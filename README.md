@@ -31,8 +31,8 @@ You'll have to change the app bundle identifiers in the main target and app exte
 4. Open Terminal, and ensure the current directory is in the `tsurukame` directory, or use `cd` to change it if not. Then type the following command, replacing `7B2GP77Y4A` with your development team, such as `D526893WQ3`, and `com.davidsansome.wanikani` with your identifier, such as `com.mzsanford.wanikani`:
     `utils/set-team-product.sh 7B2GP77Y4A com.davidsansome.wanikani` 
 
-# Update the CocoaPods dependencies
-First, you will need to install [CocoaPods](https://cocoapods.org) if you don't already have it. The website suggests using `sudo gem install cocoapods`.
+## Development tasks and dependencies
 
-Next, you will need to switch the current directory to the `ios` directory using `cd`. 
-Finally, simply install the dependencies using `pod install` or `pod update`.
+In the Developer/Projects workspace, run builds and tests through root Mainboard tasks; see [the workflow](SWIFTUI_MIGRATION.md#swift-testing-mainboard-and-native-formatting). `mainboard run --as-is usagi-toolchain` checks Xcode, `usagi-simulators` lists available devices, `usagi-resolve` restores the committed Swift package versions, and `usagi-pods` restores CocoaPods with `--deployment`. Dependency upgrades are separate reviewed changes.
+
+For a standalone checkout, use the same native manifests: restore CocoaPods from `ios` with `pod install --deployment`, then resolve the workspace with Xcode using `-onlyUsePackageVersionsFromResolvedFile`. CocoaPods remains necessary for legacy iOS targets until their callers migrate; the shared Swift package and native Mac target do not use it.

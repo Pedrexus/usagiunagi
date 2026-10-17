@@ -156,11 +156,15 @@ The intended local workspace is `/Users/pedro/Developer/Projects`, with this sta
 | Task | Purpose |
 | --- | --- |
 | `usagi-toolchain` | Show the selected Xcode/Swift versions. |
+| `usagi-simulators` | Discover available simulator names, runtime IDs, UDIDs and states. |
+| `usagi-resolve` | Restore Xcode Swift dependencies using the committed resolved versions. |
+| `usagi-pods` | Restore legacy CocoaPods dependencies with `--deployment`. |
 | `usagi-test` | Shared Swift Testing on macOS. |
 | `usagi-test-ios` | Shared tests on an iOS 27 simulator. |
 | `usagi-test-app` | Hosted iOS Swift Testing and remaining XCTest suites. |
 | `usagi-test-ui` | Synthetic XCUITest review flows. |
 | `usagi-build-mac` | Native Mac debug build with ad-hoc signing. |
+| `usagi-results <path>` | Read the exact test bundle using the selected Xcode. |
 | `usagi-results-shared` / `usagi-results-app` | Read the newest shared or hosted/UI Xcode result bundle as structured evidence. |
 
 The simulator tasks currently select the installed iPhone 18 Pro / latest runtime by name. Build/test tasks have hard timeouts and use separate derived-data locations where needed. Xcode result bundles remain under ignored build directories. The standalone fork still opens directly in Xcode; the parent workspace is not an application dependency.
@@ -210,3 +214,24 @@ share derived data and a simulator, so run them sequentially. SwiftPM retains
 Mainboard owns the developer commands and environment, while Apple's native tools
 resolve Swift dependencies. Task/lint changes do not require an unrelated environment
 upgrade. The root configuration is local to this workspace, separate from this fork.
+
+The simulator inventory is read-only; it does not establish scheme eligibility or
+boot a device. The configured tasks select Xcode explicitly because the machine's
+default command-line selection may not expose `simctl`. Do not fix that by changing
+global `xcode-select`. Build/test tasks now refuse automatic Swift package version
+changes. Restore dependencies with their dedicated tasks and review upgrades
+separately; no second dependency lock or custom Swift package resolver is introduced.
+
+For a new simulator test run, append `-resultBundlePath` with a fresh path to the
+Mainboard task, retain its exit code and inspect that exact bundle. For example:
+
+```sh
+mainboard run --as-is usagi-test-ios -resultBundlePath /private/tmp/usagi-shared-check-001.xcresult
+mainboard run --as-is usagi-results /private/tmp/usagi-shared-check-001.xcresult --json
+```
+
+Choose a new name for every invocation; Xcode refuses an existing bundle. This
+avoids mistaking an older run for the one just launched. Poll the original process
+handle rather than starting duplicate builds when an observation times out. Shared
+simulator, app and UI tasks remain sequential; command-line shared macOS tests and
+independent Mac builds can use their own build directories.
