@@ -267,3 +267,28 @@ tests independently cover offline reopening, cancellation, corrupt cache replace
 invalid URLs/responses and radical-only grading/outbox behavior. Catalog-wide media
 prefetch, cache-management UI, audio and replacing the old iOS SVGKit integration
 remain tracked requirements.
+
+## Native subject details
+
+Mac browsing and review reveals now share `NativeSubjectDetailsView`. It reads full
+content through `StudyStore.subjectDetails`, including unsent local notes and
+synonyms, and renders mnemonics/hints, reading labels, examples and related subjects
+with native SwiftUI text and navigation. Reading review reveals prioritize reading
+explanations; other contexts group meaning explanations first. Related content is
+filtered by account, availability and verified subscription access, with an explicit
+notice when the saved graph is incomplete. The read neither edits notes nor queues
+uploads.
+
+`StudyMarkup` parses WaniKani's existing mnemonic tag vocabulary into ordered text
+runs. SwiftUI maps these to attributed text, semantic subject colors, emphasis and
+web links. Unknown/malformed text and leading/trailing whitespace survive; Unicode
+ranges use Foundation's UTF-16 indexing consistently. Links use HTTP(S) only and do
+not execute markup. The existing iOS protobuf formatter is still used by its legacy
+screens; this shared implementation is the replacement for the native surfaces.
+
+Synthetic UI checks cover catalog hit targets, rich details, related navigation,
+vocabulary context sentences, persistent sheet dismissal and review reveals.
+Read-only local notes are included, while native note/synonym editing, audio,
+Japanese font preferences, richer catalog filters/progress and the iOS detail-screen
+cutover remain open. Shared tests verify account/subscription boundaries and the
+markup transformations independently of presentation.

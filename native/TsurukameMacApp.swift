@@ -184,7 +184,23 @@ final class MacStudyStore {
         var assignment = CatalogAssignment(id: 101, subjectID: subject.id, kind: subject.kind)
         assignment.level = 1; assignment.srsStage = 3; assignment.startedAt = 1; assignment.availableAt = 1
         var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
-        fixture.subjects = [subject]; fixture.assignments = [assignment]
+        if subject.kind == .kanji {
+            subject.meaningMnemonic = "A <kanji>single line</kanji> represents <b>one</b>."
+            subject.meaningHint = "Count the line: <b>one</b>."
+            subject.readingMnemonic = "Read this as <reading>いち</reading>."
+            subject.componentSubjectIDs = [2]; subject.amalgamationSubjectIDs = [3]
+            var component = CatalogSubject(id: 2, kind: .radical)
+            component.level = 1; component.japanese = "一"; component.meanings = [.init("Ground", role: .primary)]
+            var vocabulary = CatalogSubject(id: 3, kind: .vocabulary)
+            vocabulary.level = 1; vocabulary.japanese = "一つ"; vocabulary.meanings = [.init("One thing", role: .primary)]
+            vocabulary.readings = [.init("ひとつ", isPrimary: true, kind: .unknown)]
+            vocabulary.meaningMnemonic = "A synthetic <vocabulary>vocabulary</vocabulary> example."
+            vocabulary.sentences = [.init(japanese: "一つください。", english: "One, please.")]
+            vocabulary.componentSubjectIDs = [1]
+            fixture.subjects = [subject, component, vocabulary]
+            fixture.materials = [.init(serverID: 0, value: .init(subjectID: subject.id, meaningNote: "A saved synthetic note.", meaningSynonyms: ["Single"]), pending: false, legacyRevision: 0)]
+        } else { fixture.subjects = [subject] }
+        fixture.assignments = [assignment]
         _ = try await cache.importLegacyAccount(fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",
             verifiedUsername: profile.username, credentialID: "review-fixture")
         persistence = Task { cache }; savedWorkStore = cache; self.profile = profile
@@ -284,7 +300,7 @@ private struct MacStudyRoot: View {
                     } else if section == .subjects {
                         List(snapshot.subjects.filter { $0.level <= store.maximumContentLevel && (search.isEmpty || $0.characters.localizedStandardContains(search) || $0.meaning.localizedStandardContains(search)) }) { item in
                             Button { subject = item } label: {
-                                LabeledContent(item.characters.isEmpty ? item.meaning : item.characters, value: "Level \(item.level) · \(item.meaning)")
+                                LabeledContent(item.characters.isEmpty ? item.meaning : item.characters, value: "Level \(item.level) · \(item.meaning)").contentShape(Rectangle())
                             }.buttonStyle(.plain)
                         }.searchable(text: $search, prompt: "Kanji, vocabulary or meaning")
                     } else { StudyDashboard(snapshot: snapshot) { id in subject = snapshot.subjects.first { $0.id == id } } }
@@ -304,7 +320,17 @@ private struct MacStudyRoot: View {
                 }
         }.preferredColorScheme(store.isReviewFixture ? (ProcessInfo.processInfo.arguments.contains("LightFixture") ? .light : ProcessInfo.processInfo.arguments.contains("DarkFixture") ? .dark : nil) : nil)
         .onChange(of: section) { _, _ in Task { await store.reloadSavedSnapshot() } }
-        .sheet(item: $subject) { NativeSubjectDetail(subject: $0, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified) }
+        .sheet(item: $subject) { item in
+            if let accountID = store.snapshot?.accountID, let cache = store.savedWorkStore, store.snapshot?.isSample == false {
+                NavigationStack {
+                    NativeSubjectDetailsView(store: cache, accountID: accountID, subjectID: item.id)
+                        .navigationTitle("Subject")
+                }.toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { subject = nil } } }
+                .id(accountID).frame(minWidth: 480, minHeight: 520)
+            } else {
+                NativeSubjectDetail(subject: item, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified)
+            }
+        }
     }
     private var account: some View {
         Form {

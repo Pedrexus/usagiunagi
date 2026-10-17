@@ -76,21 +76,9 @@ public struct NativeReviewView: View {
               .focused($answerFocused).onSubmit { act(.submit) }
               .accessibilityIdentifier("review.answer")
           } details: {
-            ScrollView {
-              VStack(alignment: .leading, spacing: 12) {
-                LabeledContent(
-                  "Meaning",
-                  value: subject.meanings.filter { $0.role != .blacklist }.map(\.text).joined(
-                    separator: ", "))
-                LabeledContent(
-                  "Reading", value: subject.readings.map(\.text).joined(separator: " · "))
-                if let url = URL(string: subject.documentURL), url.scheme == "https",
-                  url.host == "www.wanikani.com"
-                {
-                  Link("Full subject information on WaniKani", destination: url)
-                }
-              }.padding().textSelection(.enabled)
-            }
+            NativeSubjectDetailsView(
+              store: store, accountID: accountID, subjectID: subject.id,
+              reviewQuestion: review.question?.kind)
           }
         } else {
           ContentUnavailableView(
