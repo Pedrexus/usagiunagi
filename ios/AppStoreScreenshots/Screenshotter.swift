@@ -207,7 +207,7 @@ import WaniKaniAPI
           meaning: "Salmon"
           type: PRIMARY
         }
-        kanji {
+        kanji {}
       """,
 
       8918: """
@@ -1262,6 +1262,10 @@ import WaniKaniAPI
         return try! TKMSubject(textFormatString: textProto)
       }
       return nil
+    }
+
+    override func getAllSubjects() -> [TKMSubject] {
+      subjectTextProtos.keys.sorted().compactMap { getSubject(id: $0) }
     }
 
     override func getAllAssignments() -> [TKMAssignment] {

@@ -1,6 +1,6 @@
 # SwiftUI migration study
 
-Audited 2026-10-17 against this fork and the installed Xcode 27.0 / Swift 6.4 toolchain. This is a migration plan, not a claim that the app is already entirely SwiftUI. The current app still targets iOS 15 and uses Swift 5 language mode.
+Audited 2026-10-17 against this fork and the installed Xcode 27.0 / Swift 6.4 toolchain. This is a migration plan, not a claim that the app is already entirely SwiftUI. The iPhone/iPad app now targets iOS/iPadOS 27.0. The new native Mac target requires macOS 27.0. The shared StudyKit package and Mac app use Swift 6 language mode; the remaining legacy iOS app uses Swift 5 mode.
 
 ## Recommendation
 
@@ -8,7 +8,7 @@ Move the application UI to SwiftUI in small, working slices. Use Swift for app-o
 
 SwiftUI is a UI framework, not a replacement for networking, persistence, speech recognition or data-generation tools. A repository containing several languages does not mean its screens use several competing UI frameworks. Rewriting generated or build-time code solely to improve GitHub's language percentages would add risk without simplifying the app people use.
 
-Apple explicitly supports incremental integration in [Modernize your UIKit app](https://developer.apple.com/videos/play/wwdc2026/272/). Our new Statistics screen is a SwiftUI `List` hosted in the existing tab controller. Its calculations are separate from the view and have unit tests.
+Apple explicitly supports incremental integration in [Modernize your UIKit app](https://developer.apple.com/videos/play/wwdc2026/272/). Statistics now uses shared SwiftUI views and Apple Swift Charts hosted in the existing iOS tab controller and a native macOS NavigationSplitView. Its Swift 6 calculations, curriculum data, and read-only API/cache layer are in StudyKit, with tests.
 
 ## What is actually in this repository
 
@@ -16,7 +16,7 @@ Apple explicitly supports incremental integration in [Modernize your UIKit app](
 | --- | --- | --- |
 | Screens and navigation | Mostly Swift + UIKit; 27 tracked storyboards and 7 XIBs across the repository, including launch screens and auxiliary/watch targets | Replace application screens with SwiftUI; remove each obsolete storyboard and generated accessor only after its callers migrate. |
 | Home and statistics | Custom table models and UIKit drawing; new SwiftUI statistics screen | Native `List`, `Section`, `Label`, `Button`, `TabView`, `NavigationStack`, semantic colors and system fonts. Keep study-specific Japanese font settings. |
-| Charts | Custom upcoming-review drawing; Charts 4.1 remains a pinned dependency, but no production Swift import was found | Use Apple Swift Charts where a chart helps. Audit the old dependency's linkage before removing it. A chart is not necessary for every metric. |
+| Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Migrate the remaining legacy upcoming-review drawing with its parent Home screen. |
 | Input | Objective-C `TKMKanaInput`, Swift `AnswerTextField`, keyboard overrides | Port kana conversion into a pure Swift module with parity tests. Temporarily wrap the native text field in `UIViewRepresentable`. |
 | Grading | Swift answer checking plus Objective-C edit distance | Preserve accepted answers, synonyms, blacklist handling, normalization and typo rules. The current distance uses UTF-16 units and transpositions; a naive Swift `Character` translation would change behavior. |
 | Offline storage | FMDB / SQLite, protobuf blobs, pending review and study-material queues | Keep schema and transactions first. Hide them behind a repository interface. Evaluate a Swift SQLite layer separately; SwiftData is not an automatic migration for an existing database or durable upload queue. |
@@ -28,7 +28,7 @@ Apple explicitly supports incremental integration in [Modernize your UIKit app](
 
 ## Current Apple tools worth adopting
 
-Use native controls and navigation first: the system supplies Liquid Glass where appropriate. Avoid placing glass behind every content row. The current change uses glass button configurations on iOS 26+ and conventional native controls below that version. See [Adopting Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass).
+Use native controls and navigation first: the system supplies Liquid Glass where appropriate. Avoid placing glass behind every content row. The iOS 27 floor allows native Liquid Glass controls. The dashboard uses conventional content surfaces; glass belongs to navigation and controls, not every chart. See [Adopting Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass).
 
 For the eventual SwiftUI shell, use typed navigation destinations, narrowly scoped observable state, explicit bindings for edits, and value snapshots for read-only rows. Keep grading and statistics independent of UI state. Use `@Observable` when the deployment floor permits it, with UI ownership on the main actor and background work returning safe value types.
 
@@ -40,13 +40,26 @@ Do not switch the entire project to Swift 6 mode in the UI change. The baseline 
 
 `AnswerTextField` overrides `textInputMode` to choose an installed Japanese keyboard. Apple's [textInputMode documentation](https://developer.apple.com/documentation/uikit/uiresponder/textinputmode) describes this UIKit capability. The reviewed [SwiftUI text-input APIs](https://developer.apple.com/documentation/swiftui/text-input-and-output) do not establish equivalent language selection. A SwiftUI `TextField` replacement must therefore demonstrate parity before removing the adapter. Test marked text, selection, deletion, paste, hardware keyboards and switching between meaning and reading questions.
 
-### Deployment floor
+### Deployment and native platforms
 
-- **iOS 15:** preserves today's compatibility, but requires fallbacks for modern navigation, observation, charts and glass.
-- **iOS 26+: recommended for this personal modernization fork.** Supports the modern navigation/observation/chart stack and Liquid Glass without maintaining the older design path; gate iOS 27-only enhancements.
-- **iOS 27 only:** simplest access to the installed SDK's newest features, but excludes more devices than the core feature set requires.
+The requested floor is now **iOS/iPadOS 27.0**, with a separate **macOS 27.0** native app. Xcode 27.0 / Swift 6.4 is installed. iPhone portrait and landscape are enabled; SwiftUI chart layout responds to available width and Dynamic Type. iPhone Duo-specific work is deferred at the user's request.
 
-The deployment floor has not been changed. A newer build SDK alone does not drop older OS support.
+`native/TsurukameMac.xcodeproj` builds a SwiftUI Mac app directly, without Catalyst or the iOS UIKit/CocoaPods stack. It supports account connection, manual refresh, offline statistics, curriculum charts, subject searching and basic subject details. Full mnemonics link to WaniKani. **Mac reviews, lessons, audio, downloads, notifications and full settings are not migrated yet.** This is a working first platform slice, not feature parity.
+
+Mac reads a full snapshot through URLSession/async-await. Credentials stay in Keychain; an atomic JSON snapshot is isolated in Application Support. A token fingerprint binds the cache to its credential, preventing another account's cached data from appearing after a failed account switch. Fetch failures do not publish partial API snapshots. The new reader has no write endpoints. Existing iOS review uploads and database remain authoritative until the durable outbox is ported and tested. Cross-device learning progress syncs through WaniKani; app preferences, local downloads and pending reviews are not shared through iCloud.
+
+### What prevents “pure SwiftUI” today
+
+| Feature | Swift/SwiftUI outcome | Choice still needed |
+| --- | --- | --- |
+| Home, settings, catalog, review UI, lesson UI | Can be SwiftUI; most existing iOS screens still await migration | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
+| Forced Japanese keyboard selection and marked-text behavior | Needs a small UIKit text-input adapter until SwiftUI provides equivalent control | Keep the adapter, or accept system-selected keyboard language after explicit input-parity testing. |
+| SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Pre-render trusted radical assets into cached native images, or retain a focused renderer. Do not silently remove image-only radicals. |
+| Speech recognition | Swift service using Apple's Speech framework; SwiftUI provides its controls | Keep typing available; transcription cannot establish pronunciation quality. Voice reviews remain unimplemented. |
+| Storage and networking | Swift actors and async APIs, not SwiftUI responsibilities | The Mac read-only slice is native Swift. Port iOS transactional queues and old-data migrations before removing FMDB/PromiseKit. |
+| Grading and kana conversion | Can be entirely Swift | Preserve UTF-16 edit-distance/transposition semantics and kana composition behavior with parity tests. Objective-C implementations still remain. |
+| Protobuf, SQLite engines and Apple frameworks | Swift-facing APIs may contain generated or compiled non-Swift internals | “App-owned code in Swift” is achievable; “no non-Swift code anywhere” is not a meaningful platform guarantee. |
+| Watch companion and build/data utilities | Separate platform/tooling migrations | Keep current functionality; not included in the new Mac target. |
 
 ## Migration order and completion gates
 
@@ -65,3 +78,7 @@ Track app-owned production LOC, storyboard/XIB size, dependencies and behavior c
 Prototype tap-to-speak as another answer input into the same grading path. Evaluate [SpeechAnalyzer / SpeechTranscriber](https://developer.apple.com/videos/play/wwdc2025/277/) with runtime checks for supported Japanese/English locales, device support and downloaded model availability. Retain typing and cancellation. Never grade interim transcripts or callbacks belonging to an earlier question. A recognized kanji transcription is not evidence that the learner pronounced the expected reading; test this explicitly on a physical device. Transcription is not pronunciation scoring.
 
 Voice recognition is not implemented in this change.
+
+## Validation of the iOS 27 slice
+
+The iOS and native macOS targets build with Xcode 27. Ten new Swift Testing checks cover curriculum scope totals, cumulative JLPT sets, coverage thresholds, Unicode variants, account-cache isolation, API pagination and failure handling. The existing 34 iOS tests cover grading, kana, existing logic and statistics. The Mac desktop was locked during visual interaction checks; a successful build is not full Mac interaction validation. No real-account login or review upload was exercised.

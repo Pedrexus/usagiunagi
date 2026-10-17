@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5F84B9E7F40CE19F2FDE97 /* StudyCore */; };
 		0A943349E17FA7889EFEE41F /* Pods_Tsurukame.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC80AAF9736A570E3C4CC09E /* Pods_Tsurukame.framework */; };
 		11F0AAE295A730DDD157C7A8 /* StudyStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B23E267AB393BA610A4B75B /* StudyStatistics.swift */; };
 		1C1A27E594D03064CFACBADB /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639CE0BC2CF0ABCE00902668 /* FeatureFlags.swift */; };
@@ -17,6 +18,7 @@
 		48F4B1DC268CB9850033860E /* UpcomingReviewsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F4B1DB268CB9850033860E /* UpcomingReviewsViewController.swift */; };
 		5C82B2908507339A293B0E59 /* Pods_FontScreenshotter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F33812F134DC80E5D981C40E /* Pods_FontScreenshotter.framework */; };
 		5E77A1C2D3B4F5061728394A /* SettingsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77A1C2D3B4F5061728394B /* SettingsTableViewController.swift */; };
+		60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 23A08FB0407E2600C582ED6F /* StudyUI */; };
 		630EB10A25C561A900783E54 /* NSMutableAttributedString+Replacements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 630EB10925C561A900783E54 /* NSMutableAttributedString+Replacements.swift */; };
 		630EB12125C5652400783E54 /* LessonsPageControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 630EB12025C5652400783E54 /* LessonsPageControl.swift */; };
 		630EB13F25C5713000783E54 /* ReviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 630EB13E25C5713000783E54 /* ReviewItem.swift */; };
@@ -107,7 +109,6 @@
 		63BEBF9725C57D4000123147 /* SearchResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63BEBF9625C57D4000123147 /* SearchResultViewController.swift */; };
 		63BFA78B218EB1B30058E885 /* DownloadModelItem.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63BFA78A218EB1B30058E885 /* DownloadModelItem.xib */; };
 		63BFA78E218EB6890058E885 /* OfflineAudioViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63BFA78D218EB6890058E885 /* OfflineAudioViewController.swift */; };
-		63C0400E28DD581F0068F53D /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 63C0400D28DD581F0068F53D /* Charts */; };
 		63C42A2621B6A28D008CA938 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C42A2521B6A28D008CA938 /* AppDelegate.swift */; };
 		63C42A2821B6A28D008CA938 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C42A2721B6A28D008CA938 /* ViewController.swift */; };
 		63C42A3021B6A290008CA938 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63C42A2E21B6A290008CA938 /* LaunchScreen.storyboard */; };
@@ -514,11 +515,12 @@
 				63EF56DE26060B980038551A /* WaniKaniAPI in Frameworks */,
 				637E636E242E137C00F0B5CA /* Intents.framework in Frameworks */,
 				63CAB5012605FB1B0057E1C2 /* PromiseKit in Frameworks */,
-				63C0400E28DD581F0068F53D /* Charts in Frameworks */,
 				63CAAB111FD7FACD00E09DA1 /* SystemConfiguration.framework in Frameworks */,
 				480B243123D6830300FC2A82 /* Rexy in Frameworks */,
 				637CA18725D7F5A10082580E /* SwiftProtobuf in Frameworks */,
 				0A943349E17FA7889EFEE41F /* Pods_Tsurukame.framework in Frameworks */,
+				047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */,
+				60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -942,9 +944,10 @@
 				637CA18625D7F5A10082580E /* SwiftProtobuf */,
 				63CAB5002605FB1B0057E1C2 /* PromiseKit */,
 				63EF56DD26060B980038551A /* WaniKaniAPI */,
-				63C0400D28DD581F0068F53D /* Charts */,
 				63A702142C2920D500AB0504 /* WaniKaniAPI */,
 				6324AE402F9DCEAD0089066C /* SVGKit */,
+				3B5F84B9E7F40CE19F2FDE97 /* StudyCore */,
+				23A08FB0407E2600C582ED6F /* StudyUI */,
 			);
 			productName = wk;
 			productReference = 6319C9B520441DE200C31F87 /* Tsurukame.app */;
@@ -1127,9 +1130,9 @@
 				480B242F23D6830300FC2A82 /* XCRemoteSwiftPackageReference "Rexy" */,
 				637CA18525D7F5A10082580E /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 				63CAB4FF2605FB1B0057E1C2 /* XCRemoteSwiftPackageReference "PromiseKit" */,
-				63C0400C28DD581F0068F53D /* XCRemoteSwiftPackageReference "Charts" */,
 				63A702132C2920D500AB0504 /* XCLocalSwiftPackageReference "WaniKaniAPI" */,
 				6324AE3F2F9DCEAD0089066C /* XCRemoteSwiftPackageReference "SVGKit" */,
+				4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "StudyKit" */,
 			);
 			productRefGroup = 630FD60A1FC45BDF00D21C1F;
 			projectDirPath = "";
@@ -1762,7 +1765,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = .;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1822,7 +1825,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = .;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-lcompression";
@@ -1850,7 +1853,7 @@
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1888,7 +1891,7 @@
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1916,7 +1919,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7B2GP77Y4A;
 				INFOPLIST_FILE = AppStoreScreenshots/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1942,7 +1945,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7B2GP77Y4A;
 				INFOPLIST_FILE = AppStoreScreenshots/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1974,7 +1977,7 @@
 					"FONT_SCREENSHOTTER=1",
 				);
 				INFOPLIST_FILE = FontScreenshotter/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2007,7 +2010,7 @@
 					"FONT_SCREENSHOTTER=1",
 				);
 				INFOPLIST_FILE = FontScreenshotter/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2327,6 +2330,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "StudyKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../StudyKit;
+		};
 		63A702132C2920D500AB0504 /* XCLocalSwiftPackageReference "WaniKaniAPI" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = WaniKaniAPI;
@@ -2358,14 +2365,6 @@
 				minimumVersion = 1.15.0;
 			};
 		};
-		63C0400C28DD581F0068F53D /* XCRemoteSwiftPackageReference "Charts" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/danielgindi/Charts";
-			requirement = {
-				kind = exactVersion;
-				version = 4.1.0;
-			};
-		};
 		63CAB4FF2605FB1B0057E1C2 /* XCRemoteSwiftPackageReference "PromiseKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mxcl/PromiseKit";
@@ -2377,6 +2376,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		23A08FB0407E2600C582ED6F /* StudyUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "StudyKit" */;
+			productName = StudyUI;
+		};
+		3B5F84B9E7F40CE19F2FDE97 /* StudyCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "StudyKit" */;
+			productName = StudyCore;
+		};
 		480B243023D6830300FC2A82 /* Rexy */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 480B242F23D6830300FC2A82 /* XCRemoteSwiftPackageReference "Rexy" */;
@@ -2395,11 +2404,6 @@
 		63A702142C2920D500AB0504 /* WaniKaniAPI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WaniKaniAPI;
-		};
-		63C0400D28DD581F0068F53D /* Charts */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 63C0400C28DD581F0068F53D /* XCRemoteSwiftPackageReference "Charts" */;
-			productName = Charts;
 		};
 		63CAB5002605FB1B0057E1C2 /* PromiseKit */ = {
 			isa = XCSwiftPackageProductDependency;

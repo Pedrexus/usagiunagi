@@ -34,3 +34,24 @@ Backtest candidate forecasts chronologically against held-out future periods. Co
 `StudyStatisticsTest` covers empty data, weighted accuracy, hidden subjects, duplicate assignments, lesson/burned exclusion, missing due dates, minimum focus evidence, zero/recovery streaks, median/quartile arithmetic, vacation/overdue scenarios, resets and duplicate level records. Existing grading/kana tests remain enabled.
 
 Simulator sample-data checks do not establish real-account sync correctness, prediction calibration or physical-device input behavior. No such claims are made.
+
+## Curriculum charts and study targets
+
+The shared SwiftUI dashboard separates Progress, Coverage and Focus. Progress plots SRS stages, meaning/reading accuracy, next scheduled reviews and recent level durations. Coverage uses horizontal stacked bars, configurable Started/Guru+/Master+/Burned thresholds, exact counts, and a drill-down of remaining kanji. Focus exposes the underlying error counts and recovery streak.
+
+The design was checked against the current [WaniKani public homepage](https://www.wanikani.com/), including its imagery. The app borrows clear hierarchy and WaniKani's radical blue, kanji pink and vocabulary purple identities, using system fonts, SF Symbols and native controls rather than copying the marketing illustrations. The authenticated WaniKani dashboard and WKStats account views were not accessed.
+
+| Reference | Implemented scope | Interpretation |
+| --- | --- | --- |
+| JLPT | Estimated cumulative N5–N1: 79, 245, 612, 979, 2,211 characters | Community estimates, not official/exhaustive exam lists. |
+| Japanese school grades | Cumulative grades 1–6: 80, 240, 440, 642, 835, 1,026 | Current KANJIDIC2 school classifications. |
+| Jōyō / Kyōiku | 2,136 / 1,026 | General-use / elementary-school sets. |
+| Kanji Kentei | Levels 10–5 use school grades 1–6; level 2 uses all Jōyō | Levels 4, 3 and pre-2 are omitted until exact subsets are verified. Handwriting is not assessed. |
+
+Coverage matches only kanji subjects. Vocabulary or radicals containing the same character do not qualify. The full reference-set denominator includes characters outside the synced WaniKani catalog. Learning, not-started and outside-catalog counts remain distinct. Duplicate/canonically equivalent character forms count once, and thresholds describe current SRS milestones rather than permanent mastery. A partially synced iOS catalog is labelled “outside synced catalog,” not proof the service lacks a character.
+
+[JLPT's official FAQ](https://www.jlpt.jp/e/faq/) explains that current kanji/vocabulary/grammar lists are not published. Consequently, this app does **not** offer a JLPT pass probability. An honest readiness estimate also requires external evidence of grammar, listening, vocabulary and reading comprehension. [Kanji Kentei's scope checks](https://www.kanken.or.jp/kanken/grades/meyasucheck/) define the school/Jōyō correspondences used here.
+
+Dataset snapshots, licenses, transformations and the Swift refresh command are documented in [StudyKit sources](StudyKit/Sources/StudyCore/Resources/SOURCES.md), with attribution also visible inside the app. School grades use current KANJIDIC2 rather than the older 1,006-character school list found in some secondary datasets. The generator asserts current totals and preserves the earlier grade when Unicode canonical variants collide.
+
+The native Mac app fetches complete read-only snapshots and keeps a local cache. It does not upload review results. The iOS adapter continues to read the existing local database, with pending-upload indicators and forecast suppression. These two storage paths deliberately do not share an upload queue.

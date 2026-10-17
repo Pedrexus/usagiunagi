@@ -15,3 +15,7 @@
 /ios/*.dSYM.zip
 /workspace
 /ios/gc_keys.json
+
+/StudyKit/.build/
+/native/build/
+!/native/TsurukameMac.xcodeproj/xcshareddata/
