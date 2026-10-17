@@ -12,89 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+import StudyCore
+import StudyUI
+import SwiftUI
 import WaniKaniAPI
 
-class ReviewSummaryViewController: UITableViewController, SubjectDelegate {
+/// Adapts the existing repository/navigation to the shared SwiftUI results screen.
+final class ReviewSummaryViewController: UIHostingController<SessionSummaryView?> {
   private var services: TKMServices!
-  private var model: TableModel!
+  private var subjects: [Int: TKMSubject] = [:]
+  required init?(coder: NSCoder) { super.init(coder: coder, rootView: nil) }
 
   func setup(services: TKMServices, items: [ReviewItem]) {
     self.services = services
-
-    let currentLevel = services.localCachingClient.getUserInfo()!.level
-    var incorrectItemsByLevel = [Int32: [ReviewItem]]()
-    var correct = 0
-    for item in items {
-      if !item.answer.meaningWrong, !item.answer.readingWrong {
-        correct += 1
-        continue
+    var entries: [StudySessionSummary.Entry] = []
+    var images: [Int: Image] = [:]
+    for (index, item) in items.enumerated() {
+      let subject = item.subject ?? services.localCachingClient.getSubject(id: item.assignment.subjectID)
+      subjects[index] = subject
+      let summary = subject.map {
+        StudySubject(id: $0.id, characters: $0.japanese,
+                     meaning: $0.commaSeparatedMeanings(showOldMnemonic: Settings.showOldMnemonic),
+                     readings: ($0.hasKanji ? $0.primaryReadings : $0.readings).map(\.reading),
+                     kind: $0.hasRadical ? .radical : $0.hasKanji ? .kanji : .vocabulary,
+                     level: Int($0.level))
       }
-      incorrectItemsByLevel[item.assignment.level, default: []].append(item)
-    }
-
-    let model = MutableTableModel(tableView: tableView)
-
-    // Summary section.
-    model.addSection()
-    model.add(SessionCompleteItem(correct: correct, total: items.count))
-
-    // Add a section for each level.
-    let incorrectItemLevels = incorrectItemsByLevel.keys.sorted { a, b -> Bool in
-      b < a
-    }
-    for level in incorrectItemLevels {
-      if level == currentLevel {
-        model.add(section: "Missed · current level (\(level))")
-      } else {
-        model.add(section: "Missed · level \(level)")
+      if let subject, subject.hasRadical, subject.radical.hasCharacterImageFile_p,
+         let image = UIImage(contentsOfFile: RadicalCharacterImages.pathForSubjectId(subject.id)) {
+        images[index] = Image(uiImage: image).renderingMode(.template)
       }
-
-      for item in incorrectItemsByLevel[level]! {
-        var subject = item.subject
-        if subject == nil {
-          subject = services.localCachingClient.getSubject(id: item.assignment.subjectID)
-        }
-        guard let subject = subject else {
-          continue
-        }
-
-        model.add(SubjectModelItem(subject: subject, delegate: self, assignment: nil,
-                                   readingWrong: item.answer.readingWrong,
-                                   meaningWrong: item.answer.meaningWrong))
-      }
+      entries.append(.init(id: index, subject: summary, level: Int(item.assignment.level),
+                           meaningWrong: item.answer.meaningWrong, readingWrong: item.answer.readingWrong))
     }
-    self.model = model
+    let summary = StudySessionSummary(entries: entries,
+                                     currentLevel: services.localCachingClient.getUserInfo().map { Int($0.level) })
+    rootView = SessionSummaryView(summary: summary, japaneseFont: TKMStyle.japaneseFontName,
+                                 image: { images[$0] }) { [weak self] index in
+      guard let self, let subject = subjects[index] else { return }
+      let vc = StoryboardScene.SubjectDetails.initialScene.instantiate()
+      vc.setup(services: services, subject: subject, showHints: false, hideBackButton: false, index: 0)
+      navigationController?.pushViewController(vc, animated: true)
+    }
   }
 
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     navigationController?.isNavigationBarHidden = false
   }
-
-  @IBAction private func doneClicked() {
-    navigationController?.popToRootViewController(animated: true)
-  }
-
-  override var canBecomeFirstResponder: Bool {
-    true
-  }
-
+  @IBAction private func doneClicked() { navigationController?.popToRootViewController(animated: true) }
+  override var canBecomeFirstResponder: Bool { true }
   override var keyCommands: [UIKeyCommand]? {
-    [
-      UIKeyCommand(input: "\r",
-                   modifierFlags: [],
-                   action: #selector(doneClicked),
-                   discoverabilityTitle: "Dismiss review session results"),
-    ]
-  }
-
-  // MARK: - SubjectDelegate
-
-  func didTapSubject(_ subject: TKMSubject) {
-    let vc = StoryboardScene.SubjectDetails.initialScene.instantiate()
-    vc.setup(services: services, subject: subject, showHints: false, hideBackButton: false,
-             index: 0)
-    navigationController?.pushViewController(vc, animated: true)
+    [UIKeyCommand(input: "\r", modifierFlags: [], action: #selector(doneClicked),
+                  discoverabilityTitle: "Dismiss review session results")]
   }
 }

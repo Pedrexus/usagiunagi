@@ -189,7 +189,6 @@
 		79D887452B41949F003D8F99 /* String+SHA256.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D887442B41949F003D8F99 /* String+SHA256.swift */; };
 		79D887472B419609003D8F99 /* String+SHA256Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D887462B419609003D8F99 /* String+SHA256Test.swift */; };
 		79D887482B419672003D8F99 /* String+SHA256.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D887442B41949F003D8F99 /* String+SHA256.swift */; };
-		7CE83359729B91FC7B1C8BDA /* SessionCompleteItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCB1C322531CAD495E7E543 /* SessionCompleteItem.swift */; };
 		7FFBA02C9B4D7DAA24592B25 /* StudyPersistence in Frameworks */ = {isa = PBXBuildFile; productRef = 19C915BF6736A5F43D155E73 /* StudyPersistence */; };
 		85A8A502A74E08D93DD9682D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C48CF5ADDC56D1A96EDE8C /* SceneDelegate.swift */; };
 		897DA50B06F90874AD73512D /* StatisticsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B48251FA98F552C583C9D2 /* StatisticsViewController.swift */; };
@@ -309,7 +308,6 @@
 		21894D9E0883B0107075DD6F /* Pods-Tsurukame.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame.release.xcconfig"; path = "Target Support Files/Pods-Tsurukame/Pods-Tsurukame.release.xcconfig"; sourceTree = "<group>"; };
 		277BB6E424992F8F2C53564B /* HomeHeroItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeHeroItem.swift; sourceTree = "<group>"; };
 		27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
-		2DCB1C322531CAD495E7E543 /* SessionCompleteItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionCompleteItem.swift; sourceTree = "<group>"; };
 		301BAAC2C21E4A99238D1E80 /* Pods-FontScreenshotter-FontScreenshotterUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FontScreenshotter-FontScreenshotterUITests.release.xcconfig"; path = "Target Support Files/Pods-FontScreenshotter-FontScreenshotterUITests/Pods-FontScreenshotter-FontScreenshotterUITests.release.xcconfig"; sourceTree = "<group>"; };
 		34E86AD95515CD815B3086D0 /* Pods-Tsurukame.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame.debug.xcconfig"; path = "Target Support Files/Pods-Tsurukame/Pods-Tsurukame.debug.xcconfig"; sourceTree = "<group>"; };
 		3756F7F4B1B96F207317CD15 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -828,7 +826,6 @@
 				93B59B292367AF130097533C /* UpcomingReviewsChartItem.swift */,
 				277BB6E424992F8F2C53564B /* HomeHeroItem.swift */,
 				3857A1F90A4B6B5CDFDE7003 /* RedesignFeedbackItem.swift */,
-				2DCB1C322531CAD495E7E543 /* SessionCompleteItem.swift */,
 			);
 			path = Tables;
 			sourceTree = "<group>";
@@ -1582,7 +1579,6 @@
 				67E06C99CDF8C3C0A5F82329 /* WavesView.swift in Sources */,
 				BDB49A4C77A82BE725D09593 /* HomeHeroItem.swift in Sources */,
 				98CB06617A7F94BF2B0CE9AC /* RedesignFeedbackItem.swift in Sources */,
-				7CE83359729B91FC7B1C8BDA /* SessionCompleteItem.swift in Sources */,
 				F472FEF47C88DAECCBC93B48 /* HankoView.swift in Sources */,
 				97D823D8C321A8DCEFD65355 /* PillLabel.swift in Sources */,
 				5E77A1C2D3B4F5061728394A /* SettingsTableViewController.swift in Sources */,

@@ -16,6 +16,44 @@ import XCTest
 
 final class ReviewFlowTests: XCTestCase {
   @MainActor
+  func testSummaryShowsMissedMeaningAndOpensSubjectDetails() {
+    continueAfterFailure = false
+    let app = launchSingleReview()
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("banana")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
+    app.buttons["review.reveal"].tap()
+    app.buttons["review.submit"].tap()
+    let complete = app.staticTexts["Session complete"]
+    for _ in 0..<3 {
+      if complete.exists { break }
+      XCTAssertTrue(field.waitForExistence(timeout: 5))
+      let answer = app.staticTexts["review.prompt"].label.contains("Reading") ? "watashijishin" : "personally"
+      field.tap()
+      field.typeText(answer)
+      app.buttons["review.submit"].tap()
+    }
+    XCTAssertTrue(complete.waitForExistence(timeout: 5))
+    let missed = app.buttons["summary.subject.0"]
+    XCTAssertTrue(missed.waitForExistence(timeout: 5))
+    XCTAssertTrue(missed.label.contains("Meaning missed"))
+    XCTAssertFalse(missed.label.contains("Reading missed"))
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "SwiftUI missed-subject summary"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    missed.tap()
+    XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 5))
+    app.buttons["Back"].tap()
+    XCTAssertTrue(missed.waitForExistence(timeout: 5))
+    app.navigationBars["Review Summary"].buttons["Done"].tap()
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews")).firstMatch.waitForExistence(timeout: 5))
+  }
+
+  @MainActor
   private func launchPractice(anki: Bool = false) -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "-ankiMode", anki ? "YES" : "NO",

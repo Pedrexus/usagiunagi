@@ -375,3 +375,12 @@ Anki mode and Japanese font selection in the new native session remain tracked
 work; the iOS session retains these options. Focused UI tests verify typed and
 reading-only Anki practice through the shared landing menu, including draft
 retention, the existing completion summary and returning to Practice.
+
+The iOS session completion screen now uses shared `SessionSummaryView` and
+`StudySessionSummary`. A small storyboard-created hosting controller retains
+legacy repository lookup, radical images, subject-detail navigation and hardware
+Return dismissal. The custom table completion card is removed. Mac completion
+adoption and removal of the unused illustration/generated accessor remain open.
+The checkpoint passes 156 shared macOS tests, the native Mac build and three iOS
+UI flows; summary screenshot inspection and shared iOS/hosted-suite reruns remain
+pending. Work paused at the user's request; full migration is not complete.
