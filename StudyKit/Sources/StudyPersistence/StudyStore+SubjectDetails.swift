@@ -4,7 +4,8 @@ import SwiftData
 
 public struct StudySubjectDetails: Sendable {
   public let subject: CatalogSubject
-  public let material: StudyMaterial?
+  public let savedMaterial: SavedStudyMaterial?
+  public var material: StudyMaterial? { savedMaterial?.material }
   public let components: [CatalogSubject]
   public let combinations: [CatalogSubject]
   public let similar: [CatalogSubject]
@@ -64,11 +65,26 @@ extension StudyStore {
         predicate: #Predicate {
           $0.accountID == accountID && $0.subjectID == subjectID
         })
-    ).first?.material
+    ).first?.saved
     return StudySubjectDetails(
-      subject: subject, material: material,
+      subject: subject, savedMaterial: material,
       components: ordered(subject.componentSubjectIDs),
       combinations: ordered(subject.amalgamationSubjectIDs),
       similar: ordered(subject.visuallySimilarKanjiIDs))
+  }
+
+  /// Revalidate access and the editor's revision on the store actor before queuing a local edit.
+  /// Opening and saving unchanged content must not create an upload or disturb an existing one.
+  public func saveSubjectMaterial(
+    _ material: StudyMaterial, accountID: String, expectedRevision: UUID?
+  ) throws {
+    let details = try subjectDetails(subjectID: material.subjectID, accountID: accountID)
+    guard details.savedMaterial?.revision == expectedRevision else {
+      throw StudyStoreError.staleMaterial
+    }
+    guard material != (details.material ?? StudyMaterial(subjectID: material.subjectID)) else {
+      return
+    }
+    try saveMaterial(material, accountID: accountID, expectedRevision: expectedRevision)
   }
 }

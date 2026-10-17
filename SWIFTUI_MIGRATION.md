@@ -81,7 +81,7 @@ Do not switch the entire project to Swift 6 mode in the UI change. The baseline 
 
 The requested floor is now **iOS/iPadOS 27.0**, with a separate **macOS 27.0** native app. Xcode 27.0 / Swift 6.4 is installed. iPhone portrait and landscape are enabled; SwiftUI chart layout responds to available width and Dynamic Type. iPhone Duo-specific work is deferred at the user's request.
 
-`native/TsurukameMac.xcodeproj` builds a SwiftUI Mac app directly, without Catalyst or the iOS UIKit/CocoaPods stack. It supports account connection, manual refresh, offline statistics, curriculum charts, subject searching, rich saved subject details and durable native reviews. Image-only radicals have on-demand caching. **Lessons, complete review options, note/synonym editing, audio, download management, notifications and full settings remain unfinished.** This does not establish feature parity; see TASKS.md for current acceptance gates.
+`native/TsurukameMac.xcodeproj` builds a SwiftUI Mac app directly, without Catalyst or the iOS UIKit/CocoaPods stack. It supports account connection, manual refresh, offline statistics, curriculum charts, subject searching, rich saved subject details, local note/synonym editing and durable native reviews. Image-only radicals have on-demand caching. **Lessons, complete review options, audio, download management, notifications and full settings remain unfinished.** This does not establish feature parity; see TASKS.md for current acceptance gates.
 
 Mac reads full study content through URLSession/async-await and commits it in the shared SwiftData store; the previous JSON cache is imported once. Credentials stay in Keychain, and a fingerprint binds each visible snapshot to its credential. Fetch failures do not publish partial snapshots. Native validated write endpoints and a durable upload lane are now implemented; the Mac Saved work screen exposes explicit synchronization of eligible locally saved work. Existing iOS review uploads and its database remain active until the controlled writer handoff. Cross-device learning progress syncs through WaniKani; app preferences, local downloads and pending reviews are not shared through iCloud.
 
@@ -303,7 +303,26 @@ screens; this shared implementation is the replacement for the native surfaces.
 
 Synthetic UI checks cover catalog hit targets, rich details, related navigation,
 vocabulary context sentences, persistent sheet dismissal and review reveals.
-Read-only local notes are included, while native note/synonym editing, audio,
-Japanese font preferences, richer catalog filters/progress and the iOS detail-screen
-cutover remain open. Shared tests verify account/subscription boundaries and the
-markup transformations independently of presentation.
+The native notes/synonyms form now saves through `saveSubjectMaterial`, which
+revalidates account/content access and the captured material revision on the store
+actor. No-op saves leave upload state unchanged. Existing durable queue ownership,
+server identity and uncertain-attempt protection remain intact. Local synonyms
+immediately participate in the normal review grader, including an already-open
+session. Saving does not upload; Saved work remains the explicit sending action.
+
+Notes retain their exact whitespace and Unicode. Synonyms use separate editable
+entries rather than comma/newline parsing, preserving existing string boundaries.
+This follows the [WaniKani study-material API's string and array fields](https://docs.api.wanikani.com/20170710/#update-a-study-material).
+Cancelling a changed draft asks before discarding it. A stale save retains the
+draft, shows the current saved version and requires an explicit replacement choice;
+the replacement still checks the compared revision. Drafts are view state until
+Save succeeds, not crash-recoverable autosaves. Errors stay visible while scrolling.
+
+Direct synthetic Mac checks verified save/reopen, multiline Japanese text,
+synonym addition, cancel/retain/discard, two-window conflict comparison and explicit
+replacement, and the pending entry in Saved work. Shared tests independently prove
+disk reopening, no-op and clear behavior, stale revisions, current content access,
+uncertain-upload preservation and normal grading with a newly edited synonym.
+Audio, Japanese font preferences, richer catalog filters/progress and the iOS
+detail-screen cutover remain open. The existing iOS editor remains until that
+cutover; compiling this shared form on iOS does not claim its caller migration.

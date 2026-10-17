@@ -17,6 +17,10 @@ import SwiftData
         self.accountID = accountID; self.subjectID = material.subjectID
         self.material = material; self.pending = pending; revision = UUID()
     }
+    var saved: SavedStudyMaterial {
+        SavedStudyMaterial(accountID: accountID, revision: revision, pending: pending, serverID: serverID,
+            issue: issue, attemptedRevision: attemptedRevision, attemptedMaterial: attemptedMaterial, material: material)
+    }
 }
 
 public struct SavedStudyMaterial: Sendable {
@@ -36,10 +40,7 @@ extension StudyStore {
     }
 
     public func materials(accountID: String) throws -> [SavedStudyMaterial] {
-        try materialRecords(accountID: accountID).map {
-            SavedStudyMaterial(accountID: $0.accountID, revision: $0.revision, pending: $0.pending, serverID: $0.serverID, issue: $0.issue,
-                attemptedRevision: $0.attemptedRevision, attemptedMaterial: $0.attemptedMaterial, material: $0.material)
-        }.sorted { $0.material.subjectID < $1.material.subjectID }
+        try materialRecords(accountID: accountID).map(\.saved).sorted { $0.material.subjectID < $1.material.subjectID }
     }
 
     @discardableResult public func saveMaterial(_ material: StudyMaterial, accountID: String,

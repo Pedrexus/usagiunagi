@@ -36,6 +36,8 @@ public struct NativeSubjectDetailsView: View {
   private let reviewQuestion: StudyQuestionKind?
   @State private var details: StudySubjectDetails?
   @State private var error: String?
+  @State private var editing = false
+  @State private var refreshID = UUID()
 
   public init(
     store: StudyStore, accountID: String, subjectID: Int64, reviewQuestion: StudyQuestionKind? = nil
@@ -67,6 +69,11 @@ public struct NativeSubjectDetailsView: View {
             } else {
               meaningDetails(details)
               readingDetails(details)
+            }
+            Button("Edit notes and synonyms", systemImage: "square.and.pencil") { editing = true }
+            if details.savedMaterial?.pending == true {
+              Text("Changes saved on this device. Sync them from Saved work.")
+                .font(.caption).foregroundStyle(.secondary)
             }
             if let names = details.subject.partOfSpeechNames, !names.isEmpty {
               section("Parts of speech") { Text(names.joined(separator: ", ")) }
@@ -111,7 +118,12 @@ public struct NativeSubjectDetailsView: View {
         ProgressView("Loading saved subject")
       }
     }
-    .task(id: [accountID, String(subjectID)]) {
+    .sheet(isPresented: $editing, onDismiss: { refreshID = UUID() }) {
+      if let details {
+        NativeStudyMaterialEditor(store: store, accountID: accountID, details: details)
+      }
+    }
+    .task(id: [accountID, String(subjectID), refreshID.uuidString]) {
       details = nil
       error = nil
       do {
@@ -158,7 +170,7 @@ public struct NativeSubjectDetailsView: View {
     -> some View
   {
     VStack(alignment: .leading, spacing: 8) {
-      Text(title).font(.headline)
+      Text(title).font(.headline).accessibilityAddTraits(.isHeader)
       content()
     }
     .frame(maxWidth: .infinity, alignment: .leading)
