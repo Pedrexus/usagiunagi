@@ -550,7 +550,6 @@ import WaniKaniAPI
             english: "You’re way off base if you think you know me better than I know myself."
           }
           parts_of_speech: [PRONOUN]
-          audio_ids: [41385, 41377, 6643, 29636]
         }
       """,
 
@@ -1266,13 +1265,50 @@ import WaniKaniAPI
     }
 
     override func getAllAssignments() -> [TKMAssignment] {
-      // Return some assignments for a review.
-      var a = TKMAssignment()
-      a.subjectID = 3864
-      a.subjectType = .vocabulary
-      a.availableAt = 42
-      a.srsStageNumber = 2
-      return Array(repeating: a, count: availableReviewCount)
+      // Distinct subjects keep the sample review count consistent with statistics.
+      [Int64(3864), 923, 578, 689].map { id in
+        var a = TKMAssignment()
+        a.subjectID = id
+        a.subjectType = id == 3864 ? .vocabulary : .kanji
+        a.availableAt = 42
+        a.srsStageNumber = 2
+        return a
+      }
+    }
+
+    override func getAllReviewStatistics() -> [TKMReviewStatistic] {
+      var result = [TKMReviewStatistic]()
+      for index in 0 ..< 12 {
+        var stat = TKMReviewStatistic()
+        stat.subjectID = index == 0 ? 3864 : Int64(1200 + index)
+        stat.type = .vocabulary
+        stat.meaningCorrect = 24
+        stat.meaningIncorrect = 2
+        stat.meaningCurrentStreak = 8
+        stat.readingCorrect = 16
+        stat.readingIncorrect = index == 0 ? 8 : 3
+        stat.readingCurrentStreak = index == 0 ? 0 : 5
+        result.append(stat)
+      }
+      return result
+    }
+
+    override func getAllLevelProgressions() -> [TKMLevel] {
+      var result = [TKMLevel]()
+      var start = Date().addingTimeInterval(-95 * 86400)
+      for (index, days) in [10, 12, 11, 14, 9, 13, 12, 13].enumerated() {
+        var level = TKMLevel()
+        level.level = Int32(16 + index)
+        level.unlockedAt = Int32(start.timeIntervalSince1970)
+        start = start.addingTimeInterval(Double(days) * 86400)
+        level.passedAt = Int32(start.timeIntervalSince1970)
+        result.append(level)
+      }
+      var current = TKMLevel()
+      current.level = 24
+      current.unlockedAt = Int32(Date().addingTimeInterval(-86400).timeIntervalSince1970)
+      result.append(current)
+      return result
     }
 
     override func getStudyMaterial(subjectId _: Int64) -> TKMStudyMaterials? {

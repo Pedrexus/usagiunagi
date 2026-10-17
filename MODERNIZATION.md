@@ -51,6 +51,8 @@ The largest initial files include `ReviewViewController.swift` (1,747 lines), `L
 
 ## Sequence
 
+The detailed [SwiftUI migration study](SWIFTUI_MIGRATION.md) and [statistics definitions and research](STATISTICS.md) expand the implementation plan below.
+
 1. Build and launch the upstream app; run existing tests. Record limitations before editing behavior.
 2. Expand grading coverage before changing review input. Existing `AnswerCheckerTest` covers kana conversion and normalization, but does not directly exercise `checkAnswer` decisions. Cover primary/alternate readings, synonyms, typo tolerance, invalid characters and okurigana.
 3. Prototype optional spoken answers through the same grading and submission path as typed answers. Keep review progress and sync semantics unchanged.
@@ -76,3 +78,16 @@ The largest initial files include `ReviewViewController.swift` (1,747 lines), `L
 - Build warnings include protobuf `Sendable` compatibility, deprecated UIKit animation/key-window APIs and legacy ClockKit APIs. Swift 6 migration requires addressing these rather than simply changing the language mode.
 - Build-system fix: added `--exclude build` to `ios/.swiftformat`. The build invokes SwiftFormat every time; with DerivedData inside `ios/build`, it previously formatted dependency checkouts and caused package-resolution failures on the next invocation. Restored only the generated checkouts to their pinned versions before retrying; verified they remained unchanged after the successful test build. No application behavior or dependency versions changed.
 - Authenticated sync, real-device installation, microphone input and complete accessibility coverage have not yet been verified.
+
+## Native design and statistics iteration
+
+Branch: `codex/native-design-stats`.
+
+- Replaced the Home action cards with native buttons and SF Symbols, using Liquid Glass on iOS 26+ and filled/tinted fallbacks on older systems. The component decreased from 406 to 114 physical lines. Existing review/lesson/practice callbacks and availability rules remain in place.
+- Adopted semantic interface colors, system text styles and standard navigation appearance. Kept incorrect-answer feedback and destructive actions red independently of the blue interface accent. Added multiline profile labels after an enlarged-text check exposed truncation.
+- Added a SwiftUI Stats tab for lifetime reading/meaning accuracy, historical level-pace scenarios, the saved seven-day schedule and prioritized trouble items. See `STATISTICS.md` for assumptions and exclusions. The rest of the app remains mostly UIKit.
+- Extended screenshot fixtures with explicitly synthetic statistics. Removed the obsolete `audio_ids` field that caused the existing subject fixture to crash when loaded; gave the four sample review assignments distinct subject IDs.
+- Xcode Debug build and all **34 app unit tests passed** (24 existing + 10 statistics tests), result bundle `ios/build/native-stats-final.xcresult`. A subsequent build for the profile wrapping correction also passed.
+- Inspected Home and the Stats opening screen in Simulator; inspected Stats in light/dark mode and at the `accessibility-extra-large` text size. Restored the Simulator to light mode and its original `large` text size afterward. Local screenshots: `ios/build/home-native.png`, `ios/build/stats-light.png`, `ios/build/stats-dark.png`, `ios/build/stats-large-text.png`.
+- Interactive Simulator access was unavailable through the connected computer-use surface. The full review/lesson journey, focus-row navigation, VoiceOver, iPad layouts and authenticated account sync were not exercised. The existing App Store screenshot UI suite is disabled in the scheme and was not run.
+- No deployment-target, language-mode, persistence-schema or dependency-version changes. Voice recognition remains planned, not implemented.

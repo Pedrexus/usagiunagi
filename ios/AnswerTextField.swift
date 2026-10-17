@@ -71,7 +71,7 @@ class AnswerTextField: UITextField {
   }
 
   private var isMarkedIncorrect: Bool {
-    textColor == TKMStyle.Color.accent
+    textColor == TKMStyle.Color.incorrectAnswer
   }
 
   override var textColor: UIColor? {
@@ -113,7 +113,7 @@ class AnswerTextField: UITextField {
         UIColor(red: 0.984, green: 0.906, blue: 0.886, alpha: 1)
     }
     let fill = isMarkedIncorrect ? incorrectFill : TKMStyle.Color.cellBackground
-    let stroke = isMarkedIncorrect ? TKMStyle.Color.accent :
+    let stroke = isMarkedIncorrect ? TKMStyle.Color.incorrectAnswer :
       isOnInk ? TKMStyle.Color.onNightSecondary : TKMStyle.Color.label
     fieldLayer.fillColor = fill.resolvedColor(with: traitCollection).cgColor
     fieldLayer.strokeColor = stroke.resolvedColor(with: traitCollection).cgColor

@@ -39,13 +39,17 @@ class MainTitleView: UIView {
   }
 
   override func didMoveToSuperview() {
-    // Ink on paper: no text shadows, and a hairline ring around the avatar instead of a drop
-    // shadow.
+    // Use system text styles so the profile header follows Dynamic Type.
     usernameLabel.textColor = TKMStyle.Color.label
-    usernameLabel.font = UIFont.systemFont(ofSize: 22, weight: .heavy)
+    usernameLabel.font = UIFont.preferredFont(forTextStyle: .headline)
     levelLabel.textColor = TKMStyle.Color.grey33
-    levelLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-    imageContainer.layer.borderWidth = 2
+    levelLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+    usernameLabel.adjustsFontForContentSizeCategory = true
+    levelLabel.adjustsFontForContentSizeCategory = true
+    usernameLabel.numberOfLines = 0
+    levelLabel.numberOfLines = 0
+    stackView.distribution = .fill
+    imageContainer.layer.borderWidth = 0
     imageContainer.layer.borderColor = TKMStyle.Color.cellBackground.cgColor
 
     imageView.layer.masksToBounds = true

@@ -88,7 +88,7 @@ class SettingsViewController: SettingsTableViewController, TKMViewController {
                                     title: "Log out",
                                     subtitle: nil,
                                     accessoryType: .none) { [unowned self] in didTapLogOut() }
-    logOutItem.textColor = TKMStyle.Color.accent
+    logOutItem.textColor = .systemRed
     model.add(logOutItem)
 
     model.addSection()

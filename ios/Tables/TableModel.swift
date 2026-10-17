@@ -260,31 +260,16 @@ class TableModel: NSObject, UITableViewDataSource, UITableViewDelegate {
     return tableView.rowHeight
   }
 
-  // Section headers are small tracked capitals in secondary ink. The content is set here, before
-  // UIKit sizes the header, so it lays out correctly. Delegates can still restyle it in
-  // willDisplayHeaderView, which is forwarded to them as before.
   func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
     let modelSection = sections[viewSectionToModelSection(section)]
-    guard let title = modelSection.headerTitle, !title.isEmpty else {
-      return nil
-    }
+    guard let title = modelSection.headerTitle, !title.isEmpty else { return nil }
     let reuseId = "TKMSectionHeader"
     let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: reuseId) ??
       UITableViewHeaderFooterView(reuseIdentifier: reuseId)
-    var attributes: [NSAttributedString.Key: Any] = [
-      .font: UIFont.systemFont(ofSize: 12, weight: .bold),
-      .foregroundColor: TKMStyle.Color.grey33,
-      .kern: 1.6,
-    ]
     var config = UIListContentConfiguration.groupedHeader()
-    config.attributedText = NSAttributedString(string: title.uppercased(), attributes: attributes)
-    config.secondaryAttributedText = nil
-    if let detail = modelSection.headerDetail {
-      attributes[.kern] = 0.8
-      config.secondaryAttributedText = NSAttributedString(string: detail.uppercased(),
-                                                          attributes: attributes)
-      config.prefersSideBySideTextAndSecondaryText = true
-    }
+    config.text = title
+    config.secondaryText = modelSection.headerDetail
+    config.prefersSideBySideTextAndSecondaryText = true
     header.contentConfiguration = config
     return header
   }

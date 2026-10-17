@@ -872,6 +872,18 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return ret
   }
 
+  func getAllReviewStatistics() -> [TKMReviewStatistic] {
+    db.inDatabase { db in
+      var result = [TKMReviewStatistic]()
+      for cursor in db.query("SELECT pb FROM review_stats") {
+        if let statistic: TKMReviewStatistic = cursor.proto(forColumnIndex: 0) {
+          result.append(statistic)
+        }
+      }
+      return result
+    }
+  }
+
   func getAllLevelProgressions() -> [TKMLevel] {
     db.inDatabase { db in
       var ret = [TKMLevel]()

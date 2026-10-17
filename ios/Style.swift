@@ -40,8 +40,7 @@ private func AdaptiveColorHex(light: Int32, dark: Int32) -> UIColor {
   AdaptiveColor(light: UIColorFromHex(light), dark: UIColorFromHex(dark))
 }
 
-// The colours, type and shapes here follow the "Orizuru" visual refresh. The design mocks for every
-// screen, in light and dark mode, are at https://claude.ai/artifact/EzDD4prsDfKNsdXy5Bfifb
+// Use semantic system colors for the interface; retain subject colors for learning cues.
 @objc
 class TKMStyle: NSObject {
   // MARK: - Shadows
@@ -56,8 +55,7 @@ class TKMStyle: NSObject {
 
   // MARK: - WaniKani colors and gradients
 
-  // Shu (vermilion) — the red crown of the tanchō crane. The app's single accent colour.
-  static let defaultTintColor = AdaptiveColorHex(light: 0xC8402B, dark: 0xD9533D)
+  static let defaultTintColor = UIColor.systemBlue
 
   // Subject colours are flat (both "gradient" stops are the same) and deep enough for white
   // text at 5:1 or better.
@@ -173,17 +171,18 @@ class TKMStyle: NSObject {
   // MARK: - Dark mode aware UI colors
 
   enum Color {
-    // Washi paper and sumi ink. Dark mode swaps them for warm near-black and off-white.
-    static let background = AdaptiveColorHex(light: 0xF5EFE3, dark: 0x161512)
-    static let cellBackground = AdaptiveColorHex(light: 0xFFFCF6, dark: 0x211F1B)
-    static let separator = AdaptiveColorHex(light: 0xEEE6D6, dark: 0x2C2924)
-    static let cardBorder = AdaptiveColorHex(light: 0xE6DCC9, dark: 0x2E2B26)
-    static let label = AdaptiveColorHex(light: 0x1F1D1A, dark: 0xF2ECDF)
-    static let grey33 = AdaptiveColorHex(light: 0x5F574B, dark: 0xABA290)
-    static let grey66 = AdaptiveColorHex(light: 0xB9AE99, dark: 0x6E665A)
-    static let grey80 = AdaptiveColorHex(light: 0xE0D5C1, dark: 0x3A3630)
+    // Semantic colors adapt to dark mode and increased contrast.
+    static let background = UIColor.systemGroupedBackground
+    static let cellBackground = UIColor.secondarySystemGroupedBackground
+    static let separator = UIColor.separator
+    static let cardBorder = UIColor.separator
+    static let label = UIColor.label
+    static let grey33 = UIColor.secondaryLabel
+    static let grey66 = UIColor.tertiaryLabel
+    static let grey80 = UIColor.systemGray4
     static let accent = TKMStyle.defaultTintColor
-    // Night indigo, used behind the waves on the home screen's Reviews card.
+    static let incorrectAnswer = UIColor.systemRed
+    // Legacy surfaces kept until their screens migrate to native controls.
     static let night = UIColorFromHex(0x1B2740)
     static let onNight = UIColorFromHex(0xF5EFE3)
     static let onNightSecondary = UIColorFromHex(0xC9C1B1)

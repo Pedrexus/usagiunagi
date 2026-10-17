@@ -20,7 +20,7 @@ private let kMinimumLargeTitleSize: CGFloat = 20
 
 func largeTitleFont(size: CGFloat = kLargeTitleSize) -> UIFont {
   UIFontMetrics(forTextStyle: .largeTitle)
-    .scaledFont(for: UIFont.systemFont(ofSize: size, weight: .black))
+    .scaledFont(for: UIFont.systemFont(ofSize: size, weight: .bold))
 }
 
 // The settings pages share one look: a large heavy title under the back button, and each section's

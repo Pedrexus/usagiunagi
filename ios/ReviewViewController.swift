@@ -1088,7 +1088,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     previousSubjectButton.alpha = shown ? 0.0 : 1.0
 
     // Change the foreground color of the answer field.
-    answerField.textColor = shown ? TKMStyle.Color.accent : TKMStyle.Color.label
+    answerField.textColor = shown ? TKMStyle.Color.incorrectAnswer : TKMStyle.Color.label
 
     // Scroll to the top.
     subjectDetailsView
@@ -1409,7 +1409,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
   func highlightAndShakeAnswer(ranges: [NSRange]) {
     let text = NSMutableAttributedString(string: answerField.text!)
     for range in ranges {
-      text.addAttribute(.foregroundColor, value: TKMStyle.Color.accent, range: range)
+      text.addAttribute(.foregroundColor, value: TKMStyle.Color.incorrectAnswer, range: range)
     }
     answerField.attributedText = text
 
@@ -1493,7 +1493,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
       answerField.tintColor = .clear
       UIView.animate(withDuration: animationDuration,
                      animations: {
-                       self.answerField.textColor = TKMStyle.Color.accent
+                       self.answerField.textColor = TKMStyle.Color.incorrectAnswer
                        self.revealAnswerButton.alpha = 1.0
                        self.submitButton.setImage(self.forwardArrowImage, for: .normal)
                      })

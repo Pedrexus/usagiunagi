@@ -26,9 +26,8 @@ class MainTabBarViewController: UITabBarController {
   }
 
   override func viewDidLoad() {
-    if !FeatureFlags.showOtherPracticeModes {
-      tabBar.isHidden = true
-    }
+    super.viewDidLoad()
+    tabBar.isHidden = false
 
     view.backgroundColor = .clear
     for vc in viewControllers! {
@@ -36,15 +35,28 @@ class MainTabBarViewController: UITabBarController {
       case let vc as MainWaniKaniTabViewController:
         vc.setup(services: services, delegate: waniKaniTabDelegate)
         waniKaniViewController = vc
+        vc.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 0)
 
       case let vc as MainPracticeTabViewController:
         vc.setup(services: services)
         practiceViewController = vc
+        vc.tabBarItem = UITabBarItem(title: "Practice",
+                                     image: UIImage(systemName: "square.and.pencil"), tag: 1)
 
       default:
         break
       }
     }
+    var tabs = viewControllers ?? []
+    if !FeatureFlags.showOtherPracticeModes {
+      tabs.removeAll { $0 is MainPracticeTabViewController }
+    }
+    tabs.append(StatisticsViewController(services: services))
+    setViewControllers(tabs, animated: false)
+    #if DEBUG
+      if ProcessInfo.processInfo.arguments
+        .contains("ShowStatistics") { selectedIndex = tabs.count - 1 }
+    #endif
   }
 
   func update() {

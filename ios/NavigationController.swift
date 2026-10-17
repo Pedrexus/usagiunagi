@@ -31,21 +31,7 @@ class NavigationController: UINavigationController, UINavigationControllerDelega
     super.viewDidLoad()
     delegate = self
 
-    // Large titles are only shown by screens that ask for them (the settings pages); see
-    // navigationController(_:willShow:animated:). Their font is set on the appearances because the
-    // bar's own largeTitleTextAttributes lose the weight when switching between light and dark.
     navigationBar.prefersLargeTitles = true
-    let largeTitleAttributes: [NSAttributedString.Key: Any] = [
-      .font: largeTitleFont(),
-      .foregroundColor: TKMStyle.Color.label,
-    ]
-    let standard = navigationBar.standardAppearance.copy()
-    standard.largeTitleTextAttributes = largeTitleAttributes
-    navigationBar.standardAppearance = standard
-    let scrollEdge = standard.copy()
-    scrollEdge.configureWithTransparentBackground()
-    scrollEdge.largeTitleTextAttributes = largeTitleAttributes
-    navigationBar.scrollEdgeAppearance = scrollEdge
 
     // Add a new pan gesture recogniser, but copy the targets list from the built-in edge pop
     // recogniser.
