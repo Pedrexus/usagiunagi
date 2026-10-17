@@ -146,4 +146,21 @@ final class ReviewSessionTest: XCTestCase {
     XCTAssertEqual(session.activeStudyMaterials?.meaningNote, "Keep this note")
     XCTAssertEqual(session.activeStudyMaterials?.readingNote, "Excluded marker")
   }
+
+  func testRefreshingMaterialsPreservesEditsMadeInAnswerDetails() {
+    let subject = subject()
+    var stored = TKMStudyMaterials()
+    stored.subjectID = 42
+    stored.meaningNote = "Before review"
+    let repository = ReviewRepository(subject: { _ in subject }, materials: { _ in stored },
+                                      saveProgress: { _ in }, saveMaterials: { stored = $0 })
+    let session = ReviewSession(repository: repository, items: [item()], options: options, seed: 1)
+    session.nextTask()
+    stored.meaningNote = "Edited while viewing the answer"
+    stored.meaningSynonyms = ["Single"]
+    session.refreshStudyMaterials()
+    session.addSynonym("Unity")
+    XCTAssertEqual(stored.meaningNote, "Edited while viewing the answer")
+    XCTAssertEqual(stored.meaningSynonyms, ["Single", "Unity"])
+  }
 }

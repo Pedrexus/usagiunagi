@@ -54,6 +54,10 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     let question = app.staticTexts["review.question"]
     let prompt = app.staticTexts["review.prompt"]
+    let initial = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    initial.name = "SwiftUI review question"
+    initial.lifetime = .keepAlways
+    add(initial)
     let summary = app.staticTexts["Session complete"]
     let meanings = ["私自身": "personally", "私": "i", "自": "self", "身": "somebody"]
     for _ in 0 ..< 5 {
@@ -72,7 +76,7 @@ final class ReviewFlowTests: XCTestCase {
       if summary.exists { break }
     }
     XCTAssertTrue(summary.waitForExistence(timeout: 10))
-    let attachment = XCTAttachment(screenshot: app.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
     attachment.name = "Completed sample review session"
     attachment.lifetime = .keepAlways
     add(attachment)
@@ -132,12 +136,112 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["voice.submit"]
       .isEnabled) // Kanji transcription is not a reading answer.
-    let attachment = XCTAttachment(screenshot: app.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
     attachment.name = "Voice reading correction"
     attachment.lifetime = .keepAlways
     add(attachment)
     app.buttons["voice.keyboard"].tap()
     let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("watashijishin")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  private func launchSingleReview(extra: [String] = []) -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "SingleReviewFixture",
+                           "-groupMeaningReading", "YES", "-meaningFirst", "YES", "-ankiMode", "NO",
+                           "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
+                           "-allowSkippingReviews", "NO", "-showAnswerImmediately", "NO",
+                           "-enableCheats", "YES"] + extra
+    app.launch()
+    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
+      .firstMatch
+    XCTAssertTrue(start.waitForExistence(timeout: 10))
+    start.tap()
+    XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
+    return app
+  }
+
+  @MainActor
+  private func clearFixture(_ app: XCUIApplication) {
+    app.terminate()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ResetUserDefaults"]
+    app.launch()
+    app.terminate()
+  }
+
+  @MainActor
+  func testIncorrectAnswerRevealAndOverride() {
+    continueAfterFailure = false
+    let app = launchSingleReview()
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("banana")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
+    app.buttons["review.reveal"].tap()
+    XCTAssertTrue(app.buttons["review.corrections"].waitForExistence(timeout: 5))
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "SwiftUI incorrect answer details"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    app.buttons["review.corrections"].tap()
+    app.buttons["My answer was correct"].tap()
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("watashijishin")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  func testCombinedAnkiIncorrectThenCorrectCompletesOneSubject() {
+    continueAfterFailure = false
+    let app = launchSingleReview(extra: [
+      "-ankiMode",
+      "YES",
+      "-ankiModeCombineReadingMeaning",
+      "YES",
+    ])
+    defer { clearFixture(app) }
+    XCTAssertFalse(app.buttons["review.voice"].exists)
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.incorrect"].waitForExistence(timeout: 5))
+    app.buttons["review.incorrect"].tap()
+    XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 5))
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.correct"].waitForExistence(timeout: 5))
+    app.buttons["review.correct"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  func testLandscapeReviewKeepsAnswerControlsAccessible() {
+    continueAfterFailure = false
+    let app = launchSingleReview()
+    defer { XCUIDevice.shared.orientation = .portrait
+      clearFixture(app)
+    }
+    XCUIDevice.shared.orientation = .landscapeLeft
+    let rotated = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      app.windows.firstMatch.frame.width > app.windows.firstMatch.frame.height
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [rotated], timeout: 5), .completed)
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("personally")
+    XCTAssertTrue(app.buttons["review.submit"].isHittable)
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "SwiftUI landscape review"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    app.buttons["review.submit"].tap()
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
     field.typeText("watashijishin")

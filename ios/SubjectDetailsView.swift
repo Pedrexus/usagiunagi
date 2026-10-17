@@ -113,6 +113,15 @@ class SubjectDetailsView: UITableView, SubjectChipDelegate {
   required init?(coder: NSCoder) {
     super.init(coder: coder)
 
+    configureSectionSpacing()
+  }
+
+  override init(frame: CGRect, style: UITableView.Style) {
+    super.init(frame: frame, style: style)
+    configureSectionSpacing()
+  }
+
+  private func configureSectionSpacing() {
     let scaledSectionHeaderHeight = UIFontMetrics.default.scaledValue(for: kSectionHeaderHeight)
 
     sectionHeaderHeight = scaledSectionHeaderHeight

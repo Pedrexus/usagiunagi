@@ -188,6 +188,11 @@ final class ReviewSession {
     if let date = value.createdAt { item.answer.createdAt = Int32(clamping: date) }
   }
 
+  func refreshStudyMaterials() {
+    guard let task = activeTask, task.subject == nil else { return }
+    activeStudyMaterials = repository.materials(task.assignment.subjectID)
+  }
+
   func addSynonym(_ text: String) {
     var material = activeStudyMaterials ?? TKMStudyMaterials()
     material.subjectID = activeSubject.id

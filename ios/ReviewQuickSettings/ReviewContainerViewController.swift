@@ -76,12 +76,12 @@ class ReviewContainerViewController: MMDrawerController, ReviewViewControllerDel
     Settings.enableCheats
   }
 
-  func tappedMenuButton(reviewViewController _: ReviewViewController, menuButton _: UIButton) {
+  func tappedMenuButton(reviewViewController _: ReviewViewController, menuButton _: UIView) {
     (rightDrawerViewController as! UINavigationController).popToRootViewController(animated: false)
     open(.right, animated: true, completion: nil)
   }
 
-  func tappedCloseButton(reviewViewController _: ReviewViewController, closeButton: UIButton) {
+  func tappedCloseButton(reviewViewController _: ReviewViewController, closeButton: UIView) {
     endReviewSession(button: closeButton)
   }
 
@@ -127,7 +127,8 @@ class ReviewContainerViewController: MMDrawerController, ReviewViewControllerDel
                                message: "You'll lose progress on any half-answered reviews",
                                preferredStyle: .actionSheet)
     ac.popoverPresentationController?.sourceView = button
-    ac.popoverPresentationController?.sourceRect = button.bounds
+    ac.popoverPresentationController?.sourceRect = CGRect(x: 16, y: button.safeAreaInsets.top,
+                                                          width: 44, height: 44)
 
     if reviewVC.wrappingUp {
       ac.addAction(UIAlertAction(title: "Stop wrapping up", style: .default) { _ in

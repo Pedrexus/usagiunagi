@@ -161,7 +161,6 @@
 		63D1026923D7ED3200838F7C /* UIWindow+InterfaceStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D1026823D7ED3200838F7C /* UIWindow+InterfaceStyle.swift */; };
 		63D2DAEE275C5D4100D5F6FF /* UIControl+addAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D2DAED275C5D4100D5F6FF /* UIControl+addAction.swift */; };
 		63DB065B25A055D70071DC1C /* TestingAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DB065A25A055D70071DC1C /* TestingAppDelegate.swift */; };
-		63DE410827818A9A002CFB80 /* SuccessAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DE410727818A9A002CFB80 /* SuccessAnimation.swift */; };
 		63E1386827E59F4100AC4706 /* FullRefreshOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E1386727E59F4100AC4706 /* FullRefreshOverlayView.swift */; };
 		63E1386A27E6C12500AC4706 /* SettingChoiceListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E1386927E6C12500AC4706 /* SettingChoiceListViewController.swift */; };
 		63E903C61FE643BF00D73C3A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63E903C51FE643BF00D73C3A /* Main.storyboard */; };
@@ -444,7 +443,6 @@
 		63D1026823D7ED3200838F7C /* UIWindow+InterfaceStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIWindow+InterfaceStyle.swift"; sourceTree = "<group>"; };
 		63D2DAED275C5D4100D5F6FF /* UIControl+addAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIControl+addAction.swift"; sourceTree = "<group>"; };
 		63DB065A25A055D70071DC1C /* TestingAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestingAppDelegate.swift; sourceTree = "<group>"; };
-		63DE410727818A9A002CFB80 /* SuccessAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessAnimation.swift; sourceTree = "<group>"; };
 		63E1386727E59F4100AC4706 /* FullRefreshOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullRefreshOverlayView.swift; sourceTree = "<group>"; };
 		63E1386927E6C12500AC4706 /* SettingChoiceListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingChoiceListViewController.swift; sourceTree = "<group>"; };
 		63E903C51FE643BF00D73C3A /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
@@ -731,7 +729,6 @@
 				796706272B3BE71000CAF09B /* SubjectsByCategoryViewController.swift */,
 				63C74C8E25C970DA004F6C99 /* SubjectsByLevelViewController.swift */,
 				636502B225D7A39600801C2D /* SubjectsRemainingViewController.swift */,
-				63DE410727818A9A002CFB80 /* SuccessAnimation.swift */,
 				633DE93C20C2CA0600AC25F4 /* Tables */,
 				63E9A8DB21199C2600418CE1 /* Tests */,
 				63E9A8E221199C8500418CE1 /* Tests.xctest */,
@@ -1533,7 +1530,6 @@
 				63CBFF2227730ED10086BA5F /* DownloadModelItem.swift in Sources */,
 				6332528E2727F32800ABBA04 /* PillModelItem.swift in Sources */,
 				630EB13F25C5713000783E54 /* ReviewItem.swift in Sources */,
-				63DE410827818A9A002CFB80 /* SuccessAnimation.swift in Sources */,
 				63E1386A27E6C12500AC4706 /* SettingChoiceListViewController.swift in Sources */,
 				D0E1A2B3C4D5E6F708192A3C /* DeveloperOptionsViewController.swift in Sources */,
 				63EF5752260617E30038551A /* LoginViewController.swift in Sources */,

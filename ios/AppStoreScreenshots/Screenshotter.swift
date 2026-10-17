@@ -77,7 +77,8 @@ import WaniKaniAPI
         var arguments = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
         for key in ["groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
                     "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
-                    "allowSkippingReviews"] {
+                    "allowSkippingReviews", "showAnswerImmediately", "enableCheats",
+                    "ankiModeCombineReadingMeaning"] {
           if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
              let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",
                                                           requiringSecureCoding: true) {
@@ -1319,7 +1320,8 @@ import WaniKaniAPI
     override func getAllAssignments() -> [TKMAssignment] {
       // Distinct subjects keep the sample review count consistent with statistics.
       let ids: [Int64] = ProcessInfo.processInfo.arguments
-        .contains("VoiceReviewFixture") ? [3864] : [3864, 923, 578, 689]
+        .contains("VoiceReviewFixture") || ProcessInfo.processInfo.arguments
+        .contains("SingleReviewFixture") ? [3864] : [3864, 923, 578, 689]
       return ids.map { id in
         var a = TKMAssignment()
         a.subjectID = id
