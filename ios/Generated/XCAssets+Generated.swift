@@ -32,7 +32,6 @@ internal enum Asset {
     internal static let guru = ImageAsset(name: "Guru")
     internal static let master = ImageAsset(name: "Master")
   }
-  internal static let sessionComplete = ImageAsset(name: "SessionComplete")
   internal static let add = ImageAsset(name: "add")
   internal static let back = ImageAsset(name: "back")
   internal static let baselineAccessTimeBlack24pt = ImageAsset(name: "baseline_access_time_black_24pt")

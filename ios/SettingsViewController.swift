@@ -15,6 +15,9 @@
 import Foundation
 import UIKit
 
+private let kRedesignFeedbackURL =
+  URL(string: "https://github.com/Pedrexus/usagiunagi/issues/new?title=Visual%20redesign%20feedback")!
+
 class SettingsViewController: SettingsTableViewController, TKMViewController {
   private var services: TKMServices!
   private var model: TableModel?

@@ -276,9 +276,6 @@ protocol SettingProtocol {
            #keyPath(subjectCatalogueViewShowAnswers)) static var subjectCatalogueViewShowAnswers: Bool
   @Setting(true, #keyPath(allowExcludeItems)) static var allowExcludeItems: Bool
 
-  @Setting(false,
-           #keyPath(dismissedRedesignFeedbackCard)) static var dismissedRedesignFeedbackCard: Bool
-
   // Converts settings stored by older versions of the app to their new form.
   static func migrate() {
     // The SRS level indicator used to be an on/off switch.

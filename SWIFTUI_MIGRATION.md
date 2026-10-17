@@ -384,3 +384,37 @@ adoption and removal of the unused illustration/generated accessor remain open.
 The checkpoint passes 156 shared macOS tests, the native Mac build and three iOS
 UI flows; summary screenshot inspection and shared iOS/hosted-suite reruns remain
 pending. Work paused at the user's request; full migration is not complete.
+
+## Resumed cleanup scope
+
+The user resumed work and clarified that active features must be replaced before
+their legacy UI is removed. All four Go files, go.mod/go.sum and the unused C++
+SQLite inspection extension are removed. The similar-kanji generator is now Swift;
+its output preserves the 2,380 source characters and 44,828 candidate links in
+both committed runtime supplements. Equal-score candidates now have deterministic
+source ordering; the bundled files themselves are unchanged. Protobuf generation
+targets Swift directly, and SwiftProtobuf/system SQLite remain necessary for the
+existing cache and read-only legacy importer.
+
+The detailed upcoming-review screen now uses shared `UpcomingReviewsView` through
+a narrow hosting controller. Its existing hourly buckets, cumulative totals and
+SRS/subject breakdowns remain; native disclosure rows use explicit category names
+instead of color-only counts. The unused custom redesign-feedback card, preference
+and completion illustration are removed; Settings retains its feedback link and
+asset accessors were regenerated. Non-curriculum practice results say “Missed
+items” rather than inventing a level zero.
+
+Swift domain, persistence, networking, speech and test code is intentionally
+non-UI. Active UIKit screens, the keyboard bridge, Haneke bridging header and
+vendored Objective-C dependencies remain until replacement preserves their
+callers. WatchConnectivity and Speech/AVFoundation are platform services;
+SwiftUI does not replace them. This cleanup disables no study feature and does
+not complete the migration or establish whole-app LOC reduction.
+
+The resumed checkpoint closes the prior shared-iOS/hosted-suite and retained
+summary screenshot checks: 156 shared functions pass on both platforms, 73 hosted
+tests pass, all 13 iPhone UI flows pass, and two focused iPad flows pass. Screenshots
+for the shared summary and schedule were inspected on iPhone/iPad. The native Mac
+build succeeds. Mainboard's exact bundles are recorded in TASKS.md; legacy iOS
+warnings and physical-device/account/microphone gates remain open. Mainboard tasks
+`usagi-similar-kanji` and `usagi-test-ui-ipad` cover the new developer workflows.

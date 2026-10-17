@@ -19,12 +19,10 @@ import WaniKaniAPI
 
 /// Adapts the existing repository/navigation to the shared SwiftUI results screen.
 final class ReviewSummaryViewController: UIHostingController<SessionSummaryView?> {
-  private var services: TKMServices!
-  private var subjects: [Int: TKMSubject] = [:]
   required init?(coder: NSCoder) { super.init(coder: coder, rootView: nil) }
 
   func setup(services: TKMServices, items: [ReviewItem]) {
-    self.services = services
+    var subjects: [Int: TKMSubject] = [:]
     var entries: [StudySessionSummary.Entry] = []
     var images: [Int: Image] = [:]
     for (index, item) in items.enumerated() {
@@ -62,7 +60,6 @@ final class ReviewSummaryViewController: UIHostingController<SessionSummaryView?
   @IBAction private func doneClicked() { navigationController?.popToRootViewController(animated: true) }
   override var canBecomeFirstResponder: Bool { true }
   override var keyCommands: [UIKeyCommand]? {
-    [UIKeyCommand(input: "\r", modifierFlags: [], action: #selector(doneClicked),
-                  discoverabilityTitle: "Dismiss review session results")]
+    [UIKeyCommand(title: "Dismiss review session results", action: #selector(doneClicked), input: "\r")]
   }
 }

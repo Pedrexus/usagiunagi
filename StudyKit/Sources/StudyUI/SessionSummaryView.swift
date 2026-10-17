@@ -30,8 +30,10 @@ public struct SessionSummaryView: View {
       }
       ForEach(summary.missedGroups) { group in
         Section(
-          group.id == summary.currentLevel
-            ? "Missed · current level (\(group.id))" : "Missed · level \(group.id)"
+          group.id <= 0
+            ? "Missed items"
+            : group.id == summary.currentLevel
+              ? "Missed · current level (\(group.id))" : "Missed · level \(group.id)"
         ) {
           ForEach(group.entries) { entry in
             if let subject = entry.subject {

@@ -16,6 +16,33 @@ import XCTest
 
 final class ReviewFlowTests: XCTestCase {
   @MainActor
+  func testUpcomingReviewsShowsStageAndSubjectCountsAndReturns() throws {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES"]
+    app.launch()
+    defer { clearFixture(app) }
+    let forecast = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", "Upcoming reviews:")).firstMatch
+    XCTAssertTrue(forecast.waitForExistence(timeout: 10))
+    let due = try XCTUnwrap(forecast.label.split(separator: ":").last?.split(separator: " ").first)
+    forecast.tap()
+    XCTAssertTrue(app.navigationBars["Upcoming Reviews"].waitForExistence(timeout: 5))
+    let hour = app.descendants(matching: .any).matching(identifier: "schedule.hour.0").firstMatch
+    XCTAssertTrue(hour.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["\(due) reviews · +\(due) this hour"].exists)
+    hour.tap()
+    XCTAssertTrue(app.staticTexts["Apprentice"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Guru"].exists)
+    XCTAssertTrue(app.staticTexts["Radical"].exists)
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "SwiftUI upcoming review breakdown"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    app.navigationBars["Upcoming Reviews"].buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(forecast.waitForExistence(timeout: 5))
+  }
+
+  @MainActor
   func testSummaryShowsMissedMeaningAndOpensSubjectDetails() {
     continueAfterFailure = false
     let app = launchSingleReview()
@@ -37,6 +64,7 @@ final class ReviewFlowTests: XCTestCase {
       app.buttons["review.submit"].tap()
     }
     XCTAssertTrue(complete.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Missed items"].exists)
     let missed = app.buttons["summary.subject.0"]
     XCTAssertTrue(missed.waitForExistence(timeout: 5))
     XCTAssertTrue(missed.label.contains("Meaning missed"))

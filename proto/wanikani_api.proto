@@ -13,7 +13,6 @@
 // limitations under the License.
 
 syntax = "proto3";
-option go_package = "github.com/davidsansome/tsurukame;proto";
 option objc_class_prefix = "TKM";
 option swift_prefix = "TKM";
 
