@@ -368,7 +368,9 @@ public class WaniKaniAPIClient: NSObject {
 
   private func startAssignment(_ progress: TKMProgress) -> Promise<Void> {
     let url = URL(string: "\(baseUrl)/assignments/\(progress.assignment.id)/start")!
-    let body = StartAssignmentRequest(started_at: WaniKaniDate(date: progress.createdAtDate))
+    let body =
+      StartAssignmentRequest(assignment: .init(started_at: progress
+          .hasCreatedAt ? WaniKaniDate(date: progress.createdAtDate) : nil))
 
     return firstly { () -> Promise<Response<AssignmentData>> in
       var request = self.authorize(url)
@@ -889,7 +891,8 @@ private struct ReviewData: Codable {
 
 /** Request type for PUT /assignments/<id>/start. */
 private struct StartAssignmentRequest: Codable {
-  var started_at: WaniKaniDate
+  struct Assignment: Codable { var started_at: WaniKaniDate? }
+  var assignment: Assignment
 }
 
 /** Request type for POST /reviews. */

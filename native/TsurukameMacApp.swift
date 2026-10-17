@@ -33,7 +33,7 @@ final class MacStudyStore {
         do { return try await persistence!.value }
         catch { persistence = nil; throw error }
     }
-    private let reader = WaniKaniReader()
+    private let reader = WaniKaniClient()
 
     func restore() async {
         guard !restored else { return }; restored = true

@@ -574,8 +574,14 @@ class APIClientTest: XCTestCase {
     XCTAssertEqual(progress.completedUnitCount, 1)
   }
 
-  func testStartAssignment() {
-    let progress = try! TKMProgress(textFormatString: """
+  func testStartAssignment() { checkStartAssignment(includeTimestamp: true) }
+
+  func testStartAssignmentWithoutTimestampUsesServerTime() {
+    checkStartAssignment(includeTimestamp: false)
+  }
+
+  private func checkStartAssignment(includeTimestamp: Bool) {
+    var progress = try! TKMProgress(textFormatString: """
       assignment {
         id: 42
       }
@@ -583,11 +589,13 @@ class APIClientTest: XCTestCase {
       created_at: 123456789
     """)
 
+    if !includeTimestamp { progress.clearCreatedAt() }
     var request = StubRequest(method: .PUT,
                               url: URL(string: "https://api.wanikani.com/v2/assignments/42/start")!)
-    request
-      .bodyMatcher = DataMatcher(data: "{\"started_at\":\"1973-11-29T21:33:09.000000Z\"}"
-        .data(using: .utf8)!)
+    let body = includeTimestamp
+      ? #"{"assignment":{"started_at":"1973-11-29T21:33:09.000000Z"}}"#
+      : #"{"assignment":{}}"#
+    request.bodyMatcher = DataMatcher(data: Data(body.utf8))
     request.setHeader(key: "Content-Type", value: "application/json")
     request.setHeader(key: "Authorization", value: "Token token=bob")
     request.response.body = """

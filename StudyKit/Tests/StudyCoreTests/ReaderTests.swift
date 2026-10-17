@@ -6,10 +6,10 @@ private func response(_ request: URLRequest, _ body: String, status: Int = 200) 
     (Data(body.utf8), HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
 }
 private let emptyPage = #"{"pages":{"next_url":null},"data":[]}"#
-private let user = #"{"data":{"id":"fixture-user-id","username":"test","level":12,"current_vacation_started_at":null}}"#
+private let user = #"{"object":"user","data":{"id":"fixture-user-id","username":"test","level":12,"current_vacation_started_at":null}}"#
 
 @Test func readerFollowsPagesAndPreservesQuestionTypes() async throws {
-    let reader = WaniKaniReader { request in
+    let reader = WaniKaniClient { request in
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-token")
         #expect(request.value(forHTTPHeaderField: "Wanikani-Revision") == "20170710")
         let url = request.url!
@@ -33,38 +33,38 @@ private let user = #"{"data":{"id":"fixture-user-id","username":"test","level":1
 }
 
 @Test func readerRejectsForeignPaginationBeforeSendingToken() async {
-    let reader = WaniKaniReader { request in
+    let reader = WaniKaniClient { request in
         #expect(request.url?.host == "api.wanikani.com")
         if request.url?.path == "/v2/user" { return response(request, user) }
         return response(request, #"{"pages":{"next_url":"https://other.invalid/v2/subjects"},"data":[]}"#)
     }
-    await #expect(throws: WaniKaniReader.ReaderError.self) { try await reader.fetch(token: "fixture-token") }
+    await #expect(throws: WaniKaniClient.APIError.self) { try await reader.fetch(token: "fixture-token") }
 }
 
 @Test func readerRejectsPaginationLoop() async {
-    let reader = WaniKaniReader { request in
+    let reader = WaniKaniClient { request in
         if request.url?.path == "/v2/user" { return response(request, user) }
         return response(request, #"{"pages":{"next_url":"https://api.wanikani.com/v2/assignments"},"data":[]}"#)
     }
-    await #expect(throws: WaniKaniReader.ReaderError.self) { try await reader.fetch(token: "fixture-token") }
+    await #expect(throws: WaniKaniClient.APIError.self) { try await reader.fetch(token: "fixture-token") }
 }
 
 @Test func failedEndpointDoesNotPublishPartialSnapshot() async {
-    let reader = WaniKaniReader { request in
+    let reader = WaniKaniClient { request in
         if request.url?.path == "/v2/user" { return response(request, user) }
         if request.url?.path == "/v2/assignments" { return response(request, "{}", status: 401) }
         return response(request, emptyPage)
     }
-    await #expect(throws: WaniKaniReader.ReaderError.self) { try await reader.fetch(token: "fixture-token") }
+    await #expect(throws: WaniKaniClient.APIError.self) { try await reader.fetch(token: "fixture-token") }
 }
 
 @Test func readerPreservesVacationAndRejectsMissingAccountIdentity() async throws {
     for validIdentity in [true, false] {
-        let reader = WaniKaniReader { request in
+        let reader = WaniKaniClient { request in
             if request.url?.path == "/v2/user" {
                 let body = validIdentity
-                    ? #"{"data":{"id":"account-id","username":"test","level":12,"current_vacation_started_at":"2026-10-17T00:00:00Z"}}"#
-                    : #"{"data":{"username":"test","level":12,"current_vacation_started_at":null}}"#
+                    ? #"{"object":"user","data":{"id":"account-id","username":"test","level":12,"current_vacation_started_at":"2026-10-17T00:00:00Z"}}"#
+                    : #"{"object":"user","data":{"username":"test","level":12,"current_vacation_started_at":null}}"#
                 return response(request, body)
             }
             return response(request, emptyPage)

@@ -73,6 +73,9 @@ public struct CatalogAssignment: Codable, Sendable, Identifiable {
     public var startedAt: Int64?
     public var passedAt: Int64?
     public var burnedAt: Int64?
+    public var unlockedAt: Int64?
+    public var resurrectedAt: Int64?
+    public var hidden: Bool?
     public var isKanaOnlyVocabulary = false
     public init(id: Int64, subjectID: Int64, kind: SubjectKind) { self.id = id; self.subjectID = subjectID; self.kind = kind }
     public var summary: StudyAssignment {
