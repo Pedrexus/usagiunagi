@@ -12,6 +12,8 @@
 		11F0AAE295A730DDD157C7A8 /* StudyStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B23E267AB393BA610A4B75B /* StudyStatistics.swift */; };
 		137DFD51681E0F8E31C6B995 /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
 		1C1A27E594D03064CFACBADB /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639CE0BC2CF0ABCE00902668 /* FeatureFlags.swift */; };
+		2543ACEDCF311399F0C4CDA9 /* PendingUploadAcknowledgement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8393A5FBE687A9FBCE654348 /* PendingUploadAcknowledgement.swift */; };
+		32765F7F237524609086CB35 /* PendingUploadAcknowledgement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8393A5FBE687A9FBCE654348 /* PendingUploadAcknowledgement.swift */; };
 		480B243123D6830300FC2A82 /* Rexy in Frameworks */ = {isa = PBXBuildFile; productRef = 480B243023D6830300FC2A82 /* Rexy */; };
 		481B2FED23C55AAF0041EF1F /* CurrentLevelReviewTimeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481B2FEC23C55AAF0041EF1F /* CurrentLevelReviewTimeItem.swift */; };
 		4820306724D849E100B40FDD /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633632EE201F3490006D582B /* Settings.swift */; };
@@ -225,6 +227,7 @@
 		E881943F2A6BC38A002C2E1C /* ArtworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E881943E2A6BC38A002C2E1C /* ArtworkManager.swift */; };
 		EC6A5487F6875EC64C63B6B2 /* Pods_FontScreenshotter_FontScreenshotterUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 404461BC39B4A19B128F9E69 /* Pods_FontScreenshotter_FontScreenshotterUITests.framework */; };
 		F472FEF47C88DAECCBC93B48 /* HankoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03F2B2960505C9046CF238A /* HankoView.swift */; };
+		FE3C6272D05CE2990DAF9EA9 /* PendingUploadAcknowledgementTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6678EB4129FCEC2995ECE5 /* PendingUploadAcknowledgementTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -470,6 +473,7 @@
 		79D887462B419609003D8F99 /* String+SHA256Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+SHA256Test.swift"; sourceTree = "<group>"; };
 		7E3A3B65C3A0B280B5FF32D3 /* Pods-Tsurukame (App Store screenshots).debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame (App Store screenshots).debug.xcconfig"; path = "Target Support Files/Pods-Tsurukame (App Store screenshots)/Pods-Tsurukame (App Store screenshots).debug.xcconfig"; sourceTree = "<group>"; };
 		82721E7B5A9C5562CC8D3B9B /* Pods-FontScreenshotter.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FontScreenshotter.release.xcconfig"; path = "Target Support Files/Pods-FontScreenshotter/Pods-FontScreenshotter.release.xcconfig"; sourceTree = "<group>"; };
+		8393A5FBE687A9FBCE654348 /* PendingUploadAcknowledgement.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingUploadAcknowledgement.swift; sourceTree = "<group>"; };
 		86C64C7CDF56B2A1FA20A641 /* zh-Hant */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "Localizations/zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		93B59B292367AF130097533C /* UpcomingReviewsChartItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingReviewsChartItem.swift; sourceTree = "<group>"; };
 		96A335062EEF5F800017BC70 /* BottomSheetAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetAction.swift; sourceTree = "<group>"; };
@@ -510,6 +514,7 @@
 		F9C48CF5ADDC56D1A96EDE8C /* SceneDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		FA1B55C18893D5E681F97EAC /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = Localizations/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FC80AAF9736A570E3C4CC09E /* Pods_Tsurukame.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Tsurukame.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD6678EB4129FCEC2995ECE5 /* PendingUploadAcknowledgementTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingUploadAcknowledgementTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -741,6 +746,7 @@
 				B8B48251FA98F552C583C9D2 /* StatisticsViewController.swift */,
 				FD13A2CE121FE15697154013 /* Branding */,
 				C1BD289C0D84E0099A6BE537 /* TKMKanaInput.swift */,
+				8393A5FBE687A9FBCE654348 /* PendingUploadAcknowledgement.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -871,6 +877,7 @@
 				79D887462B419609003D8F99 /* String+SHA256Test.swift */,
 				46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */,
 				E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */,
+				FD6678EB4129FCEC2995ECE5 /* PendingUploadAcknowledgementTest.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -1600,6 +1607,7 @@
 				897DA50B06F90874AD73512D /* StatisticsViewController.swift in Sources */,
 				90F5517AFA8C466B4B73DC91 /* AppIdentity.swift in Sources */,
 				96A3B56A248EC125F54921AB /* TKMKanaInput.swift in Sources */,
+				32765F7F237524609086CB35 /* PendingUploadAcknowledgement.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1660,6 +1668,8 @@
 				DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */,
 				CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */,
 				69A485427638BFB3E267EADD /* TKMKanaInput.swift in Sources */,
+				2543ACEDCF311399F0C4CDA9 /* PendingUploadAcknowledgement.swift in Sources */,
+				FE3C6272D05CE2990DAF9EA9 /* PendingUploadAcknowledgementTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

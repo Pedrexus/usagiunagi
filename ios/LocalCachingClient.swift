@@ -969,8 +969,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   private func clearPendingProgress(_ progress: TKMProgress) {
     db.inTransaction { db in
-      db.mustExecuteUpdate("DELETE FROM pending_progress WHERE id = ?",
-                           args: [progress.assignment.subjectID])
+      PendingUploadAcknowledgement.progress(progress, in: db)
     }
     _pendingProgressCount.invalidate()
   }
@@ -1170,8 +1169,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   private func clearPendingStudyMaterial(_ material: TKMStudyMaterials) {
     db.inTransaction { db in
-      db.mustExecuteUpdate("DELETE FROM pending_study_materials WHERE id = ?",
-                           args: [material.subjectID])
+      PendingUploadAcknowledgement.studyMaterial(material, in: db)
     }
     _pendingStudyMaterialsCount.invalidate()
   }
