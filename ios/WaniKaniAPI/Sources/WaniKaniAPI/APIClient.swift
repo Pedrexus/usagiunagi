@@ -408,7 +408,7 @@ public class WaniKaniAPIClient: NSObject {
     firstly { () -> Promise<TKMStudyMaterials?> in
       // We need to check if a study material for the subject already exists.
       studyMaterial(subjectId: pb.subjectID, progress: Progress(totalUnitCount: 1))
-    }.then { (existing: TKMStudyMaterials?) -> DataTaskPromise in
+    }.then { (existing: TKMStudyMaterials?) -> Promise<Response<StudyMaterialData>> in
       var synonyms = [String]()
       for synonym in pb.meaningSynonyms {
         synonyms.append(synonym)
@@ -421,6 +421,9 @@ public class WaniKaniAPIClient: NSObject {
       var url: URL
       var method: String
       if let existing = existing {
+        guard existing.subjectID == pb.subjectID, existing.id > 0 else {
+          throw URLError(.badServerResponse)
+        }
         method = "PUT"
         url = URL(string: "\(self.baseUrl)/study_materials/\(existing.id)")!
       } else {
@@ -431,9 +434,13 @@ public class WaniKaniAPIClient: NSObject {
 
       var request = self.authorize(url)
       try request.setJSONBody(method: method, body: body)
-      return self.session.dataTask(.promise, with: request)
-    }.map { _ in
-      // Ignore the response content.
+      return self.query(request)
+    }.map { response in
+      // A successful transport alone is insufficient: require the documented resource response.
+      guard response.object == "study_material", (response.id ?? 0) > 0,
+            response.data.subject_id == pb.subjectID else {
+        throw URLError(.badServerResponse)
+      }
     }
   }
 

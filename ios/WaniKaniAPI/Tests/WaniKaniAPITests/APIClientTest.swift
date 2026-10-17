@@ -22,6 +22,8 @@ class APIClientTest: XCTestCase {
   var subjectLevelGetter: FakeSubjectLevelGetter!
 
   override func setUp() {
+    super.setUp()
+    Hippolyte.shared.clearStubs()
     subjectLevelGetter = FakeSubjectLevelGetter()
 
     client = WaniKaniAPIClient(apiToken: "bob")
@@ -747,6 +749,8 @@ class APIClientTest: XCTestCase {
     """)
     postRequest.setHeader(key: "Content-Type", value: "application/json")
     postRequest.setHeader(key: "Authorization", value: "Token token=bob")
+    postRequest.response.statusCode = 201
+    postRequest.response.body = studyMaterialResponse()
     Hippolyte.shared.add(stubbedRequest: postRequest)
 
     waitForPromise(client.updateStudyMaterial(material))
@@ -781,7 +785,7 @@ class APIClientTest: XCTestCase {
           "data_updated_at": "2017-09-30T01:42:13.453291Z",
           "data": {
             "created_at": "2017-09-30T01:42:13.453291Z",
-            "subject_id": 241,
+            "subject_id": 42,
             "subject_type": "radical",
             "meaning_note": "I like turtles",
             "reading_note": "I like durtles",
@@ -806,9 +810,78 @@ class APIClientTest: XCTestCase {
     """)
     postRequest.setHeader(key: "Content-Type", value: "application/json")
     postRequest.setHeader(key: "Authorization", value: "Token token=bob")
+    postRequest.response.body = studyMaterialResponse()
     Hippolyte.shared.add(stubbedRequest: postRequest)
 
     waitForPromise(client.updateStudyMaterial(material))
+  }
+
+  private func studyMaterialResponse(subjectID: Int64 = 42) -> Data {
+    """
+    {"id": 65231, "object": "study_material", "data": {
+      "subject_id": \(subjectID), "subject_type": "kanji",
+      "meaning_note": "", "reading_note": "", "meaning_synonyms": ["foo", "bar"]
+    }}
+    """.data(using: .utf8)!
+  }
+
+  private func stubMaterialWrite(status: Int, body: Data?, existing: Bool = false) {
+    var lookup = StubRequest(method: .GET,
+                            url: URL(string: "https://api.wanikani.com/v2/study_materials?subject_ids=42")!)
+    let resource = existing ? String(decoding: studyMaterialResponse(), as: UTF8.self) : ""
+    lookup.response.body = "{\"object\":\"collection\",\"data\":[\(resource)]}".data(using: .utf8)
+    Hippolyte.shared.add(stubbedRequest: lookup)
+    let path = existing ? "study_materials/65231" : "study_materials"
+    var write = StubRequest(method: existing ? .PUT : .POST,
+                           url: URL(string: "https://api.wanikani.com/v2/\(path)")!)
+    write.response.statusCode = status
+    write.response.body = body
+    Hippolyte.shared.add(stubbedRequest: write)
+  }
+
+  func testStudyMaterialRejectsHTTPFailures() {
+    for existing in [false, true] {
+      for status in [401, 422, 429, 500, 503] {
+        Hippolyte.shared.clearStubs()
+        stubMaterialWrite(status: status,
+                          body: "{\"error\":\"Rejected\",\"code\":\(status)}".data(using: .utf8), existing: existing)
+        var material = TKMStudyMaterials()
+        material.subjectID = 42
+        let error = waitForError(client.updateStudyMaterial(material))
+        XCTAssertEqual((error as? WaniKaniAPIError)?.code, status)
+      }
+    }
+  }
+
+  func testStudyMaterialRejectsEmptyOrMalformedSuccessfulResponse() {
+    for body in [Data(), Data("invalid JSON".utf8)] {
+      Hippolyte.shared.clearStubs()
+      stubMaterialWrite(status: 200, body: body)
+      var material = TKMStudyMaterials()
+      material.subjectID = 42
+      XCTAssertTrue(waitForError(client.updateStudyMaterial(material)) is WaniKaniJSONDecodeError)
+    }
+  }
+
+  func testStudyMaterialRejectsResponseForAnotherSubject() {
+    stubMaterialWrite(status: 200, body: studyMaterialResponse(subjectID: 43))
+    var material = TKMStudyMaterials()
+    material.subjectID = 42
+    XCTAssertEqual((waitForError(client.updateStudyMaterial(material)) as? URLError)?.code,
+                   .badServerResponse)
+  }
+
+  func testStudyMaterialRejectsLookupForAnotherSubjectBeforeWriting() {
+    var lookup = StubRequest(method: .GET,
+                             url: URL(string: "https://api.wanikani.com/v2/study_materials?subject_ids=42")!)
+    let resource = String(decoding: studyMaterialResponse(subjectID: 43), as: UTF8.self)
+    lookup.response.body = "{\"object\":\"collection\",\"data\":[\(resource)]}".data(using: .utf8)
+    Hippolyte.shared.add(stubbedRequest: lookup)
+    // No write is stubbed: a resource for a different subject must never be modified.
+    var material = TKMStudyMaterials()
+    material.subjectID = 42
+    XCTAssertEqual((waitForError(client.updateStudyMaterial(material)) as? URLError)?.code,
+                   .badServerResponse)
   }
 
   func test4xxErrorResponse() {

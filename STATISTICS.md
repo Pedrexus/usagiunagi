@@ -25,7 +25,7 @@ The screen shows counts and relevant assumptions. Focus rows open existing subje
 
 ## Making forecasts more credible later
 
-Keep exact schedules separate from conditional forecasts. Collect consented local review-event history with timestamps, result, stage and lesson choices before claiming recent trends or fitting a model. A local history will be incomplete for reviews performed on other clients unless the API supplies them.
+Keep exact schedules separate from conditional forecasts. Collect consented local review-event history with timestamps, result, stage and lesson choices before claiming recent trends or fitting a model. A local history will be incomplete for reviews performed on other clients unless the API supplies them. The [current API contract](https://docs.api.wanikani.com/20170710/#create-a-review) explicitly says individual reviews are no longer persisted and review creation returns an unpersisted object with ID zero; full remote review history must not be assumed available.
 
 Backtest candidate forecasts chronologically against held-out future periods. Compare against a simple median-pace baseline. Report absolute date/workload error, sample size, and interval coverage; test resets, long breaks, fast levels and habit changes separately. Do not label a percentile band “80% confidence” without calibration. A useful next iteration would simulate known SRS intervals and critical-path kanji under explicit lesson/review scenarios, then compare those scenarios with observed outcomes.
 

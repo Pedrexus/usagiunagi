@@ -16,6 +16,7 @@ import FMDB
 import Foundation
 import PromiseKit
 import Reachability
+import StudyCore
 import WaniKaniAPI
 
 extension Notification.Name {
@@ -59,6 +60,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   private var dateFormatter: DateFormatter
   private var keyValueStore: NSUbiquitousKeyValueStore
   private var recentMistakeHandler: RecentMistakeHandler
+  private static let uploadCoordinator = UploadCoordinator()
+  private var uploadLifetime = UploadLifetime()
   private var busySyncing = false
   private var gotRecentMistakesCloudNotificationWhileSyncing = false
 
@@ -967,44 +970,57 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return sendPendingProgress(progress, progress: Progress(totalUnitCount: -1))
   }
 
-  private func clearPendingProgress(_ progress: TKMProgress) {
-    db.inTransaction { db in
-      PendingUploadAcknowledgement.progress(progress, in: db)
-    }
-    _pendingProgressCount.invalidate()
+  private func sendPendingProgress(_ items: [TKMProgress], progress: Progress) -> Promise<Void> {
+    upload(items.map { PendingUploadKey(kind: .progress, subjectID: $0.assignment.subjectID) },
+           progress: progress)
   }
 
-  private func sendPendingProgress(_ items: [TKMProgress], progress: Progress) -> Promise<Void> {
-    if items.isEmpty {
-      progress.totalUnitCount = 1
-      progress.completedUnitCount = 1
-      return .value(())
-    }
-
-    progress.totalUnitCount = Int64(items.count)
-
-    // Send all progress, one at a time.
-    var promise = Promise()
-    for p in items {
-      promise = promise.then { _ in
-        self.client.sendProgress(p).asVoid()
-      }.recover { err in
-        if let apiError = err as? WaniKaniAPIError, apiError.code == 422 {
-          // Drop the data if the server is clearly telling us our data is invalid and
-          // cannot be accepted. This most commonly happens when doing reviews before
-          // progress from elsewhere has synced, leaving the app trying to report
-          // progress on reviews you already did elsewhere.
-          return
-        } else {
-          throw err
+  private func upload(_ keys: [PendingUploadKey], progress: Progress) -> Promise<Void> {
+    let lifetime = uploadLifetime
+    progress.totalUnitCount = max(1, Int64(keys.count))
+    return Promise { seal in
+      Task { @MainActor in
+        do {
+          let repository = UploadRepository(lifetime: lifetime, load: { @MainActor key in
+            try lifetime.withActive { self.pendingPayload(for: key) }
+          }, send: { @MainActor key, payload in
+            let request = try lifetime.withActive { () throws -> Promise<Void> in
+              switch key.kind {
+              case .progress:
+                return try self.client.sendProgress(TKMProgress(serializedData: payload))
+              case .studyMaterial:
+                return try self.client
+                  .updateStudyMaterial(TKMStudyMaterials(serializedData: payload))
+              }
+            }
+            try await withCheckedThrowingContinuation { continuation in
+              request.done { continuation.resume() }.catch { continuation.resume(throwing: $0) }
+            }
+          }, acknowledge: { @MainActor key, payload in
+            try lifetime.withActive {
+              self.db.inTransaction { db in
+                PendingUploadStore.acknowledge(key, payload: payload, in: db)
+              }
+              switch key.kind {
+              case .progress: self._pendingProgressCount.invalidate()
+              case .studyMaterial: self._pendingStudyMaterialsCount.invalidate()
+              }
+              progress.completedUnitCount += 1
+            }
+          })
+          let job = await Self.uploadCoordinator.enqueue(keys, repository: repository)
+          try await job.value
+          progress.completedUnitCount = progress.totalUnitCount
+          seal.fulfill(())
+        } catch {
+          seal.reject(error)
         }
-      }.map {
-        self.clearPendingProgress(p)
-      }.ensure {
-        progress.completedUnitCount += 1
       }
     }
-    return promise
+  }
+
+  private func pendingPayload(for key: PendingUploadKey) -> Data? {
+    db.inDatabase { PendingUploadStore.payload(for: key, in: $0) }
   }
 
   func updateStudyMaterial(_ material: TKMStudyMaterials) -> Promise<Void> {
@@ -1042,28 +1058,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   private func sendPendingStudyMaterials(_ materials: [TKMStudyMaterials],
                                          progress: Progress) -> Promise<Void> {
-    if materials.isEmpty {
-      progress.totalUnitCount = 1
-      progress.completedUnitCount = 1
-      return .value(())
-    }
-
-    progress.totalUnitCount = Int64(materials.count)
-
-    // Send all study materials, one at a time.
-    var promise = Promise.value(())
-    for m in materials {
-      promise = promise.then { _ in
-        firstly {
-          self.client.updateStudyMaterial(m).asVoid()
-        }.map {
-          self.clearPendingStudyMaterial(m)
-        }.ensure {
-          progress.completedUnitCount += 1
-        }
-      }
-    }
-    return promise
+    upload(materials.map { PendingUploadKey(kind: .studyMaterial, subjectID: $0.subjectID) },
+           progress: progress)
   }
 
   private func handleError(err: Error) {
@@ -1165,13 +1161,6 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
                   responseHeaders ?? NSNull(),
                   responseData ?? NSNull()])
     }
-  }
-
-  private func clearPendingStudyMaterial(_ material: TKMStudyMaterials) {
-    db.inTransaction { db in
-      PendingUploadAcknowledgement.studyMaterial(material, in: db)
-    }
-    _pendingStudyMaterialsCount.invalidate()
   }
 
   func getVoiceActors() -> [TKMVoiceActor] {
@@ -1554,6 +1543,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   }
 
   func clearAllData() {
+    uploadLifetime.invalidate()
+    uploadLifetime = UploadLifetime()
     db.inDatabase { db in
       db.mustExecuteStatements(kClearAllData)
     }
