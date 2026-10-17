@@ -19,8 +19,6 @@
 #import "Extensions/MMDrawerController+setAnimatingDrawer.h"
 #endif  // FONT_SCREENSHOTTER
 
-#import "TKMKanaInput.h"
-
 #import <Haneke/Haneke.h>
 #import <WatchConnectivity/WatchConnectivity.h>
 

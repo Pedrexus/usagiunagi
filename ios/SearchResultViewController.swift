@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import WaniKaniAPI
 
 protocol SearchResultViewControllerDelegate: NSObject {
@@ -169,9 +170,9 @@ class SearchResultViewController: UITableViewController, UISearchBarDelegate,
     queue.async {
       self.ensureAllSubjectsLoaded()
 
-      var convertedAllCharacters = true
-      let kanaQuery = TKMConvertKanaText(query, &convertedAllCharacters)
-      let exactKanaQuery: String? = convertedAllCharacters ? kanaQuery : nil
+      let conversion = KanaConverter.convert(query)
+      let kanaQuery = conversion.text
+      let exactKanaQuery: String? = conversion.convertedAllCharacters ? kanaQuery : nil
 
       var results = [TKMSubject]()
       for subject in self.allSubjects! {
