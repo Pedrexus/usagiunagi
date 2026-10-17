@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import WaniKaniAPI
 
 class AnswerChecker: NSObject {
@@ -175,6 +176,17 @@ class AnswerChecker: NSObject {
                          studyMaterials: TKMStudyMaterials?,
                          taskType: TaskType,
                          localCachingClient: LocalCachingClient) -> AnswerCheckerResult {
+    checkAnswer(answer, subject: subject, studyMaterials: studyMaterials, taskType: taskType,
+                subjectLookup: { localCachingClient.getSubject(id: $0) })
+  }
+
+  // Grading only needs a lookup for one-kanji vocabulary. This boundary keeps tests and the
+  // future shared session engine independent of database construction and networking.
+  class func checkAnswer(_ answer: String,
+                         subject: TKMSubject,
+                         studyMaterials: TKMStudyMaterials?,
+                         taskType: TaskType,
+                         subjectLookup: (Int64) -> TKMSubject?) -> AnswerCheckerResult {
     switch taskType {
     case .reading:
       let hiraganaText = convertKatakanaToHiragana(answer)
@@ -204,10 +216,9 @@ class AnswerChecker: NSObject {
          subject.componentSubjectIds.count == 1 {
         // If the vocabulary is made up of only one Kanji, check whether the user wrote the Kanji
         // reading instead of the vocabulary reading.
-        if let kanji = localCachingClient
-          .getSubject(id: subject.componentSubjectIds[0]) {
+        if let kanji = subjectLookup(subject.componentSubjectIds[0]) {
           let result = checkAnswer(answer, subject: kanji, studyMaterials: nil, taskType: taskType,
-                                   localCachingClient: localCachingClient)
+                                   subjectLookup: subjectLookup)
           if result == .Precise {
             return .OtherKanjiReading
           }
@@ -258,9 +269,9 @@ class AnswerChecker: NSObject {
       // Check if the answer *almost* matches a meaning.
       for meaning in meaningTexts {
         let meaningText = normalizedString(meaning, taskType: taskType)
-        let distance = meaningText.levenshteinDistance(to: answer)
+        let distance = AnswerDistance.between(meaningText, answer)
         let tolerance = distanceTolerance(meaningText)
-        if Int(distance) <= tolerance {
+        if distance <= tolerance {
           return .Imprecise
         }
       }
@@ -268,7 +279,7 @@ class AnswerChecker: NSObject {
       // Check if the answer would match one of the readings if converted to hiragana.
       let kanaText = TKMConvertKanaText(answer, nil)
       switch checkAnswer(kanaText, subject: subject, studyMaterials: studyMaterials,
-                         taskType: .reading, localCachingClient: localCachingClient) {
+                         taskType: .reading, subjectLookup: subjectLookup) {
       case .Precise, .Imprecise:
         return .IsReadingButWantMeaning
       case .OtherKanjiReading:

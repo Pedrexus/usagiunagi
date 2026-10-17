@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import WaniKaniAPI
 import XCTest
 
 class AnswerCheckerTest: XCTestCase {
@@ -27,5 +28,110 @@ class AnswerCheckerTest: XCTestCase {
                    "foo bar nn")
     XCTAssertEqual(AnswerChecker.normalizedString(" Foo-B.a'/r nn ", taskType: TaskType.reading),
                    "foobarんん")
+  }
+
+  private func subject(_ japanese: String = "一", meanings: [String] = ["One"],
+                       primary: [String] = ["いち"], alternate: [String] = ["ひと"],
+                       vocabulary: Bool = false) -> TKMSubject {
+    var subject = TKMSubject()
+    subject.id = 1
+    subject.japanese = japanese
+    if vocabulary { subject.vocabulary = .init() } else { subject.kanji = .init() }
+    subject.meanings = meanings.map { text in
+      var meaning = TKMMeaning()
+      meaning.meaning = text
+      meaning.type = .primary
+      return meaning
+    }
+    subject.readings = (primary.map { ($0, true) } + alternate.map { ($0, false) })
+      .map { text, primary in
+        var reading = TKMReading()
+        reading.reading = text
+        reading.isPrimary = primary
+        return reading
+      }
+    return subject
+  }
+
+  private func check(_ answer: String, subject: TKMSubject? = nil, type: TaskType = .meaning,
+                     materials: TKMStudyMaterials? = nil,
+                     lookup: (Int64) -> TKMSubject? = { _ in nil }) -> AnswerChecker
+    .AnswerCheckerResult {
+    AnswerChecker.checkAnswer(answer, subject: subject ?? self.subject(), studyMaterials: materials,
+                              taskType: type, subjectLookup: lookup)
+  }
+
+  func testMeaningSynonymsAndAuxiliaryWhitelist() {
+    var item = subject()
+    var whitelist = TKMMeaning()
+    whitelist.meaning = "Single"
+    whitelist.type = .auxiliaryWhitelist
+    item.meanings.append(whitelist)
+    var materials = TKMStudyMaterials()
+    materials.meaningSynonyms = ["Unity"]
+    XCTAssertEqual(check("one", subject: item), .Precise)
+    XCTAssertEqual(check("single", subject: item), .Precise)
+    XCTAssertEqual(check("unity", subject: item, materials: materials), .Precise)
+  }
+
+  func testBlacklistWinsEvenOverExactSynonym() {
+    var item = subject()
+    var blacklist = TKMMeaning()
+    blacklist.meaning = "Won"
+    blacklist.type = .blacklist
+    item.meanings.append(blacklist)
+    var materials = TKMStudyMaterials()
+    materials.meaningSynonyms = ["Won"]
+    XCTAssertEqual(check("won", subject: item, materials: materials), .Incorrect)
+  }
+
+  func testMeaningTypoToleranceAndTransposition() {
+    XCTAssertEqual(check("bnuny", subject: subject(meanings: ["Bunny"])), .Imprecise)
+    XCTAssertEqual(check("bunn", subject: subject(meanings: ["Bunny"])), .Imprecise)
+    XCTAssertEqual(check("bxxny", subject: subject(meanings: ["Bunny"])), .Incorrect)
+    XCTAssertEqual(check("oen"), .Incorrect) // Three-letter meanings have no typo allowance.
+  }
+
+  func testPrimaryAndAlternateReadingSemantics() {
+    XCTAssertEqual(check("いち", type: .reading), .Precise)
+    XCTAssertEqual(check("イチ", type: .reading), .Precise)
+    XCTAssertEqual(check("ひと", type: .reading), .OtherKanjiReading)
+    XCTAssertEqual(check("ひと", subject: subject(vocabulary: true), type: .reading), .Precise)
+    XCTAssertEqual(check("いぢ", type: .reading), .Incorrect) // Reading typos are not accepted.
+  }
+
+  func testKatakanaSubjectPreservesLongVowel() {
+    let item = subject("ビール", meanings: ["Beer"], primary: ["ビール"], alternate: [], vocabulary: true)
+    XCTAssertEqual(check("びーる", subject: item, type: .reading), .Precise)
+    XCTAssertEqual(check("びる", subject: item, type: .reading), .Incorrect)
+  }
+
+  func testSingleKanjiVocabularyConsultsItsComponent() {
+    var item = subject("一", primary: ["ひとつ"], alternate: [], vocabulary: true)
+    item.componentSubjectIds = [99]
+    XCTAssertEqual(check("いち", subject: item, type: .reading, lookup: { id in
+      XCTAssertEqual(id, 99)
+      return self.subject()
+    }), .OtherKanjiReading)
+    XCTAssertEqual(check("いち", subject: item, type: .reading), .Incorrect)
+  }
+
+  func testInvalidScriptRanges() {
+    XCTAssertEqual(check("ichい", type: .reading),
+                   .ContainsInvalidCharacters([NSRange(location: 0, length: 3)]))
+    XCTAssertEqual(check("a漢字b"), .ContainsInvalidCharacters([NSRange(location: 1, length: 2)]))
+  }
+
+  func testMismatchingOkuriganaIsNotAnOrdinaryWrongAnswer() {
+    let item = subject("食べる", primary: ["たべる"], alternate: [], vocabulary: true)
+    XCTAssertEqual(check("たべろ", subject: item, type: .reading),
+                   .MismatchingOkurigana([NSRange(location: 2, length: 1)]))
+    XCTAssertEqual(check("たべる", subject: item, type: .reading), .Precise)
+  }
+
+  func testReadingEnteredForMeaningGetsSpecificFeedback() {
+    XCTAssertEqual(check("ichi"), .IsReadingButWantMeaning)
+    XCTAssertEqual(check("hito"), .OtherKanjiReading)
+    XCTAssertEqual(check("not an answer"), .Incorrect)
   }
 }

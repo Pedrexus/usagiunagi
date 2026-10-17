@@ -19,7 +19,6 @@
 #import "Extensions/MMDrawerController+setAnimatingDrawer.h"
 #endif  // FONT_SCREENSHOTTER
 
-#import "Extensions/NSString+LevenshteinDistance.h"
 #import "TKMKanaInput.h"
 
 #import <Haneke/Haneke.h>
