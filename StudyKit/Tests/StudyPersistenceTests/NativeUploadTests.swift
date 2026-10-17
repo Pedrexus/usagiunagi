@@ -44,7 +44,7 @@ private actor UploadServer {
     var writes: [URLRequest] { requests.filter { $0.httpMethod != "GET" } }
     private func assignment(_ subject: Int64, stage: Int = 3, available: Int = 100) -> [String: Any] {
         ["id": subject + (replacedSubject == subject ? 200 : 100), "object": "assignment", "data": ["subject_id": subject, "subject_type": "radical",
-            "level": 1, "srs_stage": stage, "available_at": "1970-01-01T00:\(available == 100 ? "01:40" : "05:00")Z",
+            "srs_stage": stage, "available_at": "1970-01-01T00:\(available == 100 ? "01:40" : "05:00")Z",
             "started_at": stage == 0 ? NSNull() : "1970-01-01T00:00:10Z" as Any,
             "unlocked_at": "1970-01-01T00:00:01Z", "hidden": false]]
     }
@@ -80,6 +80,9 @@ private actor UploadServer {
             var material = body["study_material"]!; material["subject_id"] = material["subject_id"] ?? 42
             result = ["id": 242, "object": "study_material", "data": material]
             if let materialStatus { status = materialStatus }
+        }
+        if let rows = result["data"] as? [[String: Any]], result["pages"] != nil {
+            result["object"] = "collection"; result["total_count"] = rows.count
         }
         return (try JSONSerialization.data(withJSONObject: result), HTTPURLResponse(url: request.url!, statusCode: status,
             httpVersion: nil, headerFields: headers)!)

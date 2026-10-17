@@ -13,15 +13,19 @@ public struct WaniKaniMaterial: Sendable {
 }
 
 extension WaniKaniClient {
-    private struct AccountData: Decodable, Sendable {
+    struct AccountData: Decodable, Sendable {
         let id: String; let username: String; let level: Int; let currentVacationStartedAt: String?
+        let profileUrl: String?; let startedAt: String?; let subscription: Subscription?
+        struct Subscription: Decodable, Sendable {
+            let active: Bool; let maxLevelGranted: Int; let periodEndsAt: String?
+        }
     }
-    private struct AssignmentData: Decodable, Sendable {
-        let subjectId: Int64; let subjectType: String; let level: Int; let srsStage: Int
+    struct AssignmentData: Decodable, Sendable {
+        let subjectId: Int64; let subjectType: String; let srsStage: Int
         let availableAt: String?; let startedAt: String?; let unlockedAt: String?
         let passedAt: String?; let burnedAt: String?; let resurrectedAt: String?; let hidden: Bool?
     }
-    private struct MaterialData: Codable, Sendable {
+    struct MaterialData: Codable, Sendable {
         let subjectId: Int64; let meaningNote: String?; let readingNote: String?; let meaningSynonyms: [String]
         var value: StudyMaterial {
             .init(subjectID: subjectId, meaningNote: meaningNote ?? "", readingNote: readingNote ?? "", meaningSynonyms: meaningSynonyms)
@@ -37,11 +41,16 @@ extension WaniKaniClient {
     }
 
     public func account(token: String) async throws -> WaniKaniAccount {
+        let user = try await accountData(token: token)
+        return .init(id: user.id, username: user.username, level: user.level, onVacation: user.currentVacationStartedAt != nil)
+    }
+
+    func accountData(token: String) async throws -> AccountData {
         let resource: Resource<AccountData> = try await request(endpoint("user"), token: token)
         let user = resource.data
-        guard resource.object == "user", !user.id.isEmpty, !user.username.isEmpty, user.level > 0 else { throw APIError.invalidResponse }
+        guard resource.object == "user", !user.id.isEmpty, !user.username.isEmpty, (1...60).contains(user.level) else { throw APIError.invalidResponse }
         _ = try timestamp(user.currentVacationStartedAt)
-        return .init(id: user.id, username: user.username, level: user.level, onVacation: user.currentVacationStartedAt != nil)
+        return user
     }
 
     /// Query by subject because WaniKani can replace assignment IDs. Missing/duplicate records
@@ -120,19 +129,19 @@ extension WaniKaniClient {
         return result
     }
 
-    private func assignment(_ resource: Resource<AssignmentData>, subjectID: Int64) throws -> CatalogAssignment {
+    func assignment(_ resource: Resource<AssignmentData>, subjectID: Int64) throws -> CatalogAssignment {
         guard resource.object == "assignment", let id = resource.id, id > 0,
               resource.data.subjectId == subjectID, resource.data.srsStage >= 0 else { throw APIError.invalidResponse }
         let data = resource.data
         var value = CatalogAssignment(id: id, subjectID: subjectID, kind: try kind(data.subjectType))
-        value.level = data.level; value.srsStage = data.srsStage; value.hidden = data.hidden
+        value.srsStage = data.srsStage; value.hidden = data.hidden
         value.isKanaOnlyVocabulary = data.subjectType == "kana_vocabulary"
         value.availableAt = try data.availableAt.map(timestamp); value.startedAt = try data.startedAt.map(timestamp)
         value.unlockedAt = try data.unlockedAt.map(timestamp); value.passedAt = try data.passedAt.map(timestamp)
         value.burnedAt = try data.burnedAt.map(timestamp); value.resurrectedAt = try data.resurrectedAt.map(timestamp)
         return value
     }
-    private func material(_ resource: Resource<MaterialData>, subjectID: Int64) throws -> WaniKaniMaterial {
+    func material(_ resource: Resource<MaterialData>, subjectID: Int64) throws -> WaniKaniMaterial {
         guard resource.object == "study_material", let id = resource.id, id > 0,
               resource.data.subjectId == subjectID else { throw APIError.invalidResponse }
         return .init(id: id, value: resource.data.value)

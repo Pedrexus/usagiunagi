@@ -44,6 +44,15 @@ public struct StudyAccountState: Codable, Sendable {
     public var audio: [StudyAudioReference]
     public var cursors: [String: String]
     public var supersededAssignments: [CatalogAssignment]
+    public init(download: StudyDownload, progress: [SubjectProgress] = []) {
+        profile = download.profile; self.progress = progress; levels = download.levels
+        statistics = download.statistics; voices = download.voices
+        audio = download.subjects.flatMap { subject in subject.audio.map {
+            StudyAudioReference(subjectID: subject.id, voiceActorID: $0.voiceActorID, level: subject.level, url: $0.url)
+        } }
+        // Full reads do not establish an incremental API watermark.
+        cursors = [:]; supersededAssignments = []
+    }
     public init(legacy: LegacyStudyExport) {
         profile = legacy.profile; progress = legacy.progress; levels = legacy.levels
         statistics = legacy.statistics; voices = legacy.voices; audio = legacy.audio; cursors = legacy.cursors

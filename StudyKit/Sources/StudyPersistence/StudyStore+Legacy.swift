@@ -17,6 +17,7 @@ import SwiftData
 }
 
 @Model final class AssignmentRecord {
+    var revision: UUID = UUID()
     #Unique<AssignmentRecord>([\.accountID, \.subjectID])
     var accountID: String
     var subjectID: Int64

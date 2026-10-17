@@ -17,5 +17,6 @@
 /ios/gc_keys.json
 
 /StudyKit/.build/
+/.build/
 /native/build/
 !/native/TsurukameMac.xcodeproj/xcshareddata/

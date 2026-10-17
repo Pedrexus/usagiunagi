@@ -6,11 +6,35 @@ import StudyPersistence
 @main struct Probe {
     static func main() async throws {
         let args = CommandLine.arguments
-        guard args.count == 3, ["write", "read", "read-attempts"].contains(args[1]) else {
-            print("Usage: NativePersistenceProbe write|read|read-attempts /path/to/disposable/study.store")
+        guard args.count == 3, ["write", "read", "read-attempts", "write-catalog", "read-catalog"].contains(args[1]) else {
+            print("Usage: NativePersistenceProbe write|read|read-attempts|write-catalog|read-catalog /path/to/disposable/study.store")
             return
         }
         let store = try await StudyStore.open(at: URL(fileURLWithPath: args[2]))
+        if args[1].hasSuffix("catalog") {
+            if args[1] == "write-catalog" {
+                var profile = StudyAccountProfile(username: "upgrade"); profile.level = 4; profile.maxLevelGranted = 60
+                var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+                var subject = CatalogSubject(id: 42, kind: .kanji); subject.level = 4; subject.japanese = "猫"
+                subject.meanings = [.init("Cat", role: .primary)]; subject.meaningMnemonic = "Saved mnemonic"
+                source.subjects = [subject]
+                var assignment = CatalogAssignment(id: 142, subjectID: 42, kind: .kanji); assignment.level = 4; assignment.srsStage = 5
+                source.assignments = [assignment]
+                source.materials = [.init(serverID: 242, value: .init(subjectID: 42, meaningNote: "pending migration note"), pending: true, legacyRevision: 2)]
+                try await store.importLegacyAccount(source, sourceID: "fixture", verifiedAccountID: "upgrade", verifiedUsername: "upgrade", credentialID: "upgrade")
+                print("PASS: wrote production catalog, assignment and pending note")
+            } else {
+                let subject = try await store.catalog(accountID: "upgrade").first!
+                let assignment = try await store.assignments(accountID: "upgrade").first!
+                let note = try await store.materials(accountID: "upgrade").first!
+                precondition(subject.japanese == "猫" && subject.meaningMnemonic == "Saved mnemonic")
+                precondition(assignment.id == 142 && assignment.level == 4 && assignment.srsStage == 5)
+                precondition(note.pending && note.material.meaningNote == "pending migration note" && note.serverID == 242)
+                precondition(note.issue?.reason == .uncertain)
+                print("PASS: reopened catalog, assignment and pending note across schema upgrade")
+            }
+            return
+        }
         if args[1] == "write" {
             for id in ["first", "second"] {
                 let snapshot = StudySnapshot(accountID: id, username: id, currentLevel: 1,
@@ -32,7 +56,7 @@ import StudyPersistence
                 if request.httpMethod != "GET" { throw URLError(.timedOut) }
                 let body = request.url?.path == "/v2/user"
                     ? #"{"object":"user","data":{"id":"first","username":"first","level":1,"current_vacation_started_at":null}}"#
-                    : #"{"pages":{"next_url":null},"data":[]}"#
+                    : #"{"object":"collection","total_count":0,"pages":{"next_url":null},"data":[]}"#
                 return (Data(body.utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
             }
             do {

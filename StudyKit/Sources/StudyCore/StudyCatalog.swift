@@ -28,6 +28,12 @@ public struct CatalogSubject: Codable, Sendable, Identifiable {
     public let id: Int64
     public var kind: SubjectKind
     public var level = 0
+    // Optional additions preserve decoding of pre-download native stores.
+    public var hiddenAt: Int64?
+    public var lessonPosition: Int?
+    public var spacedRepetitionSystemID: Int64?
+    public var isKanaOnlyVocabulary: Bool?
+    public var partOfSpeechNames: [String]?
     public var slug = ""
     public var documentURL = ""
     public var japanese = ""

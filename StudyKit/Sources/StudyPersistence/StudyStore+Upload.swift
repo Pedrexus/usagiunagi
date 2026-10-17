@@ -104,9 +104,14 @@ extension StudyStore {
                     try transaction {
                         guard let row = try reviewRecord(review), row.attempted else { return }
                         let subjectID = assignment.subjectID
+                        var assignment = assignment
+                        let subject = try modelContext.fetch(FetchDescriptor<CatalogRecord>(predicate:
+                            #Predicate { $0.accountID == accountID && $0.subjectID == subjectID })).first
+                        assignment.level = subject?.level ?? review.originalAssignment?.level ?? 0
                         if let current = try modelContext.fetch(FetchDescriptor<AssignmentRecord>(predicate:
                             #Predicate { $0.accountID == accountID && $0.subjectID == subjectID })).first {
-                            current.assignment = assignment
+                            if assignment.level == 0 { assignment.level = current.assignment.level }
+                            current.assignment = assignment; current.revision = UUID()
                         } else { modelContext.insert(AssignmentRecord(accountID: accountID, assignment: assignment)) }
                         modelContext.delete(row)
                         if review.submission.isLesson { report.uploadedLessons += 1 }
@@ -159,21 +164,25 @@ extension StudyStore {
                         $0.subjectID == material.material.subjectID && $0.attemptedRevision == material.revision
                     }) {
                         row.attemptedRevision = nil; row.attemptedMaterial = nil; row.serverID = result.id
-                        if row.revision == material.revision { row.pending = false; row.issue = nil; report.uploadedMaterials += 1 }
+                        if row.revision == material.revision { row.pending = false; row.revision = UUID(); row.issue = nil; report.uploadedMaterials += 1 }
                     }
                 }
             }
             return report
         } catch {
             try checkUpload(generation, accountID: accountID)
-            if case WaniKaniClient.APIError.rateLimited(let retryAt) = error {
-                try transaction {
-                    if let row = try modelContext.fetch(FetchDescriptor<UploadPauseRecord>(predicate:
-                        #Predicate { $0.accountID == accountID })).first { row.retryAt = max(row.retryAt, retryAt) }
-                    else { modelContext.insert(UploadPauseRecord(accountID: accountID, retryAt: retryAt)) }
-                }
-            }
+            try recordRateLimit(error, accountID: accountID)
             throw error
+        }
+    }
+
+    func recordRateLimit(_ error: any Error, accountID: String) throws {
+        if case WaniKaniClient.APIError.rateLimited(let retryAt) = error {
+            try transaction {
+                if let row = try modelContext.fetch(FetchDescriptor<UploadPauseRecord>(predicate:
+                    #Predicate { $0.accountID == accountID })).first { row.retryAt = max(row.retryAt, retryAt) }
+                else { modelContext.insert(UploadPauseRecord(accountID: accountID, retryAt: retryAt)) }
+            }
         }
     }
 

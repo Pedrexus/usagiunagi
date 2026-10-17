@@ -17,10 +17,14 @@ private actor APIStub {
     var client: WaniKaniClient { WaniKaniClient { try await self.send($0) } }
 }
 
-private let assignmentJSON = #"{"id":142,"object":"assignment","data":{"subject_id":42,"subject_type":"kana_vocabulary","level":12,"srs_stage":2,"available_at":"2026-10-18T00:00:00Z","started_at":"2026-10-01T00:00:00Z","unlocked_at":"2026-09-30T00:00:00Z","passed_at":null,"burned_at":null,"resurrected_at":null,"hidden":false}}"#
+private let assignmentJSON = #"{"id":142,"object":"assignment","data":{"subject_id":42,"subject_type":"kana_vocabulary","srs_stage":2,"available_at":"2026-10-18T00:00:00Z","started_at":"2026-10-01T00:00:00Z","unlocked_at":"2026-09-30T00:00:00Z","passed_at":null,"burned_at":null,"resurrected_at":null,"hidden":false}}"#
 private let reviewJSON = #"{"id":0,"object":"review","data":{"assignment_id":142,"subject_id":42,"incorrect_meaning_answers":2,"incorrect_reading_answers":0,"ending_srs_stage":2},"resources_updated":{"assignment":ASSIGNMENT}}"#.replacingOccurrences(of: "ASSIGNMENT", with: assignmentJSON)
 private let materialJSON = #"{"id":242,"object":"study_material","data":{"subject_id":42,"meaning_note":"note","reading_note":"ねこ","meaning_synonyms":["kitty"]}}"#
-private func collection(_ rows: String) -> String { #"{"pages":{"next_url":null},"data":[ROWS]}"#.replacingOccurrences(of: "ROWS", with: rows) }
+private func collection(_ rows: String) -> String {
+    let count = (try! JSONSerialization.jsonObject(with: Data("[\(rows)]".utf8)) as! [Any]).count
+    return #"{"object":"collection","total_count":COUNT,"pages":{"next_url":null},"data":[ROWS]}"#
+        .replacingOccurrences(of: "COUNT", with: String(count)).replacingOccurrences(of: "ROWS", with: rows)
+}
 private func answer(lesson: Bool = false, createdAt: Int64? = 100) -> StudyReviewSubmission {
     .init(itemID: 0, subjectID: 42, assignmentID: 142, isLesson: lesson, meaningWrong: true,
         readingWrong: false, meaningWrongCount: 2, readingWrongCount: 0, createdAt: createdAt)

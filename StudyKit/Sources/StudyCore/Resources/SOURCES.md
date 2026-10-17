@@ -14,3 +14,7 @@ Refresh KANJIDIC2 before each release, and inspect the JLPT source for correctio
     swift tools/update-curricula.swift /tmp/kanjidic2.xml /tmp/kanji.json StudyKit/Sources/StudyCore/Resources/curricula.json
 
 If changing the JLPT revision, update the generator and this attribution. Run StudyCoreTests; changed official totals require review rather than silently accepting incompatible data. The application exposes a Sources sheet with the source snapshot date and license links.
+
+## Legacy study supplements
+
+`old-mnemonics.json` and `visually-similar-kanji.json` are byte-identical copies of this fork's existing `ios/WaniKaniAPI/Sources/WaniKaniAPI/Resources` files, inherited from davidsansome/tsurukame. They preserve the legacy radical mnemonic and similar-kanji features in the native catalog reader. The original resource copies remain temporarily because the active iOS legacy API module still uses them; remove those copies when that module's callers are retired.

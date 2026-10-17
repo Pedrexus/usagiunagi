@@ -79,6 +79,7 @@ public enum StudyStoreError: Error, LocalizedError {
 /// CloudKit is deliberately disabled: WaniKani owns cross-device study progress.
 @ModelActor public actor StudyStore {
     var uploadGeneration = UUID()
+    var refreshRun: (id: UUID, task: Task<StudySnapshot, any Error>)?
     var uploadRun: (id: UUID, task: Task<StudyUploadReport, any Error>)?
     @concurrent public static func open(at url: URL, inMemory: Bool = false) async throws -> StudyStore {
         let schema = Schema([SnapshotRecord.self, SessionRecord.self, ReviewRecord.self, MaterialRecord.self, ImportReceipt.self, CatalogRecord.self, AssignmentRecord.self, AccountRecord.self, UploadPauseRecord.self])

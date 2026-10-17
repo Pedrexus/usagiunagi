@@ -20,6 +20,9 @@ struct TsurukameMacApp: App {
 @MainActor @Observable
 final class MacStudyStore {
     var snapshot: StudySnapshot?
+    var profile: StudyAccountProfile?
+    var maximumContentLevel: Int { snapshot?.isSample == true ? 60 : profile?.maxLevelGranted ?? 3 }
+    var contentAccessVerified: Bool { snapshot?.isSample == true || profile != nil }
     var error: String?
     var isSyncing = false
     @ObservationIgnored private var restored = false
@@ -44,13 +47,14 @@ final class MacStudyStore {
                     try await cache.importLegacySnapshot(at: directory.appending(path: "snapshot-v1.json"), credentialID: credential)
                 }
                 let restoredSnapshot = try await cache.snapshot(credentialID: credential)
+                if let accountID = restoredSnapshot?.accountID { profile = try await cache.accountState(accountID: accountID)?.profile }
                 snapshot = restoredSnapshot
             }
         } catch { self.error = "Couldn't read saved statistics: \(error.localizedDescription)" }
     }
     func loadSample() {
         guard !isSyncing else { return }
-        do { snapshot = try .sample(); error = nil } catch { self.error = error.localizedDescription }
+        do { snapshot = try .sample(); profile = nil; error = nil } catch { self.error = error.localizedDescription }
     }
     func connect(_ token: String) async {
         guard !isSyncing else { return }
@@ -60,11 +64,12 @@ final class MacStudyStore {
         do {
             let previous = try TokenKeychain.load().map(credentialID)
             let credential = credentialID(token)
-            let newSnapshot = try await reader.fetch(token: token)
             let cache = try await repository()
-            try await cache.saveSnapshot(newSnapshot, credentialID: credential)
+            let newSnapshot = try await cache.refresh(credentialID: credential, token: token, client: reader)
+            guard let accountID = newSnapshot.accountID else { throw StudyStoreError.invalidIdentity }
+            let newProfile = try await cache.accountState(accountID: accountID)?.profile
             try TokenKeychain.save(token)
-            snapshot = newSnapshot
+            profile = newProfile; snapshot = newSnapshot
             if let previous, previous != credential { try await cache.removeSnapshot(credentialID: previous) }
         } catch { self.error = error.localizedDescription }
     }
@@ -83,11 +88,12 @@ final class MacStudyStore {
         do {
             if let token = try TokenKeychain.load() {
                 let cache = try await repository()
+                await cache.cancelSynchronization()
                 try await cache.removeSnapshot(credentialID: credentialID(token))
             }
             let legacy = directory.appending(path: "snapshot-v1.json")
             if FileManager.default.fileExists(atPath: legacy.path) { try FileManager.default.removeItem(at: legacy) }
-            try TokenKeychain.remove(); snapshot = nil; error = nil
+            try TokenKeychain.remove(); snapshot = nil; profile = nil; error = nil
         } catch { self.error = error.localizedDescription }
     }
 }
@@ -142,7 +148,7 @@ private struct MacStudyRoot: View {
                 if section == .account || store.snapshot == nil { account }
                 else if let snapshot = store.snapshot {
                     if section == .subjects {
-                        List(snapshot.subjects.filter { search.isEmpty || $0.characters.localizedStandardContains(search) || $0.meaning.localizedStandardContains(search) }) { item in
+                        List(snapshot.subjects.filter { $0.level <= store.maximumContentLevel && (search.isEmpty || $0.characters.localizedStandardContains(search) || $0.meaning.localizedStandardContains(search)) }) { item in
                             Button { subject = item } label: {
                                 LabeledContent(item.characters.isEmpty ? item.meaning : item.characters, value: "Level \(item.level) · \(item.meaning)")
                             }.buttonStyle(.plain)
@@ -158,7 +164,7 @@ private struct MacStudyRoot: View {
                 .safeAreaInset(edge: .bottom) {
                     if let error = store.error { Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial) }
                 }
-        }.sheet(item: $subject) { NativeSubjectDetail(subject: $0) }
+        }.sheet(item: $subject) { NativeSubjectDetail(subject: $0, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified) }
     }
     private var account: some View {
         Form {
@@ -170,6 +176,11 @@ private struct MacStudyRoot: View {
                 Button("Connect and sync") { Task { await store.connect(token); if store.error == nil { token = ""; section = .statistics } } }.disabled(store.isSyncing || token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 if let snapshot = store.snapshot, !snapshot.isSample {
                     LabeledContent("Connected", value: snapshot.username)
+                    if store.contentAccessVerified {
+                        LabeledContent("Content access", value: "Through level \(store.maximumContentLevel)")
+                    } else {
+                        Text("Refresh to verify your WaniKani content access.").foregroundStyle(.secondary)
+                    }
                     Button("Disconnect and remove local snapshot", role: .destructive) { Task { await store.disconnect() } }.disabled(store.isSyncing)
                 }
             }
@@ -183,17 +194,24 @@ private struct MacStudyRoot: View {
 
 private struct NativeSubjectDetail: View {
     let subject: StudySubject
+    let maximumLevel: Int
+    let accessVerified: Bool
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         NavigationStack {
             Form {
-                Text(subject.characters.isEmpty ? subject.meaning : subject.characters).font(.largeTitle)
-                    .foregroundStyle(subject.kind == .kanji ? StudyPalette.kanji : StudyPalette.vocabulary)
-                LabeledContent("Meaning", value: subject.meaning)
-                LabeledContent("Readings", value: subject.readings.isEmpty ? "None" : subject.readings.joined(separator: " · "))
-                LabeledContent("WaniKani level", value: String(subject.level))
-                if let url = subject.documentURL, url.scheme == "https", url.host == "www.wanikani.com" {
-                    Link("Open full mnemonics on WaniKani", destination: url)
+                if subject.level > maximumLevel {
+                    ContentUnavailableView("Subscription level limit", systemImage: "lock",
+                        description: Text(accessVerified ? "Your WaniKani subscription allows content through level \(maximumLevel)." : "Refresh your account to verify access to this level."))
+                } else {
+                    Text(subject.characters.isEmpty ? subject.meaning : subject.characters).font(.largeTitle)
+                        .foregroundStyle(subject.kind == .kanji ? StudyPalette.kanji : StudyPalette.vocabulary)
+                    LabeledContent("Meaning", value: subject.meaning)
+                    LabeledContent("Readings", value: subject.readings.isEmpty ? "None" : subject.readings.joined(separator: " · "))
+                    LabeledContent("WaniKani level", value: String(subject.level))
+                    if let url = subject.documentURL, url.scheme == "https", url.host == "www.wanikani.com" {
+                        Link("Open full mnemonics on WaniKani", destination: url)
+                    }
                 }
             }.formStyle(.grouped).navigationTitle("Subject")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

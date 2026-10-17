@@ -32,46 +32,14 @@ public struct WaniKaniClient: Sendable {
     }
     private struct Page<Value: Decodable & Sendable>: Decodable, Sendable {
         struct Pages: Decodable, Sendable { let nextUrl: String? }
+        let object: String
+        let totalCount: Int
         let pages: Pages
         let data: [Resource<Value>]
     }
-    private struct Assignment: Decodable, Sendable { let subjectId: Int64; let srsStage: Int; let availableAt: String? }
-    private struct Statistic: Decodable, Sendable {
-        let subjectId: Int64; let subjectType: String
-        let meaningCorrect: Int; let meaningIncorrect: Int; let meaningCurrentStreak: Int
-        let readingCorrect: Int; let readingIncorrect: Int; let readingCurrentStreak: Int
-        let hidden: Bool
-    }
-    private struct Level: Decodable, Sendable { let level: Int32; let unlockedAt: String?; let passedAt: String?; let abandonedAt: String? }
-    private struct Subject: Decodable, Sendable {
-        struct Meaning: Decodable, Sendable { let meaning: String; let primary: Bool }
-        struct Reading: Decodable, Sendable { let reading: String }
-        let characters: String?; let meanings: [Meaning]; let readings: [Reading]?
-        let level: Int; let documentUrl: URL?; let hiddenAt: String?
-    }
-
-    @concurrent public func fetch(token: String) async throws -> StudySnapshot {
-        async let user = account(token: token)
-        async let assignments: [Resource<Assignment>] = pages("assignments", token: token)
-        async let statistics: [Resource<Statistic>] = pages("review_statistics?hidden=false", token: token)
-        async let levels: [Resource<Level>] = pages("level_progressions", token: token)
-        async let subjects: [Resource<Subject>] = pages("subjects?hidden=false", token: token)
-        let (u, a, s, l, subjectData) = try await (user, assignments, statistics, levels, subjects)
-        return try StudySnapshot(accountID: u.id, username: u.username, currentLevel: u.level,
-            onVacation: u.onVacation,
-            assignments: a.map { StudyAssignment(subjectID: $0.data.subjectId, srsStageNumber: $0.data.srsStage, availableAt: try timestamp($0.data.availableAt)) },
-            statistics: s.map { value in
-                let d = value.data
-                return try StudyAnswerStatistics(subjectID: d.subjectId, type: kind(d.subjectType), meaningCorrect: d.meaningCorrect,
-                    meaningIncorrect: d.meaningIncorrect, meaningCurrentStreak: d.meaningCurrentStreak,
-                    readingCorrect: d.readingCorrect, readingIncorrect: d.readingIncorrect, readingCurrentStreak: d.readingCurrentStreak, hidden: d.hidden)
-            },
-            levels: l.map { StudyLevel(level: $0.data.level, unlockedAt: try timestamp($0.data.unlockedAt), passedAt: try timestamp($0.data.passedAt), abandonedAt: try timestamp($0.data.abandonedAt)) },
-            subjects: subjectData.filter { $0.data.hiddenAt == nil }.map { value in
-                guard let id = value.id, let object = value.object else { throw APIError.invalidResponse }
-                return try StudySubject(id: id, characters: value.data.characters ?? "", meaning: value.data.meanings.first(where: \.primary)?.meaning ?? value.data.meanings.first?.meaning ?? "",
-                    readings: value.data.readings?.map(\.reading) ?? [], kind: kind(object), level: value.data.level, documentURL: value.data.documentUrl)
-            })
+    /// Statistics remains a projection of the complete native download, not a second decoder.
+    public func fetch(token: String) async throws -> StudySnapshot {
+        try await download(token: token).snapshot
     }
     func kind(_ value: String) throws(APIError) -> SubjectKind {
         switch value {
@@ -93,15 +61,22 @@ public struct WaniKaniClient: Sendable {
     func pages<T: Decodable & Sendable>(_ endpoint: String, token: String) async throws -> [Resource<T>] {
         var next: URL? = URL(string: "https://api.wanikani.com/v2/\(endpoint)")!
         var visited = Set<URL>(), result = [Resource<T>]()
+        var expectedCount: Int?
         while let url = next {
             guard visited.insert(url).inserted, visited.count <= 100 else { throw APIError.invalidPagination }
             let page: Page<T> = try await request(url, token: token)
+            guard page.object == "collection", page.totalCount >= 0,
+                  expectedCount == nil || expectedCount == page.totalCount,
+                  page.data.allSatisfy({ ($0.id ?? 0) > 0 && $0.object != nil }) else { throw APIError.invalidResponse }
+            expectedCount = page.totalCount
             result += page.data
+            guard result.count <= page.totalCount else { throw APIError.invalidResponse }
             if let link = page.pages.nextUrl {
-                guard let parsed = URL(string: link), Self.isAllowed(parsed) else { throw APIError.invalidPagination }
+                guard let parsed = URL(string: link), Self.isAllowed(parsed), parsed.path == url.path else { throw APIError.invalidPagination }
                 next = parsed
             } else { next = nil }
         }
+        guard result.count == expectedCount else { throw APIError.invalidResponse }
         return result
     }
     private static func isAllowed(_ url: URL) -> Bool {

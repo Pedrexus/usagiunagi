@@ -23,8 +23,9 @@ let package = Package(
         .target(name: "StudySpeech", dependencies: ["StudyCore"], swiftSettings: concurrency),
         .target(name: "StudyUI", dependencies: ["StudyCore", "StudySpeech"],
                 swiftSettings: concurrency + [.defaultIsolation(MainActor.self)]),
-        .testTarget(name: "StudyPersistenceTests", dependencies: ["StudyPersistence", "StudyCore"]),
-        .testTarget(name: "StudyCoreTests", dependencies: ["StudyCore"]),
+        .target(name: "StudyTestSupport", dependencies: ["StudyCore"], path: "Tests/StudyTestSupport"),
+        .testTarget(name: "StudyPersistenceTests", dependencies: ["StudyPersistence", "StudyCore", "StudyTestSupport"]),
+        .testTarget(name: "StudyCoreTests", dependencies: ["StudyCore", "StudyTestSupport"]),
         .testTarget(name: "StudySpeechTests", dependencies: ["StudyCore", "StudySpeech"])
     ],
     swiftLanguageModes: [.v6]

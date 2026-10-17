@@ -66,7 +66,7 @@ extension StudyStore {
             if let row = try materialRecords(accountID: sent.accountID).first(where: {
                 $0.subjectID == sent.material.subjectID && $0.revision == sent.revision
             }), row.attemptedRevision == nil || row.attemptedRevision == sent.revision {
-                row.pending = false; row.issue = nil; row.attemptedRevision = nil; row.attemptedMaterial = nil
+                row.pending = false; row.revision = UUID(); row.issue = nil; row.attemptedRevision = nil; row.attemptedMaterial = nil
             }
         }
     }
@@ -78,22 +78,28 @@ extension StudyStore {
         try requireAccount(accountID)
         guard incoming.allSatisfy({ $0.subjectID > 0 }), Set(incoming.map(\.subjectID)).count == incoming.count
         else { throw StudyStoreError.invalidMaterial }
-        try transaction {
-            let rows = try materialRecords(accountID: accountID)
-            let current = Dictionary(uniqueKeysWithValues: rows.map { ($0.subjectID, $0) })
-            let ids = Set(incoming.map(\.subjectID))
-            if replacingAll {
-                for row in rows where !ids.contains(row.subjectID) && !row.pending && baseline[row.subjectID] == row.revision {
-                    modelContext.delete(row)
-                }
+        try transaction { try applyMaterials(incoming, accountID: accountID, baseline: baseline, replacingAll: replacingAll) }
+    }
+
+    // Caller owns the transaction so a full download commits notes with the other resources.
+    func applyMaterials(_ incoming: [StudyMaterial], accountID: String, baseline: [Int64: UUID],
+                        replacingAll: Bool, serverIDs: [Int64: Int64] = [:]) throws {
+        let rows = try materialRecords(accountID: accountID)
+        let current = Dictionary(uniqueKeysWithValues: rows.map { ($0.subjectID, $0) })
+        let ids = Set(incoming.map(\.subjectID))
+        if replacingAll {
+            for row in rows where !ids.contains(row.subjectID) && !row.pending && baseline[row.subjectID] == row.revision {
+                modelContext.delete(row)
             }
-            for material in incoming {
-                if let row = current[material.subjectID] {
-                    guard !row.pending, baseline[row.subjectID] == row.revision else { continue }
-                    row.material = material; row.revision = UUID()
-                } else if baseline[material.subjectID] == nil {
-                    modelContext.insert(MaterialRecord(accountID: accountID, material: material, pending: false))
-                }
+        }
+        for material in incoming {
+            if let row = current[material.subjectID] {
+                guard !row.pending, baseline[material.subjectID] == row.revision else { continue }
+                row.material = material; row.revision = UUID()
+                if let id = serverIDs[material.subjectID] { row.serverID = id }
+            } else if baseline[material.subjectID] == nil {
+                let row = MaterialRecord(accountID: accountID, material: material, pending: false)
+                row.serverID = serverIDs[material.subjectID]; modelContext.insert(row)
             }
         }
     }
