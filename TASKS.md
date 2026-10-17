@@ -25,7 +25,7 @@ Status: **done** = implemented and verified for the stated scope; **in progress*
 | SHELL | Open | SwiftUI Home and app navigation | Reviews/lessons counts, schedule, refresh, search, practice, deep links, scene lifecycle and native bars; delete replaced controllers/layouts. |
 | SETTINGS | Open | SwiftUI login/account/settings | Preserve preferences, vacation, logout, tokens, fonts, review/lesson options, downloads, notifications and destructive-action behavior. |
 | CATALOG | Open | Shared full subject catalog and details | Search, categories/levels, mnemonic markup and links, synonyms/notes, examples, radical images, audio and Japanese font settings. Mac currently has only basic search/details. |
-| SESSION | Open | Shared deterministic review session state | Preserve order, accepted/wrong/alternate answers, undo/ignore, Anki mode, interruption/resume, practice modes and result summaries. Depends on GRADE/KANA and outbox interface. |
+| SESSION | In progress | Shared deterministic review session state | Shared Codable/Sendable queue, progress, question tokens, overrides, delays and submissions now drive the iOS review screen. 960 legacy scenarios match; unit tests cover restoration and practice isolation. Remaining: durable account-bound resume coupled to outbox, SwiftUI host, Mac integration and end-to-end mode coverage. |
 | LESSONS | Open | SwiftUI lesson selection/teaching/quiz | Preserve lesson order, batches, filters, audio, completion and interruption behavior; share engine with Mac where appropriate. |
 | VOICE | Open | Optional English/Japanese spoken review input | SpeechAnalyzer capability/model/permission checks; explicit listening/stop/cancel, final transcript preview/correction, question-scoped callbacks, typing fallback; same grading path. Never infer a pronunciation score from transcription. Depends on GRADE/SESSION. |
 | OUTBOX | In progress | Swift persistence and durable review/material outbox | Fixed stale acknowledgements deleting newer pending payloads; SQLite/restart tests pass. Still required: migration, transactional failure recovery, globally ordered uploads, duplicate/ambiguous responses, reset/vacation handling. Do not replace iOS queue with Mac's read-only JSON snapshot. |
@@ -51,7 +51,7 @@ Status: **done** = implemented and verified for the stated scope; **in progress*
 
 ## Current execution order
 
-1. Close GRADE and KANA parity boundaries; they unblock safe review and voice work.
+1. GRADE and KANA shared implementations are in place; continue physical input validation when a device is available.
 2. Extract SESSION and the OUTBOX/SYNC interfaces; migrate review/lesson UI and add VOICE using the same submission path.
 3. Replace shell/settings/catalog/media and bring Mac to parity; remove obsolete implementations as each slice lands.
 4. Complete forecasts, adaptive/accessibility checks, watch preservation and deployment readiness. Independent tasks may be reordered when that reduces dependencies, but remain listed until verified.
@@ -82,3 +82,13 @@ Details and source evidence: [migration study](SWIFTUI_MIGRATION.md), [statistic
 - Delayed responses previously deleted pending reviews/materials by subject ID alone. Conditional acknowledgements now delete only when the stored payload matches the version that was sent, preserving a newer edit made while the request was in flight. No schema or stored-data migration is needed for this fix.
 - Three SQLite regression tests cover matching/repeated acknowledgements, unrelated subjects, a newer progress payload surviving database close/reopen plus an old acknowledgement, and newer synonyms/notes surviving an old acknowledgement. 46 iOS tests pass.
 - OUTBOX remains open: independent immediate-upload and sync chains can overlap; uploads need a shared ordering boundary and fresh queued revisions. Existing HTTP 422 handling drops progress broadly and needs reconciliation against the server assignment. Account changes, uncertain network outcomes, migration failure and rollback still need dedicated tests. This fix does not claim to resolve those separate risks.
+
+### Shared session checkpoint (2026-10-17)
+
+- Moved queue selection, question ordering, mistakes, overrides, retry delays, wrap-up, practice isolation and completion submissions into Codable/Sendable StudySession. Seeded randomness and question tokens survive a snapshot round trip; stale callbacks and duplicate completion attempts are rejected.
+- The existing iOS review screen uses a protobuf/repository adapter. Its synchronous local persistence boundary remains in place. Missing catalog content now produces an explicit error without dropping assignments. Practice status belongs to the session rather than relying on each caller to pass a flag on every answer.
+- Combined Anki answers now stay on the same unfinished item, including after retry delays expand a batch. An item with only one question cannot accidentally credit the next item.
+- Compared the compiled legacy session algorithm using injected clock/randomness and stand-in data/services: 960 scenarios across grouping, Anki, order, skipped readings, penalties, practice, retries, deferral, exclusion and wrap-up matched 676,404 state assertions. This is algorithm parity, not proof of real-account sync.
+- Durable session-file persistence/resume is not yet connected. The shared state round-trip is tested, but restart recovery must commit session state and pending submissions together under the correct account before SESSION can close.
+- Validation: 51 iOS unit/integration tests, 37 shared Swift Testing functions and the native Mac build passed. A dedicated ReviewValidation UI test completed all four sample subjects (five typed questions, including romaji-to-kana input) and reached a 100%, 4/4 summary; the captured screenshot was inspected. This used the fake client and performed no account uploads.
+- The screenshot fixture now resolves subject levels from its own data so review eligibility can be exercised without a live catalog. Added stable review accessibility identifiers for regression tests.

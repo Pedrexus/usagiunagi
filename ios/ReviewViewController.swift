@@ -36,18 +36,6 @@ private let kDefaultButtonTintColor = UIButton().tintColor
 private let kSmallKeyboardHeightChange: CGFloat = 50.0
 private let kChipsBottomMargin: CGFloat = 24.0
 
-enum AnswerResult {
-  case Correct
-  case Incorrect
-  case OverrideAnswerCorrect
-  case AskAgainLater
-  case Exclude
-
-  var correct: Bool {
-    self == .Correct || self == .OverrideAnswerCorrect
-  }
-}
-
 private func copyLabel(_ original: UILabel) -> UILabel {
   let copy = UILabel()
   copy.isHidden = original.isHidden
@@ -295,7 +283,8 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     self.delegate = delegate
     self.isPracticeSession = isPracticeSession
 
-    session = ReviewSession(services: services, items: items,
+    session = ReviewSession(repository: ReviewRepository(client: services.localCachingClient),
+                            items: items,
                             isPracticeSession: isPracticeSession)
   }
 
@@ -363,6 +352,11 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
 
     subjectDetailsView.setup(services: services, delegate: self)
 
+    answerField.accessibilityIdentifier = "review.answer"
+    questionLabel.accessibilityIdentifier = "review.question"
+    promptLabel.accessibilityIdentifier = "review.prompt"
+    submitButton.accessibilityIdentifier = "review.submit"
+    headerProgressLabel.accessibilityIdentifier = "review.progress"
     answerField.autocapitalizationType = .none
     answerField.delegate = kanaInput
     answerField.addAction(for: .editingChanged) { [weak self] in self?.answerFieldValueDidChange() }
@@ -772,6 +766,16 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
   // MARK: - Setup
 
   private func randomTask() {
+    if let error = session.initializationError {
+      let alert = UIAlertController(title: "Unable to start review", message: error,
+                                    preferredStyle: .alert)
+      alert
+        .addAction(UIAlertAction(title: "Close", style: .default) { [weak self] _ in
+          self?.endReviewSession()
+        })
+      DispatchQueue.main.async { [weak self] in self?.present(alert, animated: true) }
+      return
+    }
     if session.activeQueueLength == 0 {
       delegate.finishedAllReviewItems(self)
       return
@@ -889,6 +893,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
       doneLabel.accessibilityLabel = doneText + " done"
       queueLabel.accessibilityLabel = queueText + " remaining"
       questionLabel.accessibilityLabel = "Japanese " + subjectTypePrompt + ". Question"
+      questionLabel.accessibilityValue = session.activeSubject.japanese
       levelLabel.accessibilityLabel = "srs level \(session.activeAssignment.srsStage)"
 
       answerField.text = nil
@@ -1402,7 +1407,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
       shakeView(answerField)
 
       // The user knows the reading so mark it correct if they haven't done it yet.
-      session.activeTask.answeredReading = true
+      session.creditReading()
     }
   }
 
@@ -1447,15 +1452,15 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     }
 
     // Mark the task.
-    var marked = session.markAnswer(result, isPracticeSession: isPracticeSession)
+    guard var marked = session.markAnswer(result) else { return }
 
     // Show a new task if it was correct.
     if result != .Incorrect {
-      if session.activeAssignment.subjectType != .radical, // or kana mode?
+      if !marked.subjectFinished, session.activeAssignment.subjectType != .radical,
          isAnkiModeActiveForCurrentTask,
          Settings.ankiModeCombineReadingMeaning {
-        session.nextTask()
-        marked = session.markAnswer(.Correct, isPracticeSession: isPracticeSession)
+        session.nextTask(continuingCurrentItem: true)
+        if let combined = session.markAnswer(.Correct) { marked = combined }
       }
 
       if Settings.playAudioAutomatically,

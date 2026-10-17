@@ -1264,6 +1264,10 @@ import WaniKaniAPI
       return nil
     }
 
+    override func levelOf(subjectId: Int64) -> Int? {
+      getSubject(id: subjectId).map { Int($0.level) }
+    }
+
     override func getAllSubjects() -> [TKMSubject] {
       subjectTextProtos.keys.sorted().compactMap { getSubject(id: $0) }
     }

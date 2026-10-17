@@ -18,12 +18,6 @@ import WaniKaniAPI
 
 typealias TaskType = StudyQuestionKind
 
-extension StudyQuestionKind {
-  static func random() -> TaskType {
-    arc4random_uniform(2) == 0 ? .reading : .meaning
-  }
-}
-
 class ReviewItem: NSObject {
   private class func filterReadyItems(assignments: [TKMAssignment],
                                       localCachingClient: LocalCachingClient,
@@ -113,7 +107,6 @@ class ReviewItem: NSObject {
   var answeredReading = false
   var answeredMeaning = false
   var answer = TKMProgress()
-  var returnDelay = 0
 
   init(assignment: TKMAssignment, subject: TKMSubject? = nil) {
     self.assignment = assignment
@@ -146,19 +139,5 @@ class ReviewItem: NSObject {
       return false
     }
     return assignment.subjectID <= other.assignment.subjectID
-  }
-
-  func hasAttempts() -> Bool {
-    answer.hasMeaningWrong || answer.hasReadingWrong ||
-      answeredMeaning || answeredReading
-  }
-
-  func reset() {
-    answer.clearMeaningWrong()
-    answer.clearReadingWrong()
-    answer.clearMeaningWrongCount()
-    answer.clearReadingWrongCount()
-    answeredMeaning = false
-    answeredReading = false
   }
 }

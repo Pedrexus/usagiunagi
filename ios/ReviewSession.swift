@@ -13,158 +13,141 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import WaniKaniAPI
 
-class ReviewSession {
-  private let services: TKMServices
+enum AnswerResult {
+  case Correct, Incorrect, OverrideAnswerCorrect, AskAgainLater, Exclude
+  var correct: Bool { self == .Correct || self == .OverrideAnswerCorrect }
+}
 
-  private var activeQueue = [ReviewItem]()
-  private var reviewQueue = [ReviewItem]()
-  public private(set) var completedReviews = [ReviewItem]()
-  private var activeQueueSize = 1
+/// The existing storage implementation remains responsible for durable local writes.
+struct ReviewRepository {
+  var subject: (Int64) -> TKMSubject?
+  var materials: (Int64) -> TKMStudyMaterials? = { _ in nil }
+  var saveProgress: (TKMProgress) -> Void
+  var saveMaterials: (TKMStudyMaterials) -> Void = { _ in }
+  var setExcluded: (inout TKMStudyMaterials, Bool) -> Void = { _, _ in }
+}
 
-  private var isPracticeSession = false
+extension ReviewRepository {
+  init(client: LocalCachingClient) {
+    self.init(subject: { client.getSubject(id: $0) },
+              materials: { client.getStudyMaterial(subjectId: $0) },
+              saveProgress: { _ = client.sendProgress([$0]) },
+              saveMaterials: { _ = client.updateStudyMaterial($0) },
+              setExcluded: { material, excluded in
+                _ = client.setExcluded(studyMaterials: &material, shouldExclude: excluded)
+              })
+  }
+}
 
-  private var activeTaskIndex = 0 // An index into activeQueue.
-  public private(set) var activeTaskType: TaskType!
-  public private(set) var activeTask: ReviewItem!
-  public private(set) var activeSubject: TKMSubject!
-  public private(set) var activeStudyMaterials: TKMStudyMaterials?
+/// Adapts legacy view/protobuf values to the shared engine; contains no scheduling or grading
+/// rules.
+final class ReviewSession {
+  private let repository: ReviewRepository
+  private let legacyItems: [ReviewItem]
+  private let subjects: [Int: TKMSubject]
+  private let options: () -> StudySessionOptions
+  private let now: () -> Int64
+  private var state: StudySession
+  let initializationError: String?
+  private(set) var activeStudyMaterials: TKMStudyMaterials?
 
-  public private(set) var tasksAnsweredCorrectly = 0
-  public private(set) var tasksAnswered = 0
-  public private(set) var reviewsCompleted = 0
-
-  public var wrappingUp: Bool = false {
-    didSet {
-      if wrappingUp, let task = activeTask {
-        if !task.hasAttempts(), let index = activeQueue.firstIndex(where: { $0 === task }) {
-          activeQueue.remove(at: index)
-          reviewQueue.append(task)
-        }
-      }
+  init(repository: ReviewRepository, items: [ReviewItem], isPracticeSession: Bool = false,
+       options: @escaping () -> StudySessionOptions = ReviewSession.currentOptions,
+       now: @escaping () -> Int64 = { Int64(Date().timeIntervalSince1970) },
+       seed: UInt64 = .random(in: .min ... .max)) {
+    self.repository = repository
+    legacyItems = items
+    self.options = options
+    self.now = now
+    var subjects = [Int: TKMSubject]()
+    var entries = [StudySessionItem]()
+    for (index, item) in items.enumerated() {
+      guard let subject = item.subject ?? repository.subject(item.assignment.subjectID)
+      else { continue }
+      subjects[index] = subject
+      entries.append(StudySessionItem(id: index, subjectID: item.assignment.subjectID,
+                                      assignmentID: item.assignment.id,
+                                      srsStage: item.assignment.srsStage.rawValue,
+                                      availableAt: Int64(item.assignment.availableAt),
+                                      isLesson: item.assignment.isLessonStage,
+                                      isKanji: subject.hasKanji,
+                                      hasMeaning: !subject.meanings.isEmpty,
+                                      hasReading: !subject.readings.isEmpty))
+    }
+    self.subjects = subjects
+    do {
+      guard entries.count == items.count else { throw StudySessionError.missingQuestionContent(-1) }
+      state = try StudySession(items: entries, options: options(), isPractice: isPracticeSession,
+                               seed: seed)
+      initializationError = nil
+    } catch {
+      // Leave every assignment untouched; an incomplete catalog must not silently skip reviews.
+      state = try! StudySession(items: [], options: options(), isPractice: isPracticeSession,
+                                seed: seed)
+      initializationError =
+        "Some study items are missing their question data. Sync your account and try again."
     }
   }
 
-  init(services: TKMServices, items: [ReviewItem], isPracticeSession: Bool = false) {
-    self.services = services
-    reviewQueue = items
-    self.isPracticeSession = isPracticeSession
-
-    if Settings.groupMeaningReading || (Settings.ankiMode &&
-      Settings.ankiModeCombineReadingMeaning && Settings.ankiModeTaskType == .both) || self
-      .isPracticeSession {
-      activeQueueSize = 1
-    } else {
-      activeQueueSize = Int(Settings.reviewBatchSize)
-    }
-
-    refillActiveQueue()
+  static func currentOptions() -> StudySessionOptions {
+    var value = StudySessionOptions()
+    value.batchSize = Settings.reviewBatchSize
+    value.groupMeaningReading = Settings.groupMeaningReading
+    value.combinedAnki = Settings.ankiMode && Settings.ankiModeCombineReadingMeaning && Settings
+      .ankiModeTaskType == .both
+    value.meaningFirst = Settings.meaningFirst
+    value.incorrectAnswerDelay = Settings.incorrectAnswerReturnDelay
+    value.skipKanjiReadings = Settings.skipKanjiReadings
+    value.minimizePenalty = Settings.minimizeReviewPenalty
+    return value
   }
 
-  public var activeQueueLength: Int {
-    activeQueue.count
+  var activeTask: ReviewItem! { state.question.map { legacyItems[$0.itemID] } }
+  var activeTaskType: TaskType! { state.question?.kind }
+  var activeSubject: TKMSubject! { state.question.flatMap { subjects[$0.itemID] } }
+  var activeAssignment: TKMAssignment! { activeTask?.assignment }
+  var completedReviews: [ReviewItem] { state.completedIDs.map { legacyItems[$0] } }
+  var activeQueueLength: Int { state.activeIDs.count }
+  var reviewQueueLength: Int { state.queuedIDs.count }
+  var tasksAnswered: Int { state.tasksAnswered }
+  var tasksAnsweredCorrectly: Int { state.tasksAnsweredCorrectly }
+  var reviewsCompleted: Int { state.completedIDs.count }
+  var successRateText: String { "\(state.successRate)%" }
+  var hasStarted: Bool { state.question != nil }
+  var canWrapUp: Bool { state.canWrapUp }
+  var wrappingUp: Bool {
+    get { state.wrappingUp }
+    set { state.setWrappingUp(newValue) }
   }
 
-  public var reviewQueueLength: Int {
-    reviewQueue.count
+  func nextTask(continuingCurrentItem: Bool = false) {
+    state.options = options()
+    guard let question = state.nextQuestion(continuingCurrentItem: continuingCurrentItem)
+    else { return }
+    activeStudyMaterials = activeTask.subject == nil ? repository
+      .materials(activeTask.assignment.subjectID) : nil
+    copyProgress(for: question.itemID)
   }
 
-  public var successRateText: String {
-    if tasksAnswered == 0 {
-      return "100%"
-    }
-    return String(Int(Double(tasksAnsweredCorrectly) / Double(tasksAnswered) * 100)) + "%"
+  func moveActiveTaskToEnd() {
+    guard let question = state.question else { return }
+    try? state.deferQuestion(question)
+    copyProgress(for: question.itemID)
   }
 
-  public var hasStarted: Bool {
-    activeTask != nil
+  func excludeTask() {
+    guard let question = state.question else { return }
+    try? state.excludeQuestion(question)
+    copyProgress(for: question.itemID)
   }
 
-  public var canWrapUp: Bool {
-    if activeQueue.isEmpty {
-      return false
-    }
-    for item in activeQueue {
-      if item.hasAttempts() {
-        return true
-      }
-    }
-    return false
-  }
-
-  public var activeAssignment: TKMAssignment! {
-    activeTask.assignment
-  }
-
-  public func nextTask() {
-    guard !activeQueue.isEmpty else {
-      return
-    }
-
-    if Settings.groupMeaningReading || isPracticeSession,
-       activeTask != nil,
-       !activeTask.answeredMeaning || !activeTask.answeredReading,
-       activeTask.returnDelay == 0,
-       let taskIndex = activeQueue.firstIndex(where: { $0 === activeTask }) {
-      // Stay on current task for back-to-back after correct answer
-      activeTaskIndex = taskIndex
-    } else {
-      // Normal mode: find eligible tasks or pull from reviewQueue
-      var eligibleIndices = activeQueue.indices.filter { activeQueue[$0].returnDelay == 0 }
-      if eligibleIndices.isEmpty, !wrappingUp, !reviewQueue.isEmpty {
-        let item = reviewQueue.removeFirst()
-        activeQueue.append(item)
-        eligibleIndices = [activeQueue.count - 1]
-      } else if eligibleIndices.isEmpty {
-        eligibleIndices = Array(activeQueue.indices)
-      }
-
-      // Decrement skip counts for all items
-      for i in activeQueue.indices {
-        if activeQueue[i].returnDelay > 0 {
-          activeQueue[i].returnDelay -= 1
-        }
-      }
-
-      activeTaskIndex = eligibleIndices.randomElement()!
-    }
-    activeTask = activeQueue[activeTaskIndex]
-
-    if let subject = activeTask.subject {
-      activeSubject = subject
-      activeStudyMaterials = nil
-    } else {
-      activeSubject = services.localCachingClient.getSubject(id: activeTask.assignment.subjectID)!
-      activeStudyMaterials =
-        services.localCachingClient.getStudyMaterial(subjectId: activeTask.assignment.subjectID)
-    }
-
-    // Choose whether to ask the meaning or the reading.
-    if activeTask.answeredMeaning || activeSubject.meanings.isEmpty {
-      activeTaskType = .reading
-    } else if activeTask.answeredReading || activeSubject.readings.isEmpty {
-      activeTaskType = .meaning
-    } else if Settings.groupMeaningReading || (Settings.ankiMode &&
-      Settings.ankiModeCombineReadingMeaning && Settings.ankiModeTaskType == .both) ||
-      isPracticeSession {
-      activeTaskType = Settings.meaningFirst ? .meaning : .reading
-    } else {
-      activeTaskType = TaskType.random()
-    }
-  }
-
-  public func moveActiveTaskToEnd() {
-    activeQueue.remove(at: activeTaskIndex)
-    activeTask.reset()
-    reviewQueue.append(activeTask)
-    refillActiveQueue()
-  }
-
-  public func excludeTask() {
-    activeQueue.remove(at: activeTaskIndex)
-    activeTask.reset()
-    refillActiveQueue()
+  func creditReading() {
+    guard let question = state.question else { return }
+    try? state.creditReading(question)
+    copyProgress(for: question.itemID)
   }
 
   struct MarkResult {
@@ -173,137 +156,49 @@ class ReviewSession {
     let newSrsStage: SRSStage
   }
 
-  private var lastMarkAnswerWasFirstTime = false
-  public func markAnswer(_ result: AnswerResult,
-                         isPracticeSession: Bool = false) -> MarkResult {
-    var firstTimeAnswered = false
-    switch activeTaskType {
-    case .meaning:
-      firstTimeAnswered = !activeTask.answer.hasMeaningWrong
-      if firstTimeAnswered ||
-        (lastMarkAnswerWasFirstTime && result == .OverrideAnswerCorrect) {
-        activeTask.answer.meaningWrong = !result.correct
-        if result == .OverrideAnswerCorrect {
-          activeTask.answer.meaningWrongCount -= 1
-        }
-      }
-      activeTask.answeredMeaning = result.correct
-
-      if !result.correct {
-        activeTask.answer.meaningWrongCount += 1
-      }
-
-    case .reading:
-      firstTimeAnswered = !activeTask.answer.hasReadingWrong
-      if firstTimeAnswered ||
-        (lastMarkAnswerWasFirstTime && result == .OverrideAnswerCorrect) {
-        activeTask.answer.readingWrong = !result.correct
-        if result == .OverrideAnswerCorrect {
-          activeTask.answer.readingWrongCount -= 1
-        }
-      }
-      activeTask.answeredReading = result.correct
-
-      if !result.correct {
-        activeTask.answer.readingWrongCount += 1
-      }
-
-    default:
-      fatalError()
-    }
-    lastMarkAnswerWasFirstTime = firstTimeAnswered
-
-    // Update stats.
+  func markAnswer(_ result: AnswerResult) -> MarkResult? {
+    guard let question = state.question else { return nil }
+    let decision: StudyAnswerDecision
     switch result {
-    case .Correct:
-      tasksAnswered += 1
-      tasksAnsweredCorrectly += 1
-      activeTask.returnDelay = 0
-
-    case .Incorrect:
-      tasksAnswered += 1
-      // show this number of items before repeating this one:
-      activeTask.returnDelay = Settings.incorrectAnswerReturnDelay
-
-    case .OverrideAnswerCorrect:
-      tasksAnsweredCorrectly += 1
-      activeTask.returnDelay = 0
-
-    case .Exclude:
-      fatalError()
-    case .AskAgainLater:
-      // Handled above.
-      fatalError()
+    case .Correct: decision = .correct
+    case .Incorrect: decision = .incorrect
+    case .OverrideAnswerCorrect: decision = .overrideCorrect
+    case .AskAgainLater, .Exclude: return nil
     }
+    state.options = options()
+    guard let mark = try? state.mark(decision, for: question, now: now()) else { return nil }
+    copyProgress(for: question.itemID)
+    if mark.submission != nil { repository.saveProgress(legacyItems[question.itemID].answer) }
+    return MarkResult(subjectFinished: mark.subjectFinished, didLevelUp: mark.didLevelUp,
+                      newSrsStage: SRSStage(rawValue: mark.estimatedSRSStage)!)
+  }
 
-    // Remove it from the active queue if that was the last part.
-    let shouldIgnoreReading: Bool = activeSubject.hasKanji && Settings.skipKanjiReadings
-    let answeredReading: Bool = activeTask.answeredReading || activeSubject
-      .readings.isEmpty
-    let isSubjectFinished =
-      (activeTask.answeredMeaning || activeSubject.meanings.isEmpty) &&
-      (shouldIgnoreReading || answeredReading)
-    let didLevelUp = (!activeTask.answer.readingWrong && !activeTask.answer
-      .meaningWrong && !isPracticeSession)
-    let newSrsStage =
-      didLevelUp ? activeAssignment.srsStage.next : activeAssignment.srsStage
-        .previous
-    if isSubjectFinished {
-      let date = Int32(Date().timeIntervalSince1970)
-      if date > activeAssignment.availableAt {
-        activeTask.answer.createdAt = date
-      }
-
-      if Settings.minimizeReviewPenalty {
-        if activeTask.answer.meaningWrong {
-          activeTask.answer.meaningWrongCount = 1
-        }
-        if activeTask.answer.readingWrong {
-          activeTask.answer.readingWrongCount = 1
-        }
-      }
-
-      if !isPracticeSession {
-        _ = services.localCachingClient!.sendProgress([activeTask.answer])
-      }
-
-      reviewsCompleted += 1
-      completedReviews.append(activeTask)
-      activeQueue.remove(at: activeTaskIndex)
-      refillActiveQueue()
-    }
-
-    return MarkResult(subjectFinished: isSubjectFinished, didLevelUp: didLevelUp,
-                      newSrsStage: newSrsStage)
+  private func copyProgress(for id: Int) {
+    guard let value = state.items[id] else { return }
+    let item = legacyItems[id]
+    item.answeredMeaning = value.meaning.answered
+    item.answeredReading = value.reading.answered
+    if let wrong = value.meaning.firstAnswerWrong { item.answer.meaningWrong = wrong }
+    else { item.answer.clearMeaningWrong() }
+    if let wrong = value.reading.firstAnswerWrong { item.answer.readingWrong = wrong }
+    else { item.answer.clearReadingWrong() }
+    item.answer.meaningWrongCount = Int32(clamping: value.meaning.wrongCount)
+    item.answer.readingWrongCount = Int32(clamping: value.reading.wrongCount)
+    if let date = value.createdAt { item.answer.createdAt = Int32(clamping: date) }
   }
 
   func addSynonym(_ text: String) {
-    if activeStudyMaterials == nil {
-      activeStudyMaterials = TKMStudyMaterials()
-      activeStudyMaterials!.subjectID = activeSubject.id
-    }
-    activeStudyMaterials!.meaningSynonyms.append(text)
-    _ = services.localCachingClient?.updateStudyMaterial(activeStudyMaterials!)
+    var material = activeStudyMaterials ?? TKMStudyMaterials()
+    material.subjectID = activeSubject.id
+    material.meaningSynonyms.append(text)
+    activeStudyMaterials = material
+    repository.saveMaterials(material)
   }
 
   func setExclude(_ exclude: Bool) {
-    if activeStudyMaterials == nil {
-      activeStudyMaterials = TKMStudyMaterials()
-      activeStudyMaterials!.subjectID = activeSubject.id
-    }
-    _ = services.localCachingClient?.setExcluded(studyMaterials: &activeStudyMaterials!,
-                                                 shouldExclude: exclude)
-  }
-
-  private func refillActiveQueue() {
-    if wrappingUp {
-      return
-    }
-
-    while activeQueue.count < activeQueueSize, reviewQueue.count != 0 {
-      let item = reviewQueue.first!
-      reviewQueue.removeFirst()
-      activeQueue.append(item)
-    }
+    var material = activeStudyMaterials ?? TKMStudyMaterials()
+    material.subjectID = activeSubject.id
+    repository.setExcluded(&material, exclude)
+    activeStudyMaterials = material
   }
 }
