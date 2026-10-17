@@ -14,6 +14,9 @@ public struct NativeReviewView: View {
   @State private var confirmEnd = false
   @State private var readyImage: String?
   @State private var voiceQuestion: StudyQuestion?
+  @State private var settings = false
+  @State private var fullDetails = false
+  @StoredReviewPreferences private var preferences
   @FocusState private var answerFocused: Bool
 
   public init(store: StudyStore, accountID: String) {
@@ -27,6 +30,8 @@ public struct NativeReviewView: View {
         if review.question != nil {
           HStack {
             Spacer()
+            Button("Quick settings", systemImage: "slider.horizontal.3") { settings = true }
+              .accessibilityIdentifier("review.settings")
             Button("End session", systemImage: "xmark") { confirmEnd = true }
           }.padding(.horizontal)
         }
@@ -78,7 +83,7 @@ public struct NativeReviewView: View {
           } details: {
             NativeSubjectDetailsView(
               store: store, accountID: accountID, subjectID: subject.id,
-              reviewQuestion: review.question?.kind)
+              reviewQuestion: review.question?.kind, visibleQuestions: visibleQuestions)
           }
         } else {
           ContentUnavailableView(
@@ -103,6 +108,14 @@ public struct NativeReviewView: View {
       }
     }
     .disabled(busy)
+    .onChange(of: preferences) { _, _ in applyPreferences() }
+    .sheet(isPresented: $settings, onDismiss: { answerFocused = screen.phase == .answering }) {
+      ReviewSettingsPanel(preferences: preferences, changed: savePreferences, supportsAudio: false)
+      {
+        settings = false
+      }
+      .frame(minWidth: 380, minHeight: 460)
+    }
     .confirmationDialog("End review session?", isPresented: $confirmEnd, titleVisibility: .visible)
     {
       if let review {
@@ -146,6 +159,7 @@ public struct NativeReviewView: View {
     }
   }
   private func present(_ value: NativeReviewState) {
+    if review?.question != value.question { fullDetails = false }
     review = value
     let session = value.saved.session
     screen.title = "Reviews"
@@ -163,11 +177,13 @@ public struct NativeReviewView: View {
     screen.remaining = session.activeIDs.count + session.queuedIDs.count
     screen.accuracy = "\(session.successRate)%"
     screen.wrappingUp = session.wrappingUp
-    screen.phase = session.currentDecision == .incorrect ? .incorrect : .answering
-    screen.canOverride = session.currentDecision == .incorrect
+    screen.phase =
+      session.currentDecision == .incorrect
+      ? (preferences.revealAnswers ? .details : .incorrect) : .answering
     screen.answer = ""
     screen.feedback =
       session.currentDecision == .incorrect ? "Incorrect answer. Try again or reveal it." : ""
+    applyPreferences()
     answerFocused = true
   }
   private func change(_ action: NativeReviewAction) {
@@ -181,16 +197,32 @@ public struct NativeReviewView: View {
   private func submit(convertRomaji: Bool = true) {
     guard screen.canAnswer, let review, let question = review.question else { return }
     let typed = screen.answer.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !typed.isEmpty else { return }
+    guard !typed.isEmpty else {
+      if preferences.allowSkipping { change(.deferQuestion) }
+      return
+    }
+    let exactMatch = preferences.exactMatch
     let answer =
       question.kind == .reading && convertRomaji ? KanaConverter.convert(typed).text : typed
     run {
       let result = try await store.answerReview(
-        answer, question: question, accountID: accountID, expectedRevision: review.saved.revision)
-      present(result.state)
+        answer, question: question, accountID: accountID, expectedRevision: review.saved.revision,
+        exactMatch: exactMatch)
+      if result.state.question != question || result.grade == .incorrect {
+        present(result.state)
+      } else {
+        self.review = result.state
+        applyPreferences()
+      }
       if result.state.question == question { screen.answer = result.normalized }
       switch result.grade {
-      case .precise, .imprecise: screen.successCount += 1
+      case .precise: screen.successCount += 1
+      case .imprecise:
+        if exactMatch {
+          screen.feedback = "Use the exact meaning."
+        } else {
+          screen.successCount += 1
+        }
       case .incorrect: break
       case .otherKanjiReading: screen.feedback = "Use the reading taught for this subject."
       case .mismatchingOkurigana: screen.feedback = "Check the kana following the kanji."
@@ -210,19 +242,79 @@ public struct NativeReviewView: View {
       } else {
         submit()
       }
-    case .reveal, .showAll: screen.phase = .details
+    case .reveal: screen.phase = .details
+    case .showAll:
+      fullDetails = true
+      screen.canShowAll = false
     case .retry:
       screen.phase = .answering
       screen.answer = ""
       screen.feedback = ""
       answerFocused = true
-    case .correct: change(.overrideCorrect)
+    case .correct:
+      if screen.canOverride { change(.overrideCorrect) }
     case .deferQuestion: change(.deferQuestion)
     case .voice:
       voiceQuestion = review?.question
       voice = voiceQuestion != nil
     case .focus: answerFocused = true
+    case .settings: settings = true
     default: break
+    }
+  }
+
+  private func savePreferences(_ old: ReviewPreferences, _ new: ReviewPreferences) {
+    do { try $preferences.applyChanges(from: old, to: new) } catch {
+      self.error = error.localizedDescription
+    }
+  }
+  private var visibleQuestions: Set<StudyQuestionKind> {
+    if fullDetails || preferences.revealFullAnswer { return [.meaning, .reading] }
+    guard let review, let question = review.question,
+      let item = review.saved.session.items[question.itemID]
+    else { return [] }
+    var visible = Set<StudyQuestionKind>()
+    if item.meaning.hasAttempts { visible.insert(.meaning) }
+    if item.reading.hasAttempts { visible.insert(.reading) }
+    return visible
+  }
+  private func applyPreferences() {
+    let preferences = preferences
+    screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
+    screen.canSkip = preferences.allowSkipping
+    screen.canOverride =
+      preferences.allowCorrections && review?.saved.session.currentDecision == .incorrect
+    let available: Set<StudyQuestionKind> =
+      review?.subject?.readings.isEmpty == false ? [.meaning, .reading] : [.meaning]
+    screen.canShowAll = !available.isSubset(of: visibleQuestions)
+    let stage = review?.question.flatMap { review?.saved.session.items[$0.itemID]?.srsStage } ?? 0
+    let name: String
+    let dots: String
+    switch stage {
+    case 1...4:
+      name = "Apprentice \(stage)"
+      dots = String(repeating: "•", count: stage) + String(repeating: "◦", count: 4 - stage)
+    case 5...6:
+      name = "Guru \(stage - 4)"
+      dots = String(repeating: "•", count: stage - 4) + String(repeating: "◦", count: 6 - stage)
+    case 7:
+      name = "Master"
+      dots = "•"
+    case 8:
+      name = "Enlightened"
+      dots = "•"
+    case 9:
+      name = "Burned"
+      dots = "•"
+    default:
+      name = ""
+      dots = ""
+    }
+    screen.stageAccessibility = name
+    switch preferences.stageIndicator {
+    case .none: screen.stage = ""
+    case .name: screen.stage = name
+    case .dots: screen.stage = dots
     }
   }
 }

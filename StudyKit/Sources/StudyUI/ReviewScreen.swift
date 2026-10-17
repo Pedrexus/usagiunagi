@@ -31,6 +31,7 @@ import SwiftUI
     public var canExclude = false
     public var canAddSynonym = false
     public var canPlayAudio = false
+    public var canShowAll = true
     public var hasMenu = false
     public var canChangeFont = false
     public var showAssessment = false
@@ -149,7 +150,9 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             details()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             HStack {
-                Button("All information", systemImage: "info.circle") { action(.showAll) }
+                if state.canShowAll {
+                    Button("All information", systemImage: "info.circle") { action(.showAll) }
+                }
                 Spacer()
                 if state.canPlayAudio {
                     Button("Audio", systemImage: "speaker.wave.2") { action(.playAudio) }

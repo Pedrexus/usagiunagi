@@ -34,18 +34,22 @@ public struct NativeSubjectDetailsView: View {
   private let accountID: String
   private let subjectID: Int64
   private let reviewQuestion: StudyQuestionKind?
+  private let visibleQuestions: Set<StudyQuestionKind>
   @State private var details: StudySubjectDetails?
   @State private var error: String?
   @State private var editing = false
   @State private var refreshID = UUID()
 
   public init(
-    store: StudyStore, accountID: String, subjectID: Int64, reviewQuestion: StudyQuestionKind? = nil
+    store: StudyStore, accountID: String, subjectID: Int64,
+    reviewQuestion: StudyQuestionKind? = nil,
+    visibleQuestions: Set<StudyQuestionKind> = [.meaning, .reading]
   ) {
     self.store = store
     self.accountID = accountID
     self.subjectID = subjectID
     self.reviewQuestion = reviewQuestion
+    self.visibleQuestions = visibleQuestions
   }
   public var body: some View {
     Group {
@@ -78,7 +82,7 @@ public struct NativeSubjectDetailsView: View {
             if let names = details.subject.partOfSpeechNames, !names.isEmpty {
               section("Parts of speech") { Text(names.joined(separator: ", ")) }
             }
-            if !details.subject.deprecatedMnemonic.isEmpty {
+            if visibleQuestions.contains(.meaning), !details.subject.deprecatedMnemonic.isEmpty {
               DisclosureGroup("Earlier radical mnemonic") {
                 MnemonicText(source: details.subject.deprecatedMnemonic)
               }
@@ -138,32 +142,36 @@ public struct NativeSubjectDetailsView: View {
     }
   }
   @ViewBuilder private func meaningDetails(_ details: StudySubjectDetails) -> some View {
-    section("Meanings") {
-      Text(
-        details.subject.meanings.filter { $0.role != .blacklist }.map(\.text).joined(
-          separator: ", "))
-      if let material = details.material, !material.meaningSynonyms.isEmpty {
-        LabeledContent("Your synonyms", value: material.meaningSynonyms.joined(separator: ", "))
+    if visibleQuestions.contains(.meaning) {
+      section("Meanings") {
+        Text(
+          details.subject.meanings.filter { $0.role != .blacklist }.map(\.text).joined(
+            separator: ", "))
+        if let material = details.material, !material.meaningSynonyms.isEmpty {
+          LabeledContent("Your synonyms", value: material.meaningSynonyms.joined(separator: ", "))
+        }
       }
+      mnemonic("Meaning mnemonic", details.subject.meaningMnemonic)
+      mnemonic("Meaning hint", details.subject.meaningHint)
+      note("Your meaning note", details.material?.meaningNote)
     }
-    mnemonic("Meaning mnemonic", details.subject.meaningMnemonic)
-    mnemonic("Meaning hint", details.subject.meaningHint)
-    note("Your meaning note", details.material?.meaningNote)
   }
   @ViewBuilder private func readingDetails(_ details: StudySubjectDetails) -> some View {
-    if !details.subject.readings.isEmpty {
-      section("Readings") {
-        ForEach(Array(details.subject.readings.enumerated()), id: \.offset) { _, reading in
-          LabeledContent(reading.kind.label) {
-            Text(reading.text + (reading.isPrimary ? " · Primary" : ""))
-              .fontWeight(reading.isPrimary ? .semibold : .regular)
+    if visibleQuestions.contains(.reading) {
+      if !details.subject.readings.isEmpty {
+        section("Readings") {
+          ForEach(Array(details.subject.readings.enumerated()), id: \.offset) { _, reading in
+            LabeledContent(reading.kind.label) {
+              Text(reading.text + (reading.isPrimary ? " · Primary" : ""))
+                .fontWeight(reading.isPrimary ? .semibold : .regular)
+            }
           }
         }
       }
+      mnemonic("Reading mnemonic", details.subject.readingMnemonic)
+      mnemonic("Reading hint", details.subject.readingHint)
+      note("Your reading note", details.material?.readingNote)
     }
-    mnemonic("Reading mnemonic", details.subject.readingMnemonic)
-    mnemonic("Reading hint", details.subject.readingHint)
-    note("Your reading note", details.material?.readingNote)
   }
 
   private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content)

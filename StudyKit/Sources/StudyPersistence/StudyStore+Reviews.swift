@@ -80,7 +80,7 @@ extension StudyStore {
   /// Grade against the latest local synonyms and commit the decision and outbox together.
   public func answerReview(
     _ answer: String, question: StudyQuestion, accountID: String,
-    expectedRevision: UUID, now: Date = .now
+    expectedRevision: UUID, exactMatch: Bool = false, now: Date = .now
   ) throws -> NativeReviewAnswer {
     var state = try currentReview(accountID: accountID, expectedRevision: expectedRevision)
     guard state.question == question, let subject = state.subject else {
@@ -94,6 +94,9 @@ extension StudyStore {
     let grade = AnswerGrader.checkNormalizedAnswer(
       normalized, subject: subject.gradingSubject, synonyms: synonyms,
       taskType: question.kind, subjectLookup: { state.subjects[$0]?.gradingSubject })
+    if exactMatch, grade == .imprecise {
+      return .init(state: state, grade: grade, normalized: normalized)
+    }
     var session = state.saved.session
     switch grade {
     case .precise, .imprecise:

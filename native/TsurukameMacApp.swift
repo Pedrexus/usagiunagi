@@ -254,6 +254,14 @@ private enum TokenKeychain {
 
 private struct MacStudyRoot: View {
     @Bindable var store: MacStudyStore
+    @StoredReviewPreferences private var reviewPreferences
+    private var preferredAppearance: ColorScheme? {
+        if store.isReviewFixture {
+            if ProcessInfo.processInfo.arguments.contains("LightFixture") { return .light }
+            if ProcessInfo.processInfo.arguments.contains("DarkFixture") { return .dark }
+        }
+        return $reviewPreferences.colorScheme
+    }
     private enum Destination: String, CaseIterable, Identifiable {
         case reviews = "Reviews", statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
         var id: Self { self }
@@ -318,7 +326,7 @@ private struct MacStudyRoot: View {
                         Text(summary).font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial)
                     }
                 }
-        }.preferredColorScheme(store.isReviewFixture ? (ProcessInfo.processInfo.arguments.contains("LightFixture") ? .light : ProcessInfo.processInfo.arguments.contains("DarkFixture") ? .dark : nil) : nil)
+        }.preferredColorScheme(preferredAppearance)
         .onChange(of: section) { _, _ in Task { await store.reloadSavedSnapshot() } }
         .sheet(item: $subject) { item in
             if let accountID = store.snapshot?.accountID, let cache = store.savedWorkStore, store.snapshot?.isSample == false {

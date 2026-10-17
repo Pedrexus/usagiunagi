@@ -15,4 +15,15 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
     public var autoplayAudio = false
     public var interruptBackgroundAudio = false
     public init() {}
+
+    /// A settings window only replaces fields it changed, preserving another window's edits.
+    public mutating func applyChanges(from old: Self, to new: Self) {
+        if old.appearance != new.appearance { appearance = new.appearance }
+        if old.stageIndicator != new.stageIndicator { stageIndicator = new.stageIndicator }
+        if old.fontScale != new.fontScale { fontScale = new.fontScale }
+        for key in [\Self.revealAnswers, \.revealFullAnswer, \.exactMatch, \.allowCorrections,
+                    \.allowSkipping, \.autoplayAudio, \.interruptBackgroundAudio] {
+            if old[keyPath: key] != new[keyPath: key] { self[keyPath: key] = new[keyPath: key] }
+        }
+    }
 }

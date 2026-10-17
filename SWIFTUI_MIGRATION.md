@@ -55,10 +55,10 @@ No feature was disabled for this audit. UIKit keyboard/composition and rich-deta
 | Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Migrate the remaining legacy upcoming-review drawing with its parent Home screen. |
 | Input | Shared Swift `KanaConverter`, Swift `TKMKanaInput`/`AnswerTextField`, keyboard overrides | Objective-C conversion removed after 86,210 full-string and 11,392 interactive comparisons. Keep the narrow native adapter for selection/composition and later wrap it in `UIViewRepresentable`; physical input-method checks remain open. The review screen now hosts this input through `UIViewRepresentable`. |
 | Grading | Shared Swift `AnswerGrader`/`GradingSubject`/`AnswerDistance`; thin iOS protobuf adapter | Full grader moved into StudyCore; 292,880 grade categories and 18,225 distance results compared with the original. Unicode highlight offsets fixed. Session/voice integration reuses this engine. |
-| Review sessions | Shared Swift `StudySession` and SwiftUI `ReviewScreen`, hosted by an iOS repository/navigation adapter | The old review layout, constraints, waves and custom success-animation implementation are removed. Preserve rich subject details through a temporary table adapter while CATALOG migrates. Connect account-bound durable restoration with the outbox and integrate Mac reviews. |
+| Review sessions | Shared Swift `StudySession` and SwiftUI `ReviewScreen`, hosted by an iOS repository/navigation adapter | The old review layout, constraints, waves and custom success-animation implementation are removed. Native Mac reviews use the atomic session/outbox boundary. Preserve iOS rich subject details through a temporary table adapter while CATALOG migrates; iOS durable restoration/caller cutover and full mode parity remain. |
 | Offline storage | FMDB / SQLite, protobuf blobs, pending review and study-material queues | Full refresh retains offline snapshots until complete responses arrive; revision-aware transaction-level merges protect pending notes and local review progress, including local changes acknowledged while a download is in flight. Additive schema 14/15 migrations preserve existing payloads. Download callbacks honor reset/logout lifetimes. Migrate to a shared SwiftData repository with typed models, actor isolation and explicit transaction boundaries. The production StudyPersistence store verifies atomic session/answer persistence, rollback, conditional acknowledgement, note merges and separate-process recovery. Mac cache callers have switched to it, with a one-time credential-bound JSON importer. The iOS database/callers have not switched yet. SwiftData does not import this legacy schema automatically: validate a one-time import and rollback path before switching callers, then remove FMDB and replaced wrappers. Do not maintain two permanent writable stores. |
 | Async/networking | Shared Swift 6 upload actor; legacy PromiseKit API/downloads, URLSession, Reachability | Immediate/background writes share one process-wide lane and reload current durable payloads. An adapter currently bridges the legacy client to async/await. Replace PromiseKit chains with URLSession async APIs and structured concurrency, deleting the replaced adapter paths. Keep WaniKani-specific response validation, rate-limit handling and account ownership; rejected/ambiguous review reconciliation remains open. Network path status is advisory, not proof a request will succeed. |
-| Review quick settings | Shared SwiftUI form in a native sheet; SwiftUI end/wrap-up confirmation | MMDrawerController, its Objective-C hook and the drawer-specific menu controllers are removed. Archived preference keys are preserved; the separate font-library screen still awaits migration. |
+| Review quick settings | Shared SwiftUI form in native iOS/Mac sheets; SwiftUI end/wrap-up confirmation | MMDrawerController, its Objective-C hook and the drawer-specific menu controllers are removed. iOS archived preference keys remain; Mac uses observed AppStorage with field-wise merging. Audio and font-library implementation still await Mac migration. |
 | Images | Haneke cache and SVGKit radical rendering | SwiftUI loads avatars. Native reviews render validated, locally cached SVG bytes through Apple’s SwiftUI WebView. Full offline prefetch, audio and legacy iOS SVGKit removal remain open. |
 | Text matching | Rexy for POSIX longest-match behavior | Compare matching semantics before replacing it with native Regex. Similar syntax is not proof of equivalent highlighting. |
 | Other languages | Go utilities and generated protobuf Go; C++ SQLite extension; Ruby/Fastlane/build scripts | Keep build/data tools separate from the iOS migration. Generated output should be regenerated, not hand-translated. |
@@ -93,8 +93,8 @@ Mac reads full study content through URLSession/async-await and commits it in th
 | Rich review answer details and font library | Temporary UIKit adapters; these can migrate to SwiftUI | Preserve mnemonic markup, editable notes/synonyms, audio, subject links and font downloads while CATALOG/SETTINGS migrate. Quick settings and end/wrap-up controls are now SwiftUI. This is staged work, not a SwiftUI limitation. |
 | Forced Japanese keyboard selection and marked-text behavior | Needs a small UIKit text-input adapter until SwiftUI provides equivalent control | Keep the adapter, or accept system-selected keyboard language after explicit input-parity testing. |
 | SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Native reviews use Apple’s SwiftUI WebView with a small HTML image wrapper, disabled scripts and local SVG bytes. No app-owned UIKit/AppKit representable is needed. The legacy iOS SVGKit path remains until its callers migrate. |
-| Speech recognition | Swift service using Apple's Speech framework; SwiftUI provides its controls | Shared Swift 6 capture service and SwiftUI panel now feed iOS review grading. Keep typing available; transcription cannot establish pronunciation quality. Physical microphone/model validation and Mac review integration remain open. |
-| Storage and networking | Swift actors and async APIs, not SwiftUI responsibilities | The Mac read-only slice is native Swift. Port iOS transactional queues and old-data migrations before removing FMDB/PromiseKit. |
+| Speech recognition | Swift service using Apple's Speech framework; SwiftUI provides its controls | Shared Swift 6 capture service and SwiftUI panel feed iOS and native Mac review grading. Keep typing available; transcription cannot establish pronunciation quality. Physical microphone/model validation remains open. |
+| Storage and networking | Swift actors and async APIs, not SwiftUI responsibilities | Mac reads and explicit saved-work uploads use the shared native store. Complete iOS transactional queue/caller cutover and old-data migration before removing FMDB/PromiseKit. |
 | Grading and kana conversion | Can be entirely Swift | Preserve UTF-16 edit-distance/transposition semantics and kana composition behavior with parity tests. Both grading and kana conversion are now shared Swift, with direct legacy parity comparisons. The native text-input adapter remains. |
 | Protobuf, SQLite engines and Apple frameworks | Swift-facing APIs may contain generated or compiled non-Swift internals | “App-owned code in Swift” is achievable; “no non-Swift code anywhere” is not a meaningful platform guarantee. |
 | Watch companion and build/data utilities | Separate platform/tooling migrations | Keep current functionality; not included in the new Mac target. |
@@ -326,3 +326,25 @@ uncertain-upload preservation and normal grading with a newly edited synonym.
 Audio, Japanese font preferences, richer catalog filters/progress and the iOS
 detail-screen cutover remain open. The existing iOS editor remains until that
 cutover; compiling this shared form on iOS does not claim its caller migration.
+
+## Native review preferences
+
+The Mac review page reuses `ReviewSettingsPanel` and the shared `ReviewPreferences`
+value. `StoredReviewPreferences` wraps AppStorage observation; edits merge only
+changed fields into the current value so another window's unrelated changes survive.
+The Mac window root applies appearance, including sheets. iOS keeps its archived-key
+adapter until its wider settings migration. No second synchronization service or
+preference dependency is needed.
+
+The native page applies question size, stage presentation, skipping, correction
+availability and partial/full reveal choices. An exact-match near miss uses the
+normal grader but leaves the durable session and pending answers unchanged, allowing
+a precise retry without a penalty. Explicit All information reveals the remaining
+question type. Ordinary settings changes preserve the current answer draft.
+
+Mac audio playback and the font library are still open, so their controls are not
+presented there yet. iOS retains both. Practice/Anki, lessons and complete option
+parity remain tracked separately. Automated checks cover merging/serialization and
+exact matching; synthetic UI checks cover draft retention, reveal/correction/skip
+behavior and appearance persistence. No live account or microphone validation is
+claimed by this checkpoint.

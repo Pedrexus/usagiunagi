@@ -278,3 +278,46 @@ extension NativeReviewTests {
     )
   }
 }
+
+extension NativeReviewTests {
+  @Test(arguments: [true, false]) func exactMatchingUsesNormalGradingWithoutPenalizingTypos(
+    exactMatch: Bool
+  ) async throws {
+    let store = try await store()
+    let details = try await store.subjectDetails(subjectID: 1, accountID: account)
+    var material = try #require(details.material)
+    material.meaningSynonyms.append("Bunny")
+    try await store.saveSubjectMaterial(
+      material, accountID: account, expectedRevision: details.savedMaterial?.revision)
+    var opened = try await store.openReviews(accountID: account, now: now)
+    if let question = opened.question, question.kind == .reading {
+      opened = try await store.answerReview(
+        "いち", question: question, accountID: account, expectedRevision: opened.saved.revision,
+        now: now
+      ).state
+    }
+    let question = try #require(opened.question)
+    #expect(question.kind == .meaning)
+    let checked = try await store.answerReview(
+      "bunn", question: question, accountID: account, expectedRevision: opened.saved.revision,
+      exactMatch: exactMatch, now: now)
+    #expect(checked.grade == .imprecise)
+    if exactMatch {
+      #expect(checked.state.saved.revision == opened.saved.revision)
+      #expect(checked.state.question == question)
+      #expect(checked.state.saved.session.tasksAnswered == opened.saved.session.tasksAnswered)
+      #expect(checked.state.saved.session.items[question.itemID]?.meaning.wrongCount == 0)
+      #expect(try await store.pendingReviews(accountID: account).isEmpty)
+      let restored = try await store.openReviews(accountID: account, now: now)
+      #expect(restored.saved.revision == opened.saved.revision && restored.question == question)
+      let exact = try await store.answerReview(
+        "bunny", question: question, accountID: account, expectedRevision: restored.saved.revision,
+        exactMatch: true, now: now)
+      #expect(exact.grade == .precise)
+      #expect(exact.state.saved.session.items[question.itemID]?.meaning.answered == true)
+    } else {
+      #expect(checked.state.saved.revision != opened.saved.revision)
+      #expect(checked.state.saved.session.items[question.itemID]?.meaning.answered == true)
+    }
+  }
+}

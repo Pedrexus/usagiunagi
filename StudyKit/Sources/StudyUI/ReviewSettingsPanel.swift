@@ -4,15 +4,18 @@ import SwiftUI
 /// Native review preferences. The host handles persistence and the font library.
 public struct ReviewSettingsPanel: View {
     @State private var preferences: ReviewPreferences
+    private let sourcePreferences: ReviewPreferences
     private let changed: (ReviewPreferences, ReviewPreferences) -> Void
-    private let fonts: () -> Void
+    private let fonts: (() -> Void)?
+    private let supportsAudio: Bool
     private let done: () -> Void
 
     public init(preferences: ReviewPreferences,
                 changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
-                fonts: @escaping () -> Void, done: @escaping () -> Void) {
+                fonts: (() -> Void)? = nil, supportsAudio: Bool = true, done: @escaping () -> Void) {
         _preferences = State(initialValue: preferences)
-        self.changed = changed; self.fonts = fonts; self.done = done
+        sourcePreferences = preferences
+        self.changed = changed; self.fonts = fonts; self.supportsAudio = supportsAudio; self.done = done
     }
 
     private func binding<Value>(_ keyPath: WritableKeyPath<ReviewPreferences, Value>) -> Binding<Value> {
@@ -42,8 +45,10 @@ public struct ReviewSettingsPanel: View {
                             Text("\(step * 25)%").tag(Double(step) / 4)
                         }
                     }.accessibilityIdentifier("reviewSettings.fontSize")
-                    Button("Japanese fonts", systemImage: "textformat") { fonts() }
-                        .accessibilityIdentifier("reviewSettings.fonts")
+                    if let fonts {
+                        Button("Japanese fonts", systemImage: "textformat", action: fonts)
+                            .accessibilityIdentifier("reviewSettings.fonts")
+                    }
                 }
                 Section("Answers and marking") {
                     Toggle("Autoreveal answers", isOn: binding(\.revealAnswers))
@@ -57,14 +62,20 @@ public struct ReviewSettingsPanel: View {
                     Toggle("Allow skipping", isOn: binding(\.allowSkipping))
                         .accessibilityIdentifier("reviewSettings.skipping")
                 }
-                Section("Audio") {
-                    Toggle("Autoplay audio", isOn: binding(\.autoplayAudio))
-                        .accessibilityIdentifier("reviewSettings.autoplay")
-                    Toggle("Interrupt background audio", isOn: binding(\.interruptBackgroundAudio))
-                        .accessibilityIdentifier("reviewSettings.interruptAudio")
+                if supportsAudio {
+                    Section("Audio") {
+                        Toggle("Autoplay audio", isOn: binding(\.autoplayAudio))
+                            .accessibilityIdentifier("reviewSettings.autoplay")
+                        Toggle("Interrupt background audio", isOn: binding(\.interruptBackgroundAudio))
+                            .accessibilityIdentifier("reviewSettings.interruptAudio")
+                    }
                 }
             }
+            #if os(macOS)
+            .formStyle(.grouped)
+            #endif
             .navigationTitle("Quick settings")
+            .onChange(of: sourcePreferences) { _, value in preferences = value }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
