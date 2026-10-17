@@ -21,6 +21,8 @@ struct TsurukameMacApp: App {
 final class MacStudyStore {
     var snapshot: StudySnapshot?
     var profile: StudyAccountProfile?
+    var savedWorkStore: StudyStore?
+    var syncSummary: String?
     var maximumContentLevel: Int { snapshot?.isSample == true ? 60 : profile?.maxLevelGranted ?? 3 }
     var contentAccessVerified: Bool { snapshot?.isSample == true || profile != nil }
     var error: String?
@@ -31,7 +33,7 @@ final class MacStudyStore {
     private func repository() async throws -> StudyStore {
         let task = persistence ?? Task { try await StudyStore.open(at: directory.appending(path: "study.store")) }
         persistence = task
-        do { return try await task.value }
+        do { let store = try await task.value; savedWorkStore = store; return store }
         catch { persistence = nil; throw error }
     }
     private let reader = WaniKaniClient()
@@ -54,13 +56,13 @@ final class MacStudyStore {
     }
     func loadSample() {
         guard !isSyncing else { return }
-        do { snapshot = try .sample(); profile = nil; error = nil } catch { self.error = error.localizedDescription }
+        do { snapshot = try .sample(); profile = nil; error = nil; syncSummary = nil } catch { self.error = error.localizedDescription }
     }
     func connect(_ token: String) async {
         guard !isSyncing else { return }
         let token = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else { error = "Enter your WaniKani API token."; return }
-        isSyncing = true; error = nil; defer { isSyncing = false }
+        isSyncing = true; error = nil; syncSummary = nil; defer { isSyncing = false }
         do {
             let previous = try TokenKeychain.load().map(credentialID)
             let credential = credentialID(token)
@@ -79,6 +81,19 @@ final class MacStudyStore {
             await connect(token)
         } catch { self.error = error.localizedDescription }
     }
+    /// Sending is an explicit Saved work action; ordinary refresh remains read-only.
+    func syncSavedWork(accountID: String) async throws {
+        guard !isSyncing else { throw StudyUploadError.alreadyRunning }
+        guard snapshot?.accountID == accountID, snapshot?.isSample == false,
+              let token = try TokenKeychain.load() else { throw StudyStoreError.invalidIdentity }
+        isSyncing = true; error = nil; syncSummary = nil; defer { isSyncing = false }
+        let cache = try await repository()
+        let report = try await cache.uploadPending(accountID: accountID, token: token, client: reader)
+        syncSummary = "Sent \(report.uploadedReviews) reviews, \(report.uploadedLessons) lessons and \(report.uploadedMaterials) note edits. \(report.reviewsNeedingAttention + report.materialsNeedingAttention) items need attention."
+            + (report.onVacation ? " Reviews and lessons are paused during vacation." : "")
+        snapshot = try await cache.refresh(credentialID: credentialID(token), token: token, client: reader)
+        profile = try await cache.accountState(accountID: accountID)?.profile
+    }
     private func credentialID(_ token: String) -> String {
         SHA256.hash(data: Data(token.utf8)).map { String(format: "%02x", $0) }.joined()
     }
@@ -93,7 +108,7 @@ final class MacStudyStore {
             }
             let legacy = directory.appending(path: "snapshot-v1.json")
             if FileManager.default.fileExists(atPath: legacy.path) { try FileManager.default.removeItem(at: legacy) }
-            try TokenKeychain.remove(); snapshot = nil; profile = nil; error = nil
+            try TokenKeychain.remove(); snapshot = nil; profile = nil; error = nil; syncSummary = nil
         } catch { self.error = error.localizedDescription }
     }
 }
@@ -122,12 +137,13 @@ private enum TokenKeychain {
 private struct MacStudyRoot: View {
     @Bindable var store: MacStudyStore
     private enum Destination: String, CaseIterable, Identifiable {
-        case statistics = "Statistics", subjects = "Subjects", account = "Account"
+        case statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
         var id: Self { self }
         var symbol: String {
             switch self {
             case .statistics: "chart.bar.xaxis"
             case .subjects: "character.book.closed"
+            case .savedWork: "tray.and.arrow.up"
             case .account: "person.crop.circle"
             }
         }
@@ -147,7 +163,16 @@ private struct MacStudyRoot: View {
             Group {
                 if section == .account || store.snapshot == nil { account }
                 else if let snapshot = store.snapshot {
-                    if section == .subjects {
+                    if section == .savedWork {
+                        if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
+                            SavedWorkView(store: cache, accountID: accountID, isSyncing: store.isSyncing) {
+                                try await store.syncSavedWork(accountID: accountID)
+                            }.id(accountID)
+                        } else {
+                            ContentUnavailableView("No account work in sample mode", systemImage: "tray",
+                                description: Text("Connect your account to see work saved on this Mac. The iPhone and iPad queues stay on those devices."))
+                        }
+                    } else if section == .subjects {
                         List(snapshot.subjects.filter { $0.level <= store.maximumContentLevel && (search.isEmpty || $0.characters.localizedStandardContains(search) || $0.meaning.localizedStandardContains(search)) }) { item in
                             Button { subject = item } label: {
                                 LabeledContent(item.characters.isEmpty ? item.meaning : item.characters, value: "Level \(item.level) · \(item.meaning)")
@@ -163,6 +188,9 @@ private struct MacStudyRoot: View {
                 }
                 .safeAreaInset(edge: .bottom) {
                     if let error = store.error { Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial) }
+                    if section == .savedWork, let summary = store.syncSummary {
+                        Text(summary).font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial)
+                    }
                 }
         }.sheet(item: $subject) { NativeSubjectDetail(subject: $0, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified) }
     }
@@ -172,7 +200,7 @@ private struct MacStudyRoot: View {
                 Text("Native Mac statistics and subject browsing. Reviews and lessons still run in the iPhone/iPad app while their session UI is migrated.").foregroundStyle(.secondary)
                 SecureField("API token", text: $token)
                 Link("Create a token in WaniKani", destination: URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
-                Text("Only reading access is used. The token is stored in this Mac's Keychain; the account snapshot stays locally for offline access.").font(.caption).foregroundStyle(.secondary)
+                Text("Connect and refresh use reading access. Sending from Saved work also requires the corresponding review, assignment or study-material write permissions. The token stays in this Mac's Keychain; saved work stays on this device.").font(.caption).foregroundStyle(.secondary)
                 Button("Connect and sync") { Task { await store.connect(token); if store.error == nil { token = ""; section = .statistics } } }.disabled(store.isSyncing || token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 if let snapshot = store.snapshot, !snapshot.isSample {
                     LabeledContent("Connected", value: snapshot.username)

@@ -12,35 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+import Foundation
+import Testing
+import WaniKaniAPI
 
-class URLRequestSetBodyTest: XCTestCase {
-  func testEncodesPlusSign() {
-    var req = URLRequest(url: URL(string: "http://example.com")!)
-    try! req.setFormBody(method: "POST", queryItems: [
-      URLQueryItem(name: "password", value: "foo+bar"),
-    ])
-
-    XCTAssertEqual(String(data: req.httpBody!, encoding: .utf8)!, "password=foo%2Bbar")
+struct URLRequestSetBodyTest {
+  @Test(arguments: [
+    ("foo+bar", "foo%2Bbar"),
+    ("foo&bar", "foo%26bar"),
+    ("bob=bob", "bob%3Dbob"),
+    ("foo%bar", "foo%25bar"),
+    ("かな", "%E3%81%8B%E3%81%AA"),
+    ("", ""),
+  ])
+  func formEscaping(value: String, encoded: String) throws {
+    var request = try URLRequest(url: #require(URL(string: "https://example.com")))
+    try request.setFormBody(
+      method: "POST",
+      queryItems: [URLQueryItem(name: "password", value: value)])
+    let body = try #require(request.httpBody)
+    #expect(String(data: body, encoding: .utf8) == "password=\(encoded)")
+    #expect(request.httpMethod == "POST")
+    #expect(
+      request
+        .value(forHTTPHeaderField: "Content-Type") == "application/x-www-form-urlencoded")
+    #expect(request.value(forHTTPHeaderField: "Content-Length") == String(body.count))
   }
 
-  func testEncodesAmpersandAndEquals() {
-    var req = URLRequest(url: URL(string: "http://example.com")!)
-    try! req.setFormBody(method: "POST", queryItems: [
-      URLQueryItem(name: "username", value: "bob=bob"),
-      URLQueryItem(name: "password", value: "foo&bar"),
-    ])
-
-    XCTAssertEqual(String(data: req.httpBody!, encoding: .utf8)!,
-                   "username=bob%3Dbob&password=foo%26bar")
-  }
-
-  func testEncodesPercentSign() {
-    var req = URLRequest(url: URL(string: "http://example.com")!)
-    try! req.setFormBody(method: "POST", queryItems: [
-      URLQueryItem(name: "password", value: "foo%bar"),
-    ])
-
-    XCTAssertEqual(String(data: req.httpBody!, encoding: .utf8)!, "password=foo%25bar")
+  @Test func formSeparatorsAreDistinctFromEscapedValues() throws {
+    var request = try URLRequest(url: #require(URL(string: "https://example.com")))
+    try request.setFormBody(
+      method: "POST",
+      queryItems: [
+        URLQueryItem(name: "username", value: "bob=bob"),
+        URLQueryItem(name: "password", value: "foo&bar"),
+      ])
+    let body = try #require(request.httpBody)
+    #expect(String(data: body, encoding: .utf8) == "username=bob%3Dbob&password=foo%26bar")
   }
 }

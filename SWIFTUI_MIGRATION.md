@@ -8,7 +8,7 @@ Move the application UI to SwiftUI in small, working slices. Use Swift for app-o
 
 SwiftUI is a UI framework, not a replacement for networking, persistence, speech recognition or data-generation tools. A repository containing several languages does not mean its screens use several competing UI frameworks. Rewriting generated or build-time code solely to improve GitHub's language percentages would add risk without simplifying the app people use.
 
-Apple explicitly supports incremental integration in [Modernize your UIKit app](https://developer.apple.com/videos/play/wwdc2026/272/). Statistics now uses shared SwiftUI views and Apple Swift Charts hosted in the existing iOS tab controller and a native macOS NavigationSplitView. Its Swift 6 calculations, curriculum data, and read-only API/cache layer are in StudyKit, with tests.
+Apple explicitly supports incremental integration in [Modernize your UIKit app](https://developer.apple.com/videos/play/wwdc2026/272/). Statistics now uses shared SwiftUI views and Apple Swift Charts hosted in the existing iOS tab controller and a native macOS NavigationSplitView. Its Swift 6 calculations, curriculum data, native API client and SwiftData store are in StudyKit, with tests.
 
 ## Swift 6.4 and SwiftUI 27 audit — 2026-10-17
 
@@ -83,7 +83,7 @@ The requested floor is now **iOS/iPadOS 27.0**, with a separate **macOS 27.0** n
 
 `native/TsurukameMac.xcodeproj` builds a SwiftUI Mac app directly, without Catalyst or the iOS UIKit/CocoaPods stack. It supports account connection, manual refresh, offline statistics, curriculum charts, subject searching and basic subject details. Full mnemonics link to WaniKani. **Mac reviews, lessons, audio, downloads, notifications and full settings are not migrated yet.** This is a working first platform slice, not feature parity.
 
-Mac reads a full snapshot through URLSession/async-await. Credentials stay in Keychain; an atomic JSON snapshot is isolated in Application Support. A token fingerprint binds the cache to its credential, preventing another account's cached data from appearing after a failed account switch. Fetch failures do not publish partial API snapshots. The new reader has no write endpoints. Existing iOS review uploads and database remain authoritative until the durable outbox is ported and tested. Cross-device learning progress syncs through WaniKani; app preferences, local downloads and pending reviews are not shared through iCloud.
+Mac reads full study content through URLSession/async-await and commits it in the shared SwiftData store; the previous JSON cache is imported once. Credentials stay in Keychain, and a fingerprint binds each visible snapshot to its credential. Fetch failures do not publish partial snapshots. Native validated write endpoints and a durable upload lane are now implemented; the Mac Saved work screen exposes explicit synchronization of eligible locally saved work. Existing iOS review uploads and its database remain active until the controlled writer handoff. Cross-device learning progress syncs through WaniKani; app preferences, local downloads and pending reviews are not shared through iCloud.
 
 ### What prevents “pure SwiftUI” today
 
@@ -107,7 +107,7 @@ Mac reads a full snapshot through URLSession/async-await. Credentials stay in Ke
 4. **Review and lesson sessions:** the deterministic state machine and main SwiftUI review layout are implemented. Continue with durable resume, native Mac integration, lesson navigation and the remaining rich-details/settings bridges. Expand mode coverage for wrong/alternate answers, correction, interruption, queues and input behavior. Keep the small input adapter as necessary.
 5. **Data and dependency cleanup:** test offline review completion, restart before upload, failed/duplicate upload responses, retry ordering, reset/vacation transitions and old-database upgrades. Only then replace FMDB/PromiseKit and remove unused dependencies. Migrate the watch companion independently.
 
-Use XCTest for existing coverage and UI workflows; new isolated Swift modules can use Swift Testing. Use previews for empty, loading, offline, vacation, error and populated states, then verify actual Simulator/device behavior. Preview success is not proof of sync correctness.
+Use Swift Testing for isolated unit/integration coverage, migrate existing XCTest suites after reviewing fixture ownership, and keep XCUITest for UI workflows. Use previews for empty, loading, offline, vacation, error and populated states, then verify actual Simulator/device behavior. Preview success is not proof of sync correctness.
 
 Track app-owned production LOC, storyboard/XIB size, dependencies and behavior coverage separately. The Home action component shrank from 406 to 114 physical lines; the statistics feature adds code, so this change does not claim a net reduction across the whole app. Splitting a large file into smaller files alone is not a reduction.
 
@@ -148,3 +148,27 @@ The native Mac connect/refresh path now uses this full store transaction. Subscr
 Validation: **102 shared Swift Testing functions pass on macOS and iOS 27** (59 core, 6 speech, 37 persistence), including complete payload/hidden-data tests and eight refresh functions covering process reopen, pending notes/reviews, a half-answered session, missing resources, account mismatch, cancellation, overlapping reads, backoff and an upload racing an older download. **75 iOS app tests pass** and the Mac app builds. A separate executable built from committed `c8db161` models wrote catalog/assignment/pending-note rows; the new production store reopened them successfully after the additive assignment-revision change. The independent-process upload probe also retains uncertain attempt markers. The initial incremental iOS test directory contained stale resource copies; the full suite passes from fresh derived data. No live account was accessed.
 
 Next gates remain explicit: recovery actions/UI for ambiguous writes; shared app ownership/coalescing of sync; incremental refresh and efficiency; recent-mistake and durable-session UI integration; atomic iOS writer handoff; native Mac study/detail UI; media downloads; removal of replaced legacy implementations. Full refresh is implemented, but the iOS app still uses its existing writer. Do not enable a second writable queue or delete the legacy database before those gates pass.
+
+## Swift Testing, Mainboard and native formatting
+
+The intended local workspace is `/Users/pedro/Developer/Projects`, with this standalone fork under `apps/usagiunagi`. Root `mainboard.toml` owns the task entries. Run from that root using `mainboard run --as-is <task>` to use the installed environment without changing the unrelated lock. These tasks invoke Apple's Xcode toolchain directly; Mainboard and its Python implementation are developer infrastructure, not shipped app code.
+
+| Task | Purpose |
+| --- | --- |
+| `usagi-toolchain` | Show the selected Xcode/Swift versions. |
+| `usagi-test` | Shared Swift Testing on macOS. |
+| `usagi-test-ios` | Shared tests on an iOS 27 simulator. |
+| `usagi-test-app` | Hosted iOS Swift Testing and remaining XCTest suites. |
+| `usagi-test-ui` | Synthetic XCUITest review flows. |
+| `usagi-build-mac` | Native Mac debug build with ad-hoc signing. |
+| `usagi-format-changed` / `usagi-format-check` | Format or lint changed tracked/staged Swift files using bundled `swift format`; stage new files to include them. |
+
+The simulator tasks currently select the installed iPhone 18 Pro / latest runtime by name. Build/test tasks have hard timeouts and use separate derived-data locations where needed. Xcode result bundles remain under ignored build directories. The standalone fork still opens directly in Xcode; the parent workspace is not an application dependency.
+
+[Apple's migration guidance](https://developer.apple.com/documentation/testing/migratingfromxctest) supports gradual adoption. The shared package already uses Swift Testing; four independent hosted suites now do too. Use structs and per-test fixtures, parameterized examples rather than opaque loops, `#require` for values needed by subsequent checks, and async/await for completion. The hosted target uses `SWIFT_TESTING_XCTEST_INTEROP_MODE=complete` in its scheme and tasks so assertions in shared helpers cannot silently become warnings during mixed-framework migration. Never nest an expectation macro inside a callback expression passed to another expectation: call the operation first and assert its result and observed callback values separately.
+
+Next migrate the seven remaining hosted suites after checking their state ownership. UIKit input tests need MainActor isolation. Preferences/session tests touching UserDefaults or process-wide settings need a common serialized scope or injected per-test stores, not independently serialized suites that still race each other. SQLite/import/outbox tests must keep temporary databases, WAL/reopen/rollback cases and account-fencing assertions. Legacy API tests should migrate only if their implementation survives the native-client cutover. XCUITest remains for launching and operating the app; a unit-test framework change does not replace real review, keyboard, voice or offline UI checks.
+
+An actual migration failure exposed an obsolete SwiftFormat 0.52 build phase which rewrote Testing macros as invalid `#expecttry` tokens. The build phase, helper package and old formatter configuration are removed. Apple's bundled `swift format` uses the root configuration and runs explicitly, so builds never modify source and no separate formatter dependency needs installation. Existing license headers are retained. This is a tooling reduction, not proof of whole-app LOC reduction.
+
+Validated at this checkpoint: 107 shared functions on macOS/iOS; 24 Swift Testing functions plus 49 XCTest tests in the hosted iOS target; the native Mac build; and synthetic recovery UI inspection. No real-account/device claim follows from these checks.

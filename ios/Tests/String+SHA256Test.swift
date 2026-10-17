@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+import Foundation
+import Testing
 
-class StringSHA256Test: XCTestCase {
-  func testEmptyString() {
-    XCTAssertEqual(String().sha256(),
-                   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-  }
-
-  func testNonEmptyString() {
-    XCTAssertEqual("foo".sha256(),
-                   "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae")
+struct StringSHA256Test {
+  @Test(arguments: [
+    ("", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+    ("foo", "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"),
+  ])
+  func knownDigest(input: String, expected: String) {
+    #expect(input.sha256() == expected)
   }
 }

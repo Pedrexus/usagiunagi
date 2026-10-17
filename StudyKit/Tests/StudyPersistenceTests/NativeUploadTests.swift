@@ -252,6 +252,102 @@ struct NativeUploadTests {
         }
     }
 
+    @Test func rejectedRecoveryChoicePersistsAndRechecksServerBeforeRetry() async throws {
+        let dir = try directory(); defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appending(path: "study.store"), server = UploadServer()
+        await server.configure(rejectedSubject: 42, reviewStatus: 422, materialStatus: 422)
+        do {
+            let store = try await store(at: url)
+            _ = try await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+            let work = try await store.savedWork(accountID: "account-a")
+            let review = try #require(work.reviews.first), material = try #require(work.materials.first)
+            let requestCount = await server.requests.count
+            try await store.queueRejectedReview(review)
+            try await store.queueRejectedMaterial(material)
+            #expect(await server.requests.count == requestCount) // Queuing is local, not consent to upload.
+            await #expect(throws: StudyRecoveryError.self) { try await store.queueRejectedReview(review) }
+            await #expect(throws: StudyRecoveryError.self) { try await store.queueRejectedMaterial(material) }
+        }
+        let store = try await StudyStore.open(at: url)
+        let work = try await store.savedWork(accountID: "account-a")
+        #expect(work.reviews.first?.issue == nil && work.materials.first?.issue == nil)
+        #expect(work.reviews.first?.submission.assignmentID == 142)
+        #expect(work.materials.first?.material.meaningNote == "first")
+        await server.configure(changedSubject: 42)
+        let report = try await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+        #expect(report.uploadedReviews == 0 && report.uploadedMaterials == 1)
+        #expect(try await store.savedWork(accountID: "account-a").reviews.first?.issue?.reason == .assignmentChanged)
+    }
+
+    @Test func rejectedReviewCanBeRetriedWithoutChangingItsOriginalAnswers() async throws {
+        let store = try await store(note: false), server = UploadServer()
+        await server.configure(rejectedSubject: 42, reviewStatus: 422)
+        _ = try await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+        let saved = try #require(await store.savedWork(accountID: "account-a").reviews.first)
+        try await store.queueRejectedReview(saved)
+        #expect(try await store.savedWork(accountID: "account-a").reviews.first?.submission == saved.submission)
+        await server.configure()
+        let report = try await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+        #expect(report.uploadedReviews == 1)
+        #expect(try await store.savedWork(accountID: "account-a").isEmpty)
+        let writes = await server.writes
+        #expect(writes.count == 2)
+        let first = try JSONSerialization.jsonObject(with: #require(writes.first?.httpBody)) as? NSDictionary
+        let second = try JSONSerialization.jsonObject(with: #require(writes.last?.httpBody)) as? NSDictionary
+        #expect(first == second)
+    }
+
+    @Test func recoveryNeverClearsUncertainOrChangedWork() async throws {
+        for scenario in 0...3 {
+            let store = try await store(note: false), server = UploadServer()
+            await server.configure(timeoutReview: scenario == 0, changedSubject: scenario == 1 ? 42 : nil,
+                missingSubject: scenario == 2 ? 42 : nil, replacedSubject: scenario == 3 ? 42 : nil)
+            _ = try? await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+            let saved = try #require(await store.savedWork(accountID: "account-a").reviews.first)
+            await #expect(throws: StudyRecoveryError.self) { try await store.queueRejectedReview(saved) }
+            let retained = try #require(await store.savedWork(accountID: "account-a").reviews.first)
+            #expect(retained.revision == saved.revision && retained.attempted == saved.attempted)
+            #expect(retained.issue?.reason == saved.issue?.reason)
+        }
+        let store = try await store(subjects: []), server = UploadServer()
+        await server.configure(timeoutMaterial: true)
+        _ = try? await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+        let saved = try #require(await store.savedWork(accountID: "account-a").materials.first)
+        await #expect(throws: StudyRecoveryError.self) { try await store.queueRejectedMaterial(saved) }
+        #expect(try await store.savedWork(accountID: "account-a").materials.first?.attemptedRevision == saved.attemptedRevision)
+    }
+
+    @Test func recoveryRejectsStaleNoteEditsAndDisconnectedAccounts() async throws {
+        let store = try await store(), server = UploadServer()
+        await server.configure(rejectedSubject: 42, reviewStatus: 422, materialStatus: 422)
+        _ = try await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+        let work = try await store.savedWork(accountID: "account-a")
+        let saved = try #require(work.materials.first), review = try #require(work.reviews.first)
+        try await store.saveMaterial(.init(subjectID: 42, meaningNote: "newer"), accountID: "account-a", expectedRevision: saved.revision)
+        await #expect(throws: StudyRecoveryError.self) { try await store.queueRejectedMaterial(saved) }
+        #expect(try await store.savedWork(accountID: "account-a").materials.first?.material.meaningNote == "newer")
+        try await store.removeSnapshot(credentialID: "credential-a")
+        await #expect(throws: StudyStoreError.self) { try await store.queueRejectedReview(review) }
+        await #expect(throws: StudyStoreError.self) { try await store.savedWork(accountID: "account-a") }
+        #expect(try await store.pendingReviews(accountID: "account-a").count == 1)
+    }
+
+    @Test func recoveryCannotChangeItemsDuringAnUploadPass() async throws {
+        let store = try await store(), server = UploadServer(), gate = UploadGate()
+        await server.configure(rejectedSubject: 42, reviewStatus: 422, materialStatus: 422)
+        _ = try await store.uploadPending(accountID: "account-a", token: "fixture", client: server.client)
+        let work = try await store.savedWork(accountID: "account-a")
+        let review = try #require(work.reviews.first), material = try #require(work.materials.first)
+        await server.configure(gate: gate, gateMethod: "GET")
+        let client = await server.client
+        let run = Task { try await store.uploadPending(accountID: "account-a", token: "fixture", client: client) }
+        await gate.waitForEntry()
+        await #expect(throws: StudyUploadError.self) { try await store.queueRejectedReview(review) }
+        await #expect(throws: StudyUploadError.self) { try await store.queueRejectedMaterial(material) }
+        await gate.resume(); _ = try await run.value
+        #expect(try await store.savedWork(accountID: "account-a").materials.first?.issue?.reason == .rejected)
+    }
+
     @Test func lessonUsesStartEndpointAndCommitsUpdatedAssignment() async throws {
         let store = try await store(note: false, lesson: true), server = UploadServer()
         await server.configure(lessonSubject: 42)

@@ -21,7 +21,7 @@ let package = Package(
         .target(name: "StudyCore", resources: [.process("Resources")], swiftSettings: concurrency),
         .target(name: "StudyPersistence", dependencies: ["StudyCore"], swiftSettings: concurrency),
         .target(name: "StudySpeech", dependencies: ["StudyCore"], swiftSettings: concurrency),
-        .target(name: "StudyUI", dependencies: ["StudyCore", "StudySpeech"],
+        .target(name: "StudyUI", dependencies: ["StudyCore", "StudySpeech", "StudyPersistence"],
                 swiftSettings: concurrency + [.defaultIsolation(MainActor.self)]),
         .target(name: "StudyTestSupport", dependencies: ["StudyCore"], path: "Tests/StudyTestSupport"),
         .testTarget(name: "StudyPersistenceTests", dependencies: ["StudyPersistence", "StudyCore", "StudyTestSupport"]),
