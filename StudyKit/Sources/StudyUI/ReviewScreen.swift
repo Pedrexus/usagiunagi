@@ -10,6 +10,7 @@ import SwiftUI
     public var questionFont = ""
     public var questionSize: Double = 72
     public var prompt = ""
+    public var title: String?
     public var subjectColor = Color.accentColor
     public var level = ""
     public var stage = ""
@@ -77,7 +78,7 @@ public struct ReviewScreen<Input: View, Details: View>: View {
                 }
             }
             .padding()
-            .navigationTitle(state.hasMenu ? "Reviews" : "Quiz")
+            .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

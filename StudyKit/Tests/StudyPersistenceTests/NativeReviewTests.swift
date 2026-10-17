@@ -1,0 +1,237 @@
+import Foundation
+import StudyCore
+import StudyTestSupport
+import Testing
+
+@testable import StudyPersistence
+
+struct NativeReviewTests {
+  private let account = "fixture-user-id"
+  private let now = Date(timeIntervalSince1970: 2_000_000_000)
+  private func store(at url: URL = URL(filePath: "/unused")) async throws -> StudyStore {
+    let store = try await StudyStore.open(at: url, inMemory: url.path == "/unused")
+    _ = try await store.refresh(
+      credentialID: "credential", token: "fixture",
+      client: .init(transport: DownloadFixture.response))
+    return store
+  }
+
+  @Test func answersAndSessionSurviveReopenAndCompletionDoesNotRequeue() async throws {
+    let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: folder) }
+    let url = folder.appending(path: "study.store")
+    let initial: NativeReviewState
+    do {
+      let store = try await store(at: url)
+      let opened = try await store.openReviews(accountID: account, now: now)
+      let question = try #require(opened.question)
+      initial = try await store.answerReview(
+        question.kind == .meaning ? "single" : "いち", question: question, accountID: account,
+        expectedRevision: opened.saved.revision,
+        now: now
+      ).state
+      #expect(initial.saved.session.completedIDs.isEmpty)
+      #expect(try await store.pendingReviews(accountID: account).isEmpty)
+    }
+    let reopened = try await StudyStore.open(at: url)
+    let resumed = try await reopened.openReviews(accountID: account, now: now)
+    #expect(
+      resumed.saved.revision == initial.saved.revision && resumed.question == initial.question)
+    let reading = try #require(resumed.question)
+    let complete = try await reopened.answerReview(
+      reading.kind == .reading ? "いち" : "single", question: reading, accountID: account,
+      expectedRevision: resumed.saved.revision,
+      now: now)
+    #expect(complete.state.question == nil)
+    let snapshot = try #require(await reopened.snapshot(credentialID: "credential"))
+    #expect(snapshot.pendingReviews == 1 && snapshot.assignments.isEmpty)
+    #expect(try await reopened.pendingReviews(accountID: account).count == 1)
+    try await reopened.finishReviews(
+      accountID: account, expectedRevision: complete.state.saved.revision)
+    #expect(try await reopened.session(accountID: account) == nil)
+    await #expect(throws: NativeReviewError.self) {
+      try await reopened.openReviews(accountID: account, now: now)
+    }
+    #expect(try await reopened.pendingReviews(accountID: account).count == 1)
+  }
+
+  @Test func staleWindowsAndVoiceTokensCannotCreditAnotherQuestion() async throws {
+    let store = try await store()
+    let opened = try await store.openReviews(accountID: account, now: now)
+    let question = try #require(opened.question)
+    let answered = try await store.answerReview(
+      question.kind == .meaning ? "one" : "いち", question: question, accountID: account,
+      expectedRevision: opened.saved.revision,
+      now: now)
+    await #expect(throws: StudyStoreError.self) {
+      try await store.answerReview(
+        question.kind == .meaning ? "one" : "いち", question: question, accountID: account,
+        expectedRevision: opened.saved.revision,
+        now: now)
+    }
+    await #expect(throws: StudySessionError.self) {
+      try await store.answerReview(
+        question.kind == .meaning ? "one" : "いち", question: question, accountID: account,
+        expectedRevision: answered.state.saved.revision, now: now)
+    }
+    #expect(try await store.session(accountID: account)?.session.tasksAnswered == 1)
+  }
+
+  @Test func incorrectAnswerPersistsAndExplicitCorrectionUsesNormalEngine() async throws {
+    let store = try await store()
+    let initial = try await store.openReviews(accountID: account, now: now)
+    let question = try #require(initial.question)
+    let wrong = try await store.answerReview(
+      question.kind == .meaning ? "wrong" : "ぜんぜん", question: question, accountID: account,
+      expectedRevision: initial.saved.revision,
+      now: now)
+    #expect(wrong.grade == .incorrect && wrong.state.saved.session.currentDecision == .incorrect)
+    let restored = try await store.openReviews(accountID: account, now: now)
+    #expect(restored.saved.session.currentDecision == .incorrect)
+    let corrected = try await store.changeReview(
+      .overrideCorrect, accountID: account, expectedRevision: restored.saved.revision, now: now)
+    #expect(corrected.saved.session.successRate == 100 && corrected.question?.kind != question.kind)
+    #expect(corrected.saved.session.items[question.itemID]?.meaning.wrongCount == 0)
+    await #expect(throws: StudyStoreError.self) {
+      try await store.finishReviews(accountID: account, expectedRevision: corrected.saved.revision)
+    }
+  }
+
+  @Test func invalidReadingAndAlternativeReadingDoNotPenalize() async throws {
+    let store = try await store()
+    let initial = try await store.openReviews(accountID: account, now: now)
+    let meaning = try #require(initial.question)
+    let readingState =
+      meaning.kind == .reading
+      ? initial
+      : try await store.answerReview(
+        "one", question: meaning, accountID: account, expectedRevision: initial.saved.revision,
+        now: now
+      ).state
+    let question = try #require(readingState.question)
+    let revision = readingState.saved.revision
+    for (text, expected) in [
+      ("一", AnswerGrade.containsInvalidCharacters([NSRange(location: 0, length: 1)])),
+      ("ひと", .otherKanjiReading),
+    ] {
+      let result = try await store.answerReview(
+        text, question: question, accountID: account, expectedRevision: revision, now: now)
+      #expect(result.grade == expected && result.state.saved.revision == revision)
+      #expect(result.state.saved.session.tasksAnswered == readingState.saved.session.tasksAnswered)
+    }
+  }
+
+  @Test func changedAssignmentAndDisconnectedAccountCannotAcceptAnswers() async throws {
+    let store = try await store()
+    let initial = try await store.openReviews(accountID: account, now: now)
+    let question = try #require(initial.question)
+    var download = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    download.assignments[0].srsStage = 6
+    let baseline = try await store.refreshBaseline(accountID: account)
+    _ = try await store.applyDownload(download, credentialID: "credential", baseline: baseline)
+    await #expect(throws: NativeReviewError.self) {
+      try await store.answerReview(
+        question.kind == .meaning ? "one" : "いち", question: question, accountID: account,
+        expectedRevision: initial.saved.revision,
+        now: now)
+    }
+    try await store.removeSnapshot(credentialID: "credential")
+    await #expect(throws: StudyStoreError.self) {
+      try await store.answerReview(
+        question.kind == .meaning ? "one" : "いち", question: question, accountID: account,
+        expectedRevision: initial.saved.revision,
+        now: now)
+    }
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+  }
+
+  @Test func selectionHonorsDueTimeVacationAndSubscription() async throws {
+    let store = try await store()
+    await #expect(throws: NativeReviewError.self) {
+      try await store.openReviews(accountID: account, now: .distantPast)
+    }
+    var download = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    download.profile.maxLevelGranted = 0
+    let baseline = try await store.refreshBaseline(accountID: account)
+    _ = try await store.applyDownload(download, credentialID: "credential", baseline: baseline)
+    await #expect(throws: NativeReviewError.self) {
+      try await store.openReviews(accountID: account, now: now)
+    }
+    download.profile.maxLevelGranted = 60
+    download.profile.vacationStartedAt = 1
+    _ = try await store.applyDownload(
+      download, credentialID: "credential", baseline: store.refreshBaseline(accountID: account))
+    await #expect(throws: NativeReviewError.self) {
+      try await store.openReviews(accountID: account, now: now)
+    }
+    #expect(try await store.session(accountID: account) == nil)
+  }
+}
+
+extension NativeReviewTests {
+  @Test func missingContentCannotSilentlyDropADueAssignment() async throws {
+    let store = try await store()
+    var download = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    download.subjects.removeAll { $0.id == 1 }
+    let baseline = try await store.refreshBaseline(accountID: account)
+    _ = try await store.applyDownload(download, credentialID: "credential", baseline: baseline)
+    await #expect(throws: NativeReviewError.self) {
+      try await store.openReviews(accountID: account, now: now)
+    }
+    #expect(try await store.session(accountID: account) == nil)
+  }
+
+  @Test(arguments: [true, false]) func reviewSurfaceDoesNotAdoptPracticeOrLessonSessions(
+    isPractice: Bool
+  ) async throws {
+    let store = try await store()
+    var practice = try StudySession(
+      items: [.init(id: 1, subjectID: 1, assignmentID: 101, srsStage: 5, isLesson: !isPractice)],
+      isPractice: isPractice)
+    practice.nextQuestion()
+    try await store.saveSession(practice, accountID: account, expectedRevision: nil)
+    await #expect(throws: StudyStoreError.self) {
+      try await store.openReviews(accountID: account, now: now)
+    }
+    #expect(try await store.session(accountID: account)?.session.isPractice == isPractice)
+  }
+}
+
+extension NativeReviewTests {
+  @Test func explicitEndPreservesCompletedWorkAndRejectsOldWindow() async throws {
+    let store = try await store()
+    var download = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    var second = CatalogAssignment(id: 102, subjectID: 2, kind: .vocabulary)
+    second.level = 1
+    second.srsStage = 3
+    second.availableAt = 1
+    second.startedAt = 1
+    second.isKanaOnlyVocabulary = true
+    download.assignments.append(second)
+    let baseline = try await store.refreshBaseline(accountID: account)
+    _ = try await store.applyDownload(download, credentialID: "credential", baseline: baseline)
+    var review = try await store.openReviews(accountID: account, now: now)
+    for _ in 0..<4 where review.saved.session.completedIDs.isEmpty {
+      let question = try #require(review.question)
+      review = try await store.answerReview(
+        question.kind == .reading ? "いち" : "one", question: question, accountID: account,
+        expectedRevision: review.saved.revision, now: now
+      ).state
+    }
+    #expect(review.saved.session.completedIDs.count == 1 && review.question != nil)
+    let pending = try await store.pendingReviews(accountID: account).map(\.revision)
+    try await store.endReviews(accountID: account, expectedRevision: review.saved.revision)
+    #expect(try await store.session(accountID: account) == nil)
+    #expect(try await store.pendingReviews(accountID: account).map(\.revision) == pending)
+    await #expect(throws: StudyStoreError.self) {
+      try await store.changeReview(
+        .advance, accountID: account, expectedRevision: review.saved.revision)
+    }
+    let next = try await store.openReviews(accountID: account, now: now)
+    #expect(next.saved.session.items.count == 1)
+  }
+}

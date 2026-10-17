@@ -27,6 +27,13 @@ final class MacStudyStore {
     var contentAccessVerified: Bool { snapshot?.isSample == true || profile != nil }
     var error: String?
     var isDisconnecting = false
+    var isReviewFixture: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("ReviewFixture")
+        #else
+        false
+        #endif
+    }
     var isSyncing: Bool { activeRequests > 0 || isDisconnecting }
     private var activeRequests = 0
     @ObservationIgnored private var activeCredential: String?
@@ -58,6 +65,12 @@ final class MacStudyStore {
     }
     func restore() async {
         guard !restored else { return }; restored = true
+        #if DEBUG
+        if isReviewFixture {
+            do { try await restoreReviewFixture() } catch { self.error = error.localizedDescription }
+            return
+        }
+        #endif
         if ProcessInfo.processInfo.arguments.contains("SampleData") { loadSample(); return }
         let epoch = generation
         do {
@@ -82,12 +95,25 @@ final class MacStudyStore {
             if generation == epoch { self.error = "Couldn't read saved statistics: \(error.localizedDescription)" }
         }
     }
+    func reloadSavedSnapshot() async {
+        guard !isSyncing, let accountID = snapshot?.accountID, let cache = savedWorkStore else { return }
+        let epoch = generation
+        do {
+            let credential = isReviewFixture ? "review-fixture" : try TokenKeychain.load().map(credentialID)
+            guard let credential else { return }
+            let saved = try await cache.snapshot(credentialID: credential)
+            try checkRequest(epoch)
+            guard saved?.accountID == accountID, snapshot?.accountID == accountID else { return }
+            snapshot = saved
+        } catch { if generation == epoch { self.error = error.localizedDescription } }
+    }
     func loadSample() {
         guard !isSyncing else { return }
         do { snapshot = try .sample(); profile = nil; error = nil; syncSummary = nil }
         catch { self.error = error.localizedDescription }
     }
     @discardableResult func connect(_ token: String) async -> Bool {
+        guard !isReviewFixture else { return false }
         let token = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else { error = "Enter your WaniKani API token."; return false }
         let epoch = generation, credential = credentialID(token)
@@ -110,6 +136,7 @@ final class MacStudyStore {
         }
     }
     func refresh() async {
+        guard !isReviewFixture else { return }
         do {
             guard let token = try TokenKeychain.load() else { error = "Connect a WaniKani account first."; return }
             await connect(token)
@@ -117,6 +144,7 @@ final class MacStudyStore {
     }
     /// Sending is an explicit Saved work action; ordinary refresh remains read-only.
     func syncSavedWork(accountID: String) async throws {
+        guard !isReviewFixture else { throw StudyStoreError.sampleData }
         guard snapshot?.accountID == accountID, snapshot?.isSample == false,
               let token = try TokenKeychain.load() else { throw StudyStoreError.invalidIdentity }
         let epoch = generation, credential = credentialID(token)
@@ -139,10 +167,31 @@ final class MacStudyStore {
         "Sent \(report.uploadedReviews) reviews, \(report.uploadedLessons) lessons and \(report.uploadedMaterials) note edits. \(report.reviewsNeedingAttention + report.materialsNeedingAttention) items need attention."
             + (report.onVacation ? " Reviews and lessons are paused during vacation." : "")
     }
+    #if DEBUG
+    private func restoreReviewFixture() async throws {
+        let cache = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
+        var profile = StudyAccountProfile(username: "Synthetic review fixture")
+        profile.level = 1; profile.maxLevelGranted = 60
+        var subject = CatalogSubject(id: 1, kind: .kanji)
+        subject.level = 1; subject.japanese = "一"
+        subject.meanings = [.init("One", role: .primary)]
+        subject.readings = [.init("いち", isPrimary: true, kind: .onyomi)]
+        var assignment = CatalogAssignment(id: 101, subjectID: 1, kind: .kanji)
+        assignment.level = 1; assignment.srsStage = 3; assignment.startedAt = 1; assignment.availableAt = 1
+        var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+        fixture.subjects = [subject]; fixture.assignments = [assignment]
+        _ = try await cache.importLegacyAccount(fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",
+            verifiedUsername: profile.username, credentialID: "review-fixture")
+        persistence = Task { cache }; savedWorkStore = cache; self.profile = profile
+        snapshot = try await cache.snapshot(credentialID: "review-fixture")
+    }
+    #endif
+
     private func credentialID(_ token: String) -> String {
         SHA256.hash(data: Data(token.utf8)).map { String(format: "%02x", $0) }.joined()
     }
     func disconnect() async {
+        guard !isReviewFixture else { return }
         guard !isDisconnecting else { return }
         let connectingCredential = activeCredential
         generation = UUID(); activeRequests = 0; activeCredential = nil
@@ -185,10 +234,11 @@ private enum TokenKeychain {
 private struct MacStudyRoot: View {
     @Bindable var store: MacStudyStore
     private enum Destination: String, CaseIterable, Identifiable {
-        case statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
+        case reviews = "Reviews", statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
         var id: Self { self }
         var symbol: String {
             switch self {
+            case .reviews: "rectangle.and.pencil.and.ellipsis"
             case .statistics: "chart.bar.xaxis"
             case .subjects: "character.book.closed"
             case .savedWork: "tray.and.arrow.up"
@@ -211,7 +261,13 @@ private struct MacStudyRoot: View {
             Group {
                 if section == .account || store.snapshot == nil { account }
                 else if let snapshot = store.snapshot {
-                    if section == .savedWork {
+                    if section == .reviews {
+                        if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
+                            NativeReviewView(store: cache, accountID: accountID).id(accountID)
+                        } else {
+                            ContentUnavailableView("Connect to review", systemImage: "rectangle.and.pencil.and.ellipsis", description: Text("Sample statistics do not contain a complete offline review catalog."))
+                        }
+                    } else if section == .savedWork {
                         if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
                             SavedWorkView(store: cache, accountID: accountID, isSyncing: store.isSyncing) {
                                 try await store.syncSavedWork(accountID: accountID)
@@ -235,17 +291,19 @@ private struct MacStudyRoot: View {
                         .disabled(store.isSyncing || store.snapshot?.isSample != false)
                 }
                 .safeAreaInset(edge: .bottom) {
+                    if store.isReviewFixture { Text("Synthetic review fixture · memory only · uploads disabled").font(.caption).padding() }
                     if let error = store.error { Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial) }
                     if section == .savedWork, let summary = store.syncSummary {
                         Text(summary).font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial)
                     }
                 }
-        }.sheet(item: $subject) { NativeSubjectDetail(subject: $0, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified) }
+        }.onChange(of: section) { _, _ in Task { await store.reloadSavedSnapshot() } }
+        .sheet(item: $subject) { NativeSubjectDetail(subject: $0, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified) }
     }
     private var account: some View {
         Form {
             Section("WaniKani account") {
-                Text("Native Mac statistics and subject browsing. Reviews and lessons still run in the iPhone/iPad app while their session UI is migrated.").foregroundStyle(.secondary)
+                Text("Native Mac statistics, subject browsing and saved offline reviews. Lessons, image-only radicals and full study settings are still being migrated.").foregroundStyle(.secondary)
                 SecureField("API token", text: $token)
                 Link("Create a token in WaniKani", destination: URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
                 Text("Connect and refresh use reading access. Sending from Saved work also requires the corresponding review, assignment or study-material write permissions. The token stays in this Mac's Keychain; saved work stays on this device.").font(.caption).foregroundStyle(.secondary)

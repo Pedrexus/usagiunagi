@@ -136,6 +136,8 @@ public struct StudySession: Codable, Sendable {
         isPractice ? [] : completedIDs.compactMap { items[$0]?.submission }
     }
 
+    public var currentDecision: StudyAnswerDecision? { lastDecision }
+
     public var canWrapUp: Bool { activeIDs.contains { items[$0]?.hasAttempts == true } }
     public var successRate: Int { tasksAnswered == 0 ? 100 : tasksAnsweredCorrectly * 100 / tasksAnswered }
 

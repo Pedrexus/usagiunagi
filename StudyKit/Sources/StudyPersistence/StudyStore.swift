@@ -102,8 +102,14 @@ public enum StudyStoreError: Error, LocalizedError {
     }
 
     public func snapshot(credentialID: String) throws -> StudySnapshot? {
-        try modelContext.fetch(FetchDescriptor<SnapshotRecord>(predicate:
-            #Predicate { $0.credentialID == credentialID })).first?.snapshot
+        guard let snapshot = try modelContext.fetch(FetchDescriptor<SnapshotRecord>(predicate:
+            #Predicate { $0.credentialID == credentialID })).first?.snapshot else { return nil }
+        guard let accountID = snapshot.accountID else { return snapshot }
+        let pending = try pendingReviews(accountID: accountID), ids = Set(pending.map(\.subjectID))
+        return StudySnapshot(accountID: accountID, username: snapshot.username, currentLevel: snapshot.currentLevel,
+            onVacation: snapshot.onVacation, assignments: snapshot.assignments.filter { !ids.contains($0.subjectID) },
+            statistics: snapshot.statistics, levels: snapshot.levels, subjects: snapshot.subjects,
+            savedAt: snapshot.savedAt, pendingReviews: pending.count, isSample: snapshot.isSample)
     }
 
     public func saveSnapshot(_ snapshot: StudySnapshot, credentialID: String) throws {
