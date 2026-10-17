@@ -36,23 +36,15 @@ public enum StudyUploadError: Error, LocalizedError {
 }
 
 extension StudyStore {
-    /// One native upload lane per store. Account transitions must await cancelUploads before
+    /// One native upload lane per store. Account transitions must await cancelSynchronization before
     /// changing credentials or clearing data. No token is persisted in SwiftData.
     public func uploadPending(accountID: String, token: String, client: WaniKaniClient = .init()) async throws -> StudyUploadReport {
-        guard uploadRun == nil else { throw StudyUploadError.alreadyRunning }
+        guard synchronizationCancellations == 0, uploadRun == nil else { throw StudyUploadError.alreadyRunning }
         let id = UUID(), generation = uploadGeneration
         let task = Task { try await self.performUpload(accountID: accountID, token: token, client: client, generation: generation) }
         uploadRun = (id, task)
         defer { if uploadRun?.id == id { uploadRun = nil } }
         return try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() }
-    }
-
-    public func cancelUploads() async {
-        uploadGeneration = UUID()
-        guard let run = uploadRun else { return }
-        run.task.cancel()
-        _ = await run.task.result
-        if uploadRun?.id == run.id { uploadRun = nil }
     }
 
     public func uploadRetryDate(accountID: String) throws -> Date? {

@@ -11,22 +11,13 @@ extension StudyStore {
     /// One complete read per store. Local edits and uploads may continue while downloading;
     /// revisions prevent the response from replacing work completed during that interval.
     public func refresh(credentialID: String, token: String, client: WaniKaniClient = .init()) async throws -> StudySnapshot {
-        guard refreshRun == nil else { throw StudyUploadError.alreadyRunning }
+        guard synchronizationCancellations == 0, refreshRun == nil else { throw StudyUploadError.alreadyRunning }
         guard !credentialID.isEmpty else { throw StudyStoreError.invalidIdentity }
         let id = UUID(), generation = uploadGeneration
         let task = Task { try await self.performRefresh(credentialID: credentialID, token: token, client: client, generation: generation) }
         refreshRun = (id, task)
         defer { if refreshRun?.id == id { refreshRun = nil } }
         return try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() }
-    }
-
-    /// Account transitions must cancel and await both lanes before removing credentials/data.
-    public func cancelSynchronization() async {
-        let refresh = refreshRun
-        refresh?.task.cancel()
-        await cancelUploads() // Invalidates the generation before awaiting either lane.
-        _ = await refresh?.task.result
-        if refreshRun?.id == refresh?.id { refreshRun = nil }
     }
 
     private func checkRefresh(_ generation: UUID) throws {

@@ -52,6 +52,6 @@ extension StudyStore {
 
     private func requireRecoveryIdle(accountID: String) throws {
         try requireAccount(accountID)
-        guard uploadRun == nil, refreshRun == nil else { throw StudyUploadError.alreadyRunning }
+        guard synchronizationCancellations == 0, synchronizationRun == nil, uploadRun == nil, refreshRun == nil else { throw StudyUploadError.alreadyRunning }
     }
 }

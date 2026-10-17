@@ -147,7 +147,7 @@ The native Mac connect/refresh path now uses this full store transaction. Subscr
 
 Validation: **102 shared Swift Testing functions pass on macOS and iOS 27** (59 core, 6 speech, 37 persistence), including complete payload/hidden-data tests and eight refresh functions covering process reopen, pending notes/reviews, a half-answered session, missing resources, account mismatch, cancellation, overlapping reads, backoff and an upload racing an older download. **75 iOS app tests pass** and the Mac app builds. A separate executable built from committed `c8db161` models wrote catalog/assignment/pending-note rows; the new production store reopened them successfully after the additive assignment-revision change. The independent-process upload probe also retains uncertain attempt markers. The initial incremental iOS test directory contained stale resource copies; the full suite passes from fresh derived data. No live account was accessed.
 
-Next gates remain explicit: recovery actions/UI for ambiguous writes; shared app ownership/coalescing of sync; incremental refresh and efficiency; recent-mistake and durable-session UI integration; atomic iOS writer handoff; native Mac study/detail UI; media downloads; removal of replaced legacy implementations. Full refresh is implemented, but the iOS app still uses its existing writer. Do not enable a second writable queue or delete the legacy database before those gates pass.
+Next gates remain explicit: recovery actions/UI for ambiguous writes; iOS adoption of shared sync ownership; incremental refresh and efficiency; recent-mistake and durable-session UI integration; atomic iOS writer handoff; native Mac study/detail UI; media downloads; removal of replaced legacy implementations. Full refresh is implemented, but the iOS app still uses its existing writer. Do not enable a second writable queue or delete the legacy database before those gates pass.
 
 ## Swift Testing, Mainboard and native formatting
 
@@ -172,3 +172,11 @@ Next migrate the seven remaining hosted suites after checking their state owners
 An actual migration failure exposed an obsolete SwiftFormat 0.52 build phase which rewrote Testing macros as invalid `#expecttry` tokens. The build phase, helper package and old formatter configuration are removed. Apple's bundled `swift format` uses the root configuration and runs explicitly, so formatting no longer runs during builds and no separate formatter dependency needs installation. Existing license headers are retained. This is a tooling reduction, not proof of whole-app LOC reduction.
 
 Validated at this checkpoint: 107 shared functions on macOS/iOS; 24 Swift Testing functions plus 49 XCTest tests in the hosted iOS target; the native Mac build; and synthetic recovery UI inspection. No real-account/device claim follows from these checks.
+
+## App-owned synchronization
+
+`StudyStore.synchronize` now sequences app requests on the existing model actor. It shares matching work, queues an explicit send behind a read, validates the account binding before sending, and returns the committed snapshot/profile with the upload report. A refresh never silently authorizes an upload. Tokens remain in memory for the pass and are not persisted in SwiftData.
+
+The operation outlives a cancelled waiting view; explicit account transitions call `cancelSynchronization` to fence new work, cancel and drain every lane, and preserve uncertain attempts. The Mac presentation layer separately fences late callbacks and permits disconnect during sync. Its request count remains busy until every same-account caller finishes. The obsolete upload-only cancellation API was removed.
+
+Upload acknowledgement and download publication remain separate transactions. A download failure after a successful upload carries the completed upload report to the UI; it does not restore or resend acknowledged work. Eight new controlled-concurrency tests pass on both platforms, bringing the shared suite to 115 functions. Native Mac build and synthetic navigation checks pass. The iOS app still uses its legacy writer; adopting this shared owner is part of its controlled cutover, not a second writable queue.

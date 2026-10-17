@@ -204,7 +204,7 @@ struct NativeUploadTests {
         let run = Task { try await store.uploadPending(accountID: "account-a", token: "fixture", client: client) }
         await gate.waitForEntry()
         await #expect(throws: StudyUploadError.self) { try await store.uploadPending(accountID: "account-a", token: "fixture", client: client) }
-        let cancel = Task { await store.cancelUploads() }
+        let cancel = Task { await store.cancelSynchronization() }
         await gate.waitForCancellation()
         try await store.removeSnapshot(credentialID: "credential-a")
         try await store.saveSnapshot(.init(accountID: "account-b", username: "other", currentLevel: 5,
