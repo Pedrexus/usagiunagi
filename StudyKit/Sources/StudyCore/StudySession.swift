@@ -77,6 +77,12 @@ public struct StudyReviewSubmission: Codable, Equatable, Sendable {
     public let meaningWrongCount: Int
     public let readingWrongCount: Int
     public let createdAt: Int64?
+    public init(itemID: Int, subjectID: Int64, assignmentID: Int64, isLesson: Bool,
+                meaningWrong: Bool, readingWrong: Bool, meaningWrongCount: Int, readingWrongCount: Int, createdAt: Int64?) {
+        self.itemID = itemID; self.subjectID = subjectID; self.assignmentID = assignmentID; self.isLesson = isLesson
+        self.meaningWrong = meaningWrong; self.readingWrong = readingWrong
+        self.meaningWrongCount = meaningWrongCount; self.readingWrongCount = readingWrongCount; self.createdAt = createdAt
+    }
 }
 
 public struct StudyMarkResult: Equatable, Sendable {

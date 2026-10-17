@@ -8,6 +8,7 @@ import SwiftData
     var subjectID: Int64
     var revision: UUID
     var pending: Bool
+    var serverID: Int64? = nil
     @Attribute(.codable) var material: StudyMaterial
     init(accountID: String, material: StudyMaterial, pending: Bool) {
         self.accountID = accountID; self.subjectID = material.subjectID
@@ -19,6 +20,7 @@ public struct SavedStudyMaterial: Sendable {
     public let accountID: String
     public let revision: UUID
     public let pending: Bool
+    public let serverID: Int64?
     public let material: StudyMaterial
 }
 
@@ -29,7 +31,7 @@ extension StudyStore {
 
     public func materials(accountID: String) throws -> [SavedStudyMaterial] {
         try materialRecords(accountID: accountID).map {
-            SavedStudyMaterial(accountID: $0.accountID, revision: $0.revision, pending: $0.pending, material: $0.material)
+            SavedStudyMaterial(accountID: $0.accountID, revision: $0.revision, pending: $0.pending, serverID: $0.serverID, material: $0.material)
         }.sorted { $0.material.subjectID < $1.material.subjectID }
     }
 
