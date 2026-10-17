@@ -14,36 +14,26 @@
 
 import Foundation
 import StudyCore
+import StudyUI
+import SwiftUI
 import WaniKaniAPI
 
-class MainPracticeTabViewController: UITableViewController {
+final class MainPracticeTabViewController: UIHostingController<KatakanaPracticeMenu> {
   var services: TKMServices!
-  var model: TableModel!
+
+  required init?(coder: NSCoder) {
+    super.init(coder: coder, rootView: KatakanaPracticeMenu {})
+  }
 
   func setup(services: TKMServices) {
     self.services = services
   }
 
   override func viewDidLoad() {
-    recreateTableModel()
-  }
-
-  func update() {
-    recreateTableModel()
-  }
-
-  private func recreateTableModel() {
-    let model = MutableTableModel(tableView: tableView)
-
-    model.addSection()
-    model.add(PracticeCardItem(caption: "Katakana", title: "Katakana characters", glyph: "カ",
-                               samples: ["ア", "シ", "ツ", "ソ", "ン"]) { [unowned self] in
-        self.perform(segue: StoryboardSegue.Main.katakanaCharacterPractice, sender: self)
-      })
-    model.add(section: nil, footer: "Practice sessions don't affect your WaniKani SRS progress.")
-
-    self.model = model
-    tableView.reloadData()
+    super.viewDidLoad()
+    rootView = KatakanaPracticeMenu { [weak self] in
+      self?.perform(segue: StoryboardSegue.Main.katakanaCharacterPractice, sender: self)
+    }
   }
 
   // MARK: - UIViewController

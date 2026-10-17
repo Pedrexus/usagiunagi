@@ -18,7 +18,6 @@ class MainTabBarViewController: UITabBarController {
   var services: TKMServices!
   weak var waniKaniTabDelegate: MainWaniKaniTabViewController.Delegate?
   weak var waniKaniViewController: MainWaniKaniTabViewController?
-  weak var practiceViewController: MainPracticeTabViewController?
 
   func setup(services: TKMServices, waniKaniTabDelegate: MainWaniKaniTabViewController.Delegate?) {
     self.services = services
@@ -39,7 +38,6 @@ class MainTabBarViewController: UITabBarController {
 
       case let vc as MainPracticeTabViewController:
         vc.setup(services: services)
-        practiceViewController = vc
         vc.tabBarItem = UITabBarItem(title: "Practice",
                                      image: UIImage(systemName: "square.and.pencil"), tag: 1)
 
@@ -61,6 +59,5 @@ class MainTabBarViewController: UITabBarController {
 
   func update() {
     waniKaniViewController?.update()
-    practiceViewController?.update()
   }
 }

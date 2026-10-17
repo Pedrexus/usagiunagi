@@ -355,8 +355,10 @@ claimed by this checkpoint.
 without an account, store or network dependency. Native Mac practice is SwiftUI and
 available before account connection. It keeps temporary progress in the session
 sheet; ending practice discards that local session. Completing cards cannot create
-WaniKani submissions. The iOS practice host now reads the same deck while retaining
-its current keyboard and options until its UI migration is complete.
+WaniKani submissions. The iOS practice host reads the same deck. Its landing menu
+now shares `KatakanaPracticeMenu` with Mac through a small UIHostingController;
+the old table card, custom colors, waves and constraints are removed. The existing
+review host retains its keyboard and options until that migration is complete.
 
 Typed kana/romaji, reveal, correction, deferral and accuracy share ordinary study
 semantics. The Japanese voice panel captures a question token; a late answer cannot
@@ -369,5 +371,7 @@ keyboard cancellation are verified; actual microphone/model tests remain open.
 All 107 deck entries preserve their original order, including the repeated エ.
 The new tests complete the deck with zero submissions and cover incorrect retries,
 corrections, invalid input and stale question rejection. Full practice options,
-Anki mode, Japanese font selection and the iOS practice-screen replacement remain
-tracked work; no existing iOS capability was removed by this checkpoint.
+Anki mode and Japanese font selection in the new native session remain tracked
+work; the iOS session retains these options. Focused UI tests verify typed and
+reading-only Anki practice through the shared landing menu, including draft
+retention, the existing completion summary and returning to Practice.

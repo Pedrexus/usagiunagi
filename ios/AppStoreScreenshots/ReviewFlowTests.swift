@@ -16,6 +16,75 @@ import XCTest
 
 final class ReviewFlowTests: XCTestCase {
   @MainActor
+  private func launchPractice(anki: Bool = false) -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "-ankiMode", anki ? "YES" : "NO",
+                           "-ankiModeTaskType", "2", "-autoSwitchKeyboard", "NO",
+                           "-playAudioAutomatically", "NO", "-allowSkippingReviews", "NO"]
+    app.launch()
+    let tab = app.tabBars.buttons["Practice"]
+    XCTAssertTrue(tab.waitForExistence(timeout: 10))
+    tab.tap()
+    XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "Native SwiftUI practice menu"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    app.buttons["practice.katakana"].tap()
+    XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
+    return app
+  }
+
+  @MainActor
+  func testPracticeMenuPreservesTypedReviewsAndReturns() {
+    continueAfterFailure = false
+    let app = launchPractice()
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["review.question"].value as? String, "ア")
+    XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Reading"))
+    field.tap()
+    field.typeText("a")
+    app.buttons["review.submit"].tap()
+    let next = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      app.staticTexts["review.question"].value as? String == "イ"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
+    field.tap()
+    field.typeText("i")
+    let draft = field.value as? String
+    app.buttons["review.settings"].tap()
+    XCTAssertTrue(app.buttons["reviewSettings.done"].waitForExistence(timeout: 5))
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertEqual(field.value as? String, draft)
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
+    app.navigationBars["Review Summary"].buttons["Done"].tap()
+    XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
+  }
+
+  @MainActor
+  func testPracticeMenuPreservesAnkiReadingMode() {
+    continueAfterFailure = false
+    let app = launchPractice(anki: true)
+    defer { clearFixture(app) }
+    XCTAssertFalse(app.textFields["review.answer"].exists)
+    XCTAssertFalse(app.buttons["review.voice"].exists)
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.correct"].waitForExistence(timeout: 5))
+    app.buttons["review.correct"].tap()
+    let next = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      app.staticTexts["review.question"].value as? String == "イ"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
+    app.navigationBars["Review Summary"].buttons["Done"].tap()
+    XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
+  }
+
+  @MainActor
   func testCompleteSampleReviewsThroughTypedAnswers() {
     continueAfterFailure = false
     let app = XCUIApplication()

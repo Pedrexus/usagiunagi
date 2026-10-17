@@ -64,21 +64,16 @@
         <!--Practice-->
         <scene sceneID="d6R-Gk-GXK">
             <objects>
-                <tableViewController id="Spk-nW-GEQ" customClass="MainPracticeTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="insetGrouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" estimatedSectionHeaderHeight="-1" sectionFooterHeight="18" estimatedSectionFooterHeight="-1" id="tim-gF-sT3">
+                <viewController id="Spk-nW-GEQ" customClass="MainPracticeTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="tim-gF-sT3">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="609"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <connections>
-                            <outlet property="dataSource" destination="Spk-nW-GEQ" id="if6-LB-Vme"/>
-                            <outlet property="delegate" destination="Spk-nW-GEQ" id="8UB-Tm-YO4"/>
-                        </connections>
-                    </tableView>
+                    </view>
                     <tabBarItem key="tabBarItem" title="Practice" image="katakana" selectedImage="katakana" id="3ZL-OS-7MD"/>
                     <connections>
                         <segue destination="pOc-Ig-wgQ" kind="show" identifier="katakanaCharacterPractice" id="AxF-9f-jjW"/>
                     </connections>
-                </tableViewController>
+                </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Yp5-JX-YtJ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-1172" y="-419"/>

@@ -6,19 +6,28 @@ public struct KatakanaPracticeView: View {
   @State private var practicing = false
   public init() {}
   public var body: some View {
+    KatakanaPracticeMenu { practicing = true }
+      .sheet(isPresented: $practicing) { KatakanaPracticeSessionView() }
+  }
+}
+
+/// The legacy iOS host retains its study options while sharing the native practice menu.
+public struct KatakanaPracticeMenu: View {
+  private let start: () -> Void
+  public init(start: @escaping () -> Void) { self.start = start }
+  public var body: some View {
     Form {
       Section {
-        Button("Katakana characters", systemImage: "character.ja") { practicing = true }
+        Button("Katakana characters", systemImage: "character.ja", action: start)
           .accessibilityIdentifier("practice.katakana")
         Text("ア · シ · ツ · ソ · ン").font(.title2)
       } footer: {
         Text(
-          "Practice the reading of katakana characters. Practice does not change your WaniKani progress and does not require an account."
+          "Practice the reading of katakana characters. Practice does not change your WaniKani progress."
         )
       }
     }
     .formStyle(.grouped)
-    .sheet(isPresented: $practicing) { KatakanaPracticeSessionView() }
   }
 }
 
