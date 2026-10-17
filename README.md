@@ -35,4 +35,6 @@ You'll have to change the app bundle identifiers in the main target and app exte
 
 In the Developer/Projects workspace, run builds and tests through root Mainboard tasks; see [the workflow](SWIFTUI_MIGRATION.md#swift-testing-mainboard-and-native-formatting). `mainboard run --as-is usagi-toolchain` checks Xcode, `usagi-simulators` lists available devices, `usagi-resolve` restores the committed Swift package versions, and `usagi-pods` restores CocoaPods with `--deployment`. Dependency upgrades are separate reviewed changes.
 
+Give builds/tests a fresh `-resultBundlePath`. Inspect that exact bundle with `mainboard run --as-is usagi-diagnostics <path> --json` for compiler diagnostics and `usagi-results <path> --json` for the test verdict. Build success alone does not verify tests or feature parity.
+
 For a standalone checkout, use the same native manifests: restore CocoaPods from `ios` with `pod install --deployment`, then resolve the workspace with Xcode using `-onlyUsePackageVersionsFromResolvedFile`. CocoaPods remains necessary for legacy iOS targets until their callers migrate; the shared Swift package and native Mac target do not use it.

@@ -81,7 +81,7 @@ Do not switch the entire project to Swift 6 mode in the UI change. The baseline 
 
 The requested floor is now **iOS/iPadOS 27.0**, with a separate **macOS 27.0** native app. Xcode 27.0 / Swift 6.4 is installed. iPhone portrait and landscape are enabled; SwiftUI chart layout responds to available width and Dynamic Type. iPhone Duo-specific work is deferred at the user's request.
 
-`native/TsurukameMac.xcodeproj` builds a SwiftUI Mac app directly, without Catalyst or the iOS UIKit/CocoaPods stack. It supports account connection, manual refresh, offline statistics, curriculum charts, subject searching and basic subject details. Full mnemonics link to WaniKani. **Mac reviews, lessons, audio, downloads, notifications and full settings are not migrated yet.** This is a working first platform slice, not feature parity.
+`native/TsurukameMac.xcodeproj` builds a SwiftUI Mac app directly, without Catalyst or the iOS UIKit/CocoaPods stack. It supports account connection, manual refresh, offline statistics, curriculum charts, subject searching, rich saved subject details and durable native reviews. Image-only radicals have on-demand caching. **Lessons, complete review options, note/synonym editing, audio, download management, notifications and full settings remain unfinished.** This does not establish feature parity; see TASKS.md for current acceptance gates.
 
 Mac reads full study content through URLSession/async-await and commits it in the shared SwiftData store; the previous JSON cache is imported once. Credentials stay in Keychain, and a fingerprint binds each visible snapshot to its credential. Fetch failures do not publish partial snapshots. Native validated write endpoints and a durable upload lane are now implemented; the Mac Saved work screen exposes explicit synchronization of eligible locally saved work. Existing iOS review uploads and its database remain active until the controlled writer handoff. Cross-device learning progress syncs through WaniKani; app preferences, local downloads and pending reviews are not shared through iCloud.
 
@@ -164,6 +164,7 @@ The intended local workspace is `/Users/pedro/Developer/Projects`, with this sta
 | `usagi-test-app` | Hosted iOS Swift Testing and remaining XCTest suites. |
 | `usagi-test-ui` | Synthetic XCUITest review flows. |
 | `usagi-build-mac` | Native Mac debug build with ad-hoc signing. |
+| `usagi-diagnostics <path>` | Read compiler errors, warnings, source locations and build status from an exact result bundle. |
 | `usagi-results <path>` | Read the exact test bundle using the selected Xcode. |
 | `usagi-results-shared` / `usagi-results-app` | Read the newest shared or hosted/UI Xcode result bundle as structured evidence. |
 
@@ -195,6 +196,20 @@ second time. An exact `.xcresult` path identifies a particular run; a `Logs/Test
 directory selects its newest direct bundle and reports that path. An unreadable or
 incomplete newest bundle never falls back to an older successful run. Keep the build
 command's exit status too: a stale result directory is not proof of a new build.
+
+`apple diagnostics` separately reads the build action's compiler errors, warnings,
+analyzer warnings and source locations, retaining destination and target metadata.
+It also works when compilation failed before tests started. A failed or unknown
+build returns nonzero; malformed, missing or truncated evidence is an error.
+Warnings remain visible on successful builds. The `build_successful` field does
+not claim tests passed, and an incremental build is not a whole-project warning
+inventory. Use this report to drive Swift concurrency and deprecated-API migration
+instead of grepping console logs. For a fresh Mac build:
+
+```sh
+mainboard run --as-is usagi-build-mac -resultBundlePath /private/tmp/usagi-mac-check-001.xcresult
+mainboard run --as-is usagi-diagnostics /private/tmp/usagi-mac-check-001.xcresult --json
+```
 
 Use root Mainboard lint for selected Swift source files, including new untracked files:
 
