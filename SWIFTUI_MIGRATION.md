@@ -161,7 +161,7 @@ The intended local workspace is `/Users/pedro/Developer/Projects`, with this sta
 | `usagi-test-app` | Hosted iOS Swift Testing and remaining XCTest suites. |
 | `usagi-test-ui` | Synthetic XCUITest review flows. |
 | `usagi-build-mac` | Native Mac debug build with ad-hoc signing. |
-| `usagi-format-changed` / `usagi-format-check` | Format or lint changed tracked/staged Swift files using bundled `swift format`; stage new files to include them. |
+| `usagi-results-shared` / `usagi-results-app` | Read the newest shared or hosted/UI Xcode result bundle as structured evidence. |
 
 The simulator tasks currently select the installed iPhone 18 Pro / latest runtime by name. Build/test tasks have hard timeouts and use separate derived-data locations where needed. Xcode result bundles remain under ignored build directories. The standalone fork still opens directly in Xcode; the parent workspace is not an application dependency.
 
@@ -180,3 +180,33 @@ Validated at this checkpoint: 107 shared functions on macOS/iOS; 24 Swift Testin
 The operation outlives a cancelled waiting view; explicit account transitions call `cancelSynchronization` to fence new work, cancel and drain every lane, and preserve uncertain attempts. The Mac presentation layer separately fences late callbacks and permits disconnect during sync. Its request count remains busy until every same-account caller finishes. The obsolete upload-only cancellation API was removed.
 
 Upload acknowledgement and download publication remain separate transactions. A download failure after a successful upload carries the completed upload report to the UI; it does not restore or resend acknowledged work. Eight new controlled-concurrency tests pass on both platforms, bringing the shared suite to 115 functions. Native Mac build and synthetic navigation checks pass. The iOS app still uses its legacy writer; adopting this shared owner is part of its controlled cutover, not a second writable queue.
+
+## Mainboard Apple workflow
+
+Mainboard now provides `apple toolchain` and `apple results`. The latter reads Apple's
+`xcresulttool` test report instead of parsing build-log success strings. Both Swift
+Testing and XCTest retain their reported totals, failures, skips, expected failures,
+devices, warnings and ten slowest cases. Parameterized arguments are not counted a
+second time. An exact `.xcresult` path identifies a particular run; a `Logs/Test`
+directory selects its newest direct bundle and reports that path. An unreadable or
+incomplete newest bundle never falls back to an older successful run. Keep the build
+command's exit status too: a stale result directory is not proof of a new build.
+
+Use root Mainboard lint for selected Swift source files, including new untracked files:
+
+```sh
+mainboard run --as-is mainboard lint --check --only swift-format apps/usagiunagi/StudyKit/Sources/StudyPersistence/StudyStore+Synchronization.swift
+```
+
+Omit `--check` to format. The old `git diff | xargs` tasks were removed. This fork is
+not registered as a parent submodule, so Mainboard's no-path changed-file discovery
+does not enter it: pass the changed files explicitly. A directory intentionally
+checks every nonignored file beneath it. Apple's bundled formatter uses `.swift-format`;
+no extra formatter package or build-phase mutation is needed.
+
+Continue using the existing bounded build/test tasks. Hosted and UI tests currently
+share derived data and a simulator, so run them sequentially. SwiftPM retains
+`Package.swift`/`Package.resolved`; CocoaPods retains `Podfile.lock` until migration.
+Mainboard owns the developer commands and environment, while Apple's native tools
+resolve Swift dependencies. Task/lint changes do not require an unrelated environment
+upgrade. The root configuration is local to this workspace, separate from this fork.
