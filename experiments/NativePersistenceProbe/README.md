@@ -1,14 +1,15 @@
-# Native persistence feasibility check
+# Native persistence restart check
 
-This small, standalone macOS 27 executable tests the Apple SwiftData primitives needed to replace the legacy persistence code. It is not linked into either app and performs no network requests. Remove it when the production repository has equivalent regression tests.
+This standalone macOS 27 executable now exercises the **production StudyPersistence store**, rather than a duplicate experimental model. It is not linked into either app and performs no network requests. Synthetic data is written to a disposable store.
 
-Run the two commands in separate processes, with the same disposable store path:
+Run the two commands as separate processes, using the same fresh path:
 
 ```sh
-swift run --package-path experiments/NativePersistenceProbe NativePersistenceProbe write /tmp/usagiunagi-probe.store
-swift run --skip-build --package-path experiments/NativePersistenceProbe NativePersistenceProbe read /tmp/usagiunagi-probe.store
+probe_dir=$(mktemp -d)
+swift run --package-path experiments/NativePersistenceProbe NativePersistenceProbe write "$probe_dir/study.store"
+swift run --skip-build --package-path experiments/NativePersistenceProbe NativePersistenceProbe read "$probe_dir/study.store"
 ```
 
-The first process checks an atomic answer/session save, revision-conditional acknowledgement, separate account records, and rollback after an injected failure. It saves an attempted upload marker. The second verifies that the answers, session and marker survive process exit and reopening. The prototype uses synthetic data and disables CloudKit explicitly.
+The first process saves account snapshots, a completed session and pending review, its attempted-upload marker, and separate accounts' pending notes. The second verifies the production Codable models survive process exit/reopening with those values intact. The broader StudyPersistence test suite covers atomic transactions, rollback, stale scene revisions, delayed acknowledgements, practice isolation, legacy Mac-cache import and note/download conflicts.
 
-Both phases passed on the installed Xcode 27.0 / Swift 6.4 toolchain on 2026-10-17. This does not test legacy database import, app lifecycle, concurrency across independent containers/processes, storage exhaustion, network reconciliation, or full feature parity. An attempted flag alone is not a complete upload protocol. Production migration must preserve the existing queue and add the remaining behavior tests before switching stores.
+This does not establish the iOS SQLite import/cutover, real WaniKani uploads, physical-device behavior or full app parity. An attempted flag must still be connected to explicit reconciliation before review upload integration. CloudKit is disabled for this local store.

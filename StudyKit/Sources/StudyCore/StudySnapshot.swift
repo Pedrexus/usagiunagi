@@ -62,6 +62,8 @@ public struct StudyLevel: Codable, Sendable {
 
 /// A complete, immutable account snapshot. No credentials or upload queue are stored here.
 public struct StudySnapshot: Codable, Sendable {
+    /// Stable WaniKani user ID; absent only in older caches and synthetic samples.
+    public let accountID: String?
     public let username: String
     public let currentLevel: Int
     public let onVacation: Bool
@@ -72,10 +74,10 @@ public struct StudySnapshot: Codable, Sendable {
     public let savedAt: Date
     public let pendingReviews: Int
     public let isSample: Bool
-    public init(username: String, currentLevel: Int, onVacation: Bool = false,
+    public init(accountID: String? = nil, username: String, currentLevel: Int, onVacation: Bool = false,
                 assignments: [StudyAssignment], statistics: [StudyAnswerStatistics], levels: [StudyLevel],
                 subjects: [StudySubject], savedAt: Date = .now, pendingReviews: Int = 0, isSample: Bool = false) {
-        self.username = username; self.currentLevel = currentLevel; self.onVacation = onVacation
+        self.accountID = accountID; self.username = username; self.currentLevel = currentLevel; self.onVacation = onVacation
         self.assignments = assignments; self.statistics = statistics; self.levels = levels
         self.subjects = subjects; self.savedAt = savedAt; self.pendingReviews = pendingReviews; self.isSample = isSample
     }

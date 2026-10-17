@@ -125,6 +125,11 @@ public struct StudySession: Codable, Sendable {
         refill()
     }
 
+    /// Durable stores derive newly completed answers from this state in the same transaction.
+    public var completedSubmissions: [StudyReviewSubmission] {
+        isPractice ? [] : completedIDs.compactMap { items[$0]?.submission }
+    }
+
     public var canWrapUp: Bool { activeIDs.contains { items[$0]?.hasAttempts == true } }
     public var successRate: Int { tasksAnswered == 0 ? 100 : tasksAnsweredCorrectly * 100 / tasksAnswered }
 
@@ -227,11 +232,7 @@ public struct StudySession: Codable, Sendable {
                 if item.reading.firstAnswerWrong == true { item.reading.wrongCount = 1 }
             }
             if !isPractice {
-                submission = StudyReviewSubmission(itemID: item.id, subjectID: item.subjectID,
-                    assignmentID: item.assignmentID, isLesson: item.isLesson,
-                    meaningWrong: item.meaning.firstAnswerWrong == true, readingWrong: item.reading.firstAnswerWrong == true,
-                    meaningWrongCount: item.meaning.wrongCount, readingWrongCount: item.reading.wrongCount,
-                    createdAt: item.createdAt)
+                submission = item.submission
             }
             completedIDs.append(item.id)
             activeIDs.removeAll { $0 == item.id }
@@ -274,5 +275,13 @@ public struct StudySession: Codable, Sendable {
             value ^= value >> 31
             if value >= threshold { return Int(value % bound) }
         }
+    }
+}
+
+private extension StudySessionItem {
+    var submission: StudyReviewSubmission {
+        StudyReviewSubmission(itemID: id, subjectID: subjectID, assignmentID: assignmentID,
+            isLesson: isLesson, meaningWrong: meaning.firstAnswerWrong == true, readingWrong: reading.firstAnswerWrong == true,
+            meaningWrongCount: meaning.wrongCount, readingWrongCount: reading.wrongCount, createdAt: createdAt)
     }
 }

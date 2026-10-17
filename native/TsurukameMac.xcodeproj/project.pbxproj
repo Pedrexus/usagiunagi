@@ -13,6 +13,7 @@
 		91AE36ABF82B0B72DA6A4BF3 /* AppIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22B24E7CA8E039A3F1122EA /* AppIdentity.swift */; };
 		968E1F36E55B3078A4292BFB /* StudyUI in Frameworks */ = {isa = PBXBuildFile; productRef = BCE9C754AFF6C8A1FF401FD0 /* StudyUI */; };
 		99F206E09E3CFB1C2CC4426D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25CAFB2135EB8C237FDF6A07 /* Cocoa.framework */; };
+		C3C245F590C5CA6640A5133F /* StudyPersistence in Frameworks */ = {isa = PBXBuildFile; productRef = C1A0AD1CFDF508C21F69F62A /* StudyPersistence */; };
 		CDE2AA81AE568AE4E5216ADB /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4B92C88DA85275F78FE0907D /* UsagiUnagi.icon */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +37,7 @@
 				99F206E09E3CFB1C2CC4426D /* Cocoa.framework in Frameworks */,
 				3AE2CE7D20558F0AC1B2EB73 /* StudyCore in Frameworks */,
 				968E1F36E55B3078A4292BFB /* StudyUI in Frameworks */,
+				C3C245F590C5CA6640A5133F /* StudyPersistence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,6 +108,7 @@
 			packageProductDependencies = (
 				EE80CAC7A4C0A857F5B75CF8 /* StudyCore */,
 				BCE9C754AFF6C8A1FF401FD0 /* StudyUI */,
+				C1A0AD1CFDF508C21F69F62A /* StudyPersistence */,
 			);
 			productName = TsurukameMac;
 			productReference = E13432C314D942AF9AA8FD8D /* TsurukameMac.app */;
@@ -190,15 +193,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = UsagiUnagi.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				CODE_SIGN_ENTITLEMENTS = UsagiUnagi.entitlements;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = usagiunagi;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Speak review answers instead of typing them. Audio is transcribed on this device.";
 				INFOPLIST_KEY_CFBundleName = usagiunagi;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Speak review answers instead of typing them. Audio is transcribed on this device.";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pedrexus.tsurukame.mac;
@@ -329,15 +332,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = UsagiUnagi.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				CODE_SIGN_ENTITLEMENTS = UsagiUnagi.entitlements;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = usagiunagi;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Speak review answers instead of typing them. Audio is transcribed on this device.";
 				INFOPLIST_KEY_CFBundleName = usagiunagi;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Speak review answers instead of typing them. Audio is transcribed on this device.";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pedrexus.tsurukame.mac;
@@ -381,6 +384,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 74DCCFC20738018AF5ECDDB7 /* XCLocalSwiftPackageReference "StudyKit" */;
 			productName = StudyUI;
+		};
+		C1A0AD1CFDF508C21F69F62A /* StudyPersistence */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 74DCCFC20738018AF5ECDDB7 /* XCLocalSwiftPackageReference "StudyKit" */;
+			productName = StudyPersistence;
 		};
 		EE80CAC7A4C0A857F5B75CF8 /* StudyCore */ = {
 			isa = XCSwiftPackageProductDependency;

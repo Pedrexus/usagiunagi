@@ -6,7 +6,7 @@ private func response(_ request: URLRequest, _ body: String, status: Int = 200) 
     (Data(body.utf8), HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
 }
 private let emptyPage = #"{"pages":{"next_url":null},"data":[]}"#
-private let user = #"{"data":{"username":"test","level":12,"vacation_started_at":null}}"#
+private let user = #"{"data":{"id":"fixture-user-id","username":"test","level":12,"current_vacation_started_at":null}}"#
 
 @Test func readerFollowsPagesAndPreservesQuestionTypes() async throws {
     let reader = WaniKaniReader { request in
@@ -28,6 +28,7 @@ private let user = #"{"data":{"username":"test","level":12,"vacation_started_at"
     #expect(result.subjects.map(\.kind) == [.kanji, .vocabulary])
     #expect(result.subjects.first?.readings == ["いち"])
     #expect(result.assignments.first?.hasAvailableAt == true)
+    #expect(result.accountID == "fixture-user-id")
     #expect(result.currentLevel == 12 && !result.onVacation && !result.isSample)
 }
 
@@ -55,4 +56,24 @@ private let user = #"{"data":{"username":"test","level":12,"vacation_started_at"
         return response(request, emptyPage)
     }
     await #expect(throws: WaniKaniReader.ReaderError.self) { try await reader.fetch(token: "fixture-token") }
+}
+
+@Test func readerPreservesVacationAndRejectsMissingAccountIdentity() async throws {
+    for validIdentity in [true, false] {
+        let reader = WaniKaniReader { request in
+            if request.url?.path == "/v2/user" {
+                let body = validIdentity
+                    ? #"{"data":{"id":"account-id","username":"test","level":12,"current_vacation_started_at":"2026-10-17T00:00:00Z"}}"#
+                    : #"{"data":{"username":"test","level":12,"current_vacation_started_at":null}}"#
+                return response(request, body)
+            }
+            return response(request, emptyPage)
+        }
+        if validIdentity {
+            let snapshot = try await reader.fetch(token: "fixture-token")
+            #expect(snapshot.onVacation && snapshot.accountID == "account-id")
+        } else {
+            await #expect(throws: (any Error).self) { try await reader.fetch(token: "fixture-token") }
+        }
+    }
 }

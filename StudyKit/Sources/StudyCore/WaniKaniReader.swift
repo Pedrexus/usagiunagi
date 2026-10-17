@@ -33,7 +33,7 @@ public struct WaniKaniReader: Sendable {
         let pages: Pages
         let data: [Resource<Value>]
     }
-    private struct User: Decodable, Sendable { let username: String; let level: Int; let vacationStartedAt: String? }
+    private struct User: Decodable, Sendable { let id: String; let username: String; let level: Int; let currentVacationStartedAt: String? }
     private struct Assignment: Decodable, Sendable { let subjectId: Int64; let srsStage: Int; let availableAt: String? }
     private struct Statistic: Decodable, Sendable {
         let subjectId: Int64; let subjectType: String
@@ -56,8 +56,9 @@ public struct WaniKaniReader: Sendable {
         async let levels: [Resource<Level>] = pages("level_progressions", token: token)
         async let subjects: [Resource<Subject>] = pages("subjects?hidden=false", token: token)
         let (u, a, s, l, subjectData) = try await (user, assignments, statistics, levels, subjects)
-        return try StudySnapshot(username: u.data.username, currentLevel: u.data.level,
-            onVacation: u.data.vacationStartedAt != nil,
+        guard !u.data.id.isEmpty else { throw ReaderError.invalidResponse }
+        return try StudySnapshot(accountID: u.data.id, username: u.data.username, currentLevel: u.data.level,
+            onVacation: u.data.currentVacationStartedAt != nil,
             assignments: a.map { StudyAssignment(subjectID: $0.data.subjectId, srsStageNumber: $0.data.srsStage, availableAt: try timestamp($0.data.availableAt)) },
             statistics: s.map { value in
                 let d = value.data
@@ -119,24 +120,5 @@ public struct WaniKaniReader: Sendable {
             return try decoder.decode(T.self, from: data)
         }
         throw ReaderError.rateLimited
-    }
-}
-
-/// An atomic snapshot cache, isolated from the legacy iOS review database.
-public actor StudySnapshotCache {
-    private struct Stored: Codable { let snapshot: StudySnapshot; let credentialID: String? }
-    private let url: URL
-    public init(url: URL) { self.url = url }
-    public func load(credentialID: String? = nil) throws -> StudySnapshot? {
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        let stored = try JSONDecoder().decode(Stored.self, from: Data(contentsOf: url))
-        return stored.credentialID == credentialID ? stored.snapshot : nil
-    }
-    public func save(_ snapshot: StudySnapshot, credentialID: String? = nil) throws {
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(Stored(snapshot: snapshot, credentialID: credentialID)).write(to: url, options: .atomic)
-    }
-    public func remove() throws {
-        if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
     }
 }

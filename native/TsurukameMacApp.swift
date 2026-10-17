@@ -3,6 +3,7 @@ import Observation
 import Security
 import CryptoKit
 import StudyCore
+import StudyPersistence
 import StudyUI
 
 @main
@@ -22,15 +23,35 @@ final class MacStudyStore {
     var error: String?
     var isSyncing = false
     private var restored = false
-    private let cache = StudySnapshotCache(url: URL.applicationSupportDirectory.appending(path: "TsurukameNative/snapshot-v1.json"))
+    private let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
+    private var persistence: Task<StudyStore, Error>?
+    private func repository() async throws -> StudyStore {
+        if persistence == nil {
+            let url = directory.appending(path: "study.store")
+            persistence = Task { try await StudyStore.open(at: url) }
+        }
+        do { return try await persistence!.value }
+        catch { persistence = nil; throw error }
+    }
     private let reader = WaniKaniReader()
 
     func restore() async {
         guard !restored else { return }; restored = true
-        do { if let token = try TokenKeychain.load() { snapshot = try await cache.load(credentialID: credentialID(token)) } } catch { self.error = "Couldn't read saved statistics: \(error.localizedDescription)" }
-        if ProcessInfo.processInfo.arguments.contains("SampleData") { loadSample() }
+        if ProcessInfo.processInfo.arguments.contains("SampleData") { loadSample(); return }
+        isSyncing = true; defer { isSyncing = false }
+        do {
+            if let token = try TokenKeychain.load() {
+                let cache = try await repository(), credential = credentialID(token)
+                if try await cache.snapshot(credentialID: credential) == nil {
+                    try await cache.importLegacySnapshot(at: directory.appending(path: "snapshot-v1.json"), credentialID: credential)
+                }
+                let restoredSnapshot = try await cache.snapshot(credentialID: credential)
+                snapshot = restoredSnapshot
+            }
+        } catch { self.error = "Couldn't read saved statistics: \(error.localizedDescription)" }
     }
     func loadSample() {
+        guard !isSyncing else { return }
         do { snapshot = try .sample(); error = nil } catch { self.error = error.localizedDescription }
     }
     func connect(_ token: String) async {
@@ -39,10 +60,14 @@ final class MacStudyStore {
         guard !token.isEmpty else { error = "Enter your WaniKani API token."; return }
         isSyncing = true; error = nil; defer { isSyncing = false }
         do {
+            let previous = try TokenKeychain.load().map(credentialID)
+            let credential = credentialID(token)
             let newSnapshot = try await reader.fetch(token: token)
+            let cache = try await repository()
+            try await cache.saveSnapshot(newSnapshot, credentialID: credential)
             try TokenKeychain.save(token)
             snapshot = newSnapshot
-            try await cache.save(newSnapshot, credentialID: credentialID(token))
+            if let previous, previous != credential { try await cache.removeSnapshot(credentialID: previous) }
         } catch { self.error = error.localizedDescription }
     }
     func refresh() async {
@@ -56,8 +81,16 @@ final class MacStudyStore {
     }
     func disconnect() async {
         guard !isSyncing else { return }
-        do { try TokenKeychain.remove(); snapshot = nil; error = nil; try await cache.remove() }
-        catch { self.error = error.localizedDescription }
+        isSyncing = true; defer { isSyncing = false }
+        do {
+            if let token = try TokenKeychain.load() {
+                let cache = try await repository()
+                try await cache.removeSnapshot(credentialID: credentialID(token))
+            }
+            let legacy = directory.appending(path: "snapshot-v1.json")
+            if FileManager.default.fileExists(atPath: legacy.path) { try FileManager.default.removeItem(at: legacy) }
+            try TokenKeychain.remove(); snapshot = nil; error = nil
+        } catch { self.error = error.localizedDescription }
     }
 }
 

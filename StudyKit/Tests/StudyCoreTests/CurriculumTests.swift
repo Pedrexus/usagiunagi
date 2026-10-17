@@ -45,19 +45,3 @@ import Testing
     let result = CurriculumCoverage(curriculum: Curriculum(id: "empty", title: "Empty", characters: []), subjects: [], assignments: [])
     #expect(result.fraction == 0)
 }
-
-@Test func cacheKeepsAccountsSeparateAndRemovesOnlySnapshot() async throws {
-    let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-    defer { try? FileManager.default.removeItem(at: folder) }
-    let cache = StudySnapshotCache(url: folder.appending(path: "snapshot.json"))
-    #expect(try await cache.load() == nil)
-    let sample = try StudySnapshot.sample()
-    try await cache.save(sample, credentialID: "account-a")
-    #expect(try await cache.load(credentialID: "account-b") == nil)
-    let restored = try #require(await cache.load(credentialID: "account-a"))
-    #expect(restored.username == sample.username && restored.subjects.count == 2136)
-    try Data("keep".utf8).write(to: folder.appending(path: "unrelated"))
-    try await cache.remove()
-    #expect(try await cache.load(credentialID: "account-a") == nil)
-    #expect(FileManager.default.fileExists(atPath: folder.appending(path: "unrelated").path))
-}
