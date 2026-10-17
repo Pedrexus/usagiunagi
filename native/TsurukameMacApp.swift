@@ -263,11 +263,12 @@ private struct MacStudyRoot: View {
         return $reviewPreferences.colorScheme
     }
     private enum Destination: String, CaseIterable, Identifiable {
-        case reviews = "Reviews", statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
+        case reviews = "Reviews", practice = "Practice", statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
         var id: Self { self }
         var symbol: String {
             switch self {
             case .reviews: "rectangle.and.pencil.and.ellipsis"
+            case .practice: "square.and.pencil"
             case .statistics: "chart.bar.xaxis"
             case .subjects: "character.book.closed"
             case .savedWork: "tray.and.arrow.up"
@@ -288,7 +289,8 @@ private struct MacStudyRoot: View {
             }.navigationTitle(AppIdentity.name).navigationSplitViewColumnWidth(min: 170, ideal: 200)
         } detail: {
             Group {
-                if section == .account || store.snapshot == nil { account }
+                if section == .practice { KatakanaPracticeView() }
+                else if section == .account || store.snapshot == nil { account }
                 else if let snapshot = store.snapshot {
                     if section == .reviews {
                         if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {

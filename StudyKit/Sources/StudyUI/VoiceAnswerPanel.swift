@@ -2,6 +2,12 @@ import StudyCore
 import StudySpeech
 import SwiftUI
 
+/// Bind sheet presentation to its captured question so first presentation cannot be empty.
+struct VoiceAnswerRequest: Identifiable {
+    let question: StudyQuestion
+    var id: StudyQuestion { question }
+}
+
 /// Shared native voice controls; hosts validate the captured question again before grading.
 public struct VoiceAnswerPanel: View {
     @State private var model: VoiceReviewController

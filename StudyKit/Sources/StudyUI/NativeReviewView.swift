@@ -10,10 +10,9 @@ public struct NativeReviewView: View {
   @State private var screen = ReviewScreenState()
   @State private var busy = false
   @State private var error: String?
-  @State private var voice = false
   @State private var confirmEnd = false
   @State private var readyImage: String?
-  @State private var voiceQuestion: StudyQuestion?
+  @State private var voiceRequest: VoiceAnswerRequest?
   @State private var settings = false
   @State private var fullDetails = false
   @StoredReviewPreferences private var preferences
@@ -130,18 +129,16 @@ public struct NativeReviewView: View {
     } message: {
       Text("Completed answers stay saved. Progress on unfinished subjects will be discarded.")
     }
-    .sheet(isPresented: $voice) {
-      if let question = voiceQuestion {
-        VoiceAnswerPanel(question: question) { text in
-          voice = false
-          guard review?.question == question else { return }
-          screen.answer = text
-          submit(convertRomaji: false)
-        } cancel: {
-          voice = false
-        }
-        .frame(minWidth: 420, minHeight: 440)
+    .sheet(item: $voiceRequest) { request in
+      VoiceAnswerPanel(question: request.question) { text in
+        voiceRequest = nil
+        guard review?.question == request.question else { return }
+        screen.answer = text
+        submit(convertRomaji: false)
+      } cancel: {
+        voiceRequest = nil
       }
+      .frame(minWidth: 420, minHeight: 440)
     }
     .task(id: accountID) { load() }
   }
@@ -255,8 +252,7 @@ public struct NativeReviewView: View {
       if screen.canOverride { change(.overrideCorrect) }
     case .deferQuestion: change(.deferQuestion)
     case .voice:
-      voiceQuestion = review?.question
-      voice = voiceQuestion != nil
+      voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
     case .focus: answerFocused = true
     case .settings: settings = true
     default: break

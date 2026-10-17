@@ -348,3 +348,26 @@ parity remain tracked separately. Automated checks cover merging/serialization a
 exact matching; synthetic UI checks cover draft retention, reveal/correction/skip
 behavior and appearance persistence. No live account or microphone validation is
 claimed by this checkpoint.
+
+## Offline katakana practice
+
+`KatakanaPractice` owns the original deck and uses the shared grader/session engine
+without an account, store or network dependency. Native Mac practice is SwiftUI and
+available before account connection. It keeps temporary progress in the session
+sheet; ending practice discards that local session. Completing cards cannot create
+WaniKani submissions. The iOS practice host now reads the same deck while retaining
+its current keyboard and options until its UI migration is complete.
+
+Typed kana/romaji, reveal, correction, deferral and accuracy share ordinary study
+semantics. The Japanese voice panel captures a question token; a late answer cannot
+mark another card. Native practice and ordinary reviews now bind the voice sheet
+to that captured request instead of maintaining a separate presentation flag.
+The Mac practice sheet supplies an explicit microphone control because its nested
+navigation toolbar was not visible during verification. First presentation and
+keyboard cancellation are verified; actual microphone/model tests remain open.
+
+All 107 deck entries preserve their original order, including the repeated エ.
+The new tests complete the deck with zero submissions and cover incorrect retries,
+corrections, invalid input and stale question rejection. Full practice options,
+Anki mode, Japanese font selection and the iOS practice-screen replacement remain
+tracked work; no existing iOS capability was removed by this checkpoint.
