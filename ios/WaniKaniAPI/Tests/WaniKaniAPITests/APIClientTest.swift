@@ -827,13 +827,13 @@ class APIClientTest: XCTestCase {
 
   private func stubMaterialWrite(status: Int, body: Data?, existing: Bool = false) {
     var lookup = StubRequest(method: .GET,
-                            url: URL(string: "https://api.wanikani.com/v2/study_materials?subject_ids=42")!)
+                             url: URL(string: "https://api.wanikani.com/v2/study_materials?subject_ids=42")!)
     let resource = existing ? String(decoding: studyMaterialResponse(), as: UTF8.self) : ""
     lookup.response.body = "{\"object\":\"collection\",\"data\":[\(resource)]}".data(using: .utf8)
     Hippolyte.shared.add(stubbedRequest: lookup)
     let path = existing ? "study_materials/65231" : "study_materials"
     var write = StubRequest(method: existing ? .PUT : .POST,
-                           url: URL(string: "https://api.wanikani.com/v2/\(path)")!)
+                            url: URL(string: "https://api.wanikani.com/v2/\(path)")!)
     write.response.statusCode = status
     write.response.body = body
     Hippolyte.shared.add(stubbedRequest: write)
@@ -844,7 +844,8 @@ class APIClientTest: XCTestCase {
       for status in [401, 422, 429, 500, 503] {
         Hippolyte.shared.clearStubs()
         stubMaterialWrite(status: status,
-                          body: "{\"error\":\"Rejected\",\"code\":\(status)}".data(using: .utf8), existing: existing)
+                          body: "{\"error\":\"Rejected\",\"code\":\(status)}".data(using: .utf8),
+                          existing: existing)
         var material = TKMStudyMaterials()
         material.subjectID = 42
         let error = waitForError(client.updateStudyMaterial(material))

@@ -338,10 +338,15 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       SELECT MAX(id) FROM assignments GROUP BY subject_id
     );
     """,
+    // Version 14. Keep edits newer than a downloaded material snapshot, even after upload
+    // acknowledgement.
+    SyncStore.localRevisionMigration,
+    // Version 15. Protect completed reviews from older assignment responses.
+    SyncStore.progressRevisionMigration,
   ]
 
   private let kInitialSchemaVersion = 8
-  private let kSchemaVersion = 13
+  private let kSchemaVersion = 15
 
   // Run when the user logs out. Clears everything in the database.
   private let kClearAllData = """
@@ -362,23 +367,6 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   DELETE FROM subjects;
   DELETE FROM voice_actors;
   DELETE FROM audio_urls;
-  DELETE FROM review_stats;
-  """
-
-  // Run when the user pulls down on the main screen. Clears all locally cached data so it can be
-  // re-downloaded, but doesn't log out the user.
-  private let kFullSync = """
-  UPDATE sync
-    SET assignments_updated_after = \"\",
-        subjects_updated_after = \"\",
-        voice_actors_updated_after = \"\",
-        study_materials_updated_after = \"\",
-        review_stats_updated_after = \"\";
-  DELETE FROM assignments;
-  DELETE FROM subjects;
-  DELETE FROM subject_progress;
-  DELETE FROM voice_actors;
-  DELETE FROM study_materials;
   DELETE FROM review_stats;
   """
 
@@ -570,7 +558,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       "LEFT JOIN assignments AS a " +
       "ON p.id = a.subject_id " +
       "WHERE srs_stage = \(SRSStage.burned.rawValue)") {
-      ret.append(cursor.proto(forColumnIndex: 0)!)
+      if let assignment: TKMAssignment = cursor.proto(forColumnIndex: 0) { ret.append(assignment) }
     }
     return ret
   }
@@ -932,30 +920,15 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   func sendProgress(_ progress: [TKMProgress]) -> Promise<Void> {
     db.inTransaction { db in
       for p in progress {
-        // Delete the assignment.
-        db.mustExecuteUpdate("DELETE FROM assignments WHERE id = ?", args: [p.assignment.id])
-
-        // Store the progress locally.
-        db.mustExecuteUpdate("REPLACE INTO pending_progress (id, pb) VALUES (?, ?)",
-                             args: [p.assignment.subjectID, try! p.serializedData()])
-
         var newSrsStage = p.assignment.srsStage
         if p.isLesson || (!p.meaningWrong && !p.readingWrong) {
           newSrsStage = newSrsStage.next
         } else if p.meaningWrong || p.readingWrong {
           newSrsStage = newSrsStage.previous
         }
-        db
-          .mustExecuteUpdate("REPLACE INTO subject_progress (id, level, srs_stage, subject_type, last_mistake_time) " +
-            "VALUES (?, ?, ?, ?, ?)",
-            args: [
-              p.assignment.subjectID,
-              p.assignment.level,
-              newSrsStage.rawValue,
-              p.assignment.subjectType.rawValue,
-              !p.isLesson && (p.meaningWrong || p.readingWrong)
-                ? dateFormatter.string(from: Date()) : "",
-            ])
+        SyncStore.saveLocalProgress(p, srsStage: newSrsStage.rawValue,
+                                    mistakeTime: !p.isLesson && (p.meaningWrong || p.readingWrong)
+                                      ? dateFormatter.string(from: Date()) : "", in: db)
       }
     }
 
@@ -1025,11 +998,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   func updateStudyMaterial(_ material: TKMStudyMaterials) -> Promise<Void> {
     db.inTransaction { db in
-      // Store the study material locally.
-      db.mustExecuteUpdate("REPLACE INTO study_materials (id, pb) VALUES(?, ?)",
-                           args: [material.subjectID, try! material.serializedData()])
-      db.mustExecuteUpdate("REPLACE INTO pending_study_materials (id) VALUES(?)",
-                           args: [material.subjectID])
+      SyncStore.saveLocalMaterial(subjectID: material.subjectID,
+                                  payload: try! material.serializedData(), in: db)
     }
 
     _pendingStudyMaterialsCount.invalidate()
@@ -1180,6 +1150,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   // MARK: - Syncing
 
   private func fetchAssignments(progress: Progress) -> Promise<Void> {
+    let lifetime = uploadLifetime
+    let baseline = db.inDatabase { SyncStore.assignmentVersions(in: $0) }
     // Get the last assignment update time.
     let updatedAfter: String = db.inDatabase { db in
       let cursor = db.query("SELECT assignments_updated_after FROM sync")
@@ -1193,38 +1165,20 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       client.assignments(progress: progress, updatedAfter: updatedAfter)
     }.done { assignments, updatedAt in
       NSLog("Updated %d assignments at %@", assignments.count, updatedAt)
-      self.db.inTransaction { db in
-        for assignment in assignments {
-          // A subject can be given a new assignment ID; drop any older assignment for it so the
-          // subject isn't stored twice.
-          db.mustExecuteUpdate("DELETE FROM assignments WHERE subject_id = ? AND id != ?",
-                               args: [assignment.subjectID, assignment.id])
-          db.mustExecuteUpdate("REPLACE INTO assignments (id, pb, subject_id) " +
-            "VALUES (?, ?, ?)",
-            args: [
-              assignment.id,
-              try! assignment.serializedData(),
-              assignment.subjectID,
-            ])
-          // perform an upsert since we don't want to lose any existing last_mistake_time
-          // data via REPLACE INTO.
-          db.mustExecuteUpdate("INSERT INTO subject_progress (id, level, " +
-            "srs_stage, subject_type, last_mistake_time) VALUES (?, ?, ?, ?, ?) " +
-            "ON CONFLICT (id) DO UPDATE SET level = excluded.level, " +
-            "srs_stage = excluded.srs_stage, subject_type = excluded.subject_type",
-            args: [assignment.subjectID, assignment.level,
-                   assignment.srsStage.rawValue,
-                   assignment.subjectType.rawValue, "",
-                   assignment.level, assignment.srsStage.rawValue,
-                   assignment.subjectType.rawValue])
+      try lifetime.withActive {
+        self.db.inTransaction { db in
+          SyncStore.mergeAssignments(assignments, baseline: baseline,
+                                     replacingAll: updatedAfter.isEmpty, in: db)
+          db.mustExecuteUpdate("UPDATE sync SET assignments_updated_after = ?",
+                               args: [updatedAt])
         }
-        db.mustExecuteUpdate("UPDATE sync SET assignments_updated_after = ?",
-                             args: [updatedAt])
       }
     }
   }
 
   private func fetchStudyMaterials(progress: Progress) -> Promise<Void> {
+    let lifetime = uploadLifetime
+    let baseline = db.inDatabase { SyncStore.materialVersions(in: $0) }
     // Get the last assignment update time.
     let updatedAfter: String = db.inDatabase { db in
       let cursor = db.query("SELECT study_materials_updated_after FROM sync")
@@ -1238,56 +1192,64 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       client.studyMaterials(progress: progress, updatedAfter: updatedAfter)
     }.done { materials, updatedAt in
       NSLog("Updated %d study materials at %@", materials.count, updatedAt)
-      self.db.inTransaction { db in
-        for material in materials {
-          db.mustExecuteUpdate("REPLACE INTO study_materials (id, pb) " +
-            "VALUES (?, ?)",
-            args: [material.subjectID, try! material.serializedData()])
+      try lifetime.withActive {
+        self.db.inTransaction { db in
+          let payloads = Dictionary(materials.map { ($0.subjectID, try! $0.serializedData()) },
+                                    uniquingKeysWith: { _, latest in latest })
+          SyncStore.mergeMaterials(payloads, baseline: baseline,
+                                   replacingAll: updatedAfter.isEmpty, in: db)
+          db.mustExecuteUpdate("UPDATE sync SET study_materials_updated_after = ?",
+                               args: [updatedAt])
         }
-        db.mustExecuteUpdate("UPDATE sync SET study_materials_updated_after = ?",
-                             args: [updatedAt])
       }
     }
   }
 
   // TODO: do everything on database queue.
   private func fetchUserInfo(progress: Progress) -> Promise<Void> {
-    firstly {
+    let lifetime = uploadLifetime
+    return firstly {
       client.user(progress: progress)
     }.done { user in
       NSLog("Updated user: %@", user.debugDescription)
-      let oldMaxLevel = self.maxLevelGrantedBySubscription
-      self.db.inTransaction { db in
-        db.mustExecuteUpdate("REPLACE INTO user (id, pb) VALUES (0, ?)",
-                             args: [try! user.serializedData()])
+      try lifetime.withActive {
+        let oldMaxLevel = self.maxLevelGrantedBySubscription
+        self.db.inTransaction { db in
+          db.mustExecuteUpdate("REPLACE INTO user (id, pb) VALUES (0, ?)",
+                               args: [try! user.serializedData()])
 
-        if oldMaxLevel > 0, user.maxLevelGrantedBySubscription > oldMaxLevel {
-          // The user's max level increased, so more subjects might be available now. Clear the
-          // sync marker to force all the subjects to be downloaded again next sync.
-          db.mustExecuteUpdate("UPDATE sync SET subjects_updated_after = \"\"")
+          if oldMaxLevel > 0, user.maxLevelGrantedBySubscription > oldMaxLevel {
+            // The user's max level increased, so more subjects might be available now. Clear the
+            // sync marker to force all the subjects to be downloaded again next sync.
+            db.mustExecuteUpdate("UPDATE sync SET subjects_updated_after = \"\"")
+          }
         }
-      }
-      if user.maxLevelGrantedBySubscription != oldMaxLevel {
-        self._maxLevelGrantedBySubscription.invalidate()
+        if user.maxLevelGrantedBySubscription != oldMaxLevel {
+          self._maxLevelGrantedBySubscription.invalidate()
+        }
       }
     }
   }
 
   private func fetchLevelProgression(progress: Progress) -> Promise<Void> {
-    firstly {
+    let lifetime = uploadLifetime
+    return firstly {
       client.levelProgressions(progress: progress)
     }.done { progressions, _ in
       NSLog("Updated %d level progressions", progressions.count)
-      self.db.inTransaction { db in
-        for level in progressions {
-          db.mustExecuteUpdate("REPLACE INTO level_progressions (id, level, pb) VALUES (?, ?, ?)",
-                               args: [level.id, level.level, try! level.serializedData()])
+      try lifetime.withActive {
+        self.db.inTransaction { db in
+          for level in progressions {
+            db.mustExecuteUpdate("REPLACE INTO level_progressions (id, level, pb) VALUES (?, ?, ?)",
+                                 args: [level.id, level.level, try! level.serializedData()])
+          }
         }
       }
     }
   }
 
   private func fetchSubjects(progress: Progress) -> Promise<Void> {
+    let lifetime = uploadLifetime
     // Get the last subject update time.
     let updatedAfter: String = db.inDatabase { db in
       let cursor = db.query("SELECT subjects_updated_after FROM sync")
@@ -1301,23 +1263,26 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       client.subjects(progress: progress, updatedAfter: updatedAfter)
     }.done { subjects, updatedAt in
       NSLog("Updated %d subjects at %@", subjects.count, updatedAt)
-      self.db.inTransaction { db in
-        for subject in subjects {
-          db.mustExecuteUpdate("REPLACE INTO subjects (id, japanese, level, type, pb) " +
-            "VALUES (?, ?, ?, ?, ?)",
-            args: [
-              subject.id,
-              subject.japanese,
-              subject.level,
-              subject.subjectType.rawValue,
-              try! subject.serializedData(),
-            ])
-          self.insertAudioUrls(subject: subject, transaction: db)
+      try lifetime.withActive {
+        self.db.inTransaction { db in
+          if updatedAfter.isEmpty { SyncStore.replaceSnapshot(.subjects, in: db) }
+          for subject in subjects {
+            db.mustExecuteUpdate("REPLACE INTO subjects (id, japanese, level, type, pb) " +
+              "VALUES (?, ?, ?, ?, ?)",
+              args: [
+                subject.id,
+                subject.japanese,
+                subject.level,
+                subject.subjectType.rawValue,
+                try! subject.serializedData(),
+              ])
+            self.insertAudioUrls(subject: subject, transaction: db)
+          }
+          db.mustExecuteUpdate("UPDATE sync SET subjects_updated_after = ?",
+                               args: [updatedAt])
         }
-        db.mustExecuteUpdate("UPDATE sync SET subjects_updated_after = ?",
-                             args: [updatedAt])
       }
-      if !subjects.isEmpty {
+      if !subjects.isEmpty || updatedAfter.isEmpty {
         postNotificationOnMainQueue(.lccSubjectsChanged)
       }
     }
@@ -1337,6 +1302,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   }
 
   private func fetchVoiceActors(progress: Progress) -> Promise<Void> {
+    let lifetime = uploadLifetime
     // Get the last voice actors update time.
     let updatedAfter: String = db.inDatabase { db in
       let cursor = db.query("SELECT voice_actors_updated_after FROM sync")
@@ -1350,22 +1316,26 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       client.voiceActors(progress: progress, updatedAfter: updatedAfter)
     }.done { voiceActors, updatedAt in
       NSLog("Updated %d voice actors at %@", voiceActors.count, updatedAt)
-      self.db.inTransaction { db in
-        for voiceActor in voiceActors {
-          db.mustExecuteUpdate("REPLACE INTO voice_actors (id, pb) " +
-            "VALUES (?, ?)",
-            args: [
-              voiceActor.id,
-              try! voiceActor.serializedData(),
-            ])
+      try lifetime.withActive {
+        self.db.inTransaction { db in
+          if updatedAfter.isEmpty { SyncStore.replaceSnapshot(.voiceActors, in: db) }
+          for voiceActor in voiceActors {
+            db.mustExecuteUpdate("REPLACE INTO voice_actors (id, pb) " +
+              "VALUES (?, ?)",
+              args: [
+                voiceActor.id,
+                try! voiceActor.serializedData(),
+              ])
+          }
+          db.mustExecuteUpdate("UPDATE sync SET voice_actors_updated_after = ?",
+                               args: [updatedAt])
         }
-        db.mustExecuteUpdate("UPDATE sync SET voice_actors_updated_after = ?",
-                             args: [updatedAt])
       }
     }
   }
 
   private func fetchReviewStatistics(progress: Progress) -> Promise<Void> {
+    let lifetime = uploadLifetime
     // Get the last review stats update time.
     let updatedAfter: String = db.inDatabase { db in
       let cursor = db.query("SELECT review_stats_updated_after FROM sync")
@@ -1379,18 +1349,21 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       client.reviewStatistics(progress: progress, updatedAfter: updatedAfter)
     }.done { reviewStats, updatedAt in
       NSLog("Updated %d review stats at %@", reviewStats.count, updatedAt)
-      self.db.inTransaction { db in
-        for stat in reviewStats {
-          db.mustExecuteUpdate("REPLACE INTO review_stats (id, subject_id, pb) " +
-            "VALUES (?, ?, ?)",
-            args: [
-              stat.id,
-              stat.subjectID,
-              try! stat.serializedData(),
-            ])
+      try lifetime.withActive {
+        self.db.inTransaction { db in
+          if updatedAfter.isEmpty { SyncStore.replaceSnapshot(.statistics, in: db) }
+          for stat in reviewStats {
+            db.mustExecuteUpdate("REPLACE INTO review_stats (id, subject_id, pb) " +
+              "VALUES (?, ?, ?)",
+              args: [
+                stat.id,
+                stat.subjectID,
+                try! stat.serializedData(),
+              ])
+          }
+          db.mustExecuteUpdate("UPDATE sync SET review_stats_updated_after = ?",
+                               args: [updatedAt])
         }
-        db.mustExecuteUpdate("UPDATE sync SET review_stats_updated_after = ?",
-                             args: [updatedAt])
       }
     }
   }
@@ -1443,6 +1416,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       return Promise.value(()).cauterize()
     }
     busySyncing = true
+    let lifetime = uploadLifetime
 
     let assignmentProgressUnits: Int64 = quick ? 1 : 8
     let subjectProgressUnits: Int64 = quick ? 1 : 20
@@ -1467,12 +1441,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       Progress(totalUnitCount: -1, parent: progress, pendingUnitCount: units)
     }
 
-    let recentMistakes = getRecentMistakeTimes()
     if !quick {
-      // Clear the sync table before doing anything else. This forces us to re-download all
-      // assignments and subjects.
+      // Reset cursors, retaining offline data until each complete replacement arrives.
       db.inTransaction { db in
-        db.mustExecuteStatements(kFullSync)
+        SyncStore.requestFullRefresh(in: db)
       }
     }
 
@@ -1485,7 +1457,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       // in assignment protos.
       fetchSubjects(progress: childProgress(subjectProgressUnits)),
     ]).then { _ in
-      when(fulfilled: [
+      try lifetime.check()
+      return when(fulfilled: [
         // progress.totalUnitCount takes into account the items in this section when
         // calculating the total things that must be completed.
         // assignmentProgressUnits is accounted for already, but the other items
@@ -1500,51 +1473,43 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         self.fetchReviewStatistics(progress: childProgress(1)),
       ])
     }.ensure {
-      // we need to make sure that our current, local batch of recent mistakes go up to the cloud
-      let mergedMistakes = RecentMistakeHandler.mergeMistakes(original: recentMistakes,
-                                                              other: self.recentMistakeHandler
-                                                                .getCloudMistakes())
-      self.recentMistakeHandler.uploadMistakesToCloud(mistakes: mergedMistakes)
+      try? lifetime.withActive {
+        // we need to make sure that our current, local batch of recent mistakes go up to the cloud
+        let mergedMistakes = RecentMistakeHandler
+          .mergeMistakes(original: self.getRecentMistakeTimes(),
+                         other: self.recentMistakeHandler
+                           .getCloudMistakes())
+        self.recentMistakeHandler.uploadMistakesToCloud(mistakes: mergedMistakes)
 
-      if !quick && recentMistakes.count != 0 {
-        // re-insert recent mistakes into database
-        self.db.inDatabase { db in
-          recentMistakes.forEach { item in
-            db
-              .mustExecuteUpdate("UPDATE subject_progress SET last_mistake_time = ? WHERE id = ?",
-                                 args: [
-                                   self.dateFormatter.string(from: item.value),
-                                   item.key,
-                                 ])
-          }
+        self._availableSubjects.invalidate()
+        self._srsCategoryCounts.invalidate()
+        self._apprenticeCount.invalidate()
+        self._recentLessonCount.invalidate()
+        self._leechCount.invalidate()
+        postNotificationOnMainQueue(.lccUserInfoChanged)
+
+        self.busySyncing = false
+        progress.completedUnitCount = progress.totalUnitCount
+        if self.gotRecentMistakesCloudNotificationWhileSyncing {
+          // recent mistake data was updated while we were busy doing other syncing,
+          // so let's make sure to grab the latest data from the cloud now that we're done syncing
+          // and update our local data.
+          // (subject_progress is being updated/rebuilt during sync,
+          // so we don't want to touch it during with data from the cloud until the
+          // subject_progress is done updating)
+          self.updateRecentMistakesFromCloud(skipReuploadToCloud: false)
+          self.gotRecentMistakesCloudNotificationWhileSyncing = false
         }
       }
-
-      self._availableSubjects.invalidate()
-      self._srsCategoryCounts.invalidate()
-      self._apprenticeCount.invalidate()
-      self._recentLessonCount.invalidate()
-      self._leechCount.invalidate()
-      postNotificationOnMainQueue(.lccUserInfoChanged)
-
-      self.busySyncing = false
-      progress.completedUnitCount = progress.totalUnitCount
-      if self.gotRecentMistakesCloudNotificationWhileSyncing {
-        // recent mistake data was updated while we were busy doing other syncing,
-        // so let's make sure to grab the latest data from the cloud now that we're done syncing
-        // and update our local data.
-        // (subject_progress is being updated/rebuilt during sync,
-        // so we don't want to touch it during with data from the cloud until the
-        // subject_progress is done updating)
-        self.updateRecentMistakesFromCloud(skipReuploadToCloud: false)
-        self.gotRecentMistakesCloudNotificationWhileSyncing = false
-      }
-    }.catch(handleError)
+    }.catch { error in
+      try? lifetime.withActive { self.handleError(err: error) }
+    }
   }
 
   func clearAllData() {
     uploadLifetime.invalidate()
     uploadLifetime = UploadLifetime()
+    busySyncing = false
     db.inDatabase { db in
       db.mustExecuteStatements(kClearAllData)
     }
