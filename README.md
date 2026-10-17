@@ -1,18 +1,18 @@
-The content displayed in Tsurukame comes from WaniKani, and its use is covered by
-https://www.wanikani.com/terms, NOT the terms of the Tsurukame software license.
+# 兔鰻 · usagiunagi
 
-[![CircleCI](https://circleci.com/gh/davidsansome/tsurukame.svg?style=shield)](https://circleci.com/gh/davidsansome/tsurukame)
+An independent, unofficial WaniKani client for studying Japanese, forked from [David Sansome's Tsurukame](https://github.com/davidsansome/tsurukame). The name is **兔鰻** in Japanese and Chinese localizations, and **usagiunagi** elsewhere: a rabbit–eel companion for your studies.
 
-Tsurukame is an unofficial WaniKani app for iOS.  It helps you learn Japanese Kanji.
+This fork is being modernized for **iOS/iPadOS 27+ and native macOS 27+**, using Swift, SwiftUI, system typography, SF Symbols and Liquid Glass. Shared statistics include Apple Swift Charts, level pace, focus items and curriculum coverage for estimated JLPT lists, Japanese school grades, Jōyō/Kyōiku and selected Kanji Kentei scopes. Coverage is not an exam pass prediction.
 
-You can download the latest stable release of Tsurukame on the App Store.
+The iPhone/iPad app retains the original review and lesson workflows while migration proceeds. The new [native Mac app](native/README.md) currently supports statistics and subject browsing. Full SwiftUI migration, Mac review/lesson parity and voice review input are still in progress. See [migration status](SWIFTUI_MIGRATION.md) and [statistics definitions](STATISTICS.md).
 
-[![Download on the App Store](https://devimages-cdn.apple.com/app-store/marketing/guidelines/images/badge-example-preferred.png)](https://itunes.apple.com/us/app/tsurukame-for-wanikani/id1367114761)
+The [layered kanji icon](Branding/UsagiUnagi.icon) uses outlined SVG lettering and Apple's Icon Composer format. Brand localizations and store-name metadata are prepared in source; this fork has not been published to the App Store. Historical build target/module names and bundle identifiers remain for compatibility during migration. Choose your own signing identifiers for independent distribution.
 
-Or join the [TestFlight beta](https://testflight.apple.com/join/Fijye2AA)
-which is updated automatically any time there's a commit to this Git repository.
+WaniKani content is governed by [WaniKani's terms](https://www.wanikani.com/terms), separately from this repository's software license. Original Tsurukame copyright and license notices are retained. The [upstream App Store release](https://itunes.apple.com/us/app/tsurukame-for-wanikani/id1367114761) is Tsurukame, not a release of this fork.
 
-# Building Tsurukame
+## Building usagiunagi
+
+Requires Xcode 27. Open `ios/Tsurukame.xcworkspace` for iPhone/iPad, or `native/TsurukameMac.xcodeproj` for Mac. These historical internal paths have not been renamed.
 
 If you want to build the iOS app yourself, you will need to change the signing identifiers.
 

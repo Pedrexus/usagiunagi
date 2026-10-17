@@ -16,7 +16,7 @@ import Foundation
 
 // Where users can tell us what they think of the redesign.
 let kRedesignFeedbackURL =
-  URL(string: "https://github.com/davidsansome/tsurukame/issues/new?title=Visual%20redesign%20feedback")!
+  URL(string: "https://github.com/Pedrexus/usagiunagi/issues/new?title=Visual%20redesign%20feedback")!
 
 // A one-line card at the top of the home screen asking for feedback on the redesign, with a close
 // button to dismiss it.

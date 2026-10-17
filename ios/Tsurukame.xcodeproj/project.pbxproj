@@ -10,12 +10,14 @@
 		047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5F84B9E7F40CE19F2FDE97 /* StudyCore */; };
 		0A943349E17FA7889EFEE41F /* Pods_Tsurukame.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC80AAF9736A570E3C4CC09E /* Pods_Tsurukame.framework */; };
 		11F0AAE295A730DDD157C7A8 /* StudyStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B23E267AB393BA610A4B75B /* StudyStatistics.swift */; };
+		137DFD51681E0F8E31C6B995 /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
 		1C1A27E594D03064CFACBADB /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639CE0BC2CF0ABCE00902668 /* FeatureFlags.swift */; };
 		480B243123D6830300FC2A82 /* Rexy in Frameworks */ = {isa = PBXBuildFile; productRef = 480B243023D6830300FC2A82 /* Rexy */; };
 		481B2FED23C55AAF0041EF1F /* CurrentLevelReviewTimeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481B2FEC23C55AAF0041EF1F /* CurrentLevelReviewTimeItem.swift */; };
 		4820306724D849E100B40FDD /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633632EE201F3490006D582B /* Settings.swift */; };
 		483EBFDC261DD7190043C804 /* FontScreenshotterUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4874562D261DD28E00F33AA3 /* FontScreenshotterUITests.swift */; };
 		48F4B1DC268CB9850033860E /* UpcomingReviewsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F4B1DB268CB9850033860E /* UpcomingReviewsViewController.swift */; };
+		5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
 		5C82B2908507339A293B0E59 /* Pods_FontScreenshotter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F33812F134DC80E5D981C40E /* Pods_FontScreenshotter.framework */; };
 		5E77A1C2D3B4F5061728394A /* SettingsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77A1C2D3B4F5061728394B /* SettingsTableViewController.swift */; };
 		60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 23A08FB0407E2600C582ED6F /* StudyUI */; };
@@ -188,6 +190,8 @@
 		7CE83359729B91FC7B1C8BDA /* SessionCompleteItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCB1C322531CAD495E7E543 /* SessionCompleteItem.swift */; };
 		85A8A502A74E08D93DD9682D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C48CF5ADDC56D1A96EDE8C /* SceneDelegate.swift */; };
 		897DA50B06F90874AD73512D /* StatisticsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B48251FA98F552C583C9D2 /* StatisticsViewController.swift */; };
+		90F5517AFA8C466B4B73DC91 /* AppIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC184263840AFA4B962719B /* AppIdentity.swift */; };
+		9319FFE8FEE95DF84F5063AE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 46D1D93DB77B42DE86804E5F /* InfoPlist.strings */; };
 		93B59B2A2367AF130097533C /* UpcomingReviewsChartItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B59B292367AF130097533C /* UpcomingReviewsChartItem.swift */; };
 		96A335072EEF5F800017BC70 /* BottomSheetAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A335062EEF5F800017BC70 /* BottomSheetAction.swift */; };
 		9721708A2DBAF247001DFFED /* SubjectsExcludedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 972170892DBAF247001DFFED /* SubjectsExcludedViewController.swift */; };
@@ -200,6 +204,7 @@
 		BB0F6B0C216698F800CB1306 /* TKMKanaInputTest.m in Sources */ = {isa = PBXBuildFile; fileRef = BB0F6B0B216698F800CB1306 /* TKMKanaInputTest.m */; };
 		BBE4E32E2172576B003A200E /* FontLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE4E32D2172576B003A200E /* FontLoader.swift */; };
 		BDB49A4C77A82BE725D09593 /* HomeHeroItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277BB6E424992F8F2C53564B /* HomeHeroItem.swift */; };
+		BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 46D1D93DB77B42DE86804E5F /* InfoPlist.strings */; };
 		C904455D2395DBAE001BC48B /* AnswerTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C904455C2395DBAE001BC48B /* AnswerTextField.swift */; };
 		C904455E2395DBAE001BC48B /* AnswerTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C904455C2395DBAE001BC48B /* AnswerTextField.swift */; };
 		C90846B0237F1C770068A272 /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C90846AE237F1C770068A272 /* Interface.storyboard */; };
@@ -292,9 +297,11 @@
 		20A6D3E1C6F7A492EB9DDF0C /* Pods-Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tests.release.xcconfig"; path = "Target Support Files/Pods-Tests/Pods-Tests.release.xcconfig"; sourceTree = "<group>"; };
 		21894D9E0883B0107075DD6F /* Pods-Tsurukame.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame.release.xcconfig"; path = "Target Support Files/Pods-Tsurukame/Pods-Tsurukame.release.xcconfig"; sourceTree = "<group>"; };
 		277BB6E424992F8F2C53564B /* HomeHeroItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeHeroItem.swift; sourceTree = "<group>"; };
+		27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
 		2DCB1C322531CAD495E7E543 /* SessionCompleteItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionCompleteItem.swift; sourceTree = "<group>"; };
 		301BAAC2C21E4A99238D1E80 /* Pods-FontScreenshotter-FontScreenshotterUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FontScreenshotter-FontScreenshotterUITests.release.xcconfig"; path = "Target Support Files/Pods-FontScreenshotter-FontScreenshotterUITests/Pods-FontScreenshotter-FontScreenshotterUITests.release.xcconfig"; sourceTree = "<group>"; };
 		34E86AD95515CD815B3086D0 /* Pods-Tsurukame.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame.debug.xcconfig"; path = "Target Support Files/Pods-Tsurukame/Pods-Tsurukame.debug.xcconfig"; sourceTree = "<group>"; };
+		3756F7F4B1B96F207317CD15 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		3857A1F90A4B6B5CDFDE7003 /* RedesignFeedbackItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RedesignFeedbackItem.swift; sourceTree = "<group>"; };
 		404461BC39B4A19B128F9E69 /* Pods_FontScreenshotter_FontScreenshotterUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FontScreenshotter_FontScreenshotterUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyStatisticsTest.swift; sourceTree = "<group>"; };
@@ -456,6 +463,7 @@
 		6A11C0DE0000000000000002 /* TableCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableCards.swift; sourceTree = "<group>"; };
 		6A11C0DE0000000000000004 /* SubjectListItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectListItem.swift; sourceTree = "<group>"; };
 		6B23E267AB393BA610A4B75B /* StudyStatistics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyStatistics.swift; sourceTree = "<group>"; };
+		6C85812902528942C1AAB9B5 /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Localizations/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		7298C3542866B43ADABAFA94 /* WavesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WavesView.swift; sourceTree = "<group>"; };
 		791B8B5B2D657E2A000C8142 /* CommonErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonErrors.swift; sourceTree = "<group>"; };
 		791B8B5D2D6584C9000C8142 /* RecentMistakeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentMistakeHandler.swift; sourceTree = "<group>"; };
@@ -466,6 +474,7 @@
 		79D887462B419609003D8F99 /* String+SHA256Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+SHA256Test.swift"; sourceTree = "<group>"; };
 		7E3A3B65C3A0B280B5FF32D3 /* Pods-Tsurukame (App Store screenshots).debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame (App Store screenshots).debug.xcconfig"; path = "Target Support Files/Pods-Tsurukame (App Store screenshots)/Pods-Tsurukame (App Store screenshots).debug.xcconfig"; sourceTree = "<group>"; };
 		82721E7B5A9C5562CC8D3B9B /* Pods-FontScreenshotter.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FontScreenshotter.release.xcconfig"; path = "Target Support Files/Pods-FontScreenshotter/Pods-FontScreenshotter.release.xcconfig"; sourceTree = "<group>"; };
+		86C64C7CDF56B2A1FA20A641 /* zh-Hant */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "Localizations/zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		93B59B292367AF130097533C /* UpcomingReviewsChartItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingReviewsChartItem.swift; sourceTree = "<group>"; };
 		96A335062EEF5F800017BC70 /* BottomSheetAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetAction.swift; sourceTree = "<group>"; };
 		972170892DBAF247001DFFED /* SubjectsExcludedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectsExcludedViewController.swift; sourceTree = "<group>"; };
@@ -499,9 +508,11 @@
 		E76D291A2528193C74A43C60 /* Pods-FontScreenshotter.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FontScreenshotter.debug.xcconfig"; path = "Target Support Files/Pods-FontScreenshotter/Pods-FontScreenshotter.debug.xcconfig"; sourceTree = "<group>"; };
 		E881943A2A6BC0CF002C2E1C /* ArtworkModelItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkModelItem.swift; sourceTree = "<group>"; };
 		E881943E2A6BC38A002C2E1C /* ArtworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkManager.swift; sourceTree = "<group>"; };
+		EEC184263840AFA4B962719B /* AppIdentity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		F33812F134DC80E5D981C40E /* Pods_FontScreenshotter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FontScreenshotter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F3565A0DBD16020ADBFAB194 /* PracticeCardItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PracticeCardItem.swift; sourceTree = "<group>"; };
 		F9C48CF5ADDC56D1A96EDE8C /* SceneDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		FA1B55C18893D5E681F97EAC /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = Localizations/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FC80AAF9736A570E3C4CC09E /* Pods_Tsurukame.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Tsurukame.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -737,6 +748,7 @@
 				5E77A1C2D3B4F5061728394B /* SettingsTableViewController.swift */,
 				6B23E267AB393BA610A4B75B /* StudyStatistics.swift */,
 				B8B48251FA98F552C583C9D2 /* StatisticsViewController.swift */,
+				FD13A2CE121FE15697154013 /* Branding */,
 			);
 			sourceTree = "<group>";
 		};
@@ -914,6 +926,17 @@
 				C90846C5237F1C790068A272 /* Info.plist */,
 			);
 			path = ComplicationExtension;
+			sourceTree = "<group>";
+		};
+		FD13A2CE121FE15697154013 /* Branding */ = {
+			isa = PBXGroup;
+			children = (
+				27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */,
+				EEC184263840AFA4B962719B /* AppIdentity.swift */,
+				46D1D93DB77B42DE86804E5F /* InfoPlist.strings */,
+			);
+			name = Branding;
+			path = ../Branding;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1124,6 +1147,9 @@
 			knownRegions = (
 				en,
 				Base,
+				ja,
+				"zh-Hans",
+				"zh-Hant",
 			);
 			mainGroup = 630FD60A1FC45BDF00D21C1F;
 			packageReferences = (
@@ -1191,6 +1217,8 @@
 				63C4EA702C2598A4003D3C0B /* OfflineAudio.storyboard in Resources */,
 				63C4EA6C2C258F2C003D3C0B /* SelectFonts.storyboard in Resources */,
 				9721708C2DBAF3A6001DFFED /* SubjectsExcluded.storyboard in Resources */,
+				BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */,
+				5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1232,6 +1260,8 @@
 			files = (
 				C90846B2237F1C780068A272 /* Assets.xcassets in Resources */,
 				C90846B0237F1C770068A272 /* Interface.storyboard in Resources */,
+				9319FFE8FEE95DF84F5063AE /* InfoPlist.strings in Resources */,
+				137DFD51681E0F8E31C6B995 /* UsagiUnagi.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1578,6 +1608,7 @@
 				5E77A1C2D3B4F5061728394A /* SettingsTableViewController.swift in Sources */,
 				11F0AAE295A730DDD157C7A8 /* StudyStatistics.swift in Sources */,
 				897DA50B06F90874AD73512D /* StatisticsViewController.swift in Sources */,
+				90F5517AFA8C466B4B73DC91 /* AppIdentity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1690,6 +1721,17 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		46D1D93DB77B42DE86804E5F /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3756F7F4B1B96F207317CD15 /* en */,
+				FA1B55C18893D5E681F97EAC /* ja */,
+				6C85812902528942C1AAB9B5 /* zh-Hans */,
+				86C64C7CDF56B2A1FA20A641 /* zh-Hant */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		63C42A2E21B6A290008CA938 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1840,7 +1882,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 63344E7D2D291C9F002A4FED /* DeveloperDebug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Resources/Tsurukame.entitlements;
@@ -1878,7 +1920,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 63344E7C2D291C9F002A4FED /* AppStoreRelease.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Resources/Tsurukame.entitlements;
@@ -2137,7 +2179,7 @@
 		C90846CA237F1C790068A272 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -2165,7 +2207,7 @@
 		C90846CB237F1C790068A272 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";

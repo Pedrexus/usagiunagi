@@ -82,7 +82,7 @@ class WebClientTest: XCTestCase {
     createApiToken.setHeader(key: "Cookie", value: "_wanikani_session=sessioncookie2")
     createApiToken
       .bodyMatcher = StringMatcher(string:
-        "description=Tsurukame&" +
+        "description=usagiunagi&" +
           "permissions%5Bassignments%5D%5Bstart%5D=0&" +
           "permissions%5Bassignments%5D%5Bstart%5D=1&" +
           "permissions%5Breviews%5D%5Bcreate%5D=0&" +
@@ -97,7 +97,7 @@ class WebClientTest: XCTestCase {
     createApiToken.response.body = """
       <tr data-id="personal-access-token__e03af9dd-aaa9-4a17-921e-3a29315767ec">
         <td class="personal-access-token-description">
-                          Tsurukame
+                          usagiunagi
                         </td>
         <td class="personal-access-token-token">
             <code>e03af9dd-aaa9-4a17-921e-3a29315767ec</code>

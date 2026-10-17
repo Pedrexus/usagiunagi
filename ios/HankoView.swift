@@ -15,7 +15,7 @@
 import CoreText
 import Foundation
 
-// The app's seal (判子): 鶴 over 亀, cut out of a vermilion block so whatever is behind shows
+// The app's seal (判子): 兔 over 鰻, cut out of a vermilion block so whatever is behind shows
 // through the characters. Each character is stretched to fill its half of the seal, the way a
 // carved name seal fills its face.
 class HankoView: UIView {
@@ -28,7 +28,7 @@ class HankoView: UIView {
     didSet { setNeedsDisplay() }
   }
 
-  var characters = ["鶴", "亀"] {
+  var characters = ["兔", "鰻"] {
     didSet { setNeedsDisplay() }
   }
 
@@ -42,7 +42,7 @@ class HankoView: UIView {
     backgroundColor = .clear
     contentMode = .redraw
     isAccessibilityElement = true
-    accessibilityLabel = "Tsurukame"
+    accessibilityLabel = AppIdentity.name
     accessibilityTraits = .image
   }
 

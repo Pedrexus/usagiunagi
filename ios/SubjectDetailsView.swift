@@ -447,7 +447,7 @@ class SubjectDetailsView: UITableView, SubjectChipDelegate {
       if SubjectDetailsView.showAllFieldsCount >= 10 {
         Settings.seenFullAnswerPrompt = true
         let ac = UIAlertController(title: "Always show the full answer?",
-                                   message: "If you prefer, Tsurukame can always show the " +
+                                   message: "If you prefer, \(AppIdentity.name) can always show the " +
                                      "full answer instead of hiding the part you haven't " +
                                      "answered yet.\n" +
                                      "You can change this in Settings at any time.",

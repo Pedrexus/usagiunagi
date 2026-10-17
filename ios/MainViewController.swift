@@ -355,7 +355,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     isShowingUnauthorizedAlert = true
 
     let ac = UIAlertController(title: "Logged out",
-                               message: "Your API token expired, is invalid, or does not have the proper permissions. Please log in again. You won't lose your review progress.\n\nAPI tokens for the Tsurukame app cannot be expired and require all of the following permissions: assignments:start, reviews:create, study_materials:create, study_materials:update.",
+                               message: "Your API token expired, is invalid, or does not have the proper permissions. Please log in again. You won't lose your review progress.\n\nAPI tokens for the \(AppIdentity.name) app cannot be expired and require all of the following permissions: assignments:start, reviews:create, study_materials:create, study_materials:update.",
                                preferredStyle: .alert)
 
     if Settings.userApiToken != "" {

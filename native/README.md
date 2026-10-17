@@ -1,4 +1,4 @@
-# Native Mac app
+# usagiunagi · native Mac app
 
 Open `TsurukameMac.xcodeproj` in Xcode 27 and run the `TsurukameMac` scheme on macOS 27 or newer. This is a native SwiftUI app, not Catalyst. The shared `../StudyKit` package has no third-party dependencies.
 
@@ -13,4 +13,4 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project nat
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --package-path StudyKit
 ```
 
-A successful build and mock API tests do not establish real-account synchronization, Keychain prompt behavior, or complete desktop interaction coverage. See `../SWIFTUI_MIGRATION.md` for remaining platform work.
+The sample-data flow, charts, coverage drill-down, subject navigation and kanji search were checked in the running Mac app. Build and mock API tests do not establish real-account synchronization or Keychain prompt behavior. See `../SWIFTUI_MIGRATION.md` for remaining platform work.

@@ -94,7 +94,7 @@ private struct MacStudyRoot: View {
                 Label("Statistics", systemImage: "chart.bar.xaxis").tag("Statistics")
                 Label("Subjects", systemImage: "character.book.closed").tag("Subjects")
                 Label("Account", systemImage: "person.crop.circle").tag("Account")
-            }.navigationTitle("Tsurukame").navigationSplitViewColumnWidth(min: 170, ideal: 200)
+            }.navigationTitle(AppIdentity.name).navigationSplitViewColumnWidth(min: 170, ideal: 200)
         } detail: {
             Group {
                 if section == "Account" || store.snapshot == nil { account }

@@ -133,7 +133,7 @@ public class WaniKaniWebClient {
       let csrfToken = try self.extractCSRFToken(arg.data)
 
       let queryItems = [
-        URLQueryItem(name: "description", value: "Tsurukame"),
+        URLQueryItem(name: "description", value: "usagiunagi"),
         URLQueryItem(name: "permissions[assignments][start]", value: "0"),
         URLQueryItem(name: "permissions[assignments][start]", value: "1"),
         URLQueryItem(name: "permissions[reviews][create]", value: "0"),
@@ -213,7 +213,7 @@ private let kCSRFTokenRE = try! NSRegularExpression(pattern:
   "<meta name=\"csrf-token\" content=\"([^\"]*)", options: [])
 private let kApiTokenRE = try! NSRegularExpression(pattern:
   ">\\s*" +
-    "Tsurukame\\s*" +
+    "(?:usagiunagi|Tsurukame)\\s*" +
     "</.*?" +
     "<code[^>]*>([a-f0-9-]{36})</code>",
   options: [.dotMatchesLineSeparators])

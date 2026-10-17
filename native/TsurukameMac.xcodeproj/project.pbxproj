@@ -8,14 +8,23 @@
 
 /* Begin PBXBuildFile section */
 		3AE2CE7D20558F0AC1B2EB73 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = EE80CAC7A4C0A857F5B75CF8 /* StudyCore */; };
+		5D8467EF30634DB80923C333 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F51397CC4B659A4754D3F /* InfoPlist.strings */; };
 		904EF54F25D8662C9CABE863 /* TsurukameMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA8C5F4E914FDB6FE9994AC /* TsurukameMacApp.swift */; };
+		91AE36ABF82B0B72DA6A4BF3 /* AppIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22B24E7CA8E039A3F1122EA /* AppIdentity.swift */; };
 		968E1F36E55B3078A4292BFB /* StudyUI in Frameworks */ = {isa = PBXBuildFile; productRef = BCE9C754AFF6C8A1FF401FD0 /* StudyUI */; };
 		99F206E09E3CFB1C2CC4426D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25CAFB2135EB8C237FDF6A07 /* Cocoa.framework */; };
+		CDE2AA81AE568AE4E5216ADB /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4B92C88DA85275F78FE0907D /* UsagiUnagi.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		25CAFB2135EB8C237FDF6A07 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		26D86164EFD1B113E1B65109 /* zh-Hant */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "Localizations/zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		4B92C88DA85275F78FE0907D /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
+		89059823AE010115D074D87D /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		8A70DE002B4C84D6C3086EC1 /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = Localizations/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		94B06A502EDECD321B9C9199 /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Localizations/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		ABA8C5F4E914FDB6FE9994AC /* TsurukameMacApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TsurukameMacApp.swift; sourceTree = "<group>"; };
+		B22B24E7CA8E039A3F1122EA /* AppIdentity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		E13432C314D942AF9AA8FD8D /* TsurukameMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TsurukameMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -55,7 +64,19 @@
 				E599646581F38A60310A1020 /* Products */,
 				7FA4E96D331434390BD2BA8B /* Frameworks */,
 				ABA8C5F4E914FDB6FE9994AC /* TsurukameMacApp.swift */,
+				B82F799EA3A44976AD5EE5F2 /* Branding */,
 			);
+			sourceTree = "<group>";
+		};
+		B82F799EA3A44976AD5EE5F2 /* Branding */ = {
+			isa = PBXGroup;
+			children = (
+				4B92C88DA85275F78FE0907D /* UsagiUnagi.icon */,
+				B22B24E7CA8E039A3F1122EA /* AppIdentity.swift */,
+				2B2F51397CC4B659A4754D3F /* InfoPlist.strings */,
+			);
+			name = Branding;
+			path = ../Branding;
 			sourceTree = "<group>";
 		};
 		E599646581F38A60310A1020 /* Products */ = {
@@ -106,6 +127,9 @@
 			knownRegions = (
 				en,
 				Base,
+				ja,
+				"zh-Hans",
+				"zh-Hant",
 			);
 			mainGroup = 9A80ECA2F1715819A7B25BA8;
 			minimizedProjectReferenceProxies = 0;
@@ -127,6 +151,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5D8467EF30634DB80923C333 /* InfoPlist.strings in Resources */,
+				CDE2AA81AE568AE4E5216ADB /* UsagiUnagi.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,22 +164,38 @@
 			buildActionMask = 2147483647;
 			files = (
 				904EF54F25D8662C9CABE863 /* TsurukameMacApp.swift in Sources */,
+				91AE36ABF82B0B72DA6A4BF3 /* AppIdentity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		2B2F51397CC4B659A4754D3F /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				89059823AE010115D074D87D /* en */,
+				8A70DE002B4C84D6C3086EC1 /* ja */,
+				94B06A502EDECD321B9C9199 /* zh-Hans */,
+				26D86164EFD1B113E1B65109 /* zh-Hant */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		2BD12717A4CA3DD934F88454 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Tsurukame;
+				INFOPLIST_KEY_CFBundleDisplayName = usagiunagi;
+				INFOPLIST_KEY_CFBundleName = usagiunagi;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
@@ -283,13 +325,14 @@
 		D98D133C86E30C74EC221797 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Tsurukame;
+				INFOPLIST_KEY_CFBundleDisplayName = usagiunagi;
+				INFOPLIST_KEY_CFBundleName = usagiunagi;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;

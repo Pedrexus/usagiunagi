@@ -120,7 +120,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     hanko.layer.shadowRadius = 14
     hanko.layer.shadowOffset = CGSize(width: 0, height: 10)
     let title = UILabel()
-    title.text = "Tsurukame"
+    title.text = AppIdentity.name
     title.font = UIFont.systemFont(ofSize: 34, weight: .heavy)
     title.textColor = TKMStyle.Color.onNight
     title.accessibilityTraits = .header

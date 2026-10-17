@@ -1,0 +1,75 @@
+{
+  "fill": {
+    "automatic-gradient": "srgb:0.94000,0.96000,0.97000,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "RabbitKanji.svg",
+          "name": "兔 · rabbit",
+          "glass": true,
+          "fill-specializations": [
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.90000,0.95000,0.97000,1.00000"
+              }
+            },
+            {
+              "appearance": "tinted",
+              "value": {
+                "solid": "extended-gray:1.00000,1.00000"
+              }
+            }
+          ]
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.22
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.08
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "EelKanji.svg",
+          "name": "鰻 · eel",
+          "glass": true,
+          "fill-specializations": [
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.90000,0.95000,0.97000,1.00000"
+              }
+            },
+            {
+              "appearance": "tinted",
+              "value": {
+                "solid": "extended-gray:1.00000,1.00000"
+              }
+            }
+          ]
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.22
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.08
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}
