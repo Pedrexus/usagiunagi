@@ -77,8 +77,6 @@ protocol ReviewViewControllerDelegate: AnyObject {
 
   @objc optional func tappedMenuButton(reviewViewController: ReviewViewController,
                                        menuButton: UIView)
-  @objc optional func tappedCloseButton(reviewViewController: ReviewViewController,
-                                        closeButton: UIView)
 }
 
 /// Compatibility host for navigation, legacy repository and rich subject details.
@@ -170,7 +168,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     super.viewWillAppear(animated)
     navigationController?.setNavigationBarHidden(true, animated: false)
     SiriShortcutHelper.shared.attachShortcutActivity(self, type: .reviews)
-    if !session.hasStarted { randomTask() }
+    if !session.hasStarted { randomTask() } else { quickSettingsChanged() }
   }
 
   override func viewDidAppear(_ animated: Bool) {
@@ -193,13 +191,17 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     }
   }
 
-  func quickSettingsMenuWillOpen() { answerField.resignFirstResponder() }
-  func quickSettingsMenuDidClose() { quickSettingsChanged()
-    focusAnswerField()
+  func prepareForSettings() {
+    view.endEditing(true)
+    saveDetails()
   }
 
   func quickSettingsChanged() {
-    if screen.phase == .answering { updateQuestion(focus: false) }
+    updateQuestion(focus: false, resetAnswer: false)
+    if screen.phase == .details {
+      saveDetails()
+      updateAnswerDetails()
+    }
   }
 
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -244,17 +246,21 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     screen.remaining = session.activeQueueLength + session.reviewQueueLength
     screen.accuracy = delegate.showsSuccessRate() ? session.successRateText : nil
     screen.wrappingUp = session.wrappingUp
+    screen.canWrapUp = session.canWrapUp
+    screen.activeCount = session.activeQueueLength
   }
 
-  private func updateQuestion(focus: Bool = true) {
+  private func updateQuestion(focus: Bool = true, resetAnswer: Bool = true) {
     guard let subject = session.activeSubject,
           let assignment = session.activeAssignment else { return }
-    screen.phase = .answering
-    screen.feedback = ""
-    screen.answer = ""
-    answerField.text = ""
-    answerField.textColor = .label
-    answerField.isEnabled = true
+    if resetAnswer {
+      screen.phase = .answering
+      screen.feedback = ""
+      screen.answer = ""
+      answerField.text = ""
+      answerField.textColor = .label
+      answerField.isEnabled = true
+    }
     screen.isAnki = isAnkiModeActiveForCurrentTask
     screen.canSkip = Settings.allowSkippingReviews
     screen.canOverride = delegate.allowsCheats(forReviewItem: session.activeTask)
@@ -290,8 +296,11 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     case .bubble: screen.stage = assignment.srsStage.description
     case .dots: screen.stage = getDots(stage: assignment.srsStage)?.string ?? ""
     }
-    currentFontName = randomFont(thatCanRenderText: subject.japanese)
-    screen.questionFont = currentFontName
+    if resetAnswer || availableFonts != fontsThatCanRenderText(subject.japanese, exclude: nil)
+      .sorted() {
+      currentFontName = randomFont(thatCanRenderText: subject.japanese)
+      screen.questionFont = screen.phase == .details ? TKMStyle.japaneseFontName : currentFontName
+    }
     screen.questionSize = TKMStyle.reviewSubjectFontSize(baseSize: 64)
     kanaInput.enabled = session.activeTaskType == .reading
     if let reading = subject.primaryReadings.first {
@@ -306,7 +315,9 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
 
   private func handle(_ action: ReviewScreenAction) {
     switch action {
-    case .close: delegate.tappedCloseButton?(reviewViewController: self, closeButton: view)
+    case .end: endReviewSession()
+    case .wrap: wrappingUp = true
+    case .stopWrapping: wrappingUp = false
     case .settings: delegate.tappedMenuButton?(reviewViewController: self, menuButton: view)
     case .voice: showVoiceAnswer()
     case .submit: enterKeyPressed()
@@ -456,13 +467,17 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     }
   }
 
-  @objc private func revealAnswer() {
+  private func updateAnswerDetails() {
     subjectDetailsView.update(withSubject: session.activeSubject,
                               studyMaterials: session.activeStudyMaterials,
                               assignment: session.activeAssignment,
                               task: Settings.showFullAnswer || combinesAnkiQuestions ? nil : session
                                 .activeTask)
     subjectDetailsView.setContentOffset(.zero, animated: false)
+  }
+
+  @objc private func revealAnswer() {
+    updateAnswerDetails()
     screen.phase = .details
     screen.questionFont = TKMStyle.japaneseFontName
     answerField.resignFirstResponder()

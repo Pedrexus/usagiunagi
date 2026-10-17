@@ -21,6 +21,8 @@ import SwiftUI
     public var remaining = 0
     public var accuracy: String?
     public var wrappingUp = false
+    public var canWrapUp = false
+    public var activeCount = 0
     public var isAnki = false
     public var canSkip = false
     public var canOverride = false
@@ -35,7 +37,7 @@ import SwiftUI
 }
 
 public enum ReviewScreenAction {
-    case close, settings, voice, submit, reveal, retry, correct, incorrect, deferQuestion, exclude
+    case end, wrap, stopWrapping, settings, voice, submit, reveal, retry, correct, incorrect, deferQuestion, exclude
     case synonym, previous, toggleFont, nextFont, previousFont, showAll, playAudio, focus
 }
 
@@ -51,6 +53,7 @@ public struct ReviewScreen<Input: View, Details: View>: View {
         false
         #endif
     }
+    @State private var confirmEnd = false
     private let state: ReviewScreenState
     private let action: (ReviewScreenAction) -> Void
     private let input: () -> Input
@@ -81,7 +84,9 @@ public struct ReviewScreen<Input: View, Details: View>: View {
             .toolbar {
                 if state.hasMenu {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("End session", systemImage: "xmark") { action(.close) }
+                        Button("End session", systemImage: "xmark") {
+                            if state.canWrapUp { confirmEnd = true } else { action(.end) }
+                        }
                             .accessibilityIdentifier("review.close")
                     }
                 }
@@ -100,6 +105,13 @@ public struct ReviewScreen<Input: View, Details: View>: View {
                 Button("My answer was correct") { action(.correct) }
                 Button("My answer was incorrect") { action(.incorrect) }
                 Button("Ask again later") { action(.deferQuestion) }
+            }
+            .confirmationDialog("End review session?", isPresented: $confirmEnd, titleVisibility: .visible) {
+                if state.wrappingUp { Button("Stop wrapping up") { action(.stopWrapping) } }
+                else { Button("Wrap up (\(state.activeCount) to go)") { action(.wrap) } }
+                Button("End review session", role: .destructive) { action(.end) }
+            } message: {
+                Text("Ending now loses progress on half-answered reviews. Wrap up to finish the current batch first.")
             }
             .onChange(of: compactLandscape) { _, _ in action(.focus) }
             .sensoryFeedback(.success, trigger: state.successCount)

@@ -93,6 +93,17 @@ private func setArchiveData<T: Codable>(_ object: T, key: String) {
     data = NSKeyedArchiver.archivedData(withRootObject: object)
   }
 
+  #if DEBUG
+    // Keep interactive screenshot-test overrides mutable and isolated from saved preferences.
+    if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+      var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+      if arguments[key] != nil {
+        arguments[key] = data
+        UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
+        return
+      }
+    }
+  #endif
   UserDefaults.standard.setValue(data, forKey: key)
 }
 

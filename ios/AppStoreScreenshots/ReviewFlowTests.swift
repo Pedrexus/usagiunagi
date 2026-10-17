@@ -248,4 +248,113 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
   }
+
+  @MainActor
+  func testQuickSettingsPreservesDraftAndAppliesExactMatch() {
+    continueAfterFailure = false
+    let app = launchSingleReview(extra: ["-exactMatch", "NO"])
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("personaly")
+    app.buttons["review.settings"].tap()
+    let exact = app.switches["reviewSettings.exactMatch"]
+    XCTAssertTrue(exact.waitForExistence(timeout: 5))
+    XCTAssertEqual(exact.value as? String, "0")
+    exact.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+    XCTAssertEqual(exact.value as? String, "1")
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "SwiftUI quick settings"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertEqual(field.value as? String, "personaly")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.staticTexts["review.feedback"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["review.feedback"].label, "Use the exact meaning.")
+    app.buttons["review.settings"].tap()
+    XCTAssertTrue(exact.waitForExistence(timeout: 5))
+    XCTAssertEqual(exact.value as? String, "1")
+    exact.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+    XCTAssertEqual(exact.value as? String, "0")
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertEqual(field.value as? String, "personaly")
+    app.buttons["review.submit"].tap()
+    let reading = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      app.staticTexts["review.prompt"].label.contains("Reading")
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+    field.tap()
+    field.typeText("watashijishin")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  func testWrapUpCanBeStoppedAndCompleted() {
+    continueAfterFailure = false
+    let app = launchSingleReview()
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("personally")
+    app.buttons["review.submit"].tap()
+    app.buttons["review.close"].tap()
+    let wrap = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Wrap up ("))
+      .firstMatch
+    XCTAssertTrue(wrap.waitForExistence(timeout: 5))
+    wrap.tap()
+    XCTAssertTrue(app.staticTexts["Wrapping up"].waitForExistence(timeout: 5))
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(app.buttons["Stop wrapping up"].waitForExistence(timeout: 5))
+    app.buttons["Stop wrapping up"].tap()
+    XCTAssertFalse(app.staticTexts["Wrapping up"].exists)
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(wrap.waitForExistence(timeout: 5))
+    wrap.tap()
+    field.tap()
+    field.typeText("watashijishin")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  func testFontLibraryReturnsToDraftAndUnstartedReviewCanClose() {
+    continueAfterFailure = false
+    let app = launchSingleReview()
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("personally")
+    app.buttons["review.settings"].tap()
+    XCTAssertTrue(app.buttons["reviewSettings.fonts"].waitForExistence(timeout: 5))
+    app.buttons["reviewSettings.fonts"].tap()
+    let navigation = app.navigationBars["Select Fonts"]
+    XCTAssertTrue(navigation.waitForExistence(timeout: 5))
+    navigation.buttons.firstMatch.tap()
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "personally")
+    app.buttons["review.close"].tap()
+    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
+      .firstMatch
+    XCTAssertTrue(start.waitForExistence(timeout: 5))
+  }
+
+  @MainActor
+  func testExplicitEndDiscardsOnlyTheUnfinishedSession() {
+    continueAfterFailure = false
+    let app = launchSingleReview()
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("personally")
+    app.buttons["review.submit"].tap()
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(app.buttons["End review session"].waitForExistence(timeout: 5))
+    app.buttons["End review session"].tap()
+    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
+      .firstMatch
+    XCTAssertTrue(start.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.staticTexts["Session complete"].exists)
+  }
 }

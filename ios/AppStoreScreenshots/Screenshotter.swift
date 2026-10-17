@@ -77,7 +77,7 @@ import WaniKaniAPI
         var arguments = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
         for key in ["groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
                     "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
-                    "allowSkippingReviews", "showAnswerImmediately", "enableCheats",
+                    "allowSkippingReviews", "exactMatch", "showAnswerImmediately", "enableCheats",
                     "ankiModeCombineReadingMeaning"] {
           if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
              let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",

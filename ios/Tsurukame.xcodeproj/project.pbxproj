@@ -46,11 +46,7 @@
 		63344E812D291C9F002A4FED /* DeveloperDebug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 63344E7D2D291C9F002A4FED /* DeveloperDebug.xcconfig */; };
 		63344E822D291C9F002A4FED /* TestFlightRelease.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 63344E7E2D291C9F002A4FED /* TestFlightRelease.xcconfig */; };
 		63344E8A2D291CAA002A4FED /* ReviewContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E832D291CAA002A4FED /* ReviewContainerViewController.swift */; };
-		63344E8B2D291CAA002A4FED /* ReviewQuickSettingsAnswersMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E842D291CAA002A4FED /* ReviewQuickSettingsAnswersMenu.swift */; };
-		63344E8C2D291CAA002A4FED /* ReviewQuickSettingsAudioMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E852D291CAA002A4FED /* ReviewQuickSettingsAudioMenu.swift */; };
-		63344E8D2D291CAA002A4FED /* ReviewQuickSettingsDisplayMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E862D291CAA002A4FED /* ReviewQuickSettingsDisplayMenu.swift */; };
-		63344E8E2D291CAA002A4FED /* ReviewQuickSettingsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E872D291CAA002A4FED /* ReviewQuickSettingsMenu.swift */; };
-		63344E8F2D291CAA002A4FED /* ReviewQuickSettingsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E882D291CAA002A4FED /* ReviewQuickSettingsTable.swift */; };
+		63344E8E2D291CAA002A4FED /* ReviewPreferencesAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E872D291CAA002A4FED /* ReviewPreferencesAdapter.swift */; };
 		63358E9A27365FC70013A2AC /* OfflineAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63358E9927365FC70013A2AC /* OfflineAudio.swift */; };
 		63358E9C273664D40013A2AC /* SwitchModelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63358E9B273664D40013A2AC /* SwitchModelItem.swift */; };
 		63358E9E273664F50013A2AC /* BasicModelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63358E9D273664F50013A2AC /* BasicModelItem.swift */; };
@@ -224,9 +220,11 @@
 		C970BC0323D262CE001F3735 /* SiriShortcutHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C970BC0223D262CE001F3735 /* SiriShortcutHelper.swift */; };
 		CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */; };
 		D0E1A2B3C4D5E6F708192A3C /* DeveloperOptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1A2B3C4D5E6F708192A3B /* DeveloperOptionsViewController.swift */; };
+		DB40628C93DF452F1307B1EB /* ReviewPreferencesAdapterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60BFEAEFA93214A0B6869BC /* ReviewPreferencesAdapterTest.swift */; };
 		DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */; };
 		E881943B2A6BC0CF002C2E1C /* ArtworkModelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E881943A2A6BC0CF002C2E1C /* ArtworkModelItem.swift */; };
 		E881943F2A6BC38A002C2E1C /* ArtworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E881943E2A6BC38A002C2E1C /* ArtworkManager.swift */; };
+		EC4FC1F9F9A47FD1CB8C8C1F /* ReviewPreferencesAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E872D291CAA002A4FED /* ReviewPreferencesAdapter.swift */; };
 		EC6A5487F6875EC64C63B6B2 /* Pods_FontScreenshotter_FontScreenshotterUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 404461BC39B4A19B128F9E69 /* Pods_FontScreenshotter_FontScreenshotterUITests.framework */; };
 		F472FEF47C88DAECCBC93B48 /* HankoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03F2B2960505C9046CF238A /* HankoView.swift */; };
 		FD8DD84D882C458DA4576236 /* ReviewSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A9A55C282389C800602D09 /* ReviewSession.swift */; };
@@ -337,11 +335,7 @@
 		63344E7D2D291C9F002A4FED /* DeveloperDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = DeveloperDebug.xcconfig; sourceTree = "<group>"; };
 		63344E7E2D291C9F002A4FED /* TestFlightRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TestFlightRelease.xcconfig; sourceTree = "<group>"; };
 		63344E832D291CAA002A4FED /* ReviewContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewContainerViewController.swift; sourceTree = "<group>"; };
-		63344E842D291CAA002A4FED /* ReviewQuickSettingsAnswersMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQuickSettingsAnswersMenu.swift; sourceTree = "<group>"; };
-		63344E852D291CAA002A4FED /* ReviewQuickSettingsAudioMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQuickSettingsAudioMenu.swift; sourceTree = "<group>"; };
-		63344E862D291CAA002A4FED /* ReviewQuickSettingsDisplayMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQuickSettingsDisplayMenu.swift; sourceTree = "<group>"; };
-		63344E872D291CAA002A4FED /* ReviewQuickSettingsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQuickSettingsMenu.swift; sourceTree = "<group>"; };
-		63344E882D291CAA002A4FED /* ReviewQuickSettingsTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQuickSettingsTable.swift; sourceTree = "<group>"; };
+		63344E872D291CAA002A4FED /* ReviewPreferencesAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPreferencesAdapter.swift; sourceTree = "<group>"; };
 		63358E9927365FC70013A2AC /* OfflineAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAudio.swift; sourceTree = "<group>"; };
 		63358E9B273664D40013A2AC /* SwitchModelItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchModelItem.swift; sourceTree = "<group>"; };
 		63358E9D273664F50013A2AC /* BasicModelItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicModelItem.swift; sourceTree = "<group>"; };
@@ -393,7 +387,6 @@
 		63A711E52BBBF8190047436A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		63A9A55C282389C800602D09 /* ReviewSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSession.swift; sourceTree = "<group>"; };
 		63B63FF627733ABC0098DAAD /* NotificationDispatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDispatcher.swift; sourceTree = "<group>"; };
-		63B63FFC2773581E0098DAAD /* MMDrawerController+setAnimatingDrawer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MMDrawerController+setAnimatingDrawer.h"; sourceTree = "<group>"; };
 		63BEBF9625C57D4000123147 /* SearchResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultViewController.swift; sourceTree = "<group>"; };
 		63BFA78A218EB1B30058E885 /* DownloadModelItem.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DownloadModelItem.xib; sourceTree = "<group>"; };
 		63BFA78D218EB6890058E885 /* OfflineAudioViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAudioViewController.swift; sourceTree = "<group>"; };
@@ -484,6 +477,7 @@
 		9721708B2DBAF3A6001DFFED /* SubjectsExcluded.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = SubjectsExcluded.storyboard; sourceTree = "<group>"; };
 		97A120DE2D9C467100D19CAE /* ReviewUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewUtils.swift; sourceTree = "<group>"; };
 		9CFD97ACE7ABC2C904715D83 /* Pods-Tsurukame-Tsurukame Complication Extension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame-Tsurukame Complication Extension.debug.xcconfig"; path = "Target Support Files/Pods-Tsurukame-Tsurukame Complication Extension/Pods-Tsurukame-Tsurukame Complication Extension.debug.xcconfig"; sourceTree = "<group>"; };
+		A60BFEAEFA93214A0B6869BC /* ReviewPreferencesAdapterTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReviewPreferencesAdapterTest.swift; sourceTree = "<group>"; };
 		B8B48251FA98F552C583C9D2 /* StatisticsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatisticsViewController.swift; sourceTree = "<group>"; };
 		BB2909A5217FAF8B00B1816F /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		BBE4E32D2172576B003A200E /* FontLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontLoader.swift; sourceTree = "<group>"; };
@@ -630,7 +624,6 @@
 			children = (
 				63A1676F253AD8AD00B5BCD6 /* CGContext+Blur.swift */,
 				63A16770253AD8AD00B5BCD6 /* FMDatabase+Assert.swift */,
-				63B63FFC2773581E0098DAAD /* MMDrawerController+setAnimatingDrawer.h */,
 				630EB10925C561A900783E54 /* NSMutableAttributedString+Replacements.swift */,
 				63D2DAED275C5D4100D5F6FF /* UIControl+addAction.swift */,
 				63D1026823D7ED3200838F7C /* UIWindow+InterfaceStyle.swift */,
@@ -768,11 +761,7 @@
 			isa = PBXGroup;
 			children = (
 				63344E832D291CAA002A4FED /* ReviewContainerViewController.swift */,
-				63344E842D291CAA002A4FED /* ReviewQuickSettingsAnswersMenu.swift */,
-				63344E852D291CAA002A4FED /* ReviewQuickSettingsAudioMenu.swift */,
-				63344E862D291CAA002A4FED /* ReviewQuickSettingsDisplayMenu.swift */,
-				63344E872D291CAA002A4FED /* ReviewQuickSettingsMenu.swift */,
-				63344E882D291CAA002A4FED /* ReviewQuickSettingsTable.swift */,
+				63344E872D291CAA002A4FED /* ReviewPreferencesAdapter.swift */,
 			);
 			path = ReviewQuickSettings;
 			sourceTree = "<group>";
@@ -884,6 +873,7 @@
 				E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */,
 				FD6678EB4129FCEC2995ECE5 /* PendingUploadAcknowledgementTest.swift */,
 				E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */,
+				A60BFEAEFA93214A0B6869BC /* ReviewPreferencesAdapterTest.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -1293,14 +1283,12 @@
 				"${BUILT_PRODUCTS_DIR}/Haneke/Haneke.framework",
 				"${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework",
 				"${BUILT_PRODUCTS_DIR}/FMDB/FMDB.framework",
-				"${BUILT_PRODUCTS_DIR}/MMDrawerController/MMDrawerController.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Haneke.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Reachability.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FMDB.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MMDrawerController.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1553,12 +1541,8 @@
 				63391B572779B7FC005CDA72 /* AppSettingsViewController.swift in Sources */,
 				79D887452B41949F003D8F99 /* String+SHA256.swift in Sources */,
 				63344E8A2D291CAA002A4FED /* ReviewContainerViewController.swift in Sources */,
-				63344E8B2D291CAA002A4FED /* ReviewQuickSettingsAnswersMenu.swift in Sources */,
 				791B8B5C2D657E2A000C8142 /* CommonErrors.swift in Sources */,
-				63344E8C2D291CAA002A4FED /* ReviewQuickSettingsAudioMenu.swift in Sources */,
-				63344E8D2D291CAA002A4FED /* ReviewQuickSettingsDisplayMenu.swift in Sources */,
-				63344E8E2D291CAA002A4FED /* ReviewQuickSettingsMenu.swift in Sources */,
-				63344E8F2D291CAA002A4FED /* ReviewQuickSettingsTable.swift in Sources */,
+				63344E8E2D291CAA002A4FED /* ReviewPreferencesAdapter.swift in Sources */,
 				633AFAE123516BE7004F732F /* SubjectDetailsView.swift in Sources */,
 				63358E9A27365FC70013A2AC /* OfflineAudio.swift in Sources */,
 				C970BC0323D262CE001F3735 /* SiriShortcutHelper.swift in Sources */,
@@ -1679,6 +1663,8 @@
 				FE3C6272D05CE2990DAF9EA9 /* PendingUploadAcknowledgementTest.swift in Sources */,
 				FD8DD84D882C458DA4576236 /* ReviewSession.swift in Sources */,
 				326C7AFEFEC1146179A2AFA0 /* ReviewSessionTest.swift in Sources */,
+				EC4FC1F9F9A47FD1CB8C8C1F /* ReviewPreferencesAdapter.swift in Sources */,
+				DB40628C93DF452F1307B1EB /* ReviewPreferencesAdapterTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

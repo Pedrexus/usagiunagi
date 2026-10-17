@@ -15,10 +15,6 @@
 #ifndef Tsurukame_Bridging_Header_h
 #define Tsurukame_Bridging_Header_h
 
-#ifndef FONT_SCREENSHOTTER
-#import "Extensions/MMDrawerController+setAnimatingDrawer.h"
-#endif  // FONT_SCREENSHOTTER
-
 #import <Haneke/Haneke.h>
 #import <WatchConnectivity/WatchConnectivity.h>
 

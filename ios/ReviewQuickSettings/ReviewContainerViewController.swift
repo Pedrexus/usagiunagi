@@ -12,139 +12,75 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import MMDrawerController
+import StudyCore
+import StudyUI
+import SwiftUI
 
-class ReviewContainerViewController: MMDrawerController, ReviewViewControllerDelegate,
-  ReviewQuickSettingsMenuDelegate {
-  var services: TKMServices!
+/// Temporary navigation host while the app shell migrates. Settings themselves are SwiftUI.
+class ReviewContainerViewController: UIViewController, ReviewViewControllerDelegate,
+  UIAdaptivePresentationControllerDelegate {
+  private var services: TKMServices!
   var reviewVC: ReviewViewController!
 
   func setup(services: TKMServices, items: [ReviewItem], isPracticeSession: Bool = false) {
     self.services = services
-
     reviewVC = StoryboardScene.Review.initialScene.instantiate()
     reviewVC.setup(services: services, items: items, showMenuButton: true, showSubjectHistory: true,
                    delegate: self, isPracticeSession: isPracticeSession)
-
-    let menuVC = ReviewQuickSettingsMenu(services: services, delegate: self)
-    let menuNavigationVC = UINavigationController(rootViewController: menuVC)
-    menuNavigationVC.navigationBar.tintColor = .white
-
-    centerViewController = reviewVC
-    rightDrawerViewController = menuNavigationVC
-    shouldStretchDrawer = false
-    closeDrawerGestureModeMask = .all
-    openDrawerGestureModeMask = .bezelPanningCenterView
-    centerHiddenInteractionMode = .none
-    setDrawerVisualStateBlock(MMDrawerVisualState.parallaxVisualStateBlock(withParallaxFactor: 1.0))
   }
 
-  override func setAnimatingDrawer(_ animatingDrawer: Bool) {
-    // The drawer disables interaction while it animates, which makes the answer field resign and
-    // hides the keyboard, so the review screen has to know the menu is opening before then.
-    if animatingDrawer, openSide == .none {
-      reviewVC.quickSettingsMenuWillOpen()
-    }
-    super.setAnimatingDrawer(animatingDrawer)
-
-    // Hide the keyboard if we're opening the drawer, show it if we're closing it.
-    if (animatingDrawer && openSide == .none) ||
-      (!animatingDrawer && openSide != .none) {
-      view.endEditing(true)
-    } else if animatingDrawer, openSide != .none {
-      reviewVC.focusAnswerField()
-    } else if !animatingDrawer, openSide == .none {
-      reviewVC.quickSettingsMenuDidClose()
-    }
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    addChild(reviewVC)
+    view.addSubview(reviewVC.view)
+    reviewVC.view.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      reviewVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      reviewVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      reviewVC.view.topAnchor.constraint(equalTo: view.topAnchor),
+      reviewVC.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+    ])
+    reviewVC.didMove(toParent: self)
   }
 
-  // MARK: - UIViewController
-
-  override func viewWillAppear(_ animated: Bool) {
-    if isInSettingsVc {
-      isInSettingsVc = false
-      closeDrawer(animated: false, completion: nil)
-      reviewVC.quickSettingsChanged()
-    }
-    super.viewWillAppear(animated)
-  }
-
-  // MARK: - ReviewViewControllerDelegate
-
-  func allowsCheats(forReviewItem _: ReviewItem) -> Bool {
-    Settings.enableCheats
-  }
+  func allowsCheats(forReviewItem _: ReviewItem) -> Bool { Settings.enableCheats }
+  func allowsCustomFonts() -> Bool { true }
+  func showsSuccessRate() -> Bool { true }
 
   func tappedMenuButton(reviewViewController _: ReviewViewController, menuButton _: UIView) {
-    (rightDrawerViewController as! UINavigationController).popToRootViewController(animated: false)
-    open(.right, animated: true, completion: nil)
+    reviewVC.prepareForSettings()
+    let panel = ReviewSettingsPanel(preferences: ReviewPreferencesAdapter.current,
+                                    changed: { [weak self] old, new in
+                                      ReviewPreferencesAdapter.apply(new, replacing: old)
+                                      self?.view.window?.setInterfaceStyle(Settings.interfaceStyle)
+                                      self?.reviewVC.quickSettingsChanged()
+                                    }, fonts: { [weak self] in self?.showFonts() },
+                                    done: { [weak self] in self?.closeSettings() })
+    let host = UIHostingController(rootView: panel)
+    host.modalPresentationStyle = .formSheet
+    host.presentationController?.delegate = self
+    present(host, animated: true)
   }
 
-  func tappedCloseButton(reviewViewController _: ReviewViewController, closeButton: UIView) {
-    endReviewSession(button: closeButton)
+  private func closeSettings() {
+    dismiss(animated: true) { [weak self] in self?.reviewVC.focusAnswerField() }
+  }
+
+  func presentationControllerDidDismiss(_: UIPresentationController) {
+    reviewVC.focusAnswerField()
+  }
+
+  private func showFonts() {
+    dismiss(animated: true) { [weak self] in
+      guard let self else { return }
+      let fonts = StoryboardScene.SelectFonts.initialScene.instantiate()
+      fonts.setup(services: self.services)
+      self.navigationController?.pushViewController(fonts, animated: true)
+    }
   }
 
   func finishedAllReviewItems(_ reviewViewController: ReviewViewController) {
     reviewViewController.perform(segue: StoryboardSegue.Review.reviewSummary,
                                  sender: reviewViewController)
-  }
-
-  func allowsCustomFonts() -> Bool {
-    true
-  }
-
-  func showsSuccessRate() -> Bool {
-    true
-  }
-
-  // MARK: - ReviewMenuDelegate
-
-  // Set to true when another settings view controller is pushed. Upon returning to
-  // this view controller, the ReviewViewController will reload its display.
-  var isInSettingsVc = false
-
-  func closeMenuAndPush(viewController: UIViewController) {
-    isInSettingsVc = true
-    navigationController?.pushViewController(viewController, animated: true)
-  }
-
-  func quickSettingsChanged() {
-    reviewVC.quickSettingsChanged()
-  }
-
-  // MARK: - Ending the session
-
-  private func endReviewSession(button: UIView) {
-    // Only confirm if there are half-answered reviews whose progress would be lost. These can be
-    // wrapped up instead: finished off without starting any new ones.
-    if !reviewVC.canWrapUp {
-      reviewVC.endReviewSession()
-      return
-    }
-
-    let ac = UIAlertController(title: "End review session?",
-                               message: "You'll lose progress on any half-answered reviews",
-                               preferredStyle: .actionSheet)
-    ac.popoverPresentationController?.sourceView = button
-    ac.popoverPresentationController?.sourceRect = CGRect(x: 16, y: button.safeAreaInsets.top,
-                                                          width: 44, height: 44)
-
-    if reviewVC.wrappingUp {
-      ac.addAction(UIAlertAction(title: "Stop wrapping up", style: .default) { _ in
-        self.reviewVC.wrappingUp = false
-      })
-    } else {
-      let count = reviewVC.activeQueueLength
-      let title = "Wrap up (\(count) to go)"
-      ac.addAction(UIAlertAction(title: title, style: .default) { _ in
-        self.reviewVC.wrappingUp = true
-      })
-    }
-    ac.addAction(UIAlertAction(title: "End review session", style: .destructive) { _ in
-      self.reviewVC.endReviewSession()
-    })
-    ac.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-    present(ac, animated: true)
   }
 }
