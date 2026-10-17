@@ -29,6 +29,7 @@ import SwiftData
     @Attribute(.codable) var submission: StudyReviewSubmission
     @Attribute(.codable) var originalItem: StudySessionItem
     @Attribute(.codable) var originalAssignment: CatalogAssignment? = nil
+    @Attribute(.codable) var issue: StudyUploadIssue? = nil
     init(accountID: String, submission: StudyReviewSubmission, originalItem: StudySessionItem) {
         self.accountID = accountID; self.subjectID = submission.subjectID; self.submission = submission
         self.originalItem = originalItem; self.revision = UUID(); attempted = false
@@ -55,6 +56,7 @@ public struct SavedReview: Sendable {
     public let originalAssignment: CatalogAssignment?
     /// An attempt survives restart. It must be reconciled rather than automatically replayed.
     public let attempted: Bool
+    public let issue: StudyUploadIssue?
 }
 
 public enum StudyStoreError: Error, LocalizedError {
@@ -76,8 +78,10 @@ public enum StudyStoreError: Error, LocalizedError {
 /// One actor/container per local store. Model values never escape its executor.
 /// CloudKit is deliberately disabled: WaniKani owns cross-device study progress.
 @ModelActor public actor StudyStore {
+    var uploadGeneration = UUID()
+    var uploadRun: (id: UUID, task: Task<StudyUploadReport, Error>)?
     @concurrent public static func open(at url: URL, inMemory: Bool = false) async throws -> StudyStore {
-        let schema = Schema([SnapshotRecord.self, SessionRecord.self, ReviewRecord.self, MaterialRecord.self, ImportReceipt.self, CatalogRecord.self, AssignmentRecord.self, AccountRecord.self])
+        let schema = Schema([SnapshotRecord.self, SessionRecord.self, ReviewRecord.self, MaterialRecord.self, ImportReceipt.self, CatalogRecord.self, AssignmentRecord.self, AccountRecord.self, UploadPauseRecord.self])
         let configuration: ModelConfiguration
         if inMemory {
             configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
@@ -201,7 +205,7 @@ public enum StudyStoreError: Error, LocalizedError {
     public func pendingReviews(accountID: String) throws -> [SavedReview] {
         try modelContext.fetch(FetchDescriptor<ReviewRecord>(predicate: #Predicate { $0.accountID == accountID })).map {
             SavedReview(accountID: $0.accountID, subjectID: $0.subjectID, revision: $0.revision,
-                        submission: $0.submission, originalItem: $0.originalItem, originalAssignment: $0.originalAssignment, attempted: $0.attempted)
+                        submission: $0.submission, originalItem: $0.originalItem, originalAssignment: $0.originalAssignment, attempted: $0.attempted, issue: $0.issue)
         }.sorted { $0.subjectID < $1.subjectID }
     }
 
@@ -220,7 +224,7 @@ public enum StudyStoreError: Error, LocalizedError {
         }
     }
 
-    private func reviewRecord(_ review: SavedReview) throws -> ReviewRecord? {
+    func reviewRecord(_ review: SavedReview) throws -> ReviewRecord? {
         let accountID = review.accountID, subjectID = review.subjectID, revision = review.revision
         return try modelContext.fetch(FetchDescriptor<ReviewRecord>(predicate:
             #Predicate { $0.accountID == accountID && $0.subjectID == subjectID && $0.revision == revision })).first

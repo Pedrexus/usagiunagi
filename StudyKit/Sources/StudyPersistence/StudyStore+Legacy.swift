@@ -130,6 +130,8 @@ extension StudyStore {
             for entry in source.materials {
                 let row = MaterialRecord(accountID: accountID, material: entry.value, pending: entry.pending)
                 row.serverID = entry.serverID > 0 ? entry.serverID : nil
+                // The legacy queue also lacks a record of which note revision reached the server.
+                if entry.pending { row.issue = .init(reason: .uncertain, httpStatus: nil, serverAssignment: nil, detectedAt: Date()) }
                 modelContext.insert(row)
             }
             modelContext.insert(AccountRecord(accountID: accountID, state: StudyAccountState(legacy: source)))

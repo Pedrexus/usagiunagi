@@ -82,6 +82,9 @@ struct LegacyImportTests {
         await #expect(throws: StudyStoreError.self) { try await store.beginReviewAttempt(review) }
         let material = try #require(await store.materials(accountID: "account-a").first)
         #expect(material.material == source.materials[0].value && material.pending && material.serverID == 242)
+        #expect(material.issue?.reason == .uncertain && material.attemptedMaterial == nil)
+        try await store.saveMaterial(.init(subjectID: 42, meaningNote: "edited after import"), accountID: "account-a", expectedRevision: material.revision)
+        #expect(try await store.materials(accountID: "account-a").first?.issue?.reason == .uncertain)
         let snapshot = try #require(await store.snapshot(credentialID: "credential-a"))
         #expect(snapshot.accountID == "account-a" && snapshot.pendingReviews == 1 && snapshot.onVacation)
         #expect(snapshot.assignments.map(\.subjectID) == [43])

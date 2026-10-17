@@ -99,17 +99,24 @@ extension WaniKaniClient {
     public func saveMaterial(_ value: StudyMaterial, token: String) async throws -> WaniKaniMaterial {
         guard value.subjectID > 0 else { throw APIError.invalidPayload }
         let existing = try await material(subjectID: value.subjectID, token: token)
+        return try await writeMaterial(value, serverID: existing?.id, token: token)
+    }
+
+    /// Supply an ID from a fresh subject lookup. A durable caller can record its exact attempt
+    /// between that read and this single write, retaining uncertainty across process termination.
+    public func writeMaterial(_ value: StudyMaterial, serverID: Int64?, token: String) async throws -> WaniKaniMaterial {
+        guard value.subjectID > 0, serverID == nil || serverID! > 0 else { throw APIError.invalidPayload }
         struct Body: Encodable {
             struct Material: Encodable { let subjectId: Int64?; let meaningNote: String; let readingNote: String; let meaningSynonyms: [String] }
             let studyMaterial: Material
         }
-        let body = Body(studyMaterial: .init(subjectId: existing == nil ? value.subjectID : nil,
+        let body = Body(studyMaterial: .init(subjectId: serverID == nil ? value.subjectID : nil,
             meaningNote: value.meaningNote, readingNote: value.readingNote, meaningSynonyms: value.meaningSynonyms))
-        let path = existing.map { "study_materials/\($0.id)" } ?? "study_materials"
+        let path = serverID.map { "study_materials/\($0)" } ?? "study_materials"
         let response: Resource<MaterialData> = try await request(endpoint(path), token: token,
-            method: existing == nil ? "POST" : "PUT", body: encode(body))
+            method: serverID == nil ? "POST" : "PUT", body: encode(body))
         let result = try material(response, subjectID: value.subjectID)
-        guard result.value == value, existing == nil || result.id == existing?.id else { throw APIError.invalidResponse }
+        guard result.value == value, serverID == nil || result.id == serverID else { throw APIError.invalidResponse }
         return result
     }
 

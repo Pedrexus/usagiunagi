@@ -9,6 +9,9 @@ import SwiftData
     var revision: UUID
     var pending: Bool
     var serverID: Int64? = nil
+    @Attribute(.codable) var issue: StudyUploadIssue? = nil
+    var attemptedRevision: UUID? = nil
+    @Attribute(.codable) var attemptedMaterial: StudyMaterial? = nil
     @Attribute(.codable) var material: StudyMaterial
     init(accountID: String, material: StudyMaterial, pending: Bool) {
         self.accountID = accountID; self.subjectID = material.subjectID
@@ -21,17 +24,21 @@ public struct SavedStudyMaterial: Sendable {
     public let revision: UUID
     public let pending: Bool
     public let serverID: Int64?
+    public let issue: StudyUploadIssue?
+    public let attemptedRevision: UUID?
+    public let attemptedMaterial: StudyMaterial?
     public let material: StudyMaterial
 }
 
 extension StudyStore {
-    private func materialRecords(accountID: String) throws -> [MaterialRecord] {
+    func materialRecords(accountID: String) throws -> [MaterialRecord] {
         try modelContext.fetch(FetchDescriptor<MaterialRecord>(predicate: #Predicate { $0.accountID == accountID }))
     }
 
     public func materials(accountID: String) throws -> [SavedStudyMaterial] {
         try materialRecords(accountID: accountID).map {
-            SavedStudyMaterial(accountID: $0.accountID, revision: $0.revision, pending: $0.pending, serverID: $0.serverID, material: $0.material)
+            SavedStudyMaterial(accountID: $0.accountID, revision: $0.revision, pending: $0.pending, serverID: $0.serverID, issue: $0.issue,
+                attemptedRevision: $0.attemptedRevision, attemptedMaterial: $0.attemptedMaterial, material: $0.material)
         }.sorted { $0.material.subjectID < $1.material.subjectID }
     }
 
@@ -45,6 +52,7 @@ extension StudyStore {
             guard existing?.revision == expectedRevision else { throw StudyStoreError.staleMaterial }
             if let existing {
                 existing.material = material; existing.revision = revision; existing.pending = true
+                if existing.issue?.reason == .rejected { existing.issue = nil }
             } else {
                 let row = MaterialRecord(accountID: accountID, material: material, pending: true)
                 revision = row.revision; modelContext.insert(row)
@@ -57,7 +65,9 @@ extension StudyStore {
         try transaction {
             if let row = try materialRecords(accountID: sent.accountID).first(where: {
                 $0.subjectID == sent.material.subjectID && $0.revision == sent.revision
-            }) { row.pending = false }
+            }), row.attemptedRevision == nil || row.attemptedRevision == sent.revision {
+                row.pending = false; row.issue = nil; row.attemptedRevision = nil; row.attemptedMaterial = nil
+            }
         }
     }
 
