@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import WaniKaniAPI
 
-enum TaskType {
-  case reading
-  case meaning
+typealias TaskType = StudyQuestionKind
 
+extension StudyQuestionKind {
   static func random() -> TaskType {
     arc4random_uniform(2) == 0 ? .reading : .meaning
   }

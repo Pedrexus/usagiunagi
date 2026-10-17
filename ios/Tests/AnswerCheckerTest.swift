@@ -69,9 +69,9 @@ class AnswerCheckerTest: XCTestCase {
     item.meanings.append(whitelist)
     var materials = TKMStudyMaterials()
     materials.meaningSynonyms = ["Unity"]
-    XCTAssertEqual(check("one", subject: item), .Precise)
-    XCTAssertEqual(check("single", subject: item), .Precise)
-    XCTAssertEqual(check("unity", subject: item, materials: materials), .Precise)
+    XCTAssertEqual(check("one", subject: item), .precise)
+    XCTAssertEqual(check("single", subject: item), .precise)
+    XCTAssertEqual(check("unity", subject: item, materials: materials), .precise)
   }
 
   func testBlacklistWinsEvenOverExactSynonym() {
@@ -82,28 +82,28 @@ class AnswerCheckerTest: XCTestCase {
     item.meanings.append(blacklist)
     var materials = TKMStudyMaterials()
     materials.meaningSynonyms = ["Won"]
-    XCTAssertEqual(check("won", subject: item, materials: materials), .Incorrect)
+    XCTAssertEqual(check("won", subject: item, materials: materials), .incorrect)
   }
 
   func testMeaningTypoToleranceAndTransposition() {
-    XCTAssertEqual(check("bnuny", subject: subject(meanings: ["Bunny"])), .Imprecise)
-    XCTAssertEqual(check("bunn", subject: subject(meanings: ["Bunny"])), .Imprecise)
-    XCTAssertEqual(check("bxxny", subject: subject(meanings: ["Bunny"])), .Incorrect)
-    XCTAssertEqual(check("oen"), .Incorrect) // Three-letter meanings have no typo allowance.
+    XCTAssertEqual(check("bnuny", subject: subject(meanings: ["Bunny"])), .imprecise)
+    XCTAssertEqual(check("bunn", subject: subject(meanings: ["Bunny"])), .imprecise)
+    XCTAssertEqual(check("bxxny", subject: subject(meanings: ["Bunny"])), .incorrect)
+    XCTAssertEqual(check("oen"), .incorrect) // Three-letter meanings have no typo allowance.
   }
 
   func testPrimaryAndAlternateReadingSemantics() {
-    XCTAssertEqual(check("いち", type: .reading), .Precise)
-    XCTAssertEqual(check("イチ", type: .reading), .Precise)
-    XCTAssertEqual(check("ひと", type: .reading), .OtherKanjiReading)
-    XCTAssertEqual(check("ひと", subject: subject(vocabulary: true), type: .reading), .Precise)
-    XCTAssertEqual(check("いぢ", type: .reading), .Incorrect) // Reading typos are not accepted.
+    XCTAssertEqual(check("いち", type: .reading), .precise)
+    XCTAssertEqual(check("イチ", type: .reading), .precise)
+    XCTAssertEqual(check("ひと", type: .reading), .otherKanjiReading)
+    XCTAssertEqual(check("ひと", subject: subject(vocabulary: true), type: .reading), .precise)
+    XCTAssertEqual(check("いぢ", type: .reading), .incorrect) // Reading typos are not accepted.
   }
 
   func testKatakanaSubjectPreservesLongVowel() {
     let item = subject("ビール", meanings: ["Beer"], primary: ["ビール"], alternate: [], vocabulary: true)
-    XCTAssertEqual(check("びーる", subject: item, type: .reading), .Precise)
-    XCTAssertEqual(check("びる", subject: item, type: .reading), .Incorrect)
+    XCTAssertEqual(check("びーる", subject: item, type: .reading), .precise)
+    XCTAssertEqual(check("びる", subject: item, type: .reading), .incorrect)
   }
 
   func testSingleKanjiVocabularyConsultsItsComponent() {
@@ -112,26 +112,26 @@ class AnswerCheckerTest: XCTestCase {
     XCTAssertEqual(check("いち", subject: item, type: .reading, lookup: { id in
       XCTAssertEqual(id, 99)
       return self.subject()
-    }), .OtherKanjiReading)
-    XCTAssertEqual(check("いち", subject: item, type: .reading), .Incorrect)
+    }), .otherKanjiReading)
+    XCTAssertEqual(check("いち", subject: item, type: .reading), .incorrect)
   }
 
   func testInvalidScriptRanges() {
     XCTAssertEqual(check("ichい", type: .reading),
-                   .ContainsInvalidCharacters([NSRange(location: 0, length: 3)]))
-    XCTAssertEqual(check("a漢字b"), .ContainsInvalidCharacters([NSRange(location: 1, length: 2)]))
+                   .containsInvalidCharacters([NSRange(location: 0, length: 3)]))
+    XCTAssertEqual(check("a漢字b"), .containsInvalidCharacters([NSRange(location: 1, length: 2)]))
   }
 
   func testMismatchingOkuriganaIsNotAnOrdinaryWrongAnswer() {
     let item = subject("食べる", primary: ["たべる"], alternate: [], vocabulary: true)
     XCTAssertEqual(check("たべろ", subject: item, type: .reading),
-                   .MismatchingOkurigana([NSRange(location: 2, length: 1)]))
-    XCTAssertEqual(check("たべる", subject: item, type: .reading), .Precise)
+                   .mismatchingOkurigana([NSRange(location: 2, length: 1)]))
+    XCTAssertEqual(check("たべる", subject: item, type: .reading), .precise)
   }
 
   func testReadingEnteredForMeaningGetsSpecificFeedback() {
-    XCTAssertEqual(check("ichi"), .IsReadingButWantMeaning)
-    XCTAssertEqual(check("hito"), .OtherKanjiReading)
-    XCTAssertEqual(check("not an answer"), .Incorrect)
+    XCTAssertEqual(check("ichi"), .isReadingButWantMeaning)
+    XCTAssertEqual(check("hito"), .otherKanjiReading)
+    XCTAssertEqual(check("not an answer"), .incorrect)
   }
 }

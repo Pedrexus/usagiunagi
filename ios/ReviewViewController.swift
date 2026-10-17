@@ -1385,20 +1385,20 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
                                            localCachingClient: services.localCachingClient)
 
     switch result {
-    case .Precise:
+    case .precise:
       markAnswer(.Correct)
-    case .Imprecise:
+    case .imprecise:
       if Settings.exactMatch { shakeView(answerField) }
       else { markAnswer(.Correct) }
-    case .Incorrect:
+    case .incorrect:
       markAnswer(.Incorrect)
-    case .OtherKanjiReading:
+    case .otherKanjiReading:
       shakeView(answerField)
-    case let .MismatchingOkurigana(ranges):
+    case let .mismatchingOkurigana(ranges):
       highlightAndShakeAnswer(ranges: ranges)
-    case let .ContainsInvalidCharacters(ranges):
+    case let .containsInvalidCharacters(ranges):
       highlightAndShakeAnswer(ranges: ranges)
-    case .IsReadingButWantMeaning:
+    case .isReadingButWantMeaning:
       shakeView(answerField)
 
       // The user knows the reading so mark it correct if they haven't done it yet.
