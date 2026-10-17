@@ -31,6 +31,24 @@ private func body(_ request: URLRequest) throws -> [String: Any] {
 }
 
 struct NativeClientTests {
+    @MainActor @Test func responseDecodingLeavesTheUIThread() async throws {
+        struct Probe: Decodable, Sendable {
+            let decodedOnMainThread: Bool
+            init(from decoder: any Decoder) throws {
+                // A synchronous decoder models the expensive part of a large account download.
+                _ = try decoder.container(keyedBy: CodingKeys.self)
+                decodedOnMainThread = Thread.isMainThread
+            }
+            private enum CodingKeys: String, CodingKey { case value }
+        }
+        let client = WaniKaniClient { request in
+            (Data("{}".utf8), HTTPURLResponse(url: request.url!, statusCode: 200,
+                httpVersion: nil, headerFields: nil)!)
+        }
+        let result: Probe = try await client.request(URL(string: "https://api.wanikani.com/v2/user")!, token: "fixture")
+        #expect(!result.decodedOnMainThread)
+    }
+
     @Test func reviewUsesNativeJSONAndAcceptsTheDocumentedZeroReceiptID() async throws {
         let stub = APIStub([.init(body: reviewJSON)])
         let client = await stub.client

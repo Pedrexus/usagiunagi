@@ -22,15 +22,13 @@ final class MacStudyStore {
     var snapshot: StudySnapshot?
     var error: String?
     var isSyncing = false
-    private var restored = false
+    @ObservationIgnored private var restored = false
     private let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
-    private var persistence: Task<StudyStore, Error>?
+    @ObservationIgnored private var persistence: Task<StudyStore, any Error>?
     private func repository() async throws -> StudyStore {
-        if persistence == nil {
-            let url = directory.appending(path: "study.store")
-            persistence = Task { try await StudyStore.open(at: url) }
-        }
-        do { return try await persistence!.value }
+        let task = persistence ?? Task { try await StudyStore.open(at: directory.appending(path: "study.store")) }
+        persistence = task
+        do { return try await task.value }
         catch { persistence = nil; throw error }
     }
     private let reader = WaniKaniClient()
@@ -117,22 +115,33 @@ private enum TokenKeychain {
 
 private struct MacStudyRoot: View {
     @Bindable var store: MacStudyStore
-    @State private var section = "Statistics"
+    private enum Destination: String, CaseIterable, Identifiable {
+        case statistics = "Statistics", subjects = "Subjects", account = "Account"
+        var id: Self { self }
+        var symbol: String {
+            switch self {
+            case .statistics: "chart.bar.xaxis"
+            case .subjects: "character.book.closed"
+            case .account: "person.crop.circle"
+            }
+        }
+    }
+    @State private var section = Destination.statistics
     @State private var subject: StudySubject?
     @State private var token = ""
     @State private var search = ""
     var body: some View {
         NavigationSplitView {
             List(selection: $section) {
-                Label("Statistics", systemImage: "chart.bar.xaxis").tag("Statistics")
-                Label("Subjects", systemImage: "character.book.closed").tag("Subjects")
-                Label("Account", systemImage: "person.crop.circle").tag("Account")
+                ForEach(Destination.allCases) { section in
+                    Label(section.rawValue, systemImage: section.symbol).tag(section)
+                }
             }.navigationTitle(AppIdentity.name).navigationSplitViewColumnWidth(min: 170, ideal: 200)
         } detail: {
             Group {
-                if section == "Account" || store.snapshot == nil { account }
+                if section == .account || store.snapshot == nil { account }
                 else if let snapshot = store.snapshot {
-                    if section == "Subjects" {
+                    if section == .subjects {
                         List(snapshot.subjects.filter { search.isEmpty || $0.characters.localizedStandardContains(search) || $0.meaning.localizedStandardContains(search) }) { item in
                             Button { subject = item } label: {
                                 LabeledContent(item.characters.isEmpty ? item.meaning : item.characters, value: "Level \(item.level) · \(item.meaning)")
@@ -140,7 +149,7 @@ private struct MacStudyRoot: View {
                         }.searchable(text: $search, prompt: "Kanji, vocabulary or meaning")
                     } else { StudyDashboard(snapshot: snapshot) { id in subject = snapshot.subjects.first { $0.id == id } } }
                 }
-            }.navigationTitle(section)
+            }.navigationTitle(section.rawValue)
                 .toolbar {
                     if store.isSyncing { ProgressView().controlSize(.small) }
                     Button("Refresh", systemImage: "arrow.clockwise") { Task { await store.refresh() } }
@@ -158,14 +167,14 @@ private struct MacStudyRoot: View {
                 SecureField("API token", text: $token)
                 Link("Create a token in WaniKani", destination: URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
                 Text("Only reading access is used. The token is stored in this Mac's Keychain; the account snapshot stays locally for offline access.").font(.caption).foregroundStyle(.secondary)
-                Button("Connect and sync") { Task { await store.connect(token); if store.error == nil { token = ""; section = "Statistics" } } }.disabled(store.isSyncing || token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button("Connect and sync") { Task { await store.connect(token); if store.error == nil { token = ""; section = .statistics } } }.disabled(store.isSyncing || token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 if let snapshot = store.snapshot, !snapshot.isSample {
                     LabeledContent("Connected", value: snapshot.username)
                     Button("Disconnect and remove local snapshot", role: .destructive) { Task { await store.disconnect() } }.disabled(store.isSyncing)
                 }
             }
             Section("Explore") {
-                Button("Use sample data") { store.loadSample(); section = "Statistics" }.disabled(store.isSyncing)
+                Button("Use sample data") { store.loadSample(); section = .statistics }.disabled(store.isSyncing)
                 Text("Sample data is synthetic and clearly labelled. It is never uploaded or saved over your account cache.").font(.caption).foregroundStyle(.secondary)
             }
         }.formStyle(.grouped)

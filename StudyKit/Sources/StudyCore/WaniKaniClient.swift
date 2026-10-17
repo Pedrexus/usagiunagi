@@ -50,7 +50,7 @@ public struct WaniKaniClient: Sendable {
         let level: Int; let documentUrl: URL?; let hiddenAt: String?
     }
 
-    public func fetch(token: String) async throws -> StudySnapshot {
+    @concurrent public func fetch(token: String) async throws -> StudySnapshot {
         async let user = account(token: token)
         async let assignments: [Resource<Assignment>] = pages("assignments", token: token)
         async let statistics: [Resource<Statistic>] = pages("review_statistics?hidden=false", token: token)
@@ -73,7 +73,7 @@ public struct WaniKaniClient: Sendable {
                     readings: value.data.readings?.map(\.reading) ?? [], kind: kind(object), level: value.data.level, documentURL: value.data.documentUrl)
             })
     }
-    func kind(_ value: String) throws -> SubjectKind {
+    func kind(_ value: String) throws(APIError) -> SubjectKind {
         switch value {
         case "radical": .radical
         case "kanji": .kanji
@@ -81,7 +81,7 @@ public struct WaniKaniClient: Sendable {
         default: throw APIError.invalidResponse
         }
     }
-    func timestamp(_ string: String?) throws -> Int64 {
+    func timestamp(_ string: String?) throws(APIError) -> Int64 {
         guard let string else { return 0 }
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -108,11 +108,14 @@ public struct WaniKaniClient: Sendable {
         url.scheme == "https" && url.host == "api.wanikani.com" && url.user == nil && url.password == nil &&
             (url.port == nil || url.port == 443) && url.path.hasPrefix("/v2/")
     }
-    func request<T: Decodable & Sendable>(_ url: URL, token: String, method: String = "GET", body: Data? = nil) async throws -> T {
+    enum Method: String, Sendable { case get = "GET", post = "POST", put = "PUT" }
+
+    // Transport, rate-limit waiting and JSON decoding must not occupy a UI/store actor.
+    @concurrent func request<T: Decodable & Sendable>(_ url: URL, token: String, method: Method = .get, body: Data? = nil) async throws -> T {
         guard Self.isAllowed(url) else { throw APIError.invalidPagination }
         guard !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.unauthorized }
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
-        request.httpMethod = method; request.httpBody = body
+        request.httpMethod = method.rawValue; request.httpBody = body
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("20170710", forHTTPHeaderField: "Wanikani-Revision")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -128,7 +131,7 @@ public struct WaniKaniClient: Sendable {
                 let retryAt = Self.retryDate(response, now: now, fallback: Double(2 << attempt))
                 let delay = retryAt.timeIntervalSince(now)
                 // Never automatically replay a write, or shorten the server's requested wait.
-                guard method == "GET", attempt < 2, delay <= 30 else { throw APIError.rateLimited(retryAt: retryAt) }
+                guard method == .get, attempt < 2, delay <= 30 else { throw APIError.rateLimited(retryAt: retryAt) }
                 try await Task.sleep(for: .seconds(delay)); continue
             }
             guard (200...299).contains(response.statusCode) else { throw APIError.request(response.statusCode) }

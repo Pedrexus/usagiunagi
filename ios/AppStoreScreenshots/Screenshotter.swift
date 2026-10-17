@@ -37,11 +37,11 @@ import WaniKaniAPI
   /// Deterministic UI-test transcription; never records audio or calls Speech APIs.
   actor SampleVoiceCapture: VoiceCapture {
     let transcript: String
-    private var callback: (@Sendable (VoiceCaptureEvent) async -> Void)?
+    private var callback: VoiceCaptureReport?
     private var recordingID: UUID?
     init(transcript: String) { self.transcript = transcript }
     func start(id: UUID, locale _: Locale, downloadModel _: Bool,
-               report: @escaping @Sendable (VoiceCaptureEvent) async -> Void) async {
+               report: @escaping VoiceCaptureReport) async {
       recordingID = id
       callback = report
       await report(.listening)

@@ -12,9 +12,9 @@ public final class VoiceReviewController {
     public var needsKanaCorrection: Bool { question.kind == .reading && VoiceAnswerDraft.needsKanaCorrection(text) }
     public var canSubmit: Bool { phase == .reviewing && !VoiceAnswerDraft.cleanTranscript(text).isEmpty && !needsKanaCorrection }
     private let capture: any VoiceCapture
-    private var draft: VoiceAnswerDraft?
-    private var operation: Task<Void, Never>?
-    private var timeout: Task<Void, Never>?
+    @ObservationIgnored private var draft: VoiceAnswerDraft?
+    @ObservationIgnored private var operation: Task<Void, Never>?
+    @ObservationIgnored private var timeout: Task<Void, Never>?
 
     public init(question: StudyQuestion, capture: any VoiceCapture = AppleVoiceCapture()) {
         self.question = question

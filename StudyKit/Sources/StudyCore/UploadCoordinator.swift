@@ -47,7 +47,7 @@ public actor UploadCoordinator {
     private var lastJob: UUID?
     public init() {}
 
-    public func enqueue(_ keys: [PendingUploadKey], repository: UploadRepository) -> Task<Void, Error> {
+    public func enqueue(_ keys: [PendingUploadKey], repository: UploadRepository) -> Task<Void, any Error> {
         let predecessor = tail
         let id = UUID()
         let job = Task {

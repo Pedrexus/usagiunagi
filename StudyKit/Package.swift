@@ -1,5 +1,12 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.4
 import PackageDescription
+
+// Keep domain values and persistence actor-neutral. UI declarations default to MainActor.
+// Async helpers inherit the caller unless an explicit @concurrent boundary moves the work.
+let concurrency: [SwiftSetting] = [
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .enableUpcomingFeature("ExistentialAny")
+]
 
 let package = Package(
     name: "StudyKit",
@@ -11,10 +18,11 @@ let package = Package(
         .library(name: "StudyUI", targets: ["StudyUI"])
     ],
     targets: [
-        .target(name: "StudyCore", resources: [.process("Resources")]),
-        .target(name: "StudyPersistence", dependencies: ["StudyCore"]),
-        .target(name: "StudySpeech", dependencies: ["StudyCore"]),
-        .target(name: "StudyUI", dependencies: ["StudyCore", "StudySpeech"]),
+        .target(name: "StudyCore", resources: [.process("Resources")], swiftSettings: concurrency),
+        .target(name: "StudyPersistence", dependencies: ["StudyCore"], swiftSettings: concurrency),
+        .target(name: "StudySpeech", dependencies: ["StudyCore"], swiftSettings: concurrency),
+        .target(name: "StudyUI", dependencies: ["StudyCore", "StudySpeech"],
+                swiftSettings: concurrency + [.defaultIsolation(MainActor.self)]),
         .testTarget(name: "StudyPersistenceTests", dependencies: ["StudyPersistence", "StudyCore"]),
         .testTarget(name: "StudyCoreTests", dependencies: ["StudyCore"]),
         .testTarget(name: "StudySpeechTests", dependencies: ["StudyCore", "StudySpeech"])

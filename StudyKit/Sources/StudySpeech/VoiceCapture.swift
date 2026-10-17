@@ -7,9 +7,12 @@ public enum VoiceCaptureEvent: Sendable {
     case failed(String)
 }
 
+/// Export the closure's isolation semantics so Swift 5/6 hosts share the same callback type.
+public typealias VoiceCaptureReport = @Sendable (VoiceCaptureEvent) async -> Void
+
 public protocol VoiceCapture: Actor {
     func start(id: UUID, locale: Locale, downloadModel: Bool,
-               report: @escaping @Sendable (VoiceCaptureEvent) async -> Void) async throws
+               report: @escaping VoiceCaptureReport) async throws
     func finish(id: UUID) async throws
     func cancel(id: UUID) async
 }

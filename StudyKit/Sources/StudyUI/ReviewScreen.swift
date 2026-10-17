@@ -54,7 +54,7 @@ public struct ReviewScreen<Input: View, Details: View>: View {
         #endif
     }
     @State private var confirmEnd = false
-    private let state: ReviewScreenState
+    @Bindable private var state: ReviewScreenState
     private let action: (ReviewScreenAction) -> Void
     private let input: () -> Input
     private let details: () -> Details
@@ -101,7 +101,7 @@ public struct ReviewScreen<Input: View, Details: View>: View {
                     }
                 }
             }
-            .confirmationDialog("Check your answer", isPresented: Binding(get: { state.showAssessment }, set: { state.showAssessment = $0 })) {
+            .confirmationDialog("Check your answer", isPresented: $state.showAssessment) {
                 Button("My answer was correct") { action(.correct) }
                 Button("My answer was incorrect") { action(.incorrect) }
                 Button("Ask again later") { action(.deferQuestion) }

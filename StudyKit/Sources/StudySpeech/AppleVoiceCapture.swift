@@ -1,6 +1,8 @@
+// AVCaptureSession is not Sendable in SDK 27. NotificationCenter retains it as a sender
+// filter; all app-owned access to the session remains on this capture actor.
 @preconcurrency import AVFoundation
 import Foundation
-@preconcurrency import Speech
+import Speech
 
 /// Owns microphone and analyzer resources on one actor, away from UI rendering.
 public actor AppleVoiceCapture: VoiceCapture {
@@ -16,7 +18,7 @@ public actor AppleVoiceCapture: VoiceCapture {
     public init() {}
 
     public func start(id: UUID, locale: Locale, downloadModel: Bool,
-                      report: @escaping @Sendable (VoiceCaptureEvent) async -> Void) async throws {
+                      report: @escaping VoiceCaptureReport) async throws {
         if let activeID { await cancel(id: activeID) }
         activeID = id
         do {

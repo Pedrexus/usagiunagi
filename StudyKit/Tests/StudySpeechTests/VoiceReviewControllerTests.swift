@@ -4,7 +4,7 @@ import StudyCore
 import StudySpeech
 
 private actor FakeCapture: VoiceCapture {
-    var callbacks: [UUID: @Sendable (VoiceCaptureEvent) async -> Void] = [:]
+    var callbacks: [UUID: VoiceCaptureReport] = [:]
     var ids: [UUID] = []
     let transcript: String
     let needsModel: Bool
@@ -12,7 +12,7 @@ private actor FakeCapture: VoiceCapture {
     init(transcript: String = "One.", needsModel: Bool = false, startError: VoiceCaptureError? = nil) {
         self.transcript = transcript; self.needsModel = needsModel; self.startError = startError
     }
-    func start(id: UUID, locale: Locale, downloadModel: Bool, report: @escaping @Sendable (VoiceCaptureEvent) async -> Void) async throws {
+    func start(id: UUID, locale: Locale, downloadModel: Bool, report: @escaping VoiceCaptureReport) async throws {
         if let startError { throw startError }
         ids.append(id)
         callbacks[id] = report

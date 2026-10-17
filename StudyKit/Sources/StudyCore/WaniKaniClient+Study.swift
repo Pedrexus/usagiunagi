@@ -69,7 +69,7 @@ extension WaniKaniClient {
             struct Body: Encodable { struct Assignment: Encodable { let startedAt: String? }; let assignment: Assignment }
             let body = Body(assignment: .init(startedAt: answer.createdAt.map(dateString)))
             let resource: Resource<AssignmentData> = try await request(endpoint("assignments/\(answer.assignmentID)/start"),
-                token: token, method: "PUT", body: encode(body))
+                token: token, method: .put, body: encode(body))
             let result = try assignment(resource, subjectID: answer.subjectID)
             guard result.id == answer.assignmentID, result.startedAt != nil, result.srsStage > 0 else { throw APIError.invalidResponse }
             return result
@@ -84,7 +84,7 @@ extension WaniKaniClient {
         let recordedAt = answer.createdAt.flatMap { now.timeIntervalSince1970 - Double($0) > 900 ? dateString($0) : nil }
         let body = Body(review: .init(assignmentId: answer.assignmentID, incorrectMeaningAnswers: answer.meaningWrongCount,
             incorrectReadingAnswers: answer.readingWrongCount, createdAt: recordedAt))
-        let response: ReviewResponse = try await request(endpoint("reviews"), token: token, method: "POST", body: encode(body))
+        let response: ReviewResponse = try await request(endpoint("reviews"), token: token, method: .post, body: encode(body))
         let result = try assignment(response.resourcesUpdated.assignment, subjectID: answer.subjectID)
         guard response.object == "review", response.id >= 0, response.data.subjectId == answer.subjectID,
               response.data.assignmentId == answer.assignmentID, result.id == answer.assignmentID,
@@ -114,7 +114,7 @@ extension WaniKaniClient {
             meaningNote: value.meaningNote, readingNote: value.readingNote, meaningSynonyms: value.meaningSynonyms))
         let path = serverID.map { "study_materials/\($0)" } ?? "study_materials"
         let response: Resource<MaterialData> = try await request(endpoint(path), token: token,
-            method: serverID == nil ? "POST" : "PUT", body: encode(body))
+            method: serverID == nil ? .post : .put, body: encode(body))
         let result = try material(response, subjectID: value.subjectID)
         guard result.value == value, serverID == nil || result.id == serverID else { throw APIError.invalidResponse }
         return result
