@@ -59,7 +59,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and rich-deta
 | Offline storage | FMDB / SQLite, protobuf blobs, pending review and study-material queues | Full refresh retains offline snapshots until complete responses arrive; revision-aware transaction-level merges protect pending notes and local review progress, including local changes acknowledged while a download is in flight. Additive schema 14/15 migrations preserve existing payloads. Download callbacks honor reset/logout lifetimes. Migrate to a shared SwiftData repository with typed models, actor isolation and explicit transaction boundaries. The production StudyPersistence store verifies atomic session/answer persistence, rollback, conditional acknowledgement, note merges and separate-process recovery. Mac cache callers have switched to it, with a one-time credential-bound JSON importer. The iOS database/callers have not switched yet. SwiftData does not import this legacy schema automatically: validate a one-time import and rollback path before switching callers, then remove FMDB and replaced wrappers. Do not maintain two permanent writable stores. |
 | Async/networking | Shared Swift 6 upload actor; legacy PromiseKit API/downloads, URLSession, Reachability | Immediate/background writes share one process-wide lane and reload current durable payloads. An adapter currently bridges the legacy client to async/await. Replace PromiseKit chains with URLSession async APIs and structured concurrency, deleting the replaced adapter paths. Keep WaniKani-specific response validation, rate-limit handling and account ownership; rejected/ambiguous review reconciliation remains open. Network path status is advisory, not proof a request will succeed. |
 | Review quick settings | Shared SwiftUI form in a native sheet; SwiftUI end/wrap-up confirmation | MMDrawerController, its Objective-C hook and the drawer-specific menu controllers are removed. Archived preference keys are preserved; the separate font-library screen still awaits migration. |
-| Images | Haneke cache and SVGKit radical rendering | SwiftUI image loading can simplify avatars. Preserve deliberate offline downloads; HTTP caching does not guarantee offline availability. SVG radicals still need a rendering/preprocessing strategy. |
+| Images | Haneke cache and SVGKit radical rendering | SwiftUI loads avatars. Native reviews render validated, locally cached SVG bytes through Apple’s SwiftUI WebView. Full offline prefetch, audio and legacy iOS SVGKit removal remain open. |
 | Text matching | Rexy for POSIX longest-match behavior | Compare matching semantics before replacing it with native Regex. Similar syntax is not proof of equivalent highlighting. |
 | Other languages | Go utilities and generated protobuf Go; C++ SQLite extension; Ruby/Fastlane/build scripts | Keep build/data tools separate from the iOS migration. Generated output should be regenerated, not hand-translated. |
 
@@ -92,7 +92,7 @@ Mac reads full study content through URLSession/async-await and commits it in th
 | Home, settings, catalog, review UI, lesson UI | Main review layout is shared SwiftUI; most other iOS screens still await migration | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
 | Rich review answer details and font library | Temporary UIKit adapters; these can migrate to SwiftUI | Preserve mnemonic markup, editable notes/synonyms, audio, subject links and font downloads while CATALOG/SETTINGS migrate. Quick settings and end/wrap-up controls are now SwiftUI. This is staged work, not a SwiftUI limitation. |
 | Forced Japanese keyboard selection and marked-text behavior | Needs a small UIKit text-input adapter until SwiftUI provides equivalent control | Keep the adapter, or accept system-selected keyboard language after explicit input-parity testing. |
-| SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Pre-render trusted radical assets into cached native images, or retain a focused renderer. Do not silently remove image-only radicals. |
+| SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Native reviews use Apple’s SwiftUI WebView with a small HTML image wrapper, disabled scripts and local SVG bytes. No app-owned UIKit/AppKit representable is needed. The legacy iOS SVGKit path remains until its callers migrate. |
 | Speech recognition | Swift service using Apple's Speech framework; SwiftUI provides its controls | Shared Swift 6 capture service and SwiftUI panel now feed iOS review grading. Keep typing available; transcription cannot establish pronunciation quality. Physical microphone/model validation and Mac review integration remain open. |
 | Storage and networking | Swift actors and async APIs, not SwiftUI responsibilities | The Mac read-only slice is native Swift. Port iOS transactional queues and old-data migrations before removing FMDB/PromiseKit. |
 | Grading and kana conversion | Can be entirely Swift | Preserve UTF-16 edit-distance/transposition semantics and kana composition behavior with parity tests. Both grading and kana conversion are now shared Swift, with direct legacy parity comparisons. The native text-input adapter remains. |
@@ -235,3 +235,35 @@ avoids mistaking an older run for the one just launched. Poll the original proce
 handle rather than starting duplicate builds when an observation times out. Shared
 simulator, app and UI tasks remain sequential; command-line shared macOS tests and
 independent Mac builds can use their own build directories.
+
+## Image-only radicals
+
+WaniKani's [radical API](https://docs.api.wanikani.com/20170710/#radicals) supplies SVG
+images. Apple's [SwiftUI WebView](https://developer.apple.com/documentation/webkit/webview-swift.struct)
+provides the system renderer for native reviews. The surrounding feature is Swift
+and SwiftUI, with a small HTML/CSS image wrapper in Swift source; SVG rendering still
+uses WebKit. This is the remaining rendering dependency, rather than a claim that
+SwiftUI `Image` itself decodes SVG. No review type is disabled.
+
+The cache validates HTTPS CDN URLs, response status/URL/MIME type, bounded size and
+SVG structure before atomic publication. URL versions have distinct keys. Downloads
+use an ephemeral, credential-free session, refuse redirects and coalesce by URL.
+Cancelled views do not cancel an already owned download. Previously downloaded
+images survive reopening offline; corrupt cache files are replaced only after a
+valid replacement arrives. First-time offline images still require a download.
+
+Web content receives only a local data image, with JavaScript disabled, a
+nonpersistent website store and a restrictive content policy. Inner SVG titles are
+hidden from accessibility to avoid exposing the answer. Dark appearance inverts the
+monochrome strokes. Answer entry and voice are disabled until loading succeeds;
+errors offer retry, and native reviews always allow deferral. Cancellation does not
+publish an obsolete load error into a newer task.
+
+The Debug-only `ReviewFixture RadicalFixture` launch arguments exercise a real public
+WaniKani radical with synthetic, memory-only study state and disabled account writes.
+`LightFixture` or `DarkFixture` controls that preview's appearance only. Light/dark
+rendering, meaning submission and retained Saved work were checked directly. Unit
+tests independently cover offline reopening, cancellation, corrupt cache replacement,
+invalid URLs/responses and radical-only grading/outbox behavior. Catalog-wide media
+prefetch, cache-management UI, audio and replacing the old iOS SVGKit integration
+remain tracked requirements.

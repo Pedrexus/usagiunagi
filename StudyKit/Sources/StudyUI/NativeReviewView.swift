@@ -12,6 +12,7 @@ public struct NativeReviewView: View {
   @State private var error: String?
   @State private var voice = false
   @State private var confirmEnd = false
+  @State private var readyImage: String?
   @State private var voiceQuestion: StudyQuestion?
   @FocusState private var answerFocused: Bool
 
@@ -42,16 +43,34 @@ public struct NativeReviewView: View {
               self.review = nil
             }
           }
-        } else if let subject = review.subject, !subject.japanese.isEmpty {
+        } else if let subject = review.subject {
           HStack {
             Text("Answers save automatically. Leave this page to pause.").font(.caption)
               .foregroundStyle(.secondary)
             Spacer()
+            Button("Ask later") { change(.deferQuestion) }
             Button(review.saved.session.wrappingUp ? "Stop wrapping up" : "Wrap up") {
               change(review.saved.session.wrappingUp ? .stopWrapping : .wrapUp)
             }.disabled(!review.saved.session.canWrapUp && !review.saved.session.wrappingUp)
           }.padding(.horizontal)
-          ReviewScreen(state: screen, action: act) {
+          ReviewScreen(
+            state: screen, action: act,
+            question: {
+              if let url = URL(string: subject.characterImageURL),
+                !subject.characterImageURL.isEmpty
+              {
+                RadicalImageView(url: url) { available in
+                  guard self.review?.subject?.characterImageURL == url.absoluteString else {
+                    return
+                  }
+                  readyImage = available ? url.absoluteString : nil
+                  screen.canAnswer = available
+                }
+              } else {
+                Text("The radical image is missing. Refresh study content.").font(.caption)
+              }
+            }
+          ) {
             TextField(screen.prompt, text: $screen.answer)
               .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
               .focused($answerFocused).onSubmit { act(.submit) }
@@ -77,7 +96,7 @@ public struct NativeReviewView: View {
           ContentUnavailableView(
             "Study content unavailable", systemImage: "photo",
             description: Text(
-              "This question needs an image or missing catalog content. Your session remains saved. Image-only radical support on Mac is still being migrated."
+              "This question is missing catalog content. Your session remains saved. Refresh study content before continuing."
             ))
           Button("Ask this question later") { change(.deferQuestion) }
         }
@@ -143,6 +162,9 @@ public struct NativeReviewView: View {
     let session = value.saved.session
     screen.title = "Reviews"
     screen.question = value.subject?.japanese ?? ""
+    screen.canAnswer =
+      !screen.question.isEmpty
+      || (readyImage != nil && readyImage == value.subject?.characterImageURL)
     screen.prompt = value.question?.kind == .reading ? "Reading" : "Meaning"
     screen.subjectColor =
       value.subject?.kind == .kanji
@@ -169,7 +191,7 @@ public struct NativeReviewView: View {
     }
   }
   private func submit(convertRomaji: Bool = true) {
-    guard let review, let question = review.question else { return }
+    guard screen.canAnswer, let review, let question = review.question else { return }
     let typed = screen.answer.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !typed.isEmpty else { return }
     let answer =

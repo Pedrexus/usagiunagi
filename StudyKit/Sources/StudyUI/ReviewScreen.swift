@@ -11,6 +11,7 @@ import SwiftUI
     public var questionSize: Double = 72
     public var prompt = ""
     public var title: String?
+    public var canAnswer = true
     public var subjectColor = Color.accentColor
     public var level = ""
     public var stage = ""
@@ -43,7 +44,7 @@ public enum ReviewScreenAction {
 }
 
 /// Shared review layout; native input and rich details are supplied by each host during migration.
-public struct ReviewScreen<Input: View, Details: View>: View {
+public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: View {
     #if os(iOS)
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     #endif
@@ -59,10 +60,17 @@ public struct ReviewScreen<Input: View, Details: View>: View {
     private let action: (ReviewScreenAction) -> Void
     private let input: () -> Input
     private let details: () -> Details
+    private let questionContent: () -> QuestionContent
 
     public init(state: ReviewScreenState, action: @escaping (ReviewScreenAction) -> Void,
+                @ViewBuilder input: @escaping () -> Input, @ViewBuilder details: @escaping () -> Details) where QuestionContent == EmptyView {
+        self.init(state: state, action: action, question: { EmptyView() }, input: input, details: details)
+    }
+
+    public init(state: ReviewScreenState, action: @escaping (ReviewScreenAction) -> Void,
+                @ViewBuilder question: @escaping () -> QuestionContent,
                 @ViewBuilder input: @escaping () -> Input, @ViewBuilder details: @escaping () -> Details) {
-        self.state = state; self.action = action; self.input = input; self.details = details
+        self.state = state; self.action = action; self.input = input; self.details = details; self.questionContent = question
     }
 
     public var body: some View {
@@ -94,7 +102,7 @@ public struct ReviewScreen<Input: View, Details: View>: View {
                 ToolbarItemGroup(placement: .primaryAction) {
                     if state.phase == .answering && !state.isAnki {
                         Button("Voice answer", systemImage: "mic") { action(.voice) }
-                            .accessibilityIdentifier("review.voice")
+                            .accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
                     }
                     if state.hasMenu {
                         Button("Quick settings", systemImage: "slider.horizontal.3") { action(.settings) }
@@ -160,13 +168,13 @@ public struct ReviewScreen<Input: View, Details: View>: View {
                         .accessibilityIdentifier("review.reveal")
                 }.buttonStyle(.bordered)
             }
-            if !state.isAnki { input().frame(minHeight: 48, maxHeight: 56) }
+            if !state.isAnki { input().disabled(!state.canAnswer).frame(minHeight: 48, maxHeight: 56) }
             Button(state.phase == .incorrect ? "Continue" : state.isAnki ? "Show answer" :
                    state.canSkip && state.answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Skip" : "Check answer") {
                 action(.submit)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty)
+            .disabled(!state.canAnswer || (state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty))
             .accessibilityIdentifier("review.submit")
         }
     }
@@ -175,6 +183,7 @@ public struct ReviewScreen<Input: View, Details: View>: View {
         VStack(spacing: 8) {
             Group {
                 if let image = state.questionImage { image.resizable().scaledToFit().frame(maxHeight: state.questionSize) }
+                else if state.question.isEmpty { questionContent().frame(maxHeight: state.questionSize) }
                 else {
                     Text(state.question)
                         .font(state.questionFont.isEmpty ? .system(size: state.questionSize) : .custom(state.questionFont, size: state.questionSize))

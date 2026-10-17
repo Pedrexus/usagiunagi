@@ -176,7 +176,12 @@ final class MacStudyStore {
         subject.level = 1; subject.japanese = "一"
         subject.meanings = [.init("One", role: .primary)]
         subject.readings = [.init("いち", isPrimary: true, kind: .onyomi)]
-        var assignment = CatalogAssignment(id: 101, subjectID: 1, kind: .kanji)
+        if ProcessInfo.processInfo.arguments.contains("RadicalFixture") {
+            subject = CatalogSubject(id: 8790, kind: .radical)
+            subject.level = 1; subject.meanings = [.init("Death Star", role: .primary)]
+            subject.characterImageURL = "https://cdn.wanikani.com/images/363-subject-8790-with-css-original.svg?1520987154"
+        }
+        var assignment = CatalogAssignment(id: 101, subjectID: subject.id, kind: subject.kind)
         assignment.level = 1; assignment.srsStage = 3; assignment.startedAt = 1; assignment.availableAt = 1
         var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
         fixture.subjects = [subject]; fixture.assignments = [assignment]
@@ -297,13 +302,14 @@ private struct MacStudyRoot: View {
                         Text(summary).font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial)
                     }
                 }
-        }.onChange(of: section) { _, _ in Task { await store.reloadSavedSnapshot() } }
+        }.preferredColorScheme(store.isReviewFixture ? (ProcessInfo.processInfo.arguments.contains("LightFixture") ? .light : ProcessInfo.processInfo.arguments.contains("DarkFixture") ? .dark : nil) : nil)
+        .onChange(of: section) { _, _ in Task { await store.reloadSavedSnapshot() } }
         .sheet(item: $subject) { NativeSubjectDetail(subject: $0, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified) }
     }
     private var account: some View {
         Form {
             Section("WaniKani account") {
-                Text("Native Mac statistics, subject browsing and saved offline reviews. Lessons, image-only radicals and full study settings are still being migrated.").foregroundStyle(.secondary)
+                Text("Native Mac statistics, subject browsing and saved offline reviews. Lessons and full study settings are still being migrated.").foregroundStyle(.secondary)
                 SecureField("API token", text: $token)
                 Link("Create a token in WaniKani", destination: URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
                 Text("Connect and refresh use reading access. Sending from Saved work also requires the corresponding review, assignment or study-material write permissions. The token stays in this Mac's Keychain; saved work stays on this device.").font(.caption).foregroundStyle(.secondary)

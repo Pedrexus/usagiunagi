@@ -235,3 +235,46 @@ extension NativeReviewTests {
     #expect(next.saved.session.items.count == 1)
   }
 }
+
+extension NativeReviewTests {
+  @Test func imageOnlyRadicalHasOneMeaningQuestionAndOneDurableSubmission() async throws {
+    let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
+    var profile = StudyAccountProfile(username: "Radical fixture")
+    profile.level = 1
+    profile.maxLevelGranted = 60
+    var subject = CatalogSubject(id: 8790, kind: .radical)
+    subject.level = 1
+    subject.meanings = [.init("Death Star", role: .primary)]
+    subject.characterImageURL = "https://cdn.wanikani.com/fixture.svg"
+    var assignment = CatalogAssignment(id: 101, subjectID: subject.id, kind: .radical)
+    assignment.level = 1
+    assignment.srsStage = 3
+    assignment.startedAt = 1
+    assignment.availableAt = 1
+    var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    fixture.subjects = [subject]
+    fixture.assignments = [assignment]
+    _ = try await store.importLegacyAccount(
+      fixture, sourceID: "radical-fixture", verifiedAccountID: account,
+      verifiedUsername: profile.username, credentialID: "radical-fixture")
+    let opened = try await store.openReviews(accountID: account, now: now)
+    let question = try #require(opened.question)
+    #expect(question.kind == .meaning && opened.subject?.japanese == "")
+    let deferred = try await store.changeReview(
+      .deferQuestion, accountID: account, expectedRevision: opened.saved.revision)
+    let resumed = try await store.openReviews(accountID: account, now: now)
+    #expect(resumed.saved.revision == deferred.saved.revision)
+    let answer = try #require(resumed.question)
+    let completed = try await store.answerReview(
+      "death star", question: answer, accountID: account,
+      expectedRevision: resumed.saved.revision, now: now)
+    #expect(completed.grade == .precise && completed.state.question == nil)
+    let pending = try await store.pendingReviews(accountID: account)
+    #expect(pending.count == 1)
+    let submission = try #require(pending.first).submission
+    #expect(submission.subjectID == subject.id && submission.assignmentID == assignment.id)
+    #expect(
+      !submission.isLesson && submission.readingWrongCount == 0 && submission.meaningWrongCount == 0
+    )
+  }
+}
