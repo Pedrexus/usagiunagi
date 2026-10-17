@@ -1,2 +1,3 @@
 "CFBundleDisplayName" = "兔鰻";
 "CFBundleName" = "兔鰻";
+"NSMicrophoneUsageDescription" = "復習の答えを音声で入力するためにマイクを使用します。音声はこのデバイスで文字起こしされます。";

@@ -105,6 +105,7 @@ final class ReviewSession {
     return value
   }
 
+  var questionToken: StudyQuestion? { state.question }
   var activeTask: ReviewItem! { state.question.map { legacyItems[$0.itemID] } }
   var activeTaskType: TaskType! { state.question?.kind }
   var activeSubject: TKMSubject! { state.question.flatMap { subjects[$0.itemID] } }

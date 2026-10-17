@@ -15,6 +15,7 @@
 import Foundation
 import PromiseKit
 import Reachability
+import StudySpeech
 import WaniKaniAPI
 
 #if !DEBUG
@@ -33,6 +34,32 @@ import WaniKaniAPI
 
 #else
 
+  /// Deterministic UI-test transcription; never records audio or calls Speech APIs.
+  actor SampleVoiceCapture: VoiceCapture {
+    let transcript: String
+    private var callback: (@Sendable (VoiceCaptureEvent) async -> Void)?
+    private var recordingID: UUID?
+    init(transcript: String) { self.transcript = transcript }
+    func start(id: UUID, locale _: Locale, downloadModel _: Bool,
+               report: @escaping @Sendable (VoiceCaptureEvent) async -> Void) async {
+      recordingID = id
+      callback = report
+      await report(.listening)
+    }
+
+    func finish(id: UUID) async {
+      guard recordingID == id else { return }
+      await callback?(.segment(text: transcript, start: 0, end: 1, isFinal: true))
+      await callback?(.finished)
+    }
+
+    func cancel(id: UUID) {
+      guard recordingID == id else { return }
+      callback = nil
+      recordingID = nil
+    }
+  }
+
   // In debug mode this class detects whether the app is being run under "fastlane snapshot", and
   // if so will provide a LocalCachingClient that returns fake data for taking screenshots for the
   // app store.
@@ -43,6 +70,21 @@ import WaniKaniAPI
 
     class func setUp() {
       if isActive {
+        // Settings stores archived values. XCTest launch arguments arrive as strings;
+        // encode known boolean overrides in the volatile domain, without changing saved
+        // preferences.
+        let defaults = UserDefaults.standard
+        var arguments = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
+        for key in ["groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
+                    "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
+                    "allowSkippingReviews"] {
+          if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
+             let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",
+                                                          requiringSecureCoding: true) {
+            arguments[key] = data
+          }
+        }
+        defaults.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
         if ProcessInfo.processInfo.arguments.contains("ResetUserDefaults") {
           // We're run again after testing finishes to remove the dummy user.
           Settings.userApiToken = ""
@@ -1245,8 +1287,10 @@ import WaniKaniAPI
     }
 
     override func updateAvailableSubjects() -> (Int, [ReviewComposition]) {
-      (10, createComposition(4, 14, 8, 2, 1, 12, 42, 17, 9, 2, 0, 2, 17, 0, 0, 6, 0, 0, 0, 0,
-                             4, 11, 0, 8, 6))
+      (10,
+       createComposition(getAllAssignments().count, 14, 8, 2, 1, 12, 42, 17, 9, 2, 0, 2, 17, 0, 0,
+                         6, 0, 0, 0, 0,
+                         4, 11, 0, 8, 6))
     }
 
     override func updateGuruKanjiCount() -> Int {
@@ -1274,7 +1318,9 @@ import WaniKaniAPI
 
     override func getAllAssignments() -> [TKMAssignment] {
       // Distinct subjects keep the sample review count consistent with statistics.
-      [Int64(3864), 923, 578, 689].map { id in
+      let ids: [Int64] = ProcessInfo.processInfo.arguments
+        .contains("VoiceReviewFixture") ? [3864] : [3864, 923, 578, 689]
+      return ids.map { id in
         var a = TKMAssignment()
         a.subjectID = id
         a.subjectType = id == 3864 ? .vocabulary : .kanji

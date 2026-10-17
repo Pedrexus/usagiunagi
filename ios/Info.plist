@@ -41,6 +41,8 @@
 	<array>
 		<string>googlechromes</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Speak review answers instead of typing them. Audio is transcribed on this device.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

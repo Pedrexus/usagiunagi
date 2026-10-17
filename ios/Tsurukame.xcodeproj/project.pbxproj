@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5F84B9E7F40CE19F2FDE97 /* StudyCore */; };
+		0833BA0BAAC68D162D964D99 /* StudySpeech in Frameworks */ = {isa = PBXBuildFile; productRef = 5E2663408318DBE16C356C9A /* StudySpeech */; };
 		0A943349E17FA7889EFEE41F /* Pods_Tsurukame.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC80AAF9736A570E3C4CC09E /* Pods_Tsurukame.framework */; };
 		11F0AAE295A730DDD157C7A8 /* StudyStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B23E267AB393BA610A4B75B /* StudyStatistics.swift */; };
 		137DFD51681E0F8E31C6B995 /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
@@ -538,6 +539,7 @@
 				0A943349E17FA7889EFEE41F /* Pods_Tsurukame.framework in Frameworks */,
 				047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */,
 				60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */,
+				0833BA0BAAC68D162D964D99 /* StudySpeech in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -977,6 +979,7 @@
 				6324AE402F9DCEAD0089066C /* SVGKit */,
 				3B5F84B9E7F40CE19F2FDE97 /* StudyCore */,
 				23A08FB0407E2600C582ED6F /* StudyUI */,
+				5E2663408318DBE16C356C9A /* StudySpeech */,
 			);
 			productName = wk;
 			productReference = 6319C9B520441DE200C31F87 /* Tsurukame.app */;
@@ -2444,6 +2447,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 480B242F23D6830300FC2A82 /* XCRemoteSwiftPackageReference "Rexy" */;
 			productName = Rexy;
+		};
+		5E2663408318DBE16C356C9A /* StudySpeech */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "StudyKit" */;
+			productName = StudySpeech;
 		};
 		6324AE402F9DCEAD0089066C /* SVGKit */ = {
 			isa = XCSwiftPackageProductDependency;

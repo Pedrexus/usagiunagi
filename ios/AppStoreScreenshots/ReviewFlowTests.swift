@@ -77,4 +77,71 @@ final class ReviewFlowTests: XCTestCase {
     attachment.lifetime = .keepAlways
     add(attachment)
   }
+
+  @MainActor
+  func testVoiceTranscriptUsesNormalGradingAndKanaFallback() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = [
+      "-FASTLANE_SNAPSHOT",
+      "YES",
+      "VoiceReviewFixture",
+      "-groupMeaningReading",
+      "YES",
+      "-meaningFirst",
+      "YES",
+      "-ankiMode",
+      "NO",
+      "-autoSwitchKeyboard",
+      "NO",
+      "-playAudioAutomatically",
+      "NO",
+      "-allowSkippingReviews",
+      "NO",
+    ]
+    app.launch()
+    defer {
+      app.terminate()
+      app.launchArguments.append("ResetUserDefaults")
+      app.launch()
+      app.terminate()
+    }
+    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
+      .firstMatch
+    XCTAssertTrue(start.waitForExistence(timeout: 10))
+    start.tap()
+    XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 10))
+    app.buttons["review.voice"].tap()
+    XCTAssertTrue(app.buttons["voice.start"].waitForExistence(timeout: 5))
+    app.buttons["voice.start"].tap()
+    XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+    app.buttons["voice.stop"].tap()
+    XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["voice.submit"].isEnabled)
+    app.buttons["voice.submit"].tap()
+    let prompt = app.staticTexts["review.prompt"]
+    let reading = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      prompt.exists && prompt.label.contains("Reading")
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+    app.buttons["review.voice"].tap()
+    XCTAssertTrue(app.buttons["voice.start"].waitForExistence(timeout: 5))
+    app.buttons["voice.start"].tap()
+    XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+    app.buttons["voice.stop"].tap()
+    XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["voice.submit"]
+      .isEnabled) // Kanji transcription is not a reading answer.
+    let attachment = XCTAttachment(screenshot: app.screenshot())
+    attachment.name = "Voice reading correction"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    app.buttons["voice.keyboard"].tap()
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("watashijishin")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
 }

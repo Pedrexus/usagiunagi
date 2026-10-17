@@ -1,2 +1,3 @@
 "CFBundleDisplayName" = "usagiunagi";
 "CFBundleName" = "usagiunagi";
+"NSMicrophoneUsageDescription" = "Speak review answers instead of typing them. Audio is transcribed on this device.";

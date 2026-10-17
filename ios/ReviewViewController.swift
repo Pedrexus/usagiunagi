@@ -13,6 +13,9 @@
 // limitations under the License.
 
 import Foundation
+import StudySpeech
+import StudyUI
+import SwiftUI
 import WaniKaniAPI
 
 private let kDefaultAnimationDuration: TimeInterval = 0.25
@@ -217,6 +220,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
   // The header over the subject: close, progress, quick settings.
   private let closeButton = UIButton(type: .system)
   private let settingsButton = UIButton(type: .system)
+  private let voiceButton = UIButton(type: .system)
   private let headerProgressLabel = UILabel()
   private let headerAccuracyLabel = UILabel()
   private let headerTrack = UIView()
@@ -426,6 +430,10 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     closeButton.addAction(UIAction { [unowned self] _ in
       self.delegate.tappedCloseButton?(reviewViewController: self, closeButton: self.closeButton)
     }, for: .touchUpInside)
+    makeHeaderButton(voiceButton, symbol: "mic", label: "Voice answer")
+    voiceButton.accessibilityIdentifier = "review.voice"
+    voiceButton.addAction(UIAction { [weak self] _ in self?.showVoiceAnswer() },
+                          for: .touchUpInside)
     makeHeaderButton(settingsButton, symbol: "slider.horizontal.3", label: "Quick settings")
     settingsButton.addAction(UIAction { [unowned self] _ in
       self.delegate.tappedMenuButton?(reviewViewController: self, menuButton: self.settingsButton)
@@ -460,7 +468,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     headerFill.translatesAutoresizingMaskIntoConstraints = false
     headerTrack.addSubview(headerFill)
 
-    let header = UIStackView(arrangedSubviews: [closeButton, middle, settingsButton])
+    let header = UIStackView(arrangedSubviews: [closeButton, middle, voiceButton, settingsButton])
     header.alignment = .center
     header.spacing = 12
     header.translatesAutoresizingMaskIntoConstraints = false
@@ -896,6 +904,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
       questionLabel.accessibilityValue = session.activeSubject.japanese
       levelLabel.accessibilityLabel = "srs level \(session.activeAssignment.srsStage)"
 
+      voiceButton.isEnabled = !isAnkiModeActiveForCurrentTask
       answerField.text = nil
       answerField.textColor = TKMStyle.Color.label
       answerField.backgroundColor = .clear
@@ -1064,6 +1073,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     // here so it's in sync with the others.
     unlockAnswerField()
     answerField.isEnabled = !shown && !isAnkiModeActiveForCurrentTask
+    voiceButton.isEnabled = answerField.isEnabled
     if updateFirstResponder {
       if !shown, !isAnkiModeActiveForCurrentTask {
         answerField.becomeFirstResponder()
@@ -1297,6 +1307,35 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
 
   // MARK: - Submitting answers
 
+  private func showVoiceAnswer() {
+    guard let token = session.questionToken, !isAnkiModeActiveForCurrentTask,
+          !isShowingWrongAnswer, answerField.isEnabled, subjectDetailsView.isHidden else { return }
+    services.audio.stopPlayback()
+    answerField.resignFirstResponder()
+    var voiceModel = VoiceReviewController(question: token)
+    #if DEBUG
+      if Screenshotter.isActive, ProcessInfo.processInfo.arguments.contains("VoiceReviewFixture") {
+        voiceModel = VoiceReviewController(question: token,
+                                           capture: SampleVoiceCapture(transcript: token
+                                             .kind == .meaning ? "Personally." : "私自身。"))
+      }
+    #endif
+    let panel = VoiceAnswerPanel(model: voiceModel, submit: { [weak self] transcript in
+      guard let self, self.session.questionToken == token else { return }
+      self.dismiss(animated: true) {
+        guard self.session.questionToken == token else { return }
+        self.answerField.text = transcript
+        self.answerFieldValueDidChange()
+        self.submit()
+      }
+    }, cancel: { [weak self] in
+      self?.dismiss(animated: true) { self?.focusAnswerField() }
+    })
+    let controller = UIHostingController(rootView: panel)
+    controller.modalPresentationStyle = .formSheet
+    present(controller, animated: true)
+  }
+
   func answerFieldValueDidChange() {
     let text = answerField.text!.trimmingCharacters(in: .whitespaces)
 
@@ -1367,6 +1406,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
 
   private func unlockAnswerField() {
     isShowingWrongAnswer = false
+    voiceButton.isEnabled = !isAnkiModeActiveForCurrentTask
     answerField.tintColor = nil
   }
 
@@ -1495,6 +1535,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     if !Settings.showAnswerImmediately, !isAnkiModeActiveForCurrentTask {
       revealAnswerButton.isHidden = false
       isShowingWrongAnswer = true
+      voiceButton.isEnabled = false
       answerField.tintColor = .clear
       UIView.animate(withDuration: animationDuration,
                      animations: {
