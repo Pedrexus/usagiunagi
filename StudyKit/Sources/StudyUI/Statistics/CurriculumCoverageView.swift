@@ -154,15 +154,15 @@ private struct CoverageDetail: View {
 
 public struct StudySourcesView: View {
   let sourceDate: String
-  @Environment(\.dismiss) private var dismiss
   public init(sourceDate: String) { self.sourceDate = sourceDate }
   public var body: some View {
-    NavigationStack {
-      List {
-        Section("What coverage means") {
+    VStack(alignment: .leading, spacing: 20) {
+      GroupBox("What coverage means") {
+        VStack(alignment: .leading, spacing: 12) {
           Text(
             "Coverage matches synced WaniKani kanji to reference sets. Guru+, Master+ and Burned are SRS milestones, not proof of mastery. JLPT counts include easier levels."
           )
+          .accessibilityIdentifier("sources.coverage")
           Text(
             "JLPT does not publish current official kanji lists. These estimates cannot assess listening, grammar, vocabulary breadth or reading comprehension. Kanji Kentei also tests handwriting and other skills."
           )
@@ -171,7 +171,9 @@ public struct StudySourcesView: View {
             "Kanji Kentei scopes and readiness checks",
             destination: URL(string: "https://www.kanken.or.jp/kanken/grades/meyasucheck/")!)
         }
-        Section("Curriculum sources") {
+      }
+      GroupBox("Curriculum sources") {
+        VStack(alignment: .leading, spacing: 12) {
           Text(
             "School grades and Jōyō: KANJIDIC2, © James William BREEN and the Electronic Dictionary Research and Development Group. Snapshot \(sourceDate). Fields reduced to character classifications; canonical equivalents deduplicated."
           )
@@ -194,7 +196,9 @@ public struct StudySourcesView: View {
             "Jonathan Waller's JLPT resources",
             destination: URL(string: "https://www.tanos.co.uk/jlpt/")!)
         }
-        Section("Calculations") {
+      }
+      GroupBox("Calculations") {
+        VStack(alignment: .leading, spacing: 12) {
           Text(
             "Accuracy: total correct answers / total answers, separately for reading and meaning, excluding hidden items. Schedule: one next review per active item, not total future work."
           )
@@ -205,8 +209,9 @@ public struct StudySourcesView: View {
             "Focus priority: (errors + 1) / (answers + 2) / √(correct streak + 1), with at least five answers and two errors. Recovery lowers priority."
           )
         }
-      }.navigationTitle("Sources & methods")
-        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-    }.frame(minWidth: 300, minHeight: 400)
+      }
+    }
+    .font(.callout)
+    .fixedSize(horizontal: false, vertical: true)
   }
 }

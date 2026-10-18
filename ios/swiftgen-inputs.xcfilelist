@@ -10,5 +10,4 @@ $(SRCROOT)/Resources/Settings.storyboard
 $(SRCROOT)/Resources/SubjectCatalogue.storyboard
 $(SRCROOT)/Resources/SubjectDetails.storyboard
 $(SRCROOT)/Resources/SubjectsByCategory.storyboard
-$(SRCROOT)/Resources/SubjectsByLevel.storyboard
 $(SRCROOT)/Resources/SubjectsRemaining.storyboard

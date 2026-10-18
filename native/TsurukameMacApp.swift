@@ -326,7 +326,7 @@ private struct MacStudyRoot: View {
     @State private var section = Destination.statistics
     @State private var subject: StudySubject?
     @State private var token = ""
-    @State private var search = ""
+    @State private var catalogAnswers = true
     var body: some View {
         NavigationSplitView {
             List(selection: $section) {
@@ -356,11 +356,16 @@ private struct MacStudyRoot: View {
                                 description: Text("Connect your account to see work saved on this Mac. The iPhone and iPad queues stay on those devices."))
                         }
                     } else if section == .subjects {
-                        List(snapshot.subjects.filter { $0.level <= store.maximumContentLevel && (search.isEmpty || $0.characters.localizedStandardContains(search) || $0.meaning.localizedStandardContains(search)) }) { item in
-                            Button { subject = item } label: {
-                                LabeledContent(item.characters.isEmpty ? item.meaning : item.characters, value: "Level \(item.level) · \(item.meaning)").contentShape(Rectangle())
-                            }.buttonStyle(.plain)
-                        }.searchable(text: $search, prompt: "Kanji, vocabulary or meaning")
+                        if !snapshot.isSample, store.contentAccessVerified, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
+                            NativeSubjectCatalogView(store: cache, accountID: accountID, maximumLevel: store.maximumContentLevel).id(accountID)
+                        } else {
+                            NavigationStack {
+                                SubjectCatalogView(collection: sampleCatalog(snapshot), title: "Subjects", mode: .all,
+                                    showAnswers: $catalogAnswers, maximumLevel: store.maximumContentLevel) { id in
+                                    subject = snapshot.subjects.first { $0.id == id }
+                                }
+                            }
+                        }
                     } else { StudyDashboard(snapshot: snapshot) { id in subject = snapshot.subjects.first { $0.id == id } } }
                 }
             }.navigationTitle(section.rawValue)
@@ -393,6 +398,17 @@ private struct MacStudyRoot: View {
                 NativeSubjectDetail(subject: item, maximumLevel: store.maximumContentLevel, accessVerified: store.contentAccessVerified)
             }
         }
+    }
+    private func sampleCatalog(_ snapshot: StudySnapshot) -> SubjectCatalogCollection {
+        let assignments = Dictionary(snapshot.assignments.map { ($0.subjectID, $0.srsStageNumber) }, uniquingKeysWith: max)
+        return SubjectCatalogCollection(items: snapshot.subjects.filter { $0.level <= store.maximumContentLevel }.map { item in
+            var value = CatalogSubject(id: item.id, kind: item.kind)
+            value.japanese = item.characters; value.level = item.level
+            value.meanings = [.init(item.meaning, role: .primary)]
+            value.readings = item.readings.map { .init($0, isPrimary: true, kind: .unknown) }
+            let status: SubjectCatalogItem.Status = assignments[item.id].flatMap(StudySRSStage.init(rawValue:)).map { .studying($0, reviewAt: nil, guruAt: nil) } ?? .unassigned
+            return SubjectCatalogItem(subject: value, status: status)
+        })
     }
     private var account: some View {
         Form {

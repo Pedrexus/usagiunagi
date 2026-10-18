@@ -3,6 +3,7 @@ import Charts
 import StudyCore
 
 public struct StudyDashboard: View {
+    private static let bundledLibrary = try? CurriculumLibrary.bundled()
     public let snapshot: StudySnapshot
     private let metrics: StudyMetrics
     private let library: CurriculumLibrary?
@@ -16,7 +17,7 @@ public struct StudyDashboard: View {
     public init(snapshot: StudySnapshot, initialPage: Page = .progress, openSubject: @escaping (Int64) -> Void) {
         self._page = State(initialValue: initialPage)
         self.snapshot = snapshot; self.metrics = snapshot.metrics()
-        self.library = try? CurriculumLibrary.bundled(); self.openSubject = openSubject
+        self.library = Self.bundledLibrary; self.openSubject = openSubject
     }
 
     public var body: some View {
@@ -50,8 +51,13 @@ public struct StudyDashboard: View {
                     case .focus: focus
                     }
                 }
-                Button("Sources and calculation details", systemImage: "info.circle") { showSources = true }
-                    .font(.callout)
+                DisclosureGroup(isExpanded: $showSources) {
+                    StudySourcesView(sourceDate: library?.kanjidicDate ?? "Unavailable")
+                } label: {
+                    Label("Sources and calculation details", systemImage: "info.circle")
+                        .font(.callout)
+                }
+                .accessibilityIdentifier("statistics.sources")
                 Text("Snapshot: \(snapshot.savedAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -60,7 +66,6 @@ public struct StudyDashboard: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
         .background(.background)
         .tint(StudyPalette.radical)
-        .sheet(isPresented: $showSources) { StudySourcesView(sourceDate: library?.kanjidicDate ?? "Unavailable") }
         .accessibilityIdentifier("StudyDashboard")
     }
 

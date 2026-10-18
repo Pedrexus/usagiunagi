@@ -200,12 +200,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
   // MARK: - Navigation bar buttons
 
   @IBAction func searchButtonTapped() {
-    // Present the search bar and results together in a modal dialog. The results view controller
-    // owns the search bar and Cancel button in its navigation bar (see SearchResultViewController);
-    // we just wrap it in a navigation controller and present it.
-    let nav = UINavigationController(rootViewController: searchResultsViewController)
-    nav.modalPresentationStyle = .formSheet
-    present(nav, animated: true)
+    navigationController?.pushViewController(searchResultsViewController, animated: true)
   }
 
   @IBAction func settingsButtonTapped() {
@@ -417,9 +412,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
   func searchResultSelected(subject: TKMSubject) {
     let vc = StoryboardScene.SubjectDetails.initialScene.instantiate()
     vc.setup(services: services, subject: subject)
-    // Dismiss the search dialog, then push the subject details onto the main navigation stack.
-    dismiss(animated: true) {
-      self.navigationController?.pushViewController(vc, animated: true)
-    }
+    navigationController?.popViewController(animated: false)
+    navigationController?.pushViewController(vc, animated: true)
   }
 }

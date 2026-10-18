@@ -119,11 +119,6 @@ internal enum StoryboardScene {
 
     internal static let initialScene = InitialSceneType<Tsurukame.SubjectsByCategoryViewController>(storyboard: Self.self)
   }
-  internal enum SubjectsByLevel: StoryboardType {
-    internal static let storyboardName = "SubjectsByLevel"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.SubjectsByLevelViewController>(storyboard: Self.self)
-  }
   internal enum SubjectsRemaining: StoryboardType {
     internal static let storyboardName = "SubjectsRemaining"
 

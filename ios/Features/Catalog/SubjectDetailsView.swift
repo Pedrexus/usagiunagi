@@ -257,6 +257,7 @@ struct SubjectDetailsPage: View {
     .overlay(alignment: .topLeading) {
       if let back {
         Button("Back", systemImage: "chevron.backward", action: back).buttonStyle(.bordered)
+          .accessibilityIdentifier("subject.back")
           .background(.regularMaterial, in: Capsule()).padding(8)
       }
     }

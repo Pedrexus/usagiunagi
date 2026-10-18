@@ -521,7 +521,9 @@ Coverage no longer stores a selected chart row as a sheet item or schedules a
 second presentation on dismissal. Each explicit target button expands its current
 remaining-kanji grid in the page. The bundled StudyCore curriculum and saved
 WaniKani snapshot are the default data source, without a coverage download. Only an
-explicit kanji or Sources action opens its separate destination. See TASKS.md for
+explicit kanji action opens its separate destination. Sources and calculation
+details also expand within the page, so the shared dashboard presents no sheets.
+The bundled library is decoded once per app process. See TASKS.md for
 exact test evidence and remaining acceptance gates.
 
 ## Shared rich details and editing — 2026-10-18
@@ -580,3 +582,43 @@ retains WebKit until a suitable native renderer replaces it. Audio/speech,
 persistence, networking and watch connectivity are platform services, not screens.
 No lesson, review, note, synonym or catalog feature is disabled by this checkpoint.
 Exact tests, line counts and remaining UI acceptance are recorded in TASKS.md.
+
+## Shared catalog presentation — 2026-10-18
+
+`SubjectCatalogView` owns native list rows, sections, search, filters, level controls
+and answer visibility. `SubjectCatalogQuery` performs cancellable concurrent matching
+of immutable values, with exact-before-prefix-before-substring ranking and stable
+level/ID ties. Pending uploads are explicit values rather than synthetic Guru stages.
+The native read projection applies account/subscription/hidden-content fences within
+the StudyStore actor; it does not introduce another writable repository. iOS still
+reads its current cache through one observable adapter until the writer cutover.
+
+The native search presentation keeps its toolbar visible through
+[avoidHidingContent](https://developer.apple.com/documentation/swiftui/searchpresentationtoolbarbehavior/avoidhidingcontent).
+This preserves the explicit Cancel control while search is active. The existing
+UIKit navigation host remains for legacy deep links, Home actions and cache callbacks;
+its storyboard identities are small temporary hosts rather than retained table UI.
+Search uses normal navigation instead of a nested form sheet. Cancel pops the search
+screen; selecting a result replaces it with details, keeping Back directed to Home.
+The paging drag is disabled outside level browsing using
+[GestureMask.subviews](https://developer.apple.com/documentation/swiftui/gesturemask/subviews),
+which preserves the child's gestures; GestureMask.none would disable those as well.
+
+| Audited file | Result |
+| --- | --- |
+| `ios/SubjectCatalogueViewController.swift` | Deleted its UIKit page container. Level menu/buttons and bounded horizontal paging use the shared SwiftUI list. Its storyboard class identity is implemented in the one temporary host file. |
+| `ios/SubjectsByLevelViewController.swift` | Deleted its level table and related storyboard; no production references remain. The unrelated generated TKMSubjectsByLevel data type remains. |
+| `ios/SubjectsRemainingViewController.swift` | Deleted its table/row assembly. The adapter preserves apprentice filtering, previous-level vocabulary preference and existing review/Guru timing. |
+| `ios/SubjectsByCategoryViewController.swift` | Deleted the table implementation; the adapter preserves category selection and started-only assignments. |
+| `ios/SubjectsExcludedViewController.swift` | Deleted the table implementation; shared presentation reloads after returning from an exclusion edit. |
+| `ios/SearchResultViewController.swift` | Deleted search-controller/delegate presentation. Shared search handles clear/cancel, Japanese/meaning/kana and exact ranking; the existing host callback still closes search and opens details. |
+| `ios/Tables/SubjectListItem.swift` | Deleted the UIKit row, answer-view generators, width calculations and ShowAnswersButton after proving there were no remaining callers. Shared row content is absent from accessibility when answers are hidden. |
+| `ios/Tables/SubjectModelItem.swift` and `.xib` | Deleted after checking the only references were their definitions, nib and Xcode project. |
+| Five catalog/search storyboards | Reduced to blank hosting scenes preserving existing caller/class/scene identities. Removed old table/page references from the project, SwiftGen inputs and generated scene accessors. |
+| `ios/Tables/SRSStageCategoryItem.swift` | Retained: the Home stage summary still uses it. The remaining Home/settings table infrastructure and input/media bridges also have active callers. |
+
+Native Mac Subjects uses its full stored catalog and native navigation to rich details.
+Sample mode projects only its explicitly synthetic summary data. Complete Mac lessons,
+audio/fonts, exclusion editing and broad keyboard/accessibility acceptance remain open.
+Coverage and its sources are fully inline and use bundled reference data plus the saved
+snapshot by default. TASKS.md records exact tests and control-helper limitations.

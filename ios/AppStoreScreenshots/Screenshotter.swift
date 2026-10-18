@@ -79,7 +79,7 @@ import WaniKaniAPI
         for key in ["groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
                     "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
                     "allowSkippingReviews", "exactMatch", "showAnswerImmediately", "enableCheats",
-                    "ankiModeCombineReadingMeaning", "blurContextSentences"] {
+                    "ankiModeCombineReadingMeaning", "blurContextSentences", "allowExcludeItems", "showPreviousLevelGraph"] {
           if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
              let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",
                                                           requiringSecureCoding: true) {
@@ -109,8 +109,8 @@ import WaniKaniAPI
 
   class FakeLocalCachingClient: LocalCachingClient {
     private var completedLessons: Set<Int64> = []
-    private var editedMaterials: [Int64: StudyMaterial] = [:]
-    private var materialVersions: [Int64: Int64] = [:]
+    private var editedMaterials: [Int64: StudyMaterial] = ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") ? [3864: StudyMaterial(subjectID: 3864, meaningNote: StudyMaterial.exclusionMarker)] : [:]
+    private var materialVersions: [Int64: Int64] = ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") ? [3864: 0] : [:]
     private var conflicts: Set<Int64> = []
     private let subjectTextProtos: [Int64: String] = [
       // Subjects used in the search results for "sake". Abridged protos containing just the fields
@@ -1307,12 +1307,21 @@ import WaniKaniAPI
     }
 
     override func updateSrsCategoryCounts() -> [Int] {
-      [86, 120, 485, 786, 2056]
+      guard ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") else { return [86, 120, 485, 786, 2056] }
+      var counts = Array(repeating: 0, count: 6)
+      for item in catalogAssignments() where !item.isLocked && item.srsStageNumber > 0 {
+        counts[item.srsStage.category.rawValue] += 1
+      }
+      return counts
     }
 
     override func getSubject(id: Int64) -> TKMSubject? {
       if let textProto = subjectTextProtos[id] {
-        return try! TKMSubject(textFormatString: textProto)
+        var subject = try! TKMSubject(textFormatString: textProto)
+        if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
+          subject.level = [Int64(294): Int32(2), 923: 2][id] ?? 1
+        }
+        return subject
       }
       return nil
     }
@@ -1326,6 +1335,7 @@ import WaniKaniAPI
     }
 
     override func getAllAssignments() -> [TKMAssignment] {
+      if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") { return catalogAssignments() }
       if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
         return [Int64(293), 743, 3864].map { id in
           let subject = getSubject(id: id)!
@@ -1354,6 +1364,25 @@ import WaniKaniAPI
         a.srsStageNumber = 2
         return a
       }
+    }
+
+    private func catalogAssignments() -> [TKMAssignment] {
+      [Int64(293), 294, 743, 923, 578, 3864, 689, 8790].map { id in
+        let subject = getSubject(id: id)!
+        var value = TKMAssignment()
+        value.id = 100_000 + id; value.subjectID = id; value.subjectType = subject.subjectType; value.level = subject.level
+        if ![294, 8790].contains(id) {
+          value.srsStageNumber = [Int64(293): Int32(5), 743: 2, 923: 5, 578: 0, 3864: 3, 689: 9][id]!
+          if value.srsStageNumber > 0 { value.startedAt = 42; value.availableAt = id == 923 ? Int32.max : 42 }
+        }
+        return value
+      }
+    }
+    override func getAssignmentsInCategory(category: SRSStageCategory) -> [TKMAssignment] {
+      if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
+        return catalogAssignments().filter { !$0.isLocked && $0.srsStage.category == category }
+      }
+      return super.getAssignmentsInCategory(category: category)
     }
 
     override func getAllReviewStatistics() -> [TKMReviewStatistic] {
@@ -1422,6 +1451,7 @@ import WaniKaniAPI
     override func getUserInfo() -> TKMUser? {
       var user = TKMUser()
       user.level = 24
+      if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") { user.level = 1 }
       user.username = "Fred"
       user.maxLevelGrantedBySubscription = 60
       return user
@@ -1435,8 +1465,11 @@ import WaniKaniAPI
       nil
     }
 
-    override func getAssignments(level _: Int) -> [TKMAssignment] {
-      // Return just enough to populate the SubjectsByLevelViewController.
+    override func getAssignments(level: Int) -> [TKMAssignment] {
+      if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
+        return catalogAssignments().filter { $0.level == level }
+      }
+      // Return just enough to populate the level catalog.
       let subjects = [293,
                       294,
                       295,
@@ -1497,7 +1530,10 @@ import WaniKaniAPI
     }
 
     override func getAssignmentsAtUsersCurrentLevel() -> [TKMAssignment] {
-      makePieSlices(.radical, locked: 0, lesson: 2, apprentice: 4, guru: 1) +
+      if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
+        return catalogAssignments().filter { $0.level == 1 }
+      }
+      return makePieSlices(.radical, locked: 0, lesson: 2, apprentice: 4, guru: 1) +
         makePieSlices(.kanji, locked: 8, lesson: 4, apprentice: 12, guru: 1) +
         makePieSlices(.vocabulary, locked: 50, lesson: 8, apprentice: 4, guru: 0)
     }

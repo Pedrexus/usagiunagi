@@ -184,6 +184,9 @@ struct ReviewRecoveryTests {
     #expect(try await reopened.pendingReviews(accountID: account).isEmpty)
     #expect(
       try await reopened.snapshot(credentialID: "credential")?.requiresAssignmentRefresh == true)
+    let catalog = try await reopened.subjectCatalog(accountID: account)
+    #expect(catalog.requiresAssignmentRefresh)
+    #expect(catalog.items.allSatisfy { $0.status.stage == nil })
     #expect(try await reopened.assignments(accountID: account).allSatisfy { $0.subjectID != 1 })
     #expect(
       try await reopened.snapshot(credentialID: "credential")?.assignments.allSatisfy {

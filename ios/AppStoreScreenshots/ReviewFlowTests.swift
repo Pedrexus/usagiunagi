@@ -56,6 +56,20 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["coverage.target.grade1"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["Done"].exists)
     XCTAssertFalse(app.navigationBars["N5"].exists)
+    let sources = app.buttons["statistics.sources"]
+    for _ in 0..<8 where !sources.isHittable { app.swipeUp() }
+    XCTAssertTrue(sources.isHittable)
+    sources.tap()
+    XCTAssertTrue(app.staticTexts["sources.coverage"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Done"].exists)
+    XCTAssertTrue(app.buttons["Home"].firstMatch.isHittable)
+    app.buttons["Home"].firstMatch.tap()
+    app.buttons["Stats"].firstMatch.tap()
+    for _ in 0..<8 where !sources.isHittable { app.swipeUp() }
+    XCTAssertTrue(sources.isHittable)
+    sources.tap()
+    XCTAssertFalse(app.staticTexts["sources.coverage"].exists)
+    XCTAssertFalse(app.buttons["Done"].exists)
   }
 
   @MainActor
@@ -855,5 +869,163 @@ extension ReviewFlowTests {
     XCTAssertEqual(
       app.textViews["material.readingNote"].value as? String, "Concurrent hidden reading note")
     app.buttons["material.cancel"].tap()
+  }
+}
+
+extension ReviewFlowTests {
+  @MainActor private func launchCatalog() -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = [
+      "-FASTLANE_SNAPSHOT", "YES", "CatalogFlowFixture", "-allowExcludeItems", "YES",
+      "-showPreviousLevelGraph", "YES",
+    ]
+    app.launch()
+    XCTAssertTrue(app.tables.firstMatch.waitForExistence(timeout: 10))
+    return app
+  }
+  @MainActor private func openHomeRow(_ prefix: String, in app: XCUIApplication) {
+    let row = app.cells.containing(.staticText, identifier: prefix).firstMatch
+    for _ in 0..<12 {
+      if row.exists && row.isHittable {
+        row.tap()
+        return
+      }
+      app.tables.firstMatch.swipeUp(velocity: .slow)
+    }
+    let hierarchy = XCTAttachment(string: app.debugDescription)
+    hierarchy.name = "Missing home catalog entry"
+    hierarchy.lifetime = .keepAlways
+    add(hierarchy)
+    XCTFail("Home catalog entry unavailable: \(prefix)")
+  }
+
+  @MainActor func testCatalogLevelPagingHidesAnswersAndStageNavigation() {
+    continueAfterFailure = false
+    let app = launchCatalog()
+    defer { clearFixture(app) }
+    openHomeRow("Show all", in: app)
+    let first = app.buttons["catalog.subject.743"]
+    XCTAssertTrue(first.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["catalog.previousLevel"].isEnabled)
+    let answers = app.buttons["catalog.answers"]
+    if answers.label == "Hide answers" { answers.tap() }
+    XCTAssertTrue(first.label.contains("Answers hidden"))
+    XCTAssertFalse(first.label.contains("Alcohol"))
+    app.buttons["catalog.nextLevel"].tap()
+    let second = app.buttons["catalog.subject.923"]
+    XCTAssertTrue(second.waitForExistence(timeout: 5))
+    XCTAssertTrue(second.label.contains("Answers hidden"))
+    app.buttons["catalog.nextLevel"].tap()
+    XCTAssertTrue(app.staticTexts["No matching subjects"].waitForExistence(timeout: 5))
+    app.buttons["catalog.previousLevel"].tap()
+    XCTAssertTrue(second.waitForExistence(timeout: 5))
+    app.buttons["catalog.subject.294"].swipeRight()
+    XCTAssertTrue(first.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["catalog.previousLevel"].isEnabled)
+    let last = app.buttons["catalog.subject.8790"]
+    for _ in 0..<4 where !last.isHittable { app.swipeUp() }
+    XCTAssertTrue(last.isHittable)
+    for _ in 0..<4 where !app.buttons["catalog.level"].isHittable { app.swipeDown() }
+    XCTAssertTrue(app.buttons["catalog.level"].isHittable)
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "SwiftUI level catalog with hidden answers"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.buttons["catalog.back"].tap()
+    openHomeRow("Guru", in: app)
+    XCTAssertTrue(second.waitForExistence(timeout: 5))
+    XCTAssertTrue(second.label.contains("Guru I"))
+    XCTAssertTrue(second.label.contains("Answers hidden"))
+    XCTAssertFalse(app.buttons["catalog.subject.743"].exists)
+    app.buttons["catalog.answers"].tap()
+    XCTAssertFalse(second.label.contains("Answers hidden"))
+    app.buttons["catalog.back"].tap()
+    XCTAssertTrue(app.tables.firstMatch.exists)
+  }
+
+  @MainActor func testCatalogSearchClearsKanaQueryAndOpensDetails() {
+    continueAfterFailure = false
+    let app = launchCatalog()
+    defer { clearFixture(app) }
+    app.buttons["Search"].tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("watashijishin")
+    let result = app.buttons["catalog.subject.3864"]
+    XCTAssertTrue(result.waitForExistence(timeout: 5))
+    XCTAssertTrue(result.label.contains("Personally"))
+    field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "watashijishin".count))
+    XCTAssertTrue(app.staticTexts["Search saved subjects"].waitForExistence(timeout: 5))
+    XCTAssertFalse(result.exists)
+    app.buttons["catalog.back"].tap()
+    let dismissed = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "exists == false"), object: field)
+    let dismissal = XCTWaiter.wait(for: [dismissed], timeout: 5)
+    if dismissal != .completed {
+      let hierarchy = XCTAttachment(string: app.debugDescription)
+      hierarchy.name = "Search cancellation hierarchy"
+      hierarchy.lifetime = .keepAlways
+      add(hierarchy)
+    }
+    XCTAssertEqual(dismissal, .completed)
+    app.buttons["Search"].tap()
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("personally")
+    XCTAssertTrue(result.waitForExistence(timeout: 5))
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "SwiftUI catalog search"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    result.tap()
+    XCTAssertTrue(app.buttons["subject.editMaterial"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["subject.back"].exists)
+    XCTAssertFalse(field.exists)
+    app.buttons["subject.back"].tap()
+    XCTAssertTrue(app.buttons["Search"].waitForExistence(timeout: 5))
+  }
+
+  @MainActor func testCatalogRemainingExplainsReadinessAndKeepsDueItemsFirst() {
+    continueAfterFailure = false
+    let app = launchCatalog()
+    defer { clearFixture(app) }
+    openHomeRow("Show remaining", in: app)
+    let due = app.buttons["catalog.subject.743"]
+    let lesson = app.buttons["catalog.subject.578"]
+    XCTAssertTrue(due.waitForExistence(timeout: 5))
+    XCTAssertTrue(due.label.contains("Review now"))
+    XCTAssertTrue(lesson.label.contains("Available now"))
+    XCTAssertLessThan(due.frame.minY, lesson.frame.minY)
+    XCTAssertTrue(app.buttons["catalog.subject.8790"].label.contains("Locked"))
+    XCTAssertFalse(app.buttons["catalog.subject.689"].exists)
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "SwiftUI remaining items and next actions"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.buttons["catalog.back"].tap()
+  }
+
+  @MainActor func testCatalogExclusionUpdatesAfterReturningFromDetails() {
+    continueAfterFailure = false
+    let app = launchCatalog()
+    defer { clearFixture(app) }
+    openHomeRow("Excluded items", in: app)
+    let row = app.buttons["catalog.subject.3864"]
+    XCTAssertTrue(row.waitForExistence(timeout: 5))
+    row.tap()
+    let excluded = app.switches["subject.excluded"]
+    scrollTo(excluded, in: app)
+    XCTAssertEqual(excluded.value as? String, "1")
+    excluded.coordinate(withNormalizedOffset: .zero).withOffset(
+      CGVector(dx: excluded.frame.width - 26, dy: excluded.frame.height / 2)
+    ).tap()
+    let off = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@", "0"), object: excluded)
+    XCTAssertEqual(XCTWaiter.wait(for: [off], timeout: 3), .completed)
+    app.buttons["subject.back"].tap()
+    XCTAssertTrue(app.staticTexts["No matching subjects"].waitForExistence(timeout: 5))
+    XCTAssertFalse(row.exists)
+    app.buttons["catalog.back"].tap()
   }
 }
