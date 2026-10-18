@@ -79,12 +79,19 @@ import WaniKaniAPI
         for key in ["groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
                     "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
                     "allowSkippingReviews", "exactMatch", "showAnswerImmediately", "enableCheats",
-                    "ankiModeCombineReadingMeaning", "blurContextSentences", "allowExcludeItems", "showPreviousLevelGraph"] {
+                    "ankiModeCombineReadingMeaning", "blurContextSentences", "allowExcludeItems", "showPreviousLevelGraph",
+                    "showAllReadings", "useKatakanaForOnyomi", "showStatsSection", "showOldMnemonic",
+                    "showArtwork", "showSimilarKanjiAboveLevel", "notificationsAllReviews",
+                    "notificationsBadging", "notificationSounds", "showFullAnswer"] {
           if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
              let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",
                                                           requiringSecureCoding: true) {
             arguments[key] = data
           }
+        }
+        if ProcessInfo.processInfo.arguments.contains("SettingsFlowFixture"),
+           let data = try? NSKeyedArchiver.archivedData(withRootObject: Settings.lessonOrder.map(\.rawValue), requiringSecureCoding: true) {
+          arguments["lessonOrder"] = data
         }
         defaults.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
         if ProcessInfo.processInfo.arguments.contains("ResetUserDefaults") {

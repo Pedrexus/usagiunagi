@@ -74,6 +74,8 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     view.backgroundColor = TKMStyle.Color.background
     if let items = navigationItem.rightBarButtonItems, items.count == 2 {
       items[0].image = UIImage(systemName: "gearshape")
+      items[0].accessibilityLabel = "Settings"
+      items[0].accessibilityIdentifier = "app.settings"
       items[1].image = UIImage(systemName: "magnifyingglass")
       for item in items {
         item.tintColor = TKMStyle.Color.label

@@ -123,7 +123,7 @@ private func getArchiveData<T: Codable>(_ defaultValue: T, key: String) -> T {
 protocol SettingProtocol {
   associatedtype ValueType
 
-  var defaultValue: ValueType { get }
+  var key: String { get }
   var wrappedValue: ValueType { get set }
 }
 

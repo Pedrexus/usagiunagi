@@ -745,6 +745,8 @@ extension ReviewFlowTests {
         } else {
           details.swipeUp(velocity: .slow)
         }
+      } else if towardTop {
+        app.swipeDown()
       } else {
         app.swipeUp()
       }
@@ -873,6 +875,166 @@ extension ReviewFlowTests {
 }
 
 extension ReviewFlowTests {
+  @MainActor private func launchSettings() -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = [
+      "-FASTLANE_SNAPSHOT", "YES", "CatalogFlowFixture", "SettingsFlowFixture",
+      "-reviewItemsLimitEnabled", "NO", "-groupMeaningReading", "NO", "-meaningFirst", "YES",
+      "-ankiMode", "NO", "-ankiModeCombineReadingMeaning", "NO", "-ankiModeTaskType", "1",
+      "-showAllReadings", "NO", "-skipKanjiReadings", "NO", "-showFullAnswer", "NO",
+      "-lessonBatchSize", "5", "-interfaceStyle", "1", "-gravatarCustomEmail", "",
+    ]
+    app.launch()
+    XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 10))
+    app.buttons["app.settings"].tap()
+    XCTAssertTrue(app.buttons["settings.page.lessons"].waitForExistence(timeout: 5))
+    return app
+  }
+  @MainActor private func setSettingsSwitch(
+    _ control: XCUIElement, on: Bool, in app: XCUIApplication
+  ) {
+    scrollTo(control, in: app)
+    if control.frame.maxY > app.frame.maxY - 60 { app.swipeUp(velocity: .slow) }
+    if control.value as? String == (on ? "1" : "0") { return }
+    control.coordinate(withNormalizedOffset: .zero).withOffset(
+      CGVector(dx: control.frame.width - 26, dy: control.frame.height / 2)
+    ).tap()
+    let state = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@", on ? "1" : "0"), object: control)
+    XCTAssertEqual(XCTWaiter.wait(for: [state], timeout: 3), .completed)
+  }
+  @MainActor private func settingsPickerText(_ control: XCUIElement) -> String {
+    ([control.label, control.value as? String ?? ""]
+      + control.staticTexts.allElementsBoundByIndex.map(\.label)).joined(separator: " ")
+  }
+
+  @MainActor func testSettingsLessonChoicesAndReorderingPersistWhenReopened() {
+    continueAfterFailure = false
+    let app = launchSettings()
+    defer { clearFixture(app) }
+    app.buttons["settings.page.lessons"].tap()
+    let batch = app.buttons["settings.lessonBatchSize"]
+    XCTAssertTrue(batch.waitForExistence(timeout: 5))
+    batch.tap()
+    app.buttons["2 lessons"].tap()
+    app.buttons["settings.apprenticeLessonsLimit"].tap()
+    app.buttons["50"].tap()
+    app.buttons["settings.lessonOrderLink"].tap()
+    let handles = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Reorder'"))
+    XCTAssertEqual(handles.count, 3)
+    let nextFirst = handles.element(boundBy: 1).label
+    handles.element(boundBy: 0).press(forDuration: 0.3, thenDragTo: handles.element(boundBy: 2))
+    XCTAssertEqual(handles.firstMatch.label, nextFirst)
+    app.navigationBars.buttons.firstMatch.tap()
+    app.buttons["settings.lessonOrderLink"].tap()
+    XCTAssertEqual(handles.firstMatch.label, nextFirst)
+    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons.firstMatch.tap()
+    app.buttons["settings.page.lessons"].tap()
+    XCTAssertTrue(batch.waitForExistence(timeout: 5))
+    XCTAssertTrue(settingsPickerText(batch).contains("2"), batch.debugDescription)
+    let limit = app.buttons["settings.apprenticeLessonsLimit"]
+    XCTAssertTrue(settingsPickerText(limit).contains("50"), limit.debugDescription)
+    let image = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    image.name = "Native SwiftUI lesson settings"
+    image.lifetime = .keepAlways
+    add(image)
+  }
+
+  @MainActor func testSettingsReviewDependenciesAndDownloadNavigation() {
+    continueAfterFailure = false
+    let app = launchSettings()
+    defer { clearFixture(app) }
+    app.buttons["settings.page.reviews"].tap()
+    let limit = app.buttons["settings.reviewItemsLimit"]
+    XCTAssertFalse(limit.exists)
+    setSettingsSwitch(app.switches["settings.reviewItemsLimitEnabled"], on: true, in: app)
+    XCTAssertTrue(limit.waitForExistence(timeout: 5))
+    limit.tap()
+    app.buttons["10 reviews"].tap()
+    setSettingsSwitch(app.switches["settings.groupMeaningReading"], on: true, in: app)
+    XCTAssertTrue(app.buttons["settings.meaningFirst"].exists)
+    XCTAssertFalse(app.buttons["settings.reviewBatchSize"].exists)
+    setSettingsSwitch(app.switches["settings.groupMeaningReading"], on: false, in: app)
+    XCTAssertTrue(app.buttons["settings.reviewBatchSize"].exists)
+    XCTAssertFalse(app.buttons["settings.meaningFirst"].exists)
+    setSettingsSwitch(app.switches["settings.ankiMode"], on: true, in: app)
+    let tasks = app.buttons["settings.ankiModeTaskType"]
+    scrollTo(tasks, in: app)
+    let combined = app.switches["settings.ankiModeCombineReadingMeaning"]
+    setSettingsSwitch(combined, on: true, in: app)
+    tasks.tap()
+    app.buttons["Reading only"].tap()
+    XCTAssertFalse(combined.exists)
+    tasks.tap()
+    app.buttons["Both"].tap()
+    XCTAssertTrue(combined.waitForExistence(timeout: 5))
+    XCTAssertEqual(combined.value as? String, "0")
+    setSettingsSwitch(app.switches["settings.ankiMode"], on: false, in: app)
+    XCTAssertFalse(tasks.exists)
+    let fonts = app.buttons["reviewSettings.fonts"]
+    scrollTo(fonts, in: app, towardTop: true)
+    fonts.tap()
+    XCTAssertTrue(app.navigationBars["Select Fonts"].waitForExistence(timeout: 5))
+    app.navigationBars["Select Fonts"].buttons.firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Reviews"].waitForExistence(timeout: 5))
+    let audio = app.buttons["settings.offlineAudio"]
+    scrollTo(audio, in: app)
+    audio.tap()
+    XCTAssertTrue(app.navigationBars["Offline Audio"].waitForExistence(timeout: 5))
+    app.navigationBars["Offline Audio"].buttons.firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Reviews"].waitForExistence(timeout: 5))
+  }
+
+  @MainActor func testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation() {
+    continueAfterFailure = false
+    let app = launchSettings()
+    defer { clearFixture(app) }
+    app.buttons["settings.page.appearance"].tap()
+    let style = app.buttons["settings.interfaceStyle"]
+    XCTAssertTrue(style.waitForExistence(timeout: 5))
+    style.tap()
+    app.buttons["Dark"].tap()
+    let email = app.textFields["settings.gravatarCustomEmail"]
+    email.tap()
+    email.typeText("fixture@example.invalid")
+    if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+    XCTAssertTrue(app.switches["settings.notificationsAllReviews"].exists)
+    XCTAssertTrue(app.switches["settings.notificationsBadging"].exists)
+    XCTAssertTrue(app.switches["settings.notificationSounds"].exists)
+    app.navigationBars.buttons.firstMatch.tap()
+    app.buttons["settings.page.appearance"].tap()
+    XCTAssertTrue(email.waitForExistence(timeout: 5))
+    XCTAssertEqual(email.value as? String, "fixture@example.invalid")
+    XCTAssertTrue(settingsPickerText(style).contains("Dark"), style.debugDescription)
+    let image = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    image.name = "Native SwiftUI appearance and notification settings"
+    image.lifetime = .keepAlways
+    add(image)
+    app.navigationBars.buttons.firstMatch.tap()
+    app.buttons["settings.page.subjects"].tap()
+    let readings = app.switches["settings.showAllReadings"]
+    setSettingsSwitch(readings, on: true, in: app)
+    app.navigationBars.buttons.firstMatch.tap()
+    app.buttons["settings.page.subjects"].tap()
+    XCTAssertTrue(readings.waitForExistence(timeout: 5))
+    XCTAssertEqual(readings.value as? String, "1")
+    app.navigationBars.buttons.firstMatch.tap()
+    let developer = app.buttons["settings.developer"]
+    scrollTo(developer, in: app)
+    developer.tap()
+    XCTAssertTrue(app.navigationBars["Developer options"].waitForExistence(timeout: 5))
+    app.navigationBars["Developer options"].buttons.firstMatch.tap()
+    let logout = app.buttons["settings.logout"]
+    scrollTo(logout, in: app)
+    logout.tap()
+    XCTAssertTrue(app.alerts["Log out?"].waitForExistence(timeout: 5))
+    app.alerts["Log out?"].buttons["Cancel"].tap()
+    XCTAssertFalse(app.alerts.firstMatch.exists)
+    app.buttons["settings.back"].tap()
+    XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 5))
+  }
+
   @MainActor private func launchCatalog() -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = [

@@ -44,6 +44,9 @@
          </EnvironmentVariable>
       </EnvironmentVariables>
       <Testables>
+         <TestableReference skipped = "NO">
+            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "A27000000000000000000004" BuildableName = "AppTests.xctest" BlueprintName = "AppTests" ReferencedContainer = "container:Tsurukame.xcodeproj"/>
+         </TestableReference>
          <TestableReference
             skipped = "NO">
             <BuildableReference

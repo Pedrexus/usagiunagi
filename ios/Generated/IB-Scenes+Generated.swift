@@ -12,32 +12,15 @@ import UIKit
 
 // swiftlint:disable explicit_type_interface identifier_name line_length type_body_length type_name
 internal enum StoryboardScene {
-  internal enum AppSettings: StoryboardType {
-    internal static let storyboardName = "AppSettings"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.AppSettingsViewController>(storyboard: Self.self)
-  }
   internal enum LaunchScreen: StoryboardType {
     internal static let storyboardName = "LaunchScreen"
 
     internal static let initialScene = InitialSceneType<UIKit.UIViewController>(storyboard: Self.self)
   }
-  internal enum LessonOrder: StoryboardType {
-    internal static let storyboardName = "LessonOrder"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.LessonOrderViewController>(storyboard: Self.self)
-
-    internal static let uiTableViewControllerB5QPHHTQ = SceneType<Tsurukame.LessonOrderViewController>(storyboard: Self.self, identifier: "UITableViewController-B5Q-PH-hTQ")
-  }
   internal enum LessonPicker: StoryboardType {
     internal static let storyboardName = "LessonPicker"
 
     internal static let initialScene = InitialSceneType<Tsurukame.LessonPickerViewController>(storyboard: Self.self)
-  }
-  internal enum LessonSettings: StoryboardType {
-    internal static let storyboardName = "LessonSettings"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.LessonSettingsViewController>(storyboard: Self.self)
   }
   internal enum Lessons: StoryboardType {
     internal static let storyboardName = "Lessons"
@@ -74,11 +57,6 @@ internal enum StoryboardScene {
 
     internal static let initialScene = InitialSceneType<Tsurukame.ReviewContainerViewController>(storyboard: Self.self)
   }
-  internal enum ReviewSettings: StoryboardType {
-    internal static let storyboardName = "ReviewSettings"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.ReviewSettingsViewController>(storyboard: Self.self)
-  }
   internal enum ReviewSummary: StoryboardType {
     internal static let storyboardName = "ReviewSummary"
 
@@ -108,11 +86,6 @@ internal enum StoryboardScene {
     internal static let storyboardName = "SubjectDetails"
 
     internal static let initialScene = InitialSceneType<Tsurukame.SubjectDetailsViewController>(storyboard: Self.self)
-  }
-  internal enum SubjectDetailsSettings: StoryboardType {
-    internal static let storyboardName = "SubjectDetailsSettings"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.SubjectDetailsSettingsViewController>(storyboard: Self.self)
   }
   internal enum SubjectsByCategory: StoryboardType {
     internal static let storyboardName = "SubjectsByCategory"

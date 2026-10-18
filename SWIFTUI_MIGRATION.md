@@ -50,7 +50,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and rich-deta
 
 | Area | Current implementation | Proposed treatment |
 | --- | --- | --- |
-| Screens and navigation | Mostly Swift + UIKit; 27 tracked storyboards and 7 XIBs across the repository, including launch screens and auxiliary/watch targets | Replace application screens with SwiftUI; remove each obsolete storyboard and generated accessor only after its callers migrate. |
+| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 21 storyboards and 6 XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. | Finish Home/login/download/developer presentation and the app shell; remove each obsolete layout/accessor after its callers migrate. |
 | Home and statistics | Custom table models and UIKit drawing; new SwiftUI statistics screen | Native `List`, `Section`, `Label`, `Button`, `TabView`, `NavigationStack`, semantic colors and system fonts. Keep study-specific Japanese font settings. |
 | Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Migrate the remaining legacy upcoming-review drawing with its parent Home screen. |
 | Input | Shared Swift `KanaConverter`, Swift `TKMKanaInput`/`AnswerTextField`, keyboard overrides | Objective-C conversion removed after 86,210 full-string and 11,392 interactive comparisons. Keep the narrow native adapter for selection/composition and later wrap it in `UIViewRepresentable`; physical input-method checks remain open. The review screen now hosts this input through `UIViewRepresentable`. |
@@ -121,7 +121,7 @@ Stopping releases the capture provider so the [analyzer input sequence](https://
 
 Japanese recognition may produce kanji. The panel requires an explicit kana correction before a reading can be submitted; it does not convert recognized kanji into the expected reading or infer a pronunciation score. This limitation may reduce the speed benefit for Japanese answers. Physical-device tests must establish useful accuracy/latency and whether another speech strategy is needed. The shared panel/service compile for Mac, but the Mac app still needs its review workflow before exposing voice input.
 
-## Validation of the iOS 27 slice
+## Recorded iOS 27 validation — 2026-10-17
 
 The iOS and native macOS targets build with Xcode 27. The current suite has 102 shared Swift Testing functions covering curriculum, coverage, account/cache/API behavior, grading and kana, plus all 102 shared tests on iOS and 75 iOS tests for grading adapters, native kana input, existing logic and statistics. Direct legacy comparisons cover 292,880 grade cases, 18,225 edit-distance pairs, 86,210 whole-string kana conversions and 11,392 interactive edits. Manual native Mac checks passed for sample-data loading, chart display, coverage drill-down, opening a subject from a coverage gap, and subject searching. iPhone and iPad Simulator coverage layouts were also inspected. Nine distinct UI flows passed on iPhone (suite plus targeted rerun) and together on iPad: typed session completion, voice transcript/typing fallback, wrong-answer reveal/override, combined Anki, landscape typing, exact-match changes with draft preservation, font-library return, explicit end and wrap-up/stop-wrap-up. Native quick-settings sheets were visually inspected on both devices. The question, rich answer details and voice panels were visually inspected, along with the compact iPhone landscape layout. The session algorithm also matched 960 legacy scenarios across 676,404 state assertions. The upload coordinator also has controlled serialization/lifetime and SQLite in-flight-edit tests; 26 mocked legacy API-client tests validate response handling; eleven shared native-client tests cover typed writes and failures. Rejected reviews remain pending while assignment/conflict reconciliation is unfinished. These checks do not establish full feature parity. No real-account login or review upload was exercised.
 
@@ -622,3 +622,65 @@ Sample mode projects only its explicitly synthetic summary data. Complete Mac le
 audio/fonts, exclusion editing and broad keyboard/accessibility acceptance remain open.
 Coverage and its sources are fully inline and use bundled reference data plus the saved
 snapshot by default. TASKS.md records exact tests and control-helper limitations.
+
+## Native settings and direct app tests — 2026-10-18
+
+The iOS settings tree now uses one typed SwiftUI NavigationStack and native forms.
+Appearance, Gravatar email editing, lesson order/limits, full review settings,
+subject display and logout confirmation no longer assemble UIKit table models.
+Lesson reordering uses List.onMove. Shared ReviewSettingsContent supplies display,
+marking and audio sections to both the quick panel and full settings, with typed
+ViewBuilder additions for the complete iOS options. Existing field-wise review
+preference merging remains the writer; the shared quick panel still preserves drafts.
+
+ArchivedPreference is a temporary DynamicProperty bridge to the existing Setting
+and EnumSetting values. It observes their tiny archived Data values using native
+[AppStorage](https://developer.apple.com/documentation/swiftui/appstorage) and writes
+through the original codec/key. Local invalidation also supports volatile test
+arguments. The protocol exposes only a key and mutable value. No second writable
+preference repository or incompatible UserDefaults migration was introduced.
+
+Notification changes use the async
+[authorization/settings APIs](https://developer.apple.com/documentation/usernotifications/unusernotificationcenter)
+and [badge setter](https://developer.apple.com/documentation/usernotifications/unusernotificationcenter/setbadgecount(_:withcompletionhandler:)).
+A MainActor model serializes prompts, keeps off changes even if clearing a revoked
+badge fails, and resumes the requested preference after returning from system
+Settings. The UI offers an explicit system-settings action for denied permission;
+it does not open that app automatically. Permission/failure/overlap tests inject
+only the three platform operations. Physical prompt/delivery acceptance remains open.
+
+| Audited file/resource | Result |
+| --- | --- |
+| SettingsViewController.swift and its account table classes | Replaced by Features/Settings/SettingsViewController.swift: SwiftUI navigation/form plus a narrow scene/service host. Version copy, feedback, account header and confirmed logout remain. The host gates the outer full-screen back pan when inner SwiftUI navigation is active. |
+| AppSettingsViewController.swift | Replaced by AppearanceSettings.swift; removed manual switches, text-view editing, callback retention and foreground observer. |
+| LessonSettingsViewController.swift and LessonOrderViewController.swift | Replaced by one native lesson settings form and reorderable List. Original raw-enum array writes, batch sizes, apprentice limit, current-level priority and vocabulary controls remain. |
+| ReviewSettingsViewController.swift | Replaced by ReviewSettings.swift and shared sections. Preserved batch/order/wrong-answer choices, conditional back-to-back/Anki controls, combined-mode reset, missing-keyboard guard, font/audio navigation and archived values. |
+| SubjectDetailsSettingsViewController.swift | Replaced by SubjectDisplaySettings.swift; the old blur preference now clearly describes its existing explicit translation reveal behavior. |
+| Five subsidiary settings/order storyboards | Deleted their source/build/resource references and generated factories/segues after moving navigation into SwiftUI. The Settings root is a blank hosting scene for Main's active segue. |
+| SettingChoiceListViewController.swift | Deleted; native typed Pickers replace its only callers. |
+| EditableTextModelItem.swift and AttributedModelItem.swift | Deleted after proving AppSettings was their last consumer; a native email TextField replaces that path. |
+| SettingsTableViewController.swift and TableCards | Retained: developer tools and Home still have active callers. |
+| FontsViewController, OfflineAudioViewController and DeveloperOptionsViewController | Retained behind explicit host actions. These are migration work, not limitations of SwiftUI. Main settings UI does not claim those destinations are already ported. |
+
+The new Swift 6 AppTests target imports the built application with @testable.
+Its first five Swift Testing functions cover notification permission decisions,
+resume/cancel, errors, badge failure and overlap. Importing the app into the old
+Tests target exposed duplicate FMResultSet.Sequence conformances because that
+legacy target recompiles app sources. Keeping new tests in AppTests avoids adding
+another source copy; move old suites there incrementally. Both remain under the
+main shared scheme, and Mainboard's hosted task selects both. XCUITest remains the
+workflow tool. No new package dependency or Python tooling was added.
+
+The audit also found that the three retained legacy celebration switches currently
+have no consumer in the new renderer. MOTION in TASKS.md records this as required
+native-feedback work, including Reduce Motion. Presence of those controls is not
+proof of functional parity. Native Mac full settings, login/account, developer and
+download screens, iOS storage handoff and device checks remain open. Exact results
+and the measured scope of deletions are recorded in TASKS.md.
+
+A sixth direct app test verifies late account notifications after the cache has
+been disconnected. The host now clears its account summary safely instead of
+force-unwrapping a removed client. Latest checkpoint counts supersede the dated
+validation snapshots above: 191 shared functions, 82 hosted app tests, three new
+iPhone settings workflows, eight iPad regression flows and two final iPhone checks.
+See TASKS.md for exact bundles, per-run scope and the open MOTION acceptance item.
