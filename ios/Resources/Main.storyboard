@@ -30,16 +30,12 @@
         <!--WaniKani-->
         <scene sceneID="K7h-9v-EbW">
             <objects>
-                <tableViewController id="xs8-Ja-JLy" customClass="MainWaniKaniTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="insetGrouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" estimatedSectionHeaderHeight="-1" sectionFooterHeight="18" estimatedSectionFooterHeight="-1" id="gyB-v8-wyw">
+                <viewController id="xs8-Ja-JLy" customClass="MainWaniKaniTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="gyB-v8-wyw">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="609"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <connections>
-                            <outlet property="dataSource" destination="xs8-Ja-JLy" id="s0P-eU-a7i"/>
-                            <outlet property="delegate" destination="xs8-Ja-JLy" id="bdY-Vv-2Hb"/>
-                        </connections>
-                    </tableView>
+                    </view>
                     <tabBarItem key="tabBarItem" title="WaniKani" image="wanikani" selectedImage="wanikani" id="Oej-HL-cbr"/>
                     <connections>
                         <segue destination="mNH-9F-QWo" kind="show" identifier="startLessons" id="SqF-uW-Cj4"/>
@@ -56,7 +52,7 @@
                         <segue destination="pOc-Ig-wgQ" kind="show" identifier="startAllLeechReviews" id="LEs-R7-aHH"/>
                         <segue destination="5T5-eW-fQb" kind="show" identifier="showExcluded" id="m1H-uD-W8R"/>
                     </connections>
-                </tableViewController>
+                </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kbL-0E-6LB" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-1145" y="-1081"/>

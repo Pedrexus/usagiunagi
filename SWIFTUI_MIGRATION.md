@@ -50,9 +50,9 @@ No feature was disabled for this audit. UIKit keyboard/composition and navigatio
 
 | Area | Current implementation | Proposed treatment |
 | --- | --- | --- |
-| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 21 storyboards and 6 XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. | Finish Home/login/download/developer presentation and the app shell; remove each obsolete layout/accessor after its callers migrate. |
-| Home and statistics | Custom table models and UIKit drawing; new SwiftUI statistics screen | Native `List`, `Section`, `Label`, `Button`, `TabView`, `NavigationStack`, semantic colors and system fonts. Keep study-specific Japanese font settings. |
-| Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Migrate the remaining legacy upcoming-review drawing with its parent Home screen. |
+| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 20 storyboards and 3 XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. | Finish app-shell ownership, login/account/vacation presentation and native Mac feature parity; remove each remaining layout/accessor after its callers migrate. |
+| Home and statistics | Shared SwiftUI Home and statistics; custom table framework and Home drawing retired | Native `List`, `Section`, `Label`, `Button`, `TabView`, `NavigationStack`, semantic colors and system fonts. Keep study-specific Japanese font settings. |
+| Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Home hourly, level and SRS charts now use Swift Charts too; preserve the native chart accessibility and navigation regressions. |
 | Input | Shared Swift `KanaConverter`, Swift `TKMKanaInput`/`AnswerTextField`, keyboard overrides | Objective-C conversion removed after 86,210 full-string and 11,392 interactive comparisons. Keep the narrow native adapter for selection/composition and later wrap it in `UIViewRepresentable`; physical input-method checks remain open. The review screen now hosts this input through `UIViewRepresentable`. |
 | Grading | Shared Swift `AnswerGrader`/`GradingSubject`/`AnswerDistance`; thin iOS protobuf adapter | Full grader moved into StudyCore; 292,880 grade categories and 18,225 distance results compared with the original. Unicode highlight offsets fixed. Session/voice integration reuses this engine. |
 | Review sessions | Shared Swift `StudySession`, SwiftUI `ReviewScreen` and shared rich subject details, hosted by an iOS repository/navigation adapter | The old review layout, constraints, waves, details table and custom success-animation implementation are removed. Native Mac reviews use the atomic session/outbox boundary. The iOS input and cache/session owner remain temporary adapters; durable restoration/caller cutover and full mode parity remain. |
@@ -89,7 +89,7 @@ Mac reads full study content through URLSession/async-await and commits it in th
 
 | Feature | Swift/SwiftUI outcome | Choice still needed |
 | --- | --- | --- |
-| Home, settings, catalog, review UI, lesson UI | Main review layout is shared SwiftUI; most other iOS screens still await migration | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
+| Home, settings, catalog, review UI, lesson UI | Home, review, lessons, catalog/details, statistics and iOS settings/media/diagnostics render in SwiftUI; root/login/account and native Mac parity remain | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
 | Rich review answer details and font library | Shared SwiftUI presentation behind small iOS navigation/service hosts | Rich details, note/synonym editing and the iOS font library now render in shared SwiftUI. Core Text handles font registration and URLSession handles downloads; these are native services rather than UI exceptions. Native Mac font-library integration remains open. |
 | Forced Japanese keyboard selection and marked-text behavior | Needs a small UIKit text-input adapter until SwiftUI provides equivalent control | Keep the adapter, or accept system-selected keyboard language after explicit input-parity testing. |
 | SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Native reviews use Apple’s SwiftUI WebView with a small HTML image wrapper, disabled scripts and local SVG bytes. No app-owned UIKit/AppKit representable is needed. The legacy iOS SVGKit path remains until its callers migrate. |
@@ -828,3 +828,55 @@ shared form, endpoint/snapshot services and main-settings observer: **552 → 42
 physical lines**, 132 fewer. Comments/blank lines are included; tests, Debug
 fixtures, generated and third-party code are excluded. TASKS.md contains the
 current verdicts and explicit limits.
+
+### Home file-by-file audit and table retirement — 2026-10-18
+
+This checkpoint replaces Home presentation while preserving its study queues and the
+existing navigation/sync owners. It does not complete the app shell or native Mac
+feature parity. The final Mainboard checks and exact test bundles are in TASKS.md.
+
+| File | Decision and replacement |
+| --- | --- |
+| ios/MainWaniKaniTabViewController.swift | Retired root table controller. Features/Home/MainWaniKaniTabViewController.swift hosts the shared SwiftUI view; original prepare/queue/sorting/batch/practice/keyboard/segue methods are unchanged apart from formatting. |
+| StudyKit/Sources/StudyUI/Home/HomeDashboardView.swift | Shared native List, study controls, forecast/level/SRS plots, counts and typed HomeAction callbacks. Uses system controls/fonts/SF Symbols and existing subject colors; accessibility exposes counts and the forecast button. Compiles on native macOS; its Mac app entry point remains separate work. |
+| StudyKit/Sources/StudyCore/StudyLevelProgress.swift | Portable stage classification and count conservation; nil stages remain locked, unstarted stage zero remains lessons, started zero/stages 1–4 remain Apprentice and stages 5–9 are Guru or above. Three Swift Testing functions cover the boundaries and empty groups. |
+| ios/Features/Home/HomeTiming.swift | Consolidates the two formatting helpers and retains all three existing timing calculations unchanged. Predictions are scenarios, not calibrated guarantees. |
+| ios/LevelTimeRemainingItem.swift | Deleted table wrapper after its calculation moved to HomeTiming and its result moved to native labeled content. |
+| ios/Tables/CurrentLevelReviewTimeItem.swift | Deleted table wrapper/duplicate formatter after moving its unchanged calculation to HomeTiming. |
+| ios/Tables/CurrentLevelChartItem.swift | Deleted UIKit chart rows, manual geometry and legacy LevelProgress; shared classification and native stacked BarMarks replace them. |
+| ios/Tables/UpcomingReviewsChartItem.swift | Deleted custom hourly chart drawing/labels/cell. Swift Charts keeps due-now plus the next 23 hourly buckets, accessible summary and full-forecast route. |
+| ios/SRSStageCategoryItem.swift | Deleted table-stage rows and hand-drawn SRS breakdown. Shared plot and native buttons retain category counts/routes and burned practice. |
+| ios/Tables/HomeHeroItem.swift | Deleted the last table adapter and its private SwiftUI action view. Actions now live in HomeDashboardView with the same labels, enablement and callbacks. |
+| ios/Tables/BasicModelItem.swift | Deleted; its final Home rows are native labeled content/buttons. |
+| ios/Tables/ListSeparatorItem.swift | Deleted; no callers remain. Native List sections replace custom separator cells. |
+| ios/Tables/ListSeparatorItem.xib | Deleted after its cell had no callers; resource/project references removed. |
+| ios/Tables/PillModelItem.swift | Deleted; no callers remain. Native controls replace the pill cell machinery and private separator-class lookup. |
+| ios/Tables/PillModelItem.xib | Deleted after its cell had no callers; resource/project references removed. |
+| ios/Tables/TableCards.swift | Deleted; no callers remain. System List sections own backgrounds/corners rather than manual card frames. |
+| ios/Tables/TableModel.swift | Deleted datasource/delegate/cache/filter/mutable-table framework after Home, its final consumer, passed replacement checks. |
+| ios/Tables/TableModelItem.swift | Deleted cell factory/protocol/base class/property wrapper after all consumers retired. |
+| ios/Extensions/UIControl+addAction.swift | Deleted unused closure extension, including its pre-iOS-14 associated-object fallback. The review keyboard's native UIAction overload remains. |
+| ios/Tables/ArtworkManager.swift | Preserved and moved to Features/Catalog/ArtworkManager.swift; SubjectDetailsView still uses it. Retains every artwork mapping, helper and regeneration recipe; removes unused imports. |
+| ios/Features/Catalog/SubjectArtwork.swift | Preserved active SwiftUI artwork consumer. Its project membership moves out of the retired Tables group. |
+| ios/MainViewController.swift | Removes empty table delegate conformance/dead inset code, names refresh callbacks for Home, and drops unreachable pre-iOS-15 navigation branches. Existing sync, watch notifications, profile/header, vacation and lifecycle ownership remain. |
+| ios/Resources/Main.storyboard | Converts only the Home table scene to a plain hosting scene; all 13 Home segues and identities remain. Root/header/tab/login migration is still open. |
+| ios/Tsurukame.xcodeproj/project.pbxproj | Updates host/timing paths; removes audited source/resource/group memberships. The empty Tables group/directory is gone. Remaining source layouts are 20 storyboards and 3 XIBs. |
+| ios/AppStoreScreenshots/ReviewFlowTests.swift | Adds Home counts/availability/plots/rotation/refresh gates and screenshot evidence. Home lookups use stable identifiers; scrolling avoids the floating tab bar. Seven retained study/Coverage workflows pass on each device. |
+| ios/AppStoreScreenshots/Screenshotter.swift | Minimal debug-only empty-queue/vacation fixtures and volatile Apprentice-limit override. Existing saved settings and production account/sync behavior remain. |
+
+The retired Home/table Swift files total 2,080 physical lines, versus 790 for the
+four shared/adapter replacements, including comments: **1,290 fewer lines**. Two
+retired XIBs add 115 removed layout lines. This comparison excludes artwork
+relocation, parent cleanup, tests and documentation; it is not a whole-app LOC
+claim. Caller/project audits are performed through Mainboard before retirement;
+all retained queue/route methods and timing calculation bodies were compared with
+the prior commit. The final retired-symbol/project audit is empty.
+
+UIKit hosting/navigation, the root header, login/account/vacation presentation,
+keyboard/IME and SVG/audio/watch bridges and the iOS legacy writer remain until
+verified replacements are ready. Native Mac Home adoption, complete settings and
+lesson/media parity, calibrated forecasts, real-account/device checks and broad
+accessibility acceptance are still open. Coverage and Sources stay inline and use
+the bundled reference library plus the saved synced account snapshot; the latest
+phone and tablet regressions pass without a reopening modal. No physical installed
+build or airplane-mode check is claimed.

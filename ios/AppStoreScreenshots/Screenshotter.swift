@@ -94,6 +94,10 @@ import WaniKaniAPI
            let data = try? NSKeyedArchiver.archivedData(withRootObject: Settings.lessonOrder.map(\.rawValue), requiringSecureCoding: true) {
           arguments["lessonOrder"] = data
         }
+        if ProcessInfo.processInfo.arguments.contains("HomeLimitFixture"),
+           let data = try? NSKeyedArchiver.archivedData(withRootObject: 0, requiringSecureCoding: true) {
+          arguments["apprenticeLessonsLimit"] = data
+        }
         defaults.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
         if ProcessInfo.processInfo.arguments.contains("ResetUserDefaults") {
           // We're run again after testing finishes to remove the dummy user.
@@ -1304,6 +1308,7 @@ import WaniKaniAPI
     }
 
     override func updateAvailableSubjects() -> (Int, [ReviewComposition]) {
+      if ProcessInfo.processInfo.arguments.contains("HomeEmptyFixture") { return (0, createComposition(0)) }
       if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
         return (getAllAssignments().filter(\.isLessonStage).count, createComposition(0))
       }
@@ -1464,6 +1469,7 @@ import WaniKaniAPI
       var user = TKMUser()
       user.level = 24
       if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") { user.level = 1 }
+      if ProcessInfo.processInfo.arguments.contains("HomeVacationFixture") { user.vacationStartedAt = 50 }
       user.username = "Fred"
       user.maxLevelGrantedBySubscription = 60
       return user

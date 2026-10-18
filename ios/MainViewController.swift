@@ -20,13 +20,13 @@ private let kDefaultProfileImageURL =
   "https://cdn.wanikani.com/default-avatar-300x300-20121121.png"
 private let kProfileImageSize: CGFloat = 80
 
-private let kUpcomingReviewsSection = 1
-
 // The user's Gravatar, or WaniKani's default avatar if they haven't given an email address.
 func currentUserProfileImageURL() -> URL {
-  let email = Settings.gravatarCustomEmail.isEmpty
+  let email =
+    Settings.gravatarCustomEmail.isEmpty
     ? Settings.userEmailAddress : Settings.gravatarCustomEmail
-  return email.isEmpty ? URL(string: kDefaultProfileImageURL)!
+  return email.isEmpty
+    ? URL(string: kDefaultProfileImageURL)!
     : userProfileImageURL(emailAddress: email)
 }
 
@@ -37,12 +37,14 @@ private func userProfileImageURL(emailAddress: String) -> URL {
 
   let size = kProfileImageSize * UIScreen.main.scale
 
-  return URL(string: "https://www.gravatar.com/avatar/\(hash).jpg?s=\(size)&d=\(kDefaultProfileImageURL)")!
+  return URL(
+    string: "https://www.gravatar.com/avatar/\(hash).jpg?s=\(size)&d=\(kDefaultProfileImageURL)")!
 }
 
 class MainViewController: UIViewController, LoginViewControllerDelegate,
   SearchResultViewControllerDelegate,
-  UITableViewDelegate, MainWaniKaniTabViewController.Delegate {
+  MainWaniKaniTabViewController.Delegate
+{
   var services: TKMServices!
 
   @IBOutlet var titleView: MainTitleView!
@@ -84,7 +86,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
 
     updateGradientColors()
     updateHourlyTimer()
-    recreateTableModel()
+    updateHome()
 
     nd.add(name: .lccAvailableItemsChanged) { [weak self] _ in self?.availableItemsChanged() }
     nd.add(name: .lccRecentMistakesCountChanged) { [weak self] _ in self?.availableItemsChanged() }
@@ -108,7 +110,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     headerGradient.colors = [paper, paper]
   }
 
-  private func scheduleTableModelUpdate() {
+  private func scheduleHomeUpdate() {
     if isUpdating {
       return
     }
@@ -117,11 +119,11 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     DispatchQueue.main.async {
       WatchHelper.sharedInstance.updatedData(client: self.services.localCachingClient)
       self.isUpdating = false
-      self.recreateTableModel()
+      self.updateHome()
     }
   }
 
-  private func recreateTableModel() {
+  private func updateHome() {
     updateUserInfo()
 
     tabBarViewController?.update()
@@ -138,14 +140,6 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
 
     navigationController?.isNavigationBarHidden = false
 
-    if #available(iOS 15.0, *) {} else {
-      if let bar = navigationController?.navigationBar {
-        bar.setBackgroundImage(UIImage(), for: .default)
-        bar.shadowImage = UIImage()
-        bar.isTranslucent = true
-      }
-    }
-
     super.viewWillAppear(animated)
   }
 
@@ -155,23 +149,13 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
   }
 
   override func viewWillDisappear(_ animated: Bool) {
-    if #available(iOS 15.0, *) {} else {
-      if let bar = navigationController?.navigationBar {
-        bar.setBackgroundImage(nil, for: .default)
-        bar.shadowImage = nil
-        bar.isTranslucent = false
-      }
-    }
 
     super.viewWillDisappear(animated)
     cancelHourlyTimer()
   }
 
   override func viewDidLayoutSubviews() {
-    updateTableContentInset(animated: false)
-    // Scroll to the very top, including the inset.
-    // TODO:
-    // tableView.contentOffset = CGPoint(x: 0, y: -tableView.contentInset.top)
+    updateVacationVisibility(animated: false)
   }
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -215,15 +199,17 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     cancelHourlyTimer()
 
     let calendar = Calendar.current as NSCalendar
-    let date = calendar
+    let date =
+      calendar
       .nextDate(after: Date(), matching: .minute, value: 0, options: .matchNextTime)!
 
-    hourlyRefreshTimer = Timer.scheduledTimer(withTimeInterval: date.timeIntervalSinceNow,
-                                              repeats: false,
-                                              block: { [weak self] _ in
-                                                guard let self = self else { return }
-                                                self.hourlyTimerExpired()
-                                              })
+    hourlyRefreshTimer = Timer.scheduledTimer(
+      withTimeInterval: date.timeIntervalSinceNow,
+      repeats: false,
+      block: { [weak self] _ in
+        guard let self = self else { return }
+        self.hourlyTimerExpired()
+      })
   }
 
   func cancelHourlyTimer() {
@@ -258,10 +244,11 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     setProgress(progress)
 
     if quick {
-      scheduleTableModelUpdate()
+      scheduleHomeUpdate()
     } else {
       if !progress.isFinished,
-         let overlay = FullRefreshOverlayView(window: view.window!) {
+        let overlay = FullRefreshOverlayView(window: view.window!)
+      {
         syncFuture.finally {
           overlay.hide()
         }
@@ -296,7 +283,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
 
   func availableItemsChanged() {
     if (view?.window) != nil {
-      scheduleTableModelUpdate()
+      scheduleHomeUpdate()
     }
   }
 
@@ -308,27 +295,24 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     guard let user = services.localCachingClient.getUserInfo() else { return }
     let guruKanji = services.localCachingClient.guruKanjiCount
 
-    titleView.update(username: user.username,
-                     level: Int(user.level),
-                     guruKanji: Int(guruKanji),
-                     imageURL: currentUserProfileImageURL())
+    titleView.update(
+      username: user.username,
+      level: Int(user.level),
+      guruKanji: Int(guruKanji),
+      imageURL: currentUserProfileImageURL())
 
-    updateTableContentInset(animated: true)
+    updateVacationVisibility(animated: true)
   }
 
-  func updateTableContentInset(animated: Bool) {
+  func updateVacationVisibility(animated: Bool) {
     guard let user = services.localCachingClient.getUserInfo() else { return }
 
-    var top: CGFloat = 0.0
     var vacationAlpha: CGFloat = 0.0
     if user.hasVacationStartedAt {
-      top += vacationView.frame.height
       vacationAlpha = 1.0
     }
 
     let animations = {
-      // TODO:
-      // self.tableView.contentInset = UIEdgeInsets(top: top, left: 0, bottom: 0, right: 0)
       self.vacationView.alpha = vacationAlpha
     }
     if animated {
@@ -341,7 +325,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
   func srsLevelCountsChanged() {
     if (view?.window) != nil {
       updateUserInfo()
-      scheduleTableModelUpdate()
+      scheduleHomeUpdate()
     }
   }
 
@@ -351,25 +335,34 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     }
     isShowingUnauthorizedAlert = true
 
-    let ac = UIAlertController(title: "Logged out",
-                               message: "Your API token expired, is invalid, or does not have the proper permissions. Please log in again. You won't lose your review progress.\n\nAPI tokens for the \(AppIdentity.name) app cannot be expired and require all of the following permissions: assignments:start, reviews:create, study_materials:create, study_materials:update.",
-                               preferredStyle: .alert)
+    let ac = UIAlertController(
+      title: "Logged out",
+      message:
+        "Your API token expired, is invalid, or does not have the proper permissions. Please log in again. You won't lose your review progress.\n\nAPI tokens for the \(AppIdentity.name) app cannot be expired and require all of the following permissions: assignments:start, reviews:create, study_materials:create, study_materials:update.",
+      preferredStyle: .alert)
 
     if Settings.userApiToken != "" {
-      ac.addAction(UIAlertAction(title: "Manage tokens on WaniKani", style: .default,
-                                 handler: { _ in
-                                   self.loginAgain()
-                                   if let link =
-                                     URL(string: "https://www.wanikani.com/settings/personal_access_tokens#" +
-                                       Settings
-                                       .userApiToken) {
-                                     UIApplication.shared.open(link)
-                                   }
-                                 }))
+      ac.addAction(
+        UIAlertAction(
+          title: "Manage tokens on WaniKani", style: .default,
+          handler: { _ in
+            self.loginAgain()
+            if let link =
+              URL(
+                string: "https://www.wanikani.com/settings/personal_access_tokens#"
+                  + Settings
+                  .userApiToken)
+            {
+              UIApplication.shared.open(link)
+            }
+          }))
     }
-    ac.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-      self.loginAgain()
-    }))
+    ac.addAction(
+      UIAlertAction(
+        title: "OK", style: .default,
+        handler: { _ in
+          self.loginAgain()
+        }))
     present(ac, animated: true, completion: nil)
   }
 

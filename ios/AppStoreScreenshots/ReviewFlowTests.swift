@@ -15,6 +15,93 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor private func attachHomeScreenshot(_ title: String) {
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = title
+    attachment.lifetime = .keepAlways
+    add(attachment)
+  }
+  @MainActor func testHomeProgressCountsChartsAndRefreshSurviveRotation() {
+    continueAfterFailure = false
+    XCUIDevice.shared.orientation = .portrait
+    addTeardownBlock { await MainActor.run { XCUIDevice.shared.orientation = .portrait } }
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "-showPreviousLevelGraph", "NO"]
+    app.launch()
+    defer { clearFixture(app) }
+    let home = app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
+    XCTAssertTrue(home.waitForExistence(timeout: 10))
+    attachHomeScreenshot("SwiftUI Home study actions and forecast")
+    let forecast = app.descendants(matching: .any).matching(identifier: "home.forecast").firstMatch
+    scrollTo(forecast, in: app)
+    XCTAssertTrue(forecast.exists)
+    XCTAssertFalse(app.buttons["Done"].exists)
+    let kanji = app.descendants(matching: .any).matching(identifier: "home.level.24.kanji")
+      .firstMatch
+    scrollTo(kanji, in: app)
+    XCTAssertEqual(kanji.label, "Kanji: 1 of 25 at Guru, 12 in Apprentice, 4 in lessons, 8 locked")
+    attachHomeScreenshot("SwiftUI Home level progress")
+    let burned = app.buttons["home.stage.4"]
+    scrollTo(burned, in: app)
+    XCTAssertTrue(burned.label.contains("2,056"))
+    XCTAssertTrue(app.buttons["home.burned"].exists)
+    attachHomeScreenshot("SwiftUI Home SRS distribution")
+    XCUIDevice.shared.orientation = .landscapeLeft
+    let rotated = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.windows.firstMatch.frame.width > app.windows.firstMatch.frame.height
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [rotated], timeout: 5), .completed)
+    scrollTo(burned, in: app)
+    XCTAssertTrue(burned.isHittable)
+    attachHomeScreenshot("SwiftUI Home landscape SRS distribution")
+    XCUIDevice.shared.orientation = .portrait
+    let reviews = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
+      .firstMatch
+    scrollTo(reviews, in: app, towardTop: true)
+    let availability = reviews.label
+    home.swipeDown(velocity: .slow)
+    XCTAssertTrue(reviews.waitForExistence(timeout: 5))
+    XCTAssertEqual(reviews.label, availability)
+    XCTAssertFalse(app.alerts.firstMatch.exists)
+  }
+
+  @MainActor func testHomeDisablesEmptyStudyQueuesAndHidesVacationActions() {
+    continueAfterFailure = false
+    for fixture in ["HomeEmptyFixture", "HomeLimitFixture", "HomeVacationFixture"] {
+      let app = XCUIApplication()
+      app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", fixture]
+      app.launch()
+      defer { clearFixture(app) }
+      XCTAssertTrue(
+        app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
+          .waitForExistence(timeout: 10))
+      let reviews = app.buttons.matching(
+        NSPredicate(format: "label BEGINSWITH %@", "Start reviews")
+      ).firstMatch
+      let lessons = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Lessons"))
+        .firstMatch
+      let choose = app.buttons["Choose lessons"]
+      if fixture == "HomeVacationFixture" {
+        XCTAssertFalse(reviews.exists)
+        XCTAssertFalse(lessons.exists)
+        XCTAssertFalse(choose.exists)
+        XCTAssertFalse(
+          app.descendants(matching: .any).matching(identifier: "home.forecast").firstMatch.exists)
+        XCTAssertTrue(
+          app.descendants(matching: .any).matching(identifier: "home.level.24.kanji").firstMatch
+            .exists)
+      } else {
+        XCTAssertFalse(lessons.isEnabled)
+        XCTAssertFalse(choose.isEnabled)
+        XCTAssertEqual(reviews.isEnabled, fixture != "HomeEmptyFixture")
+        if fixture == "HomeLimitFixture" {
+          XCTAssertTrue(lessons.label.contains("Apprentice limit reached"))
+        }
+      }
+    }
+  }
+
   @MainActor private func launchDeveloperOptions() -> XCUIApplication {
     let app = launchSettings(extra: ["DeveloperFlowFixture", "AudioFlowFixture"])
     let developer = app.buttons["settings.developer"]
@@ -464,13 +551,13 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testUpcomingReviewsShowsStageAndSubjectCountsAndReturns() throws {
     continueAfterFailure = false
+    XCUIDevice.shared.orientation = .portrait
     let app = XCUIApplication()
     app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES"]
     app.launch()
     defer { clearFixture(app) }
-    let forecast = app.cells.matching(
-      NSPredicate(format: "label BEGINSWITH %@", "Upcoming reviews:")
-    ).firstMatch
+    let forecast = app.descendants(matching: .any).matching(identifier: "home.forecast").firstMatch
+    scrollTo(forecast, in: app)
     XCTAssertTrue(forecast.waitForExistence(timeout: 10))
     let due = try XCTUnwrap(forecast.label.split(separator: ":").last?.split(separator: " ").first)
     forecast.tap()
@@ -756,7 +843,7 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor
   private func startReviews(in app: XCUIApplication) {
-    let table = app.tables.firstMatch
+    let table = app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
     XCTAssertTrue(table.waitForExistence(timeout: 10))
     let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
       .firstMatch
@@ -1122,6 +1209,7 @@ extension ReviewFlowTests {
       if element.exists && element.isHittable { return }
       let details = app.scrollViews["subject.scroll"]
       let form = app.descendants(matching: .any).matching(identifier: "material.form").firstMatch
+      let home = app.collectionViews["home.dashboard"]
       if form.exists && form.isHittable {
         if element.exists && element.frame.midY < form.frame.minY {
           form.swipeDown(velocity: .slow)
@@ -1134,6 +1222,12 @@ extension ReviewFlowTests {
         } else {
           details.swipeUp(velocity: .slow)
         }
+      } else if home.exists && home.isHittable {
+        // Keep drags clear of the floating tab bar, which covers the center in landscape.
+        let down = towardTop || element.exists && element.frame.midY < home.frame.minY
+        let start = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.25 : 0.7))
+        let end = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.7 : 0.25))
+        start.press(forDuration: 0.05, thenDragTo: end)
       } else if towardTop {
         app.swipeDown()
       } else {
@@ -1437,17 +1531,20 @@ extension ReviewFlowTests {
       "-showPreviousLevelGraph", "YES",
     ]
     app.launch()
-    XCTAssertTrue(app.tables.firstMatch.waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
+        .waitForExistence(timeout: 10))
     return app
   }
   @MainActor private func openHomeRow(_ prefix: String, in app: XCUIApplication) {
-    let row = app.cells.containing(.staticText, identifier: prefix).firstMatch
+    let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", prefix)).firstMatch
     for _ in 0..<12 {
       if row.exists && row.isHittable {
         row.tap()
         return
       }
-      app.tables.firstMatch.swipeUp(velocity: .slow)
+      app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch.swipeUp(
+        velocity: .slow)
     }
     let hierarchy = XCTAttachment(string: app.debugDescription)
     hierarchy.name = "Missing home catalog entry"
@@ -1497,7 +1594,8 @@ extension ReviewFlowTests {
     app.buttons["catalog.answers"].tap()
     XCTAssertFalse(second.label.contains("Answers hidden"))
     app.buttons["catalog.back"].tap()
-    XCTAssertTrue(app.tables.firstMatch.exists)
+    XCTAssertTrue(
+      app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch.exists)
   }
 
   @MainActor func testCatalogSearchClearsKanaQueryAndOpensDetails() {
