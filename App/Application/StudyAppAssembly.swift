@@ -1,3 +1,4 @@
+import CoreText
 import StudyCore
 import StudyPersistence
 import StudyUI
@@ -31,6 +32,32 @@ import SwiftUI
     #else
       false
     #endif
+  }
+  static func makeFonts() -> StudyFontLibrary {
+    #if DEBUG
+      if isReviewFixture {
+        let font = CTFontCreateWithName("HiraMinProN-W3" as CFString, 24, nil)
+        let name = CTFontCopyPostScriptName(font) as String
+        let directory = FileManager.default.temporaryDirectory.appending(
+          path: "mac-font-fixture-\(UUID().uuidString)")
+        let catalog = StudyFontCatalog(
+          definitions: [
+            .init(name, "font-ready.ttf", "Installed font fixture", 1024),
+            .init("DownloadFontFixture", "font-download.ttf", "Download font fixture", 1024),
+            .init("MissingFontFixture", "font-failed.ttf", "Failed font fixture", 1024),
+            .init("HeldFontFixture", "font-held.ttf", "Held font fixture", 1024),
+          ], directory: directory, bundledFonts: nil)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [FontFixtureProtocol.self]
+        return StudyFontLibrary(
+          catalog: catalog, preferences: DefaultsStudyFontPreferences(defaults: reviewDefaults),
+          configuration: configuration)
+      }
+    #endif
+    return StudyFontLibrary(
+      catalog: .init(
+        directory: URL.applicationSupportDirectory.appending(path: "TsurukameNative/fonts"),
+        bundledFonts: nil))
   }
   static func makeModel() -> StudyAppModel {
     #if DEBUG

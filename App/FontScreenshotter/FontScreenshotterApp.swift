@@ -1,10 +1,11 @@
 // Copyright David Sansome
 // Licensed under the Apache License, Version 2.0. See LICENSE for terms.
 
+import StudyCore
 import SwiftUI
 
 @main struct FontScreenshotterApp: App {
-  private let loader = FontLoader()
+  private let loader = StudyFontCatalog()
   var body: some Scene {
     WindowGroup {
       ScrollView {
@@ -12,7 +13,7 @@ import SwiftUI
           ForEach(loader.allFonts, id: \.fileName) { font in
             VStack(alignment: .leading, spacing: 8) {
               Text(font.displayName).font(.headline)
-              Text(Font.fontPreviewText).font(.custom(font.fontName, size: 24))
+              Text(StudyFont.previewText).font(.custom(font.fontName, size: 24))
                 .frame(width: 320, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 .accessibilityLabel(font.definition.fontName).accessibilityIdentifier("preview")
             }

@@ -18,6 +18,14 @@ Mac consumes the shared root/model/store. iOS still uses its legacy coordinator/
 
 Put business behavior and screens in Shared. Keep `#if os(...)` at the narrow platform capability edges; prefer layout and availability adaptation inside views. There is one SwiftUI app entry point; the iOS legacy coordinator remains a temporary destination. `App/Platform` contains temporary capability bridges; platform configuration stays in `App/Configuration`. The remaining watch target is a companion, not another phone/Mac app.
 
+## Shared font ownership
+
+`StudyCore.StudyFontCatalog` owns the eight original font definitions, file activation and Japanese glyph checks. `StudyFontLibrary` owns the URLSession downloads, native Progress, cancellation/retry state and selected filenames. One library is injected by the app and survives picker navigation; both platforms use `StudyUI.FontLibraryView`. Font preview assets belong to that UI package once. The FontScreenshotter utility consumes the same catalog.
+
+Font files are validated before cache replacement, then activated at their final file URL through Core Text. Transfer identities prevent a cancelled completion from replacing a newer download. The iOS adapter retains `Settings.selectedFonts` in its existing archived format and the original Documents/fonts location. Native Mac uses a UserDefaults string array and Application Support/TsurukameNative/fonts. The small iOS hosting controller contains no download/catalog business logic; its obsolete font storyboard and loader were removed. Native review selection and gestures use the same glyph-filtered names without clearing an answer draft.
+
+Pronunciation playback, notification/watch integration and the remaining iOS writer/coordinator still need their own parity work. Shared font ownership does not establish complete media parity or change account/grading storage.
+
 ## Bridges still required
 
 - iOS lifecycle, controller presentation and the small remaining storyboard shell are migration work, not a permanent SwiftUI limitation.

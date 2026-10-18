@@ -37,26 +37,24 @@ public struct ReviewSettingsPanel: View {
   }
 
   public var body: some View {
-    NavigationStack {
-      Form {
-        if supportsSessionOptions { StudySessionSettingsContent(options: binding.sessionOptions) }
-        ReviewSettingsContent(
-          preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
-          display: { EmptyView() }, answers: { EmptyView() }, audio: { EmptyView() })
-      }
-      #if os(macOS)
-        .formStyle(.grouped)
-      #endif
-      .navigationTitle(supportsSessionOptions ? "Review settings" : "Quick settings")
-      .onChange(of: sourcePreferences) { _, value in preferences = value }
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
-      .toolbar {
-        if let done {
-          ToolbarItem(placement: .confirmationAction) {
-            Button("Done", action: done).accessibilityIdentifier("reviewSettings.done")
-          }
+    Form {
+      if supportsSessionOptions { StudySessionSettingsContent(options: binding.sessionOptions) }
+      ReviewSettingsContent(
+        preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
+        display: { EmptyView() }, answers: { EmptyView() }, audio: { EmptyView() })
+    }
+    #if os(macOS)
+      .formStyle(.grouped)
+    #endif
+    .navigationTitle(supportsSessionOptions ? "Review settings" : "Quick settings")
+    .onChange(of: sourcePreferences) { _, value in preferences = value }
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
+    .toolbar {
+      if let done {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done", action: done).accessibilityIdentifier("reviewSettings.done")
         }
       }
     }

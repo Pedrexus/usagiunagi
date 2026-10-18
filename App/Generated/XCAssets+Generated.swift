@@ -43,16 +43,6 @@ internal enum Asset {
   internal static let baselineStopBlack24pt = ImageAsset(name: "baseline_stop_black_24pt")
   internal static let baselineVolumeUpBlack24pt = ImageAsset(name: "baseline_volume_up_black_24pt")
   internal static let checkmarkCircle = SymbolAsset(name: "checkmark.circle")
-  internal enum FontPreviews {
-    internal static let armedBanana = ImageAsset(name: "ArmedBanana")
-    internal static let hinaMincho = ImageAsset(name: "Hina Mincho")
-    internal static let hosofuwafont = ImageAsset(name: "Hosofuwafont")
-    internal static let notoSerifJP = ImageAsset(name: "Noto Serif JP")
-    internal static let sawarabiMincho = ImageAsset(name: "Sawarabi Mincho")
-    internal static let dartsFont = ImageAsset(name: "darts font")
-    internal static let nagayamaKai = ImageAsset(name: "nagayama_kai")
-    internal static let santyoumeFont = ImageAsset(name: "santyoume-font")
-  }
   internal static let forward = ImageAsset(name: "forward")
   internal static let goforwardPlus = SymbolAsset(name: "goforward.plus")
   internal static let icArrowForwardWhite = ImageAsset(name: "ic_arrow_forward_white")

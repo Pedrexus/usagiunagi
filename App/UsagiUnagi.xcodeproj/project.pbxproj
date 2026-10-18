@@ -52,7 +52,6 @@
 		63391B5F2779BF56005CDA72 /* LessonSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63391B5E2779BF56005CDA72 /* LessonSettings.swift */; platformFilter = ios; };
 		633AFAE123516BE7004F732F /* SubjectDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633AFAE023516BE7004F732F /* SubjectDetailsView.swift */; platformFilter = ios; };
 		633AFAE62352B6F2004F732F /* VocabularyHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633AFAE52352B6F2004F732F /* VocabularyHighlighter.swift */; platformFilter = ios; };
-		634EB1A121B6BBA400E1831C /* FontLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE4E32D2172576B003A200E /* FontLoader.swift */; };
 		634EB1A321B6BC7000E1831C /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = BB2909A5217FAF8B00B1816F /* fonts */; };
 		6365040D25D7DC8000801C2D /* Settings.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6365040C25D7DC8000801C2D /* Settings.storyboard */; platformFilter = ios; };
 		6365041625D7DDB700801C2D /* Review.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6365041525D7DDB700801C2D /* Review.storyboard */; platformFilter = ios; };
@@ -92,7 +91,6 @@
 		63C4EA662C258BF2003D3C0B /* ReviewSummary.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63C4EA652C258BF2003D3C0B /* ReviewSummary.storyboard */; platformFilter = ios; };
 		63C4EA682C258DF0003D3C0B /* UpcomingReviews.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63C4EA672C258DF0003D3C0B /* UpcomingReviews.storyboard */; platformFilter = ios; };
 		63C4EA6A2C258E0E003D3C0B /* LessonPicker.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63C4EA692C258E0E003D3C0B /* LessonPicker.storyboard */; platformFilter = ios; };
-		63C4EA6C2C258F2C003D3C0B /* SelectFonts.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63C4EA6B2C258F2C003D3C0B /* SelectFonts.storyboard */; platformFilter = ios; };
 		63C4EA702C2598A4003D3C0B /* OfflineAudio.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63C4EA6F2C2598A4003D3C0B /* OfflineAudio.storyboard */; platformFilter = ios; };
 		63C4EA7A2C267C85003D3C0B /* XCAssets+Generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C4EA792C267C85003D3C0B /* XCAssets+Generated.swift */; platformFilter = ios; };
 		63C74C7F25C96F58004F6C99 /* SubjectDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C74C7E25C96F58004F6C99 /* SubjectDelegate.swift */; platformFilter = ios; };
@@ -138,7 +136,7 @@
 		A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27000000000000000000002 /* NotificationPreferencesTests.swift */; };
 		A27100000000000000000001 /* FontLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27100000000000000000002 /* FontLibraryTests.swift */; };
 		A27100000000000000000003 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = BB2909A5217FAF8B00B1816F /* fonts */; };
-		A27100000000000000000004 /* FontFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27100000000000000000005 /* FontFixture.swift */; platformFilter = ios; };
+		A27100000000000000000004 /* FontFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27100000000000000000005 /* FontFixture.swift */; };
 		A27200000000000000000001 /* AudioFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27200000000000000000002 /* AudioFixture.swift */; platformFilter = ios; };
 		A27300000000000000000001 /* DeveloperFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27300000000000000000002 /* DeveloperFixture.swift */; platformFilter = ios; };
 		A27400000000000000000001 /* HomeTiming.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27400000000000000000002 /* HomeTiming.swift */; platformFilter = ios; };
@@ -149,7 +147,6 @@
 		A97D950983A67C19E13A899F /* MacStatisticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */; platformFilter = macos; };
 		B299EA4ED7A417D5A5274D2B /* StudyStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B23E267AB393BA610A4B75B /* StudyStatistics.swift */; };
 		B8046F54DB4F1D8BAF0E4C80 /* LegacyStudyImporterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */; };
-		BBE4E32E2172576B003A200E /* FontLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE4E32D2172576B003A200E /* FontLoader.swift */; platformFilter = ios; };
 		BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 46D1D93DB77B42DE86804E5F /* InfoPlist.strings */; };
 		C87EB1EE32148A9CC8342DFB /* MacLessonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B881D213C2680BC8C542CEEE /* MacLessonTests.swift */; platformFilter = macos; };
 		C904455D2395DBAE001BC48B /* AnswerTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C904455C2395DBAE001BC48B /* AnswerTextField.swift */; platformFilter = ios; };
@@ -167,6 +164,7 @@
 		C970BC0323D262CE001F3735 /* SiriShortcutHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C970BC0223D262CE001F3735 /* SiriShortcutHelper.swift */; platformFilter = ios; };
 		CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */; };
 		D0E1A2B3C4D5E6F708192A3C /* DeveloperOptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1A2B3C4D5E6F708192A3B /* DeveloperOptionsViewController.swift */; platformFilter = ios; };
+		D93CBDFC9204BC20F4D08264 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5F84B9E7F40CE19F2FDE97 /* StudyCore */; };
 		DB40628C93DF452F1307B1EB /* ReviewPreferencesAdapterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60BFEAEFA93214A0B6869BC /* ReviewPreferencesAdapterTest.swift */; };
 		DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */; };
 		E717CA071A89FC8F289F62ED /* Pods_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8305DF23D562F215F9A60905 /* Pods_Tests.framework */; };
@@ -327,7 +325,6 @@
 		63C4EA652C258BF2003D3C0B /* ReviewSummary.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = ReviewSummary.storyboard; sourceTree = "<group>"; };
 		63C4EA672C258DF0003D3C0B /* UpcomingReviews.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = UpcomingReviews.storyboard; sourceTree = "<group>"; };
 		63C4EA692C258E0E003D3C0B /* LessonPicker.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LessonPicker.storyboard; sourceTree = "<group>"; };
-		63C4EA6B2C258F2C003D3C0B /* SelectFonts.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = SelectFonts.storyboard; sourceTree = "<group>"; };
 		63C4EA6F2C2598A4003D3C0B /* OfflineAudio.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = OfflineAudio.storyboard; sourceTree = "<group>"; };
 		63C4EA792C267C85003D3C0B /* XCAssets+Generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "XCAssets+Generated.swift"; sourceTree = "<group>"; };
 		63C74C7E25C96F58004F6C99 /* SubjectDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectDelegate.swift; sourceTree = "<group>"; };
@@ -384,7 +381,6 @@
 		B8DA01B76750F7A065DA04D3 /* Release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Configuration/Release.xcconfig; sourceTree = "<group>"; };
 		BAB1A17A0A21D0379D8E1B2C /* Pods_AppTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_AppTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2909A5217FAF8B00B1816F /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
-		BBE4E32D2172576B003A200E /* FontLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontLoader.swift; sourceTree = "<group>"; };
 		C1BD289C0D84E0099A6BE537 /* TKMKanaInput.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TKMKanaInput.swift; sourceTree = "<group>"; };
 		C904455C2395DBAE001BC48B /* AnswerTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerTextField.swift; sourceTree = "<group>"; };
 		C90846AC237F1C770068A272 /* Tsurukame Complication.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tsurukame Complication.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -447,6 +443,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				63EF56E226060BA70038551A /* WaniKaniAPI in Frameworks */,
+				D93CBDFC9204BC20F4D08264 /* StudyCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -506,7 +503,6 @@
 				63C4EA612C258BCC003D3C0B /* ReviewContainer.storyboard */,
 				63C4EA652C258BF2003D3C0B /* ReviewSummary.storyboard */,
 				63C4EA4F2C257BC4003D3C0B /* SearchResult.storyboard */,
-				63C4EA6B2C258F2C003D3C0B /* SelectFonts.storyboard */,
 				6365040C25D7DC8000801C2D /* Settings.storyboard */,
 				63C4EA572C2587DD003D3C0B /* SubjectCatalogue.storyboard */,
 				63C4EA5D2C25880A003D3C0B /* SubjectDetails.storyboard */,
@@ -560,7 +556,6 @@
 				C90846BC237F1C790068A272 /* ComplicationExtension */,
 				41897D93237228F100F6A0B7 /* Extensions */,
 				639CE0BC2CF0ABCE00902668 /* FeatureFlags.swift */,
-				BBE4E32D2172576B003A200E /* FontLoader.swift */,
 				63C42A2421B6A28D008CA938 /* FontScreenshotter */,
 				63C42A2321B6A28D008CA938 /* FontScreenshotter.app */,
 				4874562C261DD28E00F33AA3 /* FontScreenshotterUITests */,
@@ -840,6 +835,7 @@
 			name = FontScreenshotter;
 			packageProductDependencies = (
 				63EF56E126060BA70038551A /* WaniKaniAPI */,
+				3B5F84B9E7F40CE19F2FDE97 /* StudyCore */,
 			);
 			productName = FontScreenshotter;
 			productReference = 63C42A2321B6A28D008CA938 /* FontScreenshotter.app */;
@@ -1052,7 +1048,6 @@
 				6365041F25D7DE0900801C2D /* Lessons.storyboard in Resources */,
 				6365040D25D7DC8000801C2D /* Settings.storyboard in Resources */,
 				63C4EA702C2598A4003D3C0B /* OfflineAudio.storyboard in Resources */,
-				63C4EA6C2C258F2C003D3C0B /* SelectFonts.storyboard in Resources */,
 				9721708C2DBAF3A6001DFFED /* SubjectsExcluded.storyboard in Resources */,
 				BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */,
 				5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */,
@@ -1268,7 +1263,6 @@
 				633AFAE62352B6F2004F732F /* VocabularyHighlighter.swift in Sources */,
 				631CAD63234AD5FC008CEA73 /* AnswerChecker.swift in Sources */,
 				6335B4E723CF14280071671E /* Screenshotter.swift in Sources */,
-				BBE4E32E2172576B003A200E /* FontLoader.swift in Sources */,
 				630EB13F25C5713000783E54 /* ReviewItem.swift in Sources */,
 				D0E1A2B3C4D5E6F708192A3C /* DeveloperOptionsViewController.swift in Sources */,
 				63EF5752260617E30038551A /* LoginViewController.swift in Sources */,
@@ -1342,7 +1336,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				634EB1A121B6BBA400E1831C /* FontLoader.swift in Sources */,
 				63C42A2621B6A28D008CA938 /* FontScreenshotterApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

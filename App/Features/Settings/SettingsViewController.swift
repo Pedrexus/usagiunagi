@@ -147,8 +147,7 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
       back: { [weak self] in self?.navigationController?.popViewController(animated: true) },
       fonts: { [weak self] in
         guard let self else { return }
-        let controller = StoryboardScene.SelectFonts.initialScene.instantiate()
-        controller.setup(services: services)
+        let controller = FontsViewController(library: services.fontLibrary)
         pushLegacy(controller)
       },
       offlineAudio: { [weak self] in

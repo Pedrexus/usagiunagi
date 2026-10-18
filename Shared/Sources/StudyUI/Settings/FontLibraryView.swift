@@ -1,57 +1,11 @@
 import Foundation
+import StudyCore
 import SwiftUI
 
-public struct StudyFontOption: Identifiable {
-  public let id: String
-  public let title: String
-  public let previewText: String
-  public let fontName: String?
-  public let preview: Image?
-  public let sizeBytes: Int64
-  public let progress: Progress?
-  public let error: String?
-
-  public init(
-    id: String, title: String, previewText: String, fontName: String?, preview: Image?,
-    sizeBytes: Int64, progress: Progress?, error: String?
-  ) {
-    self.id = id
-    self.title = title
-    self.previewText = previewText
-    self.fontName = fontName
-    self.preview = preview
-    self.sizeBytes = sizeBytes
-    self.progress = progress
-    self.error = error
-  }
-}
-
-public enum FontLibraryAction {
-  case download(String)
-  case cancel(String)
-  case select(String, Bool)
-  case deleteAll
-}
-
 public struct FontLibraryView: View {
-  let options: [StudyFontOption]
-  let selected: Set<String>
-  let canDelete: Bool
-  let deletionError: String?
-  let action: (FontLibraryAction) -> Void
+  @Bindable private var library: StudyFontLibrary
   @State private var confirmingDeletion = false
-
-  public init(
-    options: [StudyFontOption], selected: Set<String>, canDelete: Bool, deletionError: String?,
-    action: @escaping (FontLibraryAction) -> Void
-  ) {
-    self.options = options
-    self.selected = selected
-    self.canDelete = canDelete
-    self.deletionError = deletionError
-    self.action = action
-  }
-
+  public init(library: StudyFontLibrary) { self.library = library }
   public var body: some View {
     Form {
       Section {
@@ -60,14 +14,15 @@ public struct FontLibraryView: View {
         )
         .font(.callout).foregroundStyle(.secondary)
       }
-      ForEach(options) { font in
+      ForEach(library.options) { font in
         Section {
           VStack(alignment: .leading, spacing: 12) {
             if font.fontName != nil {
               Toggle(
                 font.title,
                 isOn: Binding(
-                  get: { selected.contains(font.id) }, set: { action(.select(font.id, $0)) })
+                  get: { library.selectedFiles.contains(font.id) },
+                  set: { library.send(.select(font.id, $0)) })
               )
               .accessibilityIdentifier("font.selection.\(font.id)")
             } else {
@@ -75,11 +30,11 @@ public struct FontLibraryView: View {
                 Text(font.title).font(.headline)
                 Spacer()
                 if font.progress != nil {
-                  Button("Cancel", systemImage: "xmark.circle") { action(.cancel(font.id)) }
+                  Button("Cancel", systemImage: "xmark.circle") { library.send(.cancel(font.id)) }
                     .accessibilityIdentifier("font.cancel.\(font.id)")
                 } else {
                   Button(font.error == nil ? "Download" : "Retry", systemImage: "arrow.down.circle")
-                  { action(.download(font.id)) }
+                  { library.send(.download(font.id)) }
                   .accessibilityIdentifier("font.download.\(font.id)")
                 }
               }
@@ -91,8 +46,10 @@ public struct FontLibraryView: View {
             Group {
               if let name = font.fontName {
                 Text(font.previewText).font(.custom(name, size: 24)).lineLimit(2)
-              } else if let preview = font.preview {
-                preview.resizable().renderingMode(.template).scaledToFit()
+              } else if let name = StudyFont.definitions.first(where: { $0.fileName == font.id })?
+                .fontName
+              {
+                Image(name, bundle: .module).resizable().renderingMode(.template).scaledToFit()
                   .foregroundStyle(.primary).frame(maxHeight: 100)
               }
             }.accessibilityHidden(true)
@@ -107,7 +64,7 @@ public struct FontLibraryView: View {
           }.padding(.vertical, 4).accessibilityElement(children: .contain)
         }
       }
-      if canDelete {
+      if library.canDelete {
         Section {
           Button("Delete all downloaded fonts", systemImage: "trash", role: .destructive) {
             confirmingDeletion = true
@@ -117,7 +74,7 @@ public struct FontLibraryView: View {
             "Delete all downloaded fonts?", isPresented: $confirmingDeletion,
             titleVisibility: .visible
           ) {
-            Button("Delete downloaded fonts", role: .destructive) { action(.deleteAll) }
+            Button("Delete downloaded fonts", role: .destructive) { library.send(.deleteAll) }
           } message: {
             Text(
               "Downloads will stop and your font selection will be cleared. Reviews will use the default Japanese font."
@@ -125,11 +82,11 @@ public struct FontLibraryView: View {
           }
         }
       }
-      if let deletionError { Text(deletionError).foregroundStyle(.red) }
+      if let deletionError = library.deletionError { Text(deletionError).foregroundStyle(.red) }
     }
     #if os(macOS)
       .formStyle(.grouped)
     #endif
-    .navigationTitle("Select Fonts")
+    .navigationTitle("Select Fonts").task { library.reloadSelection() }
   }
 }

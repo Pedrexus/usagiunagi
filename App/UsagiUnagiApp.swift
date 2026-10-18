@@ -1,3 +1,4 @@
+import StudyCore
 import StudyUI
 import SwiftUI
 
@@ -8,6 +9,7 @@ struct UsagiUnagiApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
   #else
     @State private var model = StudyAppAssembly.makeModel()
+    @State private var fonts = StudyAppAssembly.makeFonts()
   #endif
 
   var body: some Scene {
@@ -19,6 +21,7 @@ struct UsagiUnagiApp: App {
           model: model, appName: AppIdentity.name, appearance: StudyAppAssembly.appearance,
           notice: StudyAppAssembly.notice
         )
+        .environment(fonts)
         .defaultAppStorage(StudyAppAssembly.reviewDefaults)
         .frame(minWidth: 640, minHeight: 500)
         .task {

@@ -66,11 +66,6 @@ internal enum StoryboardScene {
 
     internal static let initialScene = InitialSceneType<Tsurukame.SearchResultViewController>(storyboard: Self.self)
   }
-  internal enum SelectFonts: StoryboardType {
-    internal static let storyboardName = "SelectFonts"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.FontsViewController>(storyboard: Self.self)
-  }
   internal enum Settings: StoryboardType {
     internal static let storyboardName = "Settings"
 

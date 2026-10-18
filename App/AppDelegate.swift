@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import UIKit
 import WaniKaniAPI
 
@@ -37,8 +38,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     application.setMinimumBackgroundFetchInterval(UIApplication.backgroundFetchIntervalMinimum)
     #if DEBUG
       if let (loader, configuration) = Screenshotter.fontFixture() {
-        services = TKMServices(fontLoader: loader, audioDownloads: Screenshotter.audioFixture())
-        services.fontLibrary = FontLibraryModel(loader: loader, configuration: configuration)
+        services = TKMServices(
+          fontLibrary: StudyFontLibrary(
+            catalog: loader, preferences: LegacyFontPreferences(), configuration: configuration),
+          audioDownloads: Screenshotter.audioFixture())
       } else {
         services = TKMServices(audioDownloads: Screenshotter.audioFixture())
       }

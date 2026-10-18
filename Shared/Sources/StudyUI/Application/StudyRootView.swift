@@ -8,11 +8,12 @@ public struct StudyRootView: View {
   private let appName: String
   private let appearance: ColorScheme?
   private let notice: String?
+  @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
   @State private var shell = StudyShellState()
   @State private var tab = StudyTab.home
   @State private var path: StudyDestination?
-  @State private var settingsPath: StudyDestination?
+  @State private var settingsPath: [StudyDestination] = []
   @State private var showSettings = false
   @State private var subject: StudySubject?
   @State private var token = ""
@@ -30,11 +31,11 @@ public struct StudyRootView: View {
       StudyShellView(
         state: shell, search: { path = .search },
         settings: {
-          settingsPath = nil
+          settingsPath = []
           showSettings = true
         },
         signIn: {
-          settingsPath = .account
+          settingsPath = [.account]
           showSettings = true
         },
         manageToken: {
@@ -87,20 +88,26 @@ public struct StudyRootView: View {
       }
       .onChange(of: model.snapshot?.accountID) { _, _ in
         path = nil
-        settingsPath = nil
+        settingsPath = []
         showSettings = false
         subject = nil
         token = ""
         updateHeader()
       }
       .sheet(isPresented: $showSettings) {
-        NavigationStack {
+        NavigationStack(path: $settingsPath) {
           Form {
-            Button("Review settings") { settingsPath = .reviewSettings }
-            Button("Saved work") { settingsPath = .savedWork }
-            Button("WaniKani account") { settingsPath = .account }
+            Button("Review settings") { settingsPath.append(.reviewSettings) }
+            Button("Saved work") { settingsPath.append(.savedWork) }
+            Button("WaniKani account") { settingsPath = [.account] }
           }.formStyle(.grouped).navigationTitle("Settings")
-            .navigationDestination(item: $settingsPath) { value in destination(value) }
+            .navigationDestination(for: StudyDestination.self) { value in
+              destination(value).toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                  Button("Done") { showSettings = false }
+                }
+              }
+            }
             .toolbar {
               ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { showSettings = false }
@@ -129,6 +136,7 @@ public struct StudyRootView: View {
   @ViewBuilder private func destination(_ value: StudyDestination) -> some View {
     switch value {
     case .account: account
+    case .fonts: FontLibraryView(library: fonts)
     case .reviewSettings:
       ReviewSettingsPanel(
         preferences: preferences,
@@ -136,7 +144,8 @@ public struct StudyRootView: View {
           do { try $preferences.applyChanges(from: old, to: new) } catch {
             model.error = error.localizedDescription
           }
-        }, supportsAudio: false, supportsSessionOptions: true, done: { showSettings = false })
+        }, fonts: { settingsPath.append(.fonts) }, supportsAudio: false,
+        supportsSessionOptions: true)
     case .forecast: NativeForecastView(model: model)
     case .reviews, .lessons, .practice, .savedWork, .catalog, .search:
       if let snapshot = model.snapshot, !snapshot.isSample, let accountID = snapshot.accountID,
@@ -180,7 +189,7 @@ public struct StudyRootView: View {
             "Connect and refresh your WaniKani account to study with its saved catalog. Previews do not change your account."
           ))
         Button("Connect account") {
-          settingsPath = .account
+          settingsPath = [.account]
           showSettings = true
         }
       }

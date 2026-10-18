@@ -20,23 +20,28 @@ import WaniKaniAPI
 
 /// Temporary navigation host while the app shell migrates. Settings themselves are SwiftUI.
 class ReviewContainerViewController: UIViewController, ReviewViewControllerDelegate,
-  UIAdaptivePresentationControllerDelegate {
+  UIAdaptivePresentationControllerDelegate
+{
   private var services: TKMServices!
   var reviewVC: ReviewViewController!
 
-  static func practice(services: TKMServices, subject: TKMSubject) -> ReviewContainerViewController {
+  static func practice(services: TKMServices, subject: TKMSubject) -> ReviewContainerViewController
+  {
     var assignment = TKMAssignment()
     assignment.subjectType = subject.subjectType
     let controller = StoryboardScene.ReviewContainer.initialScene.instantiate()
-    controller.setup(services: services, items: [ReviewItem(assignment: assignment, subject: subject)], isPracticeSession: true)
+    controller.setup(
+      services: services, items: [ReviewItem(assignment: assignment, subject: subject)],
+      isPracticeSession: true)
     return controller
   }
 
   func setup(services: TKMServices, items: [ReviewItem], isPracticeSession: Bool = false) {
     self.services = services
     reviewVC = StoryboardScene.Review.initialScene.instantiate()
-    reviewVC.setup(services: services, items: items, showMenuButton: true, showSubjectHistory: true,
-                   delegate: self, isPracticeSession: isPracticeSession)
+    reviewVC.setup(
+      services: services, items: items, showMenuButton: true, showSubjectHistory: true,
+      delegate: self, isPracticeSession: isPracticeSession)
   }
 
   override func viewDidLoad() {
@@ -59,14 +64,15 @@ class ReviewContainerViewController: UIViewController, ReviewViewControllerDeleg
 
   func tappedMenuButton(reviewViewController _: ReviewViewController, menuButton _: UIView) {
     reviewVC.prepareForSettings()
-    let panel = ReviewSettingsPanel(preferences: ReviewPreferencesAdapter.current,
-                                    changed: { [weak self] old, new in
-                                      ReviewPreferencesAdapter.apply(new, replacing: old)
-                                      self?.view.window?.setInterfaceStyle(Settings.interfaceStyle)
-                                      self?.reviewVC.quickSettingsChanged()
-                                    }, fonts: { [weak self] in self?.showFonts() },
-                                    done: { [weak self] in self?.closeSettings() })
-    let host = UIHostingController(rootView: panel)
+    let panel = ReviewSettingsPanel(
+      preferences: ReviewPreferencesAdapter.current,
+      changed: { [weak self] old, new in
+        ReviewPreferencesAdapter.apply(new, replacing: old)
+        self?.view.window?.setInterfaceStyle(Settings.interfaceStyle)
+        self?.reviewVC.quickSettingsChanged()
+      }, fonts: { [weak self] in self?.showFonts() },
+      done: { [weak self] in self?.closeSettings() })
+    let host = UIHostingController(rootView: NavigationStack { panel })
     host.modalPresentationStyle = .formSheet
     host.presentationController?.delegate = self
     present(host, animated: true)
@@ -83,14 +89,14 @@ class ReviewContainerViewController: UIViewController, ReviewViewControllerDeleg
   private func showFonts() {
     dismiss(animated: true) { [weak self] in
       guard let self else { return }
-      let fonts = StoryboardScene.SelectFonts.initialScene.instantiate()
-      fonts.setup(services: self.services)
+      let fonts = FontsViewController(library: self.services.fontLibrary)
       self.navigationController?.pushViewController(fonts, animated: true)
     }
   }
 
   func finishedAllReviewItems(_ reviewViewController: ReviewViewController) {
-    reviewViewController.perform(segue: StoryboardSegue.Review.reviewSummary,
-                                 sender: reviewViewController)
+    reviewViewController.perform(
+      segue: StoryboardSegue.Review.reviewSummary,
+      sender: reviewViewController)
   }
 }

@@ -134,6 +134,73 @@ final class MacReviewModeTests: XCTestCase {
     screenshot.lifetime = .keepAlways
     add(screenshot)
   }
+  func testFontSelectionAndDownloadsPreserveTheReviewDraft() {
+    let app = launch([])
+    defer { app.terminate() }
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    input.click()
+    input.typeText("one")
+    app.buttons["review.settings"].click()
+    let fonts = app.buttons["reviewSettings.fonts"]
+    XCTAssertTrue(fonts.waitForExistence(timeout: 5))
+    fonts.click()
+    let download = app.buttons["font.download.font-download.ttf"]
+    XCTAssertTrue(download.waitForExistence(timeout: 5))
+    download.click()
+    let selection = app.switches["font.selection.font-download.ttf"]
+    XCTAssertTrue(selection.waitForExistence(timeout: 12), app.debugDescription)
+    XCTAssertEqual((selection.value as? NSNumber)?.intValue, 1)
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    screenshot.name = "Shared native font picker"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    let back = app.sheets.firstMatch.buttons["chevron.backward"]
+    XCTAssertTrue(back.waitForExistence(timeout: 5), app.debugDescription)
+    back.click()
+    app.buttons["reviewSettings.done"].click()
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertEqual(input.value as? String, "one")
+    app.buttons["review.settings"].click()
+    app.buttons["reviewSettings.fonts"].click()
+    XCTAssertTrue(selection.waitForExistence(timeout: 5))
+    XCTAssertEqual((selection.value as? NSNumber)?.intValue, 1)
+  }
+  func testFontFailuresCancelAndDeleteAreNativeAndRecoverable() {
+    let app = launch([])
+    defer { app.terminate() }
+    app.buttons["app.settings"].click()
+    app.buttons["Review settings"].click()
+    let fonts = app.buttons["reviewSettings.fonts"]
+    XCTAssertTrue(fonts.waitForExistence(timeout: 5))
+    fonts.click()
+    let held = app.buttons["font.download.font-held.ttf"]
+    XCTAssertTrue(held.waitForExistence(timeout: 5))
+    held.click()
+    app.buttons["font.cancel.font-held.ttf"].click()
+    XCTAssertTrue(held.waitForExistence(timeout: 5))
+    let failed = app.buttons["font.download.font-failed.ttf"]
+    failed.click()
+    XCTAssertTrue(app.staticTexts["font.error.font-failed.ttf"].waitForExistence(timeout: 5))
+    XCTAssertEqual(failed.label, "Retry")
+    app.buttons["font.download.font-download.ttf"].click()
+    let back = app.sheets.firstMatch.buttons["chevron.backward"]
+    XCTAssertTrue(back.waitForExistence(timeout: 5), app.debugDescription)
+    back.click()
+    fonts.click()
+    XCTAssertTrue(app.switches["font.selection.font-download.ttf"].waitForExistence(timeout: 12))
+    let picker = app.sheets.firstMatch.scrollViews.firstMatch
+    let delete = app.buttons["fonts.deleteAll"]
+    for _ in 0..<5 {
+      if delete.isHittable { break }
+      picker.scroll(byDeltaX: 0, deltaY: -300)
+    }
+    delete.click()
+    app.windows.firstMatch.buttons["Delete downloaded fonts"].click()
+    XCTAssertTrue(app.buttons["font.download.font-download.ttf"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.switches["font.selection.font-download.ttf"].exists)
+  }
 
 }
 

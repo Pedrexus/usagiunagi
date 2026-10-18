@@ -71,3 +71,11 @@ enum ReviewPreferencesAdapter {
     }
   }
 }
+
+/// Keep the existing iPhone archive until the single-writer migration adopts native preferences.
+@MainActor final class LegacyFontPreferences: StudyFontPreferences {
+  var selectedFiles: Set<String> {
+    get { Settings.selectedFonts }
+    set { Settings.selectedFonts = newValue }
+  }
+}

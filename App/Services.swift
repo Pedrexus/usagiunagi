@@ -19,11 +19,10 @@ import WaniKaniAPI
 
 class TKMServices {
   let reachability: Reachability = .forInternetConnection()
-  let fontLoader: FontLoader
   let legacyAvatars = LegacyAvatarCache(
     directory: URL.cachesDirectory.appending(
       path: "com.hpique.haneke/shared", directoryHint: .isDirectory))
-  @MainActor lazy var fontLibrary = FontLibraryModel(loader: fontLoader)
+  @MainActor let fontLibrary: StudyFontLibrary
 
   private(set) var offlineAudio: OfflineAudio!
   private(set) var audio: Audio!
@@ -32,8 +31,9 @@ class TKMServices {
   var client: WaniKaniAPIClient!
   var localCachingClient: LocalCachingClient!
 
-  @MainActor init(fontLoader: FontLoader = .init(), audioDownloads: StudyAudioDownloads? = nil) {
-    self.fontLoader = fontLoader
+  @MainActor init(fontLibrary: StudyFontLibrary? = nil, audioDownloads: StudyAudioDownloads? = nil)
+  {
+    self.fontLibrary = fontLibrary ?? StudyFontLibrary(preferences: LegacyFontPreferences())
     offlineAudio = OfflineAudio(services: self, downloads: audioDownloads)
     audio = Audio(services: self)
     radicalCharacterImages = RadicalCharacterImages(services: self)

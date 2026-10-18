@@ -24,7 +24,11 @@ public struct NativeReviewView: View {
   @State private var confirmEnd = false
   @State private var readyImage: String?
   @State private var voiceRequest: VoiceAnswerRequest?
+  @Environment(StudyFontLibrary.self) private var fonts
   @State private var settings = false
+  @State private var selectingFonts = false
+  @State private var fontSubjectID: Int64?
+  @State private var customFont = ""
   @State private var fullDetails = false
   @StoredReviewPreferences private var preferences
   @FocusState private var answerFocused: Bool
@@ -140,17 +144,25 @@ public struct NativeReviewView: View {
     }
     .disabled(busy)
     .onChange(of: preferences) { _, _ in applyPreferences() }
+    .onChange(of: fonts.selectedFiles) { _, _ in chooseFont(newSubject: false) }
+    .onChange(of: screen.phase) { _, _ in applyFont() }
     .sheet(
       isPresented: $settings,
-      onDismiss: { answerFocused = screen.phase == .answering && !screen.isAnki }
-    ) {
-      ReviewSettingsPanel(
-        preferences: preferences, changed: savePreferences, supportsAudio: false,
-        supportsSessionOptions: true
-      ) {
-        settings = false
+      onDismiss: {
+        selectingFonts = false
+        answerFocused = screen.phase == .answering && !screen.isAnki
       }
-      .frame(minWidth: 380, minHeight: 460)
+    ) {
+      NavigationStack {
+        ReviewSettingsPanel(
+          preferences: preferences, changed: savePreferences, fonts: { selectingFonts = true },
+          supportsAudio: false,
+          supportsSessionOptions: true
+        ) {
+          settings = false
+        }
+        .navigationDestination(isPresented: $selectingFonts) { FontLibraryView(library: fonts) }
+      }.frame(minWidth: 380, minHeight: 460)
     }
     .confirmationDialog(
       isPractice ? "End practice?" : isLesson ? "End lesson quiz?" : "End review session?",
@@ -216,6 +228,8 @@ public struct NativeReviewView: View {
   private func present(_ value: NativeReviewState) {
     if review?.question != value.question { fullDetails = false }
     review = value
+    let newSubject = fontSubjectID != value.subject?.id
+    fontSubjectID = value.subject?.id
     let session = value.saved.session
     screen.title =
       review?.saved.session.practiceScope?.title ?? (isLesson ? "Lesson quiz" : "Reviews")
@@ -246,6 +260,7 @@ public struct NativeReviewView: View {
     applyPreferences()
     screen.success = nil
     if let success = value.success { screen.recordSuccess(success) }
+    chooseFont(newSubject: newSubject)
     answerFocused = !value.isAnki
   }
   private func change(_ action: NativeReviewAction) {
@@ -340,10 +355,32 @@ public struct NativeReviewView: View {
       voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
     case .focus: answerFocused = true
     case .settings: settings = true
+    case .toggleFont:
+      if screen.canChangeFont {
+        screen.questionFont = screen.questionFont.isEmpty ? customFont : ""
+      }
+    case .nextFont: cycleFont(1)
+    case .previousFont: cycleFont(-1)
     default: break
     }
   }
 
+  private func chooseFont(newSubject: Bool) {
+    let available = fonts.fontNames(for: screen.question)
+    if newSubject || !available.contains(customFont) {
+      customFont = available.randomElement() ?? ""
+    }
+    screen.canChangeFont = !available.isEmpty
+    applyFont()
+  }
+  private func applyFont() { screen.questionFont = screen.phase == .details ? "" : customFont }
+  private func cycleFont(_ offset: Int) {
+    let available = fonts.fontNames(for: screen.question)
+    guard !available.isEmpty else { return }
+    let index = available.firstIndex(of: customFont) ?? 0
+    customFont = available[(index + offset + available.count) % available.count]
+    applyFont()
+  }
   private func savePreferences(_ old: ReviewPreferences, _ new: ReviewPreferences) {
     do { try $preferences.applyChanges(from: old, to: new) } catch {
       self.error = error.localizedDescription

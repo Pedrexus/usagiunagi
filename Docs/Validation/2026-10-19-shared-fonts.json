@@ -1,0 +1,520 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T17:43:17Z",
+  "source_base_commit": "63f2b204a82d33b4a04eae33e4d9205cd677b6cb",
+  "branch": "codex/swiftui-27-curriculum",
+  "status": "Shared font ownership and native picker checkpoint; full modernization remains open",
+  "implementation": {
+    "shared_catalog": "StudyCore.StudyFontCatalog; original eight definitions, final-URL Core Text activation and UTF-16 glyph validation",
+    "shared_owner": "StudyCore.StudyFontLibrary; one app-owned URLSession download queue, Progress, transfer identities and durable selection",
+    "shared_ui": "StudyUI.FontLibraryView with one package-owned preview asset catalog",
+    "native_review": "Mac review settings/font gestures use the shared library and preserve the answer draft",
+    "legacy_compatibility": "iOS Documents/fonts and Settings.selectedFonts archived data retained through a typed adapter",
+    "native_preferences": "UserDefaults string array; Application Support/TsurukameNative/fonts",
+    "deleted": [
+      "App/FontLoader.swift",
+      "App/Resources/SelectFonts.storyboard"
+    ],
+    "platform_bridge": "16-line iOS hosting/navigation controller retained; no font business logic",
+    "ios_writer_changed": false,
+    "pronunciation_playback_migrated": false,
+    "live_wanikani_exercises_or_account_changes": false,
+    "tool_source_changed": false,
+    "pr_created": false,
+    "pushed": false
+  },
+  "source_sha256": {
+    "App/AppDelegate.swift": "7ac2a131a8c90031a529f191fd752a0104131f57d650a29e23b645147a5dc591",
+    "App/AppStoreScreenshots/FontFixture.swift": "0e9f1d8ceb96da3253e9afb88b2b447c7a0f2ddb9c3c04894f9e98222fd560f0",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "a226ba495899accbe411c5dedf2c87b53202ef86da40c9990efb275a89dfb444",
+    "App/AppTests/FontLibraryTests.swift": "7cc020d98c8bf6b00c330011cc222bf287819f2256c45df5b251528ea8681553",
+    "App/Application/StudyAppAssembly.swift": "f0410651f8658d2135eb9615394f41ff9cb0e7376040aee8758e38c5363c2402",
+    "App/Features/Settings/FontsViewController.swift": "7f2fb01dfa09666be2be337ca2e5de25863e045869c9591b6afb815aed23ff97",
+    "App/Features/Settings/SettingsViewController.swift": "216edf0e9073c3a05d029343ab28f214a203cb1afea87044b8b0c994e18dc0a0",
+    "App/FontScreenshotter/FontScreenshotterApp.swift": "258897c7caa304605f8cef97bf08a9af6c9277ace6df0dfa799b8665b12886ce",
+    "App/Generated/IB-Scenes+Generated.swift": "6e099c261089a581667fabe93eb97a6bedc72e1305d7e44ea4a59c9a2db8ffd7",
+    "App/Generated/XCAssets+Generated.swift": "4a789cde2b2e650e25acf3e0eed032dad306f6bbf837f23e31034d48770119b7",
+    "App/ReviewQuickSettings/ReviewContainerViewController.swift": "9e43d448355cd0c57eb998a9ebf9387cb6091e084a6140e09fabc0de64ab6494",
+    "App/ReviewQuickSettings/ReviewPreferencesAdapter.swift": "6c5aa975e512df41968bfc7cd693f03ba1e538772f1d59ec8ea1c121331c8175",
+    "App/ReviewViewController.swift": "90e53e8de52a0f2ac64f6e5ca23c2e47975f9ad4bc2e7b55282a5b741088cbf5",
+    "App/Services.swift": "40e7d848fec66e454195ee09160c1da44fd2bafef9010d29ae3deaf2feed5aa7",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "78c3cc087e25dac17bbe390837eeafa8dbaf6d0c0d60b7d86f137f9d16f69ac7",
+    "App/UsagiUnagiApp.swift": "7a013f33137982951fcf38fb9757a32dc4225323d6662d64412c6fedbd1c077b",
+    "Shared/Package.swift": "9480c9ae66058195914a0fc43f28ec539dfc679ca61eb243b3406652114edede",
+    "Shared/Sources/StudyCore/StudyFontCatalog.swift": "12f15e68eb3d48c286c0235086f503d6a460f0a5584a866bce8964ab833b6786",
+    "Shared/Sources/StudyCore/StudyFontLibrary.swift": "73b5b522e665002a7b9b6e3746e33fdfba1de454ba257483531609a3adb03d42",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "e843285b2dec40e7a72d14053d2e5ea7c640f84951bfcf2ea55058f26d22ea09",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "2d6049fdc3f8a2544052ec53c9683cefdb84b93e29831c5c31b9e5be9fa98352",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/ArmedBanana.imageset/ArmedBanana.png": "1fddc0f5094acfec8221aefbe740f73fa1ac3b5c10fb61ff45c2a1bf4359e561",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/ArmedBanana.imageset/Contents.json": "73d03d9b1ed8d388834edeba42b5afec70e375155eb057330f53281e8b88aa01",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Contents.json": "0fd49ba3c3585c709678e0046a821c3c60685ec7063720d30d3a3448be3a208b",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hina Mincho.imageset/Contents.json": "107b3b2115bc8a629de8164dcb021d7343e8dbd884aee4419f56d025a1e845f3",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hina Mincho.imageset/Hina Mincho.png": "5cf40556582831ce664d843c6485706ab0191cfab5d8d6d218eb3b14b4ecea26",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hosofuwafont.imageset/Contents.json": "a762b12c8224bc97b6b2ba5f44853ae0aa08aab1ec5ada51ba5f863190a0525a",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hosofuwafont.imageset/Hosofuwafont.png": "c5184aec09793001edf4a9becd7882032da7ce067d9d691e29b6273326e558eb",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Noto Serif JP.imageset/Contents.json": "9790c977dd6916a06279e64bfaa2c9af39f6582055990256cc7706dcfc676a2f",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Noto Serif JP.imageset/Noto Serif JP.png": "1340adf09cf865c34eb7c2139cfe0a60e4c60cba8a539fea45b72e182171cb40",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Sawarabi Mincho.imageset/Contents.json": "6edc8e59660cecd4779e1380b65f82908526c6a32e88c1ff08397e7a0d46ff1e",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Sawarabi Mincho.imageset/Sawarabi Mincho.png": "a96447de6b2a98a5bf797981284c97553f3ba40b718da0d9ad65f950a39bc5c2",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/darts font.imageset/Contents.json": "c5208f54ac053ab3f711f0ac13092e84b3d2f74e9247db92f6e0f328c2f6584c",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/darts font.imageset/darts font.png": "6fa089c7e641d4d8046f8314e0f8428c0357a1e5f22581b0eff97cbacb3fc93c",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/nagayama_kai.imageset/Contents.json": "a637a783994ef633247820d27ac1bca3ea8adfc1752539841b9af3f1875174cc",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/nagayama_kai.imageset/nagayama_kai.png": "2a892d0b419300e318d4f9fbf2a3c1e7a91c5ec04648003c5f87856bc587b700",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/santyoume-font.imageset/Contents.json": "a2dcae1cf374c4ee96cc330b67753c4b6ec30be9b02d26f25dbbdffa6112f192",
+    "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/santyoume-font.imageset/santyoume-font.png": "50c3299dbb1e837b2a7876862a61b7c0dd04783cb83257d2a3bc67823e1b7d70",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "a4c11c72bcaced930b39e6bbbc95111ec20f237b48bb9da4b768013b34f9b5fc",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift": "f30b6136de6e155fa2c3783e927bdfd31ef9cbe457f9e1ef0b1127f493763980",
+    "Shared/Sources/StudyUI/Settings/FontLibraryView.swift": "8e3d863d43312fa6badcb9d6ad21df39b0b928f6df280461c82a0794b099ecff",
+    "Shared/Tests/StudyCoreTests/StudyFontLibraryTests.swift": "1c3ceda6b06020ab908676ab8de0fa0574866ac5161d6a1d8f3334bbe9fede22"
+  },
+  "unchanged_moved_preview_resources": [
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/ArmedBanana.imageset/ArmedBanana.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/ArmedBanana.imageset/ArmedBanana.png",
+      "sha256": "1fddc0f5094acfec8221aefbe740f73fa1ac3b5c10fb61ff45c2a1bf4359e561"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/ArmedBanana.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/ArmedBanana.imageset/Contents.json",
+      "sha256": "73d03d9b1ed8d388834edeba42b5afec70e375155eb057330f53281e8b88aa01"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Contents.json",
+      "sha256": "0fd49ba3c3585c709678e0046a821c3c60685ec7063720d30d3a3448be3a208b"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Hina Mincho.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hina Mincho.imageset/Contents.json",
+      "sha256": "107b3b2115bc8a629de8164dcb021d7343e8dbd884aee4419f56d025a1e845f3"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Hina Mincho.imageset/Hina Mincho.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hina Mincho.imageset/Hina Mincho.png",
+      "sha256": "5cf40556582831ce664d843c6485706ab0191cfab5d8d6d218eb3b14b4ecea26"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Hosofuwafont.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hosofuwafont.imageset/Contents.json",
+      "sha256": "a762b12c8224bc97b6b2ba5f44853ae0aa08aab1ec5ada51ba5f863190a0525a"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Hosofuwafont.imageset/Hosofuwafont.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hosofuwafont.imageset/Hosofuwafont.png",
+      "sha256": "c5184aec09793001edf4a9becd7882032da7ce067d9d691e29b6273326e558eb"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Noto Serif JP.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Noto Serif JP.imageset/Contents.json",
+      "sha256": "9790c977dd6916a06279e64bfaa2c9af39f6582055990256cc7706dcfc676a2f"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Noto Serif JP.imageset/Noto Serif JP.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Noto Serif JP.imageset/Noto Serif JP.png",
+      "sha256": "1340adf09cf865c34eb7c2139cfe0a60e4c60cba8a539fea45b72e182171cb40"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Sawarabi Mincho.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Sawarabi Mincho.imageset/Contents.json",
+      "sha256": "6edc8e59660cecd4779e1380b65f82908526c6a32e88c1ff08397e7a0d46ff1e"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/Sawarabi Mincho.imageset/Sawarabi Mincho.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Sawarabi Mincho.imageset/Sawarabi Mincho.png",
+      "sha256": "a96447de6b2a98a5bf797981284c97553f3ba40b718da0d9ad65f950a39bc5c2"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/darts font.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/darts font.imageset/Contents.json",
+      "sha256": "c5208f54ac053ab3f711f0ac13092e84b3d2f74e9247db92f6e0f328c2f6584c"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/darts font.imageset/darts font.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/darts font.imageset/darts font.png",
+      "sha256": "6fa089c7e641d4d8046f8314e0f8428c0357a1e5f22581b0eff97cbacb3fc93c"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/nagayama_kai.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/nagayama_kai.imageset/Contents.json",
+      "sha256": "a637a783994ef633247820d27ac1bca3ea8adfc1752539841b9af3f1875174cc"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/nagayama_kai.imageset/nagayama_kai.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/nagayama_kai.imageset/nagayama_kai.png",
+      "sha256": "2a892d0b419300e318d4f9fbf2a3c1e7a91c5ec04648003c5f87856bc587b700"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/santyoume-font.imageset/Contents.json",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/santyoume-font.imageset/Contents.json",
+      "sha256": "a2dcae1cf374c4ee96cc330b67753c4b6ec30be9b02d26f25dbbdffa6112f192"
+    },
+    {
+      "from": "App/Resources/Assets.xcassets/font-previews/santyoume-font.imageset/santyoume-font.png",
+      "to": "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/santyoume-font.imageset/santyoume-font.png",
+      "sha256": "50c3299dbb1e837b2a7876862a61b7c0dd04783cb83257d2a3bc67823e1b7d70"
+    }
+  ],
+  "validation": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-fonts-final-shared-mac.log",
+      "log_sha256": "fbaa688ae620d9162e361181b70a1f8931d2520e968d796dd427c8b8e00dce5f",
+      "passed": 285,
+      "breakdown": {
+        "core": 144,
+        "persistence": 121,
+        "speech": 6,
+        "application": 14
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-fonts-final-shared-ios.log",
+      "log_sha256": "147db40c2f7cb11c1d9e90af694b3b2bce24836074517faa819347de6f6a82f0",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5ca75ee022e94ee696535dd379d02fb7.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 285,
+        "passedTests": 285,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 412,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "StudyKit-Package · Built with macOS 27.0.1",
+        "finishTime": 1792344808.64,
+        "runtimeWarnings": [],
+        "startTime": 1792344777.286,
+        "statistics": [
+          {
+            "subtitle": "163 test runs",
+            "title": "36 tests ran with dynamic parameters"
+          }
+        ],
+        "title": "Test - StudyKit-Package",
+        "topInsights": [
+          {
+            "category": "Longest Test Runs",
+            "impact": "41% of duration",
+            "text": "1 longest test run with outlier durations exceeding 0.15s (three standard deviations)"
+          }
+        ]
+      }
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-fonts-final-hosted.log",
+      "log_sha256": "f219750dbf05f17a87287afb790612687020747cc3ac901d9d87b90eef627ce6",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0d7a5da4a62d4a878f8d0ae7e8fca1fc.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 88,
+        "passedTests": 88,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 97,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Tsurukame · Built with macOS 27.0.1",
+        "finishTime": 1792344717.999,
+        "runtimeWarnings": [],
+        "startTime": 1792344680.287,
+        "statistics": [
+          {
+            "subtitle": "13 test runs",
+            "title": "4 tests ran with dynamic parameters"
+          }
+        ],
+        "title": "Test - Tsurukame",
+        "topInsights": [
+          {
+            "category": "Longest Test Runs",
+            "impact": "69% of duration",
+            "text": "1 longest test run with outlier durations exceeding 0.09s (three standard deviations)"
+          },
+          {
+            "category": "Longest Test Runs",
+            "impact": "43% of duration",
+            "text": "2 longest test runs with outlier durations exceeding 0.07s (three standard deviations)"
+          }
+        ]
+      }
+    },
+    "native_mac": {
+      "log": "/private/tmp/usagi-fonts-final-mac-ui.log",
+      "log_sha256": "ffc6b2fd5da3eb3a9a9d1f4d3ea044087e189186a1b40a9522d9e12071085730",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a129a39a0e9142c98d3726a10c3eea23.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 11,
+        "passedTests": 11,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "00006040-000649442200801C",
+              "deviceName": "My Mac",
+              "modelName": "Mac mini",
+              "osBuildNumber": "26A434",
+              "osVersion": "27.0.1",
+              "platform": "macOS"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 11,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+        "finishTime": 1792344869.551,
+        "runtimeWarnings": [],
+        "startTime": 1792344680.333,
+        "statistics": [],
+        "title": "Test - UsagiUnagi",
+        "topInsights": []
+      }
+    },
+    "iphone": {
+      "log": "/private/tmp/usagi-fonts-final-phone.log",
+      "log_sha256": "481ff062a52574fc987090ddfb8aad59996f0be3268691535fb4f613128f559c",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d12034f2597349afbfb2a89f5e258d83.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 5,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "ReviewValidation · Built with macOS 27.0.1",
+        "finishTime": 1792345079.574,
+        "runtimeWarnings": [],
+        "startTime": 1792344887.281,
+        "statistics": [],
+        "title": "Test - ReviewValidation",
+        "topInsights": []
+      }
+    },
+    "ipad": {
+      "log": "/private/tmp/usagi-fonts-final-pad.log",
+      "log_sha256": "2f0297984ab04edd354369eb729555a7630e8974acc21d5296a7dadb48b21612",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a29847cf4eb24e9288c24fd240729e66.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+              "deviceName": "iPad Pro 11-inch (M5)",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 5,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "ReviewValidation · Built with macOS 27.0.1",
+        "finishTime": 1792345293.111,
+        "runtimeWarnings": [],
+        "startTime": 1792345109.956,
+        "statistics": [],
+        "title": "Test - ReviewValidation",
+        "topInsights": []
+      }
+    },
+    "font_preview_utility": {
+      "log": "/private/tmp/usagi-fonts-final-previews.log",
+      "log_sha256": "8f17b8179358afc1b0471fde496211f10d5d5174ed356fa540be12141692d909",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-70271f1908d04918a5f7ea83a5112844.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "FontScreenshotter · Built with macOS 27.0.1",
+        "finishTime": 1792345360.89,
+        "runtimeWarnings": [],
+        "startTime": 1792345317.59,
+        "statistics": [],
+        "title": "Test - FontScreenshotter",
+        "topInsights": []
+      }
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-fonts-final-release.log",
+      "log_sha256": "d1ed349c0f579c128e28a9a30627cfb973b01da1b245f0d5740926ca646f9ca6",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-e73650f331be42cd93f0103557491425.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0,
+        "errors": [],
+        "warnings": [],
+        "analyzerWarnings": [],
+        "actionTitle": "Build \"UsagiUnagi\"",
+        "destination": {
+          "architecture": "arm64",
+          "deviceId": "00006040-000649442200801C",
+          "deviceName": "My Mac",
+          "modelName": "Mac mini",
+          "osBuildNumber": "26A434",
+          "osVersion": "27.0.1",
+          "platform": "macOS"
+        },
+        "endTime": 1792344856.353,
+        "startTime": 1792344800.099
+      }
+    },
+    "original_mac_font_registration": {
+      "log": "/private/tmp/usagi-fonts-final-registration.log",
+      "log_sha256": "e850cf4f0b8f2e21f54010fbf4577e7a93596abfa53c2bd9841d1b1487921251",
+      "registered_files": 8,
+      "includes_woff": true
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-shared-fonts-format.log",
+      "changed_swift_files": 24,
+      "owner_annotations_excluded": [
+        "App/AnswerChecker.swift",
+        "App/FullRefreshOverlayView.swift"
+      ]
+    }
+  },
+  "visual_acceptance": {
+    "window_only_screenshot": "/private/tmp/usagi-shared-fonts-images/CC03C911-8B69-48A6-AA6A-E4FAA256E841.png",
+    "sha256": "7724e9450a64dc3dc0d2711b7b44fcb17805b916c3b880943ee407e961af54bd",
+    "result": "Native grouped form, system text, Japanese previews, selected switch and unchanged answer draft visible in app window"
+  },
+  "diagnostics_resolved": [
+    {
+      "log": "/private/tmp/usagi-shared-fonts-hosted.log",
+      "reason": "Swift 5 host evaluated a main-actor default argument outside its initializer; construct the optional injected default inside the main-actor initializer"
+    },
+    {
+      "log": "/private/tmp/usagi-shared-fonts-mac-sheets.log",
+      "reason": "Native Mac confirmation also had a Touch Bar button; scope its selector to the app window"
+    },
+    {
+      "log": "/private/tmp/usagi-shared-fonts-mac-queue.log",
+      "reason": "A native sheet back button is not under a Toolbar accessibility ancestor; selector corrected to the observed sheet hierarchy"
+    },
+    {
+      "reason": "Use actual Japanese PostScript name HiraMinProN-W3 in fixtures; nonexistent name falls back to Helvetica"
+    },
+    {
+      "reason": "Mock URLProtocol serializes cancellation with a mutex at its Foundation callback boundary; production library keeps MainActor ownership"
+    }
+  ],
+  "references": [
+    "https://docs.swift.org/latest/documentation/diagnostics/sending-closure-risks-data-race/",
+    "MacOSX27.0.sdk CoreText/CTFontManager.h: deprecated graphics registration and current file-URL activation"
+  ],
+  "remaining": "Docs/TASKS.md; native pronunciation, platform services, iOS single-writer handoff, physical speech/IME and full-account statistics acceptance remain open",
+  "memory": "AIZK tools unavailable; no AIZK write claimed"
+}

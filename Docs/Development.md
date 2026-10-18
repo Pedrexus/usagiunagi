@@ -16,6 +16,7 @@ From Developer/Projects, use `mainboard run --as-is <task>`:
 | `usagi-test-ui`, `usagi-test-ui-ipad` | Full iPhone/iPad acceptance except host-driven warm links |
 | `usagi-test-warm-links`, `usagi-test-warm-links-ipad` | Actual custom URL delivery into an already running synthetic app |
 | `usagi-build-mac-tests`, `usagi-test-mac` | Compile native Mac UI tests, or execute them |
+| `usagi-font-previews` | Check all eight shared-catalog font previews and PNG attachments |
 
 Focused `usagi-test-*` tasks use the same executor. Each Xcode execution creates a unique `.xcresult` under `.build/Results`, streams native output and preserves native failure/timeout status. Successful test execution also requires actual passing cases. Inspect an exact bundle with `mainboard apple results <path> --json` or `mainboard apple diagnostics <path> --json`. A build-only pass does not establish UI acceptance. Simulator runs sharing a device must run sequentially. Native Mac UI fixtures also ignore saved window restoration through a process-only launch argument; they never clear the real app's saved windows or account data. Run interactive Mac and simulator UI acceptance sequentially. Capture only the app window in Mac screenshots.
 
@@ -48,3 +49,9 @@ App-specific generators are in `Resources/Generators`; the legacy protobuf schem
 CircleCI, upstream Fastlane publishing/signing, unused snapshot capture, Xcode Cloud release notes, obsolete store screenshots and upstream Firebase deployment were retired. Generated Pods/build caches are ignored. Fonts and historical link-association references are retained under Resources/Hosted. Previous result logs/screenshots remain under ignored `.build/Previous`; durable receipts remain in Docs/Validation. No command deploys to the original author's account.
 
 The [levels 1–3 display preview](../Resources/Fixtures/README.md) contains 357 real catalog references read from WaniKani's visible level pages without an API token. Mainboard exported `Resources/Fixtures/free-levels.parquet` with Zstandard; the app reads matching JSON through Foundation. Mac Account → Preview free levels 1–3 opens it offline, with negative local IDs, no assignments/account identity and no uploads. These are display readings/meanings, not full accepted-answer rules, mnemonics or real WaniKani IDs. Complete review/lesson fixtures still require an authorized API catalog. Chrome was returned to the dashboard and no exercises or account changes were made.
+
+## Font acceptance
+
+Shared font tests use isolated preferences/directories and local URLProtocol responses to check activation, glyph filtering, stale completion/cancellation, failure/retry and cache preservation. Hosted iOS tests additionally activate the eight original font files and verify the existing archived selection format. Native UI fixtures use the installed Japanese PostScript name `HiraMinProN-W3`; a nonexistent family name silently falls back to Helvetica on Mac and is not a valid Japanese test font. Fixture networking is local, delayed and cancellable; no live WaniKani exercises are used.
+
+The shared library keeps network work outside UI state and publishes completion on MainActor. The debug URLProtocol fixture uses a mutex for its cancellation flag across the Foundation callback queue; it does not weaken production actor isolation. See the [official Swift sending-closure diagnostic](https://docs.swift.org/latest/documentation/diagnostics/sending-closure-risks-data-race/) and the [font checkpoint receipt](Validation/2026-10-19-shared-fonts.json).

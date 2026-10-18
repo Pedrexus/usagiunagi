@@ -619,20 +619,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
   @objc func playAudio() { if screen.phase == .details { subjectDetails.playAudio() } }
 
   func fontsThatCanRenderText(_ text: String, exclude: [String]?) -> [String] {
-    var availableFonts: [String] = []
-
-    for filename in Settings.selectedFonts {
-      if let font = services.fontLoader.font(fileName: filename) {
-        if let ex = exclude, ex.contains(font.fontName) {
-          continue
-        }
-        if font.canRender(text) {
-          availableFonts.append(font.fontName)
-        }
-      }
-    }
-
-    return availableFonts
+    services.fontLibrary.fontNames(for: text, excluding: exclude ?? [])
   }
 
   func nextCustomFont(thatCanRenderText _: String) -> String? {
