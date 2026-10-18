@@ -53,10 +53,9 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
   private var avatarRequest: URL?
   private var avatarRestoreTask: Task<Void, Never>?
   var searchResultsViewController: SearchResultViewController!
-  private(set) var tabBarViewController: MainTabBarViewController?
+  private(set) var homeViewController: MainWaniKaniTabViewController?
 
   var hourlyRefreshTimer = Timer()
-  var isShowingUnauthorizedAlert = false
   var isUpdating = false
 
   private let nd = NotificationDispatcher()
@@ -71,14 +70,25 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
     let search = StoryboardScene.SearchResult.initialScene.instantiate()
     search.setup(services: services, delegate: self)
     searchResultsViewController = search
-    let tabs = StoryboardScene.Main.mainTabs.instantiate()
-    tabs.setup(services: services, waniKaniTabDelegate: self)
-    tabBarViewController = tabs
+    let home = StoryboardScene.Main.home.instantiate()
+    home.setup(services: services, delegate: self)
+    homeViewController = home
+    let practice =
+      FeatureFlags.showOtherPracticeModes ? StoryboardScene.Main.practice.instantiate() : nil
+    practice?.setup(services: services)
     rootView = MainShellRoot(
-      state: shell, tabs: tabs,
+      state: shell, home: home, practice: practice,
+      statistics: StatisticsViewController(services: services),
       search: { [weak self] in self?.searchButtonTapped() },
-      settings: { [weak self] in self?.settingsButtonTapped() })
-    tabs.loadViewIfNeeded()
+      settings: { [weak self] in self?.settingsButtonTapped() },
+      signIn: { [weak self] in self?.loginAgain() },
+      manageToken: Settings.userApiToken.isEmpty
+        ? nil
+        : { [weak self] in
+          self?.loginAgain()
+          UIApplication.shared.open(
+            URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
+        })
     updateHourlyTimer()
     updateHome()
     nd.add(name: .lccAvailableItemsChanged) { [weak self] _ in self?.availableItemsChanged() }
@@ -119,7 +129,7 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
   private func updateHome() {
     updateUserInfo()
 
-    tabBarViewController?.update()
+    homeViewController?.update()
   }
 
   // MARK: - UIViewController
@@ -275,51 +285,8 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
     }
   }
 
-  func clientIsUnauthorized() {
-    if isShowingUnauthorizedAlert {
-      return
-    }
-    isShowingUnauthorizedAlert = true
-
-    let ac = UIAlertController(
-      title: "Logged out",
-      message:
-        "Your API token expired, is invalid, or does not have the proper permissions. Please log in again. You won't lose your review progress.\n\nAPI tokens for the \(AppIdentity.name) app cannot be expired and require all of the following permissions: assignments:start, reviews:create, study_materials:create, study_materials:update.",
-      preferredStyle: .alert)
-
-    if Settings.userApiToken != "" {
-      ac.addAction(
-        UIAlertAction(
-          title: "Manage tokens on WaniKani", style: .default,
-          handler: { _ in
-            self.loginAgain()
-            if let link =
-              URL(
-                string: "https://www.wanikani.com/settings/personal_access_tokens#"
-                  + Settings
-                  .userApiToken)
-            {
-              UIApplication.shared.open(link)
-            }
-          }))
-    }
-    ac.addAction(
-      UIAlertAction(
-        title: "OK", style: .default,
-        handler: { _ in
-          self.loginAgain()
-        }))
-    present(ac, animated: true, completion: nil)
-  }
-
-  func clientIsHibernating() {
-    if isShowingUnauthorizedAlert {
-      return
-    }
-    isShowingUnauthorizedAlert = true
-
-    present(CommonErrors.getHibernatingAccountAlertController(), animated: true, completion: nil)
-  }
+  func clientIsUnauthorized() { shell.reportAccountIssue(.unauthorized) }
+  func clientIsHibernating() { shell.reportAccountIssue(.hibernating) }
 
   func loginAgain() {
     guard services.localCachingClient.getUserInfo() != nil else {
@@ -335,7 +302,7 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
   func loginComplete() {
     services.localCachingClient.client.updateApiToken(Settings.userApiToken)
     navigationController?.popViewController(animated: true)
-    isShowingUnauthorizedAlert = false
+    shell.accountRestored()
   }
 
   // MARK: - MainWaniKaniTabViewController.Delegate
@@ -354,24 +321,53 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
   }
 }
 
+private enum ShellTab: Hashable {
+  case home, practice, statistics
+  static var initial: Self {
+    #if DEBUG
+      if ProcessInfo.processInfo.arguments.contains("ShowStatistics") { return .statistics }
+    #endif
+    return .home
+  }
+}
+
 struct MainShellRoot: View {
   let state: StudyShellState
-  let tabs: MainTabBarViewController
+  let home: MainWaniKaniTabViewController
+  let practice: MainPracticeTabViewController?
+  let statistics: StatisticsViewController
   let search: () -> Void
   let settings: () -> Void
+  let signIn: () -> Void
+  let manageToken: (() -> Void)?
+  @State private var selection = ShellTab.initial
   var body: some View {
-    StudyShellView(state: state, search: search, settings: settings) {
-      MainShellTabs(controller: tabs)
+    StudyShellView(
+      state: state, search: search, settings: settings, signIn: signIn, manageToken: manageToken
+    ) {
+      TabView(selection: $selection) {
+        Tab("Home", systemImage: "house", value: ShellTab.home) {
+          ShellDestination(controller: home)
+        }
+        if let practice {
+          Tab("Practice", systemImage: "square.and.pencil", value: ShellTab.practice) {
+            ShellDestination(controller: practice)
+          }
+        }
+        Tab("Stats", systemImage: "chart.bar.xaxis", value: ShellTab.statistics) {
+          ShellDestination(controller: statistics)
+        }
+      }
     }.overlay {
       if let progress = state.blockingProgress { FullRefreshOverlayView(progress: progress) }
     }
   }
 }
 
-struct MainShellTabs: UIViewControllerRepresentable {
-  let controller: MainTabBarViewController
-  func makeUIViewController(context: Context) -> MainTabBarViewController { controller }
-  func updateUIViewController(_ controller: MainTabBarViewController, context: Context) {
+private struct ShellDestination<Controller: UIViewController>: UIViewControllerRepresentable {
+  let controller: Controller
+  func makeUIViewController(context: Context) -> Controller { controller }
+  func updateUIViewController(_ controller: Controller, context: Context) {
     controller.view.isUserInteractionEnabled = context.environment.isEnabled
   }
 }

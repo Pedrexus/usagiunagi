@@ -50,7 +50,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and navigatio
 
 | Area | Current implementation | Proposed treatment |
 | --- | --- | --- |
-| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 19 storyboards and zero XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. Root header, vacation, login and refresh presentation now use SwiftUI. | Finish native navigation/scene ownership, account alerts and native Mac feature parity; remove each remaining layout/accessor after its callers migrate. |
+| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 19 storyboards and zero XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. Root header, tabs, vacation, login, account alerts and refresh presentation now use SwiftUI. | Finish root/detail navigation and scene ownership plus native Mac feature parity; remove each remaining layout/accessor after its callers migrate. |
 | Home and statistics | Shared SwiftUI Home and statistics; custom table framework and Home drawing retired | Native `List`, `Section`, `Label`, `Button`, `TabView`, `NavigationStack`, semantic colors and system fonts. Keep study-specific Japanese font settings. |
 | Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Home hourly, level and SRS charts now use Swift Charts too; preserve the native chart accessibility and navigation regressions. |
 | Input | Shared Swift `KanaConverter`, Swift `TKMKanaInput`/`AnswerTextField`, keyboard overrides | Objective-C conversion removed after 86,210 full-string and 11,392 interactive comparisons. Keep the narrow native adapter for selection/composition and later wrap it in `UIViewRepresentable`; physical input-method checks remain open. The review screen now hosts this input through `UIViewRepresentable`. |
@@ -980,3 +980,45 @@ Apple references checked for this migration:
 [submit labels](https://developer.apple.com/documentation/swiftui/view/submitlabel(_:)).
 Only primary Apple documentation was used for API decisions. Exact test bundles,
 remaining limitations and source/retirement inventories are in TASKS.md.
+
+## Native tabs and account alerts audit (2026-10-18)
+
+Home/Practice/Stats presentation now belongs to typed SwiftUI TabView/Tab values.
+The remaining UIKit representable carries existing study/navigation adapters;
+it does not preserve an app-owned UITabBarController or activate another writer.
+The current inventory is **19 storyboards / zero XIBs**.
+
+| File or asset | Decision and verification |
+| --- | --- |
+| StudyUI/Home/StudyShellView.swift | Adds observable account-warning gating and native SwiftUI alerts. Consumed warnings stay dismissed until accepted reauthentication; a covered Home defers warnings, preserving the active review draft. Existing Foundation.Progress ownership remains. |
+| ios/Features/Home/MainViewController.swift | Owns typed native tabs and retained adapter instances. Preserves feature-flag visibility and Debug Stats startup. Replaces UIKit account alerts with shared state; token management opens a credential-free static URL. Existing lifecycle/sync/queues remain. |
+| ios/MainTabBarViewController.swift | Deleted only after native tabs/practice/Coverage/account workflows passed. No live consumer remains. |
+| ios/CommonErrors.swift | Deleted after shared hibernation presentation and website action replaced its final caller. |
+| ios/Features/Home/MainWaniKaniTabViewController.swift | Entire existing Home/queue/lesson/review/catalog/keyboard implementation remains byte-for-byte unchanged. No production routing experiment remains. |
+| ios/MainPracticeTabViewController.swift → Features/Practice/MainPracticeTabViewController.swift | Physical relocation only; full file remains byte-for-byte unchanged. Practice still uses its existing subject creation and grading setup. |
+| ios/StatisticsViewController.swift → Features/Statistics/StatisticsViewController.swift | Preserves read projection, notifications, saved snapshot inputs and subject navigation; removes unused UIKit tab-item assignment and updates the obsolete details comment. |
+| ios/SceneDelegate.swift | Resolves the retained Home adapter directly for existing study links. Cold and real warm review/lesson/subject links pass. UIKit scene/root navigation ownership remains explicit migration work. |
+| ios/Resources/Main.storyboard | Removes old tab-controller scene/relationship items and unused image declarations. Adds typed Home and Practice scene identifiers, preserving all study routes. |
+| Generated IB/asset accessors and project | SwiftGen regenerates typed Home/Practice factories and removes unused image symbols. Project removes retired files and records the two feature-folder paths. |
+| Assets.xcassets/wanikani.imageset | Four unused files removed after caller audit; the native Home SF Symbol replaces the tab image. App branding/icon assets remain. |
+| Assets.xcassets/katakana.imageset | Four unused files removed after caller audit; the native Practice SF Symbol replaces the tab image. Study content remains. |
+| ios/AppTests/StudyShellStateTests.swift | Three Swift Testing functions verify duplicate/dismissed-warning suppression, reset after sign-in and independent refresh progress. Final hosted count: 90. |
+| LoginFixture.swift, Screenshotter.swift and login host | Debug-only repeated/deferred synthetic account events and reused mock authentication. Cache clearing stays a no-op, no real account requests/writes. |
+| ReviewFlowTests.swift | Real reauthentication/forced email; deferred warning and unchanged review draft; native tabs/Anki/typing; Coverage tab-state retention; warm/cold routes; Home and study regressions. Native lazy-row/foreground readiness is synchronized explicitly. |
+| tools/TestWarmLinks.swift | Bounded native Swift host runner for real simulator URL delivery to an existing app. Refreshes test-runner container, consumes fresh allowlisted requests and requires all three deliveries. UI tests confirm the OS Open prompt. Run with the two declared Mainboard warm-link tasks, not plain xcodebuild. |
+| validation/2026-10-18-native-tabs.json | Compact durable verdicts and checkpoint source hashes, including the older iPad report captured before Xcode pruned its result bundle. No fabricated result replacement or physical-device claim. |
+
+The checkpoint removes **46 production Swift physical lines** (23,884 → 23,838)
+and two production source files under the same path filters as prior checkpoints.
+Tests, Debug fixtures, tools, vendor/generated/build output and user annotations
+are excluded; the Swift test host is explicitly tooling. App-owned UIKit root and
+detail navigation, scene lifetime, keyboard/IME and active SVG/storage/watch
+bridges remain. Mac parity, calibrated forecasts and physical/accessibility gates
+are still required. No feature was disabled and the full goal is not complete.
+
+Apple references checked: [typed Tab initializer](https://developer.apple.com/documentation/swiftui/tab/init(_:systemimage:value:content:)),
+[tab navigation](https://developer.apple.com/documentation/swiftui/enhancing-your-app-content-with-tab-navigation),
+and [native alert builders](https://developer.apple.com/documentation/swiftui/view/alert(_:ispresented:actions:message:)).
+The installed XCUIApplication header was inspected for launch/open/activate
+semantics; actual warm delivery uses Apple's simulator command and the normal
+system confirmation rather than restarting through the test application's launch API.

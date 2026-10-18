@@ -114,6 +114,9 @@ import WaniKaniAPI
 
     static func createLocalCachingClient(client: WaniKaniAPIClient,
                                          reachability: Reachability) -> LocalCachingClient {
+      if isActive, ProcessInfo.processInfo.arguments.contains("ReauthFlowFixture") {
+        return AccountIssueFixtureCachingClient(client: client, reachability: reachability)
+      }
       if isActive, ProcessInfo.processInfo.arguments.contains("LoginFlowFixture") {
         return LoginFixtureCachingClient(client: client, reachability: reachability)
       }

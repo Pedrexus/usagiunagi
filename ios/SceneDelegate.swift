@@ -127,7 +127,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
   private func findMainWaniKaniTabViewController() -> MainWaniKaniTabViewController? {
     for vc in navigationController.viewControllers {
       if let vc = vc as? MainViewController {
-        return vc.tabBarViewController?.waniKaniViewController
+        return vc.homeViewController
       }
     }
     return nil

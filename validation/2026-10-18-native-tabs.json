@@ -1,0 +1,154 @@
+{
+  "baseline": "e7aa522",
+  "toolchain": "Xcode 27.0 / Swift 6.4",
+  "scope": "Native SwiftUI tabs and account warnings; existing legacy study writer retained",
+  "checks": [
+    {
+      "scope": "home-ipad",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardHomePad/Logs/Test/Test-ReviewValidation-2026.10.18_19-32-45-+0900.xcresult",
+      "result": "Passed",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "home-phone",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-ReviewValidation-2026.10.18_19-35-40-+0900.xcresult",
+      "result": "Passed",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "hosted",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-Tsurukame-2026.10.18_20-07-02-+0900.xcresult",
+      "result": "Passed",
+      "total": 90,
+      "passed": 90,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "ipad-navigation",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardHomePad/Logs/Test/Test-ReviewValidation-2026.10.18_19-22-51-+0900.xcresult",
+      "result": "Passed",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "login-ipad",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardHomePad/Logs/Test/Test-ReviewValidation-2026.10.18_19-39-01-+0900.xcresult",
+      "result": "Passed",
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "login-phone",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-ReviewValidation-2026.10.18_19-41-49-+0900.xcresult",
+      "result": "Passed",
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "phone-navigation",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-ReviewValidation-2026.10.18_19-32-44-+0900.xcresult",
+      "result": "Passed",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "shell-ipad",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardHomePad/Logs/Test/Test-ReviewValidation-2026.10.18_19-36-19-+0900.xcresult",
+      "result": "Passed",
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "shell-phone",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-ReviewValidation-2026.10.18_19-39-15-+0900.xcresult",
+      "result": "Passed",
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "warm-ipad",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardHomePad/Logs/Test/Test-ReviewValidation-2026.10.18_20-04-40-+0900.xcresult",
+      "result": "Passed",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "scope": "warm-phone",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-ReviewValidation-2026.10.18_20-04-38-+0900.xcresult",
+      "result": "Passed",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ]
+    }
+  ],
+  "production_source_sha256_at_checkpoint": {
+    "StudyKit/Sources/StudyUI/Home/StudyShellView.swift": "69eb5dcf67a57b8a84f51b7e29488a12168cd51e63e46cb45f657ae810e54176",
+    "ios/Features/Home/MainViewController.swift": "071482c27bc169b7b9e0af37d7ebf4a2efdb2a7ea0b35dd891d9843146efdf02",
+    "ios/Features/Home/MainWaniKaniTabViewController.swift": "617fafbb8615fe3f4de569fe4d99244b56ff1bedb090f479d958ed9c7eaa7937",
+    "ios/Features/Practice/MainPracticeTabViewController.swift": "dabf3fdbb22f624e8fbf5342db84ca64501bf4e720fc125ca919340aa6d4b296",
+    "ios/Features/Statistics/StatisticsViewController.swift": "b3b0a0e89f54c71b9e816decd0db01c897114137cef3a99ddf5cc8cbd5023d59",
+    "ios/Features/Account/LoginViewController.swift": "14fdbdf409363d03e2a1cce00f76adb4eb5418068ca6c67464d2bc8cbea0b65e",
+    "ios/SceneDelegate.swift": "eeb3192ab8220ac56d113be91cff540cf47e846e00ba5871b7c0b4fa8bb46d61",
+    "ios/Resources/Main.storyboard": "2ab6409856d017d006e92d3b68093d3b7f9d47b781e3378f950cc0aa19c3699c",
+    "ios/Tsurukame.xcodeproj/project.pbxproj": "9ee7e587791173da06a794a4e38d39587b75cf02c8a5f853111ec60d40eb29a5"
+  },
+  "native_mac_build": "/private/tmp/usagi-native-tabs-mac-initial-20261018.log",
+  "limitations": [
+    "Synthetic simulator fixtures; no real-account/physical-device acceptance.",
+    "iPad navigation receipt was captured before Xcode pruned its older bundle.",
+    "Domain/persistence/speech sources unchanged; the prior 222 shared-function gate remains historical evidence.",
+    "UIKit root/detail navigation, SceneDelegate lifecycle and keyboard/IME adapters remain."
+  ],
+  "tooling_source_sha256": {
+    "tools/TestWarmLinks.swift": "3baf1699eb4a4c2bcc17073f9fdb427a4f2dbd5748f21e971bfe1e3e0f03adac"
+  },
+  "mainboard_commits": [
+    "f81031f4c",
+    "ba7bca800"
+  ],
+  "tool_swift6_typecheck": "Passed"
+}

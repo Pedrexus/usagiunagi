@@ -15,6 +15,87 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor private func launchAccountFixture(_ extra: [String]) -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ReauthFlowFixture"] + extra
+    addTeardownBlock { await MainActor.run { self.clearFixture(app) } }
+    app.launch()
+    return app
+  }
+  @MainActor func testAccountExpiryUsesNativeReauthenticationAndPreservesForcedEmail() {
+    continueAfterFailure = false
+    let app = launchAccountFixture([])
+    let warning = app.alerts["Logged out"]
+    XCTAssertTrue(warning.waitForExistence(timeout: 10))
+    XCTAssertTrue(warning.buttons["Manage tokens on WaniKani"].exists)
+    warning.buttons["OK"].tap()
+    XCTAssertTrue(app.secureTextFields["login.token"].waitForExistence(timeout: 5))
+    app.buttons["login.method"].tap()
+    let email = app.textFields["login.email"]
+    XCTAssertEqual(email.value as? String, "dummy")
+    XCTAssertFalse(email.isEnabled)
+    let password = app.secureTextFields["login.password"]
+    password.tap()
+    password.typeText("fixture-password")
+    app.buttons["login.submit"].tap()
+    XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
+    XCTAssertFalse(app.alerts.firstMatch.exists)
+    XCUIDevice.shared.press(.home)
+    app.activate()
+    let settings = app.buttons["app.settings"]
+    let foregroundReady = expectation(
+      for: NSPredicate(format: "hittable == true"), evaluatedWith: settings)
+    wait(for: [foregroundReady], timeout: 5)
+    settings.tap()
+    XCTAssertTrue(app.buttons["settings.back"].waitForExistence(timeout: 5))
+    app.buttons["settings.back"].tap()
+    XCTAssertFalse(app.alerts.firstMatch.exists)
+  }
+
+  @MainActor func testHibernationWarningStaysDismissedAcrossNativeTabChanges() {
+    continueAfterFailure = false
+    let app = launchAccountFixture(["HibernationFixture"])
+    let warning = app.alerts["Account is Hibernating"]
+    XCTAssertTrue(warning.waitForExistence(timeout: 10))
+    XCTAssertTrue(warning.buttons["Open WaniKani Website"].exists)
+    warning.buttons["OK"].tap()
+    for _ in 0..<2 {
+      app.buttons["Stats"].firstMatch.tap()
+      XCTAssertTrue(app.buttons["coverage.system"].exists || app.buttons["Coverage"].exists)
+      app.buttons["Home"].firstMatch.tap()
+      XCTAssertTrue(app.collectionViews["home.dashboard"].exists)
+      XCTAssertFalse(app.alerts.firstMatch.exists)
+    }
+    attachHomeScreenshot("SwiftUI tabs after hibernation warning dismissal")
+  }
+
+  @MainActor func testAccountWarningWaitsForReviewCloseAndKeepsTheAnswerDraft() {
+    continueAfterFailure = false
+    let app = launchAccountFixture([
+      "DeferredAccountIssue", "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
+    ])
+    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
+      .firstMatch
+    XCTAssertTrue(start.waitForExistence(timeout: 5))
+    start.tap()
+    let answer = app.textFields["review.answer"]
+    XCTAssertTrue(answer.waitForExistence(timeout: 5))
+    answer.tap()
+    answer.typeText("hold")
+    let draft = answer.value as? String
+    XCTAssertFalse((draft ?? "").isEmpty)
+    let interrupting = expectation(
+      for: NSPredicate(format: "exists == true"), evaluatedWith: app.alerts["Logged out"])
+    interrupting.isInverted = true
+    wait(for: [interrupting], timeout: 10)
+    XCTAssertEqual(answer.value as? String, draft)
+    XCTAssertTrue(app.buttons["review.submit"].exists)
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(app.alerts["Logged out"].waitForExistence(timeout: 5))
+    app.alerts["Logged out"].buttons["OK"].tap()
+    XCTAssertTrue(app.secureTextFields["login.token"].waitForExistence(timeout: 5))
+  }
+
   @MainActor func testNativeLoginTokenFailuresHibernationAndHomeNavigation() {
     continueAfterFailure = false
     let app = XCUIApplication()
@@ -80,6 +161,46 @@ final class ReviewFlowTests: XCTestCase {
     password.tap()
     password.typeText("\n")
     XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor func testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics() throws {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    addTeardownBlock { await MainActor.run { self.clearFixture(app) } }
+    for route in ["reviews", "lessons", "subject/3864"] {
+      app.terminate()
+      app.launchArguments = [
+        "-FASTLANE_SNAPSHOT", "YES",
+        route == "lessons" ? "LessonFlowFixture" : "SingleReviewFixture",
+        "-playAudioAutomatically", "NO", "-autoSwitchKeyboard", "NO",
+      ]
+      app.launch()
+      XCTAssertTrue(app.buttons["Stats"].firstMatch.waitForExistence(timeout: 10))
+      app.buttons["Stats"].firstMatch.tap()
+      XCTAssertTrue(app.buttons["Coverage"].waitForExistence(timeout: 5))
+      let marker = FileManager.default.temporaryDirectory.appendingPathComponent(
+        "usagi-warm-link.json")
+      let request = ["id": UUID().uuidString, "url": "tsurukame:///" + route]
+      try JSONSerialization.data(withJSONObject: request).write(to: marker, options: .atomic)
+      let open = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Open"]
+        .firstMatch
+      if open.waitForExistence(timeout: 5) { open.tap() }
+
+      switch route {
+      case "reviews":
+        XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
+        app.buttons["review.close"].tap()
+      case "lessons":
+        XCTAssertTrue(app.staticTexts["lesson.position"].waitForExistence(timeout: 10))
+        app.buttons["lesson.back"].tap()
+      default:
+        XCTAssertTrue(app.scrollViews["subject.scroll"].waitForExistence(timeout: 10))
+        app.buttons["subject.back"].tap()
+      }
+      XCTAssertTrue(app.buttons["Coverage"].waitForExistence(timeout: 5))
+      XCTAssertTrue(app.buttons["app.settings"].isHittable)
+      XCTAssertFalse(app.alerts.firstMatch.exists)
+    }
   }
 
   @MainActor func testShellColdReviewLessonAndSubjectLinksReturnToHome() {
@@ -179,6 +300,7 @@ final class ReviewFlowTests: XCTestCase {
     let burned = app.buttons["home.stage.4"]
     scrollTo(burned, in: app)
     XCTAssertTrue(burned.label.contains("2,056"))
+    scrollTo(app.buttons["home.burned"], in: app)
     XCTAssertTrue(app.buttons["home.burned"].exists)
     attachHomeScreenshot("SwiftUI Home SRS distribution")
     XCUIDevice.shared.orientation = .landscapeLeft
@@ -765,7 +887,7 @@ final class ReviewFlowTests: XCTestCase {
       "-playAudioAutomatically", "NO", "-allowSkippingReviews", "NO",
     ]
     app.launch()
-    let tab = app.tabBars.buttons["Practice"]
+    let tab = app.buttons["Practice"].firstMatch
     XCTAssertTrue(tab.waitForExistence(timeout: 10))
     tab.tap()
     XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))

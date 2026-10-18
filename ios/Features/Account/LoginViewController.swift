@@ -53,7 +53,10 @@ final class LoginViewController: UIHostingController<StudySignInView?> {
     -> StudySignInAccount
   {
     #if DEBUG
-      if Screenshotter.isActive, ProcessInfo.processInfo.arguments.contains("LoginFlowFixture") {
+      if Screenshotter.isActive,
+        ["LoginFlowFixture", "ReauthFlowFixture"].contains(
+          where: ProcessInfo.processInfo.arguments.contains)
+      {
         return try await LoginFixture.authenticate(credentials)
       }
     #endif

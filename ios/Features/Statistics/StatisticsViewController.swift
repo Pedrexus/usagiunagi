@@ -18,7 +18,7 @@ import SwiftUI
 import WaniKaniAPI
 
 /// The dashboard and calculations are shared with native macOS. This adapter only reads the
-/// existing cache and routes subject taps into the still-unmigrated details screen.
+/// existing cache and routes subject taps into the shared details screen through its navigation adapter.
 final class StatisticsViewController: UIHostingController<StudyDashboard?> {
   private let services: TKMServices
   private let notifications = NotificationDispatcher()
@@ -27,7 +27,6 @@ final class StatisticsViewController: UIHostingController<StudyDashboard?> {
     self.services = services
     super.init(rootView: nil)
     title = "Statistics"
-    tabBarItem = UITabBarItem(title: "Stats", image: UIImage(systemName: "chart.bar.xaxis"), tag: 2)
   }
 
   @available(*, unavailable)

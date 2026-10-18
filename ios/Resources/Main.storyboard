@@ -9,34 +9,15 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Main Tab Bar View Controller-->
-        <scene sceneID="MFE-sF-fTy">
-            <objects>
-                <tabBarController storyboardIdentifier="MainTabs" id="xk8-G5-91F" customClass="MainTabBarViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
-                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="o7z-vV-Y1y">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="49"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    </tabBar>
-                    <connections>
-                        <segue destination="xs8-Ja-JLy" kind="relationship" relationship="viewControllers" id="DMm-VN-QgW"/>
-                        <segue destination="Spk-nW-GEQ" kind="relationship" relationship="viewControllers" id="C2v-3N-Dfm"/>
-                    </connections>
-                </tabBarController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="LFf-1c-bD9" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="-2207" y="-732"/>
-        </scene>
         <!--WaniKani-->
         <scene sceneID="K7h-9v-EbW">
             <objects>
-                <viewController id="xs8-Ja-JLy" customClass="MainWaniKaniTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Home" id="xs8-Ja-JLy" customClass="MainWaniKaniTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="gyB-v8-wyw">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="609"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="WaniKani" image="wanikani" selectedImage="wanikani" id="Oej-HL-cbr"/>
                     <connections>
                         <segue destination="mNH-9F-QWo" kind="show" identifier="startLessons" id="SqF-uW-Cj4"/>
                         <segue destination="VqN-Fx-mI6" kind="show" identifier="showLessonPicker" id="ax0-g5-78S"/>
@@ -60,12 +41,11 @@
         <!--Practice-->
         <scene sceneID="d6R-Gk-GXK">
             <objects>
-                <viewController id="Spk-nW-GEQ" customClass="MainPracticeTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Practice" id="Spk-nW-GEQ" customClass="MainPracticeTabViewController" customModule="Tsurukame" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="tim-gF-sT3">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="609"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Practice" image="katakana" selectedImage="katakana" id="3ZL-OS-7MD"/>
                     <connections>
                         <segue destination="pOc-Ig-wgQ" kind="show" identifier="katakanaCharacterPractice" id="AxF-9f-jjW"/>
                     </connections>
@@ -188,8 +168,6 @@
     <resources>
         <image name="ic_search_white" width="24" height="24"/>
         <image name="ic_settings_white" width="24" height="24"/>
-        <image name="katakana" width="25" height="25"/>
-        <image name="wanikani" width="25" height="25"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
