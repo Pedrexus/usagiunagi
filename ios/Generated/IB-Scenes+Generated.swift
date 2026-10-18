@@ -36,6 +36,8 @@ internal enum StoryboardScene {
     internal static let storyboardName = "Main"
 
     internal static let initialScene = InitialSceneType<Tsurukame.MainViewController>(storyboard: Self.self)
+
+    internal static let mainTabs = SceneType<Tsurukame.MainTabBarViewController>(storyboard: Self.self, identifier: "MainTabs")
   }
   internal enum Navigation: StoryboardType {
     internal static let storyboardName = "Navigation"

@@ -16,6 +16,7 @@ import CoreSpotlight
 import Foundation
 import Intents
 import MobileCoreServices
+import UIKit
 
 class SiriShortcutHelper: NSObject {
   enum ShortcutType: String {

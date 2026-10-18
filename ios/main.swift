@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import UIKit
 
 private func main() {
   setlocale(LC_CTYPE, "UTF-8")

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import UIKit
 
 extension UIWindow {
   @objc func setInterfaceStyle(_ style: InterfaceStyle) {

@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double Pods_FontScreenshotterVersionNumber;
-FOUNDATION_EXPORT const unsigned char Pods_FontScreenshotterVersionString[];
+FOUNDATION_EXPORT double Pods_AppTestsVersionNumber;
+FOUNDATION_EXPORT const unsigned char Pods_AppTestsVersionString[];
 

@@ -50,7 +50,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and navigatio
 
 | Area | Current implementation | Proposed treatment |
 | --- | --- | --- |
-| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 20 storyboards and 3 XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. | Finish app-shell ownership, login/account/vacation presentation and native Mac feature parity; remove each remaining layout/accessor after its callers migrate. |
+| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 20 storyboards and zero XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. Root header, vacation and refresh presentation now use SwiftUI. | Finish app-shell ownership, login/account/vacation presentation and native Mac feature parity; remove each remaining layout/accessor after its callers migrate. |
 | Home and statistics | Shared SwiftUI Home and statistics; custom table framework and Home drawing retired | Native `List`, `Section`, `Label`, `Button`, `TabView`, `NavigationStack`, semantic colors and system fonts. Keep study-specific Japanese font settings. |
 | Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Home hourly, level and SRS charts now use Swift Charts too; preserve the native chart accessibility and navigation regressions. |
 | Input | Shared Swift `KanaConverter`, Swift `TKMKanaInput`/`AnswerTextField`, keyboard overrides | Objective-C conversion removed after 86,210 full-string and 11,392 interactive comparisons. Keep the narrow native adapter for selection/composition and later wrap it in `UIViewRepresentable`; physical input-method checks remain open. The review screen now hosts this input through `UIViewRepresentable`. |
@@ -59,7 +59,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and navigatio
 | Offline storage | FMDB / SQLite, protobuf blobs, pending review and study-material queues | Full refresh retains offline snapshots until complete responses arrive; revision-aware transaction-level merges protect pending notes and local review progress, including local changes acknowledged while a download is in flight. Additive schema 14/15 migrations preserve existing payloads. Download callbacks honor reset/logout lifetimes. Migrate to a shared SwiftData repository with typed models, actor isolation and explicit transaction boundaries. The production StudyPersistence store verifies atomic session/answer persistence, rollback, conditional acknowledgement, note merges and separate-process recovery. Mac cache callers have switched to it, with a one-time credential-bound JSON importer. The iOS database/callers have not switched yet. SwiftData does not import this legacy schema automatically: validate a one-time import and rollback path before switching callers, then remove FMDB and replaced wrappers. Do not maintain two permanent writable stores. |
 | Async/networking | Shared Swift 6 upload actor; legacy PromiseKit API/downloads, URLSession, Reachability | Immediate/background writes share one process-wide lane and reload current durable payloads. An adapter currently bridges the legacy client to async/await. Replace PromiseKit chains with URLSession async APIs and structured concurrency, deleting the replaced adapter paths. Keep WaniKani-specific response validation, rate-limit handling and account ownership; rejected/ambiguous review reconciliation remains open. Network path status is advisory, not proof a request will succeed. |
 | Review quick settings | Shared SwiftUI form in native iOS/Mac sheets; SwiftUI end/wrap-up confirmation | MMDrawerController, its Objective-C hook and the drawer-specific menu controllers are removed. iOS archived preference keys remain; Mac uses observed AppStorage with field-wise merging. Audio and font-library implementation still await Mac migration. |
-| Images | Haneke cache and SVGKit radical rendering | SwiftUI loads avatars. Native reviews render validated, locally cached SVG bytes through Apple’s SwiftUI WebView. Full offline prefetch, audio and legacy iOS SVGKit removal remain open. |
+| Images | Native URLCache/AsyncImage avatars with a read-only legacy-cache importer; active iOS SVGKit radical rendering | Haneke is removed. SwiftUI loads avatars. Native reviews render validated, locally cached SVG bytes through Apple’s SwiftUI WebView. Full offline prefetch, audio and legacy iOS SVGKit removal remain open. |
 | Text matching | Rexy for POSIX longest-match behavior | Compare matching semantics before replacing it with native Regex. Similar syntax is not proof of equivalent highlighting. |
 | Other languages | Go files/modules and the unused C++ SQLite inspector have been removed; similar-kanji generation now uses Swift. Ruby/Fastlane/build scripts remain. | Replace active runtime/UI callers before removing their infrastructure. Build/distribution tooling and generated output have separate requirements from SwiftUI screens. |
 
@@ -89,7 +89,7 @@ Mac reads full study content through URLSession/async-await and commits it in th
 
 | Feature | Swift/SwiftUI outcome | Choice still needed |
 | --- | --- | --- |
-| Home, settings, catalog, review UI, lesson UI | Home, review, lessons, catalog/details, statistics and iOS settings/media/diagnostics render in SwiftUI; root/login/account and native Mac parity remain | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
+| Home, settings, catalog, review UI, lesson UI | Home, review, lessons, catalog/details, statistics and iOS settings/media/diagnostics render in SwiftUI; tab/navigation/login/account ownership and native Mac parity remain | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
 | Rich review answer details and font library | Shared SwiftUI presentation behind small iOS navigation/service hosts | Rich details, note/synonym editing and the iOS font library now render in shared SwiftUI. Core Text handles font registration and URLSession handles downloads; these are native services rather than UI exceptions. Native Mac font-library integration remains open. |
 | Forced Japanese keyboard selection and marked-text behavior | Needs a small UIKit text-input adapter until SwiftUI provides equivalent control | Keep the adapter, or accept system-selected keyboard language after explicit input-parity testing. |
 | SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Native reviews use Apple’s SwiftUI WebView with a small HTML image wrapper, disabled scripts and local SVG bytes. No app-owned UIKit/AppKit representable is needed. The legacy iOS SVGKit path remains until its callers migrate. |
@@ -880,3 +880,60 @@ accessibility acceptance are still open. Coverage and Sources stay inline and us
 the bundled reference library plus the saved synced account snapshot; the latest
 phone and tablet regressions pass without a reopening modal. No physical installed
 build or airplane-mode check is claimed.
+
+## Native shell and cache retirement audit (2026-10-18)
+
+This supersedes the earlier root/header/vacation and three-XIB inventory entries.
+Presentation is now SwiftUI; the retained tab/scene/navigation and account service
+adapters are still explicit migration work. No feature was disabled. The iOS
+writer/outbox, queue creation and grading remain unchanged.
+
+| File or infrastructure | Decision and validation |
+| --- | --- |
+| StudyUI/Home/StudyShellView.swift | Shared observable profile, native avatar request/cache policy, Search/Settings glass buttons, vacation Link and Foundation.Progress. Avoid parent accessibility identifiers that overwrite child identifiers. |
+| ios/Features/Home/MainViewController.swift | Replacement hosting controller at a feature path. Existing services/timers/watch/account/search callbacks remain; exact client/progress identity controls completion. Consumes the startup route once after actual appearance. Retains UIKit tabs through a narrow representable. |
+| ios/MainViewController.swift | Removed the old root-path implementation after shell/study checks passed. Typed scene identity is preserved. |
+| ios/MainTitleView.swift | Deleted profile/nib/manual-layout wrapper; native shell renders the same account information. |
+| ios/MainTitleView.xib | Deleted after profile replacement passed. |
+| ios/VacationModeView.swift | Deleted custom notice/window-layout wrapper; shared native notice retains the website action and paused study state. |
+| ios/VacationModeView.xib | Deleted after vacation visibility and disabled queues passed. |
+| ios/GradientView.swift | Deleted custom drawing subclass with no callers after title retirement. |
+| ios/FullRefreshOverlayView.swift | Retained path with SwiftUI material/progress presentation. No fixed duration estimate, UIWindow manipulation or nib. Blocking continues after background/foreground until the owned operation settles. |
+| ios/FullRefreshOverlayView.xib | Deleted after native refresh/foreground workflow passed. |
+| ios/PillLabel.swift | Deleted unused custom label; no caller remains after table/title retirement. |
+| ios/Tsurukame-Bridging-Header.h | Deleted along with every bridging-header build setting. Explicit UIKit imports in its former native callers and WatchConnectivity in WatchHelper replace implicit dependency-header exports. |
+| StudyCore/LegacyAvatarCache.swift | Actor imports only a matching escaped/MD5 legacy key with bounded validated PNG/JPEG decoding into native URLCache. Read-only source, native-cache precedence, serialized explicit clear and no study-store access. Historical MD5 is key compatibility only. |
+| StudyCoreTests/LegacyAvatarCacheTests.swift | Four Swift Testing functions cover old names/bytes, newer cache precedence, corrupt/oversized input, explicit clear/import ordering and untouched neighboring study data. Both Mac and iPad shared gates pass. |
+| ios/Services.swift | Owns the importer at the exact historical Haneke shared directory. Native URLCache/AsyncImage owns ongoing downloads. |
+| ios/Extensions/String+SHA256.swift | Replaces CommonCrypto/NSData/unsafe-buffer plumbing with CryptoKit; existing empty/foo digest regressions pass. |
+| StudyUI/Settings/DeveloperSettingsView.swift and its iOS host | Clear is async/throwing, disables repeated taps, reports success after completion and displays errors. Retains cache-change notification to existing avatar consumers. |
+| ios/SceneDelegate.swift | Saves initial URL/activity handling for the root's one-shot first appearance; immediate scene connection occurs before navigation attachment. Existing warm handlers remain. Three actual public cold URL launches and subsequent Back routes pass on each device. |
+| ios/Resources/Main.storyboard and generated IB accessors | Root becomes a plain hosting scene; MainTabs gets a typed scene identifier. Removes old title/vacation outlets, embed segue and resource references. Existing study routes remain. SwiftGen regenerates scene/segue accessors. |
+| ios/Style.swift | Removes the now-unreferenced custom shadow helper and normalizes three private helper names. Study color values/calculations remain unchanged. |
+| ios/Podfile, lock, tracked Pods and project | Removes Haneke and all FontScreenshotter CocoaPods integration, retaining remaining versions. Adds AppTests search-path inheritance for its imported host's remaining dependencies. Regenerated tracked support/project files and matching installed manifest are committed together. Clean built apps have no Haneke framework. No complete dependency/runtime migration is claimed. |
+| ios/AppStoreScreenshots/ShellFixture.swift and Screenshotter.swift | Debug-only temporary sync fixture advances native Progress and tests overlap without real network/account writes. No production behavior override. |
+| ios/AppStoreScreenshots/ReviewFlowTests.swift | New progress/foreground and three-route cold-start workflows, plus retained settings/search/sharing/study/Coverage regressions. Stable child identifiers and list-edge gestures avoid native floating tab controls. |
+
+The final app-owned layout inventory is **20 storyboards / zero XIBs**. Scoped
+production Swift falls **24,247 → 24,101 physical lines** against a7a7c6f; see
+TASKS.md for exact filters and evidence. Vendor/generated/test code is excluded.
+The three XIBs remove another 210 lines. This does not replace the still-required
+same-scope overall comparison against upstream.
+
+Validation passes: 216 shared Swift Testing functions on macOS and iPadOS,
+87 hosted tests, 12 UI workflows per iPhone/iPad, one font-export test producing
+eight PNGs, and the native Mac build. Exact bundles, Mainboard verdicts, source
+comparison and remaining limitations are recorded in the checkpoint in TASKS.md.
+The iOS UI gates use synthetic fixtures; real device/account, keyboard, microphone,
+full-account offline/performance, broad accessibility and native Mac parity remain.
+The remaining UIKit tab/navigation/scene/login/input bridges and active legacy
+storage/SVG/watch paths have not been removed. No iOS store/writer cutover occurs.
+
+Native APIs consulted: [ProgressView](https://developer.apple.com/documentation/swiftui/progressview),
+[glass buttons](https://developer.apple.com/documentation/swiftui/primitivebuttonstyle/glass),
+[controller representable](https://developer.apple.com/documentation/swiftui/uiviewcontrollerrepresentable),
+[request cache policy](https://developer.apple.com/documentation/foundation/nsurlrequest/cachepolicy-swift.enum/returncachedataelseload),
+[Foundation caching](https://developer.apple.com/documentation/foundation/accessing-cached-data),
+and [public test URL launch](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/open(_:)).
+Historical cache naming/directory compatibility was checked against the vendored
+Haneke 1.0.2 implementation before deletion.

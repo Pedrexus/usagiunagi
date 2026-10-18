@@ -6,15 +6,17 @@ public struct DeveloperSettingsView: View {
   @Binding var endpoint: String
   let defaultEndpoint: String
   let archive: SQLiteDiagnosticArchive
-  let clearAvatarCache: () -> Void
+  let clearAvatarCache: @MainActor () async throws -> Void
   @State private var editingEndpoint = false
   @State private var draft = ""
   @State private var invalidEndpoint = false
   @State private var cacheCleared = false
+  @State private var clearingCache = false
+  @State private var cacheError: String?
 
   public init(
     endpoint: Binding<String>, defaultEndpoint: String, archive: SQLiteDiagnosticArchive,
-    clearAvatarCache: @escaping () -> Void
+    clearAvatarCache: @escaping @MainActor () async throws -> Void
   ) {
     self._endpoint = endpoint
     self.defaultEndpoint = defaultEndpoint
@@ -44,9 +46,15 @@ public struct DeveloperSettingsView: View {
           Label("Export local database", systemImage: "square.and.arrow.up")
         }.accessibilityIdentifier("developer.export")
         Button("Clear avatar image cache", systemImage: "person.crop.circle.badge.xmark") {
-          clearAvatarCache()
-          cacheCleared = true
-        }.accessibilityIdentifier("developer.clearAvatarCache")
+          clearingCache = true
+          Task {
+            defer { clearingCache = false }
+            do {
+              try await clearAvatarCache()
+              cacheCleared = true
+            } catch { cacheError = error.localizedDescription }
+          }
+        }.disabled(clearingCache).accessibilityIdentifier("developer.clearAvatarCache")
       } header: {
         Text("Diagnostics")
       } footer: {
@@ -76,5 +84,13 @@ public struct DeveloperSettingsView: View {
       Text("Default: \(defaultEndpoint)")
     }
     .alert("Image cache cleared", isPresented: $cacheCleared) { Button("OK", role: .cancel) {} }
+    .alert(
+      "Unable to clear image cache",
+      isPresented: Binding(get: { cacheError != nil }, set: { if !$0 { cacheError = nil } })
+    ) {
+      Button("OK", role: .cancel) { cacheError = nil }
+    } message: {
+      Text(cacheError ?? "")
+    }
   }
 }

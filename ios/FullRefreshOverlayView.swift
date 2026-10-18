@@ -13,41 +13,18 @@
 // limitations under the License.
 
 import Foundation
+import SwiftUI
 
-class FullRefreshOverlayView: UIView {
-  @IBOutlet var containerView: UIVisualEffectView!
-
-  init?(window: UIWindow) {
-    super.init(frame: window.frame)
-
-    let nib = UINib(nibName: "FullRefreshOverlayView", bundle: Bundle(for: type(of: self)))
-    nib.instantiate(withOwner: self, options: nil)
-
-    // Add the container to ourself and add ourself to the window.
-    addSubview(containerView)
-    window.addSubview(self)
-
-    // Fade in.
-    alpha = 0.0
-    UIView.animate(withDuration: 0.3) {
-      self.alpha = 1.0
-    }
-  }
-
-  override func layoutSubviews() {
-    containerView.frame = frame
-  }
-
-  func hide() {
-    UIView.animate(withDuration: 0.3) {
-      self.alpha = 0.0
-    } completion: { _ in
-      self.removeFromSuperview()
-    }
-  }
-
-  @available(*, unavailable)
-  required init?(coder _: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
+struct FullRefreshOverlayView: View {
+  let progress: Progress
+  var body: some View {
+    VStack(spacing: 16) {
+      Text("Full refresh in progress…").font(.headline).accessibilityIdentifier("app.fullRefresh")
+      ProgressView(progress).progressViewStyle(.linear).labelsHidden().frame(maxWidth: 280)
+        .accessibilityLabel("WaniKani sync").accessibilityIdentifier("app.refreshProgress")
+      Text("Updating your reviews and syncing your WaniKani account.")
+        .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+    }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(.regularMaterial).contentShape(Rectangle())
   }
 }

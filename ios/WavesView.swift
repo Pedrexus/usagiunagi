@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import UIKit
 
 // Seigaiha (青海波) — overlapping rows of concentric arcs, the sea the turtle swims in. The top of
 // the pattern fades into whatever is behind the view.

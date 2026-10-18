@@ -14,6 +14,7 @@
 
 import AVFoundation
 import Foundation
+import UIKit
 
 protocol AudioDelegate: NSObject {
   func audioPlaybackStateChanged(state: Audio.PlaybackState)

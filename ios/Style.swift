@@ -13,16 +13,17 @@
 // limitations under the License.
 
 import Foundation
+import UIKit
 import WaniKaniAPI
 
-private func UIColorFromHex(_ hexColor: Int32) -> UIColor {
+private func uiColorFromHex(_ hexColor: Int32) -> UIColor {
   let red = CGFloat((hexColor & 0xFF0000) >> 16) / 255
   let green = CGFloat((hexColor & 0x00FF00) >> 8) / 255
   let blue = CGFloat(hexColor & 0x0000FF) / 255
   return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
 }
 
-private func AdaptiveColor(light: UIColor, dark: UIColor) -> UIColor {
+private func adaptiveColor(light: UIColor, dark: UIColor) -> UIColor {
   if #available(iOS 13, *) {
     return UIColor { (tc: UITraitCollection) -> UIColor in
       if tc.userInterfaceStyle == .dark {
@@ -36,49 +37,41 @@ private func AdaptiveColor(light: UIColor, dark: UIColor) -> UIColor {
   }
 }
 
-private func AdaptiveColorHex(light: Int32, dark: Int32) -> UIColor {
-  AdaptiveColor(light: UIColorFromHex(light), dark: UIColorFromHex(dark))
+private func adaptiveColorHex(light: Int32, dark: Int32) -> UIColor {
+  adaptiveColor(light: uiColorFromHex(light), dark: uiColorFromHex(dark))
 }
 
 // Use semantic system colors for the interface; retain subject colors for learning cues.
 @objc
 class TKMStyle: NSObject {
-  // MARK: - Shadows
-
-  @objc class func addShadowToView(_ view: UIView, offset: Float, opacity: Float, radius: Float) {
-    view.layer.shadowColor = UIColor.black.cgColor
-    view.layer.shadowOffset = CGSize(width: 0.0, height: Double(offset))
-    view.layer.shadowOpacity = opacity
-    view.layer.shadowRadius = CGFloat(radius)
-    view.clipsToBounds = false
-  }
-
   // MARK: - WaniKani colors and gradients
 
   static let defaultTintColor = UIColor.systemBlue
 
   // Subject colours are flat (both "gradient" stops are the same) and deep enough for white
   // text at 5:1 or better.
-  static let radicalColor1 = AdaptiveColorHex(light: 0x2B6CB0, dark: 0x2A64A3)
+  static let radicalColor1 = adaptiveColorHex(light: 0x2B6CB0, dark: 0x2A64A3)
   static let radicalColor2 = radicalColor1
-  static let kanjiColor1 = AdaptiveColorHex(light: 0xB8346B, dark: 0xA82E62)
+  static let kanjiColor1 = adaptiveColorHex(light: 0xB8346B, dark: 0xA82E62)
   static let kanjiColor2 = kanjiColor1
-  static let vocabularyColor1 = AdaptiveColorHex(light: 0x74409F, dark: 0x6A3A96)
+  static let vocabularyColor1 = adaptiveColorHex(light: 0x74409F, dark: 0x6A3A96)
   static let vocabularyColor2 = vocabularyColor1
-  static let lockedColor1 = UIColorFromHex(0x5F574B)
+  static let lockedColor1 = uiColorFromHex(0x5F574B)
   static let lockedColor2 = lockedColor1
   // Tiles for subjects that are locked, in lists where burned subjects are drawn in ink.
-  static let lockedTileColor = AdaptiveColorHex(light: 0x8F8474, dark: 0x5F574B)
+  static let lockedTileColor = adaptiveColorHex(light: 0x8F8474, dark: 0x5F574B)
   // The review prompt strip: ink for readings, paper for meanings.
-  static let readingColor1 = AdaptiveColorHex(light: 0x1F1D1A, dark: 0x2E2B26)
+  static let readingColor1 = adaptiveColorHex(light: 0x1F1D1A, dark: 0x2E2B26)
   static let readingColor2 = readingColor1
   static let meaningColor1 = Color.background
   static let meaningColor2 = meaningColor1
 
-  static let explosionColor1 = UIColor(red: 247.0 / 255, green: 181.0 / 255, blue: 74.0 / 255,
-                                       alpha: 1.0)
-  static let explosionColor2 = UIColor(red: 230.0 / 255, green: 57.0 / 255, blue: 91.0 / 255,
-                                       alpha: 1.0)
+  static let explosionColor1 = UIColor(
+    red: 247.0 / 255, green: 181.0 / 255, blue: 74.0 / 255,
+    alpha: 1.0)
+  static let explosionColor2 = UIColor(
+    red: 230.0 / 255, green: 57.0 / 255, blue: 91.0 / 255,
+    alpha: 1.0)
 
   static var radicalGradient: [CGColor] { [radicalColor1.cgColor, radicalColor2.cgColor] }
   static var kanjiGradient: [CGColor] { [kanjiColor1.cgColor, kanjiColor2.cgColor] }
@@ -90,15 +83,15 @@ class TKMStyle: NSObject {
   class func color(forSRSStageCategory srsStageCategory: SRSStageCategory) -> UIColor {
     switch srsStageCategory {
     case .apprentice:
-      return AdaptiveColorHex(light: 0xB8346B, dark: 0xE0678F)
+      return adaptiveColorHex(light: 0xB8346B, dark: 0xE0678F)
     case .guru:
-      return AdaptiveColorHex(light: 0x74409F, dark: 0xB083D6)
+      return adaptiveColorHex(light: 0x74409F, dark: 0xB083D6)
     case .master:
-      return AdaptiveColorHex(light: 0x2F55B5, dark: 0x7D98E0)
+      return adaptiveColorHex(light: 0x2F55B5, dark: 0x7D98E0)
     case .enlightened:
-      return AdaptiveColorHex(light: 0x2F7FB5, dark: 0x6FB3E0)
+      return adaptiveColorHex(light: 0x2F7FB5, dark: 0x6FB3E0)
     case .burned:
-      return AdaptiveColorHex(light: 0x3A3631, dark: 0xF2ECDF)
+      return adaptiveColorHex(light: 0x3A3631, dark: 0xF2ECDF)
     }
   }
 
@@ -107,15 +100,15 @@ class TKMStyle: NSObject {
   class func fillColor(forSRSStageCategory srsStageCategory: SRSStageCategory) -> UIColor {
     switch srsStageCategory {
     case .apprentice:
-      return UIColorFromHex(0xB8346B)
+      return uiColorFromHex(0xB8346B)
     case .guru:
-      return UIColorFromHex(0x74409F)
+      return uiColorFromHex(0x74409F)
     case .master:
-      return UIColorFromHex(0x2F55B5)
+      return uiColorFromHex(0x2F55B5)
     case .enlightened:
-      return UIColorFromHex(0x2F7FB5)
+      return uiColorFromHex(0x2F7FB5)
     case .burned:
-      return UIColorFromHex(0x3A3631)
+      return uiColorFromHex(0x3A3631)
     }
   }
 
@@ -183,17 +176,17 @@ class TKMStyle: NSObject {
     static let accent = TKMStyle.defaultTintColor
     static let incorrectAnswer = UIColor.systemRed
     // Legacy surfaces kept until their screens migrate to native controls.
-    static let night = UIColorFromHex(0x1B2740)
-    static let onNight = UIColorFromHex(0xF5EFE3)
-    static let onNightSecondary = UIColorFromHex(0xC9C1B1)
+    static let night = uiColorFromHex(0x1B2740)
+    static let onNight = uiColorFromHex(0xF5EFE3)
+    static let onNightSecondary = uiColorFromHex(0xC9C1B1)
 
     // Markup colors for mnemonics.
     static let markupRadicalForeground = label
-    static let markupRadicalBackground = AdaptiveColorHex(light: 0xDCE8F5, dark: 0x24364D)
+    static let markupRadicalBackground = adaptiveColorHex(light: 0xDCE8F5, dark: 0x24364D)
     static let markupKanjiForeground = label
-    static let markupKanjiBackground = AdaptiveColorHex(light: 0xF7E4EC, dark: 0x45283A)
+    static let markupKanjiBackground = adaptiveColorHex(light: 0xF7E4EC, dark: 0x45283A)
     static let markupVocabularyForeground = label
-    static let markupVocabularyBackground = AdaptiveColorHex(light: 0xEEE5F5, dark: 0x3A2D47)
+    static let markupVocabularyBackground = adaptiveColorHex(light: 0xEEE5F5, dark: 0x3A2D47)
 
     static var placeholderText: UIColor {
       if #available(iOS 13.0, *) {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import UIKit
 
 class MainTabBarViewController: UITabBarController {
   var services: TKMServices!

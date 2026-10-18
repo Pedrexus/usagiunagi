@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import UIKit
 
 extension NSMutableAttributedString {
   func replaceFontSize(_ newSize: CGFloat) -> NSMutableAttributedString {

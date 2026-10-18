@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import UIKit
+
 class AnswerTextField: UITextField {
   // Returns a Japanese-language UITextInputMode, if available.
   // If this returns nil the user doesn't have a Japanese keyboard installed.

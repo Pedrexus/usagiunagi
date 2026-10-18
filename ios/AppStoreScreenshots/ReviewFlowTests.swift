@@ -15,6 +15,74 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor func testShellColdReviewLessonAndSubjectLinksReturnToHome() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    defer { clearFixture(app) }
+    for route in ["reviews", "lessons", "subject/3864"] {
+      app.terminate()
+      app.launchArguments = [
+        "-FASTLANE_SNAPSHOT", "YES",
+        route == "lessons" ? "LessonFlowFixture" : "SingleReviewFixture", "-playAudioAutomatically",
+        "NO", "-autoSwitchKeyboard", "NO",
+      ]
+      app.open(URL(string: "tsurukame:///" + route)!)
+      switch route {
+      case "reviews":
+        XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
+        app.buttons["review.close"].tap()
+      case "lessons":
+        XCTAssertTrue(app.staticTexts["lesson.position"].waitForExistence(timeout: 10))
+        app.buttons["lesson.back"].tap()
+      default:
+        XCTAssertTrue(app.scrollViews["subject.scroll"].waitForExistence(timeout: 10))
+        app.buttons["subject.back"].tap()
+      }
+      XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 5))
+      XCTAssertTrue(app.buttons["app.settings"].isHittable)
+    }
+  }
+
+  @MainActor func testShellFullRefreshUpdatesProgressAndKeepsBlockingAfterForeground() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ShellFlowFixture"]
+    app.launch()
+    defer { clearFixture(app) }
+    let home = app.collectionViews["home.dashboard"]
+    XCTAssertTrue(home.waitForExistence(timeout: 10))
+    XCTAssertEqual(app.staticTexts["app.username"].label, "Fred")
+    XCTAssertTrue(app.staticTexts["app.level"].label.contains("Level 24"))
+    XCTAssertTrue(app.staticTexts["app.level"].label.contains("864"))
+    let pullStart = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.2))
+    let pullEnd = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.85))
+    pullStart.press(forDuration: 0.05, thenDragTo: pullEnd)
+    attachHomeScreenshot("Home after pull to refresh")
+    let overlay = app.descendants(matching: .any).matching(identifier: "app.fullRefresh").firstMatch
+    XCTAssertTrue(overlay.waitForExistence(timeout: 5))
+    let indicator = app.progressIndicators["app.refreshProgress"]
+    XCTAssertTrue(indicator.waitForExistence(timeout: 5))
+    let advancing = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in (indicator.value as? String)?.contains("25") == true },
+      object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 7), .completed)
+    attachHomeScreenshot("Native full refresh progress")
+    XCTAssertFalse(app.buttons["app.settings"].isEnabled)
+    XCUIDevice.shared.press(.home)
+    app.activate()
+    XCTAssertTrue(overlay.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["app.settings"].isEnabled)
+    let completed = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "exists == false"), object: overlay)
+    XCTAssertEqual(XCTWaiter.wait(for: [completed], timeout: 20), .completed)
+    XCTAssertTrue(app.buttons["app.settings"].isEnabled)
+    XCTAssertEqual(app.staticTexts["app.username"].label, "Fred")
+    app.buttons["app.settings"].tap()
+    XCTAssertTrue(app.buttons["settings.back"].waitForExistence(timeout: 5))
+    app.buttons["settings.back"].tap()
+    XCTAssertTrue(home.waitForExistence(timeout: 5))
+  }
+
   @MainActor private func attachHomeScreenshot(_ title: String) {
     let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
     attachment.name = title
@@ -83,6 +151,8 @@ final class ReviewFlowTests: XCTestCase {
         .firstMatch
       let choose = app.buttons["Choose lessons"]
       if fixture == "HomeVacationFixture" {
+        XCTAssertTrue(
+          app.descendants(matching: .any).matching(identifier: "app.vacation").firstMatch.exists)
         XCTAssertFalse(reviews.exists)
         XCTAssertFalse(lessons.exists)
         XCTAssertFalse(choose.exists)
@@ -1222,7 +1292,7 @@ extension ReviewFlowTests {
         } else {
           details.swipeUp(velocity: .slow)
         }
-      } else if home.exists && home.isHittable {
+      } else if home.exists {
         // Keep drags clear of the floating tab bar, which covers the center in landscape.
         let down = towardTop || element.exists && element.frame.midY < home.frame.minY
         let start = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.25 : 0.7))

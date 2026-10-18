@@ -14,6 +14,8 @@
 
 import Foundation
 import PromiseKit
+import StudyUI
+import SwiftUI
 import WaniKaniAPI
 
 private let kDefaultProfileImageURL =
@@ -41,25 +43,24 @@ private func userProfileImageURL(emailAddress: String) -> URL {
     string: "https://www.gravatar.com/avatar/\(hash).jpg?s=\(size)&d=\(kDefaultProfileImageURL)")!
 }
 
-class MainViewController: UIViewController, LoginViewControllerDelegate,
-  SearchResultViewControllerDelegate,
-  MainWaniKaniTabViewController.Delegate
+final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewControllerDelegate,
+  SearchResultViewControllerDelegate, MainWaniKaniTabViewController.Delegate
 {
   var services: TKMServices!
+  var onFirstAppearance: (() -> Void)?
 
-  @IBOutlet var titleView: MainTitleView!
-  @IBOutlet var vacationView: VacationModeView!
-  @IBOutlet var progressView: UIProgressView!
-  @IBOutlet var headerGradient: GradientView!
-
+  private let shell = StudyShellState()
+  private var avatarRequest: URL?
+  private var avatarRestoreTask: Task<Void, Never>?
   var searchResultsViewController: SearchResultViewController!
-  weak var tabBarViewController: MainTabBarViewController?
+  private(set) var tabBarViewController: MainTabBarViewController?
 
   var hourlyRefreshTimer = Timer()
   var isShowingUnauthorizedAlert = false
   var isUpdating = false
 
   private let nd = NotificationDispatcher()
+  required init?(coder: NSCoder) { super.init(coder: coder, rootView: nil) }
 
   func setup(services: TKMServices) {
     self.services = services
@@ -67,47 +68,39 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
 
   override func viewDidLoad() {
     super.viewDidLoad()
-
-    // Create the search results view controller.
-    let searchResultsVC = StoryboardScene.SearchResult.initialScene.instantiate()
-    searchResultsVC.setup(services: services, delegate: self)
-    searchResultsViewController = searchResultsVC
-
-    view.backgroundColor = TKMStyle.Color.background
-    if let items = navigationItem.rightBarButtonItems, items.count == 2 {
-      items[0].image = UIImage(systemName: "gearshape")
-      items[0].accessibilityLabel = "Settings"
-      items[0].accessibilityIdentifier = "app.settings"
-      items[1].image = UIImage(systemName: "magnifyingglass")
-      for item in items {
-        item.tintColor = TKMStyle.Color.label
-      }
-    }
-
-    updateGradientColors()
+    let search = StoryboardScene.SearchResult.initialScene.instantiate()
+    search.setup(services: services, delegate: self)
+    searchResultsViewController = search
+    let tabs = StoryboardScene.Main.mainTabs.instantiate()
+    tabs.setup(services: services, waniKaniTabDelegate: self)
+    tabBarViewController = tabs
+    rootView = MainShellRoot(
+      state: shell, tabs: tabs,
+      search: { [weak self] in self?.searchButtonTapped() },
+      settings: { [weak self] in self?.settingsButtonTapped() })
+    tabs.loadViewIfNeeded()
     updateHourlyTimer()
     updateHome()
-
     nd.add(name: .lccAvailableItemsChanged) { [weak self] _ in self?.availableItemsChanged() }
     nd.add(name: .lccRecentMistakesCountChanged) { [weak self] _ in self?.availableItemsChanged() }
     nd.add(name: .lccUserInfoChanged) { [weak self] _ in self?.userInfoChanged() }
     nd.add(name: .lccSRSCategoryCountsChanged) { [weak self] _ in self?.srsLevelCountsChanged() }
     nd.add(name: .lccUnauthorized) { [weak self] _ in self?.clientIsUnauthorized() }
     nd.add(name: .lccHibernating) { [weak self] _ in self?.clientIsHibernating() }
-    nd
-      .add(name: UIApplication.didEnterBackgroundNotification) { [weak self] _ in
-        self?.applicationDidEnterBackground()
-      }
-    nd
-      .add(name: UIApplication.willEnterForegroundNotification) { [weak self] _ in
-        self?.applicationWillEnterForeground()
-      }
-  }
-
-  private func updateGradientColors() {
-    // The header sits on plain paper; the gradient view is kept so the layout doesn't change.
-    let paper = TKMStyle.Color.background.resolvedColor(with: traitCollection).cgColor
-    headerGradient.colors = [paper, paper]
+    nd.add(name: .avatarCacheCleared) { [weak self] _ in
+      guard let self else { return }
+      self.avatarRestoreTask?.cancel()
+      self.avatarRequest = nil
+      self.shell.avatar = nil
+      self.shell.avatarRevision += 1
+      self.updateUserInfo()
+    }
+    nd.add(name: UIApplication.didEnterBackgroundNotification) { [weak self] _ in
+      self?.applicationDidEnterBackground()
+    }
+    nd.add(name: UIApplication.willEnterForegroundNotification) { [weak self] _ in
+      self?.applicationWillEnterForeground()
+    }
   }
 
   private func scheduleHomeUpdate() {
@@ -138,42 +131,32 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
 
     updateHourlyTimer()
 
-    navigationController?.isNavigationBarHidden = false
+    navigationController?.isNavigationBarHidden = true
 
     super.viewWillAppear(animated)
   }
 
-  override func viewDidAppear(_: Bool) {
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
     // Only start refreshing after the user has finished swiping back to this view.
     refresh(quick: true)
+    let action = onFirstAppearance
+    onFirstAppearance = nil
+    action?()
   }
 
   override func viewWillDisappear(_ animated: Bool) {
-
+    navigationController?.setNavigationBarHidden(false, animated: animated)
     super.viewWillDisappear(animated)
     cancelHourlyTimer()
-  }
-
-  override func viewDidLayoutSubviews() {
-    updateVacationVisibility(animated: false)
   }
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
     .default
   }
 
-  override func traitCollectionDidChange(_: UITraitCollection?) {
-    updateGradientColors()
-  }
-
   override func prepare(for segue: UIStoryboardSegue, sender _: Any?) {
     switch StoryboardSegue.Main(segue) {
-    case .embedTabBar:
-      let vc = segue.destination as! MainTabBarViewController
-      vc.setup(services: services, waniKaniTabDelegate: self)
-
-      tabBarViewController = vc
-
     case .settings:
       let vc = segue.destination as! SettingsViewController
       vc.setup(services: services)
@@ -185,11 +168,11 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
 
   // MARK: - Navigation bar buttons
 
-  @IBAction func searchButtonTapped() {
+  func searchButtonTapped() {
     navigationController?.pushViewController(searchResultsViewController, animated: true)
   }
 
-  @IBAction func settingsButtonTapped() {
+  func settingsButtonTapped() {
     perform(segue: StoryboardSegue.Main.settings, sender: self)
   }
 
@@ -238,45 +221,19 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
   // MARK: - Refreshing contents
 
   func refresh(quick: Bool) {
+    guard let client = services.localCachingClient else { return }
     let progress = Progress(totalUnitCount: 0)
-    let syncFuture = services.localCachingClient.sync(quick: quick, progress: progress)
-
-    setProgress(progress)
-
-    if quick {
-      scheduleHomeUpdate()
-    } else {
-      if !progress.isFinished,
-        let overlay = FullRefreshOverlayView(window: view.window!)
-      {
-        syncFuture.finally {
-          overlay.hide()
-        }
-      }
-    }
-  }
-
-  var progressKvoToken: NSKeyValueObservation?
-  func setProgress(_ progress: Progress) {
-    guard progressView != nil, !progress.isFinished else { return }
-
-    // Set the progress on the progress view and fade it in.
-    progressView.observedProgress = progress
-    UIView.animate(withDuration: 0.2) {
-      self.progressView.alpha = 1.0
-    }
-
-    // Wait for the progress to finish.
-    progressKvoToken?.invalidate()
-    progressKvoToken = progress.observe(\.isFinished, options: [.new]) { _, change in
-      if let isFinished = change.newValue, isFinished {
-        self.progressKvoToken?.invalidate()
-
-        UIView.animate(withDuration: 0.6) {
-          self.progressView.alpha = 0.0
-        }
-
-        self.services.radicalCharacterImages.downloadAll()
+    let completion = client.sync(quick: quick, progress: progress)
+    if quick { scheduleHomeUpdate() }
+    guard !progress.isFinished else { return }
+    shell.progress = progress
+    if !quick { shell.blockingProgress = progress }
+    completion.finally { [weak self] in
+      Task { @MainActor [weak self] in
+        guard let self, self.services.localCachingClient === client else { return }
+        if self.shell.progress === progress { self.shell.progress = nil }
+        if self.shell.blockingProgress === progress { self.shell.blockingProgress = nil }
+        if progress.isFinished { self.services.radicalCharacterImages.downloadAll() }
       }
     }
   }
@@ -292,34 +249,23 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
   }
 
   func updateUserInfo() {
-    guard let user = services.localCachingClient.getUserInfo() else { return }
-    let guruKanji = services.localCachingClient.guruKanjiCount
-
-    titleView.update(
-      username: user.username,
-      level: Int(user.level),
-      guruKanji: Int(guruKanji),
-      imageURL: currentUserProfileImageURL())
-
-    updateVacationVisibility(animated: true)
-  }
-
-  func updateVacationVisibility(animated: Bool) {
-    guard let user = services.localCachingClient.getUserInfo() else { return }
-
-    var vacationAlpha: CGFloat = 0.0
-    if user.hasVacationStartedAt {
-      vacationAlpha = 1.0
+    guard let client = services.localCachingClient, let user = client.getUserInfo() else { return }
+    shell.username = user.username
+    shell.level = Int(user.level)
+    shell.learnedKanji = client.guruKanjiCount
+    let avatar = currentUserProfileImageURL()
+    if avatarRequest != avatar {
+      avatarRequest = avatar
+      avatarRestoreTask?.cancel()
+      avatarRestoreTask = Task { @MainActor [weak self, legacy = services.legacyAvatars] in
+        await legacy.restore(avatar)
+        guard let self, !Task.isCancelled, self.services.localCachingClient === client,
+          self.avatarRequest == avatar
+        else { return }
+        self.shell.avatar = avatar
+      }
     }
-
-    let animations = {
-      self.vacationView.alpha = vacationAlpha
-    }
-    if animated {
-      UIView.animate(withDuration: 0.3, animations: animations)
-    } else {
-      animations()
-    }
+    shell.onVacation = user.hasVacationStartedAt
   }
 
   func srsLevelCountsChanged() {
@@ -409,5 +355,27 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
     vc.setup(services: services, subject: subject)
     navigationController?.popViewController(animated: false)
     navigationController?.pushViewController(vc, animated: true)
+  }
+}
+
+struct MainShellRoot: View {
+  let state: StudyShellState
+  let tabs: MainTabBarViewController
+  let search: () -> Void
+  let settings: () -> Void
+  var body: some View {
+    StudyShellView(state: state, search: search, settings: settings) {
+      MainShellTabs(controller: tabs)
+    }.overlay {
+      if let progress = state.blockingProgress { FullRefreshOverlayView(progress: progress) }
+    }
+  }
+}
+
+struct MainShellTabs: UIViewControllerRepresentable {
+  let controller: MainTabBarViewController
+  func makeUIViewController(context: Context) -> MainTabBarViewController { controller }
+  func updateUIViewController(_ controller: MainTabBarViewController, context: Context) {
+    controller.view.isUserInteractionEnabled = context.environment.isEnabled
   }
 }

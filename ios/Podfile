@@ -3,29 +3,18 @@ source 'https://cdn.cocoapods.org/'
 
 platform :ios, '27.0'
 
-target 'FontScreenshotter' do
-  # Comment the next line if you don't want to use dynamic frameworks
-  use_frameworks!
-
-  # Pods for FontScreenshotter
-  pod 'Haneke', '~> 1.0.2', :inhibit_warnings => true
-  pod 'Reachability', '~> 3.7.7'
-
-  target 'FontScreenshotterUITests' do
-    # Pods for testing
-  end
-
-end
-
 target 'Tsurukame' do
   # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
 
   # Pods for Tsurukame
   pod 'FMDB', '~> 2.7.5'
-  pod 'Haneke', '~> 1.0.2', :inhibit_warnings => true
   pod 'Reachability', '~> 3.7.7'
   pod 'SwiftGen', '~> 6.0'
+
+  target 'AppTests' do
+    inherit! :search_paths
+  end
 
   target 'Tests' do
     inherit! :search_paths
@@ -41,7 +30,6 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings.delete 'IPHONEOS_DEPLOYMENT_TARGET'
-      config.build_settings['ENABLE_BITCODE'] = 'YES'
     end
   end
 end

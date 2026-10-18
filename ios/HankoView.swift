@@ -14,6 +14,7 @@
 
 import CoreText
 import Foundation
+import UIKit
 
 // The app's seal (判子): 兔 over 鰻, cut out of a vermilion block so whatever is behind shows
 // through the characters. Each character is stretched to fill its half of the seal, the way a

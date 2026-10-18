@@ -21,13 +21,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
 
   private var navigationController: UINavigationController!
   private var services: TKMServices!
+  private var launchAction: (() -> Void)?
 
-  func scene(_: UIScene, willConnectTo _: UISceneSession,
-             options connectionOptions: UIScene.ConnectionOptions) {
+  func scene(
+    _: UIScene, willConnectTo _: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions
+  ) {
     // Tests replace the application delegate with one that doesn't set up any of the app's state,
     // so there's nothing for this scene to attach to.
     guard let appDelegate = UIApplication.shared.delegate as? AppDelegate,
-          let window = window else {
+      let window = window
+    else {
       return
     }
     services = appDelegate.services
@@ -44,19 +48,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
     nc.addObserver(self, selector: #selector(logout), name: .logout, object: nil)
 
     if !Settings.userApiToken.isEmpty {
+      launchAction = { [weak self] in
+        guard let self else { return }
+        for context in connectionOptions.urlContexts { _ = self.handleApplink(url: context.url) }
+        if let activity = connectionOptions.userActivities.first {
+          self.startUserActivity(type: activity.activityType)
+          _ = self.continueUserActivity(activity)
+        }
+      }
       setMainViewControllerAnimated(animated: false, clearUserData: false)
     } else {
       pushLoginViewController()
-    }
-
-    // The app was launched by opening a link or continuing an activity, which arrive here instead
-    // of in the scene delegate methods below.
-    for context in connectionOptions.urlContexts {
-      _ = handleApplink(url: context.url)
-    }
-    if let userActivity = connectionOptions.userActivities.first {
-      startUserActivity(type: userActivity.activityType)
-      continueUserActivity(userActivity)
     }
   }
 
@@ -75,8 +77,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
     (UIApplication.shared.delegate as? AppDelegate)?.updateAppBadgeCount()
   }
 
-  func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-    for context in URLContexts {
+  func scene(_: UIScene, openURLContexts urlContexts: Set<UIOpenURLContext>) {
+    for context in urlContexts {
       _ = handleApplink(url: context.url)
     }
   }
@@ -138,11 +140,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
   }
 
   private func setMainViewControllerAnimated(animated: Bool, clearUserData: Bool) {
-    services.client = WaniKaniAPIClient(apiToken: Settings.userApiToken,
-                                        baseUrl: Settings.apiBaseUrl)
-    services.localCachingClient = Screenshotter.createLocalCachingClient(client: services.client,
-                                                                         reachability: services
-                                                                           .reachability)
+    services.client = WaniKaniAPIClient(
+      apiToken: Settings.userApiToken,
+      baseUrl: Settings.apiBaseUrl)
+    services.localCachingClient = Screenshotter.createLocalCachingClient(
+      client: services.client,
+      reachability: services
+        .reachability)
     services.client.subjectLevelGetter = services.localCachingClient
 
     if !Screenshotter.isActive {
@@ -154,6 +158,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
     let pushMainViewController = { () in
       let vc = StoryboardScene.Main.initialScene.instantiate()
       vc.setup(services: self.services)
+      vc.onFirstAppearance = self.launchAction
+      self.launchAction = nil
       self.navigationController.setViewControllers([vc], animated: animated)
     }
 
@@ -218,32 +224,41 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
       mainVC.perform(segue: StoryboardSegue.Main.startLessons)
     case "subject":
       if components.count > 1,
-         let subjectID = Int64(components[1]),
-         let subject = services.localCachingClient.getSubject(id: subjectID) {
+        let subjectID = Int64(components[1]),
+        let subject = services.localCachingClient.getSubject(id: subjectID)
+      {
         openSubjectDetails(subject: subject)
       }
     case "radical":
       if components.count > 1,
-         let subject = services.localCachingClient.getSubject(japanese: String(components[1]),
-                                                              type: .radical) {
+        let subject = services.localCachingClient.getSubject(
+          japanese: String(components[1]),
+          type: .radical)
+      {
         openSubjectDetails(subject: subject)
       }
     case "kanji":
       if components.count > 1,
-         let subject = services.localCachingClient.getSubject(japanese: String(components[1]),
-                                                              type: .kanji) {
+        let subject = services.localCachingClient.getSubject(
+          japanese: String(components[1]),
+          type: .kanji)
+      {
         openSubjectDetails(subject: subject)
       }
     case "vocabulary":
       if components.count > 1,
-         let subject = services.localCachingClient.getSubject(japanese: String(components[1]),
-                                                              type: .vocabulary) {
+        let subject = services.localCachingClient.getSubject(
+          japanese: String(components[1]),
+          type: .vocabulary)
+      {
         openSubjectDetails(subject: subject)
       }
     case "wrap-up":
       if let vcs = navigationController?.viewControllers,
-         let reviewContainerVC = vcs
-         .first(where: { $0 is ReviewContainerViewController }) as? ReviewContainerViewController {
+        let reviewContainerVC =
+          vcs
+          .first(where: { $0 is ReviewContainerViewController }) as? ReviewContainerViewController
+      {
         reviewContainerVC.reviewVC.wrappingUp = true
       }
     default:

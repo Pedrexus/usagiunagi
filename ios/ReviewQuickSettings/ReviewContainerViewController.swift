@@ -15,6 +15,7 @@
 import StudyCore
 import StudyUI
 import SwiftUI
+import UIKit
 import WaniKaniAPI
 
 /// Temporary navigation host while the app shell migrates. Settings themselves are SwiftUI.

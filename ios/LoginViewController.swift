@@ -14,6 +14,7 @@
 
 import Foundation
 import PromiseKit
+import UIKit
 import WaniKaniAPI
 
 extension Notification.Name {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import UIKit
 
 class CommonErrors: NSObject {
   static func getHibernatingAccountAlertController() -> UIAlertController {

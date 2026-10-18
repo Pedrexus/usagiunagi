@@ -20,6 +20,9 @@ import WaniKaniAPI
 class TKMServices {
   let reachability: Reachability = .forInternetConnection()
   let fontLoader: FontLoader
+  let legacyAvatars = LegacyAvatarCache(
+    directory: URL.cachesDirectory.appending(
+      path: "com.hpique.haneke/shared", directoryHint: .isDirectory))
   @MainActor lazy var fontLibrary = FontLibraryModel(loader: fontLoader)
 
   private(set) var offlineAudio: OfflineAudio!

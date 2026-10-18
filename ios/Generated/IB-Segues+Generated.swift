@@ -16,7 +16,6 @@ internal enum StoryboardSegue {
     case startCustomLessons
   }
   internal enum Main: String, SegueType {
-    case embedTabBar
     case katakanaCharacterPractice
     case settings
     case showAll

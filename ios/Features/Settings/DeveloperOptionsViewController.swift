@@ -25,8 +25,7 @@ final class DeveloperOptionsViewController: UIHostingController<DeveloperSetting
         services: services, database: database,
         clearAvatarCache: {
           guard !isFixture else { return }
-          HNKCache.shared().removeAllImages()
-          URLCache.shared.removeAllCachedResponses()
+          try await services.legacyAvatars.clear()
           NotificationCenter.default.post(name: .avatarCacheCleared, object: nil)
         }))
   }
@@ -41,7 +40,7 @@ final class DeveloperOptionsViewController: UIHostingController<DeveloperSetting
 struct DeveloperSettingsContent: View {
   let services: TKMServices
   let database: URL
-  let clearAvatarCache: () -> Void
+  let clearAvatarCache: @MainActor () async throws -> Void
   @ArchivedPreference(Settings.$apiBaseUrl) private var endpoint: String
   var body: some View {
     DeveloperSettingsView(
