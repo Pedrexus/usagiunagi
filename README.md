@@ -4,7 +4,7 @@ An independent, unofficial WaniKani client, forked from [David Sansome's Tsuruka
 
 For **iOS/iPadOS 27+ and native macOS 27+**, using shared Swift, SwiftUI, SwiftData, Apple Speech and Swift Charts. The design keeps WaniKani's subject colors with system typography, SF Symbols and native Apple controls. Reviews support optional confirmed voice input. Statistics show pace, focus items and reference-list coverage; coverage is not an exam pass prediction.
 
-Modernization is ongoing. iPhone/iPad retain the existing offline writer during migration. Mac lessons and Anki modes are implemented, but desktop UI acceptance and some media/settings parity remain open. See [current tasks](Docs/TASKS.md) and the [shared-code architecture](Docs/Architecture.md).
+Modernization is ongoing. iPhone/iPad retain the existing offline writer during migration. The account/sync model is shared Swift 6, and Mac lessons/Anki modes pass synthetic UI acceptance. Common navigation, some media/settings parity and the iOS storage handoff remain open. See [current tasks](Docs/TASKS.md) and the [shared-code architecture](Docs/Architecture.md).
 
 ## Repository
 

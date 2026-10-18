@@ -1,3 +1,4 @@
+import StudyUI
 import SwiftUI
 
 /// One native app target and entry point for iPhone, iPad and Mac.
@@ -6,7 +7,7 @@ struct UsagiUnagiApp: App {
   #if os(iOS)
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
   #else
-    @State private var model = StudyAppState()
+    @State private var model = StudyAppAssembly.makeModel()
   #endif
 
   var body: some Scene {
@@ -15,15 +16,21 @@ struct UsagiUnagiApp: App {
         LegacyStudyWindow(services: appDelegate.services, appDelegate: appDelegate)
       #else
         StudyRoot(store: model)
-          .defaultAppStorage(StudyAppState.reviewDefaults)
+          .defaultAppStorage(StudyAppAssembly.reviewDefaults)
           .frame(minWidth: 640, minHeight: 500)
-          .task { await model.restore() }
+          .task {
+            if ProcessInfo.processInfo.arguments.contains("--sample-data") {
+              model.loadSample()
+            } else {
+              await model.restore()
+            }
+          }
       #endif
     }
     #if os(macOS)
       .defaultSize(width: 1120, height: 800)
       .defaultLaunchBehavior(.presented)
-      .restorationBehavior(model.isReviewFixture ? .disabled : .automatic)
+      .restorationBehavior(StudyAppAssembly.isReviewFixture ? .disabled : .automatic)
       .commands {
         CommandGroup(after: .newItem) {
           Button("Refresh WaniKani") { Task { await model.refresh() } }

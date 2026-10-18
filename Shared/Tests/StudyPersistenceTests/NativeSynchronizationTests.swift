@@ -5,39 +5,8 @@ import Testing
 
 @testable import StudyPersistence
 
-private actor SynchronizationGate {
-  private var entered = false
-  private var cancelled = false
-  private var entryWaiter: CheckedContinuation<Void, Never>?
-  private var cancellationWaiter: CheckedContinuation<Void, Never>?
-  private var release: CheckedContinuation<Void, Never>?
-  func pause() async {
-    entered = true
-    entryWaiter?.resume()
-    entryWaiter = nil
-    await withTaskCancellationHandler {
-      await withCheckedContinuation { release = $0 }
-    } onCancel: {
-      Task { await self.sawCancellation() }
-    }
-  }
-  private func sawCancellation() {
-    cancelled = true
-    cancellationWaiter?.resume()
-    cancellationWaiter = nil
-  }
-  func waitForEntry() async { if !entered { await withCheckedContinuation { entryWaiter = $0 } } }
-  func waitForCancellation() async {
-    if !cancelled { await withCheckedContinuation { cancellationWaiter = $0 } }
-  }
-  func resume() {
-    release?.resume()
-    release = nil
-  }
-}
-
 private actor SynchronizationServer {
-  let gate: SynchronizationGate?
+  let gate: StudyTaskGate?
   let failAfterWrite: Bool
   let pauseWrites: Bool
   let failRead: Bool
@@ -45,7 +14,7 @@ private actor SynchronizationServer {
   private(set) var writes = 0
   private var material: [String: Any] = DownloadFixture.rows["study_materials"]!.first!
   init(
-    gate: SynchronizationGate? = nil, failAfterWrite: Bool = false, pauseWrites: Bool = false,
+    gate: StudyTaskGate? = nil, failAfterWrite: Bool = false, pauseWrites: Bool = false,
     failRead: Bool = false
   ) {
     self.gate = gate
@@ -96,7 +65,7 @@ struct NativeSynchronizationTests {
 
   @Test func overlappingRefreshesShareOneReadWithoutSendingPendingWork() async throws {
     let store = try await store(pendingNote: true)
-    let gate = SynchronizationGate()
+    let gate = StudyTaskGate()
     let server = SynchronizationServer(gate: gate)
     let client = await server.client
     let first = try await store.synchronizationTask(
@@ -117,7 +86,7 @@ struct NativeSynchronizationTests {
 
   @Test func explicitSendQueuesBehindAReadAndCoalescesOtherRequests() async throws {
     let store = try await store(pendingNote: true)
-    let gate = SynchronizationGate()
+    let gate = StudyTaskGate()
     let server = SynchronizationServer(gate: gate)
     let client = await server.client
     let read = try await store.synchronizationTask(
@@ -147,7 +116,7 @@ struct NativeSynchronizationTests {
 
   @Test func cancellingAWaitingSceneDoesNotCancelTheOwnedPass() async throws {
     let store = try await store()
-    let gate = SynchronizationGate()
+    let gate = StudyTaskGate()
     let server = SynchronizationServer(gate: gate)
     let client = await server.client
     let scene = Task {
@@ -165,7 +134,7 @@ struct NativeSynchronizationTests {
 
   @Test func accountTransitionDrainsReadAndQueuedSendBeforeAllowingNewWork() async throws {
     let store = try await store(pendingNote: true)
-    let gate = SynchronizationGate()
+    let gate = StudyTaskGate()
     let server = SynchronizationServer(gate: gate)
     let client = await server.client
     let before = try #require(await store.snapshot(credentialID: "credential"))
@@ -197,7 +166,7 @@ struct NativeSynchronizationTests {
 
   @Test func differentCredentialsAndWrongSendAccountCannotJoin() async throws {
     let store = try await store()
-    let gate = SynchronizationGate()
+    let gate = StudyTaskGate()
     let server = SynchronizationServer(gate: gate)
     let client = await server.client
     let run = try await store.synchronizationTask(
@@ -223,7 +192,7 @@ struct NativeSynchronizationTests {
 
   @Test func cancellingDuringAWritePreservesItsUncertainAttempt() async throws {
     let store = try await store(pendingNote: true)
-    let gate = SynchronizationGate()
+    let gate = StudyTaskGate()
     let server = SynchronizationServer(gate: gate, pauseWrites: true)
     let client = await server.client
     let send = Task {
@@ -249,7 +218,7 @@ struct NativeSynchronizationTests {
 
   @Test func failedPrerequisiteReadNeverStartsAQueuedWrite() async throws {
     let store = try await store(pendingNote: true)
-    let gate = SynchronizationGate()
+    let gate = StudyTaskGate()
     let server = SynchronizationServer(gate: gate, failRead: true)
     let client = await server.client
     let read = try await store.synchronizationTask(

@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T15:26:12Z",
+  "branch": "codex/swiftui-27-curriculum",
+  "source_base_commit": "c85abd254f598edbdf95e345c32d32ec40cf2ca1",
+  "status": "Shared-model checkpoint; full modernization and iOS writer adoption remain open",
+  "implementation": {
+    "model": "StudyUI.StudyAppModel; MainActor/Observation, Swift 6 language mode",
+    "credentials": "StudyPersistence.StudyCredentialStore with shared Security/Keychain implementation",
+    "native_composition": "App/Application/StudyRoot.swift retains platform composition and synthetic fixtures",
+    "removed": "App/Application/StudyAppState.swift",
+    "mac_storage_and_keychain_namespace_preserved": true,
+    "ios_writer_changed": false,
+    "compatibility_fixes": [
+      "Credential-read failure can retry restore and successful recovery clears stale errors.",
+      "Repository opening has one app-owned task; a failure clears its own slot before waking waiting scenes.",
+      "Credential removal succeeds before cache mappings are removed; failure leaves the published account and cached work accessible for retry.",
+      "After credential removal succeeds, local cleanup failure cannot leave a connected account published."
+    ]
+  },
+  "source_sha256": {
+    "App/Application/StudyRoot.swift": "1895ed8e5c069fa43871e1b026324e7767c3ee12669e9db08cbf52aaf36d2b54",
+    "App/UsagiUnagiApp.swift": "ef4366ebc6b3fe91a1fcbcb77c2dc5889acf75e64ca12c6e6ab638d7627d8e6a",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "e64be66cad8e72ddaca5068c126e71a19cd2501d2d99f0d8facae619698263b7",
+    "Shared/Package.swift": "f30853f11ac11b0fd12c240c69e180098d704e5c067dfb5ab7d5b9d8d9ef2402",
+    "Shared/Sources/StudyUI/Application/StudyAppModel.swift": "7e81ddff3909fba4510ea0ed724efce6d1f4827d67d6212fec20fed191447616",
+    "Shared/Sources/StudyPersistence/StudyCredentialStore.swift": "6443acdb60bac8b0c093bc0122d1461d567e795b03beded08aafb5bdc6bfec45",
+    "Shared/Tests/StudyUITests/StudyAppModelTests.swift": "99fa30d9829a068b35b92ff3c1a59e7186b5df0eb297ad04f45b13244999d112",
+    "Shared/Tests/StudyTestSupport/StudyTaskGate.swift": "3cd47820ae2a3c19ab73e658bb7ac67a4ab112792226c7b1345f29cff75089cf",
+    "Shared/Tests/StudyPersistenceTests/NativeSynchronizationTests.swift": "d49c6134f65a84c977fb9bc648eb2a64b3ab327316cff2d174dc80e0ae94882a"
+  },
+  "shared_mac": {
+    "passed": 267,
+    "breakdown": {
+      "core": 132,
+      "persistence": 115,
+      "speech": 6,
+      "application": 14
+    },
+    "log": "/private/tmp/usagi-shared-model-owned-final.log"
+  },
+  "shared_ios": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-1577c7e2abe44ed9a7b8b7ea178d7d35.xcresult",
+    "log": "/private/tmp/usagi-shared-model-owned-ios.log",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 267,
+      "passedTests": 267,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "finishTime": 1792336690.991,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792336661.519
+    }
+  },
+  "native_mac": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-96d94aae340b4dfeac48faae0ef527d2.xcresult",
+    "log": "/private/tmp/usagi-shared-model-owned-mac.log",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 7,
+      "passedTests": 7,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "finishTime": 1792336792.297,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792336669.425
+    }
+  },
+  "hosted_ios": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-525e513fd23849e09e9a62a895252e3f.xcresult",
+    "log": "/private/tmp/usagi-shared-model-owned-hosted-retry.log",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 91,
+      "passedTests": 91,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "finishTime": 1792337072.214,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792337044.087
+    }
+  },
+  "native_release": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-60e0ccf75e744e22b12241ea1fef3f68.xcresult",
+    "log": "/private/tmp/usagi-shared-model-owned-release.log",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "endTime": 1792337010.049,
+      "startTime": 1792336976.136
+    }
+  },
+  "failed_launch_attempt": {
+    "log": "/private/tmp/usagi-shared-model-owned-hosted.log",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-3b61ca1fe13d448d90c762f30152632c.xcresult",
+    "error": "Simulator launch failed before test execution: Mach error -308, server died.",
+    "recovery": "Same iPhone destination and test scope retried after the other iOS test job had finished; final 91 tests passed. No simulator data was reset."
+  },
+  "application_tests": [
+    "No credentials do not open storage or use the network.",
+    "Cached restore opens one repository, preserves pending work and reads no network.",
+    "Connection trims credentials and saves only after a verified download.",
+    "Rejected credentials preserve the prior account and outbox.",
+    "Failed credential saving cannot publish an account switch.",
+    "Old-account work stays inaccessible after switching and returns after reconnecting.",
+    "Failed repository opening can retry.",
+    "Credential-read failure can retry restore.",
+    "Active connection fences other credentials, restore and sample changes.",
+    "Disconnect drains a deliberately late response without account resurrection.",
+    "Read-only refresh and sample browsing preserve pending work and send nothing.",
+    "Acknowledged note upload remains acknowledged if subsequent refresh fails.",
+    "Older Mac JSON cache restores offline without changing its source bytes.",
+    "Failed credential removal preserves cached account work until a successful retry."
+  ],
+  "next_handoff_evidence": {
+    "source": [
+      "App/AppDelegate.swift",
+      "App/Platform/LegacyStudyWindow.swift",
+      "App/Platform/LegacyStudyCoordinator.swift"
+    ],
+    "finding": "Services creation does not open LocalCachingClient; the legacy scene coordinator creates it later, and background fetch returns noData while absent.",
+    "next": "After full native UI/media/route parity, gate cold bootstrap before creating that coordinator. Verify identity and import schema 9–15 conservatively with process-crash/rollback evidence. Do not activate a second writer.",
+    "runtime_cold_migration_verified": false
+  },
+  "limits": [
+    "Native Mac consumes the new shared model; iOS retains its current legacy writer and scene adapter until parity and cold-handoff acceptance.",
+    "Sign-in/session/media ownership, common routes/Home, notifications/watch, physical voice/IME, full-account validation and intermediate KanKen scopes remain in Docs/TASKS.md.",
+    "Tests use synthetic in-memory credentials and transports; no live WaniKani exercise, credential extraction or account write was performed.",
+    "No new complete iPhone/iPad UI run, physical microphone/IME test, hosted Actions run, push or PR is claimed."
+  ],
+  "owner_annotations_preserved_unstaged": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

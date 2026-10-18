@@ -26,7 +26,8 @@ let package = Package(
         .target(name: "StudyTestSupport", dependencies: ["StudyCore"], path: "Tests/StudyTestSupport"),
         .testTarget(name: "StudyPersistenceTests", dependencies: ["StudyPersistence", "StudyCore", "StudyTestSupport"]),
         .testTarget(name: "StudyCoreTests", dependencies: ["StudyCore", "StudyTestSupport"]),
-        .testTarget(name: "StudySpeechTests", dependencies: ["StudyCore", "StudySpeech"])
+        .testTarget(name: "StudySpeechTests", dependencies: ["StudyCore", "StudySpeech"]),
+        .testTarget(name: "StudyUITests", dependencies: ["StudyUI", "StudyPersistence", "StudyCore", "StudyTestSupport"])
     ],
     swiftLanguageModes: [.v6]
 )

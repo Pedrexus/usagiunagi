@@ -116,7 +116,7 @@
 		63F7F52E23D4C2CA006A31FB /* Audio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F7F52D23D4C2CA006A31FB /* Audio.swift */; platformFilter = ios; };
 		63FCAE78237F75CC00DB1418 /* Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63FCAE77237F75CC00DB1418 /* Style.swift */; platformFilter = ios; };
 		69A485427638BFB3E267EADD /* TKMKanaInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1BD289C0D84E0099A6BE537 /* TKMKanaInput.swift */; };
-		6DF440FA84D10AC573496F61 /* StudyAppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5FAA8DC32D15C9C3AEAA7C /* StudyAppState.swift */; platformFilter = macos; };
+		6DF440FA84D10AC573496F61 /* StudyRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5FAA8DC32D15C9C3AEAA7C /* StudyRoot.swift */; platformFilter = macos; };
 		6F5E06F1F9BD785F9E3BDC4E /* UsagiUnagiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */; };
 		706CDA3796D0FFB572296F1E /* SyncStoreTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = B73B6034A96F7BE05887BBB8 /* SyncStoreTest.swift */; };
 		791B8B5E2D6584C9000C8142 /* RecentMistakeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 791B8B5D2D6584C9000C8142 /* RecentMistakeHandler.swift */; platformFilter = ios; };
@@ -257,7 +257,7 @@
 		3756F7F4B1B96F207317CD15 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacStatisticsTests.swift; path = AppStoreScreenshots/MacStatisticsTests.swift; sourceTree = "<group>"; };
 		3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegacyStudyImporterTest.swift; sourceTree = "<group>"; };
-		3F5FAA8DC32D15C9C3AEAA7C /* StudyAppState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StudyAppState.swift; path = Application/StudyAppState.swift; sourceTree = "<group>"; };
+		3F5FAA8DC32D15C9C3AEAA7C /* StudyRoot.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StudyRoot.swift; path = Application/StudyRoot.swift; sourceTree = "<group>"; };
 		46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyStatisticsTest.swift; sourceTree = "<group>"; };
 		4874562D261DD28E00F33AA3 /* NativeFontPreviewTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NativeFontPreviewTests.swift; path = NativeFontPreviewTests.swift; sourceTree = "<group>"; };
 		4874562E261DD28E00F33AA3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -624,7 +624,7 @@
 				71D4BC28171A5694DB4ACE75 /* SyncStore.swift */,
 				0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */,
 				36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */,
-				3F5FAA8DC32D15C9C3AEAA7C /* StudyAppState.swift */,
+				3F5FAA8DC32D15C9C3AEAA7C /* StudyRoot.swift */,
 				9AA090A81B269F2E9AD6BD52 /* LegacyStudyWindow.swift */,
 				B881D213C2680BC8C542CEEE /* MacLessonTests.swift */,
 				2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */,
@@ -1322,7 +1322,7 @@
 				9B7342C437915FD7B2FBA42C /* SyncStore.swift in Sources */,
 				FFDC4714E0B50FC1EF60E822 /* LegacyStudyImporter.swift in Sources */,
 				6F5E06F1F9BD785F9E3BDC4E /* UsagiUnagiApp.swift in Sources */,
-				6DF440FA84D10AC573496F61 /* StudyAppState.swift in Sources */,
+				6DF440FA84D10AC573496F61 /* StudyRoot.swift in Sources */,
 				3A7B6946F29D8EB946B41859 /* LegacyStudyWindow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
