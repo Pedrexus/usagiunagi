@@ -15,11 +15,11 @@
 import CoreText
 import Foundation
 
-struct FontDefinition {
-  var fontName: String
-  var fileName: String
-  var displayName: String
-  var sizeBytes: Int64
+struct FontDefinition: Sendable {
+  let fontName: String
+  let fileName: String
+  let displayName: String
+  let sizeBytes: Int64
   init(_ fontName: String, _ fileName: String, _ displayName: String, _ sizeBytes: Int64) {
     self.fontName = fontName
     self.fileName = fileName
@@ -28,7 +28,7 @@ struct FontDefinition {
   }
 }
 
-class Font: NSObject {
+final class Font {
   static let fontPreviewText = "色は匂へど散りぬるを我が世誰ぞ常ならん有為の奥山今日越えて浅き夢見じ酔ひもせず"
   static let fontDefinitions: [FontDefinition] = [
     FontDefinition("ArmedBanana", "armed-banana.ttf", "Armed Banana", 3_298_116),
@@ -40,82 +40,96 @@ class Font: NSObject {
     FontDefinition("santyoume-font", "san-chou-me.ttf", "San Chou Me", 4_428_896),
     FontDefinition("Sawarabi Mincho", "sawarabi-mincho.ttf", "Sawarabi Mincho", 1_082_324),
   ]
-  static func loadFont(path: String) -> Bool {
-    guard let data = FileManager.default.contents(atPath: path) else { return false }
-    let provider = CGDataProvider(data: NSData(data: data))!
-    let font = CGFont(provider)!
-    return CTFontManagerRegisterGraphicsFont(font, nil)
+  static func graphicsFont(path: String) -> CGFont? {
+    guard let data = FileManager.default.contents(atPath: path) else { return nil }
+    guard let provider = CGDataProvider(data: data as CFData) else { return nil }
+    return CGFont(provider)
   }
 
-  var definition: FontDefinition
-  var fontName: String { definition.fontName }
+  let definition: FontDefinition
+  private(set) var fontName: String
   var fileName: String { definition.fileName }
   var displayName: String { definition.displayName }
   var sizeBytes: Int64 { definition.sizeBytes }
-  var available: Bool = false
+  private(set) var available: Bool = false
+  private let directory: URL
+  private let bundledFonts: URL?
 
-  init(definition: FontDefinition) {
+  init(definition: FontDefinition, directory: URL, bundledFonts: URL?) {
     self.definition = definition
-    super.init()
+    fontName = definition.fontName
+    self.directory = directory
+    self.bundledFonts = bundledFonts
     reload()
   }
 
   func canRender(_ text: String) -> Bool {
+    guard available else { return false }
     let fontRef = CTFontCreateWithName(NSString(string: fontName), 0.0, nil)
-    let count = text.count, characters = text.utf16.map { $0 }
-    let glyphs = UnsafeMutablePointer<CGGlyph>.allocate(capacity: count)
-    let canRender = CTFontGetGlyphsForCharacters(fontRef, characters, glyphs, count)
-    if canRender {
-      // Check every glyph has a path.
-      for i in 0 ..< count {
-        guard CTFontCreatePathForGlyph(fontRef, glyphs[i], nil) != nil else { return false }
-      }
+    let characters = Array(text.utf16)
+    var glyphs = [CGGlyph](repeating: 0, count: characters.count)
+    guard CTFontGetGlyphsForCharacters(fontRef, characters, &glyphs, characters.count) else {
+      return false
     }
-    return canRender
+    // Core Text uses a zero continuation slot for a surrogate pair.
+    return glyphs.filter { $0 != 0 }.allSatisfy {
+      CTFontCreatePathForGlyph(fontRef, $0, nil) != nil
+    }
   }
 
   func reload() {
     if available { return }
-    if UIFont.fontNames(forFamilyName: fontName).count > 0 {
+    let names = CTFontManagerCopyAvailablePostScriptNames() as? [String] ?? []
+    if names.contains(definition.fontName) {
       available = true
       return
     }
-
-    // Try to load a built-in font first.
-    if let path = Bundle.main.path(forResource: "fonts/\(fileName)", ofType: nil) {
-      if Font.loadFont(path: path) {
+    if (CTFontManagerCopyAvailableFontFamilyNames() as? [String] ?? []).contains(
+      definition.fontName)
+    {
+      let pattern = CTFontDescriptorCreateWithAttributes(
+        [kCTFontFamilyNameAttribute: definition.fontName] as CFDictionary)
+      if let match = CTFontDescriptorCreateMatchingFontDescriptor(pattern, nil),
+        let name = CTFontDescriptorCopyAttribute(match, kCTFontNameAttribute) as? String
+      {
+        fontName = name
         available = true
         return
       }
     }
-
-    // Try to load the downloaded font.
-    let path = "\(FontLoader.cacheDirectoryPath)/\(fileName)"
-    NSLog("Loading font \(path)")
-    if Font.loadFont(path: path) {
-      available = true
-      return
+    for url in [
+      bundledFonts?.appendingPathComponent(fileName), directory.appendingPathComponent(fileName),
+    ].compactMap({ $0 }) {
+      if let font = Font.graphicsFont(path: url.path), let name = font.postScriptName as String?,
+        names.contains(name) || CTFontManagerRegisterGraphicsFont(font, nil)
+      {
+        fontName = name
+        available = true
+        return
+      }
     }
   }
 
   func didDelete() { available = false }
-  func loadScreenshot() -> UIImage! { UIImage(named: fontName) }
 }
 
-class FontLoader: NSObject {
+final class FontLoader {
   static var cacheDirectoryPath: String {
     "\(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0])/fonts"
   }
 
   let allFonts: [Font]
+  let directory: URL
 
-  override init() {
-    var allFonts: [Font] = []
-    for definition in Font.fontDefinitions {
-      allFonts.append(Font(definition: definition))
+  init(
+    definitions: [FontDefinition] = Font.fontDefinitions,
+    directory: URL = URL(fileURLWithPath: FontLoader.cacheDirectoryPath),
+    bundledFonts: URL? = Bundle.main.resourceURL?.appendingPathComponent("fonts")
+  ) {
+    self.directory = directory
+    allFonts = definitions.map {
+      Font(definition: $0, directory: directory, bundledFonts: bundledFonts)
     }
-    self.allFonts = allFonts
-    super.init()
   }
 
   func font(fileName: String) -> Font? {

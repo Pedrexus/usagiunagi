@@ -10,13 +10,13 @@
         <!--Select Fonts-->
         <scene sceneID="Edv-Yt-Zoe">
             <objects>
-                <tableViewController title="Select Fonts" id="QeO-rY-q75" customClass="FontsViewController" customModule="Tsurukame" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="insetGrouped" separatorStyle="default" allowsMultipleSelection="YES" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" id="I82-At-GcW">
+                <viewController title="Select Fonts" id="QeO-rY-q75" customClass="FontsViewController" customModule="Tsurukame" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="I82-At-GcW">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                    </tableView>
+                    </view>
                     <navigationItem key="navigationItem" title="Select Fonts" id="CJp-DN-5Zn"/>
-                </tableViewController>
+                </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="BnI-lh-nSF" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="503" y="-654"/>

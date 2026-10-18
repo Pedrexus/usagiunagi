@@ -18,7 +18,8 @@ import WaniKaniAPI
 
 class TKMServices {
   let reachability: Reachability = .forInternetConnection()
-  let fontLoader: FontLoader = .init()
+  let fontLoader: FontLoader
+  @MainActor lazy var fontLibrary = FontLibraryModel(loader: fontLoader)
 
   private(set) var offlineAudio: OfflineAudio!
   private(set) var audio: Audio!
@@ -27,7 +28,8 @@ class TKMServices {
   var client: WaniKaniAPIClient!
   var localCachingClient: LocalCachingClient!
 
-  init() {
+  init(fontLoader: FontLoader = .init()) {
+    self.fontLoader = fontLoader
     offlineAudio = OfflineAudio(services: self)
     audio = Audio(services: self)
     radicalCharacterImages = RadicalCharacterImages(services: self)

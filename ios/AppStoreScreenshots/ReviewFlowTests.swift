@@ -15,6 +15,102 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor private func launchFontLibrary(extra: [String] = []) -> XCUIApplication {
+    let app = launchSingleReview(extra: ["FontFlowFixture"] + extra)
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("personally")
+    app.buttons["review.settings"].tap()
+    app.buttons["reviewSettings.fonts"].tap()
+    XCTAssertTrue(app.navigationBars["Select Fonts"].waitForExistence(timeout: 5))
+    return app
+  }
+
+  @MainActor func testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft() {
+    continueAfterFailure = false
+    let app = launchFontLibrary()
+    defer { clearFixture(app) }
+    let selection = app.switches["font.selection.font-ready.ttf"]
+    XCTAssertTrue(selection.waitForExistence(timeout: 5))
+    XCTAssertEqual(selection.value as? String, "0")
+    setSettingsSwitch(selection, on: true, in: app)
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "SwiftUI font library selection"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.navigationBars["Select Fonts"].buttons.firstMatch.tap()
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "personally")
+    app.buttons["review.settings"].tap()
+    app.buttons["reviewSettings.fonts"].tap()
+    XCTAssertTrue(selection.waitForExistence(timeout: 5))
+    XCTAssertEqual(selection.value as? String, "1")
+  }
+
+  @MainActor func testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled() {
+    continueAfterFailure = false
+    let app = launchFontLibrary()
+    defer { clearFixture(app) }
+    let held = app.buttons["font.download.font-held.ttf"]
+    scrollTo(held, in: app)
+    held.tap()
+    let cancel = app.buttons["font.cancel.font-held.ttf"]
+    XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+    cancel.tap()
+    XCTAssertTrue(held.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.staticTexts["font.error.font-held.ttf"].exists)
+    let failed = app.buttons["font.download.font-failed.ttf"]
+    scrollTo(failed, in: app, towardTop: true)
+    failed.tap()
+    let error = app.staticTexts["font.error.font-failed.ttf"]
+    XCTAssertTrue(error.waitForExistence(timeout: 5))
+    XCTAssertTrue(error.label.contains("503"))
+    XCTAssertTrue(failed.label.contains("Retry"))
+    failed.tap()
+    XCTAssertTrue(error.waitForExistence(timeout: 5))
+    let deletion = app.buttons["fonts.deleteAll"]
+    scrollTo(deletion, in: app)
+    deletion.tap()
+    let confirmation = app.buttons["Delete downloaded fonts"]
+    XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+    let dismiss = app.buttons["Cancel"].firstMatch
+    if dismiss.exists {
+      dismiss.tap()
+    } else {
+      let popup = app.popovers.firstMatch
+      XCTAssertTrue(popup.exists)
+      app.otherElements["PopoverDismissRegion"].coordinate(
+        withNormalizedOffset: CGVector(dx: popup.frame.midX < app.frame.midX ? 0.95 : 0.05, dy: 0.5)
+      ).tap()
+    }
+    XCTAssertFalse(confirmation.exists)
+    XCTAssertTrue(deletion.isHittable)
+    XCTAssertTrue(app.navigationBars["Select Fonts"].exists)
+  }
+
+  @MainActor func testFontDownloadContinuesAfterLeavingThePicker() {
+    continueAfterFailure = false
+    let app = launchFontLibrary()
+    defer { clearFixture(app) }
+    let download = app.buttons["font.download.font-download.ttf"]
+    scrollTo(download, in: app)
+    download.tap()
+    let progress = app.descendants(matching: .any).matching(
+      identifier: "font.progress.font-download.ttf"
+    ).firstMatch
+    XCTAssertTrue(progress.waitForExistence(timeout: 5))
+    app.navigationBars["Select Fonts"].buttons.firstMatch.tap()
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "personally")
+    app.buttons["review.settings"].tap()
+    app.buttons["reviewSettings.fonts"].tap()
+    let selected = app.switches["font.selection.font-download.ttf"]
+    XCTAssertTrue(selected.waitForExistence(timeout: 15))
+    XCTAssertEqual(selected.value as? String, "1")
+  }
+
   @MainActor
   func testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft() {
     continueAfterFailure = false
@@ -1014,9 +1110,14 @@ extension ReviewFlowTests {
     scrollTo(control, in: app)
     if control.frame.maxY > app.frame.maxY - 60 { app.swipeUp(velocity: .slow) }
     if control.value as? String == (on ? "1" : "0") { return }
-    control.coordinate(withNormalizedOffset: .zero).withOffset(
-      CGVector(dx: control.frame.width - 26, dy: control.frame.height / 2)
-    ).tap()
+    let thumb = control.switches.firstMatch
+    if thumb.exists {
+      thumb.tap()
+    } else {
+      control.coordinate(withNormalizedOffset: .zero).withOffset(
+        CGVector(dx: control.frame.width - 26, dy: control.frame.height / 2)
+      ).tap()
+    }
     let state = XCTNSPredicateExpectation(
       predicate: NSPredicate(format: "value == %@", on ? "1" : "0"), object: control)
     XCTAssertEqual(XCTWaiter.wait(for: [state], timeout: 3), .completed)

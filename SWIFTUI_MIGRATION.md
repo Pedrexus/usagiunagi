@@ -44,7 +44,7 @@ Raw subject/assignment IDs and numeric SRS stages remain in persisted/API compat
 
 The complete-concurrency diagnostic pass observed **412 distinct non-vendored warning locations/messages** across its build and test runs: 262 production, 95 generated, 53 UI-test/tooling, and 2 watch. This is an observed incremental-build inventory, not a clean whole-graph count or 412 independent bugs. Major sources are archived static settings, table/delegate actor contracts, storyboard-generated factories, notification callbacks, audio and legacy caching. The successful final iOS test run alone reported 349 of those. Enabling Swift 6 on the entire legacy target would turn many into errors; do not silence them with blanket preconcurrency imports or unchecked conformance. Migrate settings to native preference ownership, annotate genuine UI protocols/factories on MainActor, finish the actor-backed repository, and remove obsolete generated layers as their callers move. CORE, SETTINGS, SYNC, DEPEND and WATCH retain those gates in TASKS.md.
 
-No feature was disabled for this audit. UIKit keyboard/composition and rich-details/font-library adapters remain until parity is demonstrated. System SQLite and SwiftProtobuf remain read-only legacy-format compatibility code; Speech/AVFoundation, URLSession and SwiftData remain the native non-UI services.
+No feature was disabled for this audit. UIKit keyboard/composition and navigation/service adapters remain until parity is demonstrated; rich details and iOS font-library presentation now use shared SwiftUI. System SQLite and SwiftProtobuf remain read-only legacy-format compatibility code; Speech/AVFoundation, URLSession and SwiftData remain the native non-UI services.
 
 ## What is actually in this repository
 
@@ -90,7 +90,7 @@ Mac reads full study content through URLSession/async-await and commits it in th
 | Feature | Swift/SwiftUI outcome | Choice still needed |
 | --- | --- | --- |
 | Home, settings, catalog, review UI, lesson UI | Main review layout is shared SwiftUI; most other iOS screens still await migration | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
-| Rich review answer details and font library | Temporary UIKit adapters; these can migrate to SwiftUI | Preserve mnemonic markup, editable notes/synonyms, audio, subject links and font downloads while CATALOG/SETTINGS migrate. Quick settings and end/wrap-up controls are now SwiftUI. This is staged work, not a SwiftUI limitation. |
+| Rich review answer details and font library | Shared SwiftUI presentation behind small iOS navigation/service hosts | Rich details, note/synonym editing and the iOS font library now render in shared SwiftUI. Core Text handles font registration and URLSession handles downloads; these are native services rather than UI exceptions. Native Mac font-library integration remains open. |
 | Forced Japanese keyboard selection and marked-text behavior | Needs a small UIKit text-input adapter until SwiftUI provides equivalent control | Keep the adapter, or accept system-selected keyboard language after explicit input-parity testing. |
 | SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Native reviews use Apple’s SwiftUI WebView with a small HTML image wrapper, disabled scripts and local SVG bytes. No app-owned UIKit/AppKit representable is needed. The legacy iOS SVGKit path remains until its callers migrate. |
 | Speech recognition | Swift service using Apple's Speech framework; SwiftUI provides its controls | Shared Swift 6 capture service and SwiftUI panel feed iOS and native Mac review grading. Keep typing available; transcription cannot establish pronunciation quality. Physical microphone/model validation remains open. |
@@ -660,7 +660,8 @@ only the three platform operations. Physical prompt/delivery acceptance remains 
 | SettingChoiceListViewController.swift | Deleted; native typed Pickers replace its only callers. |
 | EditableTextModelItem.swift and AttributedModelItem.swift | Deleted after proving AppSettings was their last consumer; a native email TextField replaces that path. |
 | SettingsTableViewController.swift and TableCards | Retained: developer tools and Home still have active callers. |
-| FontsViewController, OfflineAudioViewController and DeveloperOptionsViewController | Retained behind explicit host actions. These are migration work, not limitations of SwiftUI. Main settings UI does not claim those destinations are already ported. |
+| FontsViewController | Now a small navigation host for shared FontLibraryView; the old table/download controller and download cell are removed. Core Text registers fonts and URLSession owns downloads. Native Mac adoption remains open. |
+| OfflineAudioViewController and DeveloperOptionsViewController | Retained behind explicit host actions. These are migration work, not limitations of SwiftUI. Main settings UI does not claim those destinations are already ported. |
 
 The new Swift 6 AppTests target imports the built application with @testable.
 Its first five Swift Testing functions cover notification permission decisions,
@@ -718,3 +719,39 @@ with Reduce Motion enabled. ViewThatFits switches the feedback row to a vertical
 layout when its captions need more width. No particle renderer, timer, dependency
 or replacement grading path was introduced. This restores missing behavior;
 it is not a claim of an overall LOC reduction or full platform parity.
+
+## Font library and preview utility audit — 2026-10-18
+
+The font library now uses a shared SwiftUI Form with native selection switches,
+SF Symbols, URLSession task progress, cancellation, inline errors/retry and a
+button-anchored delete confirmation. Existing filename-based preferences and
+all eight catalog entries are retained. Downloads belong to the service rather
+than the pushed screen, so closing the picker preserves the task and review draft.
+
+| Audited files | Decision and preserved behavior |
+| --- | --- |
+| ios/FontsViewController.swift | Replaced by ios/Features/Settings/FontsViewController.swift. The scene remains a small UIHostingController; font rows render in StudyUI/Settings/FontLibraryView.swift. |
+| ios/DownloadViewController.swift | Removed after replacing its sole remaining font-library caller. The observable model owns typed actions and URLSessionDownloadTask instances. |
+| ios/Tables/DownloadModelItem.swift and DownloadModelItem.xib | Removed after the app and preview utility both stopped using them. Native Toggle, Button and ProgressView replace cell/delegate/progress formatting. |
+| ios/Resources/SelectFonts.storyboard | Retained only as a hosting scene with the same identifier and navigation callers; no table/cell layout remains. |
+| ios/FontLoader.swift | Retained as Foundation/CoreText logic; removed UIKit, NSObject inheritance, the unused activation wrapper and screenshot lookup. Resolves canonical PostScript names once. Managed UTF-16 buffers fix the glyph allocation leak and supplementary-kanji count. |
+| ios/Services.swift | Owns the font model and loader. URLSession delegates transfer temporary-file ownership before returning; task identity prevents cancelled/obsolete callbacks from installing files. |
+| ios/AppDelegate.swift and AppStoreScreenshots/FontFixture.swift | Only the Debug screenshot path injects temporary storage, volatile preferences and an ephemeral mocked session. No release fixture or real account/font-cache mutation. |
+| ios/FontScreenshotter/AppDelegate.swift, ViewController.swift and Base.lproj/LaunchScreen.storyboard | Removed after the new FontScreenshotterApp.swift passed its export workflow. A native SwiftUI App replaces the UIKit lifecycle/table; a standard UILaunchScreen declaration replaces the launch storyboard. |
+| ios/FontScreenshotterUITests/FontScreenshotterUITests.swift | Replaced by NativeFontPreviewTests.swift. Native Core Image produces transparent glyph exports without the old mutable pixel loop. Export names retain the original asset aliases, while the complete Japanese sample wraps without a fixed-height cut-off. |
+| ios/Tsurukame.xcodeproj/project.pbxproj | Removed retired source/resource references and seven unrelated preview-target source memberships. Kept active Home/developer table files; they still have callers. Preview-target CocoaPods linkage remains separate dependency-cleanup work. |
+| ios/AppTests/FontLibraryTests.swift and AppStoreScreenshots/ReviewFlowTests.swift | Added five Swift Testing functions and three font workflows. They cover original files/glyphs, corrupt/status failures, saved selection, cancel/delete, retry, task survival and unchanged review drafts. Existing settings and navigation regressions remain. |
+
+Uninstalled preview images use template rendering and the semantic primary color;
+installed fonts use their actual registered face. The shared view builds for native
+Mac, but a Mac font backend and entry point are still required before claiming
+font-feature parity. Core Text, Foundation and URLSession are necessary native
+services; none requires disabling a feature because of SwiftUI.
+
+Same-scope production Swift across the old/new font controllers, download cell,
+loader, services, AppDelegate and shared form: **756 → 635 physical lines** (121
+fewer). Preview utility production Swift: **82 → 24** (58 fewer). These counts
+include comments/blank lines and exclude tests, Debug fixture files, generated
+sources and third-party code; they do not describe the whole repository. Build,
+workflow and visual evidence is recorded in TASKS.md. UIKit keyboard/navigation,
+Mac feature parity, audio/developer screens and the iOS storage handoff remain open.

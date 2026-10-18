@@ -25,21 +25,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   // for background fetches that happen while no scene is connected.
   private(set) var services: TKMServices!
 
-  func application(_ application: UIApplication,
-                   didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil)
-    -> Bool {
+  func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
+  )
+    -> Bool
+  {
     Settings.migrate()
     Screenshotter.setUp()
 
     application.setMinimumBackgroundFetchInterval(UIApplication.backgroundFetchIntervalMinimum)
-    services = TKMServices()
+    #if DEBUG
+      if let (loader, configuration) = Screenshotter.fontFixture() {
+        services = TKMServices(fontLoader: loader)
+        services.fontLibrary = FontLibraryModel(loader: loader, configuration: configuration)
+      } else {
+        services = TKMServices()
+      }
+    #else
+      services = TKMServices()
+    #endif
 
     return true
   }
 
-  func application(_: UIApplication,
-                   performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult)
-                     -> Void) {
+  func application(
+    _: UIApplication,
+    performFetchWithCompletionHandler completionHandler:
+      @escaping (UIBackgroundFetchResult)
+      -> Void
+  ) {
     guard let lcc = services.localCachingClient else {
       completionHandler(.noData)
       return
@@ -84,13 +99,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UIApplication.shared.applicationIconBadgeNumber = reviewCount
         nc.removeAllPendingNotificationRequests()
 
-        let startDate = NSCalendar.current.nextDate(after: Date(),
-                                                    matching: DateComponents(minute: 0, second: 0),
-                                                    matchingPolicy: .nextTime)!
+        let startDate = NSCalendar.current.nextDate(
+          after: Date(),
+          matching: DateComponents(minute: 0, second: 0),
+          matchingPolicy: .nextTime)!
         let startInterval = startDate.timeIntervalSinceNow
         var cumulativeReviews = reviewCount
         var notificationsAdded = 0
-        for hour in 0 ..< upcomingReviews.count {
+        for hour in 0..<upcomingReviews.count {
           let reviews = upcomingReviews[hour]
           if reviews == 0 {
             continue
@@ -106,8 +122,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
           let identifier = "badge-\(hour)"
           let content = UNMutableNotificationContent()
           if settings.alertSetting == .enabled, Settings.notificationsAllReviews {
-            content.body = "\(cumulativeReviews) review\(cumulativeReviews == 1 ? "" : "s") " +
-              "available (\(upcomingReviews[hour]) new)"
+            content.body =
+              "\(cumulativeReviews) review\(cumulativeReviews == 1 ? "" : "s") "
+              + "available (\(upcomingReviews[hour]) new)"
           }
           if settings.badgeSetting == .enabled, Settings.notificationsBadging {
             content.badge = NSNumber(value: cumulativeReviews)
@@ -116,10 +133,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             content.sound = UNNotificationSound.default
           }
 
-          let trigger = UNTimeIntervalNotificationTrigger(timeInterval: triggerTimeInterval,
-                                                          repeats: false)
-          let request = UNNotificationRequest(identifier: identifier, content: content,
-                                              trigger: trigger)
+          let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: triggerTimeInterval,
+            repeats: false)
+          let request = UNNotificationRequest(
+            identifier: identifier, content: content,
+            trigger: trigger)
 
           nc.add(request, withCompletionHandler: nil)
           notificationsAdded += 1
