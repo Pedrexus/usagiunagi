@@ -7,6 +7,7 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
   public var appearance = Appearance.system
   public var stageIndicator = StageIndicator.name
   public var fontScale = 1.0
+  public var sessionOptions = StudySessionOptions()
   public var revealAnswers = true
   public var revealFullAnswer = false
   public var exactMatch = false
@@ -22,13 +23,16 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case appearance, stageIndicator, fontScale, revealAnswers, revealFullAnswer, exactMatch
     case allowCorrections, allowSkipping, autoplayAudio, interruptBackgroundAudio
-    case correctAnswerFeedback, completedItemFeedback, srsMilestoneFeedback
+    case correctAnswerFeedback, completedItemFeedback, srsMilestoneFeedback, sessionOptions
   }
 
   /// New preferences must not reset an existing window's saved review options.
   public init(from decoder: any Decoder) throws {
     self.init()
     let values = try decoder.container(keyedBy: CodingKeys.self)
+    sessionOptions =
+      try values.decodeIfPresent(StudySessionOptions.self, forKey: .sessionOptions)
+      ?? sessionOptions
     appearance = try values.decodeIfPresent(Appearance.self, forKey: .appearance) ?? appearance
     stageIndicator =
       try values.decodeIfPresent(StageIndicator.self, forKey: .stageIndicator) ?? stageIndicator
@@ -54,6 +58,19 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
 
   /// A settings window only replaces fields it changed, preserving another window's edits.
   public mutating func applyChanges(from old: Self, to new: Self) {
+    if old.sessionOptions.ankiMode != new.sessionOptions.ankiMode {
+      sessionOptions.ankiMode = new.sessionOptions.ankiMode
+    }
+    let booleans: [WritableKeyPath<StudySessionOptions, Bool>] = [
+      \.groupMeaningReading, \.combinedAnki, \.meaningFirst, \.skipKanjiReadings, \.minimizePenalty,
+    ]
+    for key in booleans where old.sessionOptions[keyPath: key] != new.sessionOptions[keyPath: key] {
+      sessionOptions[keyPath: key] = new.sessionOptions[keyPath: key]
+    }
+    for key in [\StudySessionOptions.batchSize, \.incorrectAnswerDelay]
+    where old.sessionOptions[keyPath: key] != new.sessionOptions[keyPath: key] {
+      sessionOptions[keyPath: key] = new.sessionOptions[keyPath: key]
+    }
     if old.appearance != new.appearance { appearance = new.appearance }
     if old.stageIndicator != new.stageIndicator { stageIndicator = new.stageIndicator }
     if old.fontScale != new.fontScale { fontScale = new.fontScale }

@@ -11,7 +11,7 @@ struct TsurukameMacApp: App {
     @State private var store = MacStudyStore()
     var body: some Scene {
         WindowGroup {
-            MacStudyRoot(store: store).frame(minWidth: 640, minHeight: 500).task { await store.restore() }
+            MacStudyRoot(store: store).defaultAppStorage(MacStudyStore.reviewDefaults).frame(minWidth: 640, minHeight: 500).task { await store.restore() }
         }.defaultSize(width: 1120, height: 800)
             .commands { CommandGroup(after: .newItem) { Button("Refresh WaniKani") { Task { await store.refresh() } }.keyboardShortcut("r").disabled(store.isSyncing || store.snapshot?.isSample != false) } }
     }
@@ -19,6 +19,26 @@ struct TsurukameMacApp: App {
 
 @MainActor @Observable
 final class MacStudyStore {
+    static let reviewDefaults: UserDefaults = {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("ReviewFixture") {
+            let suite = "dev.usagiunagi.mac-review-fixture"
+            let defaults = UserDefaults(suiteName: suite)!
+            defaults.removePersistentDomain(forName: suite)
+            var preferences = ReviewPreferences()
+            if arguments.contains("AnkiFixture") {
+                preferences.sessionOptions.ankiMode = arguments.contains("ReadingAnkiFixture") ? .reading : .both
+                preferences.sessionOptions.combinedAnki = arguments.contains("CombinedAnkiFixture")
+                preferences.sessionOptions.groupMeaningReading = true
+                preferences.sessionOptions.incorrectAnswerDelay = 0
+            }
+            defaults.set(try? JSONEncoder().encode(preferences), forKey: "native.reviewPreferences")
+            return defaults
+        }
+        #endif
+        return .standard
+    }()
     var snapshot: StudySnapshot?
     var profile: StudyAccountProfile?
     var savedWorkStore: StudyStore?
@@ -310,7 +330,7 @@ private struct MacStudyRoot: View {
         return $reviewPreferences.colorScheme
     }
     private enum Destination: String, CaseIterable, Identifiable {
-        case reviews = "Reviews", lessons = "Lessons", practice = "Practice", statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
+        case reviews = "Reviews", lessons = "Lessons", practice = "Practice", statistics = "Statistics", subjects = "Subjects", settings = "Review settings", savedWork = "Saved work", account = "Account"
         var id: Self { self }
         var symbol: String {
             switch self {
@@ -319,6 +339,7 @@ private struct MacStudyRoot: View {
             case .practice: "square.and.pencil"
             case .statistics: "chart.bar.xaxis"
             case .subjects: "character.book.closed"
+            case .settings: "slider.horizontal.3"
             case .savedWork: "tray.and.arrow.up"
             case .account: "person.crop.circle"
             }
@@ -338,6 +359,12 @@ private struct MacStudyRoot: View {
         } detail: {
             Group {
                 if section == .practice { KatakanaPracticeView() }
+                else if section == .settings {
+                    ReviewSettingsPanel(preferences: reviewPreferences, changed: { old, new in
+                        do { try $reviewPreferences.applyChanges(from: old, to: new) }
+                        catch { store.error = error.localizedDescription }
+                    }, supportsAudio: false, supportsSessionOptions: true)
+                }
                 else if section == .account || store.snapshot == nil { account }
                 else if let snapshot = store.snapshot {
                     if section == .reviews {

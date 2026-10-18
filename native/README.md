@@ -2,7 +2,7 @@
 
 Open `TsurukameMac.xcodeproj` in Xcode 27 and run the `TsurukameMac` scheme on macOS 27 or newer. This is a native SwiftUI app, not Catalyst. The shared `../StudyKit` package has no third-party dependencies and uses Apple SwiftData for local persistence.
 
-The Account screen supports a WaniKani API token or clearly labelled synthetic sample data. The app provides curriculum charts, subject search and an offline snapshot. Saved work shows pending reviews and note edits from this Mac's native store. It can explicitly queue definitively rejected requests and send pending work after account/assignment verification. Uncertain or changed assignments stay saved for further reconciliation. The iPhone/iPad queues remain on those devices. The Reviews page now supports offline typed and voice-assisted reviews, wrong-answer feedback, explicit correction, wrap-up and durable pause/resume. Each decision saves with its completed-answer outbox entry before the UI advances. Image-only radicals now render through Apple’s SwiftUI WebView and reuse verified SVG files offline after their first download; missing images can be retried or deferred. Katakana practice and review quick settings also use shared native views. Lessons, audio/downloads, font selection and complete study settings still require migration.
+The Account screen supports a WaniKani API token or clearly labelled synthetic sample data. The app provides curriculum charts, subject search and an offline snapshot. Saved work shows pending reviews and note edits from this Mac's native store. It can explicitly queue definitively rejected requests and send pending work after account/assignment verification. Uncertain or changed assignments stay saved for further reconciliation. The iPhone/iPad queues remain on those devices. The Reviews page now supports offline typed and voice-assisted reviews, wrong-answer feedback, explicit correction, wrap-up and durable pause/resume. Each decision saves with its completed-answer outbox entry before the UI advances. Image-only radicals now render through Apple’s SwiftUI WebView and reuse verified SVG files offline after their first download; missing images can be retried or deferred. Katakana practice and review quick settings also use shared native views. The Lessons page reuses shared selection, teaching and quizzes. Review settings now offers scoped Anki, combined cards, grouping/order, repeat delay, reading skip and penalty controls for new sessions. Paused sessions retain their saved choices. Native lesson/mode UI acceptance remains open after automation failed to initialize; audio/downloads, fonts and remaining full settings still require migration.
 
 Credentials use Keychain. Snapshots are saved in the native SwiftData store at `Application Support/TsurukameNative/study.store`, bound to a credential fingerprint and carrying WaniKani’s stable user ID. The store contains learning data, not tokens. The former `snapshot-v1.json` cache imports once for its matching credential. Its original file is retained for rollback until explicit disconnect, which removes the credential, current snapshot and old cache file. A persistent import receipt prevents deleted snapshots from returning. Old offline snapshots without a user ID remain readable; reconnecting verifies identity before new study-state writes can be enabled. Sample mode never overwrites the saved account. Sync is manual; each refresh fetches all pages and publishes only a complete result. The shared store coalesces same-account requests and queues an explicit send behind an active read. Closing a waiting window does not cancel an app-owned pass. Disconnect cancels and drains active reads/writes before removing credentials and snapshots; pending work remains account-bound. Late callbacks cannot reconnect the UI. If upload succeeds but refresh fails, the app retains and reports the upload result. WaniKani remains the cross-device source of learning progress; iCloud preference/download sync is not implemented.
 
@@ -17,6 +17,7 @@ In `/Users/pedro/Developer/Projects`, use the root Mainboard tasks:
 
 ```sh
 mainboard run --as-is usagi-build-mac
+mainboard run --as-is usagi-build-mac-tests
 mainboard run --as-is usagi-test
 ```
 
@@ -64,3 +65,13 @@ warning; successful refresh clears it while preserving the archive.
 For isolated review recovery, use `ReviewFixture ReviewRecoveryFixture`; add
 `LessonRecoveryFixture` to inspect a lesson. These Debug-only fixtures have
 in-memory work and GET-only synthetic responses, with all uploads disabled.
+
+The native review-mode checkpoint passes 242 shared test functions on macOS/iOS,
+91 hosted iOS tests and five focused grading/settings flows on each phone/tablet.
+`usagi-build-mac-tests` compiles six native UI acceptance methods;
+`usagi-test-mac-review-modes` and `usagi-test-mac-lessons` execute them when desktop
+automation is available. Compilation is not UI acceptance. See
+`../validation/2026-10-18-native-review-modes.json` for exact evidence and limits.
+Debug `ReviewFixture` preferences use a dedicated reset suite. Add `AnkiFixture`,
+optionally `CombinedAnkiFixture` or `ReadingAnkiFixture`, for controlled mode checks;
+add `LessonFixture` for an unlocked lesson. Normal preferences remain separate.

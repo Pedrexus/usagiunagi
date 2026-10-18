@@ -15,6 +15,13 @@
 import Foundation
 
 public struct StudySessionOptions: Codable, Equatable, Sendable {
+    public enum AnkiMode: String, Codable, CaseIterable, Sendable {
+        case off, meaning, reading, both
+        public func includes(_ kind: StudyQuestionKind) -> Bool {
+            self == .both || (self == .meaning && kind == .meaning) || (self == .reading && kind == .reading)
+        }
+    }
+    public var ankiMode = AnkiMode.off
     public var batchSize = 5
     public var groupMeaningReading = false
     public var combinedAnki = false
@@ -23,6 +30,22 @@ public struct StudySessionOptions: Codable, Equatable, Sendable {
     public var skipKanjiReadings = false
     public var minimizePenalty = false
     public init() {}
+    private enum CodingKeys: String, CodingKey {
+        case ankiMode, batchSize, groupMeaningReading, combinedAnki, meaningFirst
+        case incorrectAnswerDelay, skipKanjiReadings, minimizePenalty
+    }
+    public init(from decoder: any Decoder) throws {
+        self.init()
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        batchSize = try values.decodeIfPresent(Int.self, forKey: .batchSize) ?? batchSize
+        groupMeaningReading = try values.decodeIfPresent(Bool.self, forKey: .groupMeaningReading) ?? groupMeaningReading
+        combinedAnki = try values.decodeIfPresent(Bool.self, forKey: .combinedAnki) ?? combinedAnki
+        ankiMode = try values.decodeIfPresent(AnkiMode.self, forKey: .ankiMode) ?? (combinedAnki ? .both : .off)
+        meaningFirst = try values.decodeIfPresent(Bool.self, forKey: .meaningFirst) ?? meaningFirst
+        incorrectAnswerDelay = try values.decodeIfPresent(Int.self, forKey: .incorrectAnswerDelay) ?? incorrectAnswerDelay
+        skipKanjiReadings = try values.decodeIfPresent(Bool.self, forKey: .skipKanjiReadings) ?? skipKanjiReadings
+        minimizePenalty = try values.decodeIfPresent(Bool.self, forKey: .minimizePenalty) ?? minimizePenalty
+    }
 }
 
 public struct StudyAnswerAttempt: Codable, Equatable, Sendable {

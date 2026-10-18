@@ -172,6 +172,7 @@
 		FD8DD84D882C458DA4576236 /* ReviewSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A9A55C282389C800602D09 /* ReviewSession.swift */; };
 		FE3C6272D05CE2990DAF9EA9 /* PendingUploadAcknowledgementTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6678EB4129FCEC2995ECE5 /* PendingUploadAcknowledgementTest.swift */; };
 		FFDC4714E0B50FC1EF60E822 /* LegacyStudyImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */; };
+		A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27800000000000000000002 /* ReviewSessionOptionsTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -401,6 +402,7 @@
 		F9C48CF5ADDC56D1A96EDE8C /* SceneDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		FA1B55C18893D5E681F97EAC /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = Localizations/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FD6678EB4129FCEC2995ECE5 /* PendingUploadAcknowledgementTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingUploadAcknowledgementTest.swift; sourceTree = "<group>"; };
+		A27800000000000000000002 /* ReviewSessionOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewSessionOptionsTests.swift; path = AppTests/ReviewSessionOptionsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -532,6 +534,7 @@
 			children = (
 				A27100000000000000000002 /* FontLibraryTests.swift */,
 				A27700000000000000000002 /* StudyShellStateTests.swift */,
+				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
 				A27000000000000000000002 /* NotificationPreferencesTests.swift */,
 				A27000000000000000000003 /* AppTests.xctest */,
 				6324AE3D2F9DC7FF0089066C /* RadicalCharacterImages.swift */,
@@ -1383,6 +1386,7 @@
 			files = (
 				A27100000000000000000001 /* FontLibraryTests.swift in Sources */,
 				A27700000000000000000001 /* StudyShellStateTests.swift in Sources */,
+				A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */,
 				A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

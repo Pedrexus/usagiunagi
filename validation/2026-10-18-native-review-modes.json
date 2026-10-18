@@ -1,0 +1,104 @@
+{
+  "checkpoint": "Native Mac review modes and session options",
+  "date": "2026-10-18",
+  "baseCommit": "1d9b47c",
+  "sourceSHA256": {
+    "StudyKit/Sources/StudyCore/ReviewPreferences.swift": "779f8d0cb3ab61e307734cb4b3f3870b8cee66d294d32a15d6b494e1d47c6cce",
+    "StudyKit/Sources/StudyCore/StudySession.swift": "6b0637641649b98c341271e755bb89a3994ff027116b81f16c35f95ed954e54f",
+    "StudyKit/Sources/StudyPersistence/StudyStore+Reviews.swift": "726d84ef6ac89ef0bb31e13317aa16e5235856042b17ad90afc1c2abad7bb849",
+    "StudyKit/Sources/StudyUI/Reviews/NativeReviewView.swift": "74089dccea1439e56003c682bfd5c52512c9bfdbbf4b9342d60345588cdae391",
+    "StudyKit/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift": "5ac7821fc0f51499d226e092ab1f01154d3e008a888a4e6f4022e4f524c1620d",
+    "StudyKit/Sources/StudyUI/Reviews/StudySessionSettingsContent.swift": "38b03acc9f578b7fc4899e50db70cca59f69421c562d6d25474c1f8d73bc3a3d",
+    "StudyKit/Tests/StudyCoreTests/ReviewPreferencesTests.swift": "db89f9a594ac1afaff17b5c191e5e3e58117c9604313f781368026724e66a66e",
+    "StudyKit/Tests/StudyPersistenceTests/NativeAnkiTests.swift": "cbb6a1480c3bb723f40314a052043d5e25a8c68b09e020469333b0c34ba6e97f",
+    "ios/ReviewSession.swift": "de6ce63027e4c6bb0d1cd01711a9b34be69fe74ff63c7f88d9333549089756b6",
+    "ios/AppTests/ReviewSessionOptionsTests.swift": "ad43a2e6eff450dba2723b1ed54fde778f94ccf8e28228291cf875713d4e3505",
+    "ios/Tsurukame.xcodeproj/project.pbxproj": "227e8fb630e505df163a7f81a8cbce2ff2b3a3b3d594a9fa7d3b487ddaf7437d",
+    "native/TsurukameMacApp.swift": "528b4adfcbe06a8ac44a85d40a9fc6301b02db7031e535b7227ac36e373bf117",
+    "native/UITests/MacReviewModeTests.swift": "902d48bd9b4359538db09d5624e5b1490c8fdc3ea27e235ad61eca1a2a9813d9",
+    "native/TsurukameMac.xcodeproj/project.pbxproj": "59e634006284f8a07cab539de4e45725feb671c5755a797639a5d702a92667fe"
+  },
+  "checks": [
+    {
+      "name": "ios",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardShared/Logs/Test/Test-StudyKit-Package-2026.10.18_20-51-59-+0900.xcresult",
+      "result": "Passed",
+      "passed": 242,
+      "failed": 0,
+      "runtimeWarnings": [],
+      "devices": [
+        {
+          "deviceName": "iPhone 18 Pro",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        }
+      ]
+    },
+    {
+      "name": "hosted",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-Tsurukame-2026.10.18_20-50-27-+0900.xcresult",
+      "result": "Passed",
+      "passed": 91,
+      "failed": 0,
+      "runtimeWarnings": [],
+      "devices": [
+        {
+          "deviceName": "iPhone 18 Pro",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        }
+      ]
+    },
+    {
+      "name": "phone-ui",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-ReviewValidation-2026.10.18_20-53-18-+0900.xcresult",
+      "result": "Passed",
+      "passed": 5,
+      "failed": 0,
+      "runtimeWarnings": [],
+      "devices": [
+        {
+          "deviceName": "iPhone 18 Pro",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        }
+      ]
+    },
+    {
+      "name": "pad-ui",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardHomePad/Logs/Test/Test-ReviewValidation-2026.10.18_20-50-31-+0900.xcresult",
+      "result": "Passed",
+      "passed": 5,
+      "failed": 0,
+      "runtimeWarnings": [],
+      "devices": [
+        {
+          "deviceName": "iPad Pro 11-inch (M5)",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        }
+      ]
+    }
+  ],
+  "sharedMac": {
+    "passedFunctions": 242,
+    "groups": {
+      "core": 121,
+      "persistence": 115,
+      "speech": 6
+    },
+    "logSHA256": "e8f499e236445b7b94b16efcac7b708c6245cab5102c71edac7e6f770afb1628"
+  },
+  "nativeMac": {
+    "buildForTesting": true,
+    "compiledUIAcceptanceMethods": 6,
+    "executedUIAcceptanceMethods": 0,
+    "logSHA256": "9bf5b6c71fbbae7c55c1a005b7b43379940c04fa198853dc46197b14754f0978",
+    "lastUISetupFailureReceipt": "validation/2026-10-18-native-lessons.json"
+  },
+  "limitations": [
+    "Native Mac mode/settings/lesson UI acceptance remains unproven. Six UI methods compile; no native UI execution pass is claimed. The prior automation initialization timeout remains unresolved, and permissions were not changed.",
+    "iPhone/iPad use existing synthetic fixtures and preserve their current UI/writer. No real account, upload or microphone was used.",
+    "Native Mac audio/fonts, remaining review/practice options, full settings and account flows, the iOS store/scene cutover, watch preservation and physical/accessibility acceptance remain open."
+  ]
+}

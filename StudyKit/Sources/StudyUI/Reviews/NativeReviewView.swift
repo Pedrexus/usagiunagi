@@ -122,9 +122,14 @@ public struct NativeReviewView: View {
     }
     .disabled(busy)
     .onChange(of: preferences) { _, _ in applyPreferences() }
-    .sheet(isPresented: $settings, onDismiss: { answerFocused = screen.phase == .answering }) {
-      ReviewSettingsPanel(preferences: preferences, changed: savePreferences, supportsAudio: false)
-      {
+    .sheet(
+      isPresented: $settings,
+      onDismiss: { answerFocused = screen.phase == .answering && !screen.isAnki }
+    ) {
+      ReviewSettingsPanel(
+        preferences: preferences, changed: savePreferences, supportsAudio: false,
+        supportsSessionOptions: true
+      ) {
         settings = false
       }
       .frame(minWidth: 380, minHeight: 460)
@@ -164,9 +169,10 @@ public struct NativeReviewView: View {
     run {
       let state =
         if let lessonSubjectIDs {
-          try await store.openLessons(accountID: accountID, subjectIDs: lessonSubjectIDs)
+          try await store.openLessons(
+            accountID: accountID, subjectIDs: lessonSubjectIDs, options: preferences.sessionOptions)
         } else {
-          try await store.openReviews(accountID: accountID)
+          try await store.openReviews(accountID: accountID, options: preferences.sessionOptions)
         }
       present(state)
     }
@@ -189,7 +195,10 @@ public struct NativeReviewView: View {
     screen.canAnswer =
       !screen.question.isEmpty
       || (readyImage != nil && readyImage == value.subject?.characterImageURL)
-    screen.prompt = value.question?.kind == .reading ? "Reading" : "Meaning"
+    screen.prompt =
+      value.combinesAnki
+      ? (session.options.meaningFirst ? "Meaning + Reading" : "Reading + Meaning")
+      : value.question?.kind == .reading ? "Reading" : "Meaning"
     screen.questionKind = value.question?.kind ?? .meaning
     screen.subjectColor =
       value.subject?.kind == .kanji
@@ -202,14 +211,14 @@ public struct NativeReviewView: View {
     screen.wrappingUp = session.wrappingUp
     screen.phase =
       session.currentDecision == .incorrect
-      ? (preferences.revealAnswers ? .details : .incorrect) : .answering
+      ? (value.isAnki || preferences.revealAnswers ? .details : .incorrect) : .answering
     screen.answer = ""
     screen.feedback =
       session.currentDecision == .incorrect ? "Incorrect answer. Try again or reveal it." : ""
     applyPreferences()
     screen.success = nil
     if let success = value.success { screen.recordSuccess(success) }
-    answerFocused = true
+    answerFocused = !value.isAnki
   }
   private func change(_ action: NativeReviewAction) {
     guard let review else { return }
@@ -217,6 +226,24 @@ public struct NativeReviewView: View {
       present(
         try await store.changeReview(
           action, accountID: accountID, expectedRevision: review.saved.revision))
+    }
+  }
+  private func revealAnki() {
+    guard let review, let question = review.question else { return }
+    run {
+      present(
+        try await store.revealAnki(
+          question: question, accountID: accountID,
+          expectedRevision: review.saved.revision))
+    }
+  }
+  private func assessAnki(_ correct: Bool) {
+    guard screen.phase == .details, let review, let question = review.question else { return }
+    run {
+      present(
+        try await store.assessAnki(
+          correct: correct, question: question, accountID: accountID,
+          expectedRevision: review.saved.revision))
     }
   }
   private func submit(convertRomaji: Bool = true) {
@@ -258,7 +285,9 @@ public struct NativeReviewView: View {
   private func act(_ action: ReviewScreenAction) {
     switch action {
     case .submit:
-      if screen.phase == .details {
+      if screen.isAnki {
+        if screen.phase == .answering { revealAnki() } else { screen.showAssessment = true }
+      } else if screen.phase == .details {
         change(.advance)
       } else if screen.phase == .incorrect {
         screen.phase = .details
@@ -275,7 +304,9 @@ public struct NativeReviewView: View {
       screen.feedback = ""
       answerFocused = true
     case .correct:
-      if screen.canOverride { change(.overrideCorrect) }
+      if screen.isAnki { assessAnki(true) } else if screen.canOverride { change(.overrideCorrect) }
+    case .incorrect:
+      if screen.isAnki { assessAnki(false) }
     case .deferQuestion: change(.deferQuestion)
     case .voice:
       voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
@@ -291,7 +322,9 @@ public struct NativeReviewView: View {
     }
   }
   private var visibleQuestions: Set<StudyQuestionKind> {
-    if fullDetails || preferences.revealFullAnswer { return [.meaning, .reading] }
+    if fullDetails || preferences.revealFullAnswer || review?.combinesAnki == true {
+      return [.meaning, .reading]
+    }
     guard let review, let question = review.question,
       let item = review.saved.session.items[question.itemID]
     else { return [] }
@@ -302,6 +335,7 @@ public struct NativeReviewView: View {
   }
   private func applyPreferences() {
     let preferences = preferences
+    screen.isAnki = review?.isAnki == true
     screen.feedbackPreferences = preferences
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
     screen.canSkip = preferences.allowSkipping

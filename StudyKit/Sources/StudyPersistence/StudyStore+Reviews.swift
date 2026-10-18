@@ -7,6 +7,13 @@ public struct NativeReviewState: Sendable {
   public let subjects: [Int64: CatalogSubject]
   /// A transient receipt for a newly saved correct answer; never replayed on resume.
   public let success: StudyMarkResult?
+  public var isAnki: Bool {
+    question.map { saved.session.options.ankiMode.includes($0.kind) } == true
+  }
+  public var combinesAnki: Bool {
+    isAnki && saved.session.options.ankiMode == .both && saved.session.options.combinedAnki
+      && question.flatMap { saved.session.items[$0.itemID] }?.hasReading == true
+  }
   public var isLesson: Bool { saved.session.items.values.first?.isLesson == true }
   public var question: StudyQuestion? {
     guard let question = saved.session.question,
@@ -26,7 +33,8 @@ public struct NativeReviewAnswer: Sendable {
 }
 
 public enum NativeReviewError: Error, LocalizedError {
-  case unavailableAccount, vacation, noReviews, noLessons, invalidLessonSelection
+  case unavailableAccount, vacation, noReviews, noLessons, invalidLessonSelection,
+    incompatibleAnswerMode
   case sessionInProgress(isLesson: Bool)
   case incompleteContent(Int64)
   case changedAssignment(Int64)
@@ -34,6 +42,8 @@ public enum NativeReviewError: Error, LocalizedError {
     switch self {
     case .unavailableAccount: "Refresh this account before starting reviews."
     case .vacation: "Study sessions are paused while your account is on vacation."
+    case .incompatibleAnswerMode:
+      "This question uses Anki mode. Show the answer, then mark it correct or incorrect."
     case .noReviews: "No reviews are available in the saved account data."
     case .noLessons: "No lessons are available in the saved account data."
     case .invalidLessonSelection:
@@ -55,7 +65,9 @@ public enum NativeReviewAction: Sendable {
 extension StudyStore {
   /// Reopen the existing session unchanged, or select due assignments from the offline catalog.
   /// No network request or upload occurs here. Each window must use the returned revision.
-  public func openReviews(accountID: String, now: Date = .now) throws -> NativeReviewState {
+  public func openReviews(
+    accountID: String, options: StudySessionOptions = .init(), now: Date = .now
+  ) throws -> NativeReviewState {
     try requireReviewAccount(accountID)
     if let saved = try session(accountID: accountID) {
       let state = try reviewState(saved, accountID: accountID)
@@ -87,10 +99,10 @@ extension StudyStore {
     }
     guard !selected.isEmpty else { throw NativeReviewError.noReviews }
     var session = try StudySession(
-      items: selected.enumerated().map { $0.element.sessionItem(id: $0.offset, isLesson: false) })
+      items: selected.enumerated().map { $0.element.sessionItem(id: $0.offset, isLesson: false) },
+      options: nativeSessionOptions(options))
     session.nextQuestion()
-    let revision = try saveSession(session, accountID: accountID, expectedRevision: nil)
-    return try reviewState(.init(revision: revision, session: session), accountID: accountID)
+    return try saveReviewState(session, accountID: accountID, expectedRevision: nil)
   }
 
   /// Available means unlocked, unstarted, visible, accessible and not pending upload.
@@ -127,8 +139,9 @@ extension StudyStore {
   }
 
   /// Lesson quizzes use the atomic review writer and never replace paused work.
-  public func openLessons(accountID: String, subjectIDs: [Int64]? = nil) throws -> NativeReviewState
-  {
+  public func openLessons(
+    accountID: String, subjectIDs: [Int64]? = nil, options: StudySessionOptions = .init()
+  ) throws -> NativeReviewState {
     try requireReviewAccount(accountID)
     if let subjectIDs, subjectIDs.isEmpty || Set(subjectIDs).count != subjectIDs.count {
       throw NativeReviewError.invalidLessonSelection
@@ -151,10 +164,9 @@ extension StudyStore {
     var session = try StudySession(
       items: subjectIDs.enumerated().map {
         byID[$0.element]!.sessionItem(id: $0.offset, isLesson: true)
-      })
+      }, options: nativeSessionOptions(options))
     session.nextQuestion()
-    let revision = try saveSession(session, accountID: accountID, expectedRevision: nil)
-    return try reviewState(.init(revision: revision, session: session), accountID: accountID)
+    return try saveReviewState(session, accountID: accountID, expectedRevision: nil)
   }
 
   /// Grade against the latest local synonyms and commit the decision and outbox together.
@@ -166,6 +178,7 @@ extension StudyStore {
     guard state.question == question, let subject = state.subject else {
       throw StudySessionError.staleQuestion
     }
+    guard !state.isAnki else { throw NativeReviewError.incompatibleAnswerMode }
     try validateCurrentAssignment(state, accountID: accountID)
     let normalized = AnswerGrader.normalizedString(answer, taskType: question.kind)
     let synonyms =
@@ -188,10 +201,8 @@ extension StudyStore {
     case .isReadingButWantMeaning: try session.creditReading(question)
     default: return .init(state: state, grade: grade, normalized: normalized)
     }
-    let revision = try saveSession(
-      session, accountID: accountID, expectedRevision: expectedRevision)
-    state = try reviewState(
-      .init(revision: revision, session: session), accountID: accountID, success: success)
+    state = try saveReviewState(
+      session, accountID: accountID, expectedRevision: expectedRevision, success: success)
     return .init(state: state, grade: grade, normalized: normalized)
   }
 
@@ -208,7 +219,7 @@ extension StudyStore {
       guard session.currentDecision == .incorrect else { throw StudyStoreError.invalidSession }
       session.nextQuestion()
     case .overrideCorrect:
-      guard !state.isLesson else { throw StudySessionError.invalidOverride }
+      guard !state.isLesson && !state.isAnki else { throw StudySessionError.invalidOverride }
       try validateCurrentAssignment(state, accountID: accountID)
       success = try session.mark(
         .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
@@ -223,6 +234,67 @@ extension StudyStore {
       session.setWrappingUp(false)
       session.nextQuestion()
     }
+    return try saveReviewState(
+      session, accountID: accountID, expectedRevision: expectedRevision, success: success)
+  }
+
+  /// Revealing an Anki answer records the provisional miss before presenting its details,
+  /// matching the original review flow. A later assessment changes that same decision.
+  public func revealAnki(
+    question: StudyQuestion, accountID: String, expectedRevision: UUID,
+    now: Date = .now
+  ) throws -> NativeReviewState {
+    let state = try currentReview(accountID: accountID, expectedRevision: expectedRevision)
+    guard state.question == question else { throw StudySessionError.staleQuestion }
+    guard state.isAnki else { throw NativeReviewError.incompatibleAnswerMode }
+    guard state.saved.session.currentDecision == nil else {
+      throw StudySessionError.alreadyAnswered
+    }
+    try validateCurrentAssignment(state, accountID: accountID)
+    var session = state.saved.session
+    _ = try session.mark(.incorrect, for: question, now: Int64(now.timeIntervalSince1970))
+    return try saveReviewState(session, accountID: accountID, expectedRevision: expectedRevision)
+  }
+
+  /// The combined card's two decisions and any completed submission commit together.
+  public func assessAnki(
+    correct: Bool, question: StudyQuestion, accountID: String,
+    expectedRevision: UUID, now: Date = .now
+  ) throws -> NativeReviewState {
+    let state = try currentReview(accountID: accountID, expectedRevision: expectedRevision)
+    guard state.question == question else { throw StudySessionError.staleQuestion }
+    guard state.isAnki, state.saved.session.currentDecision == .incorrect else {
+      throw StudyStoreError.invalidSession
+    }
+    try validateCurrentAssignment(state, accountID: accountID)
+    var session = state.saved.session
+    var success: StudyMarkResult?
+    if correct {
+      success = try session.mark(
+        .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
+      if state.combinesAnki, success?.subjectFinished == false {
+        guard let other = session.nextQuestion(continuingCurrentItem: true),
+          other.itemID == question.itemID
+        else {
+          throw StudyStoreError.invalidSession
+        }
+        success = try session.mark(.correct, for: other, now: Int64(now.timeIntervalSince1970))
+      }
+    }
+    session.nextQuestion()
+    return try saveReviewState(
+      session, accountID: accountID, expectedRevision: expectedRevision, success: success)
+  }
+
+  private func nativeSessionOptions(_ options: StudySessionOptions) -> StudySessionOptions {
+    var value = options
+    value.combinedAnki = options.ankiMode == .both && options.combinedAnki
+    return value
+  }
+  private func saveReviewState(
+    _ session: StudySession, accountID: String, expectedRevision: UUID?,
+    success: StudyMarkResult? = nil
+  ) throws -> NativeReviewState {
     let revision = try saveSession(
       session, accountID: accountID, expectedRevision: expectedRevision)
     return try reviewState(

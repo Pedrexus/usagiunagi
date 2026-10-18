@@ -8,18 +8,21 @@ public struct ReviewSettingsPanel: View {
   private let changed: (ReviewPreferences, ReviewPreferences) -> Void
   private let fonts: (() -> Void)?
   private let supportsAudio: Bool
-  private let done: () -> Void
+  private let supportsSessionOptions: Bool
+  private let done: (() -> Void)?
 
   public init(
     preferences: ReviewPreferences,
     changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
-    fonts: (() -> Void)? = nil, supportsAudio: Bool = true, done: @escaping () -> Void
+    fonts: (() -> Void)? = nil, supportsAudio: Bool = true, supportsSessionOptions: Bool = false,
+    done: (() -> Void)? = nil
   ) {
     _preferences = State(initialValue: preferences)
     sourcePreferences = preferences
     self.changed = changed
     self.fonts = fonts
     self.supportsAudio = supportsAudio
+    self.supportsSessionOptions = supportsSessionOptions
     self.done = done
   }
 
@@ -36,6 +39,7 @@ public struct ReviewSettingsPanel: View {
   public var body: some View {
     NavigationStack {
       Form {
+        if supportsSessionOptions { StudySessionSettingsContent(options: binding.sessionOptions) }
         ReviewSettingsContent(
           preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
           display: { EmptyView() }, answers: { EmptyView() }, audio: { EmptyView() })
@@ -43,14 +47,16 @@ public struct ReviewSettingsPanel: View {
       #if os(macOS)
         .formStyle(.grouped)
       #endif
-      .navigationTitle("Quick settings")
+      .navigationTitle(supportsSessionOptions ? "Review settings" : "Quick settings")
       .onChange(of: sourcePreferences) { _, value in preferences = value }
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
       .toolbar {
-        ToolbarItem(placement: .confirmationAction) {
-          Button("Done", action: done).accessibilityIdentifier("reviewSettings.done")
+        if let done {
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Done", action: done).accessibilityIdentifier("reviewSettings.done")
+          }
         }
       }
     }

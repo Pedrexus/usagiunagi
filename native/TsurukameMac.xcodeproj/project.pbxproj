@@ -8,7 +8,7 @@
 		EDEC7A94F407B6C75905901D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/MacLessonTests.swift; sourceTree = "<group>"; };
 		C3DF2530E9D987A1368CEC66 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = MacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CB2D61E2B4D71467ADD842A = {isa = PBXBuildFile; fileRef = EDEC7A94F407B6C75905901D; };
-		5A1CF2D820B7146070996EC1 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (0CB2D61E2B4D71467ADD842A,); runOnlyForDeploymentPostprocessing = 0; };
+		5A1CF2D820B7146070996EC1 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (0CB2D61E2B4D71467ADD842A, A27900000000000000000001,); runOnlyForDeploymentPostprocessing = 0; };
 		1CE692F2E83ECB50342AB7F5 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		28313649BDF34D3620412E59 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_IDENTITY = "-"; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_BUNDLE_IDENTIFIER = dev.usagiunagi.MacUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = TsurukameMac;}; name = Debug; };
 		70B9191B46266AE7568D88B7 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_IDENTITY = "-"; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_BUNDLE_IDENTIFIER = dev.usagiunagi.MacUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = TsurukameMac;}; name = Release; };
@@ -26,6 +26,7 @@
 		99F206E09E3CFB1C2CC4426D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25CAFB2135EB8C237FDF6A07 /* Cocoa.framework */; };
 		C3C245F590C5CA6640A5133F /* StudyPersistence in Frameworks */ = {isa = PBXBuildFile; productRef = C1A0AD1CFDF508C21F69F62A /* StudyPersistence */; };
 		CDE2AA81AE568AE4E5216ADB /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4B92C88DA85275F78FE0907D /* UsagiUnagi.icon */; };
+		A27900000000000000000001 /* MacReviewModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27900000000000000000002 /* MacReviewModeTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,7 @@
 		ABA8C5F4E914FDB6FE9994AC /* TsurukameMacApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TsurukameMacApp.swift; sourceTree = "<group>"; };
 		B22B24E7CA8E039A3F1122EA /* AppIdentity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		E13432C314D942AF9AA8FD8D /* TsurukameMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TsurukameMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A27900000000000000000002 /* MacReviewModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/MacReviewModeTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +80,7 @@
 				7FA4E96D331434390BD2BA8B /* Frameworks */,
 				ABA8C5F4E914FDB6FE9994AC /* TsurukameMacApp.swift */,
 				EDEC7A94F407B6C75905901D,
+				A27900000000000000000002 /* MacReviewModeTests.swift */,
 				B82F799EA3A44976AD5EE5F2 /* Branding */,
 			);
 			sourceTree = "<group>";
