@@ -8,10 +8,11 @@ public enum StudyDestination: Hashable, Sendable {
   case practice(StudyPracticeScope)
   case catalog(SubjectCatalogQuery, remaining: Bool = false)
   case search, forecast
-  case reviewSettings, savedWork, account, fonts, offlineAudio
+  case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings
 }
 
 struct NativeHomeDashboardView: View {
+  @Environment(StudyLessonSettings.self) private var lessonSettings
   let model: StudyAppModel
   let active: Bool
   let route: (StudyDestination) -> Void
@@ -23,6 +24,7 @@ struct NativeHomeDashboardView: View {
     let savedAt: Date?
     let pending: Int?
     let date: Date
+    let lessonPreferences: StudyLessonPreferences
   }
   var body: some View {
     TimelineView(.periodic(from: .now, by: 60)) { context in
@@ -30,7 +32,7 @@ struct NativeHomeDashboardView: View {
         id: Request(
           active: active, account: model.snapshot?.accountID,
           savedAt: model.snapshot?.savedAt, pending: model.snapshot?.pendingReviews,
-          date: context.date)
+          date: context.date, lessonPreferences: lessonSettings.value)
       ) {
         if active { await load() }
       }
@@ -60,7 +62,8 @@ struct NativeHomeDashboardView: View {
     do {
       let value: HomeDashboardData
       if !snapshot.isSample, let accountID = snapshot.accountID, let store = model.savedWorkStore {
-        value = try await store.homeData(accountID: accountID)
+        value = try await store.homeData(
+          accountID: accountID, lessonPreferences: lessonSettings.value)
       } else {
         let available = Self.preview(snapshot)
         var preview = HomeDashboardData()
@@ -163,9 +166,15 @@ struct NativeHomeDashboardView: View {
 }
 
 struct NativeForecastView: View {
+  @Environment(StudyLessonSettings.self) private var lessonSettings
   let model: StudyAppModel
   @State private var hours: [UpcomingReviewsView.Hour]?
   @State private var error: String?
+  private struct Request: Hashable {
+    let account: String?
+    let savedAt: Date?
+    let preferences: StudyLessonPreferences
+  }
   var body: some View {
     Group {
       if let error {
@@ -176,7 +185,11 @@ struct NativeForecastView: View {
       } else {
         ProgressView("Loading saved forecast")
       }
-    }.navigationTitle("Upcoming reviews").task {
+    }.navigationTitle("Upcoming reviews").task(
+      id: Request(
+        account: model.snapshot?.accountID, savedAt: model.snapshot?.savedAt,
+        preferences: lessonSettings.value)
+    ) {
       do {
         guard let snapshot = model.snapshot else { return }
         guard !snapshot.requiresAssignmentRefresh, snapshot.pendingReviews == 0,
@@ -192,7 +205,8 @@ struct NativeForecastView: View {
           if let accountID = snapshot.accountID, let store = model.savedWorkStore,
             !snapshot.isSample
           {
-            try await store.availability(accountID: accountID)
+            try await store.availability(
+              accountID: accountID, lessonPreferences: lessonSettings.value)
           } else { NativeHomeDashboardView.preview(snapshot) }
         let groups = Dictionary(grouping: available.scheduledFuture) { item in
           Int(

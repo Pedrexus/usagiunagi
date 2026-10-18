@@ -55,6 +55,7 @@ public struct StudyAvailability: Sendable {
   public let assignments: [CatalogAssignment]
   public let pending: Set<Int64>
   public let excluded: Set<Int64>
+  public let lessonPreferences: StudyLessonPreferences
   public let now: Date
   private let byID: [Int64: CatalogSubject]
   private let calendar: Calendar
@@ -63,8 +64,10 @@ public struct StudyAvailability: Sendable {
   public init(
     account: StudyAccountState, subjects: [CatalogSubject], assignments: [CatalogAssignment],
     pending: Set<Int64> = [], excluded: Set<Int64> = [], now: Date = .now,
-    calendar: Calendar = .current, leechThreshold: Double = 1
+    calendar: Calendar = .current, leechThreshold: Double = 1,
+    lessonPreferences: StudyLessonPreferences = .init()
   ) {
+    self.lessonPreferences = lessonPreferences.normalized
     self.account = account
     self.subjects = subjects
     self.assignments = assignments
@@ -83,6 +86,17 @@ public struct StudyAvailability: Sendable {
       return subject.hiddenAt == nil && subject.level <= account.profile.maxLevelGranted
     }
   }
+  private func includes(_ item: CatalogAssignment) -> Bool {
+    lessonPreferences.includeKanaVocabulary
+      || !(item.isKanaOnlyVocabulary || byID[item.subjectID]?.isKanaOnlyVocabulary == true)
+  }
+  public var apprenticeCount: Int {
+    assignments.filter { item in
+      (1...4).contains(item.srsStage) && item.hidden != true
+        && byID[item.subjectID]?.hiddenAt == nil
+    }.count
+  }
+  public var apprenticeLimitReached: Bool { apprenticeCount >= lessonPreferences.apprenticeLimit }
   public var scheduled: [CatalogAssignment] {
     scheduledFuture.filter {
       $0.availableAt.map { Double($0) <= now.timeIntervalSince1970 } == true
@@ -91,18 +105,19 @@ public struct StudyAvailability: Sendable {
   }
   public var scheduledFuture: [CatalogAssignment] {
     accessible.filter {
-      $0.startedAt != nil && (1...8).contains($0.srsStage) && $0.availableAt != nil
+      includes($0) && $0.startedAt != nil && (1...8).contains($0.srsStage) && $0.availableAt != nil
         && ($0.kind != .vocabulary || !excluded.contains($0.subjectID))
     }
   }
   public var lessons: [CatalogAssignment] {
     accessible.filter {
-      $0.unlockedAt != nil && $0.startedAt == nil && $0.srsStage == 0
+      includes($0) && $0.unlockedAt != nil && $0.startedAt == nil && $0.srsStage == 0
         && ($0.kind != .vocabulary || !excluded.contains($0.subjectID))
     }
     .sorted {
-      ($0.level, byID[$0.subjectID]?.lessonPosition ?? Int.max, $0.subjectID)
-        < ($1.level, byID[$1.subjectID]?.lessonPosition ?? Int.max, $1.subjectID)
+      lessonPreferences.precedes(
+        (level: $0.level, kind: $0.kind, subjectID: $0.subjectID),
+        (level: $1.level, kind: $1.kind, subjectID: $1.subjectID))
     }
   }
   public func practice(_ scope: StudyPracticeScope) -> [CatalogAssignment] {
@@ -111,7 +126,9 @@ public struct StudyAvailability: Sendable {
       account.statistics.map { ($0.answers.subjectID, $0.answers) },
       uniquingKeysWith: { first, _ in first })
     return accessible.filter { item in
-      guard item.startedAt != nil, (1...9).contains(item.srsStage) else { return false }
+      guard includes(item), item.startedAt != nil, (1...9).contains(item.srsStage) else {
+        return false
+      }
       switch scope {
       case .apprentice: return item.srsStage <= 4 && item.passedAt != nil
       case .recentLessons:

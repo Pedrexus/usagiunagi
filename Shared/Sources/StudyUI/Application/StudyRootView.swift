@@ -9,6 +9,7 @@ public struct StudyRootView: View {
   private let appName: String
   private let appearance: ColorScheme?
   private let notice: String?
+  @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
@@ -119,6 +120,8 @@ public struct StudyRootView: View {
       .sheet(isPresented: $showSettings) {
         NavigationStack(path: $settingsPath) {
           Form {
+            Button("Lessons") { settingsPath.append(.lessonSettings) }.accessibilityIdentifier(
+              "settings.page.lessons")
             Button("Review settings") { settingsPath.append(.reviewSettings) }
             Button("Saved work") { settingsPath.append(.savedWork) }
             Button("WaniKani account") { settingsPath = [.account] }
@@ -158,6 +161,7 @@ public struct StudyRootView: View {
   @ViewBuilder private func destination(_ value: StudyDestination) -> some View {
     switch value {
     case .account: account
+    case .lessonSettings: LessonSettingsView(settings: lessonSettings)
     case .fonts: FontLibraryView(library: fonts)
     case .offlineAudio: AudioLibraryView(library: audio)
     case .reviewSettings:
@@ -179,7 +183,8 @@ public struct StudyRootView: View {
         case .reviews: NativeReviewView(store: store, accountID: accountID, finished: finished)
         case .lessons(let automatic):
           NativeLessonView(
-            store: store, accountID: accountID, automaticBatchSize: automatic ? 5 : nil,
+            store: store, accountID: accountID,
+            automaticBatchSize: automatic ? lessonSettings.value.batchSize : nil,
             finished: finished)
         case .practice(let scope):
           NativeReviewView(

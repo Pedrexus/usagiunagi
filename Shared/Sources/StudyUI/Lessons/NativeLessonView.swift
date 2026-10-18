@@ -4,6 +4,7 @@ import SwiftUI
 
 /// Teaching and quizzes share the account's existing durable study session.
 public struct NativeLessonView: View {
+  @Environment(StudyLessonSettings.self) private var lessonSettings
   private let store: StudyStore
   private let accountID: String
   private let automaticBatchSize: Int?
@@ -74,17 +75,26 @@ public struct NativeLessonView: View {
         Button("Try again") { Task { await load() } }
       } else if loaded {
         LessonPickerView(items: items) { ids in
-          let available = try await store.availableLessons(accountID: accountID)
+          let available = try await store.availableLessons(
+            accountID: accountID, lessonPreferences: lessonSettings.value)
           let byID = Dictionary(uniqueKeysWithValues: available.map { ($0.id, $0.summary) })
           guard !ids.isEmpty, ids.allSatisfy({ byID[$0] != nil }) else {
             throw NativeReviewError.invalidLessonSelection
           }
-          selection = Selection(subjects: ids.compactMap { byID[$0] })
+          let selected = Set(ids)
+          selection = Selection(
+            subjects: available.filter { selected.contains($0.id) }.map(\.summary))
         }
       } else {
         ProgressView("Loading saved lessons")
       }
-    }.task(id: accountID) { if selection == nil { await load() } }
+    }.task(id: LessonReadKey(accountID: accountID, preferences: lessonSettings.value)) {
+      if selection == nil { await load() }
+    }
+  }
+  private struct LessonReadKey: Equatable {
+    let accountID: String
+    let preferences: StudyLessonPreferences
   }
   private func load() async {
     error = nil
@@ -110,7 +120,8 @@ public struct NativeLessonView: View {
         let resumed = Selection(subjects: subjects, resumeQuiz: true)
         if automaticBatchSize != nil { selection = resumed } else { pausedLesson = resumed }
       } else {
-        let available = try await store.availableLessons(accountID: accountID)
+        let available = try await store.availableLessons(
+          accountID: accountID, lessonPreferences: lessonSettings.value)
         try Task.checkCancellation()
         items = available.map(\.summary)
         loaded = true

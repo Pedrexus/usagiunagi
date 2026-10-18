@@ -22,6 +22,7 @@ class TKMServices {
   let legacyAvatars = LegacyAvatarCache(
     directory: URL.cachesDirectory.appending(
       path: "com.hpique.haneke/shared", directoryHint: .isDirectory))
+  @MainActor let lessonSettings: StudyLessonSettings
   @MainActor let fontLibrary: StudyFontLibrary
 
   private(set) var offlineAudio: OfflineAudio!
@@ -33,6 +34,7 @@ class TKMServices {
 
   @MainActor init(fontLibrary: StudyFontLibrary? = nil, audioDownloads: StudyAudioDownloads? = nil)
   {
+    lessonSettings = StudyLessonSettings(store: LegacyLessonPreferences())
     self.fontLibrary = fontLibrary ?? StudyFontLibrary(preferences: LegacyFontPreferences())
     let downloads =
       audioDownloads ?? StudyAudioDownloads(directory: .documentsDirectory.appending(path: "audio"))

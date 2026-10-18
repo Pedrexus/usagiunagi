@@ -237,6 +237,10 @@ final class MacReviewModeTests: XCTestCase {
     defer { app.terminate() }
     app.buttons["app.settings"].click()
     app.buttons["Review settings"].click()
+    let paired = app.switches["reviewSettings.groupMeaningReading"]
+    XCTAssertTrue(paired.waitForExistence(timeout: 5))
+    paired.click()
+    XCTAssertEqual((paired.value as? NSNumber)?.intValue, 1)
     let autoplay = app.switches["reviewSettings.autoplay"]
     XCTAssertTrue(autoplay.waitForExistence(timeout: 5))
     autoplay.click()
@@ -244,6 +248,7 @@ final class MacReviewModeTests: XCTestCase {
     app.buttons["home.reviews"].click()
     let input = app.textFields["review.answer"]
     XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Meaning")
     input.click()
     input.typeText("one thing")
     app.buttons["review.submit"].click()

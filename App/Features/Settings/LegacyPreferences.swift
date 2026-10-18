@@ -1,4 +1,5 @@
 import StudyCore
+import WaniKaniAPI
 
 // Copyright David Sansome
 //
@@ -95,6 +96,41 @@ enum ReviewPreferencesAdapter {
       Settings.offlineAudioCellular = newValue.cellular
       Settings.offlineAudioVoiceActors = newValue.voiceIDs
 
+    }
+  }
+}
+
+@MainActor final class LegacyLessonPreferences: StudyLessonPreferenceStore {
+  var value: StudyLessonPreferences {
+    get {
+      var value = StudyLessonPreferences()
+      value.batchSize = Settings.lessonBatchSize
+      value.prioritizeCurrentLevel = Settings.prioritizeCurrentLevel
+      value.apprenticeLimit = Settings.apprenticeLessonsLimit
+      value.includeKanaVocabulary = Settings.showKanaOnlyVocab
+      value.order = Settings.lessonOrder.compactMap { kind in
+        switch kind {
+        case .radical: .radical
+        case .kanji: .kanji
+        case .vocabulary: .vocabulary
+        default: nil
+        }
+      }
+      return value.normalized
+    }
+    set {
+      let value = newValue.normalized
+      Settings.lessonBatchSize = value.batchSize
+      Settings.prioritizeCurrentLevel = value.prioritizeCurrentLevel
+      Settings.apprenticeLessonsLimit = value.apprenticeLimit
+      Settings.showKanaOnlyVocab = value.includeKanaVocabulary
+      Settings.lessonOrder = value.order.map { kind in
+        switch kind {
+        case .radical: .radical
+        case .kanji: .kanji
+        case .vocabulary: .vocabulary
+        }
+      }
     }
   }
 }

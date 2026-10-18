@@ -18,6 +18,14 @@ Mac consumes the shared root/model/store. iOS still uses its legacy coordinator/
 
 Put business behavior and screens in Shared. Keep `#if os(...)` at the narrow platform capability edges; prefer layout and availability adaptation inside views. There is one SwiftUI app entry point; the iOS legacy coordinator remains a temporary destination. `App/Platform` contains temporary capability bridges; platform configuration stays in `App/Configuration`. The remaining watch target is a companion, not another phone/Mac app.
 
+## Shared lesson choices
+
+`StudyLessonPreferences` owns the original defaults, normalized batch sizes, subject order, current-level priority, Apprentice limit and kana-only vocabulary choice. One strict level/type/ID comparator is used by native selection and the temporary iOS adapter. `StudyLessonSettings` merges individual edits into the latest stored value; all native windows share the app-owned observable instance. `LessonSettingsView` is common SwiftUI, with native list reordering on iOS and small move buttons on Mac.
+
+Native Home, the forecast and new lesson/review/practice selection use the same preferences. The Apprentice count includes pending and excluded workload; reaching the limit disables new lessons with an explanation while preserving the available-item count. Resuming a durable quiz returns its saved queue/options before applying new selection rules. A changed preference cannot rewrite a paused quiz or bypass assignment/account validation.
+
+Native settings use one Codable UserDefaults value. The temporary `App/Features/Settings/LegacyPreferences.swift` adapts the original iOS archived keys for lessons, reviews, fonts and audio; it replaces the former review-only adapter location. iOS vocabulary exclusion controls remain available. The native subject exclusion controls and other unmigrated settings/services still require parity work. The old app-specific lesson form is removed; no account database or iOS writer cutover occurs in this migration.
+
 ## Shared font ownership
 
 `StudyCore.StudyFontCatalog` owns the eight original font definitions, file activation and Japanese glyph checks. `StudyFontLibrary` owns the URLSession downloads, native Progress, cancellation/retry state and selected filenames. One library is injected by the app and survives picker navigation; both platforms use `StudyUI.FontLibraryView`. Font preview assets belong to that UI package once. The FontScreenshotter utility consumes the same catalog.

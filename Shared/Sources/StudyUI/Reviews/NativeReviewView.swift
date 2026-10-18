@@ -24,6 +24,7 @@ public struct NativeReviewView: View {
   @State private var confirmEnd = false
   @State private var readyImage: String?
   @State private var voiceRequest: VoiceAnswerRequest?
+  @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @State private var settings = false
@@ -217,13 +218,16 @@ public struct NativeReviewView: View {
       switch mode {
       case .reviews:
         state = try await store.openReviews(
-          accountID: accountID, options: preferences.sessionOptions)
+          accountID: accountID, options: preferences.sessionOptions,
+          lessonPreferences: lessonSettings.value)
       case .lessons(let ids):
         state = try await store.openLessons(
-          accountID: accountID, subjectIDs: ids, options: preferences.sessionOptions)
+          accountID: accountID, subjectIDs: ids, options: preferences.sessionOptions,
+          lessonPreferences: lessonSettings.value)
       case .practice(let scope):
         state = try await store.openPractice(
-          accountID: accountID, scope: scope, options: preferences.sessionOptions)
+          accountID: accountID, scope: scope, options: preferences.sessionOptions,
+          lessonPreferences: lessonSettings.value)
       }
       present(state)
     }

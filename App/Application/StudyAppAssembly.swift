@@ -59,6 +59,9 @@ import SwiftUI
         directory: URL.applicationSupportDirectory.appending(path: "TsurukameNative/fonts"),
         bundledFonts: nil))
   }
+  static func makeLessonSettings() -> StudyLessonSettings {
+    StudyLessonSettings(store: DefaultsStudyLessonPreferences(defaults: reviewDefaults))
+  }
   static func makeAudio() -> StudyAudioLibrary {
     #if DEBUG
       if isReviewFixture {
@@ -211,6 +214,48 @@ import SwiftUI
         ]
       }
       fixture.assignments = [assignment]
+      if ProcessInfo.processInfo.arguments.contains("--lesson-settings-fixture") {
+        let examples: [(SubjectKind, String, String, String)] = [
+          (.radical, "人", "Person", ""), (.radical, "口", "Mouth", ""),
+          (.kanji, "二", "Two", "に"), (.vocabulary, "一つ", "One thing", "ひとつ"),
+          (.vocabulary, "こんにちは", "Hello", ""),
+        ]
+        for (index, example) in examples.enumerated() {
+          var subject = CatalogSubject(id: Int64(10 + index), kind: example.0)
+          subject.level = 1
+          subject.japanese = example.1
+          subject.meanings = [.init(example.2, role: .primary)]
+          if !example.3.isEmpty {
+            subject.readings = [.init(example.3, isPrimary: true, kind: .unknown)]
+          }
+          subject.isKanaOnlyVocabulary = index == 4
+          var item = CatalogAssignment(
+            id: Int64(200 + index), subjectID: subject.id, kind: subject.kind)
+          item.level = 1
+          item.unlockedAt = 1
+          item.isKanaOnlyVocabulary = index == 4
+          fixture.subjects.append(subject)
+          fixture.assignments.append(item)
+        }
+        if ProcessInfo.processInfo.arguments.contains("--lesson-limit-fixture") {
+          for index in 0..<25 {
+            var subject = CatalogSubject(id: Int64(100 + index), kind: .kanji)
+            subject.level = 1
+            subject.japanese = "二"
+            subject.meanings = [.init("Two", role: .primary)]
+            subject.readings = [.init("に", isPrimary: true, kind: .onyomi)]
+            var item = CatalogAssignment(
+              id: Int64(1000 + index), subjectID: subject.id, kind: .kanji)
+            item.level = 1
+            item.srsStage = 2
+            item.startedAt = 1
+            item.availableAt = Int64(Date.now.timeIntervalSince1970) + 86400
+            fixture.subjects.append(subject)
+            fixture.assignments.append(item)
+          }
+        }
+      }
+
       if ProcessInfo.processInfo.arguments.contains("--review-recovery-fixture") {
         let lesson = ProcessInfo.processInfo.arguments.contains("--lesson-recovery-fixture")
         fixture.pendingReviews = [

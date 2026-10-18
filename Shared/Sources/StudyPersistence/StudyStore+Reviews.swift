@@ -33,8 +33,9 @@ public struct NativeReviewAnswer: Sendable {
   public let normalized: String
 }
 
-public enum NativeReviewError: Error, LocalizedError {
-  case unavailableAccount, vacation, noReviews, noLessons, invalidLessonSelection,
+public enum NativeReviewError: Error, LocalizedError, Equatable {
+  case unavailableAccount, vacation, noReviews, noLessons, apprenticeLimitReached,
+    invalidLessonSelection,
     incompatibleAnswerMode, noPracticeItems, practiceInProgress
   case sessionInProgress(isLesson: Bool)
   case incompleteContent(Int64)
@@ -49,6 +50,8 @@ public enum NativeReviewError: Error, LocalizedError {
     case .incompatibleAnswerMode:
       "This question uses Anki mode. Show the answer, then mark it correct or incorrect."
     case .noReviews: "No reviews are available in the saved account data."
+    case .apprenticeLimitReached:
+      "The Apprentice limit is reached. Review existing items or change the limit in lesson settings."
     case .noLessons: "No lessons are available in the saved account data."
     case .invalidLessonSelection:
       "These lessons are no longer available. Return to Lessons and choose again."
@@ -70,7 +73,8 @@ extension StudyStore {
   /// Reopen the existing session unchanged, or select due assignments from the offline catalog.
   /// No network request or upload occurs here. Each window must use the returned revision.
   public func openReviews(
-    accountID: String, options: StudySessionOptions = .init(), now: Date = .now
+    accountID: String, options: StudySessionOptions = .init(), now: Date = .now,
+    lessonPreferences: StudyLessonPreferences = .init()
   ) throws -> NativeReviewState {
     try requireReviewAccount(accountID)
     if let saved = try session(accountID: accountID) {
@@ -82,7 +86,8 @@ extension StudyStore {
     let subjects = try catalog(accountID: accountID)
     let byID = Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) })
     let profile = try accountState(accountID: accountID)!.profile
-    let due = try availability(accountID: accountID, now: now).scheduled
+    let due = try availability(accountID: accountID, now: now, lessonPreferences: lessonPreferences)
+      .scheduled
     var selected: [CatalogAssignment] = []
     for assignment in due {
       guard let subject = byID[assignment.subjectID] else {
@@ -102,7 +107,8 @@ extension StudyStore {
 
   public func openPractice(
     accountID: String, scope: StudyPracticeScope,
-    options: StudySessionOptions = .init(), now: Date = .now
+    options: StudySessionOptions = .init(), now: Date = .now,
+    lessonPreferences: StudyLessonPreferences = .init()
   ) throws -> NativeReviewState {
     try requireReviewAccount(accountID, practice: true)
     if let saved = try session(accountID: accountID) {
@@ -113,7 +119,8 @@ extension StudyStore {
       guard saved.session.practiceScope == scope else { throw NativeReviewError.practiceInProgress }
       return state
     }
-    let available = try availability(accountID: accountID, now: now)
+    let available = try availability(
+      accountID: accountID, now: now, lessonPreferences: lessonPreferences)
     let selected = available.practice(scope)
     guard !selected.isEmpty else { throw NativeReviewError.noPracticeItems }
     let subjects = Dictionary(uniqueKeysWithValues: available.subjects.map { ($0.id, $0) })
@@ -131,13 +138,17 @@ extension StudyStore {
   }
 
   /// Available means unlocked, unstarted, visible, accessible and not pending upload.
-  public func availableLessons(accountID: String) throws -> [CatalogSubject] {
+  public func availableLessons(
+    accountID: String, lessonPreferences: StudyLessonPreferences = .init()
+  ) throws -> [CatalogSubject] {
     try requireReviewAccount(accountID)
     let byID = Dictionary(
       uniqueKeysWithValues: try catalog(accountID: accountID).map { ($0.id, $0) })
     let profile = try accountState(accountID: accountID)!.profile
     var result: [CatalogSubject] = []
-    for assignment in try availability(accountID: accountID).lessons {
+    let available = try availability(accountID: accountID, lessonPreferences: lessonPreferences)
+    guard !available.apprenticeLimitReached else { throw NativeReviewError.apprenticeLimitReached }
+    for assignment in available.lessons {
       guard let subject = byID[assignment.subjectID] else {
         throw NativeReviewError.incompleteContent(assignment.subjectID)
       }
@@ -146,16 +157,13 @@ extension StudyStore {
       try requireReviewContent(subject, assignment: assignment)
       result.append(subject)
     }
-    return result.sorted {
-      ($0.level, $0.lessonPosition ?? Int.max, $0.id) < (
-        $1.level, $1.lessonPosition ?? Int.max, $1.id
-      )
-    }
+    return result
   }
 
   /// Lesson quizzes use the atomic review writer and never replace paused work.
   public func openLessons(
-    accountID: String, subjectIDs: [Int64]? = nil, options: StudySessionOptions = .init()
+    accountID: String, subjectIDs: [Int64]? = nil, options: StudySessionOptions = .init(),
+    lessonPreferences: StudyLessonPreferences = .init()
   ) throws -> NativeReviewState {
     try requireReviewAccount(accountID)
     if let subjectIDs, subjectIDs.isEmpty || Set(subjectIDs).count != subjectIDs.count {
@@ -171,7 +179,8 @@ extension StudyStore {
       return state
     }
     guard let subjectIDs else { throw NativeReviewError.noLessons }
-    let available = Set(try availableLessons(accountID: accountID).map(\.id))
+    let available = Set(
+      try availableLessons(accountID: accountID, lessonPreferences: lessonPreferences).map(\.id))
     guard Set(subjectIDs).isSubset(of: available) else {
       throw NativeReviewError.invalidLessonSelection
     }

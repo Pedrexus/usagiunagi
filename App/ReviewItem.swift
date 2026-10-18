@@ -19,9 +19,11 @@ import WaniKaniAPI
 typealias TaskType = StudyQuestionKind
 
 class ReviewItem: NSObject {
-  private class func filterReadyItems(assignments: [TKMAssignment],
-                                      localCachingClient: LocalCachingClient,
-                                      _ isIncluded: (TKMAssignment) -> Bool) -> [ReviewItem] {
+  private class func filterReadyItems(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient,
+    _ isIncluded: (TKMAssignment) -> Bool
+  ) -> [ReviewItem] {
     var ret = [ReviewItem]()
     guard localCachingClient.getUserInfo() != nil else {
       return ret
@@ -43,60 +45,90 @@ class ReviewItem: NSObject {
     return ret
   }
 
-  class func readyForReview(assignments: [TKMAssignment],
-                            localCachingClient: LocalCachingClient) -> [ReviewItem] {
-    filterReadyItems(assignments: assignments,
-                     localCachingClient: localCachingClient) { assignment -> Bool in
+  class func readyForReview(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient
+  ) -> [ReviewItem] {
+    filterReadyItems(
+      assignments: assignments,
+      localCachingClient: localCachingClient
+    ) { assignment -> Bool in
       assignment.isReviewStage && assignment.availableAtDate.timeIntervalSinceNow < 0
     }
   }
 
-  class func readyForRecentMistakesReview(assignments: [TKMAssignment],
-                                          localCachingClient: LocalCachingClient) -> [ReviewItem] {
-    filterReadyItems(assignments: assignments,
-                     localCachingClient: localCachingClient) { assignment -> Bool in
+  class func readyForRecentMistakesReview(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient
+  ) -> [ReviewItem] {
+    filterReadyItems(
+      assignments: assignments,
+      localCachingClient: localCachingClient
+    ) { assignment -> Bool in
       assignment.isReviewStage
     }
   }
 
-  class func readyForRecentLessonReview(assignments: [TKMAssignment],
-                                        localCachingClient: LocalCachingClient) -> [ReviewItem] {
-    filterReadyItems(assignments: assignments,
-                     localCachingClient: localCachingClient) { assignment -> Bool in
+  class func readyForRecentLessonReview(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient
+  ) -> [ReviewItem] {
+    filterReadyItems(
+      assignments: assignments,
+      localCachingClient: localCachingClient
+    ) { assignment -> Bool in
       assignment.isReviewStage
     }
   }
 
-  class func readyForAlreadyPassedApprenticeReview(assignments: [TKMAssignment],
-                                                   localCachingClient: LocalCachingClient)
-    -> [ReviewItem] {
-    filterReadyItems(assignments: assignments,
-                     localCachingClient: localCachingClient) { assignment -> Bool in
+  class func readyForAlreadyPassedApprenticeReview(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient
+  )
+    -> [ReviewItem]
+  {
+    filterReadyItems(
+      assignments: assignments,
+      localCachingClient: localCachingClient
+    ) { assignment -> Bool in
       assignment.hasPassedAt && assignment.srsStage < .guru1
     }
   }
 
-  class func readyForLeechReview(assignments: [TKMAssignment],
-                                 localCachingClient: LocalCachingClient)
-    -> [ReviewItem] {
-    filterReadyItems(assignments: assignments,
-                     localCachingClient: localCachingClient) { assignment -> Bool in
+  class func readyForLeechReview(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient
+  )
+    -> [ReviewItem]
+  {
+    filterReadyItems(
+      assignments: assignments,
+      localCachingClient: localCachingClient
+    ) { assignment -> Bool in
       assignment.hasPassedAt && !assignment.hasBurnedAt
     }
   }
 
-  class func readyForBurnedReview(assignments: [TKMAssignment],
-                                  localCachingClient: LocalCachingClient) -> [ReviewItem] {
-    filterReadyItems(assignments: assignments,
-                     localCachingClient: localCachingClient) { assignment -> Bool in
+  class func readyForBurnedReview(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient
+  ) -> [ReviewItem] {
+    filterReadyItems(
+      assignments: assignments,
+      localCachingClient: localCachingClient
+    ) { assignment -> Bool in
       assignment.isBurned
     }
   }
 
-  class func readyForLessons(assignments: [TKMAssignment],
-                             localCachingClient: LocalCachingClient) -> [ReviewItem] {
-    filterReadyItems(assignments: assignments,
-                     localCachingClient: localCachingClient) { assignment -> Bool in
+  class func readyForLessons(
+    assignments: [TKMAssignment],
+    localCachingClient: LocalCachingClient
+  ) -> [ReviewItem] {
+    filterReadyItems(
+      assignments: assignments,
+      localCachingClient: localCachingClient
+    ) { assignment -> Bool in
       assignment.isLessonStage
     }
   }
@@ -115,29 +147,13 @@ class ReviewItem: NSObject {
     answer.isLesson = assignment.isLessonStage
   }
 
-  private func getSubjectTypeIndex(_ subjectType: TKMSubject.TypeEnum) -> Int {
-    for (idx, typeValue) in Settings.lessonOrder.enumerated() {
-      if typeValue == subjectType {
-        return idx
+  var lessonSortKey: StudyLessonPreferences.SortKey {
+    let kind: SubjectKind =
+      switch assignment.subjectType {
+      case .radical: .radical
+      case .kanji: .kanji
+      default: .vocabulary
       }
-    }
-    return 0
-  }
-
-  func compareForLessons(other: ReviewItem) -> Bool {
-    if assignment.level < other.assignment.level {
-      return Settings.prioritizeCurrentLevel ? false : true
-    } else if assignment.level > other.assignment.level {
-      return Settings.prioritizeCurrentLevel ? true : false
-    }
-
-    let myIndex = getSubjectTypeIndex(assignment.subjectType)
-    let otherIndex = getSubjectTypeIndex(other.assignment.subjectType)
-    if myIndex < otherIndex {
-      return true
-    } else if myIndex > otherIndex {
-      return false
-    }
-    return assignment.subjectID <= other.assignment.subjectID
+    return (level: Int(assignment.level), kind: kind, subjectID: assignment.subjectID)
   }
 }

@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T19:20:18Z",
+  "source_base_commit": "e5d24e75429503b2612ec49678e5e86b729ac155",
+  "branch": "codex/swiftui-27-curriculum",
+  "status": "Shared lesson policy/settings checkpoint; the full modernization remains open",
+  "implementation": {
+    "owner": "StudyCore.StudyLessonPreferences and app-owned observable StudyLessonSettings",
+    "ui": "One StudyUI.LessonSettingsView; iOS list reordering and Mac move controls",
+    "selection": "Shared strict level/type/subject-ID order; batch, level priority, Apprentice limit and kana-only choices used by native Home and new sessions",
+    "workload": "Apprentice count includes pending/excluded workload; available lesson count remains visible when new lessons are disabled",
+    "resume": "Existing durable session queue/options/revision are returned before new-work preference checks",
+    "storage": "Native Codable UserDefaults; five original iOS archived preference keys retained",
+    "lifecycle": "Settings host can load before account services are attached",
+    "moved": {
+      "App/ReviewQuickSettings/ReviewPreferencesAdapter.swift": "App/Features/Settings/LegacyPreferences.swift"
+    },
+    "deleted": [
+      "App/Features/Settings/LessonSettings.swift"
+    ],
+    "legacy_exclusion_control_retained": true,
+    "ios_writer_changed": false,
+    "new_dependencies": [],
+    "live_wanikani_exercises_or_account_changes": false,
+    "pr_created": false,
+    "pushed": false
+  },
+  "source_sha256": {
+    "App/AppStoreScreenshots/MacLessonTests.swift": "d970a26de2a2a9d2c5f824fc73bac4397169228e7918acd247198dae605c40ba",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "b9f404b1c7e5e9527c85c369ed4a542aa048983282c60f1148518acaa7e1f8db",
+    "App/AppTests/LessonPreferenceTests.swift": "2fb72af882565e4c4b03cfb2eb7fe22a8ee69f65e89f67acf5983a51367e28a0",
+    "App/Application/StudyAppAssembly.swift": "560d694091cb8c181f816c151b86753998920763033d030bc21f6c558a15bdf3",
+    "App/Features/Home/MainWaniKaniTabViewController.swift": "ac92e8560e3a966624b2a254db6b4a5e192d708659fd9dd320e9d57360e825b4",
+    "App/Features/Settings/LegacyPreferences.swift": "020ea7f355214b78a9af31993316ca0a9a22d5c2ef5e74c94c3a1227d7e4df47",
+    "App/Features/Settings/SettingsViewController.swift": "699c29d5ac4b879ac784af9498372f1193c0a23123c6647e4f38e639153c7767",
+    "App/ReviewItem.swift": "f70e9a7809c5933e59d7c5d39fb7318aebd60451a0abd154002d65694f6250f8",
+    "App/Services.swift": "d314f3b2919c9364bd7214cea7ae52f2a612bebe16aad75233597d2a37094bad",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "5d431cfb1b7e1393e01352bb93f172d3c3a0a269c65476c705909151f730e6f2",
+    "App/UsagiUnagiApp.swift": "712266377ce7f9490b9ebe156cfd0dbe390b1df1c458c2c7b8e38d4e73a5a99c",
+    "Shared/Sources/StudyCore/StudyAvailability.swift": "2e32dd0ae9f48c258f49f3e9e972b385c8240257835c7be8c6a5913be1016e96",
+    "Shared/Sources/StudyCore/StudyLessonPreferences.swift": "9fcc0d024e8f5a9549e4eeb23cef2ce9e5c768ceb5b39a6220bb2988ef98efbb",
+    "Shared/Sources/StudyPersistence/StudyStore+Home.swift": "cd02690e790f145b2e47a2a75b7632e9892d37ed7cc31a8ab78197a97b5fb4b5",
+    "Shared/Sources/StudyPersistence/StudyStore+Reviews.swift": "fba771b25471d0e07ecd6221a71132f759278ac05018262b8c8de626b56027d4",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "3d457fba676c3c53fea79a8e407b15107e13919b4109015feff885be4e63b7f3",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "483ce19d4eab6d3d88fb3137d3814d2e8c3ef55f3e1e7d2ee6f2bf54fb10bc90",
+    "Shared/Sources/StudyUI/Lessons/NativeLessonView.swift": "9b8fd72bacbf9420aef576abdf1267a8772e5f20cb46152286094152fd272225",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "c12d1ceb3f14b273779e2998e00b473962869c178f01dd35728fec2f32fab70f",
+    "Shared/Sources/StudyUI/Settings/LessonSettingsView.swift": "dc08ee92829b0a2ef257112a4c4a8d33017259e8d8ccd01a6310089f4b1d9c24",
+    "Shared/Tests/StudyCoreTests/StudyLessonPreferencesTests.swift": "6f360e0aae24ad2f86177191f55c24ed457151c66fd4032aaf83541273034cec",
+    "Shared/Tests/StudyPersistenceTests/LessonPreferencesTests.swift": "2694ab3fe38b72473a6c9fd02dc5f9ed74d4e866d8bf13a5572ebd3983f6cb85"
+  },
+  "removed_source_sha256": {
+    "App/Features/Settings/LessonSettings.swift": "71a4d2fe2e74b7bfe966d56cae569db5a9875516f4920f1953b609e6ab077b2b",
+    "App/ReviewQuickSettings/ReviewPreferencesAdapter.swift": "64df7e918e9220ff66ee64026012a1eb6960efe4157603d7eaaa418c93a6b906"
+  },
+  "validation": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-lessons-shared-pass.log",
+      "log_sha256": "ac74e29107fcd6edbfac55ff36c78734fbdb830462d2f393018086371734d3ca",
+      "passed": 307,
+      "breakdown": {
+        "core": 160,
+        "persistence": 126,
+        "speech": 7,
+        "application": 14
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-lessons-shared-ios.log",
+      "log_sha256": "3542c7096ae27b2620de510d5b59969a266bd7f4992ee2e68def633a65cbbaa1",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-34e3116d63914cc9bcc4dc1e0c98b939.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 307,
+        "passedTests": 307,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 437,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-lessons-hosted-pass.log",
+      "log_sha256": "308f40038228a23f66526d038f9ae876fbc117176f307f22334841992ddae3d3",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-3effb58ac20141d7868d40bc60242fb9.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 91,
+        "passedTests": 91,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 100,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "initial_hosted_attempt": {
+      "log": "/private/tmp/usagi-lessons-hosted-first.log",
+      "log_sha256": "54fd556e41032bf232e0c5c4f00e447d0367e7d71ee1b214a482290dad77d25d",
+      "result": "Failed",
+      "failure": "The disconnected settings-host regression found nil services during view construction; fixed by using the archive-backed lesson owner until services are attached."
+    },
+    "native_mac": {
+      "distinct_workflows_passing_after_fixes": 18,
+      "latest_result_by_workflow": {
+        "MacLessonTests/testNativeApprenticeLimitDisablesOnlyNewLessonsAndCanBeChanged": "passed",
+        "MacLessonTests/testNativeLessonChoicesReorderAndTeachTheConfiguredBatch": "passed",
+        "MacLessonTests/testPrimaryLessonActionOpensTeachingWithoutThePicker": "passed",
+        "MacLessonTests/testTeachingQuizPauseResumeAndFinish": "passed",
+        "MacReviewModeTests/testCombinedAnkiAutoplayWaitsForTheCorrectAssessment": "passed",
+        "MacReviewModeTests/testCombinedAnkiPreservesTheRevealedCardAcrossNavigationAndCompletesBothSides": "passed",
+        "MacReviewModeTests/testExtraStudyCompletesWithoutChangingScheduledReviews": "passed",
+        "MacReviewModeTests/testFontFailuresCancelAndDeleteAreNativeAndRecoverable": "passed",
+        "MacReviewModeTests/testFontSelectionAndDownloadsPreserveTheReviewDraft": "passed",
+        "MacReviewModeTests/testHomeForecastAndSavedSubjectSearchOpenNativeScreens": "passed",
+        "MacReviewModeTests/testIncorrectCombinedAnkiRequiresAnotherAssessment": "passed",
+        "MacReviewModeTests/testNativeOfflineAudioSettingsKeepTheUnsubmittedReviewDraft": "passed",
+        "MacReviewModeTests/testNativePronunciationFailureStaysInline": "passed",
+        "MacReviewModeTests/testNativePronunciationLoadingCanBeCancelled": "passed",
+        "MacReviewModeTests/testNativeReadingAutoplayRetainsAStopControlAfterTheFinalAnswer": "passed",
+        "MacReviewModeTests/testReadingOnlyAnkiLeavesMeaningTyped": "passed",
+        "MacReviewModeTests/testSessionModeCanBeConfiguredBeforeOpeningReviews": "passed",
+        "MacStatisticsTests/testPastPaceChartExpandsWithoutOpeningASheet": "passed"
+      },
+      "attempts": [
+        {
+          "log": "/private/tmp/usagi-lessons-mac-first.log",
+          "log_sha256": "8ab20b6cf0e5b2451e3205dafa65b232cdd16418e8856030cb34195b84a91193",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6d042daca9be4241b2b475a5a97aa3c8.xcresult"
+        },
+        {
+          "log": "/private/tmp/usagi-lessons-mac-followup.log",
+          "log_sha256": "e1544d219a2a5f63356d0efa5d5e7f4be914a5eebcd1b55ed1f15d6d1d50036e",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e88db5d605834ceeb412632d862e5d5e.xcresult"
+        },
+        {
+          "log": "/private/tmp/usagi-lessons-mac-reorder.log",
+          "log_sha256": "e191361ec15d5b2a374724b276722974ef48bb28b930bb25982ba80e43cefa1f",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7a88734c14654b5c8c5dcf9602f20496.xcresult",
+          "summary": {
+            "result": "Passed",
+            "totalTestCount": 1,
+            "passedTests": 1,
+            "failedTests": 0,
+            "skippedTests": 0,
+            "runtimeWarnings": [],
+            "devicesAndConfigurations": [
+              {
+                "device": {
+                  "architecture": "arm64",
+                  "deviceId": "00006040-000649442200801C",
+                  "deviceName": "My Mac",
+                  "modelName": "Mac mini",
+                  "osBuildNumber": "26A434",
+                  "osVersion": "27.0.1",
+                  "platform": "macOS"
+                },
+                "expectedFailures": 0,
+                "failedTests": 0,
+                "passedTests": 1,
+                "skippedTests": 0,
+                "testPlanConfiguration": {
+                  "configurationId": "1",
+                  "configurationName": "Test Scheme Action"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "initial_summary": {
+        "result": "Failed",
+        "totalTestCount": 18,
+        "passedTests": 15,
+        "failedTests": 3
+      },
+      "initial_failures": [
+        {
+          "test": "MacLessonTests/testNativeApprenticeLimitDisablesOnlyNewLessonsAndCanBeChanged()",
+          "message": "Critical process Tsurukame crashed in specialized static Runner._applyScopingTraits(for:testCase:_:)"
+        },
+        {
+          "test": "MacLessonTests/testNativeLessonChoicesReorderAndTeachTheConfiguredBatch()",
+          "message": "Not hittable: Switch, {{1128.0, 716.0}, {38.0, 18.0}}, identifier: 'settings.showKanaOnlyVocab', value: 1"
+        },
+        {
+          "test": "MacReviewModeTests/testNativeReadingAutoplayRetainsAStopControlAfterTheFinalAnswer()",
+          "message": "XCTAssertTrue failed - Attributes: Application, 0x785fc7a080, pid: 78530, title: 'usagiunagi', Disabled"
+        }
+      ],
+      "resolutions": [
+        "Disconnected hosted settings crash fixed; native limit scenario passes on rerun. The initial native runner also reported the Swift Testing crash during the simultaneous hosted run; cross-attribution is an inference.",
+        "New reorder test explicitly scrolls the navigation row clear of the toolbar and uses the actual accessible lesson count.",
+        "Autoplay test selects back-to-back meaning/reading through the real UI instead of assuming random order."
+      ]
+    },
+    "iphone_ui": {
+      "log": "/private/tmp/usagi-lessons-iphone.log",
+      "log_sha256": "65c536d7436bdbf8feca56b1c6a074db1fddf4d8aca1fdaf369136f4498ee06f",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-bc0cefcfda1849438ad851629bf50ad6.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 5,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "ipad_ui": {
+      "log": "/private/tmp/usagi-lessons-ipad.log",
+      "log_sha256": "a829d19ce222d09308cb6bc51579821fd28cdcd384565f228c3604a7364bb9b2",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8c38b97dd7d14d76aa80b67220fe1bce.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+              "deviceName": "iPad Pro 11-inch (M5)",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 5,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-lessons-mac-release.log",
+      "log_sha256": "ac87e6efd99caefc1b6f5f6524d400ad8328613e2eb3bca889e93dd7af3bb298",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-ce1a6d0629024a9c8f2331bef9628f5c.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-lessons-format.log",
+      "log_sha256": "7540a0e6c9e1b1551695f3e7677c10a2729973c58864a41228f7fdcf477f99ed",
+      "changed_swift_files": 21
+    },
+    "screenshot": {
+      "name": "Native configured lesson batch",
+      "path": "/private/tmp/usagi-lessons-native-images/B33DC27B-C593-45EC-A201-CB1ECB841F31.png",
+      "sha256": "1763b22e5aaf6d88b384477964a6e67562ee531779568813702443fffb97909a",
+      "scope": "App window only; isolated synthetic account",
+      "visually_inspected": true
+    }
+  },
+  "constraints": {
+    "chrome": "Read-only WaniKani dashboard study; no exercise opened, answers, account changes, browser credentials or tokens accessed",
+    "fixtures": "Isolated synthetic accounts; native fixtures memory-only and uploads disabled",
+    "owner_edits_excluded": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ],
+    "remaining": [
+      "Native subject/exclusion preferences",
+      "Sign-in and route ownership",
+      "Notifications/badge/watch parity",
+      "iOS writer and separate-process migration acceptance",
+      "Physical audio/speech and Japanese IME acceptance",
+      "Full-account prediction validation",
+      "Authorized publication and hosted GitHub Actions verification"
+    ]
+  }
+}

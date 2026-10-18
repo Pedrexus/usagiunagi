@@ -12,15 +12,17 @@ Work lives in `/Users/pedro/Developer/Projects/apps/usagiunagi`, on `codex/swift
 | Voice | Apple capture, confirmed transcripts, explicit kana correction and typing fallback with deterministic tests | Physical microphone/model availability, latency, interruptions and complete platform parity |
 | Statistics and plots | Swift Charts, pace/focus scenarios, chronological median-pace backtesting; JLPT reference, school/Jōyō/Kyōiku and selected KanKen coverage | Full-account checks, richer calibrated forecasting and verified KanKen 4/3/pre-2 subsets; coverage is not calibrated exam readiness |
 | Offline mock data | 357 display references for levels 1–3 in Zstandard Parquet and matching bundled JSON; native offline browsing | Full API-grade IDs/accepted-answer metadata remain unavailable; display fixtures cannot be used as authenticated exercises |
-| Settings, media and platform services | Shared review controls, font/audio catalog/download/preferences and native pronunciation; common SwiftUI media settings and original iOS caches/archives preserved | Physical media routes/interruptions, notifications/badges and watch/companion parity; full sign-in/deep-link ownership |
+| Settings, media and platform services | Shared lesson/review controls and policy, font/audio catalog/download/preferences and native pronunciation; common SwiftUI media settings and original iOS caches/archives preserved | Native subject/exclusion preferences, physical media routes/interruptions, notifications/badges and watch/companion parity; full sign-in/deep-link ownership |
 | Trim and reorganize | App/Shared/Resources/Docs; Go, unused C++, obsolete CI/release tooling and migrated tables/XIBs retired; generated Pods ignored | Replace remaining lifecycle/controllers/storyboard, IME and SVG bridges before deletion; preserve companion behavior |
-| Swift Testing | 297 shared tests on each platform, plus hosted integration suites; XCUITest verifies native UI behavior | Migrate remaining legacy tests with their callers; retain XCUITest for UI acceptance and test isolation |
+| Swift Testing | 307 shared tests on each platform, plus hosted integration suites; XCUITest verifies native UI behavior | Migrate remaining legacy tests with their callers; retain XCUITest for UI acceptance and test isolation |
 | Mainboard | General Apple executor, toolchain/diagnostics/results, bounded process trees, committed resolution, fresh evidence and generic URL-test host; no app Tools driver | Tool commit `7acaf73` remains unpublished; prior 105 isolated Mainboard checks are unchanged evidence |
 | GitHub Actions | Pinned Mainboard-based shared/restart, iPhone/iPad and native Mac gates prepared | Publish tool/app commits only when pushes are authorized, then verify hosted CI; no hosted Actions pass is claimed |
 | LOC/dependency reduction | Common behavior replaces duplicate feature presentation and obsolete infrastructure | Same-scope whole-app LOC comparison and complete functional parity remain unproven |
 | Coverage popup | User explicitly closed/asked to ignore the report; bundled references and inline coverage retained | No open popup investigation |
 
 ## Current checkpoint
+
+The lesson form and policy now have one shared owner. Native Mac honors batch size, level/type order, Apprentice limit and kana-only visibility instead of fixing batches at five. iOS keeps its original archives and exclusion control. Home/new-work selection agree; saved quizzes retain their captured queue and options. The disconnected settings host remains safe before account services are attached. The old lesson form is retired and all temporary preference adapters are grouped in Settings. See [the lesson acceptance receipt](Validation/2026-10-19-shared-lessons.json) for exact checks and the initial failures/fixes.
 
 The shared audio owner now replaces the old UIKit player and offline-audio storyboard. Native Mac has pronunciation and shared download settings. Player state uses native Observation; cached voices, download priority and archived iOS settings remain compatible. Voice sheets block playback until capture cleanup has released ownership. Shared tests pass on both platforms, including real player start/completion and cancellation. Native/hosted and iPhone/iPad results are recorded in the audio receipt. Physical audio/speech and platform-service acceptance remain open.
 
@@ -34,7 +36,7 @@ See [the audio acceptance receipt](Validation/2026-10-19-shared-audio.json), [th
 
 ## Next integration
 
-Finish native sign-in, routes, preferences/media and notification/watch parity, then adopt the shared root/account model on iOS. Gate bootstrap before `LegacyStudyCoordinator` opens the old writer. Verify identity, import one consistent schema 9–15 export, preserve pending/uncertain work and prove crash/relaunch/rollback ordering before retiring SQLite. Keep the original data recoverable; never use `clearAllDataAndClose()` for migration. See [the architecture](Architecture.md).
+Finish native sign-in, routes, remaining subject/exclusion preferences and notification/watch parity, then adopt the shared root/account model on iOS. Gate bootstrap before `LegacyStudyCoordinator` opens the old writer. Verify identity, import one consistent schema 9–15 export, preserve pending/uncertain work and prove crash/relaunch/rollback ordering before retiring SQLite. Keep the original data recoverable; never use `clearAllDataAndClose()` for migration. See [the architecture](Architecture.md).
 
 ## Browser and testing constraint
 

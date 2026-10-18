@@ -5,7 +5,7 @@ import SwiftData
 extension StudyStore {
   public func availability(
     accountID: String, now: Date = .now, calendar: Calendar = .current,
-    leechThreshold: Double = 1
+    leechThreshold: Double = 1, lessonPreferences: StudyLessonPreferences = .init()
   ) throws -> StudyAvailability {
     try requireAccount(accountID)
     guard let account = try accountState(accountID: accountID) else {
@@ -19,19 +19,26 @@ extension StudyStore {
         materials(accountID: accountID).filter { $0.material.isExcluded }.map {
           $0.material.subjectID
         }),
-      now: now, calendar: calendar, leechThreshold: leechThreshold)
+      now: now, calendar: calendar, leechThreshold: leechThreshold,
+      lessonPreferences: lessonPreferences)
   }
 
-  public func homeData(accountID: String, now: Date = .now, calendar: Calendar = .current) throws
+  public func homeData(
+    accountID: String, now: Date = .now, calendar: Calendar = .current,
+    lessonPreferences: StudyLessonPreferences = .init()
+  ) throws
     -> HomeDashboardData
   {
-    let available = try availability(accountID: accountID, now: now, calendar: calendar)
+    let available = try availability(
+      accountID: accountID, now: now, calendar: calendar, lessonPreferences: lessonPreferences)
     let snapshot = try snapshotForHome(accountID)
     var data = HomeDashboardData()
     data.date = now
     data.onVacation = available.account.profile.vacationStartedAt != nil
     data.reviews = available.scheduled.count
     data.lessons = available.lessons.count
+    data.lessonsDisabledMessage =
+      available.apprenticeLimitReached ? "Apprentice limit reached" : nil
     data.apprenticePractice = available.practice(.apprentice).count
     data.recentLessons = available.practice(.recentLessons).count
     data.recentMistakes = available.practice(.recentMistakes).count

@@ -220,9 +220,10 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
         return
       }
 
-      items = items.sorted(by: { a, b in a.compareForLessons(other: b) })
-      if items.count > Settings.lessonBatchSize {
-        items = Array(items[0..<Int(Settings.lessonBatchSize)])
+      let preferences = services.lessonSettings.value
+      items.sort { preferences.precedes($0.lessonSortKey, $1.lessonSortKey) }
+      if items.count > preferences.batchSize {
+        items = Array(items.prefix(preferences.batchSize))
       }
 
       let vc = segue.destination as! LessonsViewController

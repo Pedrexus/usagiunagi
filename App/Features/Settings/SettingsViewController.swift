@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE for terms.
 
 import Observation
+import StudyCore
 import StudyUI
 import SwiftUI
 
@@ -33,6 +34,7 @@ extension Notification.Name {
 
 struct ApplicationSettings: View {
   @Bindable var navigation: SettingsNavigation
+  let lessons: StudyLessonSettings
   let back: () -> Void
   let fonts: () -> Void
   let offlineAudio: () -> Void
@@ -107,7 +109,12 @@ struct ApplicationSettings: View {
       .navigationDestination(for: SettingsNavigation.Page.self) { page in
         switch page {
         case .appearance: AppearanceSettings(appearanceChanged: appearanceChanged)
-        case .lessons: LessonSettings()
+        case .lessons:
+          LessonSettingsView(settings: lessons) {
+            SettingToggle(
+              "Allow excluding vocabulary items", Settings.$allowExcludeItems,
+              help: "Show the option to exclude vocabulary from lessons and reviews")
+          }
         case .reviews:
           ReviewSettings(
             fonts: fonts, offlineAudio: offlineAudio, appearanceChanged: appearanceChanged)
@@ -144,6 +151,7 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
     title = "Settings"
     rootView = ApplicationSettings(
       navigation: state,
+      lessons: services?.lessonSettings ?? StudyLessonSettings(store: LegacyLessonPreferences()),
       back: { [weak self] in self?.navigationController?.popViewController(animated: true) },
       fonts: { [weak self] in
         guard let self else { return }
