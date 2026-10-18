@@ -1,6 +1,0 @@
-Bugfixes:
-- Smoother transition between English and Japanese keyboards.
-- Better search bar appearance (especially on iPad).
-
-Other changes:
-- Remove username/password login at Wanikani's request.

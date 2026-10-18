@@ -1,42 +1,26 @@
 # 兔鰻 · usagiunagi
 
-An independent, unofficial WaniKani client for studying Japanese, forked from [David Sansome's Tsurukame](https://github.com/davidsansome/tsurukame). The name is **兔鰻** in Japanese and Chinese localizations, and **usagiunagi** elsewhere: a rabbit–eel companion for your studies.
+An independent, unofficial WaniKani client, forked from [David Sansome's Tsurukame](https://github.com/davidsansome/tsurukame). **兔鰻** in Japanese and Chinese localizations; **usagiunagi** elsewhere.
 
-This fork is being modernized for **iOS/iPadOS 27+ and native macOS 27+**, using Swift, SwiftUI, system typography, SF Symbols and Liquid Glass. Shared statistics include Apple Swift Charts, level pace, focus items and curriculum coverage for estimated JLPT lists, Japanese school grades, Jōyō/Kyōiku and selected Kanji Kentei scopes. Coverage is not an exam pass prediction.
+For **iOS/iPadOS 27+ and native macOS 27+**, using shared Swift, SwiftUI, SwiftData, Apple Speech and Swift Charts. The design keeps WaniKani's subject colors with system typography, SF Symbols and native Apple controls. Reviews support optional confirmed voice input. Statistics show pace, focus items and reference-list coverage; coverage is not an exam pass prediction.
 
-The iPhone/iPad app now uses a shared SwiftUI review layout while retaining the existing grading, lesson and offline progress workflows during migration. The new [native Mac app](native/README.md) currently supports statistics, rich subject details, local notes/synonyms, saved-work recovery, durable offline reviews and katakana practice. Native lessons and scoped/combined Anki are implemented; their Mac UI acceptance remains open while desktop automation is unavailable. iOS reviews now include optional voice input with transcript confirmation and typing fallback; real microphone validation remains open. Full SwiftUI migration and Mac review/lesson parity are still in progress. See the [open-task tracker](TASKS.md), [migration status](SWIFTUI_MIGRATION.md) and [statistics definitions](STATISTICS.md).
+Modernization is ongoing. iPhone/iPad retain the existing offline writer during migration. Mac lessons and Anki modes are implemented, but desktop UI acceptance and some media/settings parity remain open. See [current tasks](Docs/TASKS.md) and the [shared-code architecture](Docs/Architecture.md).
 
-The [layered kanji icon](Branding/UsagiUnagi.icon) uses outlined SVG lettering and Apple's Icon Composer format. Brand localizations and store-name metadata are prepared in source; this fork has not been published to the App Store. Historical build target/module names and bundle identifiers remain for compatibility during migration. Choose your own signing identifiers for independent distribution.
+## Repository
 
-WaniKani content is governed by [WaniKani's terms](https://www.wanikani.com/terms), separately from this repository's software license. Original Tsurukame copyright and license notices are retained. The [upstream App Store release](https://itunes.apple.com/us/app/tsurukame-for-wanikani/id1367114761) is Tsurukame, not a release of this fork.
+| Folder | Purpose |
+| --- | --- |
+| `App` | One multiplatform app/project, system adapters and app integration tests |
+| `Shared` | One Swift package: domain, persistence, speech, SwiftUI and unit tests |
+| `Resources` | Layered kanji icon, names, hosted assets and Swift resource generators |
+| `Docs` | Current workflow/tasks, statistics definitions and historical evidence |
 
-## Building usagiunagi
+## Build and test
 
-Requires Xcode 27. Open `ios/Tsurukame.xcworkspace` for iPhone/iPad, or `native/TsurukameMac.xcodeproj` for Mac. These historical internal paths have not been renamed.
+Use Xcode 27 and open **`App/UsagiUnagi.xcworkspace`** for iPhone, iPad and native Mac. There is one `UsagiUnagi` app scheme and SwiftUI entry point. Restore the temporary locked iOS bridges with `pod install --deployment --project-directory=App`. Historical internal target/module and bundle names preserve compatibility. Set your own signing team and identifiers for devices.
 
-If you want to build the iOS app yourself, you will need to change the signing identifiers.
+[GitHub Actions](.github/workflows/apple.yml) uses Mainboard for bounded native builds/tests and result evidence. Mainboard is development infrastructure; it is not linked into the app. A standalone fork uses the public tool with its committed lock and does not need the parent workspace. See [development and CI](Docs/Development.md), including the unpublished tool-commit prerequisite.
 
-## Change the signing identifiers
-You'll have to change the app bundle identifiers in the main target and app extension to match your Apple Developer Account.
+The [Icon Composer asset](Resources/UsagiUnagi.icon) contains outlined SVG kanji layers. Localized store names are prepared in source; this fork has not been published to the App Store.
 
-1. You will need a registered Apple Developer Account. If you don't have one, you can get one for free at [Apple Developer](https://developer.apple.com/account/).
-2. Next, you will need to open Xcode, and open `ios/Tsurukame.xcworkspace`, which is what you will use to build the app.
-	1. You will need to click on the Tsurukame project in the left sidebar.
-	2. For each target, in its Signing & Capabilities tab, turn on the automatically manage signing checkbox, as shown in the first arrow in the screenshot below:
-
-    <img width="300" alt="Signing & Capabilities" src="https://user-images.githubusercontent.com/46784000/86614807-2a4f2780-bf79-11ea-8de5-dd3434b48afd.png">
-3. If you already know your development team identifier, skip to step 4.
-	1. Change the development team and bundle identifier as shown in the second and third arrows in the screenshot.
-	2. You should see the development team identifier appear, as shown at the bottom of the screenshot. 
-4. Open Terminal, and ensure the current directory is in the `tsurukame` directory, or use `cd` to change it if not. Then type the following command, replacing `7B2GP77Y4A` with your development team, such as `D526893WQ3`, and `com.davidsansome.wanikani` with your identifier, such as `com.mzsanford.wanikani`:
-    `utils/set-team-product.sh 7B2GP77Y4A com.davidsansome.wanikani` 
-
-## Development tasks and dependencies
-
-In the Developer/Projects workspace, run builds and tests through root Mainboard tasks; see [the workflow](SWIFTUI_MIGRATION.md#swift-testing-mainboard-and-native-formatting). `mainboard run --as-is usagi-toolchain` checks Xcode, `usagi-simulators` lists available devices, `usagi-resolve` restores the committed Swift package versions, and `usagi-pods` restores CocoaPods with `--deployment`. Dependency upgrades are separate reviewed changes.
-
-Give builds/tests a fresh `-resultBundlePath`. Inspect that exact bundle with `mainboard run --as-is usagi-diagnostics <path> --json` for compiler diagnostics and `usagi-results <path> --json` for the test verdict. Build success alone does not verify tests or feature parity.
-
-For a standalone checkout, use the same native manifests: restore CocoaPods from `ios` with `pod install --deployment`, then resolve the workspace with Xcode using `-onlyUsePackageVersionsFromResolvedFile`. CocoaPods remains necessary for legacy iOS targets until their callers migrate; the shared Swift package and native Mac target do not use it.
-
-Go tooling and the unused C++ database inspector have been removed. The similar-kanji supplement now has a [Swift generator](similar_kanji/README.md); its bundled runtime data is unchanged. Active UIKit screens and legacy storage dependencies remain until their SwiftUI/native replacements preserve the existing features. Swift domain, persistence, speech, networking and test modules remain part of the app architecture.
+Original copyright and [Apache 2.0 license](LICENSE) notices are retained. WaniKani content is governed separately by [WaniKani's terms](https://www.wanikani.com/terms). The [upstream App Store app](https://itunes.apple.com/us/app/tsurukame-for-wanikani/id1367114761) is Tsurukame.

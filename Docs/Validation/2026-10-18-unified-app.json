@@ -1,0 +1,668 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T14:07:58Z",
+  "branch": "codex/swiftui-27-curriculum",
+  "source_base_commit": "1af5e273094da28dac1812c6aa472198212c82bc",
+  "status": "checkpoint; modernization and Mac UI acceptance remain open",
+  "structure": {
+    "roots": [
+      "App",
+      "Shared",
+      "Resources",
+      "Docs"
+    ],
+    "project": "App/UsagiUnagi.xcodeproj",
+    "workspace": "App/UsagiUnagi.xcworkspace",
+    "scheme": "UsagiUnagi",
+    "app_target": "Tsurukame",
+    "entry": "App/UsagiUnagiApp.swift",
+    "platforms": [
+      "iOS",
+      "iPadOS",
+      "macOS"
+    ],
+    "catalyst": false
+  },
+  "shared_mac": {
+    "passed": 244,
+    "breakdown": {
+      "core": 123,
+      "persistence": 115,
+      "speech": 6
+    },
+    "log": "/private/tmp/usagi-free-preview-tests.log"
+  },
+  "shared_ios": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-325556abe2114edcac8ee0969838455b.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 244,
+      "passedTests": 244,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "testFailures": [
+
+      ],
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+            "deviceName": "iPad Pro 11-inch (M5)",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 365,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "StudyKit-Package · Built with macOS 27.0.1",
+      "finishTime": 1792332111.937,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792332093.783,
+      "statistics": [
+        {
+          "subtitle": "152 test runs",
+          "title": "31 tests ran with dynamic parameters"
+        }
+      ],
+      "title": "Test - StudyKit-Package",
+      "topInsights": [
+        {
+          "category": "Longest Test Runs",
+          "impact": "52% of duration",
+          "text": "1 longest test run with outlier durations exceeding 0.12s (three standard deviations)"
+        }
+      ]
+    }
+  },
+  "hosted_ios": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-be12e37173c54c798c4364936006b5b9.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 91,
+      "passedTests": 91,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "testFailures": [
+
+      ],
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+            "deviceName": "iPad Pro 11-inch (M5)",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 102,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Tsurukame · Built with macOS 27.0.1",
+      "finishTime": 1792329993.955,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792329942.433,
+      "statistics": [
+        {
+          "subtitle": "17 test runs",
+          "title": "6 tests ran with dynamic parameters"
+        }
+      ],
+      "title": "Test - Tsurukame",
+      "topInsights": [
+        {
+          "category": "Longest Test Runs",
+          "impact": "33% of duration",
+          "text": "1 longest test run with outlier durations exceeding 0.11s (three standard deviations)"
+        },
+        {
+          "category": "Longest Test Runs",
+          "impact": "47% of duration",
+          "text": "2 longest test runs with outlier durations exceeding 0.07s (three standard deviations)"
+        }
+      ]
+    }
+  },
+  "iphone_full_before_targeted_test_fix": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-bb10512508be4acf835d77189d062ab4.xcresult",
+    "successful": false,
+    "summary": {
+      "result": "Failed",
+      "totalTestCount": 46,
+      "passedTests": 45,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "testFailures": [
+        {
+          "failureText": "XCTAssertEqual failed: (\"Reorder Radical\") is not equal to (\"Reorder Kanji\")",
+          "targetName": "AppStoreScreenshots",
+          "testIdentifier": 39,
+          "testIdentifierString": "ReviewFlowTests/testSettingsLessonChoicesAndReorderingPersistWhenReopened()",
+          "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testSettingsLessonChoicesAndReorderingPersistWhenReopened",
+          "testName": "testSettingsLessonChoicesAndReorderingPersistWhenReopened()"
+        }
+      ],
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 45,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+      "finishTime": 1792331493.227,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        }
+      ],
+      "startTime": 1792329791.432,
+      "statistics": [
+
+      ],
+      "title": "Test - UsagiUnagi",
+      "topInsights": [
+        {
+          "category": "Longest Test Runs",
+          "impact": "19% of duration",
+          "text": "1 longest test run with outlier durations exceeding 167.98s (three standard deviations)"
+        }
+      ]
+    },
+    "slowest": [
+      {
+        "name": "testLessonPickerPreservesSelectionAndUnfinishedQuizDraft()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testLessonPickerPreservesSelectionAndUnfinishedQuizDraft",
+        "seconds": 324.76692605018616
+      },
+      {
+        "name": "testSettingsReviewDependenciesAndDownloadNavigation()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testSettingsReviewDependenciesAndDownloadNavigation",
+        "seconds": 62.61559808254242
+      },
+      {
+        "name": "testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion",
+        "seconds": 60.96404206752777
+      },
+      {
+        "name": "testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges",
+        "seconds": 38.684759974479675
+      },
+      {
+        "name": "testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation",
+        "seconds": 37.1980539560318
+      },
+      {
+        "name": "testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement",
+        "seconds": 36.92551791667938
+      },
+      {
+        "name": "testNativeLoginTokenFailuresHibernationAndHomeNavigation()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testNativeLoginTokenFailuresHibernationAndHomeNavigation",
+        "seconds": 36.90734791755676
+      },
+      {
+        "name": "testOfflineAudioFailuresRemainVisibleAndCanRetry()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testOfflineAudioFailuresRemainVisibleAndCanRetry",
+        "seconds": 35.41646897792816
+      },
+      {
+        "name": "testOfflineAudioVoiceChoicesAndCellularSettingPersist()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testOfflineAudioVoiceChoicesAndCellularSettingPersist",
+        "seconds": 35.275094985961914
+      },
+      {
+        "name": "testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz()",
+        "result": "Passed",
+        "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz",
+        "seconds": 34.00948202610016
+      }
+    ]
+  },
+  "iphone_final_home_reorder_and_scene_routes": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-ed3107980b674f9380c4991c4510275e.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 5,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "testFailures": [
+
+      ],
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 5,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+      "finishTime": 1792332036.96,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792331822.234,
+      "statistics": [
+
+      ],
+      "title": "Test - UsagiUnagi",
+      "topInsights": [
+
+      ]
+    }
+  },
+  "ipad_final_layout_and_lessons": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8add051883474f198d64f5b474f42ac9.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "testFailures": [
+
+      ],
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+            "deviceName": "iPad Pro 11-inch (M5)",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 3,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+      "finishTime": 1792330589.708,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792330492.221,
+      "statistics": [
+
+      ],
+      "title": "Test - UsagiUnagi",
+      "topInsights": [
+
+      ]
+    }
+  },
+  "ipad_final_scene_routes": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5fb8415a335a4bd4948ca9ba038249df.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "testFailures": [
+
+      ],
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+            "deviceName": "iPad Pro 11-inch (M5)",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+      "finishTime": 1792330786.145,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792330687.346,
+      "statistics": [
+
+      ],
+      "title": "Test - UsagiUnagi",
+      "topInsights": [
+
+      ]
+    }
+  },
+  "ipad_final_home_polish": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-239ad3a4385f4ffe91ca594c2459c5e3.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "testFailures": [
+
+      ],
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+            "deviceName": "iPad Pro 11-inch (M5)",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+      "finishTime": 1792330914.151,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792330843.962,
+      "statistics": [
+
+      ],
+      "title": "Test - UsagiUnagi",
+      "topInsights": [
+
+      ]
+    }
+  },
+  "mac_release_with_preview": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-57626c155b4648908eb37cf1e77d65df.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ],
+      "warnings": [
+
+      ],
+      "analyzerWarnings": [
+
+      ],
+      "actionTitle": "Build \"UsagiUnagi\"",
+      "destination": {
+        "architecture": "arm64",
+        "deviceId": "00006040-000649442200801C",
+        "deviceName": "My Mac",
+        "modelName": "Mac mini",
+        "osBuildNumber": "26A434",
+        "osVersion": "27.0.1",
+        "platform": "macOS"
+      },
+      "endTime": 1792332073.552,
+      "startTime": 1792332038.504
+    }
+  },
+  "standalone_mac_before_preview_addition": {
+    "bundle": "/private/tmp/usagi-unified-standalone/.build/Results/build-a70916c4003c41d69c60743236c14b7a.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ],
+      "warnings": [
+
+      ],
+      "analyzerWarnings": [
+
+      ],
+      "actionTitle": "Build \"UsagiUnagi\"",
+      "destination": {
+        "architecture": "arm64",
+        "deviceId": "00006040-000649442200801C",
+        "deviceName": "My Mac",
+        "modelName": "Mac mini",
+        "osBuildNumber": "26A434",
+        "osVersion": "27.0.1",
+        "platform": "macOS"
+      },
+      "endTime": 1792331214.879,
+      "startTime": 1792331184.522
+    }
+  },
+  "persistence_restart": {
+    "passed": true,
+    "log": "/private/tmp/usagi-one-app-persistence-final.log",
+    "checks": [
+      "production saved session and uncertain review",
+      "exact attempted note revision and account isolation",
+      "catalog/assignment/pending note reopened by a separate process"
+    ]
+  },
+  "mac_automated_acceptance": {
+    "result": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-49f6772cfcda401ebd9305da1f85feee.xcresult",
+      "successful": false,
+      "summary": {
+        "result": "Failed",
+        "totalTestCount": 1,
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [
+          {
+            "failureText": "XCTAssertTrue failed",
+            "targetName": "AppStoreScreenshots",
+            "testIdentifier": 1,
+            "testIdentifierString": "MacLessonTests/testTeachingQuizPauseResumeAndFinish()",
+            "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/MacLessonTests/testTeachingQuizPauseResumeAndFinish",
+            "testName": "testTeachingQuizPauseResumeAndFinish()"
+          }
+        ],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "00006040-000649442200801C",
+              "deviceName": "My Mac",
+              "modelName": "Mac mini",
+              "osBuildNumber": "26A434",
+              "osVersion": "27.0.1",
+              "platform": "macOS"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+        "finishTime": 1792331404.361,
+        "runtimeWarnings": [
+
+        ],
+        "startTime": 1792331378.781,
+        "statistics": [
+
+        ],
+        "title": "Test - UsagiUnagi",
+        "topInsights": [
+
+        ]
+      },
+      "slowest": [
+        {
+          "name": "testTeachingQuizPauseResumeAndFinish()",
+          "result": "Failed",
+          "identifier": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/MacLessonTests/testTeachingQuizPauseResumeAndFinish",
+          "seconds": 11.079292058944702
+        }
+      ]
+    },
+    "open_issue": "XCUITest launches the app menus but never creates the study window; initial sidebar lookup fails. Ordinary direct launches were visually verified. No native Mac lesson/Anki UI pass is claimed."
+  },
+  "manual_native_preview": {
+    "verified": true,
+    "actions": [
+      "opened Release app",
+      "Preview free levels 1–3 without a token",
+      "Japanese search 大人 returned Adult (おとな, level 1) and Obedient (おとなしい, level 3)",
+      "opened and dismissed read-only Adult details"
+    ],
+    "exercises_opened": false,
+    "account_changes": false
+  },
+  "fixture": {
+    "rows": 357,
+    "levels": {
+      "1": 80,
+      "2": 147,
+      "3": 130
+    },
+    "kind_counts": {
+      "radical": 85,
+      "kanji": 83,
+      "vocabulary": 189
+    },
+    "format": "Parquet",
+    "compression": "ZSTD",
+    "compressed_columns": 5,
+    "json_parquet_differences": 0,
+    "capture_codepoint_fnv1a": "638ee6020e061916",
+    "parquet": "Resources/Fixtures/free-levels.parquet",
+    "parquet_sha256": "df9846fa93dcb9902aa36da60aaf827e216fb93dcbc3568d3bf2d08d879996a2",
+    "json_sha256": "c788cc41caea130b0b04056dc82b438256629f8b1b648a858432281eae67d912",
+    "scope": "display fields only; no WaniKani IDs, accepted-answer rules, mnemonics or account progress",
+    "browser": "Existing Chrome dashboard and level 1–3 reference pages; returned to dashboard; no exercises or credential extraction"
+  },
+  "mainboard": {
+    "branch": "codex/apple-development",
+    "commit": "7acaf736c8bae16f8b028678384fe83bb728c51b",
+    "isolated_tests_passed": 105,
+    "resource_packaged": true,
+    "native_url_host_verified": true,
+    "ruff": "passed",
+    "mypy": "passed for changed Apple/process modules",
+    "workspace_task_commit": "78d5a470b"
+  },
+  "ci": {
+    "syntax": "actionlint 1.7.12 passed with official xcode-27 label configuration; shellcheck unavailable",
+    "hosted_run": false,
+    "prerequisite": "Publish the pinned Mainboard commit and app branch only after authorization; no push or PR performed"
+  },
+  "cleanup": {
+    "obsolete_release_ci_and_snapshots_retired": true,
+    "generated_pods_untracked": true,
+    "domain_generators_colocated": true,
+    "old_mac_source_tests_and_entitlement_replacements_verified": true,
+    "recoverable_mac_backup": "/private/tmp/usagi-retired-mac",
+    "sdk_annotations_preserved_unstaged": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "remaining": "Docs/TASKS.md; includes app-model/persistence handoff, remaining UIKit/SVG/IME adapters, full platform/media parity, physical speech/IME checks, predictive statistics validation, full API review fixtures and native Mac automated acceptance"
+}
