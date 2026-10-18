@@ -69,7 +69,7 @@ public struct CatalogSubject: Codable, Sendable, Identifiable {
     }
 }
 
-public struct CatalogAssignment: Codable, Sendable, Identifiable {
+public struct CatalogAssignment: Codable, Equatable, Sendable, Identifiable {
     public let id: Int64
     public let subjectID: Int64
     public var kind: SubjectKind

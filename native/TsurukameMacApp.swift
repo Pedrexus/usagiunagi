@@ -167,10 +167,10 @@ final class MacStudyStore {
         "Sent \(report.uploadedReviews) reviews, \(report.uploadedLessons) lessons and \(report.uploadedMaterials) note edits. \(report.reviewsNeedingAttention + report.materialsNeedingAttention) items need attention."
             + (report.onVacation ? " Reviews and lessons are paused during vacation." : "")
     }
-    func compareMaterial(_ saved: SavedStudyMaterial) async throws -> StudyMaterialComparison {
+    func compareSavedWork(_ request: StudyRecoveryRequest) async throws -> StudyRecoveryComparison {
         #if DEBUG
-        if isReviewFixture, ProcessInfo.processInfo.arguments.contains("MaterialRecoveryFixture") {
-            guard saved.accountID == "review-fixture", let cache = savedWorkStore else { throw StudyStoreError.sampleData }
+        if isReviewFixture, ProcessInfo.processInfo.arguments.contains("MaterialRecoveryFixture") || ProcessInfo.processInfo.arguments.contains("ReviewRecoveryFixture") {
+            guard request.accountID == "review-fixture", let cache = savedWorkStore else { throw StudyStoreError.sampleData }
             let client = WaniKaniClient { request in
                 guard request.httpMethod == "GET" else { throw StudyStoreError.sampleData }
                 let json: String
@@ -179,21 +179,23 @@ final class MacStudyStore {
                     json = #"{"object":"user","data":{"id":"review-fixture","username":"Synthetic review fixture","level":1,"current_vacation_started_at":null}}"#
                 case "study_materials":
                     json = #"{"object":"collection","total_count":1,"pages":{"next_url":null},"data":[{"id":201,"object":"study_material","data":{"subject_id":1,"meaning_note":"Server version of the note.","reading_note":"いち","meaning_synonyms":["Server synonym"]}}]}"#
+                case "assignments":
+                    json = #"{"object":"collection","total_count":1,"pages":{"next_url":null},"data":[{"id":101,"object":"assignment","data":{"subject_id":1,"subject_type":"kanji","srs_stage":4,"available_at":"2099-01-01T00:00:00Z","started_at":"2020-01-01T00:00:00Z","unlocked_at":"2020-01-01T00:00:00Z","hidden":false}}]}"#
                 default: throw StudyStoreError.sampleData
                 }
                 return (Data(json.utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
             }
-            return try await cache.compareMaterial(saved, credentialID: "review-fixture", token: "fixture", client: client)
+            return try await cache.compareSavedWork(request, credentialID: "review-fixture", token: "fixture", client: client)
         }
         #endif
         guard !isReviewFixture, snapshot?.isSample == false,
-              snapshot?.accountID == saved.accountID,
+              snapshot?.accountID == request.accountID,
               let token = try TokenKeychain.load() else { throw StudyStoreError.invalidIdentity }
         let epoch = generation, credential = credentialID(token)
         try beginRequest(credential: credential); defer { finishRequest(epoch) }
         let cache = try await repository()
         try checkRequest(epoch)
-        let comparison = try await cache.compareMaterial(saved, credentialID: credential, token: token, client: reader)
+        let comparison = try await cache.compareSavedWork(request, credentialID: credential, token: token, client: reader)
         try checkRequest(epoch)
         return comparison
     }
@@ -213,6 +215,9 @@ final class MacStudyStore {
         }
         var assignment = CatalogAssignment(id: 101, subjectID: subject.id, kind: subject.kind)
         assignment.level = 1; assignment.srsStage = 3; assignment.startedAt = 1; assignment.availableAt = 1
+        if ProcessInfo.processInfo.arguments.contains("LessonRecoveryFixture") {
+            assignment.srsStage = 0; assignment.startedAt = nil; assignment.availableAt = nil; assignment.unlockedAt = 1
+        }
         var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
         if subject.kind == .kanji {
             subject.meaningMnemonic = "A <kanji>single line</kanji> represents <b>one</b>."
@@ -236,6 +241,13 @@ final class MacStudyStore {
                              readingNote: "いち", meaningSynonyms: ["Local synonym"]), pending: true, legacyRevision: 0)]
         }
         fixture.assignments = [assignment]
+        if ProcessInfo.processInfo.arguments.contains("ReviewRecoveryFixture") {
+            let lesson = ProcessInfo.processInfo.arguments.contains("LessonRecoveryFixture")
+            fixture.pendingReviews = [.init(assignment: assignment, submission: .init(itemID: 0,
+                subjectID: subject.id, assignmentID: assignment.id, isLesson: lesson,
+                meaningWrong: !lesson, readingWrong: false, meaningWrongCount: lesson ? 0 : 1,
+                readingWrongCount: 0, createdAt: 100))]
+        }
         _ = try await cache.importLegacyAccount(fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",
             verifiedUsername: profile.username, credentialID: "review-fixture")
         persistence = Task { cache }; savedWorkStore = cache; self.profile = profile
@@ -336,7 +348,7 @@ private struct MacStudyRoot: View {
                     } else if section == .savedWork {
                         if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
                             SavedWorkView(store: cache, accountID: accountID, isSyncing: store.isSyncing,
-                                          compareMaterial: store.compareMaterial) {
+                                          compareSavedWork: store.compareSavedWork) {
                                 try await store.syncSavedWork(accountID: accountID)
                             }.id(accountID)
                         } else {
@@ -358,6 +370,10 @@ private struct MacStudyRoot: View {
                         .disabled(store.isSyncing || store.snapshot?.isSample != false)
                 }
                 .safeAreaInset(edge: .bottom) {
+                    if section == .reviews, store.snapshot?.requiresAssignmentRefresh == true {
+                        Label("Refresh WaniKani to reload progress for archived answers.", systemImage: "arrow.clockwise")
+                            .font(.callout).padding()
+                    }
                     if store.isReviewFixture { Text("Synthetic review fixture · memory only · uploads disabled").font(.caption).padding() }
                     if let error = store.error { Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding().frame(maxWidth: .infinity).background(.regularMaterial) }
                     if section == .savedWork, let summary = store.syncSummary {

@@ -41,16 +41,21 @@ public struct StudyDashboard: View {
                 Picker("Statistics section", selection: $page) {
                     ForEach(Page.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }.pickerStyle(.segmented)
-                switch page {
-                case .progress: progress
-                case .coverage:
-                    if let library {
-                        CurriculumCoverageView(snapshot: snapshot, library: library, openSubject: openSubject)
-                    } else {
-                        ContentUnavailableView("Curriculum data unavailable", systemImage: "exclamationmark.book.closed",
-                                               description: Text("The bundled source data could not be loaded."))
+                if snapshot.requiresAssignmentRefresh {
+                    ContentUnavailableView("Refresh WaniKani", systemImage: "arrow.clockwise",
+                        description: Text("Archived answers need fresh progress before statistics can be shown. Refresh this account to reload its assignments."))
+                } else {
+                    switch page {
+                    case .progress: progress
+                    case .coverage:
+                        if let library {
+                            CurriculumCoverageView(snapshot: snapshot, library: library, openSubject: openSubject)
+                        } else {
+                            ContentUnavailableView("Curriculum data unavailable", systemImage: "exclamationmark.book.closed",
+                                                   description: Text("The bundled source data could not be loaded."))
+                        }
+                    case .focus: focus
                     }
-                case .focus: focus
                 }
                 Button("Sources and calculation details", systemImage: "info.circle") { showSources = true }
                     .font(.callout)

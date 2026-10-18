@@ -5,7 +5,7 @@ import Testing
 
 @testable import StudyPersistence
 
-private actor MaterialReadGate {
+actor RecoveryGate {
   private var started = false, cancelled = false
   private var entry: CheckedContinuation<Void, Never>?
   private var cancellation: CheckedContinuation<Void, Never>?
@@ -41,7 +41,7 @@ private actor MaterialRecoveryServer {
   var remoteID: Int64 = 201
   var identity = "account"
   var timeoutWrite = false, limitRead = false
-  var gate: MaterialReadGate?
+  var gate: RecoveryGate?
   var gateWrites = false
   private(set) var requests: [URLRequest] = []
   var writes: [URLRequest] { requests.filter { $0.httpMethod != "GET" } }
@@ -55,7 +55,7 @@ private actor MaterialRecoveryServer {
     self.timeoutWrite = timeoutWrite
     self.limitRead = limitRead
   }
-  func pause(_ gate: MaterialReadGate, writes: Bool = false) {
+  func pause(_ gate: RecoveryGate, writes: Bool = false) {
     self.gate = gate
     gateWrites = writes
   }
@@ -129,8 +129,14 @@ struct MaterialRecoveryTests {
   private func comparison(_ store: StudyStore, _ server: MaterialRecoveryServer) async throws
     -> StudyMaterialComparison
   {
-    try await store.compareMaterial(
-      pending(store), credentialID: "credential", token: "fixture", client: server.client)
+    let result = try await store.compareSavedWork(
+      .material(pending(store)), credentialID: "credential", token: "fixture", client: server.client
+    )
+    guard case .material(let value) = result else {
+      Issue.record("Expected a material comparison")
+      throw StudyRecoveryError.changed
+    }
+    return value
   }
 
   @Test func unknownEarlierWriteCanBeComparedAndExplicitlyAdoptedWithoutAnotherWrite() async throws
@@ -277,8 +283,8 @@ struct MaterialRecoveryTests {
     await server.fault(identity: "other")
     await #expect(throws: StudyUploadError.self) { try await comparison(store, server) }
     await #expect(throws: StudyUploadError.self) {
-      try await store.compareMaterial(
-        before, credentialID: "other", token: "fixture", client: server.client)
+      try await store.compareSavedWork(
+        .material(before), credentialID: "other", token: "fixture", client: server.client)
     }
     await server.fault(limitRead: true)
     await #expect(throws: WaniKaniClient.APIError.self) { try await comparison(store, server) }
@@ -297,7 +303,7 @@ struct MaterialRecoveryTests {
   @Test func concurrentEditDuringReadPreventsPublishingAnObsoleteComparison() async throws {
     let store = try await store()
     let server = MaterialRecoveryServer()
-    let gate = MaterialReadGate()
+    let gate = RecoveryGate()
     await server.pause(gate)
     let run = Task { try await comparison(store, server) }
     await gate.entered()
@@ -313,7 +319,7 @@ struct MaterialRecoveryTests {
   @Test func disconnectCancellationDrainsComparisonAndFencesOlderChoices() async throws {
     let store = try await store()
     let server = MaterialRecoveryServer()
-    let gate = MaterialReadGate()
+    let gate = RecoveryGate()
     let old = try await comparison(store, server)
     await server.pause(gate)
     let run = Task { try await comparison(store, server) }
@@ -343,7 +349,7 @@ struct MaterialRecoveryTests {
   @Test func rateLimitObservedDuringALocalEditStillPausesTheAccount() async throws {
     let store = try await store()
     let server = MaterialRecoveryServer()
-    let gate = MaterialReadGate()
+    let gate = RecoveryGate()
     await server.fault(limitRead: true)
     await server.pause(gate)
     let run = Task { try await comparison(store, server) }
@@ -374,7 +380,7 @@ struct MaterialRecoveryTests {
   @Test func confirmedOlderWriteAdvancesTheBaselineForANewerLocalEdit() async throws {
     let store = try await store()
     let server = MaterialRecoveryServer()
-    let gate = MaterialReadGate()
+    let gate = RecoveryGate()
     let compared = try await comparison(store, server)
     try await store.resolveMaterial(compared, choice: .keepLocal)
     await server.pause(gate, writes: true)

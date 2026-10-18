@@ -2,7 +2,7 @@ import Foundation
 import StudyCore
 import SwiftData
 
-public struct StudyUploadIssue: Codable, Sendable {
+public struct StudyUploadIssue: Codable, Equatable, Sendable {
     public enum Reason: String, Codable, Sendable { case uncertain, rejected, assignmentChanged, assignmentMissing, materialChanged }
     public let reason: Reason
     public let httpStatus: Int?

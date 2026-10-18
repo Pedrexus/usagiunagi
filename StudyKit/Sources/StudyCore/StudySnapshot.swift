@@ -60,7 +60,7 @@ public struct StudyLevel: Codable, Sendable {
     }
 }
 
-/// A complete, immutable account snapshot. No credentials or upload queue are stored here.
+/// An immutable account snapshot. No credentials or upload queue are stored here.
 public struct StudySnapshot: Codable, Sendable {
     /// Stable WaniKani user ID; absent only in older caches and synthetic samples.
     public let accountID: String?
@@ -74,12 +74,35 @@ public struct StudySnapshot: Codable, Sendable {
     public let savedAt: Date
     public let pendingReviews: Int
     public let isSample: Bool
+    /// Local recovery invalidated assignment data; only a complete refresh clears this flag.
+    public let requiresAssignmentRefresh: Bool
     public init(accountID: String? = nil, username: String, currentLevel: Int, onVacation: Bool = false,
                 assignments: [StudyAssignment], statistics: [StudyAnswerStatistics], levels: [StudyLevel],
-                subjects: [StudySubject], savedAt: Date = .now, pendingReviews: Int = 0, isSample: Bool = false) {
+                subjects: [StudySubject], savedAt: Date = .now, pendingReviews: Int = 0, isSample: Bool = false,
+                requiresAssignmentRefresh: Bool = false) {
         self.accountID = accountID; self.username = username; self.currentLevel = currentLevel; self.onVacation = onVacation
         self.assignments = assignments; self.statistics = statistics; self.levels = levels
         self.subjects = subjects; self.savedAt = savedAt; self.pendingReviews = pendingReviews; self.isSample = isSample
+        self.requiresAssignmentRefresh = requiresAssignmentRefresh
+    }
+    private enum CodingKeys: String, CodingKey {
+        case accountID, username, currentLevel, onVacation, assignments, statistics, levels, subjects
+        case savedAt, pendingReviews, isSample, requiresAssignmentRefresh
+    }
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(accountID: values.decodeIfPresent(String.self, forKey: .accountID),
+            username: values.decode(String.self, forKey: .username),
+            currentLevel: values.decode(Int.self, forKey: .currentLevel),
+            onVacation: values.decode(Bool.self, forKey: .onVacation),
+            assignments: values.decode([StudyAssignment].self, forKey: .assignments),
+            statistics: values.decode([StudyAnswerStatistics].self, forKey: .statistics),
+            levels: values.decode([StudyLevel].self, forKey: .levels),
+            subjects: values.decode([StudySubject].self, forKey: .subjects),
+            savedAt: values.decode(Date.self, forKey: .savedAt),
+            pendingReviews: values.decode(Int.self, forKey: .pendingReviews),
+            isSample: values.decode(Bool.self, forKey: .isSample),
+            requiresAssignmentRefresh: values.decodeIfPresent(Bool.self, forKey: .requiresAssignmentRefresh) ?? false)
     }
     public func metrics(now: Date = .now) -> StudyMetrics {
         StudyMetrics(assignments: assignments, statistics: statistics, levels: levels,

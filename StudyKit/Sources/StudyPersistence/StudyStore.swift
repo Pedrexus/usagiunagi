@@ -34,6 +34,10 @@ import SwiftData
         self.accountID = accountID; self.subjectID = submission.subjectID; self.submission = submission
         self.originalItem = originalItem; self.revision = UUID(); attempted = false
     }
+    var saved: SavedReview {
+        .init(accountID: accountID, subjectID: subjectID, revision: revision, submission: submission,
+              originalItem: originalItem, originalAssignment: originalAssignment, attempted: attempted, issue: issue)
+    }
 }
 
 @Model final class ImportReceipt {
@@ -47,7 +51,7 @@ public struct SavedStudySession: Sendable {
     public let session: StudySession
 }
 
-public struct SavedReview: Sendable {
+public struct SavedReview: Codable, Equatable, Sendable {
     public let accountID: String
     public let subjectID: Int64
     public let revision: UUID
@@ -83,9 +87,9 @@ public enum StudyStoreError: Error, LocalizedError {
     var synchronizationCancellations = 0
     var refreshRun: (id: UUID, task: Task<StudySnapshot, any Error>)?
     var uploadRun: (id: UUID, task: Task<StudyUploadReport, any Error>)?
-    var recoveryRun: (id: UUID, task: Task<StudyMaterialComparison, any Error>)?
+    var recoveryRun: (id: UUID, task: Task<StudyRecoveryComparison, any Error>)?
     @concurrent public static func open(at url: URL, inMemory: Bool = false) async throws -> StudyStore {
-        let schema = Schema([SnapshotRecord.self, SessionRecord.self, ReviewRecord.self, MaterialRecord.self, ImportReceipt.self, CatalogRecord.self, AssignmentRecord.self, AccountRecord.self, UploadPauseRecord.self])
+        let schema = Schema([SnapshotRecord.self, SessionRecord.self, ReviewRecord.self, MaterialRecord.self, ImportReceipt.self, CatalogRecord.self, AssignmentRecord.self, AccountRecord.self, UploadPauseRecord.self, ArchivedReviewRecord.self])
         let configuration: ModelConfiguration
         if inMemory {
             configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
@@ -110,7 +114,8 @@ public enum StudyStoreError: Error, LocalizedError {
         return StudySnapshot(accountID: accountID, username: snapshot.username, currentLevel: snapshot.currentLevel,
             onVacation: snapshot.onVacation, assignments: snapshot.assignments.filter { !ids.contains($0.subjectID) },
             statistics: snapshot.statistics, levels: snapshot.levels, subjects: snapshot.subjects,
-            savedAt: snapshot.savedAt, pendingReviews: pending.count, isSample: snapshot.isSample)
+            savedAt: snapshot.savedAt, pendingReviews: pending.count, isSample: snapshot.isSample,
+            requiresAssignmentRefresh: snapshot.requiresAssignmentRefresh)
     }
 
     public func saveSnapshot(_ snapshot: StudySnapshot, credentialID: String) throws {
@@ -213,10 +218,8 @@ public enum StudyStoreError: Error, LocalizedError {
     }
 
     public func pendingReviews(accountID: String) throws -> [SavedReview] {
-        try modelContext.fetch(FetchDescriptor<ReviewRecord>(predicate: #Predicate { $0.accountID == accountID })).map {
-            SavedReview(accountID: $0.accountID, subjectID: $0.subjectID, revision: $0.revision,
-                        submission: $0.submission, originalItem: $0.originalItem, originalAssignment: $0.originalAssignment, attempted: $0.attempted, issue: $0.issue)
-        }.sorted { $0.subjectID < $1.subjectID }
+        try modelContext.fetch(FetchDescriptor<ReviewRecord>(predicate: #Predicate { $0.accountID == accountID }))
+            .map(\.saved).sorted { $0.subjectID < $1.subjectID }
     }
 
     /// Commit before the network write. No automatic reset of attempted records on process launch.

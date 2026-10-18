@@ -8,25 +8,26 @@ public struct SavedWorkView: View {
   private let accountID: String
   private let isSyncing: Bool
   private let synchronize: @MainActor () async throws -> Void
-  private let compareMaterial:
-    @MainActor (SavedStudyMaterial) async throws -> StudyMaterialComparison
+  private let compareSavedWork:
+    @MainActor (StudyRecoveryRequest) async throws -> StudyRecoveryComparison
   @State private var work: SavedStudyWork?
   @State private var error: String?
   @State private var performingAction = false
-  @State private var comparison: StudyMaterialComparison?
+  @State private var comparison: StudyRecoveryComparison?
   @State private var resolution: StudyMaterialResolution?
+  @State private var confirmArchive = false
 
   public init(
     store: StudyStore, accountID: String, isSyncing: Bool,
-    compareMaterial:
-      @escaping @MainActor (SavedStudyMaterial) async throws -> StudyMaterialComparison,
+    compareSavedWork:
+      @escaping @MainActor (StudyRecoveryRequest) async throws -> StudyRecoveryComparison,
     synchronize: @escaping @MainActor () async throws -> Void
   ) {
     self.store = store
     self.accountID = accountID
     self.isSyncing = isSyncing
     self.synchronize = synchronize
-    self.compareMaterial = compareMaterial
+    self.compareSavedWork = compareSavedWork
   }
 
   public var body: some View {
@@ -35,14 +36,21 @@ public struct SavedWorkView: View {
         Text("Completed answers and note edits stay on this device until WaniKani accepts them.")
           .foregroundStyle(.secondary)
         if let work {
-          LabeledContent("Answers waiting", value: String(work.reviews.count))
+          detailField("Answers waiting", value: String(work.reviews.count))
             .accessibilityElement(children: .ignore).accessibilityLabel("Answers waiting")
             .accessibilityValue(String(work.reviews.count)).accessibilityIdentifier(
               "savedWork.answerCount")
-          LabeledContent("Note edits waiting", value: String(work.materials.count))
+          detailField("Note edits waiting", value: String(work.materials.count))
             .accessibilityElement(children: .ignore).accessibilityLabel("Note edits waiting")
             .accessibilityValue(String(work.materials.count)).accessibilityIdentifier(
               "savedWork.materialCount")
+          if work.requiresAssignmentRefresh {
+            Label(
+              "Refresh WaniKani to reload progress for archived answers.",
+              systemImage: "arrow.clockwise"
+            )
+            .foregroundStyle(.secondary)
+          }
           if let retryAt = work.retryAt, retryAt > .now {
             Text(
               "WaniKani asked us to wait until \(retryAt.formatted(date: .omitted, time: .standard))."
@@ -70,22 +78,26 @@ public struct SavedWorkView: View {
           Section("Answers") {
             ForEach(work.reviews, id: \.revision) { review in
               DisclosureGroup(title(review.subjectID)) {
-                LabeledContent("Type", value: review.submission.isLesson ? "Lesson" : "Review")
-                LabeledContent("Assignment", value: String(review.submission.assignmentID))
-                LabeledContent("Stage when answered", value: String(review.originalItem.srsStage))
-                LabeledContent(
+                detailField("Type", value: review.submission.isLesson ? "Lesson" : "Review")
+                detailField("Assignment", value: String(review.submission.assignmentID))
+                detailField("Stage when answered", value: String(review.originalItem.srsStage))
+                detailField(
                   "Meaning mistakes", value: String(review.submission.meaningWrongCount))
-                LabeledContent(
+                detailField(
                   "Reading mistakes", value: String(review.submission.readingWrongCount))
                 if let timestamp = review.submission.createdAt {
-                  LabeledContent(
+                  detailField(
                     "Answered",
                     value: Date(timeIntervalSince1970: TimeInterval(timestamp)).formatted())
                 }
                 issue(review.issue, attempted: review.attempted)
+                Button("Compare with WaniKani", systemImage: "arrow.left.arrow.right") {
+                  run { comparison = try await compareSavedWork(.review(review)) }
+                }.disabled(isSyncing || performingAction)
+                  .accessibilityIdentifier("savedWork.compareAnswer.\(review.subjectID)")
                 if let remote = review.issue?.serverAssignment {
-                  LabeledContent("Last observed assignment", value: String(remote.id))
-                  LabeledContent("Last observed stage", value: String(remote.srsStage))
+                  detailField("Last observed assignment", value: String(remote.id))
+                  detailField("Last observed stage", value: String(remote.srsStage))
                 }
                 if !review.attempted, review.issue?.reason == .rejected {
                   Button("Queue answer again") {
@@ -125,11 +137,42 @@ public struct SavedWorkView: View {
           }
         }
       }
+      if let work, !work.archivedReviews.isEmpty {
+        Section("Local answer archive") {
+          Text(
+            "These answers are kept on this device. They are not upload receipts and will not be sent again automatically."
+          )
+          .font(.caption).foregroundStyle(.secondary)
+          ForEach(work.archivedReviews) { archived in
+            DisclosureGroup(
+              archived.subject.map {
+                [$0.characters, $0.meaning].filter { !$0.isEmpty }.joined(separator: " · ")
+              } ?? "Subject \(archived.saved.subjectID)"
+            ) {
+              detailField(
+                "Type", value: archived.saved.submission.isLesson ? "Lesson" : "Review")
+              detailField("Assignment", value: String(archived.saved.submission.assignmentID))
+              detailField(
+                "Meaning mistakes", value: String(archived.saved.submission.meaningWrongCount))
+              detailField(
+                "Reading mistakes", value: String(archived.saved.submission.readingWrongCount))
+              detailField("Archived", value: archived.archivedAt.formatted())
+              ShareLink(
+                "Export saved answer", item: ArchivedReviewTransfer(value: archived),
+                preview: SharePreview("Saved study answer"))
+            }
+          }
+        }
+      }
     }.formStyle(.grouped).navigationTitle("Saved work")
       .task(id: accountID) { await reload() }
       .onChange(of: isSyncing) { _, syncing in if !syncing { run {} } }
       .sheet(
-        item: $comparison, onDismiss: { resolution = nil }, content: { materialComparison($0) })
+        item: $comparison,
+        onDismiss: {
+          resolution = nil
+          confirmArchive = false
+        }, content: { recoverySheet($0) })
   }
 
   private func title(_ id: Int64) -> String {
@@ -146,11 +189,11 @@ public struct SavedWorkView: View {
     }
   }
   @ViewBuilder private func material(_ value: StudyMaterial) -> some View {
-    materialField("Meaning note", value: value.meaningNote)
-    materialField("Reading note", value: value.readingNote)
-    materialField("Synonyms", value: value.meaningSynonyms.joined(separator: ", "))
+    detailField("Meaning note", value: value.meaningNote)
+    detailField("Reading note", value: value.readingNote)
+    detailField("Synonyms", value: value.meaningSynonyms.joined(separator: ", "))
   }
-  private func materialField(_ name: String, value: String) -> some View {
+  private func detailField(_ name: String, value: String) -> some View {
     let text = value.isEmpty ? "None" : value
     return LabeledContent(name, value: text).textSelection(.enabled)
       .accessibilityElement(children: .ignore).accessibilityLabel(name).accessibilityValue(text)
@@ -174,14 +217,85 @@ public struct SavedWorkView: View {
           : "Ready for the next sync."
       }
     Text(message).foregroundStyle(.secondary)
-    if let status = issue?.httpStatus { LabeledContent("Server response", value: String(status)) }
-    if let date = issue?.detectedAt { LabeledContent("Last checked", value: date.formatted()) }
+    if let status = issue?.httpStatus { detailField("Server response", value: String(status)) }
+    if let date = issue?.detectedAt { detailField("Last checked", value: date.formatted()) }
   }
   private func checkMaterial(_ saved: SavedStudyMaterial) {
     run {
-      comparison = try await compareMaterial(saved)
+      comparison = try await compareSavedWork(.material(saved))
       resolution = nil
     }
+  }
+  @ViewBuilder private func recoverySheet(_ value: StudyRecoveryComparison) -> some View {
+    switch value {
+    case .material(let compared): materialComparison(compared)
+    case .review(let compared): reviewComparison(compared)
+    }
+  }
+  private func reviewComparison(_ value: StudyReviewComparison) -> some View {
+    NavigationStack {
+      Form {
+        Section("Saved answer") {
+          detailField("Type", value: value.saved.submission.isLesson ? "Lesson" : "Review")
+          detailField("Assignment", value: String(value.saved.submission.assignmentID))
+          detailField("Stage when answered", value: String(value.saved.originalItem.srsStage))
+          detailField(
+            "Meaning mistakes", value: String(value.saved.submission.meaningWrongCount))
+          detailField(
+            "Reading mistakes", value: String(value.saved.submission.readingWrongCount))
+        }
+        Section("WaniKani assignment") {
+          if let remote = value.remote {
+            detailField("Assignment", value: String(remote.id))
+            detailField("Current stage", value: String(remote.srsStage))
+            detailField("Lesson started", value: remote.startedAt == nil ? "No" : "Yes")
+            if let date = remote.availableAt {
+              detailField(
+                "Next available", value: Date(timeIntervalSince1970: TimeInterval(date)).formatted()
+              )
+            }
+            if remote.hidden == true { Text("This assignment is hidden on WaniKani.") }
+          } else {
+            Text("WaniKani returned no assignment for this subject.")
+          }
+          Text("Checked \(value.checkedAt.formatted())").font(.caption).foregroundStyle(.secondary)
+        }
+        Section {
+          Text(
+            "This read cannot confirm whether the saved answer was received. Keeping it pending does not send it again."
+          )
+          Button("Archive this answer and refresh later", systemImage: "archivebox") {
+            confirmArchive = true
+          }
+          .accessibilityIdentifier("savedWork.archiveAnswer")
+        } footer: {
+          Text(
+            "Archiving keeps the exact answer locally for inspection and export and removes it from the upload queue. Refresh WaniKani afterward to load current progress. This does not mark the old answer as successfully uploaded."
+          )
+        }
+        if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
+      }.formStyle(.grouped).disabled(performingAction || isSyncing)
+        .navigationTitle("Resolve saved answer")
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Keep pending") { comparison = nil }.disabled(performingAction)
+          }
+        }
+        .confirmationDialog(
+          "Archive this saved answer?", isPresented: $confirmArchive, titleVisibility: .visible
+        ) {
+          Button("Archive without sending") {
+            run {
+              try await store.archiveReview(value)
+              comparison = nil
+            }
+          }
+        } message: {
+          Text(
+            "The exact answer will stay in your local archive. It will leave the upload queue and this subject will require a refresh before reviewing again. WaniKani progress will not be changed."
+          )
+        }
+    }.frame(idealWidth: 540, idealHeight: 620).interactiveDismissDisabled(performingAction)
   }
   private func materialComparison(_ value: StudyMaterialComparison) -> some View {
     NavigationStack {

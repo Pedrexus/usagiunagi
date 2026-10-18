@@ -1,12 +1,15 @@
 import Foundation
 import StudyCore
+import SwiftData
 
 /// One consistent local read for the recovery screen. No credentials or model objects escape.
 public struct SavedStudyWork: Sendable {
   public let reviews: [SavedReview]
   public let materials: [SavedStudyMaterial]
+  public let archivedReviews: [ArchivedStudyReview]
   public let subjects: [StudySubject]
   public let retryAt: Date?
+  public let requiresAssignmentRefresh: Bool
   public var isEmpty: Bool { reviews.isEmpty && materials.isEmpty }
 }
 
@@ -31,34 +34,77 @@ public struct StudyMaterialComparison: Identifiable, Sendable {
 
 public enum StudyMaterialResolution: Equatable, Sendable { case keepLocal, useServer }
 
+public enum StudyRecoveryRequest: Sendable {
+  case material(SavedStudyMaterial)
+  case review(SavedReview)
+  public var accountID: String {
+    switch self {
+    case .material(let saved): saved.accountID
+    case .review(let saved): saved.accountID
+    }
+  }
+}
+
+public enum StudyRecoveryComparison: Identifiable, Sendable {
+  case material(StudyMaterialComparison)
+  case review(StudyReviewComparison)
+  public var id: UUID {
+    switch self {
+    case .material(let value): value.id
+    case .review(let value): value.id
+    }
+  }
+}
+
 extension StudyStore {
   /// Read-only comparison. A fresh identity check and local revisions fence every suspension.
-  public func compareMaterial(
-    _ saved: SavedStudyMaterial, credentialID: String, token: String,
+  public func compareSavedWork(
+    _ request: StudyRecoveryRequest, credentialID: String, token: String,
     client: WaniKaniClient = .init()
-  ) async throws -> StudyMaterialComparison {
+  ) async throws -> StudyRecoveryComparison {
     try Task.checkCancellation()
-    try requireRecoveryIdle(accountID: saved.accountID)
+    try requireRecoveryIdle(accountID: request.accountID)
     guard !token.isEmpty else { throw StudyStoreError.invalidIdentity }
     let id = UUID()
     let generation = uploadGeneration
-    try checkMaterialRecovery(saved, credentialID: credentialID, generation: generation)
+    try checkRecoveryRequest(request, credentialID: credentialID, generation: generation)
+    let assignmentRevision: UUID?
+    if case .review(let saved) = request {
+      assignmentRevision = try recoveryAssignment(saved)?.revision
+    } else {
+      assignmentRevision = nil
+    }
     let task = Task {
       do {
-        if let retryAt = try uploadRetryDate(accountID: saved.accountID), retryAt > Date() {
+        if let retryAt = try uploadRetryDate(accountID: request.accountID), retryAt > Date() {
           throw WaniKaniClient.APIError.rateLimited(retryAt: retryAt)
         }
         let account = try await client.account(token: token)
-        try checkMaterialRecovery(saved, credentialID: credentialID, generation: generation)
-        guard account.id == saved.accountID else { throw StudyUploadError.accountMismatch }
-        let remote = try await client.material(subjectID: saved.material.subjectID, token: token)
-        try checkMaterialRecovery(saved, credentialID: credentialID, generation: generation)
-        return StudyMaterialComparison(
-          id: id, saved: saved, remote: remote, checkedAt: Date(), generation: generation)
+        try checkRecoveryRequest(request, credentialID: credentialID, generation: generation)
+        guard account.id == request.accountID else { throw StudyUploadError.accountMismatch }
+        switch request {
+        case .material(let saved):
+          let remote = try await client.material(subjectID: saved.material.subjectID, token: token)
+          try checkRecoveryRequest(request, credentialID: credentialID, generation: generation)
+          return StudyRecoveryComparison.material(
+            .init(
+              id: id, saved: saved, remote: remote, checkedAt: Date(), generation: generation))
+        case .review(let saved):
+          let remote = try await client.assignment(subjectID: saved.subjectID, token: token)
+          try checkRecoveryRequest(request, credentialID: credentialID, generation: generation)
+          guard try recoveryAssignment(saved)?.revision == assignmentRevision else {
+            throw StudyRecoveryError.changed
+          }
+          return StudyRecoveryComparison.review(
+            .init(
+              id: id, saved: saved, remote: remote,
+              checkedAt: Date(), generation: generation, credentialID: credentialID,
+              assignmentRevision: assignmentRevision))
+        }
       } catch {
         try checkRecoveryAccount(
-          saved.accountID, credentialID: credentialID, generation: generation)
-        try recordRateLimit(error, accountID: saved.accountID)
+          request.accountID, credentialID: credentialID, generation: generation)
+        try recordRateLimit(error, accountID: request.accountID)
         throw error
       }
     }
@@ -96,11 +142,14 @@ extension StudyStore {
     }
   }
 
-  private func checkMaterialRecovery(
-    _ saved: SavedStudyMaterial, credentialID: String, generation: UUID
+  private func checkRecoveryRequest(
+    _ request: StudyRecoveryRequest, credentialID: String, generation: UUID
   ) throws {
-    try checkRecoveryAccount(saved.accountID, credentialID: credentialID, generation: generation)
-    _ = try materialForRecovery(saved)
+    try checkRecoveryAccount(request.accountID, credentialID: credentialID, generation: generation)
+    switch request {
+    case .material(let saved): _ = try materialForRecovery(saved)
+    case .review(let saved): _ = try reviewForRecovery(saved)
+    }
   }
 
   private func checkRecoveryAccount(
@@ -133,8 +182,12 @@ extension StudyStore {
     return try SavedStudyWork(
       reviews: pendingReviews(accountID: accountID),
       materials: materials(accountID: accountID).filter(\.pending),
+      archivedReviews: archivedReviews(accountID: accountID),
       subjects: catalog(accountID: accountID).map(\.summary),
-      retryAt: uploadRetryDate(accountID: accountID))
+      retryAt: uploadRetryDate(accountID: accountID),
+      requiresAssignmentRefresh: modelContext.fetch(FetchDescriptor<SnapshotRecord>()).contains {
+        $0.snapshot.accountID == accountID && $0.snapshot.requiresAssignmentRefresh
+      })
   }
 
   /// Explicit local choice only: the uploader must still verify identity and current assignment.
@@ -167,7 +220,7 @@ extension StudyStore {
     }
   }
 
-  private func requireRecoveryIdle(accountID: String) throws {
+  func requireRecoveryIdle(accountID: String) throws {
     try requireAccount(accountID)
     guard synchronizationCancellations == 0, synchronizationRun == nil, uploadRun == nil,
       refreshRun == nil, recoveryRun == nil

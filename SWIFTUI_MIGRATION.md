@@ -61,7 +61,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and rich-deta
 | Review quick settings | Shared SwiftUI form in native iOS/Mac sheets; SwiftUI end/wrap-up confirmation | MMDrawerController, its Objective-C hook and the drawer-specific menu controllers are removed. iOS archived preference keys remain; Mac uses observed AppStorage with field-wise merging. Audio and font-library implementation still await Mac migration. |
 | Images | Haneke cache and SVGKit radical rendering | SwiftUI loads avatars. Native reviews render validated, locally cached SVG bytes through Apple’s SwiftUI WebView. Full offline prefetch, audio and legacy iOS SVGKit removal remain open. |
 | Text matching | Rexy for POSIX longest-match behavior | Compare matching semantics before replacing it with native Regex. Similar syntax is not proof of equivalent highlighting. |
-| Other languages | Go utilities and generated protobuf Go; C++ SQLite extension; Ruby/Fastlane/build scripts | Keep build/data tools separate from the iOS migration. Generated output should be regenerated, not hand-translated. |
+| Other languages | Go files/modules and the unused C++ SQLite inspector have been removed; similar-kanji generation now uses Swift. Ruby/Fastlane/build scripts remain. | Replace active runtime/UI callers before removing their infrastructure. Build/distribution tooling and generated output have separate requirements from SwiftUI screens. |
 
 ## Current Apple tools worth adopting
 
@@ -448,3 +448,27 @@ The Mac debug-only `ReviewFixture MaterialRecoveryFixture` mode supplies an
 in-memory pending note and a GET-only synthetic server comparison. It bypasses
 Keychain and keeps refresh, connect, disconnect and saved-work uploads disabled.
 Normal and release account paths retain the real client and account checks.
+
+## Native saved-answer recovery
+
+Saved work now shares one account-verified comparison lane for notes and review/lesson
+answers. The Mac hosts it entirely in SwiftUI. For answers, a fresh assignment read
+is shown alongside the original saved payload; it never serves as an upload receipt.
+The user can keep the work pending or explicitly archive it locally. A SwiftData
+transaction preserves the exact answer and cached/observed progress, removes the
+pending row and invalidates that subject's stale assignment. The archive has native
+Transferable/ShareLink JSON export and is never uploaded automatically.
+
+A persisted snapshot flag requires a full refresh before incomplete statistics are
+shown. Failed refresh and process restart preserve the flag; old JSON defaults to a
+complete snapshot when the additive key is absent. Local mistake metadata, unrelated
+queues and the read-only archive survive. Stale comparisons and account/cancellation
+changes are fenced on the same actor as synchronization. The ordinary uploader's
+rejected-request path remains separate.
+
+The [review creation contract](https://docs.api.wanikani.com/20170710/#create-a-review)
+and WaniKani engineering's [Get All Reviews announcement](https://community.wanikani.com/t/api-changes-get-all-reviews/61617)
+do not provide a reliable historical receipt for an uncertain write. No blind replay
+or exactly-once guarantee is added. Native synthetic UI and persistence tests cover
+these choices; the iOS writer/caller handoff and broader real-account/device checks
+remain open. See TASKS.md for exact checkpoint evidence.

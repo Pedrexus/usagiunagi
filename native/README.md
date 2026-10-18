@@ -20,7 +20,7 @@ mainboard run --as-is usagi-build-mac
 mainboard run --as-is usagi-test
 ```
 
-The production store provides atomic session/pending-review persistence and note/synonym revisions for the next study integration. Sixty-three persistence test functions pass on macOS and iOS, with 138 shared test functions overall. Separate-process restart checks use the production models. The sample-data flow, charts, coverage drill-down, subject navigation and kanji search were checked in the running Mac app. An isolated synthetic recovery preview verified rejected-request requeuing without sending and preservation of uncertain notes. Build and mock API tests do not establish real-account synchronization or Keychain prompt behavior. See `../SWIFTUI_MIGRATION.md` for remaining platform work.
+The production store provides atomic session/pending-review persistence and note/synonym revisions. At the October 18 review-recovery checkpoint, 178 shared Swift Testing functions pass on macOS and iOS (92 persistence, 80 core, 6 speech), and all 73 hosted iOS tests pass. Separate-process checks preserve previous-version pending work across schema upgrades. Native synthetic fixtures verify note resolution, review/lesson comparison, explicit archiving and refresh warnings. Build and mock API tests do not establish real-account synchronization or Keychain prompt behavior. See `../TASKS.md` for exact evidence and remaining platform work.
 
 Native review validation uses a Debug-only `ReviewFixture` launch argument. It creates
 one synthetic kanji assignment in an in-memory SwiftData store, bypasses Keychain,
@@ -44,10 +44,23 @@ keep the local edit queued or adopt the shown server version. Keeping an edit
 records a durable server comparison; a changed record stops the next upload and
 asks for another decision. Comparing or choosing a version does not send work.
 Concurrent changes in another app during a network request can still conflict;
-uncertain review/lesson answers remain saved for separate reconciliation.
+uncertain review/lesson answers use the separate comparison and archive flow below.
 
 For isolated recovery UI checks, launch a Debug build with
 `ReviewFixture MaterialRecoveryFixture`. Its notes and GET-only responses are synthetic and
 in-memory, and uploads remain disabled. Cancel/close preserves pending work;
 keeping a note leaves one queued edit; adopting the server fixture clears that
 pending edit and updates the native subject details.
+
+Saved review and lesson answers can be compared with a freshly verified WaniKani
+assignment. Keep pending leaves the upload queue intact. An explicit archive choice
+moves the exact answer, attempted-state metadata and cached/observed progress into a
+durable local archive, with JSON export through the native sharing menu. Archiving
+does not submit an answer or establish that WaniKani received it. The subject's old
+assignment is removed from the review cache, and statistics require a complete
+refresh rather than showing an incomplete schedule. A failed refresh keeps that
+warning; successful refresh clears it while preserving the archive.
+
+For isolated review recovery, use `ReviewFixture ReviewRecoveryFixture`; add
+`LessonRecoveryFixture` to inspect a lesson. These Debug-only fixtures have
+in-memory work and GET-only synthetic responses, with all uploads disabled.
