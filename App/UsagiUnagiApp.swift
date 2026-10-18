@@ -15,16 +15,19 @@ struct UsagiUnagiApp: App {
       #if os(iOS)
         LegacyStudyWindow(services: appDelegate.services, appDelegate: appDelegate)
       #else
-        StudyRoot(store: model)
-          .defaultAppStorage(StudyAppAssembly.reviewDefaults)
-          .frame(minWidth: 640, minHeight: 500)
-          .task {
-            if ProcessInfo.processInfo.arguments.contains("--sample-data") {
-              model.loadSample()
-            } else {
-              await model.restore()
-            }
+        StudyRootView(
+          model: model, appName: AppIdentity.name, appearance: StudyAppAssembly.appearance,
+          notice: StudyAppAssembly.notice
+        )
+        .defaultAppStorage(StudyAppAssembly.reviewDefaults)
+        .frame(minWidth: 640, minHeight: 500)
+        .task {
+          if ProcessInfo.processInfo.arguments.contains("--sample-data") {
+            model.loadSample()
+          } else {
+            await model.restore()
           }
+        }
       #endif
     }
     #if os(macOS)

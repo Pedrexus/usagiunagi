@@ -5,17 +5,17 @@ final class MacReviewModeTests: XCTestCase {
   private func launch(_ arguments: [String]) -> XCUIApplication {
     continueAfterFailure = false
     let app = XCUIApplication()
-    app.launchArguments = ["--review-fixture"] + arguments
+    app.launchArguments = ["-ApplePersistenceIgnoreState", "YES", "--review-fixture"] + arguments
     app.launch()
     app.activate()
     XCTAssertTrue(
-      app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch
-        .waitForExistence(timeout: 10))
+      app.descendants(matching: .any).matching(identifier: "home.reviews").firstMatch
+        .waitForExistence(timeout: 10), app.debugDescription)
     return app
   }
   private func showAnswer(in app: XCUIApplication) {
     let show = app.buttons["review.submit"]
-    XCTAssertTrue(show.waitForExistence(timeout: 5))
+    XCTAssertTrue(show.waitForExistence(timeout: 5), app.debugDescription)
     let ready = XCTNSPredicateExpectation(
       predicate: NSPredicate(format: "label CONTAINS %@", "Show answer"), object: show)
     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
@@ -27,39 +27,41 @@ final class MacReviewModeTests: XCTestCase {
   func testCombinedAnkiPreservesTheRevealedCardAcrossNavigationAndCompletesBothSides() {
     let app = launch(["--anki-fixture", "--combined-anki-fixture"])
     defer { app.terminate() }
-    app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
+    app.descendants(matching: .any).matching(identifier: "home.reviews").firstMatch.click()
     showAnswer(in: app)
     XCTAssertTrue(app.staticTexts["subject.meanings"].exists)
-    app.descendants(matching: .any).matching(identifier: "navigation.Statistics").firstMatch.click()
-    app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
+    app.pauseStudyAndReturn()
     let correct = app.buttons["review.correct"]
     XCTAssertTrue(correct.waitForExistence(timeout: 5))
     correct.click()
-    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.staticTexts["Review session saved"].waitForExistence(timeout: 5), app.debugDescription)
   }
   func testReadingOnlyAnkiLeavesMeaningTyped() {
     let app = launch(["--anki-fixture", "--reading-anki-fixture"])
     defer { app.terminate() }
-    app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
+    app.descendants(matching: .any).matching(identifier: "home.reviews").firstMatch.click()
     let input = app.textFields["review.answer"]
-    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertTrue(input.waitForExistence(timeout: 5), app.debugDescription)
     XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Meaning")
     input.click()
     input.typeText("one")
     app.buttons["review.submit"].click()
     showAnswer(in: app)
     app.buttons["review.correct"].click()
-    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.staticTexts["Review session saved"].waitForExistence(timeout: 5), app.debugDescription)
   }
   func testIncorrectCombinedAnkiRequiresAnotherAssessment() {
     let app = launch(["--anki-fixture", "--combined-anki-fixture"])
     defer { app.terminate() }
-    app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
+    app.descendants(matching: .any).matching(identifier: "home.reviews").firstMatch.click()
     showAnswer(in: app)
     app.buttons["review.incorrect"].click()
     showAnswer(in: app)
     app.buttons["review.correct"].click()
-    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.staticTexts["Review session saved"].waitForExistence(timeout: 5), app.debugDescription)
     XCTAssertTrue(
       app.staticTexts.matching(
         NSPredicate(
@@ -70,19 +72,94 @@ final class MacReviewModeTests: XCTestCase {
   func testSessionModeCanBeConfiguredBeforeOpeningReviews() {
     let app = launch([])
     defer { app.terminate() }
-    app.descendants(matching: .any).matching(identifier: "navigation.Review settings").firstMatch
-      .click()
+    app.buttons["app.settings"].click()
+    let settings = app.buttons["Review settings"]
+    XCTAssertTrue(settings.waitForExistence(timeout: 5))
+    settings.click()
     let mode = app.popUpButtons["reviewSettings.answerMode"]
-    XCTAssertTrue(mode.waitForExistence(timeout: 5))
+    XCTAssertTrue(mode.waitForExistence(timeout: 5), app.debugDescription)
     mode.click()
     app.menuItems["Anki: meaning and reading"].click()
     let combine = app.switches["reviewSettings.combineAnki"]
     XCTAssertTrue(combine.waitForExistence(timeout: 5))
     combine.click()
     XCTAssertEqual((combine.value as? NSNumber)?.intValue, 1)
-    app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
+    app.buttons["Done"].click()
+    app.descendants(matching: .any).matching(identifier: "home.reviews").firstMatch.click()
     showAnswer(in: app)
     app.buttons["review.correct"].click()
-    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.staticTexts["Review session saved"].waitForExistence(timeout: 5), app.debugDescription)
+  }
+  func testExtraStudyCompletesWithoutChangingScheduledReviews() throws {
+    let app = launch([])
+    defer { app.terminate() }
+    let practice = app.buttons["home.extra.recentLessons"]
+    XCTAssertTrue(practice.waitForExistence(timeout: 5))
+    practice.click()
+    for _ in 0..<2 {
+      let input = app.textFields["review.answer"]
+      XCTAssertTrue(input.waitForExistence(timeout: 5), app.debugDescription)
+      let prompt = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
+      input.click()
+      input.typeText(prompt == "Reading" ? "ichi" : "one")
+      app.buttons["review.submit"].click()
+    }
+    XCTAssertTrue(app.staticTexts["Practice complete"].waitForExistence(timeout: 5))
+    app.buttons["Finish session"].click()
+    let reviews = app.buttons["home.reviews"]
+    XCTAssertTrue(reviews.waitForExistence(timeout: 5))
+    XCTAssertTrue(reviews.isEnabled && reviews.label.contains("1 ready"))
+    XCTAssertFalse(app.staticTexts["home.notice"].exists)
+  }
+  func testHomeForecastAndSavedSubjectSearchOpenNativeScreens() {
+    let app = launch([])
+    defer { app.terminate() }
+    app.buttons["home.forecast"].click()
+    let hour = app.descendants(matching: .any).matching(identifier: "schedule.hour.0").firstMatch
+    XCTAssertTrue(hour.waitForExistence(timeout: 5), app.debugDescription)
+    app.toolbars.buttons["chevron.backward"].click()
+    XCTAssertTrue(app.buttons["app.search"].waitForExistence(timeout: 5))
+    app.buttons["app.search"].click()
+    let search = app.searchFields.firstMatch
+    XCTAssertTrue(search.waitForExistence(timeout: 5))
+    search.click()
+    search.typeText("ichi")
+    let subject = app.buttons["catalog.subject.1"]
+    XCTAssertTrue(subject.waitForExistence(timeout: 5), app.debugDescription)
+    subject.click()
+    XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    screenshot.name = "Native saved subject reached from Home"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+  }
+
+}
+
+extension XCUIApplication {
+  func pauseStudyAndReturn() {
+    let back = toolbars.buttons["chevron.backward"]
+    XCTAssertTrue(back.waitForExistence(timeout: 5), debugDescription)
+    back.click()
+    XCTAssertTrue(buttons["home.resume"].waitForExistence(timeout: 5), debugDescription)
+    openStudyTab("Stats")
+    XCTAssertTrue(scrollViews["StudyDashboard"].waitForExistence(timeout: 5), debugDescription)
+    openStudyTab("Home")
+    let resume = buttons["home.resume"]
+    XCTAssertTrue(resume.waitForExistence(timeout: 5))
+    resume.click()
+  }
+  func openStudyTab(_ title: String) {
+
+    let identifier = title == "Stats" ? "navigation.Statistics" : "navigation.\(title)"
+    let tab = descendants(matching: .any).matching(identifier: identifier).firstMatch
+    if tab.exists {
+      tab.click()
+    } else {
+      let item = staticTexts.matching(NSPredicate(format: "value == %@", title)).firstMatch
+      XCTAssertTrue(item.waitForExistence(timeout: 5), debugDescription)
+      item.click()
+    }
   }
 }

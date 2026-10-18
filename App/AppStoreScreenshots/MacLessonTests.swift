@@ -5,24 +5,32 @@ final class MacLessonTests: XCTestCase {
   private func launchQuiz() -> XCUIApplication {
     continueAfterFailure = false
     let app = XCUIApplication()
-    app.launchArguments = ["--review-fixture", "--lesson-fixture"]
+    app.launchArguments = [
+      "-ApplePersistenceIgnoreState", "YES", "--review-fixture", "--lesson-fixture",
+    ]
     app.launch()
     app.activate()
-    let lessons = app.descendants(matching: .any).matching(identifier: "navigation.Lessons")
+    let lessons = app.descendants(matching: .any).matching(identifier: "home.chooseLessons")
       .firstMatch
     XCTAssertTrue(lessons.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["home.stage.1"].exists, app.debugDescription)
+    let home = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    home.name = "Native WaniKani-inspired Home"
+    home.lifetime = .keepAlways
+    add(home)
     lessons.click()
     let subject = app.buttons["lesson.select.1"]
     XCTAssertTrue(subject.waitForExistence(timeout: 5))
     subject.click()
     app.buttons["lesson.startSelection"].click()
     XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
-    let teaching = XCTAttachment(screenshot: app.screenshot())
+    let teaching = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     teaching.name = "Native Mac lesson teaching"
     teaching.lifetime = .keepAlways
     add(teaching)
     app.buttons["lesson.quiz"].click()
-    XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.textFields["review.answer"].waitForExistence(timeout: 5), app.debugDescription)
     return app
   }
   private func answer(in app: XCUIApplication) throws {
@@ -41,31 +49,35 @@ final class MacLessonTests: XCTestCase {
       predicate: NSPredicate(format: "value != %@", initialPrompt),
       object: app.staticTexts["review.prompt"])
     XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
-    app.descendants(matching: .any).matching(identifier: "navigation.Statistics").firstMatch.click()
-    app.descendants(matching: .any).matching(identifier: "navigation.Lessons").firstMatch.click()
-    let resume = app.buttons["Resume lesson quiz"]
-    XCTAssertTrue(resume.waitForExistence(timeout: 5))
-    resume.click()
-    XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
+    app.pauseStudyAndReturn()
+    XCTAssertTrue(
+      app.textFields["review.answer"].waitForExistence(timeout: 5), app.debugDescription)
     XCTAssertNotEqual(app.staticTexts["review.prompt"].value as? String, initialPrompt)
     try answer(in: app)
-    XCTAssertTrue(app.staticTexts["Lesson quiz saved"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.staticTexts["Lesson quiz saved"].waitForExistence(timeout: 5), app.debugDescription)
     app.buttons["Finish session"].click()
-    XCTAssertTrue(app.staticTexts["No lessons available"].waitForExistence(timeout: 5))
+    let lessons = app.buttons["home.lessons"]
+    XCTAssertTrue(lessons.waitForExistence(timeout: 5))
+    XCTAssertFalse(lessons.isEnabled)
   }
-  func testReviewEntryPreservesThePausedLessonQuiz() {
-    let app = launchQuiz()
+  func testPrimaryLessonActionOpensTeachingWithoutThePicker() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = [
+      "-ApplePersistenceIgnoreState", "YES", "--review-fixture", "--lesson-fixture",
+    ]
+    app.launch()
+    app.activate()
     defer { app.terminate() }
-    app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
-    let warning = app.staticTexts.matching(
-      NSPredicate(
-        format: "label CONTAINS %@ OR value CONTAINS %@", "saved lesson quiz", "saved lesson quiz")
-    ).firstMatch
-    XCTAssertTrue(warning.waitForExistence(timeout: 5))
-    app.descendants(matching: .any).matching(identifier: "navigation.Lessons").firstMatch.click()
-    let resume = app.buttons["Resume lesson quiz"]
-    XCTAssertTrue(resume.waitForExistence(timeout: 5))
-    resume.click()
-    XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
+    let lessons = app.buttons["home.lessons"]
+    XCTAssertTrue(lessons.waitForExistence(timeout: 10))
+    lessons.click()
+    XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["lesson.startSelection"].exists)
+    app.buttons["lesson.quiz"].click()
+    XCTAssertTrue(
+      app.textFields["review.answer"].waitForExistence(timeout: 5), app.debugDescription)
   }
+
 }

@@ -2,11 +2,19 @@ import StudyCore
 import StudyPersistence
 import SwiftUI
 
+public enum NativeStudyMode: Hashable, Sendable {
+  case reviews
+  case lessons([Int64])
+  case practice(StudyPracticeScope)
+}
+
 /// Native offline reviews. The store commits each decision before the next question is shown.
 public struct NativeReviewView: View {
   private let store: StudyStore
   private let accountID: String
-  private let lessonSubjectIDs: [Int64]?
+  private let mode: NativeStudyMode
+  private var lessonSubjectIDs: [Int64]? { if case .lessons(let ids) = mode { ids } else { nil } }
+  private var isPractice: Bool { if case .practice = mode { true } else { false } }
   private let finished: () -> Void
   private var isLesson: Bool { lessonSubjectIDs != nil }
   @State private var review: NativeReviewState?
@@ -22,12 +30,12 @@ public struct NativeReviewView: View {
   @FocusState private var answerFocused: Bool
 
   public init(
-    store: StudyStore, accountID: String, lessonSubjectIDs: [Int64]? = nil,
+    store: StudyStore, accountID: String, mode: NativeStudyMode = .reviews,
     finished: @escaping () -> Void = {}
   ) {
     self.store = store
     self.accountID = accountID
-    self.lessonSubjectIDs = lessonSubjectIDs
+    self.mode = mode
     self.finished = finished
   }
 
@@ -44,10 +52,14 @@ public struct NativeReviewView: View {
         }
         if review.question == nil {
           ContentUnavailableView(
-            isLesson ? "Lesson quiz saved" : "Review session saved",
+            isPractice
+              ? "Practice complete" : isLesson ? "Lesson quiz saved" : "Review session saved",
             systemImage: "checkmark.circle",
             description: Text(
-              "\(review.saved.session.completedIDs.count) completed · \(review.saved.session.successRate)% accuracy. Completed answers stay on this Mac until you sync Saved work."
+              "\(review.saved.session.completedIDs.count) completed · \(review.saved.session.successRate)% accuracy. "
+                + (isPractice
+                  ? "Practice does not change WaniKani progress or create uploads."
+                  : "Completed answers stay on this device until you sync Saved work.")
             ))
           Button("Finish session") {
             run {
@@ -104,15 +116,21 @@ public struct NativeReviewView: View {
         }
       } else {
         ContentUnavailableView(
-          isLesson ? "Lesson quiz" : "Offline reviews",
+          isPractice ? "Extra study" : isLesson ? "Lesson quiz" : "Offline reviews",
           systemImage: "rectangle.and.pencil.and.ellipsis",
           description: Text(
-            isLesson
-              ? "Quiz the lessons you selected. Each completed lesson stays saved on this device until you sync."
-              : "Start with the reviews due in your saved account, or resume the session already saved on this Mac."
+            isPractice
+              ? "Practice uses your saved subjects without changing WaniKani progress or creating uploads."
+              : isLesson
+                ? "Quiz the lessons you selected. Each completed lesson stays saved on this device until you sync."
+                : "Start with the reviews due in your saved account, or resume the session already saved on this device."
           ))
-        Button(isLesson ? "Start or resume quiz" : "Start or resume reviews") { load() }
-          .buttonStyle(.borderedProminent)
+        Button(
+          isPractice
+            ? "Start or resume practice"
+            : isLesson ? "Start or resume quiz" : "Start or resume reviews"
+        ) { load() }
+        .buttonStyle(.borderedProminent)
       }
       if busy { ProgressView("Saving") }
       if let error {
@@ -135,7 +153,8 @@ public struct NativeReviewView: View {
       .frame(minWidth: 380, minHeight: 460)
     }
     .confirmationDialog(
-      isLesson ? "End lesson quiz?" : "End review session?", isPresented: $confirmEnd,
+      isPractice ? "End practice?" : isLesson ? "End lesson quiz?" : "End review session?",
+      isPresented: $confirmEnd,
       titleVisibility: .visible
     ) {
       if let review {
@@ -149,7 +168,10 @@ public struct NativeReviewView: View {
         }
       }
     } message: {
-      Text("Completed answers stay saved. Progress on unfinished subjects will be discarded.")
+      Text(
+        isPractice
+          ? "Practice answers do not affect your WaniKani progress."
+          : "Completed answers stay saved. Progress on unfinished subjects will be discarded.")
     }
     .sheet(item: $voiceRequest) { request in
       VoiceAnswerPanel(question: request.question) { text in
@@ -162,18 +184,23 @@ public struct NativeReviewView: View {
       }
       .frame(minWidth: 420, minHeight: 440)
     }
-    .task(id: accountID) { load() }
+    .task(id: accountID) { if review == nil { load() } }
   }
 
   private func load() {
     run {
-      let state =
-        if let lessonSubjectIDs {
-          try await store.openLessons(
-            accountID: accountID, subjectIDs: lessonSubjectIDs, options: preferences.sessionOptions)
-        } else {
-          try await store.openReviews(accountID: accountID, options: preferences.sessionOptions)
-        }
+      let state: NativeReviewState
+      switch mode {
+      case .reviews:
+        state = try await store.openReviews(
+          accountID: accountID, options: preferences.sessionOptions)
+      case .lessons(let ids):
+        state = try await store.openLessons(
+          accountID: accountID, subjectIDs: ids, options: preferences.sessionOptions)
+      case .practice(let scope):
+        state = try await store.openPractice(
+          accountID: accountID, scope: scope, options: preferences.sessionOptions)
+      }
       present(state)
     }
   }
@@ -190,7 +217,8 @@ public struct NativeReviewView: View {
     if review?.question != value.question { fullDetails = false }
     review = value
     let session = value.saved.session
-    screen.title = isLesson ? "Lesson quiz" : "Reviews"
+    screen.title =
+      review?.saved.session.practiceScope?.title ?? (isLesson ? "Lesson quiz" : "Reviews")
     screen.question = value.subject?.japanese ?? ""
     screen.canAnswer =
       !screen.question.isEmpty

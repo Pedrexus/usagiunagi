@@ -7,7 +7,7 @@ public struct KatakanaPracticeView: View {
   public init() {}
   public var body: some View {
     KatakanaPracticeMenu { practicing = true }
-      .sheet(isPresented: $practicing) { KatakanaPracticeSessionView() }
+      .sheet(isPresented: $practicing) { NavigationStack { KatakanaPracticeSessionView() } }
   }
 }
 

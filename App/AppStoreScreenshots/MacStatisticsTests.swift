@@ -5,10 +5,11 @@ final class MacStatisticsTests: XCTestCase {
   func testPastPaceChartExpandsWithoutOpeningASheet() throws {
     continueAfterFailure = false
     let app = XCUIApplication()
-    app.launchArguments = ["--sample-data"]
+    app.launchArguments = ["-ApplePersistenceIgnoreState", "YES", "--sample-data"]
     app.launch()
     app.activate()
     defer { app.terminate() }
+    app.openStudyTab("Stats")
     let dashboard = app.scrollViews["StudyDashboard"]
     XCTAssertTrue(dashboard.waitForExistence(timeout: 10))
     let summary = app.staticTexts["statistics.pace.validationSummary"]

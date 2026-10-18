@@ -6,6 +6,9 @@ import SwiftUI
 public struct NativeLessonView: View {
   private let store: StudyStore
   private let accountID: String
+  private let automaticBatchSize: Int?
+  private let finished: () -> Void
+  @State private var initialBatchOpened = false
   @State private var items: [StudySubject] = []
   @State private var selection: Selection?
   @State private var pausedReview = false
@@ -17,9 +20,14 @@ public struct NativeLessonView: View {
     let subjects: [StudySubject]
     var resumeQuiz = false
   }
-  public init(store: StudyStore, accountID: String) {
+  public init(
+    store: StudyStore, accountID: String, automaticBatchSize: Int? = nil,
+    finished: @escaping () -> Void = {}
+  ) {
     self.store = store
     self.accountID = accountID
+    self.automaticBatchSize = automaticBatchSize
+    self.finished = finished
   }
   public var body: some View {
     Group {
@@ -35,9 +43,10 @@ public struct NativeLessonView: View {
           if index == selection.subjects.count {
             NativeReviewView(
               store: store, accountID: accountID,
-              lessonSubjectIDs: selection.subjects.map(\.id),
+              mode: .lessons(selection.subjects.map(\.id)),
               finished: {
                 self.selection = nil
+                finished()
                 Task { await load() }
               })
           } else {
@@ -75,7 +84,7 @@ public struct NativeLessonView: View {
       } else {
         ProgressView("Loading saved lessons")
       }
-    }.task(id: accountID) { await load() }
+    }.task(id: accountID) { if selection == nil { await load() } }
   }
   private func load() async {
     error = nil
@@ -84,6 +93,7 @@ public struct NativeLessonView: View {
     pausedLesson = nil
     do {
       if let saved = try await store.session(accountID: accountID) {
+        initialBatchOpened = true
         if saved.session.isPractice || saved.session.items.values.contains(where: { !$0.isLesson })
         {
           pausedReview = true
@@ -97,12 +107,17 @@ public struct NativeLessonView: View {
           return subject.summary
         }
         try Task.checkCancellation()
-        pausedLesson = Selection(subjects: subjects, resumeQuiz: true)
+        let resumed = Selection(subjects: subjects, resumeQuiz: true)
+        if automaticBatchSize != nil { selection = resumed } else { pausedLesson = resumed }
       } else {
         let available = try await store.availableLessons(accountID: accountID)
         try Task.checkCancellation()
         items = available.map(\.summary)
         loaded = true
+        if let automaticBatchSize, !initialBatchOpened, !items.isEmpty {
+          initialBatchOpened = true
+          selection = Selection(subjects: Array(items.prefix(max(1, automaticBatchSize))))
+        }
       }
     } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
   }

@@ -39,7 +39,7 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
       apprentice >= Settings.apprenticeLessonsLimit ? "Apprentice limit reached" : nil
     hasLessons = !data.onVacation && data.lessons > 0 && data.lessonsDisabledMessage == nil
     hasReviews = !data.onVacation && data.reviews > 0
-    data.hourlyReviews = [data.reviews] + client.upcomingReviews.prefix(23)
+    data.hourlyReviews = [data.reviews] + client.upcomingReviews.prefix(24)
     let level = Int(user.currentLevel)
     let assignments = client.getAssignmentsAtUsersCurrentLevel()
     if Settings.showPreviousLevelGraph && level > 1 && !client.hasCompletedPreviousLevel() {

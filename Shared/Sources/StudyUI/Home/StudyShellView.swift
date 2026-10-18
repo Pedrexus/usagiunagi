@@ -16,7 +16,7 @@ import SwiftUI
   }
   public var username = ""
   public var level = 0
-  public var learnedKanji = 0
+  public var learnedKanji: Int?
   public var avatar: URL?
   public var avatarRevision = 0
   public var onVacation = false
@@ -66,8 +66,13 @@ public struct StudyShellView<Content: View>: View {
           .id(state.avatarRevision)
         VStack(alignment: .leading, spacing: 3) {
           Text(state.username).font(.headline).accessibilityIdentifier("app.username")
-          Text("Level \(state.level) · \(state.learnedKanji.formatted()) kanji learned")
-            .font(.subheadline).foregroundStyle(.secondary).accessibilityIdentifier("app.level")
+          Text(
+            state.level == 0
+              ? "Connect your WaniKani account"
+              : state.learnedKanji.map { "Level \(state.level) · \($0.formatted()) kanji learned" }
+                ?? "Level \(state.level)"
+          )
+          .font(.subheadline).foregroundStyle(.secondary).accessibilityIdentifier("app.level")
         }.frame(maxWidth: .infinity, alignment: .leading)
         HStack(spacing: 8) {
           Button("Search", systemImage: "magnifyingglass", action: search).accessibilityIdentifier(

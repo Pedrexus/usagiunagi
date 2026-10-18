@@ -321,16 +321,6 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
   }
 }
 
-private enum ShellTab: Hashable {
-  case home, practice, statistics
-  static var initial: Self {
-    #if DEBUG
-      if ProcessInfo.processInfo.arguments.contains("ShowStatistics") { return .statistics }
-    #endif
-    return .home
-  }
-}
-
 struct MainShellRoot: View {
   let state: StudyShellState
   let home: MainWaniKaniTabViewController
@@ -340,23 +330,23 @@ struct MainShellRoot: View {
   let settings: () -> Void
   let signIn: () -> Void
   let manageToken: (() -> Void)?
-  @State private var selection = ShellTab.initial
+  private static var initial: StudyTab {
+    #if DEBUG
+      if ProcessInfo.processInfo.arguments.contains("ShowStatistics") { return .statistics }
+    #endif
+    return .home
+  }
+  @State private var selection = Self.initial
   var body: some View {
     StudyShellView(
       state: state, search: search, settings: settings, signIn: signIn, manageToken: manageToken
     ) {
-      TabView(selection: $selection) {
-        Tab("Home", systemImage: "house", value: ShellTab.home) {
-          ShellDestination(controller: home)
-        }
-        if let practice {
-          Tab("Practice", systemImage: "square.and.pencil", value: ShellTab.practice) {
-            ShellDestination(controller: practice)
-          }
-        }
-        Tab("Stats", systemImage: "chart.bar.xaxis", value: ShellTab.statistics) {
-          ShellDestination(controller: statistics)
-        }
+      StudyTabs(selection: $selection, showsPractice: practice != nil) {
+        ShellDestination(controller: home)
+      } practice: {
+        if let practice { ShellDestination(controller: practice) }
+      } statistics: {
+        ShellDestination(controller: statistics)
       }
     }.overlay {
       if let progress = state.blockingProgress { FullRefreshOverlayView(progress: progress) }

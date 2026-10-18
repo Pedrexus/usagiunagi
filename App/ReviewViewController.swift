@@ -165,7 +165,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
       state: screen, action: { [weak self] in self?.handle($0) },
       input: { ExistingReviewView(view: field) },
       details: { SubjectDetailsPage(model: details) })
-    let host = UIHostingController(rootView: root)
+    let host = UIHostingController(rootView: NavigationStack { root })
     addChild(host)
     view.addSubview(host.view)
     host.view.translatesAutoresizingMaskIntoConstraints = false

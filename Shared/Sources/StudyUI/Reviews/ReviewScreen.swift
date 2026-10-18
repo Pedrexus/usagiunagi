@@ -95,65 +95,63 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   }
 
   public var body: some View {
-    NavigationStack {
-      VStack(spacing: 12) {
-        progress
-        let layout =
-          compactLandscape
-          ? AnyLayout(HStackLayout(spacing: 16))
-          : AnyLayout(VStackLayout(spacing: 12))
-        layout {
-          question
-          response
-        }
+    VStack(spacing: 12) {
+      progress
+      let layout =
+        compactLandscape
+        ? AnyLayout(HStackLayout(spacing: 16))
+        : AnyLayout(VStackLayout(spacing: 12))
+      layout {
+        question
+        response
       }
-      .padding()
-      .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
-      .toolbar {
-        if state.hasMenu {
-          ToolbarItem(placement: .cancellationAction) {
-            Button("End session", systemImage: "xmark") {
-              if state.canWrapUp { confirmEnd = true } else { action(.end) }
-            }
-            .accessibilityIdentifier("review.close")
-          }
-        }
-        ToolbarItemGroup(placement: .primaryAction) {
-          if state.phase == .answering && !state.isAnki {
-            Button("Voice answer", systemImage: "mic") { action(.voice) }
-              .accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
-          }
-          if state.hasMenu {
-            Button("Quick settings", systemImage: "slider.horizontal.3") { action(.settings) }
-              .accessibilityIdentifier("review.settings")
-          }
-        }
-      }
-      .confirmationDialog("Check your answer", isPresented: $state.showAssessment) {
-        Button("My answer was correct") { action(.correct) }
-        Button("My answer was incorrect") { action(.incorrect) }
-        Button("Ask again later") { action(.deferQuestion) }
-      }
-      .confirmationDialog(
-        "End review session?", isPresented: $confirmEnd, titleVisibility: .visible
-      ) {
-        if state.wrappingUp {
-          Button("Stop wrapping up") { action(.stopWrapping) }
-        } else {
-          Button("Wrap up (\(state.activeCount) to go)") { action(.wrap) }
-        }
-        Button("End review session", role: .destructive) { action(.end) }
-      } message: {
-        Text(
-          "Ending now loses progress on half-answered reviews. Wrap up to finish the current batch first."
-        )
-      }
-      .onChange(of: compactLandscape) { _, _ in action(.focus) }
-      .sensoryFeedback(.success, trigger: state.successCount)
     }
+    .padding()
+    .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
+    .toolbar {
+      if state.hasMenu {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("End session", systemImage: "xmark") {
+            if state.canWrapUp { confirmEnd = true } else { action(.end) }
+          }
+          .accessibilityIdentifier("review.close")
+        }
+      }
+      ToolbarItemGroup(placement: .primaryAction) {
+        if state.phase == .answering && !state.isAnki {
+          Button("Voice answer", systemImage: "mic") { action(.voice) }
+            .accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
+        }
+        if state.hasMenu {
+          Button("Quick settings", systemImage: "slider.horizontal.3") { action(.settings) }
+            .accessibilityIdentifier("review.settings")
+        }
+      }
+    }
+    .confirmationDialog("Check your answer", isPresented: $state.showAssessment) {
+      Button("My answer was correct") { action(.correct) }
+      Button("My answer was incorrect") { action(.incorrect) }
+      Button("Ask again later") { action(.deferQuestion) }
+    }
+    .confirmationDialog(
+      "End review session?", isPresented: $confirmEnd, titleVisibility: .visible
+    ) {
+      if state.wrappingUp {
+        Button("Stop wrapping up") { action(.stopWrapping) }
+      } else {
+        Button("Wrap up (\(state.activeCount) to go)") { action(.wrap) }
+      }
+      Button("End review session", role: .destructive) { action(.end) }
+    } message: {
+      Text(
+        "Ending now loses progress on half-answered reviews. Wrap up to finish the current batch first."
+      )
+    }
+    .onChange(of: compactLandscape) { _, _ in action(.focus) }
+    .sensoryFeedback(.success, trigger: state.successCount)
   }
 
   private var progress: some View {

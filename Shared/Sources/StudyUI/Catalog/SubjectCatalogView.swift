@@ -28,9 +28,11 @@ public struct SubjectCatalogView: View {
     collection: SubjectCatalogCollection, title: String, mode: Mode,
     showAnswers: Binding<Bool>, maximumLevel: Int = 60, selectedLevel: Binding<Int>? = nil,
     preferences: SubjectDetailsPreferences = .init(), japaneseFont: String? = nil,
+    initialQuery: SubjectCatalogQuery = .init(),
     image: @escaping (Int64) -> Image? = { _ in nil }, back: (() -> Void)? = nil,
     openSubject: @escaping (Int64) -> Void
   ) {
+    self._query = State(initialValue: initialQuery)
     self.collection = collection
     self.title = title
     self.mode = mode
@@ -198,6 +200,7 @@ public struct SubjectCatalogView: View {
         }
       }
     }
+    .onChange(of: selectedLevel?.wrappedValue) { _, level in if let level { query.level = level } }
     .task(id: Request(collection: collection.id, query: query)) {
       results = nil
       error = nil
