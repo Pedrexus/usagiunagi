@@ -20,9 +20,11 @@ public struct StudySubjectDetails: Sendable {
 
 public enum SubjectDetailsError: Error, LocalizedError {
   case unavailable
+  case vocabularyRequired
   case subscriptionLimit(Int)
   public var errorDescription: String? {
     switch self {
+    case .vocabularyRequired: "Only vocabulary items can be excluded."
     case .unavailable: "This subject is not in the available saved catalog. Refresh study content."
     case .subscriptionLimit(let level):
       "Your verified content access extends through level \(level)."
@@ -71,6 +73,19 @@ extension StudyStore {
       components: ordered(subject.componentSubjectIDs),
       combinations: ordered(subject.amalgamationSubjectIDs),
       similar: ordered(subject.visuallySimilarKanjiIDs))
+  }
+
+  /// Read the latest material on the actor so a toggle cannot replace newer notes or synonyms.
+  @discardableResult public func setSubjectExcluded(
+    subjectID: Int64, accountID: String, excluded: Bool
+  ) throws -> StudySubjectDetails {
+    let current = try subjectDetails(subjectID: subjectID, accountID: accountID)
+    guard current.subject.kind == .vocabulary else { throw SubjectDetailsError.vocabularyRequired }
+    var material = current.material ?? StudyMaterial(subjectID: subjectID)
+    material.isExcluded = excluded
+    try saveSubjectMaterial(
+      material, accountID: accountID, expectedRevision: current.savedMaterial?.revision)
+    return try subjectDetails(subjectID: subjectID, accountID: accountID)
   }
 
   /// Revalidate access and the editor's revision on the store actor before queuing a local edit.

@@ -8,7 +8,8 @@ import Testing
       StudyLessonPreferences.self, from: Data(#"{"batchSize":7}"#.utf8))
     #expect(value.batchSize == 7 && value.order == [.radical, .kanji, .vocabulary])
     #expect(
-      value.includeKanaVocabulary && value.apprenticeLimit == Int.max
+      value.includeKanaVocabulary && value.allowVocabularyExclusion
+        && value.apprenticeLimit == Int.max
         && !value.prioritizeCurrentLevel)
     #expect(
       try JSONDecoder().decode(StudyLessonPreferences.self, from: JSONEncoder().encode(value))
@@ -49,8 +50,9 @@ import Testing
     settings.applyChanges(from: original, to: local)
     #expect(settings.value.batchSize == 9 && settings.value.order == external.order)
     store.value.includeKanaVocabulary = false
+    store.value.allowVocabularyExclusion = false
     settings.reload()
-    #expect(!settings.value.includeKanaVocabulary)
+    #expect(!settings.value.includeKanaVocabulary && !settings.value.allowVocabularyExclusion)
   }
   @Test func nativeDefaultsPersistWithoutChangingOtherKeys() throws {
     let name = "lesson-options-\(UUID().uuidString)"
@@ -60,6 +62,7 @@ import Testing
     let store = DefaultsStudyLessonPreferences(defaults: defaults)
     var value = StudyLessonPreferences()
     value.batchSize = 3
+    value.allowVocabularyExclusion = false
     value.order = [.vocabulary, .radical, .kanji]
     store.value = value
     #expect(DefaultsStudyLessonPreferences(defaults: defaults).value == value)

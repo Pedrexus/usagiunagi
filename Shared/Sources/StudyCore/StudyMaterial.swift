@@ -16,7 +16,13 @@ public struct StudyMaterial: Codable, Equatable, Sendable {
     self.readingNote = readingNote
     self.meaningSynonyms = meaningSynonyms
   }
-  public var isExcluded: Bool { meaningNote.contains(Self.exclusionMarker) }
+  public var isExcluded: Bool {
+    get { meaningNote.contains(Self.exclusionMarker) }
+    set {
+      guard isExcluded != newValue else { return }
+      meaningNote = meaningNoteText + (newValue ? Self.exclusionMarker : "")
+    }
+  }
   public var meaningNoteText: String {
     meaningNote.replacingOccurrences(of: Self.exclusionMarker, with: "")
   }

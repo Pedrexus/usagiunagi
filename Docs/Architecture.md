@@ -24,7 +24,15 @@ Put business behavior and screens in Shared. Keep `#if os(...)` at the narrow pl
 
 Native Home, the forecast and new lesson/review/practice selection use the same preferences. The Apprentice count includes pending and excluded workload; reaching the limit disables new lessons with an explanation while preserving the available-item count. Resuming a durable quiz returns its saved queue/options before applying new selection rules. A changed preference cannot rewrite a paused quiz or bypass assignment/account validation.
 
-Native settings use one Codable UserDefaults value. The temporary `App/Features/Settings/LegacyPreferences.swift` adapts the original iOS archived keys for lessons, reviews, fonts and audio; it replaces the former review-only adapter location. iOS vocabulary exclusion controls remain available. The native subject exclusion controls and other unmigrated settings/services still require parity work. The old app-specific lesson form is removed; no account database or iOS writer cutover occurs in this migration.
+Native settings use one Codable UserDefaults value. The temporary `App/Features/Settings/LegacyPreferences.swift` adapts the original iOS archived keys for lessons, reviews, fonts and audio; it replaces the former review-only adapter location. Vocabulary exclusion uses a shared control and archive-compatible lesson setting. Subject display preferences and other unmigrated settings/services still require parity work. The old app-specific lesson form is removed; no account database or iOS writer cutover occurs in this migration.
+
+## Subject edits and vocabulary exclusion
+
+`SubjectExclusionControl` is shared by native details and the temporary iOS writer host. Its visibility is the sixth lesson preference, preserving `Settings.allowExcludeItems` on iOS and defaulting to the original enabled choice for older native archives. Hiding the control does not remove an existing exclusion. The lesson form no longer needs a platform-injected vocabulary section.
+
+`StudyMaterial.isExcluded` changes only the marker and preserves exact note text, reading notes and synonyms. Repeating the same choice preserves the original bytes. `StudyStore.setSubjectExcluded` reads the latest accessible vocabulary material on the actor and uses the existing revision-checked material writer; server identity, pending/recovery metadata and upload ownership remain unchanged. Unchanged choices are no-ops. A concurrently open notes editor receives the existing stale-version conflict instead of replacing a newer exclusion. No network request is made by the native control; Saved work owns explicit upload. The temporary iOS host retains its existing online-sync behavior.
+
+Exclusion changes new lesson/scheduled-review selection and catalog/Home counts. It does not rewrite a durable quiz, change assignments or create review submissions. Details shown inside a review do not expose this control. The existing iOS review-menu exclusion remains in its legacy writer; native parity needs an atomic queue/material action before the iOS root handoff. Physical input, remaining display preferences, routes and the iOS writer handoff remain separate work.
 
 ## Shared font ownership
 

@@ -1,18 +1,9 @@
 import StudyCore
 import SwiftUI
 
-public struct LessonSettingsView<AdditionalVocabulary: View>: View {
+public struct LessonSettingsView: View {
   @Bindable private var settings: StudyLessonSettings
-  private let additionalVocabulary: AdditionalVocabulary
-  public init(
-    settings: StudyLessonSettings, @ViewBuilder additionalVocabulary: () -> AdditionalVocabulary
-  ) {
-    self.settings = settings
-    self.additionalVocabulary = additionalVocabulary()
-  }
-  public init(settings: StudyLessonSettings) where AdditionalVocabulary == EmptyView {
-    self.init(settings: settings) { EmptyView() }
-  }
+  public init(settings: StudyLessonSettings) { self.settings = settings }
   private var binding: Binding<StudyLessonPreferences> {
     Binding(get: { settings.value }, set: { settings.applyChanges(from: settings.value, to: $0) })
   }
@@ -79,7 +70,10 @@ public struct LessonSettingsView<AdditionalVocabulary: View>: View {
           .accessibilityIdentifier("settings.showKanaOnlyVocab")
         Text("Include lessons and reviews for vocabulary written only in kana.").font(.caption)
           .foregroundStyle(.secondary)
-        additionalVocabulary
+        Toggle("Allow excluding vocabulary items", isOn: binding.allowVocabularyExclusion)
+          .accessibilityIdentifier("settings.allowExcludeItems")
+        Text("Show the option to exclude vocabulary from lessons and reviews.")
+          .font(.caption).foregroundStyle(.secondary)
       }
     }
     #if os(macOS)

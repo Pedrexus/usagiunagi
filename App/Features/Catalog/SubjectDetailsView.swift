@@ -153,9 +153,7 @@ import WaniKaniAPI
     do {
       let current = try editableMaterial()
       var draft = current.material
-      draft.meaningNote =
-        excluded
-        ? draft.meaningNoteText + StudyMaterial.exclusionMarker : draft.meaningNoteText
+      draft.isExcluded = excluded
       try save(draft, version: current.version)
     } catch { self.error = error.localizedDescription }
   }
@@ -303,12 +301,7 @@ import WaniKaniAPI
       GroupBox("Artwork by @AmandaBear") { SubjectArtwork(url: url) }
     }
     if model.showsOptions {
-      GroupBox {
-        Toggle("Exclude this item", isOn: Binding(get: { model.excluded }, set: model.setExcluded))
-          .accessibilityIdentifier("subject.excluded")
-        Text("Excluded items do not appear in lessons or reviews.").font(.caption).foregroundStyle(
-          .secondary)
-      }
+      SubjectExclusionControl(excluded: Binding(get: { model.excluded }, set: model.setExcluded))
     }
     if FeatureFlags.showSubjectDeveloperOptions {
       Button("Open practice review", action: model.openPractice)

@@ -9,7 +9,7 @@ import WaniKaniAPI
   @Test func commonPreferencesKeepTheOriginalIPhoneArchivesAndUnrelatedOptions() {
     let keys = [
       "lessonBatchSize", "prioritizeCurrentLevel", "apprenticeLessonsLimit", "showKanaOnlyVocab",
-      "lessonOrder",
+      "lessonOrder", "allowExcludeItems",
     ]
     let previous = keys.map { UserDefaults.standard.object(forKey: $0) }
     defer {
@@ -26,13 +26,15 @@ import WaniKaniAPI
     value.batchSize = 7
     value.apprenticeLimit = 50
     value.includeKanaVocabulary = false
+    value.allowVocabularyExclusion = false
     value.prioritizeCurrentLevel = true
     value.order = [.vocabulary, .kanji, .radical]
     let store = LegacyLessonPreferences()
     store.value = value
     #expect(store.value == value)
     #expect(
-      Settings.lessonOrder == [.vocabulary, .kanji, .radical] && Settings.lessonBatchSize == 7)
+      Settings.lessonOrder == [.vocabulary, .kanji, .radical] && Settings.lessonBatchSize == 7
+        && !Settings.allowExcludeItems)
     #expect(
       Settings.exactMatch == exactMatch
         && keys.allSatisfy { UserDefaults.standard.data(forKey: $0) != nil })

@@ -8,6 +8,8 @@ public struct NativeSubjectDetailsView: View {
   private let subjectID: Int64
   private let reviewQuestion: StudyQuestionKind?
   private let visibleQuestions: Set<StudyQuestionKind>
+  @Environment(StudyLessonSettings.self) private var lessonSettings
+  @State private var savingExclusion = false
   @Environment(StudyAudioLibrary.self) private var audio
   @StoredReviewPreferences private var preferences
   @State private var details: StudySubjectDetails?
@@ -26,6 +28,16 @@ public struct NativeSubjectDetailsView: View {
     self.subjectID = subjectID
     self.reviewQuestion = reviewQuestion
     self.visibleQuestions = visibleQuestions
+  }
+  private func setExcluded(_ excluded: Bool) async {
+    guard !savingExclusion else { return }
+    savingExclusion = true
+    error = nil
+    defer { savingExclusion = false }
+    do {
+      details = try await store.setSubjectExcluded(
+        subjectID: subjectID, accountID: accountID, excluded: excluded)
+    } catch { self.error = error.localizedDescription }
   }
   public var body: some View {
     Group {
@@ -48,6 +60,21 @@ public struct NativeSubjectDetailsView: View {
                 },
               audioState: audio.state(for: subjectID), audioError: audio.error(for: subjectID)
             ).padding(.horizontal)
+            if reviewQuestion == nil, details.subject.kind == .vocabulary,
+              lessonSettings.value.allowVocabularyExclusion
+            {
+              SubjectExclusionControl(
+                excluded: Binding(
+                  get: { details.material?.isExcluded == true },
+                  set: { value in Task { await setExcluded(value) } })
+              )
+              .disabled(savingExclusion).padding(.horizontal)
+              if let error {
+                Label(error, systemImage: "exclamationmark.triangle")
+                  .font(.callout).padding(.horizontal).accessibilityIdentifier(
+                    "subject.exclusionError")
+              }
+            }
             if details.savedMaterial?.pending == true {
               Text("Changes saved on this device. Sync them from Saved work.").font(.caption)
                 .foregroundStyle(.secondary).padding(.horizontal)

@@ -1053,3 +1053,15 @@ StudySessionOptions stores the Anki scope with a decoder that preserves older op
 | Native Home/forecast/lessons/reviews | Pass one app-owned lesson preference value into common selection rules. New work honors visibility and limits; saved sessions are returned unchanged. |
 
 The native settings acceptance fixture adds six synthetic lessons and an optional 25-item Apprentice workload. These records are memory-only and cannot upload. The existing autoplay UI test now explicitly chooses back-to-back meaning/reading; random question selection had made its former meaning-first assumption flaky. The hosted disconnected-settings regression also caught and fixed premature access to an unattached service. The acceptance receipt preserves initial failures and the corrected reruns. No real Chrome exercise, credential or account mutation was used. The iOS writer and remaining platform bridges are retained.
+
+### Shared vocabulary exclusion (2026-10-19)
+
+| Audited source | Change and preservation |
+| --- | --- |
+| StudyCore/StudyMaterial.swift | Writable exclusion changes only the existing marker; exact untouched bytes, meaning/reading notes and synonyms remain intact. |
+| StudyCore/StudyLessonPreferences.swift and the legacy preference adapter | One visibility preference preserves the original allowExcludeItems archive and defaults older native values to enabled. |
+| StudyUI/Settings/LessonSettingsView.swift and the app settings host | Remove the generic platform-injected section; all six lesson choices now use the common form. |
+| StudyUI/Catalog/SubjectExclusionControl.swift and the legacy details host | One native control replaces the duplicate app-specific GroupBox without changing the legacy writer or online-sync behavior. |
+| StudyStore+SubjectDetails.swift and NativeSubjectDetailsView.swift | Revalidate account, content access and vocabulary kind; read current notes before a revision-checked local edit; show errors inline and retain explicit Saved work upload. |
+
+Shared tests cover no-op writes, exact notes/identity, hiding controls without including items, inaccessible content, stale notes editors and paused-review preservation. UI acceptance and exact current source hashes are retained in the exclusion receipt. Existing IME/SVG/lifecycle/watch and iOS storage bridges remain; no live WaniKani exercise or account mutation was used. The owner SDK annotations remain outside this commit.

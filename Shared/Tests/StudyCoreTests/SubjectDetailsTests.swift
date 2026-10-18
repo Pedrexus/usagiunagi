@@ -73,3 +73,24 @@ import Testing
   #expect(edited.readingNote == "new hidden reading" && edited.meaningSynonyms == ["mine"])
   #expect(StudyMaterialChanges().applying(to: current) == current)
 }
+
+@Test func exclusionChangesPreserveExactNotesAndRepeatedChoicesAreNoOps() {
+  var material = StudyMaterial(
+    subjectID: 1, meaningNote: "  私\n ", readingNote: "reading", meaningSynonyms: ["  Exact  "])
+  let original = material
+  material.isExcluded = false
+  #expect(material == original)
+  material.isExcluded = true
+  #expect(material.meaningNoteText == original.meaningNote && material.isExcluded)
+  let excluded = material
+  material.isExcluded = true
+  #expect(material == excluded)
+  material.isExcluded = false
+  #expect(material == original)
+  material.meaningNote = "before#tsurukameExclude\n#tsurukameExcludeafter"
+  let embedded = material
+  material.isExcluded = true
+  #expect(material == embedded)
+  material.isExcluded = false
+  #expect(material.meaningNote == "before\nafter")
+}

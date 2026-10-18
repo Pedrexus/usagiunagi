@@ -264,6 +264,62 @@ final class MacReviewModeTests: XCTestCase {
     stop.click()
     XCTAssertFalse(stop.exists)
   }
+  func testNativeVocabularyExclusionUpdatesHomeAndCanBeReversed() {
+    let app = launch(["--audio-fixture"])
+    defer { app.terminate() }
+    openAudioSubject(in: app)
+    let excluded = app.checkBoxes["subject.excluded"]
+    XCTAssertTrue(excluded.waitForExistence(timeout: 5), app.debugDescription)
+    if !excluded.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -600) }
+    excluded.click()
+    let saved = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == 1"), object: excluded)
+    XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 5), .completed, app.debugDescription)
+    let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    image.name = "Native vocabulary exclusion"
+    image.lifetime = .keepAlways
+    add(image)
+    app.toolbars.buttons["chevron.backward"].click()
+    app.toolbars.buttons["chevron.backward"].click()
+    let reviews = app.buttons["home.reviews"]
+    XCTAssertTrue(reviews.waitForExistence(timeout: 5))
+    XCTAssertFalse(reviews.isEnabled)
+    setExclusionControls(false, in: app)
+    app.buttons["home.extra.excluded"].click()
+    app.buttons["catalog.subject.1"].click()
+    XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
+    XCTAssertFalse(excluded.exists)
+    app.toolbars.buttons["chevron.backward"].click()
+    app.toolbars.buttons["chevron.backward"].click()
+    XCTAssertFalse(reviews.isEnabled)
+    setExclusionControls(true, in: app)
+    app.buttons["home.extra.excluded"].click()
+    let item = app.buttons["catalog.subject.1"]
+    XCTAssertTrue(item.waitForExistence(timeout: 5))
+    item.click()
+    XCTAssertTrue(excluded.waitForExistence(timeout: 5))
+    if !excluded.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -600) }
+    excluded.click()
+    let included = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == 0"), object: excluded)
+    XCTAssertEqual(XCTWaiter.wait(for: [included], timeout: 5), .completed, app.debugDescription)
+    app.toolbars.buttons["chevron.backward"].click()
+    app.toolbars.buttons["chevron.backward"].click()
+    XCTAssertTrue(reviews.waitForExistence(timeout: 5))
+    XCTAssertTrue(reviews.isEnabled)
+  }
+  private func setExclusionControls(_ enabled: Bool, in app: XCUIApplication) {
+    app.buttons["app.settings"].click()
+    app.buttons["settings.page.lessons"].click()
+    let control = app.switches["settings.allowExcludeItems"]
+    XCTAssertTrue(control.waitForExistence(timeout: 5), app.debugDescription)
+    if !control.isHittable {
+      app.sheets.firstMatch.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -500)
+    }
+    if (control.value as? NSNumber)?.boolValue != enabled { control.click() }
+    XCTAssertEqual((control.value as? NSNumber)?.boolValue, enabled)
+    app.buttons["Done"].click()
+  }
   private func openAudioSubject(in app: XCUIApplication) {
     app.buttons["app.search"].click()
     let field = app.searchFields.firstMatch

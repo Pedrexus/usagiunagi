@@ -9,9 +9,11 @@ public struct StudyLessonPreferences: Codable, Hashable, Sendable {
   public var prioritizeCurrentLevel = false
   public var apprenticeLimit = Int.max
   public var includeKanaVocabulary = true
+  public var allowVocabularyExclusion = true
   public init() {}
   private enum CodingKeys: String, CodingKey {
-    case order, batchSize, prioritizeCurrentLevel, apprenticeLimit, includeKanaVocabulary
+    case order, batchSize, prioritizeCurrentLevel, apprenticeLimit, includeKanaVocabulary,
+      allowVocabularyExclusion
   }
   public init(from decoder: any Decoder) throws {
     self.init()
@@ -23,6 +25,9 @@ public struct StudyLessonPreferences: Codable, Hashable, Sendable {
     apprenticeLimit = try c.decodeIfPresent(Int.self, forKey: .apprenticeLimit) ?? apprenticeLimit
     includeKanaVocabulary =
       try c.decodeIfPresent(Bool.self, forKey: .includeKanaVocabulary) ?? includeKanaVocabulary
+    allowVocabularyExclusion =
+      try c.decodeIfPresent(Bool.self, forKey: .allowVocabularyExclusion)
+      ?? allowVocabularyExclusion
   }
   public var normalized: Self {
     var result = self
@@ -51,6 +56,9 @@ public struct StudyLessonPreferences: Codable, Hashable, Sendable {
     if old.apprenticeLimit != new.apprenticeLimit { apprenticeLimit = new.apprenticeLimit }
     if old.includeKanaVocabulary != new.includeKanaVocabulary {
       includeKanaVocabulary = new.includeKanaVocabulary
+    }
+    if old.allowVocabularyExclusion != new.allowVocabularyExclusion {
+      allowVocabularyExclusion = new.allowVocabularyExclusion
     }
     self = normalized
   }

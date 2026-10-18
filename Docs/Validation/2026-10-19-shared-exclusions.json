@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T19:39:26Z",
+  "source_base_commit": "b2b736b9c122e59b62168ee40ae7c21f09d50fcf",
+  "branch": "codex/swiftui-27-curriculum",
+  "status": "Shared vocabulary exclusion checkpoint; full modernization remains open",
+  "implementation": {
+    "preferences": "One sixth lesson choice controls exclusion visibility on both hosts; original iOS allowExcludeItems archive and default true preserved",
+    "ui": "One SubjectExclusionControl; native checkbox on Mac and switch on iOS; no modal",
+    "material": "Writable exclusion changes only the existing marker, retaining exact note bytes, reading notes and synonyms; repeated choices are no-ops",
+    "persistence": "StudyStore.setSubjectExcluded reads the latest accessible vocabulary on the actor and reuses revision-checked saveSubjectMaterial; server identity and pending/recovery metadata preserved",
+    "sessions": "New Home/lesson/review selection honors exclusion; paused session queues, assignments and review submissions remain unchanged",
+    "conflict": "A stale notes editor cannot overwrite a newer exclusion",
+    "visibility": "Hiding the control does not clear saved exclusions; review answer details do not expose it",
+    "upload": "Native Saved work retains explicit upload; the temporary iOS host keeps existing sync behavior",
+    "duplicate_code_retired": [
+      "iOS-specific exclusion GroupBox",
+      "Platform-injected Vocabulary settings extension"
+    ],
+    "new_dependencies": [],
+    "ios_writer_changed": false,
+    "live_wanikani_account_changes": false,
+    "pr_created": false,
+    "pushed": false
+  },
+  "source_sha256": {
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "2ad25d3420c10f3d400c4ae5480df3e9db9367cd317d8789d18aa00023f9e4c6",
+    "App/AppTests/LessonPreferenceTests.swift": "bafccd9ec22cf0431fa78d9138ae213f2cc00771703e992b112c44ee7fd58a81",
+    "App/Features/Catalog/SubjectDetailsView.swift": "1078f1203f5d145a94caf1757dd5006bc5c0d13add434b36875e62d853aa40b8",
+    "App/Features/Settings/LegacyPreferences.swift": "6d5fb1c654f764828bdc1e3357a232d8bbb854f3989d06e4b6d0dc5794f707cb",
+    "App/Features/Settings/SettingsViewController.swift": "fc6c40071c77a99c7104b710b5d60446be182257df7068126d09636cf78b51a5",
+    "Shared/Sources/StudyCore/StudyLessonPreferences.swift": "0fac098760ef06f589034c55677dab9c38776def8674b5c141fd128193b4124f",
+    "Shared/Sources/StudyCore/StudyMaterial.swift": "7f433f26ec76a7849866ef9cea2fded2dc728877d56b57431616ebd71af241b0",
+    "Shared/Sources/StudyPersistence/StudyStore+SubjectDetails.swift": "45b8bb21a55af278d50efe5c923e614213f0c8e9e6ced1f7eb5917ba5af4a236",
+    "Shared/Sources/StudyUI/Catalog/NativeSubjectDetailsView.swift": "4d73eb21ec21906df3eb62110dc5214e133c2e427cbc526f213be1d1e52ac211",
+    "Shared/Sources/StudyUI/Catalog/SubjectExclusionControl.swift": "d406aef05938a7543459ab5736817aa6f7514a1d3f632b3ef0d4dbef4acf8412",
+    "Shared/Sources/StudyUI/Settings/LessonSettingsView.swift": "7f9bbf3e1b282ad4c1842bd97fcffdfac6d0e029252d9a8fe5c0da22f8b84b14",
+    "Shared/Tests/StudyCoreTests/StudyLessonPreferencesTests.swift": "dda3bc90d85319178ebafafb18e05c3ab7b7209bd365a7b2ee2f1f928c8fced3",
+    "Shared/Tests/StudyCoreTests/SubjectDetailsTests.swift": "507a3ea506954ef9b84f91953a8338c7f93a074ce2aa7cfeb800764bc3d885e4",
+    "Shared/Tests/StudyPersistenceTests/SubjectDetailsTests.swift": "aac55ae60f997fb4eb8fa7fbfced678d18dd022cd6d79204a737329349694b88"
+  },
+  "validation": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-exclusions-shared-mac.log",
+      "log_sha256": "a0c2228f860a08193cb0419ab25946517a66306f076c9539bb1e1e2e79f38b75",
+      "passed": 313,
+      "breakdown": {
+        "core": 161,
+        "persistence": 131,
+        "speech": 7,
+        "application": 14
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-exclusions-shared-ios.log",
+      "log_sha256": "da67ff3f9a99b6e3ca23ebc9cfff86d30bef521541dd72e093302f386cac9654",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e2249dad981546ab8a33a0095490407d.xcresult",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 313,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 443,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-exclusions-hosted.log",
+      "log_sha256": "6d9cf9b433a5f9baf7a07de95214056420d70e665d00f180ff0d5f44d4deb181",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a10c8097172e4466a761a5db0b5391e0.xcresult",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 91,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 100,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "native_mac": {
+      "distinct_workflows_passing_after_test_query_fixes": 6,
+      "latest_result_by_workflow": {
+        "MacLessonTests/testNativeApprenticeLimitDisablesOnlyNewLessonsAndCanBeChanged": "passed",
+        "MacLessonTests/testNativeLessonChoicesReorderAndTeachTheConfiguredBatch": "passed",
+        "MacLessonTests/testPrimaryLessonActionOpensTeachingWithoutThePicker": "passed",
+        "MacLessonTests/testTeachingQuizPauseResumeAndFinish": "passed",
+        "MacReviewModeTests/testNativeVocabularyExclusionUpdatesHomeAndCanBeReversed": "passed",
+        "MacReviewModeTests/testReadingOnlyAnkiLeavesMeaningTyped": "passed"
+      },
+      "attempts": [
+        {
+          "log": "/private/tmp/usagi-exclusions-mac-ui.log",
+          "log_sha256": "e8106768ff1ab3a26e7f9afc6f595d30ac2b8577483e9a1fb2edfaba31584bba",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0149ca0f61fb4dd98ead9e21311a1de1.xcresult"
+        },
+        {
+          "log": "/private/tmp/usagi-exclusions-mac-followup.log",
+          "log_sha256": "8fe476b8571d6e3aaf5081ff0709c7104e916482931f255e9f8c69ba61eab11b",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7f1e95a459474381b10306ac95b0cc0c.xcresult"
+        },
+        {
+          "log": "/private/tmp/usagi-exclusions-mac-final.log",
+          "log_sha256": "ff2afaccb7499a97617085d4e66c2a28f30a5d5eb8f65e46b097f3ee93a45c5f",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7a91735382e348a6996acc8a31cce70f.xcresult",
+          "summary": {
+            "result": "Passed",
+            "passedTests": 1,
+            "failedTests": 0,
+            "skippedTests": 0,
+            "runtimeWarnings": [],
+            "devicesAndConfigurations": [
+              {
+                "device": {
+                  "architecture": "arm64",
+                  "deviceId": "00006040-000649442200801C",
+                  "deviceName": "My Mac",
+                  "modelName": "Mac mini",
+                  "osBuildNumber": "26A434",
+                  "osVersion": "27.0.1",
+                  "platform": "macOS"
+                },
+                "expectedFailures": 0,
+                "failedTests": 0,
+                "passedTests": 1,
+                "skippedTests": 0,
+                "testPlanConfiguration": {
+                  "configurationId": "1",
+                  "configurationName": "Test Scheme Action"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "initial_failures": [
+        "The new acceptance test queried a macOS checkbox as a switch. The app hierarchy showed the correct control; the query was corrected without changing the native UI.",
+        "The followup queried home.excluded instead of the existing Home component identifier home.extra.excluded. The test was corrected after inspecting the hierarchy and source."
+      ]
+    },
+    "iphone_ui": {
+      "log": "/private/tmp/usagi-exclusions-iphone.log",
+      "log_sha256": "022ab6919253818d070082fb0be86f945c5b7850c9d54474153c59e38f838073",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-32b935acfb97483bad0d15abf4082f50.xcresult",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 3,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "ipad_ui": {
+      "log": "/private/tmp/usagi-exclusions-ipad.log",
+      "log_sha256": "477148345c770faa568fa977bc086bedb41776dda59e34391a96d594414d6351",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-443e2f81847549fcab765c7aa3624fa0.xcresult",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+              "deviceName": "iPad Pro 11-inch (M5)",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 3,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-exclusions-mac-release.log",
+      "log_sha256": "4b66719bd6bcb2d2d93a70dfd197a42debabe490974021bc412077478353599b",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-096d44be43864057a9bddee7e6824526.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-exclusions-format.log",
+      "log_sha256": "8165f0e2304c996006e0cf9dfb7d60275ea5db9c06f101b219bee34973b615ed",
+      "changed_swift_files": 14
+    },
+    "screenshot": {
+      "name": "Native vocabulary exclusion",
+      "path": "/private/tmp/usagi-exclusions-native-images/205389D8-880B-4057-A51E-0FD3E37213B4.png",
+      "sha256": "cd83d23f9883f897e7b4bcbbca4d362548cf41c098dc5e794e0882d018b8dd96",
+      "scope": "App window, memory-only synthetic account with uploads disabled",
+      "visually_inspected": true
+    }
+  },
+  "limitations": [
+    "Native review-menu exclusion requires an atomic material/queue action; the legacy iOS action remains",
+    "Native subject display preferences remain incomplete",
+    "iOS still uses its original SQLite writer/coordinator",
+    "Sign-in/routes and notification/watch parity remain open",
+    "Physical audio/speech/IME and full-account prediction acceptance remain open",
+    "No GitHub Actions hosted pass or publication is claimed"
+  ],
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

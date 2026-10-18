@@ -108,6 +108,7 @@ enum ReviewPreferencesAdapter {
       value.prioritizeCurrentLevel = Settings.prioritizeCurrentLevel
       value.apprenticeLimit = Settings.apprenticeLessonsLimit
       value.includeKanaVocabulary = Settings.showKanaOnlyVocab
+      value.allowVocabularyExclusion = Settings.allowExcludeItems
       value.order = Settings.lessonOrder.compactMap { kind in
         switch kind {
         case .radical: .radical
@@ -124,6 +125,7 @@ enum ReviewPreferencesAdapter {
       Settings.prioritizeCurrentLevel = value.prioritizeCurrentLevel
       Settings.apprenticeLessonsLimit = value.apprenticeLimit
       Settings.showKanaOnlyVocab = value.includeKanaVocabulary
+      Settings.allowExcludeItems = value.allowVocabularyExclusion
       Settings.lessonOrder = value.order.map { kind in
         switch kind {
         case .radical: .radical

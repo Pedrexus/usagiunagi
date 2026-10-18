@@ -110,11 +110,7 @@ struct ApplicationSettings: View {
         switch page {
         case .appearance: AppearanceSettings(appearanceChanged: appearanceChanged)
         case .lessons:
-          LessonSettingsView(settings: lessons) {
-            SettingToggle(
-              "Allow excluding vocabulary items", Settings.$allowExcludeItems,
-              help: "Show the option to exclude vocabulary from lessons and reviews")
-          }
+          LessonSettingsView(settings: lessons)
         case .reviews:
           ReviewSettings(
             fonts: fonts, offlineAudio: offlineAudio, appearanceChanged: appearanceChanged)
