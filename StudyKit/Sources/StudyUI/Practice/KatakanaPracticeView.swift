@@ -132,11 +132,13 @@ private struct KatakanaPracticeSessionView: View {
       ? (preferences.revealAnswers ? .details : .incorrect) : .answering
     screen.answer = ""
     screen.feedback = practice.session.currentDecision == .incorrect ? "Incorrect answer" : ""
+    screen.success = nil
     screen.canShowAll = false
     applyPreferences()
     focused = screen.phase == .answering
   }
   private func applyPreferences() {
+    screen.feedbackPreferences = preferences
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
     screen.canSkip = preferences.allowSkipping
     screen.canOverride =
@@ -154,8 +156,8 @@ private struct KatakanaPracticeSessionView: View {
       else { return }
       switch result.grade {
       case .precise, .imprecise:
-        screen.successCount += 1
         present()
+        if let success = result.success { screen.recordSuccess(success) }
       case .incorrect:
         present()
         screen.answer = result.normalized
@@ -186,8 +188,9 @@ private struct KatakanaPracticeSessionView: View {
         focused = true
       case .correct:
         if screen.canOverride {
-          try practice?.correct(question)
+          let success = try practice?.correct(question)
           present()
+          if let success { screen.recordSuccess(success) }
         }
       case .deferQuestion:
         try practice?.deferQuestion(question)

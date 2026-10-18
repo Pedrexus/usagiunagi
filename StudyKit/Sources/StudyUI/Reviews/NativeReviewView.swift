@@ -182,6 +182,8 @@ public struct NativeReviewView: View {
     screen.feedback =
       session.currentDecision == .incorrect ? "Incorrect answer. Try again or reveal it." : ""
     applyPreferences()
+    screen.success = nil
+    if let success = value.success { screen.recordSuccess(success) }
     answerFocused = true
   }
   private func change(_ action: NativeReviewAction) {
@@ -214,12 +216,10 @@ public struct NativeReviewView: View {
       }
       if result.state.question == question { screen.answer = result.normalized }
       switch result.grade {
-      case .precise: screen.successCount += 1
+      case .precise: break
       case .imprecise:
         if exactMatch {
           screen.feedback = "Use the exact meaning."
-        } else {
-          screen.successCount += 1
         }
       case .incorrect: break
       case .otherKanjiReading: screen.feedback = "Use the reading taught for this subject."
@@ -277,6 +277,7 @@ public struct NativeReviewView: View {
   }
   private func applyPreferences() {
     let preferences = preferences
+    screen.feedbackPreferences = preferences
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
     screen.canSkip = preferences.allowSkipping
     screen.canOverride =

@@ -82,7 +82,8 @@ import WaniKaniAPI
                     "ankiModeCombineReadingMeaning", "blurContextSentences", "allowExcludeItems", "showPreviousLevelGraph",
                     "showAllReadings", "useKatakanaForOnyomi", "showStatsSection", "showOldMnemonic",
                     "showArtwork", "showSimilarKanjiAboveLevel", "notificationsAllReviews",
-                    "notificationsBadging", "notificationSounds", "showFullAnswer"] {
+                    "notificationsBadging", "notificationSounds", "showFullAnswer",
+                    "animateParticleExplosion", "animatePlusOne", "animateLevelUpPopup"] {
           if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
              let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",
                                                           requiringSecureCoding: true) {
@@ -1360,7 +1361,8 @@ import WaniKaniAPI
         }
       }
       // Distinct subjects keep the sample review count consistent with statistics.
-      let ids: [Int64] = ProcessInfo.processInfo.arguments
+      let feedbackFixture = ProcessInfo.processInfo.arguments.contains("ReviewFeedbackFixture")
+      let ids: [Int64] = feedbackFixture ? [3864, 923] : ProcessInfo.processInfo.arguments
         .contains("VoiceReviewFixture") || ProcessInfo.processInfo.arguments
         .contains("SingleReviewFixture") ? [3864] : [3864, 923, 578, 689]
       return ids.map { id in
@@ -1368,7 +1370,7 @@ import WaniKaniAPI
         a.subjectID = id
         a.subjectType = id == 3864 ? .vocabulary : .kanji
         a.availableAt = 42
-        a.srsStageNumber = 2
+        a.srsStageNumber = feedbackFixture ? 4 : 2
         return a
       }
     }

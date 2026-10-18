@@ -67,5 +67,19 @@ public struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: 
         audio
       }
     }
+    Section {
+      Toggle("Correct answer feedback", isOn: $preferences.correctAnswerFeedback)
+        .accessibilityIdentifier("reviewSettings.correctAnswerFeedback")
+      Toggle("Completed item +1", isOn: $preferences.completedItemFeedback)
+        .accessibilityIdentifier("reviewSettings.completedItemFeedback")
+      Toggle("SRS milestone estimates", isOn: $preferences.srsMilestoneFeedback)
+        .accessibilityIdentifier("reviewSettings.srsMilestoneFeedback")
+    } header: {
+      Text("Review feedback")
+    } footer: {
+      Text(
+        "Uses subtle symbol effects. Reduce Motion keeps feedback still. SRS milestones are local estimates until synced."
+      )
+    }
   }
 }

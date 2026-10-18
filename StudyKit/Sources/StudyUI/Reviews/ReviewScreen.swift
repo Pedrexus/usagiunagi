@@ -38,7 +38,14 @@ import SwiftUI
   public var canChangeFont = false
   public var showAssessment = false
   public var successCount = 0
+  public var success: StudyMarkResult?
+  public var feedbackPreferences = ReviewPreferences()
   public init() {}
+
+  public func recordSuccess(_ mark: StudyMarkResult) {
+    success = mark
+    successCount += 1
+  }
 }
 
 public enum ReviewScreenAction {
@@ -49,6 +56,7 @@ public enum ReviewScreenAction {
 
 /// Shared review layout; native input and rich details are supplied by each host during migration.
 public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: View {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   #if os(iOS)
     @Environment(\.verticalSizeClass) private var verticalSizeClass
   #endif
@@ -164,8 +172,46 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       }.font(.caption).foregroundStyle(.secondary)
       ProgressView(
         value: Double(state.completed), total: Double(max(1, state.completed + state.remaining)))
+      successFeedback
       if state.wrappingUp { Label("Wrapping up", systemImage: "clock").font(.caption) }
+    }.accessibilityElement(children: .contain)
+  }
+
+  private var successFeedback: some View {
+    ViewThatFits(in: .horizontal) {
+      feedbackLabels(horizontal: true)
+      feedbackLabels(horizontal: false)
     }
+    .font(.caption).foregroundStyle(.secondary)
+    .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+    .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("review.success")
+  }
+
+  private func feedbackLabels(horizontal: Bool) -> some View {
+    let layout =
+      horizontal
+      ? AnyLayout(HStackLayout(spacing: 12))
+      : AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+    return layout {
+      if let success = state.success {
+        if state.feedbackPreferences.correctAnswerFeedback {
+          Label("Correct", systemImage: "checkmark.circle")
+            .accessibilityLabel("Previous answer correct")
+        }
+        if success.subjectFinished, state.feedbackPreferences.completedItemFeedback {
+          Label("+1 completed", systemImage: "plus.circle")
+        }
+        if let milestone = success.estimatedMilestone,
+          state.feedbackPreferences.srsMilestoneFeedback
+        {
+          Label("\(milestone) (estimate)", systemImage: "arrow.up.circle")
+            .accessibilityLabel("Estimated SRS stage: \(milestone). Sync to confirm.")
+        }
+      }
+    }
+    .symbolEffectsRemoved(reduceMotion)
+    .symbolEffect(.bounce, options: .nonRepeating, value: state.successCount)
   }
 
   @ViewBuilder private var response: some View {

@@ -5,6 +5,8 @@ import StudyCore
 public struct NativeReviewState: Sendable {
   public let saved: SavedStudySession
   public let subjects: [Int64: CatalogSubject]
+  /// A transient receipt for a newly saved correct answer; never replayed on resume.
+  public let success: StudyMarkResult?
   public var question: StudyQuestion? {
     guard let question = saved.session.question,
       saved.session.activeIDs.contains(question.itemID)
@@ -103,9 +105,10 @@ extension StudyStore {
       return .init(state: state, grade: grade, normalized: normalized)
     }
     var session = state.saved.session
+    var success: StudyMarkResult?
     switch grade {
     case .precise, .imprecise:
-      _ = try session.mark(.correct, for: question, now: Int64(now.timeIntervalSince1970))
+      success = try session.mark(.correct, for: question, now: Int64(now.timeIntervalSince1970))
       session.nextQuestion()
     case .incorrect:
       _ = try session.mark(.incorrect, for: question, now: Int64(now.timeIntervalSince1970))
@@ -114,7 +117,8 @@ extension StudyStore {
     }
     let revision = try saveSession(
       session, accountID: accountID, expectedRevision: expectedRevision)
-    state = try reviewState(.init(revision: revision, session: session), accountID: accountID)
+    state = try reviewState(
+      .init(revision: revision, session: session), accountID: accountID, success: success)
     return .init(state: state, grade: grade, normalized: normalized)
   }
 
@@ -125,13 +129,15 @@ extension StudyStore {
     let state = try currentReview(accountID: accountID, expectedRevision: expectedRevision)
     var session = state.saved.session
     guard let question = state.question else { throw StudySessionError.staleQuestion }
+    var success: StudyMarkResult?
     switch action {
     case .advance:
       guard session.currentDecision == .incorrect else { throw StudyStoreError.invalidSession }
       session.nextQuestion()
     case .overrideCorrect:
       try validateCurrentAssignment(state, accountID: accountID)
-      _ = try session.mark(.overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
+      success = try session.mark(
+        .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
       session.nextQuestion()
     case .deferQuestion:
       try session.deferQuestion(question)
@@ -145,7 +151,8 @@ extension StudyStore {
     }
     let revision = try saveSession(
       session, accountID: accountID, expectedRevision: expectedRevision)
-    return try reviewState(.init(revision: revision, session: session), accountID: accountID)
+    return try reviewState(
+      .init(revision: revision, session: session), accountID: accountID, success: success)
   }
 
   public func endReviews(accountID: String, expectedRevision: UUID) throws {
@@ -175,7 +182,9 @@ extension StudyStore {
     }
     return try reviewState(saved, accountID: accountID)
   }
-  private func reviewState(_ saved: SavedStudySession, accountID: String) throws
+  private func reviewState(
+    _ saved: SavedStudySession, accountID: String, success: StudyMarkResult? = nil
+  ) throws
     -> NativeReviewState
   {
     guard !saved.session.isPractice, saved.session.items.values.allSatisfy({ !$0.isLesson }) else {
@@ -183,7 +192,8 @@ extension StudyStore {
     }
     let subjects = try catalog(accountID: accountID)
     return .init(
-      saved: saved, subjects: Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) }))
+      saved: saved, subjects: Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) }),
+      success: success)
   }
   private func requireReviewContent(_ subject: CatalogSubject, assignment: CatalogAssignment) throws
   {

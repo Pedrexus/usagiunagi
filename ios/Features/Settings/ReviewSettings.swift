@@ -110,11 +110,6 @@ struct ReviewSettings: View {
         Button("Offline audio", systemImage: "arrow.down.circle", action: offlineAudio)
           .accessibilityIdentifier("settings.offlineAudio")
       }
-      Section("Animations") {
-        SettingToggle("Particle explosion", Settings.$animateParticleExplosion)
-        SettingToggle("Level up popup", Settings.$animateLevelUpPopup)
-        SettingToggle("+1", Settings.$animatePlusOne)
-      }
     }
     .navigationTitle("Reviews")
     .onAppear {

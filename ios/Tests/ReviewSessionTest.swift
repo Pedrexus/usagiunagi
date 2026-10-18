@@ -54,65 +54,73 @@ final class ReviewSessionTest: XCTestCase {
   func testCompletedSubjectUsesExistingDurableWriteBoundaryExactlyOnce() {
     var sent = [TKMProgress]()
     let subject = subject()
-    let session = ReviewSession(repository: ReviewRepository(subject: { _ in
-      subject
-    }, saveProgress: { sent.append($0) }),
-    items: [item()], options: options, now: { 100 }, seed: 1)
+    let session = ReviewSession(
+      repository: ReviewRepository(
+        subject: { _ in
+          subject
+        }, saveProgress: { sent.append($0) }),
+      items: [item()], options: options, now: { 100 }, seed: 1)
     session.nextTask()
     XCTAssertEqual(session.activeTaskType, .meaning)
-    XCTAssertEqual(session.markAnswer(.Correct)?.subjectFinished, false)
+    XCTAssertEqual(session.markAnswer(.correct)?.subjectFinished, false)
     XCTAssertTrue(sent.isEmpty)
     session.nextTask()
     XCTAssertEqual(session.activeTaskType, .reading)
-    XCTAssertEqual(session.markAnswer(.Correct)?.subjectFinished, true)
+    XCTAssertEqual(session.markAnswer(.correct)?.subjectFinished, true)
     XCTAssertEqual(sent.count, 1)
     XCTAssertEqual(sent[0].assignment.id, 100)
     XCTAssertEqual(sent[0].assignment.subjectID, 42)
     XCTAssertEqual(sent[0].createdAt, 100)
     XCTAssertFalse(sent[0].meaningWrong || sent[0].readingWrong)
-    XCTAssertNil(session.markAnswer(.Correct))
+    XCTAssertNil(session.markAnswer(.correct))
     XCTAssertEqual(sent.count, 1)
     XCTAssertEqual(session.completedReviews.count, 1)
   }
 
   func testPracticeNeverWritesProgressEvenWhenCallerJustMarksCorrect() {
     var writes = 0
-    let session = ReviewSession(repository: ReviewRepository(subject: { _ in
-      nil
-    }, saveProgress: { _ in writes += 1 }),
-    items: [item(subject: subject(reading: false))],
-    isPracticeSession: true,
-    options: options, seed: 1)
+    let session = ReviewSession(
+      repository: ReviewRepository(
+        subject: { _ in
+          nil
+        }, saveProgress: { _ in writes += 1 }),
+      items: [item(subject: subject(reading: false))],
+      isPracticeSession: true,
+      options: options, seed: 1)
     session.nextTask()
-    XCTAssertEqual(session.markAnswer(.Correct)?.subjectFinished, true)
+    XCTAssertEqual(session.markAnswer(.correct)?.subjectFinished, true)
     XCTAssertEqual(writes, 0)
     XCTAssertEqual(session.completedReviews.count, 1)
   }
 
   func testIncompleteCatalogDoesNotSilentlySkipOrUpload() {
     var writes = 0
-    let session = ReviewSession(repository: ReviewRepository(subject: { _ in
-      nil
-    }, saveProgress: { _ in writes += 1 }),
-    items: [item()], options: options, seed: 1)
+    let session = ReviewSession(
+      repository: ReviewRepository(
+        subject: { _ in
+          nil
+        }, saveProgress: { _ in writes += 1 }),
+      items: [item()], options: options, seed: 1)
     XCTAssertNotNil(session.initializationError)
     XCTAssertEqual(session.activeQueueLength, 0)
     session.nextTask()
-    XCTAssertNil(session.markAnswer(.Correct))
+    XCTAssertNil(session.markAnswer(.correct))
     XCTAssertEqual(writes, 0)
   }
 
   func testOverrideAndReadingCreditReachTheProtobufPayload() {
     var sent = [TKMProgress]()
     let subject = subject()
-    let session = ReviewSession(repository: ReviewRepository(subject: { _ in
-      subject
-    }, saveProgress: { sent.append($0) }),
-    items: [item()], options: options, now: { 100 }, seed: 1)
+    let session = ReviewSession(
+      repository: ReviewRepository(
+        subject: { _ in
+          subject
+        }, saveProgress: { sent.append($0) }),
+      items: [item()], options: options, now: { 100 }, seed: 1)
     session.nextTask()
-    XCTAssertNotNil(session.markAnswer(.Incorrect))
+    XCTAssertNotNil(session.markAnswer(.incorrect))
     session.creditReading()
-    XCTAssertEqual(session.markAnswer(.OverrideAnswerCorrect)?.subjectFinished, true)
+    XCTAssertEqual(session.markAnswer(.overrideCorrect)?.subjectFinished, true)
     XCTAssertEqual(sent.count, 1)
     XCTAssertFalse(sent[0].meaningWrong || sent[0].readingWrong)
     XCTAssertEqual(sent[0].meaningWrongCount, 0)
@@ -129,13 +137,14 @@ final class ReviewSessionTest: XCTestCase {
     materials.meaningSynonyms = ["Single"]
     var saved: TKMStudyMaterials?
     var exclusion: Bool?
-    let repository = ReviewRepository(subject: { _ in subject }, materials: { _ in materials },
-                                      saveProgress: { _ in },
-                                      saveMaterials: { saved = $0 },
-                                      setExcluded: { material, excluded in
-                                        exclusion = excluded
-                                        material.readingNote = "Excluded marker"
-                                      })
+    let repository = ReviewRepository(
+      subject: { _ in subject }, materials: { _ in materials },
+      saveProgress: { _ in },
+      saveMaterials: { saved = $0 },
+      setExcluded: { material, excluded in
+        exclusion = excluded
+        material.readingNote = "Excluded marker"
+      })
     let session = ReviewSession(repository: repository, items: [item()], options: options, seed: 1)
     session.nextTask()
     session.addSynonym("Unity")
@@ -152,8 +161,9 @@ final class ReviewSessionTest: XCTestCase {
     var stored = TKMStudyMaterials()
     stored.subjectID = 42
     stored.meaningNote = "Before review"
-    let repository = ReviewRepository(subject: { _ in subject }, materials: { _ in stored },
-                                      saveProgress: { _ in }, saveMaterials: { stored = $0 })
+    let repository = ReviewRepository(
+      subject: { _ in subject }, materials: { _ in stored },
+      saveProgress: { _ in }, saveMaterials: { stored = $0 })
     let session = ReviewSession(repository: repository, items: [item()], options: options, seed: 1)
     session.nextTask()
     stored.meaningNote = "Edited while viewing the answer"

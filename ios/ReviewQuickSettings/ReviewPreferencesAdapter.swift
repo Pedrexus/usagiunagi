@@ -16,6 +16,20 @@ import StudyCore
 
 /// Preserve archived keys and enum meanings; no user-defaults migration is needed.
 enum ReviewPreferencesAdapter {
+  private static var booleans: [(WritableKeyPath<ReviewPreferences, Bool>, Setting<Bool>)] {
+    [
+      (\.revealAnswers, Settings.$showAnswerImmediately),
+      (\.revealFullAnswer, Settings.$showFullAnswer),
+      (\.exactMatch, Settings.$exactMatch),
+      (\.allowCorrections, Settings.$enableCheats),
+      (\.allowSkipping, Settings.$allowSkippingReviews),
+      (\.autoplayAudio, Settings.$playAudioAutomatically),
+      (\.interruptBackgroundAudio, Settings.$interruptBackgroundAudio),
+      (\.correctAnswerFeedback, Settings.$animateParticleExplosion),
+      (\.completedItemFeedback, Settings.$animatePlusOne),
+      (\.srsMilestoneFeedback, Settings.$animateLevelUpPopup),
+    ]
+  }
   static var current: ReviewPreferences {
     var value = ReviewPreferences()
     switch Settings.interfaceStyle {
@@ -29,13 +43,7 @@ enum ReviewPreferencesAdapter {
     case .dots: value.stageIndicator = .dots
     }
     value.fontScale = Double(Settings.fontSize)
-    value.revealAnswers = Settings.showAnswerImmediately
-    value.revealFullAnswer = Settings.showFullAnswer
-    value.exactMatch = Settings.exactMatch
-    value.allowCorrections = Settings.enableCheats
-    value.allowSkipping = Settings.allowSkippingReviews
-    value.autoplayAudio = Settings.playAudioAutomatically
-    value.interruptBackgroundAudio = Settings.interruptBackgroundAudio
+    for (path, setting) in booleans { value[keyPath: path] = setting.wrappedValue }
     return value
   }
 
@@ -54,22 +62,12 @@ enum ReviewPreferencesAdapter {
       case .dots: Settings.srsLevelIndicatorStyle = .dots
       }
     }
-    if value.fontScale != old.fontScale { Settings.fontSize = Float(min(2.5,
-                                                                        max(1, value.fontScale))) }
-    if value.revealAnswers != old
-      .revealAnswers { Settings.showAnswerImmediately = value.revealAnswers }
-    if value.revealFullAnswer != old
-      .revealFullAnswer { Settings.showFullAnswer = value.revealFullAnswer }
-    if value.exactMatch != old.exactMatch { Settings.exactMatch = value.exactMatch }
-    if value.allowCorrections != old
-      .allowCorrections { Settings.enableCheats = value.allowCorrections }
-    if value.allowSkipping != old
-      .allowSkipping { Settings.allowSkippingReviews = value.allowSkipping }
-    if value.autoplayAudio != old
-      .autoplayAudio { Settings.playAudioAutomatically = value.autoplayAudio }
-    if value.interruptBackgroundAudio != old
-      .interruptBackgroundAudio {
-      Settings.interruptBackgroundAudio = value.interruptBackgroundAudio
+    if value.fontScale != old.fontScale {
+      Settings.fontSize = Float(min(2.5, max(1, value.fontScale)))
+    }
+    for (path, stored) in booleans where value[keyPath: path] != old[keyPath: path] {
+      var setting = stored
+      setting.wrappedValue = value[keyPath: path]
     }
   }
 }

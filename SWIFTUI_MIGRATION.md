@@ -671,10 +671,10 @@ another source copy; move old suites there incrementally. Both remain under the
 main shared scheme, and Mainboard's hosted task selects both. XCUITest remains the
 workflow tool. No new package dependency or Python tooling was added.
 
-The audit also found that the three retained legacy celebration switches currently
-have no consumer in the new renderer. MOTION in TASKS.md records this as required
-native-feedback work, including Reduce Motion. Presence of those controls is not
-proof of functional parity. Native Mac full settings, login/account, developer and
+The audit at this checkpoint found that the three retained legacy celebration
+switches had no consumer in the new renderer. The native feedback implementation
+below restores their behavior; TASKS.md retains its UI acceptance evidence.
+Native Mac full settings, login/account, developer and
 download screens, iOS storage handoff and device checks remain open. Exact results
 and the measured scope of deletions are recorded in TASKS.md.
 
@@ -683,4 +683,38 @@ been disconnected. The host now clears its account summary safely instead of
 force-unwrapping a removed client. Latest checkpoint counts supersede the dated
 validation snapshots above: 191 shared functions, 82 hosted app tests, three new
 iPhone settings workflows, eight iPad regression flows and two final iPhone checks.
-See TASKS.md for exact bundles, per-run scope and the open MOTION acceptance item.
+See TASKS.md for exact bundles and per-run scope.
+
+## Native review feedback — 2026-10-18
+
+The shared review screen now reports the previous correct answer, completed-item
++1 and new SRS-category estimates with SF Symbols and native caption text. It
+uses the original triggers: every accepted answer, whole-item completion and
+completion reaching Guru, Master, Enlightened or Burned without an uncorrected
+first-answer penalty. Combined Anki answers still produce one completed item;
+practice can show completion but never claims SRS advancement. The final item
+continues directly to completion; no animation delays a save or navigation.
+
+Correct-answer feedback, Completed item +1 and SRS milestone estimates share the
+same form in full and quick settings. The iOS adapter preserves
+animateParticleExplosion, animatePlusOne and animateLevelUpPopup archives. Native
+preferences decode new fields with defaults while preserving previously saved
+values, and field-wise merging still preserves other windows' unrelated edits.
+The old intermediate ReviewSession.MarkResult wrapper, AnswerResult enum/conversion
+and duplicated animation settings section are removed. The iOS host now uses the
+shared StudyAnswerDecision directly, with unchanged save/defer/exclude ordering.
+One typed mapping handles both reading and field-wise writing of archived boolean
+preferences. The grading/session engine itself is unchanged.
+
+The native store returns a transient success receipt only after the existing
+session/outbox transaction succeeds. Wrong answers and exact-match hints return
+no success receipt, and reopening a saved session cannot replay an effect. The
+native review and practice screens consume the same presentation state as iOS.
+
+Apple's [Reduce Motion environment value](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityreducemotion)
+and [symbol-effects removal](https://developer.apple.com/documentation/swiftui/view/symboleffectsremoved(_:))
+provide the accessibility policy. Static, labelled feedback remains readable
+with Reduce Motion enabled. ViewThatFits switches the feedback row to a vertical
+layout when its captions need more width. No particle renderer, timer, dependency
+or replacement grading path was introduced. This restores missing behavior;
+it is not a claim of an overall LOC reduction or full platform parity.

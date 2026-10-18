@@ -16,11 +16,6 @@ import Foundation
 import StudyCore
 import WaniKaniAPI
 
-enum AnswerResult {
-  case Correct, Incorrect, OverrideAnswerCorrect, AskAgainLater, Exclude
-  var correct: Bool { self == .Correct || self == .OverrideAnswerCorrect }
-}
-
 /// The existing storage implementation remains responsible for durable local writes.
 struct ReviewRepository {
   var subject: (Int64) -> TKMSubject?
@@ -32,13 +27,14 @@ struct ReviewRepository {
 
 extension ReviewRepository {
   init(client: LocalCachingClient) {
-    self.init(subject: { client.getSubject(id: $0) },
-              materials: { client.getStudyMaterial(subjectId: $0) },
-              saveProgress: { _ = client.sendProgress([$0]) },
-              saveMaterials: { _ = client.updateStudyMaterial($0) },
-              setExcluded: { material, excluded in
-                _ = client.setExcluded(studyMaterials: &material, shouldExclude: excluded)
-              })
+    self.init(
+      subject: { client.getSubject(id: $0) },
+      materials: { client.getStudyMaterial(subjectId: $0) },
+      saveProgress: { _ = client.sendProgress([$0]) },
+      saveMaterials: { _ = client.updateStudyMaterial($0) },
+      setExcluded: { material, excluded in
+        _ = client.setExcluded(studyMaterials: &material, shouldExclude: excluded)
+      })
   }
 }
 
@@ -54,10 +50,12 @@ final class ReviewSession {
   let initializationError: String?
   private(set) var activeStudyMaterials: TKMStudyMaterials?
 
-  init(repository: ReviewRepository, items: [ReviewItem], isPracticeSession: Bool = false,
-       options: @escaping () -> StudySessionOptions = ReviewSession.currentOptions,
-       now: @escaping () -> Int64 = { Int64(Date().timeIntervalSince1970) },
-       seed: UInt64 = .random(in: .min ... .max)) {
+  init(
+    repository: ReviewRepository, items: [ReviewItem], isPracticeSession: Bool = false,
+    options: @escaping () -> StudySessionOptions = ReviewSession.currentOptions,
+    now: @escaping () -> Int64 = { Int64(Date().timeIntervalSince1970) },
+    seed: UInt64 = .random(in: .min ... .max)
+  ) {
     self.repository = repository
     legacyItems = items
     self.options = options
@@ -68,25 +66,29 @@ final class ReviewSession {
       guard let subject = item.subject ?? repository.subject(item.assignment.subjectID)
       else { continue }
       subjects[index] = subject
-      entries.append(StudySessionItem(id: index, subjectID: item.assignment.subjectID,
-                                      assignmentID: item.assignment.id,
-                                      srsStage: item.assignment.srsStage.rawValue,
-                                      availableAt: Int64(item.assignment.availableAt),
-                                      isLesson: item.assignment.isLessonStage,
-                                      isKanji: subject.hasKanji,
-                                      hasMeaning: !subject.meanings.isEmpty,
-                                      hasReading: !subject.readings.isEmpty))
+      entries.append(
+        StudySessionItem(
+          id: index, subjectID: item.assignment.subjectID,
+          assignmentID: item.assignment.id,
+          srsStage: item.assignment.srsStage.rawValue,
+          availableAt: Int64(item.assignment.availableAt),
+          isLesson: item.assignment.isLessonStage,
+          isKanji: subject.hasKanji,
+          hasMeaning: !subject.meanings.isEmpty,
+          hasReading: !subject.readings.isEmpty))
     }
     self.subjects = subjects
     do {
       guard entries.count == items.count else { throw StudySessionError.missingQuestionContent(-1) }
-      state = try StudySession(items: entries, options: options(), isPractice: isPracticeSession,
-                               seed: seed)
+      state = try StudySession(
+        items: entries, options: options(), isPractice: isPracticeSession,
+        seed: seed)
       initializationError = nil
     } catch {
       // Leave every assignment untouched; an incomplete catalog must not silently skip reviews.
-      state = try! StudySession(items: [], options: options(), isPractice: isPracticeSession,
-                                seed: seed)
+      state = try! StudySession(
+        items: [], options: options(), isPractice: isPracticeSession,
+        seed: seed)
       initializationError =
         "Some study items are missing their question data. Sync your account and try again."
     }
@@ -96,8 +98,10 @@ final class ReviewSession {
     var value = StudySessionOptions()
     value.batchSize = Settings.reviewBatchSize
     value.groupMeaningReading = Settings.groupMeaningReading
-    value.combinedAnki = Settings.ankiMode && Settings.ankiModeCombineReadingMeaning && Settings
-      .ankiModeTaskType == .both
+    value.combinedAnki =
+      Settings.ankiMode && Settings.ankiModeCombineReadingMeaning
+      && Settings
+        .ankiModeTaskType == .both
     value.meaningFirst = Settings.meaningFirst
     value.incorrectAnswerDelay = Settings.incorrectAnswerReturnDelay
     value.skipKanjiReadings = Settings.skipKanjiReadings
@@ -128,8 +132,10 @@ final class ReviewSession {
     state.options = options()
     guard let question = state.nextQuestion(continuingCurrentItem: continuingCurrentItem)
     else { return }
-    activeStudyMaterials = activeTask.subject == nil ? repository
-      .materials(activeTask.assignment.subjectID) : nil
+    activeStudyMaterials =
+      activeTask.subject == nil
+      ? repository
+        .materials(activeTask.assignment.subjectID) : nil
     copyProgress(for: question.itemID)
   }
 
@@ -151,27 +157,13 @@ final class ReviewSession {
     copyProgress(for: question.itemID)
   }
 
-  struct MarkResult {
-    let subjectFinished: Bool
-    let didLevelUp: Bool
-    let newSrsStage: SRSStage
-  }
-
-  func markAnswer(_ result: AnswerResult) -> MarkResult? {
+  func markAnswer(_ decision: StudyAnswerDecision) -> StudyMarkResult? {
     guard let question = state.question else { return nil }
-    let decision: StudyAnswerDecision
-    switch result {
-    case .Correct: decision = .correct
-    case .Incorrect: decision = .incorrect
-    case .OverrideAnswerCorrect: decision = .overrideCorrect
-    case .AskAgainLater, .Exclude: return nil
-    }
     state.options = options()
     guard let mark = try? state.mark(decision, for: question, now: now()) else { return nil }
     copyProgress(for: question.itemID)
     if mark.submission != nil { repository.saveProgress(legacyItems[question.itemID].answer) }
-    return MarkResult(subjectFinished: mark.subjectFinished, didLevelUp: mark.didLevelUp,
-                      newSrsStage: SRSStage(rawValue: mark.estimatedSRSStage)!)
+    return mark
   }
 
   private func copyProgress(for id: Int) {
@@ -179,10 +171,16 @@ final class ReviewSession {
     let item = legacyItems[id]
     item.answeredMeaning = value.meaning.answered
     item.answeredReading = value.reading.answered
-    if let wrong = value.meaning.firstAnswerWrong { item.answer.meaningWrong = wrong }
-    else { item.answer.clearMeaningWrong() }
-    if let wrong = value.reading.firstAnswerWrong { item.answer.readingWrong = wrong }
-    else { item.answer.clearReadingWrong() }
+    if let wrong = value.meaning.firstAnswerWrong {
+      item.answer.meaningWrong = wrong
+    } else {
+      item.answer.clearMeaningWrong()
+    }
+    if let wrong = value.reading.firstAnswerWrong {
+      item.answer.readingWrong = wrong
+    } else {
+      item.answer.clearReadingWrong()
+    }
     item.answer.meaningWrongCount = Int32(clamping: value.meaning.wrongCount)
     item.answer.readingWrongCount = Int32(clamping: value.reading.wrongCount)
     if let date = value.createdAt { item.answer.createdAt = Int32(clamping: date) }

@@ -27,6 +27,9 @@ final class ReviewPreferencesAdapterTest: XCTestCase {
     "allowSkippingReviews",
     "playAudioAutomatically",
     "interruptBackgroundAudio",
+    "animateParticleExplosion",
+    "animatePlusOne",
+    "animateLevelUpPopup",
   ]
   private var saved: [String: Any] = [:]
 
@@ -37,8 +40,11 @@ final class ReviewPreferencesAdapterTest: XCTestCase {
 
   override func tearDown() {
     for key in keys {
-      if let value = saved[key] { UserDefaults.standard.set(value, forKey: key) }
-      else { UserDefaults.standard.removeObject(forKey: key) }
+      if let value = saved[key] {
+        UserDefaults.standard.set(value, forKey: key)
+      } else {
+        UserDefaults.standard.removeObject(forKey: key)
+      }
     }
     super.tearDown()
   }
@@ -62,20 +68,28 @@ final class ReviewPreferencesAdapterTest: XCTestCase {
     new.allowSkipping.toggle()
     new.autoplayAudio.toggle()
     new.interruptBackgroundAudio.toggle()
+    new.correctAnswerFeedback.toggle()
+    new.completedItemFeedback.toggle()
+    new.srsMilestoneFeedback.toggle()
     ReviewPreferencesAdapter.apply(new, replacing: old)
     XCTAssertEqual(ReviewPreferencesAdapter.current, new)
     XCTAssertEqual(Settings.interfaceStyle, .dark)
     XCTAssertEqual(Settings.srsLevelIndicatorStyle, .none)
+    XCTAssertEqual(Settings.animateParticleExplosion, new.correctAnswerFeedback)
+    XCTAssertEqual(Settings.animatePlusOne, new.completedItemFeedback)
+    XCTAssertEqual(Settings.animateLevelUpPopup, new.srsMilestoneFeedback)
     for key in keys { XCTAssertTrue(UserDefaults.standard.object(forKey: key) is Data, key) }
   }
 
   func testAppliesOnlyChangedFields() {
     let old = ReviewPreferencesAdapter.current
     Settings.playAudioAutomatically = !old.autoplayAudio
+    Settings.animatePlusOne = !old.completedItemFeedback
     var new = old
     new.exactMatch.toggle()
     ReviewPreferencesAdapter.apply(new, replacing: old)
     XCTAssertEqual(Settings.exactMatch, new.exactMatch)
     XCTAssertEqual(Settings.playAudioAutomatically, !old.autoplayAudio)
+    XCTAssertEqual(Settings.animatePlusOne, !old.completedItemFeedback)
   }
 }

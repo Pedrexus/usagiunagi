@@ -34,25 +34,28 @@ public struct KatakanaPractice: Sendable {
 
   /// The question token rejects late callbacks after skipping or advancing.
   public mutating func answer(_ text: String, for token: StudyQuestion, convertRomaji: Bool = true)
-    throws -> (grade: AnswerGrade, normalized: String)
+    throws -> (grade: AnswerGrade, normalized: String, success: StudyMarkResult?)
   {
     guard question == token, let subject else { throw StudySessionError.staleQuestion }
     let input = convertRomaji ? KanaConverter.convert(text).text : text
     let normalized = AnswerGrader.normalizedString(input, taskType: .reading)
     let grade = AnswerGrader.checkNormalizedAnswer(
       normalized, subject: subject, synonyms: [], taskType: .reading, subjectLookup: { _ in nil })
+    var success: StudyMarkResult?
     if grade == .precise || grade == .imprecise {
-      _ = try session.mark(.correct, for: token, now: 0)
+      success = try session.mark(.correct, for: token, now: 0)
       session.nextQuestion()
     } else if grade == .incorrect {
       _ = try session.mark(.incorrect, for: token, now: 0)
     }
-    return (grade, normalized)
+    return (grade, normalized, success)
   }
 
-  public mutating func correct(_ token: StudyQuestion) throws {
-    _ = try session.mark(.overrideCorrect, for: token, now: 0)
+  @discardableResult public mutating func correct(_ token: StudyQuestion) throws -> StudyMarkResult
+  {
+    let success = try session.mark(.overrideCorrect, for: token, now: 0)
     session.nextQuestion()
+    return success
   }
   public mutating func advance(_ token: StudyQuestion) throws {
     guard question == token, session.currentDecision == .incorrect else {

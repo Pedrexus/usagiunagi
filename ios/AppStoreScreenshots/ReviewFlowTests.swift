@@ -16,6 +16,124 @@ import XCTest
 
 final class ReviewFlowTests: XCTestCase {
   @MainActor
+  func testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft() {
+    continueAfterFailure = false
+    let app = launchSingleReview(extra: [
+      "-animateParticleExplosion", "YES", "-animatePlusOne", "YES", "-animateLevelUpPopup", "YES",
+    ])
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("personally")
+    app.buttons["review.submit"].tap()
+    let feedback = app.descendants(matching: .any).matching(identifier: "review.success").firstMatch
+    XCTAssertTrue(feedback.waitForExistence(timeout: 5))
+    XCTAssertTrue(feedback.label.contains("Previous answer correct"))
+    XCTAssertFalse(feedback.label.contains("+1"))
+    XCTAssertFalse(feedback.label.contains("Estimated SRS"))
+    field.tap()
+    field.typeText("wata")
+    app.buttons["review.settings"].tap()
+    let correct = app.switches["reviewSettings.correctAnswerFeedback"]
+    scrollTo(correct, in: app)
+    setSettingsSwitch(correct, on: false, in: app)
+    XCTAssertEqual(app.switches["reviewSettings.completedItemFeedback"].value as? String, "1")
+    XCTAssertEqual(app.switches["reviewSettings.srsMilestoneFeedback"].value as? String, "1")
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertEqual(field.value as? String, "わた")
+    XCTAssertFalse(feedback.label.contains("Previous answer correct"))
+    app.buttons["review.settings"].tap()
+    scrollTo(correct, in: app)
+    XCTAssertEqual(correct.value as? String, "0")
+    app.buttons["reviewSettings.done"].tap()
+    app.typeText("shijishin")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  func testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion() {
+    continueAfterFailure = false
+    changeReduceMotion(to: true, restoreAfterTest: true)
+    let app = launchSingleReview(extra: [
+      "ReviewFeedbackFixture", "-ankiMode", "YES",
+      "-ankiModeCombineReadingMeaning", "YES", "-animateParticleExplosion", "YES",
+      "-animatePlusOne", "YES", "-animateLevelUpPopup", "YES",
+    ])
+    defer { clearFixture(app) }
+    app.buttons["review.submit"].tap()
+    app.buttons["review.correct"].tap()
+    let feedback = app.descendants(matching: .any).matching(identifier: "review.success").firstMatch
+    XCTAssertTrue(feedback.waitForExistence(timeout: 5))
+    XCTAssertTrue(feedback.label.contains("Previous answer correct"))
+    XCTAssertTrue(feedback.label.contains("+1 completed"))
+    XCTAssertTrue(feedback.label.contains("Estimated SRS stage: Guru"))
+    XCTAssertTrue(app.staticTexts["review.progress"].label.contains("1 completed"))
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "Native review feedback with Reduce Motion"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.buttons["review.settings"].tap()
+    let completed = app.switches["reviewSettings.completedItemFeedback"]
+    scrollTo(completed, in: app)
+    setSettingsSwitch(completed, on: false, in: app)
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertFalse(feedback.label.contains("+1 completed"))
+    XCTAssertTrue(feedback.label.contains("Estimated SRS stage: Guru"))
+    app.buttons["review.settings"].tap()
+    let milestone = app.switches["reviewSettings.srsMilestoneFeedback"]
+    scrollTo(milestone, in: app)
+    setSettingsSwitch(milestone, on: false, in: app)
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertFalse(feedback.label.contains("Estimated SRS"))
+    XCTAssertTrue(feedback.label.contains("Previous answer correct"))
+    app.buttons["review.submit"].tap()
+    app.buttons["review.correct"].tap()
+    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor private func changeReduceMotion(to enabled: Bool, restoreAfterTest: Bool = false) {
+    let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+    settings.launch()
+    defer { settings.terminate() }
+    let control = settings.switches["Reduce Motion"]
+    if !control.exists {
+      for title in ["Accessibility", "Settings"] {
+        let back = settings.navigationBars.buttons[title].firstMatch
+        if back.exists { back.tap() }
+      }
+      let sidebar = settings.collectionViews["com.apple.settings.sidebar.collectionView"]
+      let navigation = sidebar.exists ? sidebar : settings
+      navigation.swipeDown(velocity: .fast)
+      navigation.swipeDown(velocity: .fast)
+      let accessibility = settings.buttons["Accessibility"]
+      for _ in 0..<8 {
+        if accessibility.exists && accessibility.isHittable { break }
+        navigation.swipeUp()
+      }
+      XCTAssertTrue(accessibility.waitForExistence(timeout: 5))
+      accessibility.tap()
+      let motion = settings.descendants(matching: .any).matching(
+        NSPredicate(format: "label == %@", "Motion")
+      ).firstMatch
+      for _ in 0..<8 {
+        if motion.exists && motion.isHittable { break }
+        settings.swipeUp()
+      }
+      XCTAssertTrue(motion.waitForExistence(timeout: 5))
+      motion.tap()
+    }
+    XCTAssertTrue(control.waitForExistence(timeout: 5))
+    let previous = control.value as? String == "1"
+    if restoreAfterTest {
+      addTeardownBlock { [self] in
+        await MainActor.run { changeReduceMotion(to: previous) }
+      }
+    }
+    setSettingsSwitch(control, on: enabled, in: settings)
+  }
+
+  @MainActor
   func testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges() {
     continueAfterFailure = false
     let app = XCUIApplication()

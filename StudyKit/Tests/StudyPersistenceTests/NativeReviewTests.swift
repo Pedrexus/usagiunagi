@@ -24,6 +24,7 @@ struct NativeReviewTests {
     do {
       let store = try await store(at: url)
       let opened = try await store.openReviews(accountID: account, now: now)
+      #expect(opened.success == nil)
       let question = try #require(opened.question)
       initial = try await store.answerReview(
         question.kind == .meaning ? "single" : "いち", question: question, accountID: account,
@@ -35,6 +36,7 @@ struct NativeReviewTests {
     }
     let reopened = try await StudyStore.open(at: url)
     let resumed = try await reopened.openReviews(accountID: account, now: now)
+    #expect(resumed.success == nil)
     #expect(
       resumed.saved.revision == initial.saved.revision && resumed.question == initial.question)
     let reading = try #require(resumed.question)
@@ -43,6 +45,7 @@ struct NativeReviewTests {
       expectedRevision: resumed.saved.revision,
       now: now)
     #expect(complete.state.question == nil)
+    #expect(complete.state.success?.subjectFinished == true)
     let snapshot = try #require(await reopened.snapshot(credentialID: "credential"))
     #expect(snapshot.pendingReviews == 1 && snapshot.assignments.isEmpty)
     #expect(try await reopened.pendingReviews(accountID: account).count == 1)
@@ -86,11 +89,16 @@ struct NativeReviewTests {
       expectedRevision: initial.saved.revision,
       now: now)
     #expect(wrong.grade == .incorrect && wrong.state.saved.session.currentDecision == .incorrect)
+    #expect(wrong.state.success == nil)
     let restored = try await store.openReviews(accountID: account, now: now)
     #expect(restored.saved.session.currentDecision == .incorrect)
+    #expect(restored.success == nil)
     let corrected = try await store.changeReview(
       .overrideCorrect, accountID: account, expectedRevision: restored.saved.revision, now: now)
     #expect(corrected.saved.session.successRate == 100 && corrected.question?.kind != question.kind)
+    #expect(corrected.success?.subjectFinished == false)
+    let reopened = try await store.openReviews(accountID: account, now: now)
+    #expect(reopened.success == nil)
     #expect(corrected.saved.session.items[question.itemID]?.meaning.wrongCount == 0)
     await #expect(throws: StudyStoreError.self) {
       try await store.finishReviews(accountID: account, expectedRevision: corrected.saved.revision)
@@ -334,6 +342,7 @@ extension NativeReviewTests {
       exactMatch: exactMatch, now: now)
     #expect(checked.grade == .imprecise)
     if exactMatch {
+      #expect(checked.state.success == nil)
       #expect(checked.state.saved.revision == opened.saved.revision)
       #expect(checked.state.question == question)
       #expect(checked.state.saved.session.tasksAnswered == opened.saved.session.tasksAnswered)
@@ -345,8 +354,10 @@ extension NativeReviewTests {
         "bunny", question: question, accountID: account, expectedRevision: restored.saved.revision,
         exactMatch: true, now: now)
       #expect(exact.grade == .precise)
+      #expect(exact.state.success != nil)
       #expect(exact.state.saved.session.items[question.itemID]?.meaning.answered == true)
     } else {
+      #expect(checked.state.success != nil)
       #expect(checked.state.saved.revision != opened.saved.revision)
       #expect(checked.state.saved.session.items[question.itemID]?.meaning.answered == true)
     }
