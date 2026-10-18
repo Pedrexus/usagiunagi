@@ -99,7 +99,7 @@ import WaniKaniAPI
           arguments["apprenticeLessonsLimit"] = data
         }
         defaults.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
-        if ProcessInfo.processInfo.arguments.contains("ResetUserDefaults") {
+        if ProcessInfo.processInfo.arguments.contains("ResetUserDefaults") || ProcessInfo.processInfo.arguments.contains("LoginFlowFixture") {
           // We're run again after testing finishes to remove the dummy user.
           Settings.userApiToken = ""
           Settings.userEmailAddress = ""
@@ -114,6 +114,9 @@ import WaniKaniAPI
 
     static func createLocalCachingClient(client: WaniKaniAPIClient,
                                          reachability: Reachability) -> LocalCachingClient {
+      if isActive, ProcessInfo.processInfo.arguments.contains("LoginFlowFixture") {
+        return LoginFixtureCachingClient(client: client, reachability: reachability)
+      }
       if isActive, ProcessInfo.processInfo.arguments.contains("ShellFlowFixture") {
         return ShellFixtureCachingClient(client: client, reachability: reachability)
       }

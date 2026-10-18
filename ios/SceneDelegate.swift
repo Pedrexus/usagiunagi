@@ -134,7 +134,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
   }
 
   private func pushLoginViewController() {
-    let vc = StoryboardScene.Login.initialScene.instantiate()
+    let vc = LoginViewController()
     vc.delegate = self
     navigationController.setViewControllers([vc], animated: false)
   }

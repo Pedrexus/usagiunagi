@@ -50,7 +50,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and navigatio
 
 | Area | Current implementation | Proposed treatment |
 | --- | --- | --- |
-| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 20 storyboards and zero XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. Root header, vacation and refresh presentation now use SwiftUI. | Finish app-shell ownership, login/account/vacation presentation and native Mac feature parity; remove each remaining layout/accessor after its callers migrate. |
+| Screens and navigation | Shared SwiftUI reviews, lessons, statistics and catalog; native SwiftUI iOS main settings. The current app-owned tree has 19 storyboards and zero XIBs, including thin hosting scenes, launch screens and auxiliary/watch targets. Root header, vacation, login and refresh presentation now use SwiftUI. | Finish native navigation/scene ownership, account alerts and native Mac feature parity; remove each remaining layout/accessor after its callers migrate. |
 | Home and statistics | Shared SwiftUI Home and statistics; custom table framework and Home drawing retired | Native `List`, `Section`, `Label`, `Button`, `TabView`, `NavigationStack`, semantic colors and system fonts. Keep study-specific Japanese font settings. |
 | Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Home hourly, level and SRS charts now use Swift Charts too; preserve the native chart accessibility and navigation regressions. |
 | Input | Shared Swift `KanaConverter`, Swift `TKMKanaInput`/`AnswerTextField`, keyboard overrides | Objective-C conversion removed after 86,210 full-string and 11,392 interactive comparisons. Keep the narrow native adapter for selection/composition and later wrap it in `UIViewRepresentable`; physical input-method checks remain open. The review screen now hosts this input through `UIViewRepresentable`. |
@@ -89,7 +89,7 @@ Mac reads full study content through URLSession/async-await and commits it in th
 
 | Feature | Swift/SwiftUI outcome | Choice still needed |
 | --- | --- | --- |
-| Home, settings, catalog, review UI, lesson UI | Home, review, lessons, catalog/details, statistics and iOS settings/media/diagnostics render in SwiftUI; tab/navigation/login/account ownership and native Mac parity remain | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
+| Home, settings, catalog, review UI, lesson UI | Home, review, lessons, catalog/details, statistics and iOS settings/media/diagnostics render in SwiftUI; tab/navigation/account ownership and native Mac parity remain | Preserve features while replacing each screen and deleting its old implementation. No need to disable them. |
 | Rich review answer details and font library | Shared SwiftUI presentation behind small iOS navigation/service hosts | Rich details, note/synonym editing and the iOS font library now render in shared SwiftUI. Core Text handles font registration and URLSession handles downloads; these are native services rather than UI exceptions. Native Mac font-library integration remains open. |
 | Forced Japanese keyboard selection and marked-text behavior | Needs a small UIKit text-input adapter until SwiftUI provides equivalent control | Keep the adapter, or accept system-selected keyboard language after explicit input-parity testing. |
 | SVG-only radicals | SwiftUI Image does not directly replace the existing SVG renderer | Native reviews use Apple’s SwiftUI WebView with a small HTML image wrapper, disabled scripts and local SVG bytes. No app-owned UIKit/AppKit representable is needed. The legacy iOS SVGKit path remains until its callers migrate. |
@@ -937,3 +937,46 @@ Native APIs consulted: [ProgressView](https://developer.apple.com/documentation/
 and [public test URL launch](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/open(_:)).
 Historical cache naming/directory compatibility was checked against the vendored
 Haneke 1.0.2 implementation before deletion.
+
+## Native sign-in and drawing cleanup audit (2026-10-18)
+
+The current inventory is **19 storyboards / zero XIBs**. Login content no longer
+uses a storyboard or custom UIKit drawing. The account remains owned by the
+existing iOS services until the controlled persistence/sync cutover.
+
+| File | Decision and preserved behavior |
+| --- | --- |
+| StudyCore/StudySignIn.swift | Shared strict Swift 6 state and typed Sendable credentials/result. MainActor authentication injection, snapshot/duplicate protection, forced email, exact passwords, token whitespace normalization and cancelled/stale-result rejection. Owns no persistent store. |
+| StudyUI/Account/StudySignInView.swift | Native adaptive Form/SecureField/PasteButton/Links/focus/submit and inline error/reactivation guidance. Uses system fonts/appearance, existing WaniKani accent and localized app name; no custom drawing or forced night palette. Native token entry is shared with Mac. |
+| StudyCoreTests/StudySignInTests.swift | Six functions verify success/failure/hibernation/retry, immutable request drafts, forced email, duplicate protection, cancellation and a newer request surviving an obsolete result. All shared tests pass on Mac/iOS. |
+| ios/Features/Account/LoginViewController.swift | Small hosting/navigation adapter. Preserves existing token/user endpoint, custom base URL, developer-only password login, web token extraction, hibernation classification and token/email delegate handoff. Credentials are saved only after accepted success. Underlying legacy requests remain pending migration; stale completions cannot save. |
+| ios/LoginViewController.swift | Deleted old manual layout, text delegates, button styling, UIKit error/activity overlays and animations after replacement flows passed. License retained in the new host. |
+| ios/HankoView.swift | Deleted unused login-only custom seal drawing after the login replacement. The shipped layered kanji icon and localized identity are retained. |
+| ios/WavesView.swift | Deleted unused login-only drawing; no active consumer remains. |
+| ios/Resources/Login.storyboard | Deleted after native login checks. Removes 194 layout lines and the generated Login factory. Both final built app products contain no Login storyboard. |
+| ios/Features/Home/MainViewController.swift | Reauthentication directly constructs the native host with the same forced-email value/delegate. Existing authorization/sync ownership remains. |
+| ios/SceneDelegate.swift | Initial sign-in directly constructs the native host. Existing successful-login sync and logout semantics remain; no second store or writer. |
+| ios/Style.swift | Removes only three unused night-surface colors after their final consumers retired. All active subject/semantic colors remain. |
+| ios/Generated/IB-Scenes+Generated.swift and project | SwiftGen removes the retired Login factory. Project references retain the new host path and remove old storyboard/drawing memberships. |
+| ios/AppStoreScreenshots/LoginFixture.swift and Screenshotter.swift | Debug-only deterministic auth and synthetic cache; login/logout clear operations are no-ops, protecting persistent simulator study data. No real account/network is used. |
+| ios/AppStoreScreenshots/ReviewFlowTests.swift | Token rejection/hibernation/success/confirmed logout and developer-password draft/keyboard routes pass on phone/tablet. Model tests cover forced email and request/cancellation ownership; physical AutoFill is still required. |
+| native/TsurukameMacApp.swift | Reuses native token/paste/link component. Existing Keychain connect/sync and disconnect logic remains. Build verified; physical/native account acceptance remains open. |
+
+Production Swift falls **24,101 → 23,884 physical lines**, 217 fewer against
+a4f6401 under the same filters recorded in TASKS.md; source file count stays 152.
+Tests, Debug fixture files, Pods/generated/build output and user annotations are
+excluded. Login's retired storyboard removes another 194 layout lines.
+
+No feature was disabled. Native account alerts/navigation, iOS writer/networking
+cutover, keyboard composition, SVG/watch bridges, Mac study/settings parity,
+calibrated forecasts and device/accessibility acceptance remain required. The
+shared UI does not imply that SwiftUI replaces Keychain, Speech, networking or
+storage services. The complete modernization goal is still active.
+
+Apple references checked for this migration:
+[PasteButton](https://developer.apple.com/documentation/swiftui/pastebutton),
+[typed paste initializer](https://developer.apple.com/documentation/swiftui/pastebutton/init(payloadtype:onpaste:)),
+[SecureField](https://developer.apple.com/documentation/swiftui/securefield), and
+[submit labels](https://developer.apple.com/documentation/swiftui/view/submitlabel(_:)).
+Only primary Apple documentation was used for API decisions. Exact test bundles,
+remaining limitations and source/retirement inventories are in TASKS.md.

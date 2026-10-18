@@ -27,11 +27,6 @@ internal enum StoryboardScene {
 
     internal static let initialScene = InitialSceneType<Tsurukame.LessonsViewController>(storyboard: Self.self)
   }
-  internal enum Login: StoryboardType {
-    internal static let storyboardName = "Login"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.LoginViewController>(storyboard: Self.self)
-  }
   internal enum Main: StoryboardType {
     internal static let storyboardName = "Main"
 

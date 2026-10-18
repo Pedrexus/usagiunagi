@@ -175,10 +175,6 @@ class TKMStyle: NSObject {
     static let grey80 = UIColor.systemGray4
     static let accent = TKMStyle.defaultTintColor
     static let incorrectAnswer = UIColor.systemRed
-    // Legacy surfaces kept until their screens migrate to native controls.
-    static let night = uiColorFromHex(0x1B2740)
-    static let onNight = uiColorFromHex(0xF5EFE3)
-    static let onNightSecondary = uiColorFromHex(0xC9C1B1)
 
     // Markup colors for mnemonics.
     static let markupRadicalForeground = label

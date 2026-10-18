@@ -414,8 +414,7 @@ private struct MacStudyRoot: View {
         Form {
             Section("WaniKani account") {
                 Text("Native Mac statistics, subject browsing and saved offline reviews. Lessons and full study settings are still being migrated.").foregroundStyle(.secondary)
-                SecureField("API token", text: $token)
-                Link("Create a token in WaniKani", destination: URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
+                StudyTokenEntry(token: $token)
                 Text("Connect and refresh use reading access. Sending from Saved work also requires the corresponding review, assignment or study-material write permissions. The token stays in this Mac's Keychain; saved work stays on this device.").font(.caption).foregroundStyle(.secondary)
                 Button("Connect and sync") { Task { if await store.connect(token) { token = ""; section = .statistics } } }.disabled(store.isSyncing || token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 if let snapshot = store.snapshot, !snapshot.isSample {

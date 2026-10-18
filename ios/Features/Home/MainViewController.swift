@@ -326,13 +326,9 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
       return
     }
 
-    let vc = StoryboardScene.Login.initialScene.instantiate()
+    let vc = LoginViewController(
+      forcedEmail: Settings.userEmailAddress.isEmpty ? nil : Settings.userEmailAddress)
     vc.delegate = self
-    if !Settings.userEmailAddress.isEmpty {
-      vc.forcedEmail = Settings.userEmailAddress
-    } else {
-      vc.forcedEmail = nil
-    }
     navigationController?.pushViewController(vc, animated: true)
   }
 

@@ -15,6 +15,73 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor func testNativeLoginTokenFailuresHibernationAndHomeNavigation() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "LoginFlowFixture"]
+    defer { clearFixture(app) }
+    for token in ["invalid", "hibernating", "fixture-token"] {
+      app.terminate()
+      app.launch()
+      let field = app.secureTextFields["login.token"]
+      XCTAssertTrue(field.waitForExistence(timeout: 10))
+      XCTAssertFalse(app.buttons["login.submit"].isEnabled)
+      XCTAssertTrue(app.buttons["login.paste"].exists)
+      XCTAssertTrue(app.links["login.createToken"].exists)
+      field.tap()
+      field.typeText(token)
+      XCTAssertTrue(app.buttons["login.submit"].isEnabled)
+      app.buttons["login.submit"].tap()
+      if token == "fixture-token" {
+        XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["app.settings"].isHittable)
+        XCTAssertFalse(app.secureTextFields["login.token"].exists)
+        app.buttons["app.settings"].tap()
+        let logout = app.buttons["settings.logout"]
+        scrollTo(logout, in: app)
+        logout.tap()
+        XCTAssertTrue(app.alerts["Log out?"].waitForExistence(timeout: 5))
+        app.alerts["Log out?"].buttons["Log out"].tap()
+        XCTAssertTrue(app.secureTextFields["login.token"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["login.submit"].isEnabled)
+        XCTAssertFalse(app.collectionViews["home.dashboard"].exists)
+
+      } else {
+        XCTAssertTrue(app.staticTexts["login.error"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["login.submit"].isEnabled)
+        XCTAssertEqual(app.links["login.reactivate"].exists, token == "hibernating")
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        if token == "hibernating" { attachHomeScreenshot("Native login hibernation guidance") }
+      }
+    }
+  }
+
+  @MainActor func testNativeLoginPasswordModePreservesDraftAndSubmitsFromKeyboard() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "LoginFlowFixture"]
+    app.launch()
+    defer { clearFixture(app) }
+    XCTAssertTrue(app.buttons["login.method"].waitForExistence(timeout: 10))
+    app.buttons["login.method"].tap()
+    let email = app.textFields["login.email"]
+    XCTAssertTrue(email.waitForExistence(timeout: 5))
+    email.tap()
+    email.typeText("learner@example.test\n")
+    let password = app.secureTextFields["login.password"]
+    XCTAssertTrue(password.waitForExistence(timeout: 5))
+    password.typeText("fixture-password")
+    app.buttons["login.method"].tap()
+    XCTAssertTrue(app.secureTextFields["login.token"].exists)
+    app.buttons["login.method"].tap()
+    XCTAssertEqual(email.value as? String, "learner@example.test")
+    XCTAssertTrue(app.buttons["login.submit"].isEnabled)
+    attachHomeScreenshot("Native email login with preserved draft")
+    password.tap()
+    password.typeText("\n")
+    XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
+  }
+
   @MainActor func testShellColdReviewLessonAndSubjectLinksReturnToHome() {
     continueAfterFailure = false
     let app = XCUIApplication()
