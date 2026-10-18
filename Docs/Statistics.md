@@ -1,6 +1,6 @@
 # Statistics: sources, definitions and limits
 
-Researched 2026-10-17. The first implementation uses existing synced WaniKani records; it does not upload account data to another service or change review scheduling.
+Researched 2026-10-17; interface inspection and pace validation updated 2026-10-18. The first implementation uses existing synced WaniKani records; it does not upload account data to another service or change review scheduling.
 
 ## Related tools
 
@@ -18,6 +18,7 @@ Researched 2026-10-17. The first implementation uses existing synced WaniKani re
 | Next seven days | Each active assignment's next future date, grouped by local calendar day, starting today | Does not recursively simulate SRS repetitions, new lessons or errors. A lower bound on scheduled work, not a total workload prediction. Calendar boundaries use calendar arithmetic rather than fixed 24-hour days. |
 | Typical pace | Median unlocked-to-passed duration of up to 8 latest passed levels, excluding levels 1–2 and recorded abandoned/pre-reset attempts; at least 3 samples | Includes breaks. Incomplete reset history or changes in study habits may still bias the sample. |
 | Pace range | Linearly interpolated 25th and 75th percentiles of those durations | Describes the middle half of observed pace. **Not a confidence or prediction interval.** |
+| Past pace check | Reconstruct up to 8 recent completed-level estimates from up to 8 earlier levels that had passed by each target level’s unlock time; require 3 training levels per estimate and 3 held-out levels | Shows mean absolute duration/date error and observed quartile-band hits. Later completions cannot train earlier estimates. Uses currently available level/reset records, not a complete historical account snapshot or stored forecasts. |
 | Next-level scenario | Current level unlock time + those two durations | Requires a known active level, no pending uploads/vacation, level below 60 and current elapsed time below the lower duration. Otherwise no date is shown. Does not model critical-path kanji or level-specific minimum times. |
 | Focus next | Active, visible items with at least 5 answers and 2 errors on a side; use the worse eligible side | Priority score is `(errors + 1) / (answers + 2) / sqrt(currentCorrectStreak + 1)`. Zero streak is valid. Radicals have no reading side. This is a heuristic, not an estimated failure probability. |
 
@@ -27,11 +28,11 @@ The screen shows counts and relevant assumptions. Focus rows open existing subje
 
 Keep exact schedules separate from conditional forecasts. Collect consented local review-event history with timestamps, result, stage and lesson choices before claiming recent trends or fitting a model. A local history will be incomplete for reviews performed on other clients unless the API supplies them. The [current API contract](https://docs.api.wanikani.com/20170710/#create-a-review) explicitly says individual reviews are no longer persisted and review creation returns an unpersisted object with ID zero; full remote review history must not be assumed available.
 
-Backtest candidate forecasts chronologically against held-out future periods. Compare against a simple median-pace baseline. Report absolute date/workload error, sample size, and interval coverage; test resets, long breaks, fast levels and habit changes separately. Do not label a percentile band “80% confidence” without calibration. A useful next iteration would simulate known SRS intervals and critical-path kanji under explicit lesson/review scenarios, then compare those scenarios with observed outcomes.
+The current median baseline is now checked chronologically against held-out completed levels. Compare richer candidate forecasts against that baseline on the same held-out periods. Compare against a simple median-pace baseline. Report absolute date/workload error, sample size, and interval coverage; test resets, long breaks, fast levels and habit changes separately. Do not label a percentile band “80% confidence” without calibration. A useful next iteration would simulate known SRS intervals and critical-path kanji under explicit lesson/review scenarios, then compare those scenarios with observed outcomes.
 
 ## Validation
 
-`StudyStatisticsTest` covers empty data, weighted accuracy, hidden subjects, duplicate assignments, lesson/burned exclusion, missing due dates, minimum focus evidence, zero/recovery streaks, median/quartile arithmetic, vacation/overdue scenarios, resets and duplicate level records. Existing grading/kana tests remain enabled.
+`StudyStatisticsTest` covers empty data, weighted accuracy, hidden subjects, duplicate assignments, lesson/burned exclusion, missing due dates, minimum focus evidence, zero/recovery streaks, median/quartile arithmetic, vacation/overdue scenarios, resets and duplicate level records. Existing grading/kana tests remain enabled. `StudyPaceValidationTests` covers stable pace, insufficient evidence, changes in habits, no future leakage, overlapping records, bounded training/evaluation windows, resets, duplicates, invalid dates and vacation. Native Mac UI acceptance checks the displayed error, inline plot expansion and collapse, without opening a sheet. All acceptance data is synthetic; no live account exercise is used.
 
 Simulator sample-data checks do not establish real-account sync correctness, prediction calibration or physical-device input behavior. No such claims are made.
 
@@ -39,7 +40,7 @@ Simulator sample-data checks do not establish real-account sync correctness, pre
 
 The shared SwiftUI dashboard separates Progress, Coverage and Focus. Progress plots SRS stages, meaning/reading accuracy, next scheduled reviews and recent level durations. Coverage uses horizontal stacked bars, configurable Started/Guru+/Master+/Burned thresholds, exact counts, and inline expandable grids of remaining kanji. Chart interaction never presents coverage sheets. Expanded counts use the current threshold and saved snapshot rather than a captured modal value. Reference lists ship in the StudyCore resource bundle; viewing coverage needs no download. Colored kanji open saved subject details; gray kanji remain visible when outside the synced catalog. Focus exposes the underlying error counts and recovery streak.
 
-The design was checked against the current [WaniKani public homepage](https://www.wanikani.com/), including its imagery. The app borrows clear hierarchy and WaniKani's radical blue, kanji pink and vocabulary purple identities, using system fonts, SF Symbols and native controls rather than copying the marketing illustrations. The authenticated WaniKani dashboard and WKStats account views were not accessed.
+The design was checked against the current [WaniKani public homepage](https://www.wanikani.com/), including its imagery. The app borrows clear hierarchy and WaniKani's radical blue, kanji pink and vocabulary purple identities, using system fonts, SF Symbols and native controls rather than copying the marketing illustrations. The existing signed-in Chrome WaniKani dashboard was subsequently inspected read-only: separate lesson/review cards, forecast, recent mistakes, Extra Study, level progress and Item Spread. Home follows that hierarchy. No live exercise was opened, progress changed or browser credential extracted. WKStats account views were not accessed.
 
 | Reference | Implemented scope | Interpretation |
 | --- | --- | --- |

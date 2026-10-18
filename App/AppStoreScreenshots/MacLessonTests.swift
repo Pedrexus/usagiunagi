@@ -5,7 +5,7 @@ final class MacLessonTests: XCTestCase {
   private func launchQuiz() -> XCUIApplication {
     continueAfterFailure = false
     let app = XCUIApplication()
-    app.launchArguments = ["ReviewFixture", "LessonFixture"]
+    app.launchArguments = ["--review-fixture", "--lesson-fixture"]
     app.launch()
     app.activate()
     let lessons = app.descendants(matching: .any).matching(identifier: "navigation.Lessons")
@@ -25,20 +25,20 @@ final class MacLessonTests: XCTestCase {
     XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
     return app
   }
-  private func answer(in app: XCUIApplication) {
-    let prompt = app.staticTexts["review.prompt"].label
+  private func answer(in app: XCUIApplication) throws {
+    let prompt = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
     let input = app.textFields["review.answer"]
     input.click()
     input.typeText(prompt == "Reading" ? "ichi" : "one")
     app.buttons["review.submit"].click()
   }
-  func testTeachingQuizPauseResumeAndFinish() {
+  func testTeachingQuizPauseResumeAndFinish() throws {
     let app = launchQuiz()
     defer { app.terminate() }
-    let initialPrompt = app.staticTexts["review.prompt"].label
-    answer(in: app)
+    let initialPrompt = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
+    try answer(in: app)
     let changed = XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "label != %@", initialPrompt),
+      predicate: NSPredicate(format: "value != %@", initialPrompt),
       object: app.staticTexts["review.prompt"])
     XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
     app.descendants(matching: .any).matching(identifier: "navigation.Statistics").firstMatch.click()
@@ -47,8 +47,8 @@ final class MacLessonTests: XCTestCase {
     XCTAssertTrue(resume.waitForExistence(timeout: 5))
     resume.click()
     XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
-    XCTAssertNotEqual(app.staticTexts["review.prompt"].label, initialPrompt)
-    answer(in: app)
+    XCTAssertNotEqual(app.staticTexts["review.prompt"].value as? String, initialPrompt)
+    try answer(in: app)
     XCTAssertTrue(app.staticTexts["Lesson quiz saved"].waitForExistence(timeout: 5))
     app.buttons["Finish session"].click()
     XCTAssertTrue(app.staticTexts["No lessons available"].waitForExistence(timeout: 5))
@@ -58,7 +58,8 @@ final class MacLessonTests: XCTestCase {
     defer { app.terminate() }
     app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
     let warning = app.staticTexts.matching(
-      NSPredicate(format: "label CONTAINS %@", "saved lesson quiz")
+      NSPredicate(
+        format: "label CONTAINS %@ OR value CONTAINS %@", "saved lesson quiz", "saved lesson quiz")
     ).firstMatch
     XCTAssertTrue(warning.waitForExistence(timeout: 5))
     app.descendants(matching: .any).matching(identifier: "navigation.Lessons").firstMatch.click()

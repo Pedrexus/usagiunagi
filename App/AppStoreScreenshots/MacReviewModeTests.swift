@@ -5,7 +5,7 @@ final class MacReviewModeTests: XCTestCase {
   private func launch(_ arguments: [String]) -> XCUIApplication {
     continueAfterFailure = false
     let app = XCUIApplication()
-    app.launchArguments = ["ReviewFixture"] + arguments
+    app.launchArguments = ["--review-fixture"] + arguments
     app.launch()
     app.activate()
     XCTAssertTrue(
@@ -25,7 +25,7 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(app.buttons["review.incorrect"].exists)
   }
   func testCombinedAnkiPreservesTheRevealedCardAcrossNavigationAndCompletesBothSides() {
-    let app = launch(["AnkiFixture", "CombinedAnkiFixture"])
+    let app = launch(["--anki-fixture", "--combined-anki-fixture"])
     defer { app.terminate() }
     app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
     showAnswer(in: app)
@@ -38,12 +38,12 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
   }
   func testReadingOnlyAnkiLeavesMeaningTyped() {
-    let app = launch(["AnkiFixture", "ReadingAnkiFixture"])
+    let app = launch(["--anki-fixture", "--reading-anki-fixture"])
     defer { app.terminate() }
     app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
     let input = app.textFields["review.answer"]
     XCTAssertTrue(input.waitForExistence(timeout: 5))
-    XCTAssertEqual(app.staticTexts["review.prompt"].label, "Meaning")
+    XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Meaning")
     input.click()
     input.typeText("one")
     app.buttons["review.submit"].click()
@@ -52,7 +52,7 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
   }
   func testIncorrectCombinedAnkiRequiresAnotherAssessment() {
-    let app = launch(["AnkiFixture", "CombinedAnkiFixture"])
+    let app = launch(["--anki-fixture", "--combined-anki-fixture"])
     defer { app.terminate() }
     app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
     showAnswer(in: app)
@@ -61,7 +61,10 @@ final class MacReviewModeTests: XCTestCase {
     app.buttons["review.correct"].click()
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
     XCTAssertTrue(
-      app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "66% accuracy")).firstMatch
+      app.staticTexts.matching(
+        NSPredicate(
+          format: "label CONTAINS %@ OR value CONTAINS %@", "66% accuracy", "66% accuracy")
+      ).firstMatch
         .exists)
   }
   func testSessionModeCanBeConfiguredBeforeOpeningReviews() {
@@ -73,9 +76,10 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(mode.waitForExistence(timeout: 5))
     mode.click()
     app.menuItems["Anki: meaning and reading"].click()
-    let combine = app.checkBoxes["reviewSettings.combineAnki"]
+    let combine = app.switches["reviewSettings.combineAnki"]
     XCTAssertTrue(combine.waitForExistence(timeout: 5))
     combine.click()
+    XCTAssertEqual((combine.value as? NSNumber)?.intValue, 1)
     app.descendants(matching: .any).matching(identifier: "navigation.Reviews").firstMatch.click()
     showAnswer(in: app)
     app.buttons["review.correct"].click()

@@ -44,6 +44,27 @@ public struct StudyMetrics: Sendable {
     public let medianDays: Double
     public let upperDays: Double
     public let nextLevelRange: ClosedRange<Date>?
+    public let validation: PaceValidation?
+  }
+
+  public struct PaceTrial: Identifiable, Sendable {
+    public let level: Int
+    public let actualDays: Double
+    public let estimatedDays: Double
+    public let lowerDays: Double
+    public let upperDays: Double
+    public let trainingCount: Int
+    public var id: Int { level }
+    public var absoluteErrorDays: Double { abs(actualDays - estimatedDays) }
+    public var withinBand: Bool { (lowerDays...upperDays).contains(actualDays) }
+  }
+
+  public struct PaceValidation: Sendable {
+    public let trials: [PaceTrial]
+    public var meanAbsoluteErrorDays: Double {
+      trials.reduce(0) { $0 + $1.absoluteErrorDays } / Double(trials.count)
+    }
+    public var withinBandCount: Int { trials.filter(\.withinBand).count }
   }
 
   public let meaning: Accuracy
@@ -100,11 +121,12 @@ public struct StudyMetrics: Sendable {
     let latest = Dictionary(levels.map { ($0.level, $0) }, uniquingKeysWith: {
       $0.unlockedAt > $1.unlockedAt ? $0 : $1
     })
-    let completed = latest.values.filter {
+    let eligible = latest.values.filter {
       $0.level >= 3 && $0.level < currentLevel && !$0.hasAbandonedAt &&
         $0.hasUnlockedAt && $0.unlockedAt >= reset && $0.passedAt > $0.unlockedAt &&
         Double($0.passedAt) <= now.timeIntervalSince1970
-    }.sorted { $0.passedAt > $1.passedAt }.prefix(8)
+    }.sorted { $0.passedAt > $1.passedAt }
+    let completed = eligible.prefix(8)
     guard completed.count >= 3 else { return nil }
     let durations = completed.map { (Double($0.passedAt) - Double($0.unlockedAt)) / 86400 }.sorted()
     let low = quantile(durations, 0.25), median = quantile(durations, 0.5),
@@ -122,7 +144,24 @@ public struct StudyMetrics: Sendable {
       }
     }
     return Pace(history: completed.sorted { $0.level < $1.level }.map { LevelDuration(level: Int($0.level), days: Double($0.passedAt - $0.unlockedAt) / 86400) }, sampleCount: completed.count, lowerDays: low, medianDays: median, upperDays: high,
-                nextLevelRange: range)
+                nextLevelRange: range, validation: validatePace(eligible))
+  }
+
+  /// Reconstruct each estimate at that level's unlock time; later completions cannot train it.
+  private static func validatePace(_ eligible: [StudyLevel]) -> PaceValidation? {
+    let trials = eligible.compactMap { target -> PaceTrial? in
+      let history = eligible.filter {
+        $0.level < target.level && $0.passedAt <= target.unlockedAt
+      }.prefix(8)
+      guard history.count >= 3 else { return nil }
+      let days = history.map { Double($0.passedAt - $0.unlockedAt) / 86400 }.sorted()
+      return PaceTrial(
+        level: Int(target.level), actualDays: Double(target.passedAt - target.unlockedAt) / 86400,
+        estimatedDays: quantile(days, 0.5), lowerDays: quantile(days, 0.25),
+        upperDays: quantile(days, 0.75), trainingCount: history.count)
+    }.prefix(8).sorted { $0.level < $1.level }
+    // Fewer held-out levels are too little evidence for a displayed error/coverage summary.
+    return trials.count >= 3 ? PaceValidation(trials: trials) : nil
   }
 
   private static func quantile(_ sorted: [Double], _ p: Double) -> Double {

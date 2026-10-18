@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T14:46:23Z",
+  "branch": "codex/swiftui-27-curriculum",
+  "source_base_commit": "625447c",
+  "status": "Verified checkpoint; complete modernization remains open in Docs/TASKS.md",
+  "changes": [
+    "Native fixture launch arguments use option-style names; the no-window startup failure is resolved.",
+    "Mac assertions use actual StaticText values and native Switch roles/numeric values.",
+    "Pace error is reconstructed chronologically from history available at each level unlock, with bounded training and held-out samples.",
+    "Inline pace plot shows estimates, actual results and historical quartile bands; level axis excludes zero and accessibility identifiers remain distinct."
+  ],
+  "source_sha256": {
+    "App/Application/StudyAppState.swift": "0f842ffb1c4e6e34905d2a6c13bbafa255255fcb4f240b29f3139379c376b775",
+    "Shared/Sources/StudyCore/StudyMetrics.swift": "431b53c78ec8cdb09e069ac4f92fa425cee8edc0da502acbef7cdbd0e641a7c3",
+    "Shared/Sources/StudyUI/Statistics/StudyDashboard.swift": "7f5dffac0034e0225283b390512ce7f8de15c34260f730e171999b43797d3385",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "190e5bc9e5d36c3a48b3391172764391f9ce5aa0ba1d33d869fe4475da3bdf38"
+  },
+  "shared_mac": {
+    "passed": 253,
+    "breakdown": {
+      "core": 132,
+      "persistence": 115,
+      "speech": 6
+    },
+    "log": "/private/tmp/usagi-pace-shared-tests.log"
+  },
+  "shared_ios": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d35b893a07a3459a8c07f4081fd268f9.xcresult",
+    "log": "/private/tmp/usagi-pace-ios-shared.log",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 253,
+      "passedTests": 253,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "finishTime": 1792334149.201,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792334125.445
+    }
+  },
+  "hosted_ios": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-4fdf5a3411f54c3bbd047c262552ad2f.xcresult",
+    "log": "/private/tmp/usagi-pace-hosted-ios.log",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 91,
+      "passedTests": 91,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "finishTime": 1792334596.539,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792334542.042
+    }
+  },
+  "native_mac_all": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7271443ad0dd4adbb78bbcfb848c5a6f.xcresult",
+    "log": "/private/tmp/usagi-mac-all-final-pace.log",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 7,
+      "passedTests": 7,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "finishTime": 1792334631.514,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792334531.045
+    }
+  },
+  "native_chart_final_visibility": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e2c7cdc7671d44fa96cb2bc3df084968.xcresult",
+    "log": "/private/tmp/usagi-mac-pace-visible-final.log",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "finishTime": 1792334656.301,
+      "runtimeWarnings": [
+
+      ],
+      "startTime": 1792334646.654
+    },
+    "scope": "Stronger visible-explanation assertion and app-window-only screenshot added after the full 7-case pass; production sources unchanged."
+  },
+  "devices": {
+    "native_mac": "Mac mini, macOS 27.0.1 arm64",
+    "ios": "iPhone 18 Pro simulator, iOS 27.0"
+  },
+  "earlier_failed_runs": [
+    "/private/tmp/usagi-mac-pace-acceptance.log",
+    "/private/tmp/usagi-mac-pace-chart.log",
+    "/private/tmp/usagi-mac-pace-chart-arrow.log",
+    "/private/tmp/usagi-mac-pace-chart-distinct.log"
+  ],
+  "evidence_limits": [
+    "Swift Testing top-level counts differ from individual parameter invocations; reports use the top-level case count.",
+    "Pace checks use current level/reset records and retrospective reconstructions, not complete historical account snapshots or calibrated exam probabilities.",
+    "Native UI tests use synthetic local data only. No live WaniKani exercise, answer or account write was performed.",
+    "No full new iPhone/iPad UI run, physical microphone/IME validation, hosted GitHub Actions run, push or PR is claimed.",
+    "AppIntents metadata-extraction-skipped build warnings remain; this receipt does not claim a warning-free build."
+  ],
+  "owner_annotations_preserved_unstaged": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "next": "Shared app-model and verified iOS writer handoff; retain active bridges until equivalent behavior is proven."
+}

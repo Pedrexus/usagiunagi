@@ -146,6 +146,7 @@
 		A27600000000000000000001 /* LoginFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27600000000000000000002 /* LoginFixture.swift */; platformFilter = ios; };
 		A27700000000000000000001 /* StudyShellStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27700000000000000000002 /* StudyShellStateTests.swift */; };
 		A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27800000000000000000002 /* ReviewSessionOptionsTests.swift */; };
+		A97D950983A67C19E13A899F /* MacStatisticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */; platformFilter = macos; };
 		B299EA4ED7A417D5A5274D2B /* StudyStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B23E267AB393BA610A4B75B /* StudyStatistics.swift */; };
 		B8046F54DB4F1D8BAF0E4C80 /* LegacyStudyImporterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */; };
 		BBE4E32E2172576B003A200E /* FontLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE4E32D2172576B003A200E /* FontLoader.swift */; platformFilter = ios; };
@@ -254,6 +255,7 @@
 		2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacReviewModeTests.swift; path = AppStoreScreenshots/MacReviewModeTests.swift; sourceTree = "<group>"; };
 		36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsagiUnagiApp.swift; sourceTree = "<group>"; };
 		3756F7F4B1B96F207317CD15 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacStatisticsTests.swift; path = AppStoreScreenshots/MacStatisticsTests.swift; sourceTree = "<group>"; };
 		3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegacyStudyImporterTest.swift; sourceTree = "<group>"; };
 		3F5FAA8DC32D15C9C3AEAA7C /* StudyAppState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StudyAppState.swift; path = Application/StudyAppState.swift; sourceTree = "<group>"; };
 		46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyStatisticsTest.swift; sourceTree = "<group>"; };
@@ -628,6 +630,7 @@
 				2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */,
 				55D8D2CA6860CA263F708E85 /* Debug.xcconfig */,
 				B8DA01B76750F7A065DA04D3 /* Release.xcconfig */,
+				3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1331,6 +1334,7 @@
 				62E97290C5F91A414D8D0AA4 /* ReviewFlowTests.swift in Sources */,
 				C87EB1EE32148A9CC8342DFB /* MacLessonTests.swift in Sources */,
 				3D096CD2C178F453FEF79064 /* MacReviewModeTests.swift in Sources */,
+				A97D950983A67C19E13A899F /* MacStatisticsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

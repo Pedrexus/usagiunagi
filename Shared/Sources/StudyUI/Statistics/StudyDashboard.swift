@@ -125,6 +125,30 @@ public struct StudyDashboard: View {
                         Text("At a similar pace: level \(snapshot.currentLevel + 1) around \(range.lowerBound.formatted(date: .abbreviated, time: .omitted))–\(range.upperBound.formatted(date: .abbreviated, time: .omitted)).").font(.callout)
                     }
                     Text("Up to 8 levels, excluding the first two and recorded resets. Includes breaks. Dates are scenarios, not guarantees.").studyNote()
+                    if let validation = pace.validation {
+                        Text("Past average error: \(validation.meanAbsoluteErrorDays.formatted(.number.precision(.fractionLength(1)))) days across \(validation.trials.count) levels.")
+                            .font(.callout).accessibilityIdentifier("statistics.pace.validationSummary")
+                        DisclosureGroup("Compare past estimates") {
+                            Chart(validation.trials) { trial in
+                                RuleMark(x: .value("Level", trial.level),
+                                         yStart: .value("Lower typical pace", trial.lowerDays),
+                                         yEnd: .value("Upper typical pace", trial.upperDays))
+                                    .foregroundStyle(StudyPalette.radical.opacity(0.35)).lineStyle(StrokeStyle(lineWidth: 6))
+                                LineMark(x: .value("Level", trial.level), y: .value("Days", trial.estimatedDays))
+                                    .foregroundStyle(by: .value("Series", "Estimated"))
+                                PointMark(x: .value("Level", trial.level), y: .value("Days", trial.actualDays))
+                                    .foregroundStyle(by: .value("Series", "Actual"))
+                            }.chartForegroundStyleScale(["Estimated": StudyPalette.radical, "Actual": StudyPalette.kanji])
+                                .chartXScale(domain: .automatic(includesZero: false))
+                                .chartXAxis { AxisMarks(values: validation.trials.map(\.level)) }
+                                .chartYAxisLabel("Days").frame(height: 180)
+                                .accessibilityIdentifier("statistics.pace.validationChart")
+                            Text("\(validation.withinBandCount) of \(validation.trials.count) levels finished within the typical band. Each estimate uses only levels passed by the time that level started. This checks past pace, not exam readiness or a guaranteed finish date.")
+                                .studyNote().accessibilityIdentifier("statistics.pace.validationNote")
+                        }
+                    } else {
+                        Text("More history is needed to check past estimates: at least 3 earlier levels for each of 3 completed levels.").studyNote()
+                    }
                 } else { Text("Complete at least 3 levels after level 2 to see your pace.").foregroundStyle(.secondary) }
             }
         }

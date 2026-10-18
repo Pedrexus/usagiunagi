@@ -12,14 +12,14 @@ final class StudyAppState {
     static let reviewDefaults: UserDefaults = {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("ReviewFixture") {
+        if arguments.contains("--review-fixture") {
             let suite = "dev.usagiunagi.mac-review-fixture"
             let defaults = UserDefaults(suiteName: suite)!
             defaults.removePersistentDomain(forName: suite)
             var preferences = ReviewPreferences()
-            if arguments.contains("AnkiFixture") {
-                preferences.sessionOptions.ankiMode = arguments.contains("ReadingAnkiFixture") ? .reading : .both
-                preferences.sessionOptions.combinedAnki = arguments.contains("CombinedAnkiFixture")
+            if arguments.contains("--anki-fixture") {
+                preferences.sessionOptions.ankiMode = arguments.contains("--reading-anki-fixture") ? .reading : .both
+                preferences.sessionOptions.combinedAnki = arguments.contains("--combined-anki-fixture")
                 preferences.sessionOptions.groupMeaningReading = true
                 preferences.sessionOptions.incorrectAnswerDelay = 0
             }
@@ -39,7 +39,7 @@ final class StudyAppState {
     var isDisconnecting = false
     var isReviewFixture: Bool {
         #if DEBUG
-        ProcessInfo.processInfo.arguments.contains("ReviewFixture")
+        ProcessInfo.processInfo.arguments.contains("--review-fixture")
         #else
         false
         #endif
@@ -81,7 +81,7 @@ final class StudyAppState {
             return
         }
         #endif
-        if ProcessInfo.processInfo.arguments.contains("SampleData") { loadSample(); return }
+        if ProcessInfo.processInfo.arguments.contains("--sample-data") { loadSample(); return }
         let epoch = generation
         do {
             try beginRequest(credential: nil); defer { finishRequest(epoch) }
@@ -179,7 +179,7 @@ final class StudyAppState {
     }
     func compareSavedWork(_ request: StudyRecoveryRequest) async throws -> StudyRecoveryComparison {
         #if DEBUG
-        if isReviewFixture, ProcessInfo.processInfo.arguments.contains("MaterialRecoveryFixture") || ProcessInfo.processInfo.arguments.contains("ReviewRecoveryFixture") {
+        if isReviewFixture, ProcessInfo.processInfo.arguments.contains("--material-recovery-fixture") || ProcessInfo.processInfo.arguments.contains("--review-recovery-fixture") {
             guard request.accountID == "review-fixture", let cache = savedWorkStore else { throw StudyStoreError.sampleData }
             let client = WaniKaniClient { request in
                 guard request.httpMethod == "GET" else { throw StudyStoreError.sampleData }
@@ -218,14 +218,14 @@ final class StudyAppState {
         subject.level = 1; subject.japanese = "一"
         subject.meanings = [.init("One", role: .primary)]
         subject.readings = [.init("いち", isPrimary: true, kind: .onyomi)]
-        if ProcessInfo.processInfo.arguments.contains("RadicalFixture") {
+        if ProcessInfo.processInfo.arguments.contains("--radical-fixture") {
             subject = CatalogSubject(id: 8790, kind: .radical)
             subject.level = 1; subject.meanings = [.init("Death Star", role: .primary)]
             subject.characterImageURL = "https://cdn.wanikani.com/images/363-subject-8790-with-css-original.svg?1520987154"
         }
         var assignment = CatalogAssignment(id: 101, subjectID: subject.id, kind: subject.kind)
         assignment.level = 1; assignment.srsStage = 3; assignment.startedAt = 1; assignment.availableAt = 1
-        if ProcessInfo.processInfo.arguments.contains("LessonRecoveryFixture") || ProcessInfo.processInfo.arguments.contains("LessonFixture") {
+        if ProcessInfo.processInfo.arguments.contains("--lesson-recovery-fixture") || ProcessInfo.processInfo.arguments.contains("--lesson-fixture") {
             assignment.srsStage = 0; assignment.startedAt = nil; assignment.availableAt = nil; assignment.unlockedAt = 1
         }
         var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
@@ -245,14 +245,14 @@ final class StudyAppState {
             fixture.subjects = [subject, component, vocabulary]
             fixture.materials = [.init(serverID: 0, value: .init(subjectID: subject.id, meaningNote: "A saved synthetic note.", meaningSynonyms: ["Single"]), pending: false, legacyRevision: 0)]
         } else { fixture.subjects = [subject] }
-        if ProcessInfo.processInfo.arguments.contains("MaterialRecoveryFixture") {
+        if ProcessInfo.processInfo.arguments.contains("--material-recovery-fixture") {
             fixture.materials = [.init(serverID: 201,
                 value: .init(subjectID: 1, meaningNote: "Local saved note. 🐰\nSecond line.",
                              readingNote: "いち", meaningSynonyms: ["Local synonym"]), pending: true, legacyRevision: 0)]
         }
         fixture.assignments = [assignment]
-        if ProcessInfo.processInfo.arguments.contains("ReviewRecoveryFixture") {
-            let lesson = ProcessInfo.processInfo.arguments.contains("LessonRecoveryFixture")
+        if ProcessInfo.processInfo.arguments.contains("--review-recovery-fixture") {
+            let lesson = ProcessInfo.processInfo.arguments.contains("--lesson-recovery-fixture")
             fixture.pendingReviews = [.init(assignment: assignment, submission: .init(itemID: 0,
                 subjectID: subject.id, assignmentID: assignment.id, isLesson: lesson,
                 meaningWrong: !lesson, readingWrong: false, meaningWrongCount: lesson ? 0 : 1,
@@ -314,8 +314,8 @@ struct StudyRoot: View {
     @StoredReviewPreferences private var reviewPreferences
     private var preferredAppearance: ColorScheme? {
         if store.isReviewFixture {
-            if ProcessInfo.processInfo.arguments.contains("LightFixture") { return .light }
-            if ProcessInfo.processInfo.arguments.contains("DarkFixture") { return .dark }
+            if ProcessInfo.processInfo.arguments.contains("--light-fixture") { return .light }
+            if ProcessInfo.processInfo.arguments.contains("--dark-fixture") { return .dark }
         }
         return $reviewPreferences.colorScheme
     }
