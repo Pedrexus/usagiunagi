@@ -109,8 +109,7 @@ class SubjectsRemainingViewController: UITableViewController, SubjectDelegate,
 
   func didTapSubject(_ subject: TKMSubject) {
     let vc = StoryboardScene.SubjectDetails.initialScene.instantiate()
-    vc.setup(services: services, subject: subject, showHints: false, hideBackButton: false,
-             index: 0)
+    vc.setup(services: services, subject: subject)
     navigationController?.pushViewController(vc, animated: true)
   }
 }

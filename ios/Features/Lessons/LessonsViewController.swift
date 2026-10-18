@@ -17,14 +17,15 @@ import StudyUI
 import SwiftUI
 import WaniKaniAPI
 
-/// Temporary content bridges retain audio, note editing and the existing durable writer.
-final class LessonsViewController: UIHostingController<LessonFlowView<ExistingLessonPage>?>,
-  ReviewViewControllerDelegate
+/// Teaching is SwiftUI; the quiz host retains the existing input adapter and durable writer.
+final class LessonsViewController: UIHostingController<LessonFlowView<LessonPage>?>,
+  ReviewViewControllerDelegate, SubjectDelegate
 {
   private var services: TKMServices!
   private var items: [ReviewItem] = []
   private var reviewViewController: ReviewViewController?
-  private weak var teachingViewController: SubjectDetailsViewController?
+  private var teachingModels: [Int: LegacySubjectDetailsModel] = [:]
+  private weak var teachingModel: LegacySubjectDetailsModel?
   required init?(coder: NSCoder) { super.init(coder: coder, rootView: nil) }
   func setup(services: TKMServices, items: [ReviewItem]) {
     self.services = services
@@ -51,9 +52,9 @@ final class LessonsViewController: UIHostingController<LessonFlowView<ExistingLe
       subjects: subjects, japaneseFont: TKMStyle.japaneseFontName, image: { images[$0] },
       back: { [weak self] in
         self?.navigationController?.popViewController(animated: true)
-      }, playAudio: { [weak self] in self?.teachingViewController?.playAudio() },
+      }, playAudio: { [weak self] in self?.teachingModel?.playAudio() },
       page: { [weak self] index in
-        ExistingLessonPage { self?.makePage(index) ?? UIViewController() }
+        self?.makePage(index) ?? .unavailable
       })
   }
   override func viewWillAppear(_ animated: Bool) {
@@ -61,32 +62,41 @@ final class LessonsViewController: UIHostingController<LessonFlowView<ExistingLe
     navigationController?.isNavigationBarHidden = true
     SiriShortcutHelper.shared.attachShortcutActivity(self, type: .lessons)
   }
-  private func makePage(_ index: Int) -> UIViewController {
+  private func makePage(_ index: Int) -> LessonPage {
     if index == items.count {
-      if let reviewViewController { return reviewViewController }
+      if let reviewViewController { return .quiz(reviewViewController) }
       let controller = StoryboardScene.Review.initialScene.instantiate()
       controller.setup(
         services: services, items: items, showMenuButton: false,
         showSubjectHistory: false, delegate: self)
       reviewViewController = controller
-      return controller
+      return .quiz(controller)
     }
     guard items.indices.contains(index),
       let subject = services.localCachingClient.getSubject(id: items[index].assignment.subjectID)
     else {
-      return UIHostingController(
-        rootView: ContentUnavailableView(
-          "Study content unavailable",
-          systemImage: "book.closed",
-          description: Text("Return and refresh your account before continuing.")))
+      return .unavailable
     }
+    let model =
+      teachingModels[index] ?? LegacySubjectDetailsModel(services: services, delegate: self)
+    if teachingModels[index] == nil {
+      model.update(subject: subject, assignment: items[index].assignment)
+    }
+    teachingModels[index] = model
+    teachingModel = model
+    return .teaching(model)
+  }
+  func didTapSubject(_ subject: TKMSubject) {
     let controller = StoryboardScene.SubjectDetails.initialScene.instantiate()
-    controller.setup(
-      services: services, subject: subject, showHints: true, hideBackButton: true, index: index)
-    teachingViewController = controller
-    return controller
+    controller.setup(services: services, subject: subject)
+    navigationController?.pushViewController(controller, animated: true)
   }
   func allowsCheats(forReviewItem _: ReviewItem) -> Bool { false }
+  func openPracticeReview(_ subject: TKMSubject) {
+    guard FeatureFlags.showSubjectDeveloperOptions else { return }
+    navigationController?.pushViewController(
+      ReviewContainerViewController.practice(services: services, subject: subject), animated: true)
+  }
   func allowsCustomFonts() -> Bool { false }
   func showsSuccessRate() -> Bool { false }
   func finishedAllReviewItems(_: ReviewViewController) {
@@ -94,9 +104,26 @@ final class LessonsViewController: UIHostingController<LessonFlowView<ExistingLe
   }
 }
 
-struct ExistingLessonPage: UIViewControllerRepresentable {
-  let make: () -> UIViewController
-  func makeUIViewController(context: Context) -> UIViewController { make() }
+enum LessonPage: View {
+  case teaching(LegacySubjectDetailsModel)
+  case quiz(ReviewViewController)
+  case unavailable
+  var body: some View {
+    switch self {
+    case .teaching(let model):
+      SubjectDetailsPage(model: model, showsHeader: true).onAppear { model.reload() }
+    case .quiz(let controller): LessonQuizView(controller: controller)
+    case .unavailable:
+      ContentUnavailableView(
+        "Study content unavailable", systemImage: "book.closed",
+        description: Text("Return and refresh your account before continuing."))
+    }
+  }
+}
+
+private struct LessonQuizView: UIViewControllerRepresentable {
+  let controller: ReviewViewController
+  func makeUIViewController(context: Context) -> UIViewController { controller }
   func updateUIViewController(_: UIViewController, context: Context) {}
   static func dismantleUIViewController(_ controller: UIViewController, coordinator: ()) {
     controller.view.endEditing(true)

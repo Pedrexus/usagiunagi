@@ -168,6 +168,37 @@ struct NativeReviewTests {
     }
     #expect(try await store.session(accountID: account) == nil)
   }
+
+  @Test func importedExclusionsAffectNewVocabularySessionsAndPreserveResumedWork() async throws {
+    let store = try await store()
+    var download = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    var vocabulary = CatalogAssignment(id: 102, subjectID: 2, kind: .vocabulary)
+    vocabulary.level = 1
+    vocabulary.srsStage = 3
+    vocabulary.startedAt = 1
+    vocabulary.availableAt = 1
+    vocabulary.isKanaOnlyVocabulary = true
+    download.assignments.append(vocabulary)
+    _ = try await store.applyDownload(
+      download, credentialID: "credential", baseline: store.refreshBaseline(accountID: account))
+    let initial = try await store.openReviews(accountID: account, now: now)
+    #expect(initial.saved.session.items.count == 2)
+    for id: Int64 in [1, 2] {
+      let details = try await store.subjectDetails(subjectID: id, accountID: account)
+      var material = details.material ?? StudyMaterial(subjectID: id)
+      material.meaningNote += StudyMaterial.exclusionMarker
+      try await store.saveSubjectMaterial(
+        material, accountID: account, expectedRevision: details.savedMaterial?.revision)
+    }
+    let resumed = try await store.openReviews(accountID: account, now: now)
+    #expect(resumed.saved.revision == initial.saved.revision)
+    #expect(resumed.saved.session.items.count == 2)
+    try await store.endReviews(accountID: account, expectedRevision: resumed.saved.revision)
+    let next = try await store.openReviews(accountID: account, now: now)
+    #expect(next.saved.session.items.values.map(\.subjectID) == [1])
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+  }
 }
 
 extension NativeReviewTests {

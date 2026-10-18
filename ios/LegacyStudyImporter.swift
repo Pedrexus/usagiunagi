@@ -28,7 +28,7 @@ enum LegacyStudyImporter {
     defer { try? db.execute("ROLLBACK") }
     var version = 0
     try db.rows("PRAGMA user_version") { version = try Int($0.integer(0)) }
-    guard (9 ... 15).contains(version) else { throw LegacyImportError.unsupportedSchema(version) }
+    guard (9...15).contains(version) else { throw LegacyImportError.unsupportedSchema(version) }
     var users: [TKMUser] = []
     try db.rows("SELECT id, pb FROM user ORDER BY id") { row in
       try require(row.integer(0) == 0, "user identifier")
@@ -48,20 +48,23 @@ enum LegacyStudyImporter {
     var result = LegacyStudyExport(schemaVersion: version, profile: profile)
     try db.rows("SELECT id, japanese, level, type, pb FROM subjects ORDER BY id") { row in
       let value: TKMSubject = try row.message(4)
-      let subject = try catalog(value)
-      try require(row.integer(0) == subject.id && row.text(1) == subject.japanese &&
-        row.integer(2) == Int64(subject.level) && kind(row.integer(3)) == subject.kind,
+      let subject = try catalogSubject(value)
+      try require(
+        row.integer(0) == subject.id && row.text(1) == subject.japanese
+          && row.integer(2) == Int64(subject.level) && kind(row.integer(3)) == subject.kind,
         "subject metadata")
       result.subjects.append(subject)
     }
-    try require(Set(result.subjects.map(\.id)).count == result.subjects.count,
-                "duplicate subject identifiers")
+    try require(
+      Set(result.subjects.map(\.id)).count == result.subjects.count,
+      "duplicate subject identifiers")
     let subjects = Dictionary(uniqueKeysWithValues: result.subjects.map { ($0.id, $0) })
     func assignment(_ value: TKMAssignment) throws -> CatalogAssignment {
       try known(value)
       try require(value.id > 0 && value.subjectID > 0, "assignment identifier")
-      var item = try CatalogAssignment(id: value.id, subjectID: value.subjectID,
-                                       kind: kind(Int64(value.subjectType.rawValue)))
+      var item = try CatalogAssignment(
+        id: value.id, subjectID: value.subjectID,
+        kind: kind(Int64(value.subjectType.rawValue)))
       item.level = Int(value.level)
       item.srsStage = Int(value.srsStageNumber)
       item.availableAt = value.hasAvailableAt ? Int64(value.availableAt) : nil
@@ -71,7 +74,8 @@ enum LegacyStudyImporter {
       item.isKanaOnlyVocabulary = value.isKanaOnlyVocab
       // Version 10 inferred this field from the catalog. Do the same without mutating old bytes.
       if version == 9, let subject = subjects[item.subjectID], subject.kind == .vocabulary,
-         subject.readings.isEmpty {
+        subject.readings.isEmpty
+      {
         item.isKanaOnlyVocabulary = true
       }
       return item
@@ -79,8 +83,9 @@ enum LegacyStudyImporter {
     var assignments: [Int64: CatalogAssignment] = [:]
     try db.rows("SELECT id, subject_id, pb FROM assignments ORDER BY id") { row in
       let item = try assignment(row.message(2))
-      try require(row.integer(0) == item.id && row.integer(1) == item.subjectID,
-                  "assignment metadata")
+      try require(
+        row.integer(0) == item.id && row.integer(1) == item.subjectID,
+        "assignment metadata")
       if let previous = assignments.updateValue(item, forKey: item.subjectID) {
         // Match the version-13 highest-ID migration, retaining the displaced record for recovery.
         result.supersededAssignments.append(previous)
@@ -89,24 +94,28 @@ enum LegacyStudyImporter {
     result.assignments = assignments.values.sorted { $0.subjectID < $1.subjectID }
     try db.rows("SELECT id, pb FROM pending_progress ORDER BY id") { row in
       let value: TKMProgress = try row.message(1)
-      try require(value.hasAssignment && row.integer(0) == value.assignment.subjectID &&
-        value.meaningWrongCount >= 0 && value.readingWrongCount >= 0, "pending review payload")
+      try require(
+        value.hasAssignment && row.integer(0) == value.assignment.subjectID
+          && value.meaningWrongCount >= 0 && value.readingWrongCount >= 0, "pending review payload")
       let item = try assignment(value.assignment)
-      result.pendingReviews.append(.init(assignment: item,
-                                         submission: .init(itemID: result.pendingReviews.count,
-                                                           subjectID: item.subjectID,
-                                                           assignmentID: item.id,
-                                                           isLesson: value.isLesson,
-                                                           meaningWrong: value.meaningWrong,
-                                                           readingWrong: value.readingWrong,
-                                                           meaningWrongCount: Int(value
-                                                             .meaningWrongCount),
-                                                           readingWrongCount: Int(value
-                                                             .readingWrongCount),
-                                                           createdAt: value
-                                                             .hasCreatedAt ?
-                                                             Int64(value.createdAt) :
-                                                             nil)))
+      result.pendingReviews.append(
+        .init(
+          assignment: item,
+          submission: .init(
+            itemID: result.pendingReviews.count,
+            subjectID: item.subjectID,
+            assignmentID: item.id,
+            isLesson: value.isLesson,
+            meaningWrong: value.meaningWrong,
+            readingWrong: value.readingWrong,
+            meaningWrongCount: Int(
+              value
+                .meaningWrongCount),
+            readingWrongCount: Int(
+              value
+                .readingWrongCount),
+            createdAt: value
+              .hasCreatedAt ? Int64(value.createdAt) : nil)))
     }
     var pendingMaterials = Set<Int64>()
     try db
@@ -116,33 +125,43 @@ enum LegacyStudyImporter {
     let materialRevision = version >= 14 ? "local_revision" : "0"
     try db.rows("SELECT id, pb, \(materialRevision) FROM study_materials ORDER BY id") { row in
       let value: TKMStudyMaterials = try row.message(1)
-      try require(value.subjectID > 0 && row.integer(0) == value.subjectID,
-                  "study material identifier")
-      try result.materials.append(.init(serverID: value.id,
-                                        value: .init(subjectID: value.subjectID,
-                                                     meaningNote: value.meaningNote,
-                                                     readingNote: value.readingNote,
-                                                     meaningSynonyms: value.meaningSynonyms),
-                                        pending: pendingMaterials.remove(value.subjectID) != nil,
-                                        legacyRevision: row.integer(2)))
+      try require(
+        value.subjectID > 0 && row.integer(0) == value.subjectID,
+        "study material identifier")
+      try result.materials.append(
+        .init(
+          serverID: value.id,
+          value: .init(
+            subjectID: value.subjectID,
+            meaningNote: value.meaningNote,
+            readingNote: value.readingNote,
+            meaningSynonyms: value.meaningSynonyms),
+          pending: pendingMaterials.remove(value.subjectID) != nil,
+          legacyRevision: row.integer(2)))
     }
     try require(pendingMaterials.isEmpty, "pending notes without their saved content")
     let mistake = version >= 11 ? "last_mistake_time" : "NULL"
     let progressRevision = version >= 15 ? "local_revision" : "0"
     try db
-      .rows("SELECT id, level, srs_stage, subject_type, \(mistake), \(progressRevision) FROM subject_progress ORDER BY id") { row in
+      .rows(
+        "SELECT id, level, srs_stage, subject_type, \(mistake), \(progressRevision) FROM subject_progress ORDER BY id"
+      ) { row in
         let id = try row.integer(0)
         try require(id > 0, "progress identifier")
-        try result.progress.append(.init(subjectID: id, level: Int(row.integer(1)),
-                                         srsStage: Int(row.integer(2)),
-                                         kind: kind(row.integer(3)),
-                                         lastMistakeLocalTime: row.optionalText(4),
-                                         legacyRevision: row.integer(5)))
+        try result.progress.append(
+          .init(
+            subjectID: id, level: Int(row.integer(1)),
+            srsStage: Int(row.integer(2)),
+            kind: kind(row.integer(3)),
+            lastMistakeLocalTime: row.optionalText(4),
+            legacyRevision: row.integer(5)))
       }
     try db.rows("SELECT id, level, pb FROM level_progressions ORDER BY id") { row in
       let value: TKMLevel = try row.message(2)
-      try require(value.id > 0 && row.integer(0) == value.id && row
-        .integer(1) == Int64(value.level),
+      try require(
+        value.id > 0 && row.integer(0) == value.id
+          && row
+            .integer(1) == Int64(value.level),
         "level progression identifier")
       var level = CatalogLevelProgression(id: value.id)
       level.level = Int(value.level)
@@ -164,32 +183,47 @@ enum LegacyStudyImporter {
       result.voices.append(voice)
     }
     try db
-      .rows("SELECT subject_id, voice_actor_id, level, url FROM audio_urls ORDER BY subject_id, voice_actor_id") { row in
-        try result.audio.append(.init(subjectID: row.integer(0), voiceActorID: row.integer(1),
-                                      level: Int(row.integer(2)), url: row.text(3)))
+      .rows(
+        "SELECT subject_id, voice_actor_id, level, url FROM audio_urls ORDER BY subject_id, voice_actor_id"
+      ) { row in
+        try result.audio.append(
+          .init(
+            subjectID: row.integer(0), voiceActorID: row.integer(1),
+            level: Int(row.integer(2)), url: row.text(3)))
       }
     if version >= 12 {
       try db.rows("SELECT id, subject_id, pb FROM review_stats ORDER BY id") { row in
         let value: TKMReviewStatistic = try row.message(2)
-        try require(value.id > 0 && value.subjectID > 0 && row.integer(0) == value.id &&
-          row.integer(1) == value.subjectID, "review statistic identifier")
-        var statistic = try CatalogReviewStatistic(id: value.id,
-                                                   answers: .init(subjectID: value.subjectID,
-                                                                  type: kind(Int64(value.type
-                                                                      .rawValue)),
-                                                                  meaningCorrect: Int(value
-                                                                    .meaningCorrect),
-                                                                  meaningIncorrect: Int(value
-                                                                    .meaningIncorrect),
-                                                                  meaningCurrentStreak: Int(value
-                                                                    .meaningCurrentStreak),
-                                                                  readingCorrect: Int(value
-                                                                    .readingCorrect),
-                                                                  readingIncorrect: Int(value
-                                                                    .readingIncorrect),
-                                                                  readingCurrentStreak: Int(value
-                                                                    .readingCurrentStreak),
-                                                                  hidden: value.hidden))
+        try require(
+          value.id > 0 && value.subjectID > 0 && row.integer(0) == value.id
+            && row.integer(1) == value.subjectID, "review statistic identifier")
+        var statistic = try CatalogReviewStatistic(
+          id: value.id,
+          answers: .init(
+            subjectID: value.subjectID,
+            type: kind(
+              Int64(
+                value.type
+                  .rawValue)),
+            meaningCorrect: Int(
+              value
+                .meaningCorrect),
+            meaningIncorrect: Int(
+              value
+                .meaningIncorrect),
+            meaningCurrentStreak: Int(
+              value
+                .meaningCurrentStreak),
+            readingCorrect: Int(
+              value
+                .readingCorrect),
+            readingIncorrect: Int(
+              value
+                .readingIncorrect),
+            readingCurrentStreak: Int(
+              value
+                .readingCurrentStreak),
+            hidden: value.hidden))
         statistic.createdAt = value.hasCreatedAt ? Int64(value.createdAt) : nil
         statistic.meaningMaxStreak = Int(value.meaningMaxStreak)
         statistic.readingMaxStreak = Int(value.readingMaxStreak)
@@ -207,20 +241,27 @@ enum LegacyStudyImporter {
     var syncRows = 0
     try db.rows("SELECT \(columns.joined(separator: ", ")) FROM sync") { row in
       syncRows += 1
-      for (index, name) in columns
-        .enumerated() { result.cursors[name] = try row.optionalText(Int32(index)) }
+      for (index, name)
+        in columns
+        .enumerated()
+      { result.cursors[name] = try row.optionalText(Int32(index)) }
     }
     try require(syncRows == 1, "sync cursor row count")
     return result
   }
 
-  private static func catalog(_ value: TKMSubject) throws -> CatalogSubject {
-    try require(value.id > 0 && [value.hasRadical, value.hasKanji, value.hasVocabulary]
-      .filter { $0 }.count == 1,
+  static func catalogSubject(_ value: TKMSubject) throws -> CatalogSubject {
+    try require(
+      value.id > 0
+        && [value.hasRadical, value.hasKanji, value.hasVocabulary]
+          .filter { $0 }.count == 1,
       "subject kind")
-    var subject = CatalogSubject(id: value.id,
-                                 kind: value.hasRadical ? .radical : value
-                                   .hasKanji ? .kanji : .vocabulary)
+    var subject = CatalogSubject(
+      id: value.id,
+      kind: value.hasRadical
+        ? .radical
+        : value
+          .hasKanji ? .kanji : .vocabulary)
     subject.level = Int(value.level)
     subject.slug = value.slug
     subject.documentURL = value.documentURL
@@ -263,10 +304,13 @@ enum LegacyStudyImporter {
       subject.meaningMnemonic = vocabulary.meaningExplanation
       subject.readingMnemonic = vocabulary.readingExplanation
       subject.partsOfSpeech = vocabulary.partsOfSpeech.map(\.rawValue)
-      subject.sentences = try vocabulary.sentences.map { try known($0)
+      subject.partOfSpeechNames = vocabulary.partsOfSpeech.map(\.description).filter { !$0.isEmpty }
+      subject.sentences = try vocabulary.sentences.map {
+        try known($0)
         return .init(japanese: $0.japanese, english: $0.english)
       }
-      subject.audio = try vocabulary.audio.map { try known($0)
+      subject.audio = try vocabulary.audio.map {
+        try known($0)
         return .init(url: $0.url, voiceActorID: $0.voiceActorID)
       }
     }
@@ -282,8 +326,10 @@ enum LegacyStudyImporter {
     }
   }
 
-  private static func require(_ condition: @autoclosure () throws -> Bool,
-                              _ detail: String) throws {
+  private static func require(
+    _ condition: @autoclosure () throws -> Bool,
+    _ detail: String
+  ) throws {
     guard try condition() else { throw LegacyImportError.invalidData(detail) }
   }
 
@@ -295,8 +341,9 @@ enum LegacyStudyImporter {
     private let database: OpaquePointer
     init(_ url: URL) throws {
       var handle: OpaquePointer?
-      let status = sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX,
-                                   nil)
+      let status = sqlite3_open_v2(
+        url.path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX,
+        nil)
       guard status == SQLITE_OK, let handle else {
         if let handle { sqlite3_close(handle) }
         throw LegacyImportError.invalidData("database could not be opened read-only")
@@ -315,11 +362,13 @@ enum LegacyStudyImporter {
       var statement: OpaquePointer?
       defer { if let statement { sqlite3_finalize(statement) } }
       guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK,
-            let statement else {
+        let statement
+      else {
         throw LegacyImportError.invalidData("missing or unreadable database structure")
       }
       var status = sqlite3_step(statement)
-      while status == SQLITE_ROW { try body(Row(statement: statement))
+      while status == SQLITE_ROW {
+        try body(Row(statement: statement))
         status = sqlite3_step(statement)
       }
       try require(status == SQLITE_DONE, "incomplete database read")
@@ -329,8 +378,9 @@ enum LegacyStudyImporter {
   private struct Row {
     let statement: OpaquePointer
     func integer(_ index: Int32) throws -> Int64 {
-      try require(sqlite3_column_type(statement, index) == SQLITE_INTEGER,
-                  "non-integer database field")
+      try require(
+        sqlite3_column_type(statement, index) == SQLITE_INTEGER,
+        "non-integer database field")
       return sqlite3_column_int64(statement, index)
     }
 
@@ -342,7 +392,8 @@ enum LegacyStudyImporter {
       try require(sqlite3_column_type(statement, index) == SQLITE_TEXT, "non-text database field")
       let count = Int(sqlite3_column_bytes(statement, index))
       guard let bytes = sqlite3_column_text(statement, index),
-            let text = String(data: Data(bytes: bytes, count: count), encoding: .utf8) else {
+        let text = String(data: Data(bytes: bytes, count: count), encoding: .utf8)
+      else {
         throw LegacyImportError.invalidData("invalid text encoding")
       }
       return text
@@ -351,11 +402,13 @@ enum LegacyStudyImporter {
     func message<T: SwiftProtobuf.Message>(_ index: Int32) throws -> T {
       try require(sqlite3_column_type(statement, index) == SQLITE_BLOB, "missing protobuf content")
       let count = Int(sqlite3_column_bytes(statement, index))
-      let data = sqlite3_column_blob(statement, index)
+      let data =
+        sqlite3_column_blob(statement, index)
         .map { Data(bytes: $0, count: count) } ?? Data()
       let value: T
-      do { value = try T(serializedData: data) }
-      catch { throw LegacyImportError.invalidData("malformed protobuf content") }
+      do { value = try T(serializedData: data) } catch {
+        throw LegacyImportError.invalidData("malformed protobuf content")
+      }
       try known(value)
       return value
     }

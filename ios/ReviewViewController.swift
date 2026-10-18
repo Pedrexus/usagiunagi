@@ -84,7 +84,7 @@ protocol ReviewViewControllerDelegate: AnyObject {
 class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelegate {
   private let screen = ReviewScreenState()
   private let answerField = AnswerTextField(frame: .zero)
-  private let subjectDetailsView = SubjectDetailsView(frame: .zero, style: .insetGrouped)
+  private lazy var subjectDetails = LegacySubjectDetailsModel(services: services, delegate: self)
   private var kanaInput: TKMKanaInput!
   private var services: TKMServices!
   private weak var delegate: ReviewViewControllerDelegate!
@@ -145,12 +145,11 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     answerField.returnKeyType = .go
     answerField.accessibilityIdentifier = "review.answer"
     answerField.addAction(UIAction { [weak self] _ in self?.answerChanged() }, for: .editingChanged)
-    subjectDetailsView.setup(services: services, delegate: self)
     let field = answerField
-    let details = subjectDetailsView
+    let details = subjectDetails
     let root = ReviewScreen(state: screen, action: { [weak self] in self?.handle($0) },
                             input: { ExistingReviewView(view: field) },
-                            details: { ExistingReviewView(view: details) })
+                            details: { SubjectDetailsPage(model: details) })
     let host = UIHostingController(rootView: root)
     addChild(host)
     view.addSubview(host.view)
@@ -173,7 +172,6 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
-    subjectDetailsView.deselectLastSubjectChipTapped()
     focusAnswerField()
   }
 
@@ -341,7 +339,6 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
 
   private func saveDetails() {
     if screen.phase == .details {
-      subjectDetailsView.saveStudyMaterials()
       session.refreshStudyMaterials()
     }
   }
@@ -469,12 +466,10 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
   }
 
   private func updateAnswerDetails() {
-    subjectDetailsView.update(withSubject: session.activeSubject,
-                              studyMaterials: session.activeStudyMaterials,
-                              assignment: session.activeAssignment,
-                              task: Settings.showFullAnswer || combinesAnkiQuestions ? nil : session
-                                .activeTask)
-    subjectDetailsView.setContentOffset(.zero, animated: false)
+    subjectDetails.update(subject: session.activeSubject, assignment: session.activeAssignment,
+      task: Settings.showFullAnswer || combinesAnkiQuestions ? nil : session.activeTask,
+      reviewQuestion: session.activeTaskType, material: session.activeStudyMaterials)
+    screen.canShowAll = subjectDetails.questions != [.meaning, .reading]
   }
 
   @objc private func revealAnswer() {
@@ -491,21 +486,8 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
   }
 
   @objc func commandCPressed() {
-    if let selected = selectedTextView(in: subjectDetailsView) { selected.copy(nil) }
-    else { markCorrect() }
-  }
-
-  private func selectedTextView(in view: UIView) -> UITextView? {
-    if let textView = view as? UITextView, textView.isSelectable,
-       textView.selectedRange.length > 0 {
-      return textView
-    }
-    for subview in view.subviews {
-      if let textView = selectedTextView(in: subview) {
-        return textView
-      }
-    }
-    return nil
+    // Native SwiftUI selection handles Copy before this non-priority shortcut.
+    markCorrect()
   }
 
   @objc func markIncorrect() { guard screen.phase == .details else { return }
@@ -552,11 +534,17 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     if let previousSubject { didTapSubject(previousSubject) }
   }
 
-  @objc func showAllInformation() {
-    if screen.phase == .details { subjectDetailsView.showAllFields() }
+  func openPracticeReview(_ subject: TKMSubject) {
+    guard FeatureFlags.showSubjectDeveloperOptions else { return }
+    saveDetails()
+    navigationController?.pushViewController(ReviewContainerViewController.practice(services: services, subject: subject), animated: true)
   }
 
-  @objc func playAudio() { if screen.phase == .details { subjectDetailsView.playAudio() } }
+  @objc func showAllInformation() {
+    if screen.phase == .details { subjectDetails.showAllFields(); screen.canShowAll = false }
+  }
+
+  @objc func playAudio() { if screen.phase == .details { subjectDetails.playAudio() } }
 
   func fontsThatCanRenderText(_ text: String, exclude: [String]?) -> [String] {
     var availableFonts: [String] = []

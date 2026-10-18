@@ -191,7 +191,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, LoginViewControllerDele
 
   private func openSubjectDetails(subject: TKMSubject) {
     let vc = StoryboardScene.SubjectDetails.initialScene.instantiate()
-    vc.setup(services: services, subject: subject, showHints: true)
+    vc.setup(services: services, subject: subject)
     navigationController.pushViewController(vc, animated: true)
   }
 

@@ -15,6 +15,7 @@
 import Foundation
 import PromiseKit
 import Reachability
+import StudyCore
 import StudySpeech
 import WaniKaniAPI
 
@@ -78,7 +79,7 @@ import WaniKaniAPI
         for key in ["groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
                     "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
                     "allowSkippingReviews", "exactMatch", "showAnswerImmediately", "enableCheats",
-                    "ankiModeCombineReadingMeaning"] {
+                    "ankiModeCombineReadingMeaning", "blurContextSentences"] {
           if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
              let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",
                                                           requiringSecureCoding: true) {
@@ -108,6 +109,9 @@ import WaniKaniAPI
 
   class FakeLocalCachingClient: LocalCachingClient {
     private var completedLessons: Set<Int64> = []
+    private var editedMaterials: [Int64: StudyMaterial] = [:]
+    private var materialVersions: [Int64: Int64] = [:]
+    private var conflicts: Set<Int64> = []
     private let subjectTextProtos: [Int64: String] = [
       // Subjects used in the search results for "sake". Abridged protos containing just the fields
       // displayed in search results.
@@ -1387,8 +1391,32 @@ import WaniKaniAPI
       return result
     }
 
-    override func getStudyMaterial(subjectId _: Int64) -> TKMStudyMaterials? {
-      nil
+    override func getStudyMaterial(subjectId: Int64) -> TKMStudyMaterials? {
+      guard let material = editedMaterials[subjectId] else { return nil }
+      var value = TKMStudyMaterials()
+      value.subjectID = subjectId; value.meaningNote = material.meaningNote
+      value.readingNote = material.readingNote; value.meaningSynonyms = material.meaningSynonyms
+      return value
+    }
+
+    override func editableStudyMaterial(subjectID: Int64, account: String) -> StudyMaterialEdit<Int64>? {
+      guard account == getUserInfo()?.username else { return nil }
+      return StudyMaterialEdit(material: editedMaterials[subjectID] ?? StudyMaterial(subjectID: subjectID),
+        version: materialVersions[subjectID])
+    }
+
+    override func saveEditedStudyMaterial(_ material: StudyMaterial, expectedRevision: Int64?, account: String) -> Bool {
+      guard account == getUserInfo()?.username else { return false }
+      if ProcessInfo.processInfo.arguments.contains("MaterialConflictFixture"), conflicts.insert(material.subjectID).inserted {
+        editedMaterials[material.subjectID] = StudyMaterial(subjectID: material.subjectID,
+          meaningNote: "Concurrent saved note\n" + StudyMaterial.exclusionMarker,
+          readingNote: "Concurrent hidden reading note")
+        materialVersions[material.subjectID, default: 0] += 1
+      }
+      guard materialVersions[material.subjectID] == expectedRevision else { return false }
+      editedMaterials[material.subjectID] = material
+      materialVersions[material.subjectID, default: 0] += 1
+      return true
     }
 
     override func getUserInfo() -> TKMUser? {
@@ -1481,8 +1509,11 @@ import WaniKaniAPI
       return Promise.value(())
     }
 
-    override func updateStudyMaterial(_: TKMStudyMaterials) -> Promise<Void> {
-      Promise.value(())
+    override func updateStudyMaterial(_ value: TKMStudyMaterials) -> Promise<Void> {
+      editedMaterials[value.subjectID] = StudyMaterial(subjectID: value.subjectID, meaningNote: value.meaningNote,
+        readingNote: value.readingNote, meaningSynonyms: value.meaningSynonyms)
+      materialVersions[value.subjectID, default: 0] += 1
+      return Promise.value(())
     }
 
     override func clearAllData() {}

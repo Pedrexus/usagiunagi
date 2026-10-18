@@ -32,15 +32,19 @@ extension Notification.Name {
 
 struct ReviewComposition {
   var availableReviews = 0,
-      countByType: [TKMSubject.TypeEnum: Int] = [.radical: 0, .kanji: 0, .vocabulary: 0],
-      countByCategory: [SRSStageCategory: Int] = [.apprentice: 0, .guru: 0, .master: 0,
-                                                  .enlightened: 0]
+    countByType: [TKMSubject.TypeEnum: Int] = [.radical: 0, .kanji: 0, .vocabulary: 0],
+    countByCategory: [SRSStageCategory: Int] = [
+      .apprentice: 0, .guru: 0, .master: 0,
+      .enlightened: 0,
+    ]
 
   static func + (left: ReviewComposition, right: ReviewComposition) -> ReviewComposition {
-    ReviewComposition(availableReviews: left.availableReviews + right.availableReviews,
-                      countByType: left.countByType.merging(right.countByType, uniquingKeysWith: +),
-                      countByCategory: left.countByCategory.merging(right.countByCategory,
-                                                                    uniquingKeysWith: +))
+    ReviewComposition(
+      availableReviews: left.availableReviews + right.availableReviews,
+      countByType: left.countByType.merging(right.countByType, uniquingKeysWith: +),
+      countByCategory: left.countByCategory.merging(
+        right.countByCategory,
+        uniquingKeysWith: +))
   }
 }
 
@@ -51,7 +55,7 @@ private func postNotificationOnMainQueue(_ notification: Notification.Name) {
 }
 
 class LocalCachingClient: NSObject, SubjectLevelGetter {
-  let excludedText = "#tsurukameExclude"
+  let excludedText = StudyMaterial.exclusionMarker
 
   let client: WaniKaniAPIClient
   let reachability: Reachability
@@ -67,10 +71,11 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   @Cached(notificationName: .lccPendingItemsChanged) var pendingProgressCount: Int
   @Cached(notificationName: .lccPendingItemsChanged) var pendingStudyMaterialsCount: Int
-  @Cached(notificationName: .lccAvailableItemsChanged) var availableSubjects: (lessonCount: Int,
-                                                                               reviewComposition: [
-                                                                                 ReviewComposition
-                                                                               ])
+  @Cached(notificationName: .lccAvailableItemsChanged) var availableSubjects:
+    (
+      lessonCount: Int,
+      reviewComposition: [ReviewComposition]
+    )
 
   @Cached var guruKanjiCount: Int
   @Cached var apprenticeCount: Int
@@ -93,15 +98,17 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
     // register for notifications before setting up key store so that we don't
     // run into any crazy race conditions
-    NotificationCenter.default.addObserver(self,
-                                           selector: #selector(receivedRecentMistakesFromCloud),
-                                           name: NSUbiquitousKeyValueStore
-                                             .didChangeExternallyNotification,
-                                           object: keyValueStore)
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(receivedRecentMistakesFromCloud),
+      name: NSUbiquitousKeyValueStore
+        .didChangeExternallyNotification,
+      object: keyValueStore)
 
     let user = getUserInfo()
-    recentMistakeHandler.setup(keyStore: keyValueStore,
-                               storageFileNamePrefix: user?.username ?? "")
+    recentMistakeHandler.setup(
+      keyStore: keyValueStore,
+      storageFileNamePrefix: user?.username ?? "")
     // ensure we have latest mistakes all merged in from cloud in case we downloaded
     // data but did not trigger the notification (e.g. app got killed before local merge
     // or similar)
@@ -141,8 +148,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   func updateGuruKanjiCount() -> Int {
     db.inDatabase { db in
-      let cursor = db.query("SELECT COUNT(*) FROM subject_progress " +
-        "WHERE srs_stage >= 5 AND subject_type = \(TKMSubject.TypeEnum.kanji.rawValue)")
+      let cursor = db.query(
+        "SELECT COUNT(*) FROM subject_progress "
+          + "WHERE srs_stage >= 5 AND subject_type = \(TKMSubject.TypeEnum.kanji.rawValue)")
       if cursor.next() {
         return Int(cursor.int(forColumnIndex: 0))
       }
@@ -152,8 +160,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   func updateApprenticeCount() -> Int {
     db.inDatabase { db in
-      let cursor = db.query("SELECT COUNT(*) FROM subject_progress " +
-        "WHERE srs_stage >= 1 AND srs_stage <= 4")
+      let cursor = db.query(
+        "SELECT COUNT(*) FROM subject_progress " + "WHERE srs_stage >= 1 AND srs_stage <= 4")
       if cursor.next() {
         return Int(cursor.int(forColumnIndex: 0))
       }
@@ -171,8 +179,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   func updateSrsCategoryCounts() -> [Int] {
     db.inDatabase { db in
-      let cursor = db.query("SELECT srs_stage, COUNT(*) FROM subject_progress " +
-        "WHERE srs_stage >= 1 GROUP BY srs_stage")
+      let cursor = db.query(
+        "SELECT srs_stage, COUNT(*) FROM subject_progress "
+          + "WHERE srs_stage >= 1 GROUP BY srs_stage")
 
       var ret = Array(repeating: 0, count: 6)
       for cursor in cursor {
@@ -191,9 +200,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     }
 
     let now = Date()
-    var lessonCount = 0,
-        reviewComposition = Array(repeating: ReviewComposition(),
-                                  count: Int(SRSStage.maxDuration / 60 / 60) + 1)
+    var lessonCount = 0
+    var reviewComposition = Array(
+      repeating: ReviewComposition(),
+      count: Int(SRSStage.maxDuration / 60 / 60) + 1)
 
     func iterateValidReview(_ type: TKMSubject.TypeEnum, hours: Int, stage: SRSStage) {
       guard hours < reviewComposition.count else { return }
@@ -218,8 +228,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       if assignment.isLessonStage {
         lessonCount += 1
       } else if assignment.isReviewStage {
-        let stage = assignment.srsStage,
-            interval = max(0, assignment.availableAtDate.timeIntervalSince(now))
+        let stage = assignment.srsStage
+        let interval = max(0, assignment.availableAtDate.timeIntervalSince(now))
         iterateValidReview(assignment.subjectType, hours: Int(ceil(interval / 3600)), stage: stage)
       }
     }
@@ -350,25 +360,25 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   // Run when the user logs out. Clears everything in the database.
   private let kClearAllData = """
-  UPDATE sync SET
-    assignments_updated_after = "",
-    study_materials_updated_after = "",
-    subjects_updated_after = "",
-    voice_actors_updated_after = ""
-  ;
-  DELETE FROM assignments;
-  DELETE FROM pending_progress;
-  DELETE FROM study_materials;
-  DELETE FROM user;
-  DELETE FROM pending_study_materials;
-  DELETE FROM subject_progress;
-  DELETE FROM error_log;
-  DELETE FROM level_progressions;
-  DELETE FROM subjects;
-  DELETE FROM voice_actors;
-  DELETE FROM audio_urls;
-  DELETE FROM review_stats;
-  """
+    UPDATE sync SET
+      assignments_updated_after = "",
+      study_materials_updated_after = "",
+      subjects_updated_after = "",
+      voice_actors_updated_after = ""
+    ;
+    DELETE FROM assignments;
+    DELETE FROM pending_progress;
+    DELETE FROM study_materials;
+    DELETE FROM user;
+    DELETE FROM pending_study_materials;
+    DELETE FROM subject_progress;
+    DELETE FROM error_log;
+    DELETE FROM level_progressions;
+    DELETE FROM subjects;
+    DELETE FROM voice_actors;
+    DELETE FROM audio_urls;
+    DELETE FROM review_stats;
+    """
 
   private func openDatabase() {
     db = FMDatabaseQueue(url: LocalCachingClient.databaseUrl())!
@@ -396,20 +406,23 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       }
 
       // Update the table schema.
-      for version in currentVersion ..< targetVersion {
+      for version in currentVersion..<targetVersion {
         db.mustExecuteStatements(schemas[version - kInitialSchemaVersion])
 
         // Set the is_kana_only_vocab field.
         if version == 9 {
-          for cursor in db.query("SELECT a.pb, s.pb FROM assignments AS a " +
-            "JOIN subjects AS s ON a.subject_id = s.id") {
+          for cursor in db.query(
+            "SELECT a.pb, s.pb FROM assignments AS a " + "JOIN subjects AS s ON a.subject_id = s.id"
+          ) {
             var assignment: TKMAssignment = cursor.proto(forColumnIndex: 0)!
             let subject: TKMSubject = cursor.proto(forColumnIndex: 1)!
             if subject.hasVocabulary, subject.readings.isEmpty {
               assignment.isKanaOnlyVocab = true
-              db.mustExecuteUpdate("UPDATE assignments SET pb = ? WHERE id = ?", args: [
-                try! assignment.serializedData(), assignment.id,
-              ])
+              db.mustExecuteUpdate(
+                "UPDATE assignments SET pb = ? WHERE id = ?",
+                args: [
+                  try! assignment.serializedData(), assignment.id,
+                ])
             }
           }
         }
@@ -436,8 +449,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       .trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
-  func setExcluded(studyMaterials: inout TKMStudyMaterials,
-                   shouldExclude: Bool) -> Promise<Void> {
+  func setExcluded(
+    studyMaterials: inout TKMStudyMaterials,
+    shouldExclude: Bool
+  ) -> Promise<Void> {
     if shouldExclude {
       studyMaterials.meaningNote = studyMaterials.meaningNote.appending("\n\(excludedText)")
         .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -447,8 +462,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return updateStudyMaterial(studyMaterials)
   }
 
-  func makeMeaningNote(studyMaterials: TKMStudyMaterials,
-                       note: String) -> String {
+  func makeMeaningNote(
+    studyMaterials: TKMStudyMaterials,
+    note: String
+  ) -> String {
     let excluded = isExcluded(studyMaterials: studyMaterials)
     return excluded ? note.appending(excludedText) : note
   }
@@ -475,7 +492,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         return true
       }
       if Settings.allowExcludeItems,
-         let activeStudyMaterials = getStudyMaterial(subjectId: assignment.subjectID) {
+        let activeStudyMaterials = getStudyMaterial(subjectId: assignment.subjectID)
+      {
         return !isExcluded(studyMaterials: activeStudyMaterials)
       }
       return true
@@ -517,11 +535,11 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   private func getAllRecentMistakeAssignments(transaction db: FMDatabase) -> [TKMAssignment] {
     var ret = [TKMAssignment]()
     let dayAgo = Calendar.current.date(byAdding: .hour, value: -24, to: Date())!
-    for cursor in db.query("SELECT a.pb " +
-      "FROM subject_progress AS p " +
-      "LEFT JOIN assignments AS a " +
-      "ON p.id = a.subject_id " +
-      "WHERE last_mistake_time >= \"\(dateFormatter.string(from: dayAgo))\"") {
+    for cursor in db.query(
+      "SELECT a.pb " + "FROM subject_progress AS p " + "LEFT JOIN assignments AS a "
+        + "ON p.id = a.subject_id "
+        + "WHERE last_mistake_time >= \"\(dateFormatter.string(from: dayAgo))\"")
+    {
       if let pb: TKMAssignment = cursor.proto(forColumnIndex: 0) {
         ret.append(pb)
       }
@@ -531,19 +549,21 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   private func getAllLeechAssignments(transaction db: FMDatabase) -> [TKMAssignment] {
     var ret = [TKMAssignment]()
-    for cursor in db.query("SELECT a.pb, rs.pb " +
-      "FROM assignments AS a " +
-      "JOIN review_stats AS rs " +
-      "ON a.subject_id = rs.subject_id ") {
+    for cursor in db.query(
+      "SELECT a.pb, rs.pb " + "FROM assignments AS a " + "JOIN review_stats AS rs "
+        + "ON a.subject_id = rs.subject_id ")
+    {
       if let reviewStatPb: TKMReviewStatistic = cursor.proto(forColumnIndex: 1) {
         let incorrect = max(reviewStatPb.meaningIncorrect, reviewStatPb.readingIncorrect)
-        let currentStreak = min(reviewStatPb.meaningCurrentStreak,
-                                reviewStatPb.readingCurrentStreak)
+        let currentStreak = min(
+          reviewStatPb.meaningCurrentStreak,
+          reviewStatPb.readingCurrentStreak)
         // formula for leeches from: https://community.wanikani.com/t/userscript-wanikani-open-framework-additional-filters-recent-lessons-leech-training-related-items-and-more/30512
         if currentStreak > 0,
-           Float(incorrect) / pow(Float(currentStreak), 1.5) >= Settings.leechThreshold,
-           let assignmentPb: TKMAssignment = cursor.proto(forColumnIndex: 0),
-           assignmentPb.hasPassedAt, !assignmentPb.hasBurnedAt {
+          Float(incorrect) / pow(Float(currentStreak), 1.5) >= Settings.leechThreshold,
+          let assignmentPb: TKMAssignment = cursor.proto(forColumnIndex: 0),
+          assignmentPb.hasPassedAt, !assignmentPb.hasBurnedAt
+        {
           ret.append(assignmentPb)
         }
       }
@@ -553,11 +573,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   private func getAllBurnedAssignments(transaction db: FMDatabase) -> [TKMAssignment] {
     var ret = [TKMAssignment]()
-    for cursor in db.query("SELECT a.pb " +
-      "FROM subject_progress AS p " +
-      "LEFT JOIN assignments AS a " +
-      "ON p.id = a.subject_id " +
-      "WHERE srs_stage = \(SRSStage.burned.rawValue)") {
+    for cursor in db.query(
+      "SELECT a.pb " + "FROM subject_progress AS p " + "LEFT JOIN assignments AS a "
+        + "ON p.id = a.subject_id " + "WHERE srs_stage = \(SRSStage.burned.rawValue)")
+    {
       if let assignment: TKMAssignment = cursor.proto(forColumnIndex: 0) { ret.append(assignment) }
     }
     return ret
@@ -569,11 +588,11 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     // and the item moves to the Guru stage, this will no longer remain in Recent Lessons.
     // https://knowledge.wanikani.com/getting-started/extra-study/
     var ret = [TKMAssignment]()
-    for cursor in db.query("SELECT a.pb " +
-      "FROM subject_progress AS p " +
-      "LEFT JOIN assignments AS a " +
-      "ON p.id = a.subject_id " +
-      "WHERE srs_stage >= \(SRSStage.apprentice1.rawValue) AND srs_stage <= \(SRSStage.apprentice4.rawValue)") {
+    for cursor in db.query(
+      "SELECT a.pb " + "FROM subject_progress AS p " + "LEFT JOIN assignments AS a "
+        + "ON p.id = a.subject_id "
+        + "WHERE srs_stage >= \(SRSStage.apprentice1.rawValue) AND srs_stage <= \(SRSStage.apprentice4.rawValue)"
+    ) {
       let assignment = cursor.proto(forColumnIndex: 0) as TKMAssignment?
       if let assignment = assignment, assignment.hasPassedAt == false {
         ret.append(assignment)
@@ -588,8 +607,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     }
   }
 
-  private func getAllPendingProgress(transaction db: FMDatabase,
-                                     limit: Int? = nil) -> [TKMProgress] {
+  private func getAllPendingProgress(
+    transaction db: FMDatabase,
+    limit: Int? = nil
+  ) -> [TKMProgress] {
     if let limit = limit, limit <= 0 {
       return [TKMProgress]()
     }
@@ -612,6 +633,42 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         return cursor.proto(forColumnIndex: 0)
       }
       return nil
+    }
+  }
+
+  func editableStudyMaterial(subjectID: Int64, account: String) -> StudyMaterialEdit<Int64>? {
+    db.inDatabase { db in
+      let row = db.query(
+        "SELECT u.pb, m.pb, m.local_revision FROM user u LEFT JOIN study_materials m ON m.id = ?",
+        args: [subjectID])
+      guard row.next(), let user: TKMUser = row.proto(forColumnIndex: 0), user.username == account
+      else { return nil }
+      guard let value: TKMStudyMaterials = row.proto(forColumnIndex: 1) else {
+        return StudyMaterialEdit(material: StudyMaterial(subjectID: subjectID), version: nil)
+      }
+      return StudyMaterialEdit(
+        material: StudyMaterial(
+          subjectID: subjectID,
+          meaningNote: value.meaningNote, readingNote: value.readingNote,
+          meaningSynonyms: value.meaningSynonyms), version: row.longLongInt(forColumnIndex: 2))
+    }
+  }
+
+  /// Keep the existing writer/outbox, but fence a SwiftUI editor's captured account and revision.
+  func saveEditedStudyMaterial(_ material: StudyMaterial, expectedRevision: Int64?, account: String)
+    -> Bool
+  {
+    let result = db.inTransaction { db in
+      SyncStore.saveEditedMaterial(
+        material, expectedRevision: expectedRevision, account: account, in: db)
+    }
+    switch result {
+    case .changed(let updated):
+      _pendingStudyMaterialsCount.invalidate()
+      _ = sendPendingStudyMaterials([updated], progress: Progress(totalUnitCount: 1))
+      return true
+    case .unchanged: return true
+    case .stale, .accountChanged: return false
     }
   }
 
@@ -688,11 +745,11 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     var ret = [TKMAssignment]()
     var subjectIds = Set<Int>()
 
-    for cursor in db.query("SELECT p.id, p.level, p.srs_stage, p.subject_type, a.pb " +
-      "FROM subject_progress AS p " +
-      "LEFT JOIN assignments AS a " +
-      "ON p.id = a.subject_id " +
-      "WHERE p.level = ?", args: [level]) {
+    for cursor in db.query(
+      "SELECT p.id, p.level, p.srs_stage, p.subject_type, a.pb " + "FROM subject_progress AS p "
+        + "LEFT JOIN assignments AS a " + "ON p.id = a.subject_id " + "WHERE p.level = ?",
+      args: [level])
+    {
       var assignment: TKMAssignment? = cursor.proto(forColumnIndex: 4)
       if assignment == nil {
         assignment = TKMAssignment()
@@ -709,24 +766,29 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     // Add fake assignments for any other subjects at this level that don't have assignments yet
     // (the user hasn't unlocked the prerequisite radicals/kanji).
     let subjectsByLevel = getSubjects(byLevel: level, transaction: db)
-    addFakeAssignments(to: &ret, subjectIds: subjectsByLevel.radicals, type: .radical,
-                       level: level, excludeSubjectIds: subjectIds)
-    addFakeAssignments(to: &ret, subjectIds: subjectsByLevel.kanji, type: .kanji, level: level,
-                       excludeSubjectIds: subjectIds)
-    addFakeAssignments(to: &ret, subjectIds: subjectsByLevel.vocabulary, type: .vocabulary,
-                       level: level, excludeSubjectIds: subjectIds)
+    addFakeAssignments(
+      to: &ret, subjectIds: subjectsByLevel.radicals, type: .radical,
+      level: level, excludeSubjectIds: subjectIds)
+    addFakeAssignments(
+      to: &ret, subjectIds: subjectsByLevel.kanji, type: .kanji, level: level,
+      excludeSubjectIds: subjectIds)
+    addFakeAssignments(
+      to: &ret, subjectIds: subjectsByLevel.vocabulary, type: .vocabulary,
+      level: level, excludeSubjectIds: subjectIds)
 
     return ret
   }
 
-  private func getAssignmentsInCategory(category: SRSStageCategory,
-                                        transaction db: FMDatabase) -> [TKMAssignment] {
+  private func getAssignmentsInCategory(
+    category: SRSStageCategory,
+    transaction db: FMDatabase
+  ) -> [TKMAssignment] {
     var ret = [TKMAssignment]()
-    for cursor in db.query("SELECT a.pb " +
-      "FROM subject_progress AS p " +
-      "LEFT JOIN assignments AS a " +
-      "ON p.id = a.subject_id " +
-      "WHERE srs_stage >= \(category.firstSrsStage.rawValue) AND srs_stage <= \(category.lastSrsStage.rawValue)") {
+    for cursor in db.query(
+      "SELECT a.pb " + "FROM subject_progress AS p " + "LEFT JOIN assignments AS a "
+        + "ON p.id = a.subject_id "
+        + "WHERE srs_stage >= \(category.firstSrsStage.rawValue) AND srs_stage <= \(category.lastSrsStage.rawValue)"
+    ) {
       if let pb: TKMAssignment = cursor.proto(forColumnIndex: 0) {
         ret.append(pb)
       }
@@ -734,11 +796,13 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return ret
   }
 
-  private func addFakeAssignments(to assignments: inout [TKMAssignment],
-                                  subjectIds: [Int64],
-                                  type: TKMSubject.TypeEnum,
-                                  level: Int,
-                                  excludeSubjectIds: Set<Int>) {
+  private func addFakeAssignments(
+    to assignments: inout [TKMAssignment],
+    subjectIds: [Int64],
+    type: TKMSubject.TypeEnum,
+    level: Int,
+    excludeSubjectIds: Set<Int>
+  ) {
     for id in subjectIds {
       if excludeSubjectIds.contains(Int(id)) {
         continue
@@ -762,8 +826,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   func getRadicalsWithCharacterImages() -> [TKMSubject] {
     db.inDatabase { db in
       var ret = [TKMSubject]()
-      for cursor in db.query("SELECT pb FROM subjects WHERE type = ?",
-                             args: [TKMSubject.TypeEnum.radical.rawValue]) {
+      for cursor in db.query(
+        "SELECT pb FROM subjects WHERE type = ?",
+        args: [TKMSubject.TypeEnum.radical.rawValue])
+      {
         let subject: TKMSubject = cursor.proto(forColumnIndex: 0)!
         if subject.hasRadical, subject.radical.hasCharacterImageFile_p {
           ret.append(subject)
@@ -793,9 +859,11 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   func getSubject(japanese: String, type: TKMSubject.TypeEnum) -> TKMSubject? {
     db.inDatabase { db in
-      let cursor = db.query("SELECT pb FROM subjects WHERE japanese = ? AND type = ?", args: [
-        japanese, type.rawValue,
-      ])
+      let cursor = db.query(
+        "SELECT pb FROM subjects WHERE japanese = ? AND type = ?",
+        args: [
+          japanese, type.rawValue,
+        ])
       if cursor.next() {
         return cursor.proto(forColumnIndex: 0)
       }
@@ -811,15 +879,16 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       let levelList = levels.map { String($0) }.joined(separator: ",")
       let voiceActorIdList = voiceActorIds.map { String($0) }.joined(separator: ",")
 
-      let cursor = db.query("SELECT subject_id, voice_actor_id, level, url " +
-        "FROM audio_urls " +
-        "WHERE level IN (\(levelList)) " +
-        "AND voice_actor_id IN (\(voiceActorIdList))")
+      let cursor = db.query(
+        "SELECT subject_id, voice_actor_id, level, url " + "FROM audio_urls "
+          + "WHERE level IN (\(levelList)) " + "AND voice_actor_id IN (\(voiceActorIdList))")
       while cursor.next() {
-        ret.append(AudioUrl(subjectId: cursor.longLongInt(forColumnIndex: 0),
-                            voiceActorId: cursor.longLongInt(forColumnIndex: 1),
-                            level: Int(cursor.int(forColumnIndex: 2)),
-                            url: cursor.string(forColumnIndex: 3)!))
+        ret.append(
+          AudioUrl(
+            subjectId: cursor.longLongInt(forColumnIndex: 0),
+            voiceActorId: cursor.longLongInt(forColumnIndex: 1),
+            level: Int(cursor.int(forColumnIndex: 2)),
+            url: cursor.string(forColumnIndex: 3)!))
       }
     }
     return ret
@@ -888,8 +957,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   func getRecentMistakesCount() -> Int {
     let dayAgo = Calendar.current.date(byAdding: .hour, value: -24, to: Date())!
     return db.inDatabase { db in
-      let cursor = db.query("SELECT COUNT(*) FROM subject_progress " +
-        "WHERE srs_stage >= \(SRSStage.apprentice1.rawValue) AND last_mistake_time >= \"\(dateFormatter.string(from: dayAgo))\"")
+      let cursor = db.query(
+        "SELECT COUNT(*) FROM subject_progress "
+          + "WHERE srs_stage >= \(SRSStage.apprentice1.rawValue) AND last_mistake_time >= \"\(dateFormatter.string(from: dayAgo))\""
+      )
       if cursor.next() {
         return Int(cursor.int(forColumnIndex: 0))
       }
@@ -897,19 +968,19 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     }
   }
 
-  /**
-      Return array of subject/assignment ID (which is the same as subject_progress.id) to last_mistake_time (Date)
-   */
+  /// Last mistake times keyed by subject/assignment ID.
   func getRecentMistakeTimes() -> [Int32: Date] {
     let dayAgo = Calendar.current.date(byAdding: .hour, value: -24, to: Date())!
     var mistakeTimes = [Int32: Date]()
     db.inDatabase { db in
-      for cursor in db.query("SELECT id, last_mistake_time " +
-        "FROM subject_progress " +
-        "WHERE last_mistake_time >= \"\(dateFormatter.string(from: dayAgo))\"") {
+      for cursor in db.query(
+        "SELECT id, last_mistake_time " + "FROM subject_progress "
+          + "WHERE last_mistake_time >= \"\(dateFormatter.string(from: dayAgo))\"")
+      {
         let subjectId = cursor.int(forColumnIndex: 0)
         if let lastMistakeTime = cursor.string(forColumnIndex: 1),
-           let date = dateFormatter.date(from: lastMistakeTime) {
+          let date = dateFormatter.date(from: lastMistakeTime)
+        {
           mistakeTimes[subjectId] = date
         }
       }
@@ -926,9 +997,10 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         } else if p.meaningWrong || p.readingWrong {
           newSrsStage = newSrsStage.previous
         }
-        SyncStore.saveLocalProgress(p, srsStage: newSrsStage.rawValue,
-                                    mistakeTime: !p.isLesson && (p.meaningWrong || p.readingWrong)
-                                      ? dateFormatter.string(from: Date()) : "", in: db)
+        SyncStore.saveLocalProgress(
+          p, srsStage: newSrsStage.rawValue,
+          mistakeTime: !p.isLesson && (p.meaningWrong || p.readingWrong)
+            ? dateFormatter.string(from: Date()) : "", in: db)
       }
     }
 
@@ -944,8 +1016,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   }
 
   private func sendPendingProgress(_ items: [TKMProgress], progress: Progress) -> Promise<Void> {
-    upload(items.map { PendingUploadKey(kind: .progress, subjectID: $0.assignment.subjectID) },
-           progress: progress)
+    upload(
+      items.map { PendingUploadKey(kind: .progress, subjectID: $0.assignment.subjectID) },
+      progress: progress)
   }
 
   private func upload(_ keys: [PendingUploadKey], progress: Progress) -> Promise<Void> {
@@ -954,33 +1027,37 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return Promise { seal in
       Task { @MainActor in
         do {
-          let repository = UploadRepository(lifetime: lifetime, load: { @MainActor key in
-            try lifetime.withActive { self.pendingPayload(for: key) }
-          }, send: { @MainActor key, payload in
-            let request = try lifetime.withActive { () throws -> Promise<Void> in
-              switch key.kind {
-              case .progress:
-                return try self.client.sendProgress(TKMProgress(serializedData: payload))
-              case .studyMaterial:
-                return try self.client
-                  .updateStudyMaterial(TKMStudyMaterials(serializedData: payload))
+          let repository = UploadRepository(
+            lifetime: lifetime,
+            load: { @MainActor key in
+              try lifetime.withActive { self.pendingPayload(for: key) }
+            },
+            send: { @MainActor key, payload in
+              let request = try lifetime.withActive { () throws -> Promise<Void> in
+                switch key.kind {
+                case .progress:
+                  return try self.client.sendProgress(TKMProgress(serializedData: payload))
+                case .studyMaterial:
+                  return try self.client
+                    .updateStudyMaterial(TKMStudyMaterials(serializedData: payload))
+                }
               }
-            }
-            try await withCheckedThrowingContinuation { continuation in
-              request.done { continuation.resume() }.catch { continuation.resume(throwing: $0) }
-            }
-          }, acknowledge: { @MainActor key, payload in
-            try lifetime.withActive {
-              self.db.inTransaction { db in
-                PendingUploadStore.acknowledge(key, payload: payload, in: db)
+              try await withCheckedThrowingContinuation { continuation in
+                request.done { continuation.resume() }.catch { continuation.resume(throwing: $0) }
               }
-              switch key.kind {
-              case .progress: self._pendingProgressCount.invalidate()
-              case .studyMaterial: self._pendingStudyMaterialsCount.invalidate()
+            },
+            acknowledge: { @MainActor key, payload in
+              try lifetime.withActive {
+                self.db.inTransaction { db in
+                  PendingUploadStore.acknowledge(key, payload: payload, in: db)
+                }
+                switch key.kind {
+                case .progress: self._pendingProgressCount.invalidate()
+                case .studyMaterial: self._pendingStudyMaterialsCount.invalidate()
+                }
+                progress.completedUnitCount += 1
               }
-              progress.completedUnitCount += 1
-            }
-          })
+            })
           let job = await Self.uploadCoordinator.enqueue(keys, repository: repository)
           try await job.value
           progress.completedUnitCount = progress.totalUnitCount
@@ -998,8 +1075,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   func updateStudyMaterial(_ material: TKMStudyMaterials) -> Promise<Void> {
     db.inTransaction { db in
-      SyncStore.saveLocalMaterial(subjectID: material.subjectID,
-                                  payload: try! material.serializedData(), in: db)
+      SyncStore.saveLocalMaterial(
+        subjectID: material.subjectID,
+        payload: try! material.serializedData(), in: db)
     }
 
     _pendingStudyMaterialsCount.invalidate()
@@ -1014,11 +1092,11 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return db.inDatabase { db in
       var ret = [TKMStudyMaterials]()
       let query = """
-        SELECT s.pb
-        FROM study_materials AS s,
-             pending_study_materials AS p ON s.id = p.id
-        LIMIT \(limit)
-      """
+          SELECT s.pb
+          FROM study_materials AS s,
+               pending_study_materials AS p ON s.id = p.id
+          LIMIT \(limit)
+        """
       for cursor in db.query(query) {
         ret.append(cursor.proto(forColumnIndex: 0)!)
       }
@@ -1026,10 +1104,13 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     }
   }
 
-  private func sendPendingStudyMaterials(_ materials: [TKMStudyMaterials],
-                                         progress: Progress) -> Promise<Void> {
-    upload(materials.map { PendingUploadKey(kind: .studyMaterial, subjectID: $0.subjectID) },
-           progress: progress)
+  private func sendPendingStudyMaterials(
+    _ materials: [TKMStudyMaterials],
+    progress: Progress
+  ) -> Promise<Void> {
+    upload(
+      materials.map { PendingUploadKey(kind: .studyMaterial, subjectID: $0.subjectID) },
+      progress: progress)
   }
 
   private func handleError(err: Error) {
@@ -1043,28 +1124,31 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         if (err.message?.contains("hibernating")) ?? false {
           postNotificationOnMainQueue(.lccHibernating)
         } else {
-          logError(code: err.code,
-                   description: err.message,
-                   request: err.request,
-                   response: err.response,
-                   responseData: nil)
+          logError(
+            code: err.code,
+            description: err.message,
+            request: err.request,
+            response: err.response,
+            responseData: nil)
         }
 
       default:
-        logError(code: err.code,
-                 description: err.message,
-                 request: err.request,
-                 response: err.response,
-                 responseData: nil)
+        logError(
+          code: err.code,
+          description: err.message,
+          request: err.request,
+          response: err.response,
+          responseData: nil)
       }
       return
 
     case let err as WaniKaniJSONDecodeError:
-      logError(code: nil,
-               description: err.error.localizedDescription,
-               request: err.request,
-               response: err.response,
-               responseData: err.data)
+      logError(
+        code: nil,
+        description: err.error.localizedDescription,
+        request: err.request,
+        response: err.response,
+        responseData: err.data)
       return
 
     case let err as URLError:
@@ -1081,15 +1165,18 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       break
     }
 
-    logError(code: nil,
-             description: err.localizedDescription,
-             request: nil,
-             response: nil,
-             responseData: nil)
+    logError(
+      code: nil,
+      description: err.localizedDescription,
+      request: nil,
+      response: nil,
+      responseData: nil)
   }
 
-  private func logError(code: Int?, description: String?, request: URLRequest?,
-                        response: HTTPURLResponse?, responseData: Data?) {
+  private func logError(
+    code: Int?, description: String?, request: URLRequest?,
+    response: HTTPURLResponse?, responseData: Data?
+  ) {
     let requestHeaders = request?.allHTTPHeaderFields?.description
     let responseHeaders = response?.allHeaderFields.description
 
@@ -1111,25 +1198,30 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
     db.inTransaction { db in
       // Delete old log entries.
-      db.mustExecuteUpdate("""
-          DELETE FROM error_log WHERE ROWID IN (
-            SELECT ROWID FROM error_log ORDER BY ROWID DESC LIMIT -1 OFFSET 99
-          )
-      """)
+      db.mustExecuteUpdate(
+        """
+            DELETE FROM error_log WHERE ROWID IN (
+              SELECT ROWID FROM error_log ORDER BY ROWID DESC LIMIT -1 OFFSET 99
+            )
+        """)
 
-      db.mustExecuteUpdate("""
-          INSERT INTO error_log (
-            code, description, request_url, response_url,
-            request_data, request_headers, response_headers, response_data)
-          VALUES (?,?,?,?,?,?,?,?)
-      """, args: [code ?? NSNull(),
-                  description ?? NSNull(),
-                  request?.url?.absoluteString ?? NSNull(),
-                  response?.url?.absoluteString ?? NSNull(),
-                  request?.httpBody ?? NSNull(),
-                  requestHeaders ?? NSNull(),
-                  responseHeaders ?? NSNull(),
-                  responseData ?? NSNull()])
+      db.mustExecuteUpdate(
+        """
+            INSERT INTO error_log (
+              code, description, request_url, response_url,
+              request_data, request_headers, response_headers, response_data)
+            VALUES (?,?,?,?,?,?,?,?)
+        """,
+        args: [
+          code ?? NSNull(),
+          description ?? NSNull(),
+          request?.url?.absoluteString ?? NSNull(),
+          response?.url?.absoluteString ?? NSNull(),
+          request?.httpBody ?? NSNull(),
+          requestHeaders ?? NSNull(),
+          responseHeaders ?? NSNull(),
+          responseData ?? NSNull(),
+        ])
     }
   }
 
@@ -1167,10 +1259,12 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       NSLog("Updated %d assignments at %@", assignments.count, updatedAt)
       try lifetime.withActive {
         self.db.inTransaction { db in
-          SyncStore.mergeAssignments(assignments, baseline: baseline,
-                                     replacingAll: updatedAfter.isEmpty, in: db)
-          db.mustExecuteUpdate("UPDATE sync SET assignments_updated_after = ?",
-                               args: [updatedAt])
+          SyncStore.mergeAssignments(
+            assignments, baseline: baseline,
+            replacingAll: updatedAfter.isEmpty, in: db)
+          db.mustExecuteUpdate(
+            "UPDATE sync SET assignments_updated_after = ?",
+            args: [updatedAt])
         }
       }
     }
@@ -1194,12 +1288,15 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       NSLog("Updated %d study materials at %@", materials.count, updatedAt)
       try lifetime.withActive {
         self.db.inTransaction { db in
-          let payloads = Dictionary(materials.map { ($0.subjectID, try! $0.serializedData()) },
-                                    uniquingKeysWith: { _, latest in latest })
-          SyncStore.mergeMaterials(payloads, baseline: baseline,
-                                   replacingAll: updatedAfter.isEmpty, in: db)
-          db.mustExecuteUpdate("UPDATE sync SET study_materials_updated_after = ?",
-                               args: [updatedAt])
+          let payloads = Dictionary(
+            materials.map { ($0.subjectID, try! $0.serializedData()) },
+            uniquingKeysWith: { _, latest in latest })
+          SyncStore.mergeMaterials(
+            payloads, baseline: baseline,
+            replacingAll: updatedAfter.isEmpty, in: db)
+          db.mustExecuteUpdate(
+            "UPDATE sync SET study_materials_updated_after = ?",
+            args: [updatedAt])
         }
       }
     }
@@ -1215,8 +1312,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       try lifetime.withActive {
         let oldMaxLevel = self.maxLevelGrantedBySubscription
         self.db.inTransaction { db in
-          db.mustExecuteUpdate("REPLACE INTO user (id, pb) VALUES (0, ?)",
-                               args: [try! user.serializedData()])
+          db.mustExecuteUpdate(
+            "REPLACE INTO user (id, pb) VALUES (0, ?)",
+            args: [try! user.serializedData()])
 
           if oldMaxLevel > 0, user.maxLevelGrantedBySubscription > oldMaxLevel {
             // The user's max level increased, so more subjects might be available now. Clear the
@@ -1240,8 +1338,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       try lifetime.withActive {
         self.db.inTransaction { db in
           for level in progressions {
-            db.mustExecuteUpdate("REPLACE INTO level_progressions (id, level, pb) VALUES (?, ?, ?)",
-                                 args: [level.id, level.level, try! level.serializedData()])
+            db.mustExecuteUpdate(
+              "REPLACE INTO level_progressions (id, level, pb) VALUES (?, ?, ?)",
+              args: [level.id, level.level, try! level.serializedData()])
           }
         }
       }
@@ -1267,8 +1366,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         self.db.inTransaction { db in
           if updatedAfter.isEmpty { SyncStore.replaceSnapshot(.subjects, in: db) }
           for subject in subjects {
-            db.mustExecuteUpdate("REPLACE INTO subjects (id, japanese, level, type, pb) " +
-              "VALUES (?, ?, ?, ?, ?)",
+            db.mustExecuteUpdate(
+              "REPLACE INTO subjects (id, japanese, level, type, pb) " + "VALUES (?, ?, ?, ?, ?)",
               args: [
                 subject.id,
                 subject.japanese,
@@ -1278,8 +1377,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
               ])
             self.insertAudioUrls(subject: subject, transaction: db)
           }
-          db.mustExecuteUpdate("UPDATE sync SET subjects_updated_after = ?",
-                               args: [updatedAt])
+          db.mustExecuteUpdate(
+            "UPDATE sync SET subjects_updated_after = ?",
+            args: [updatedAt])
         }
       }
       if !subjects.isEmpty || updatedAfter.isEmpty {
@@ -1291,8 +1391,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   private func insertAudioUrls(subject: TKMSubject, transaction db: FMDatabase) {
     guard subject.hasVocabulary else { return }
     for audio in subject.vocabulary.audio {
-      db.mustExecuteUpdate("REPLACE INTO audio_urls (subject_id, voice_actor_id, level, url) " +
-        "VALUES (?, ?, ?, ?)", args: [
+      db.mustExecuteUpdate(
+        "REPLACE INTO audio_urls (subject_id, voice_actor_id, level, url) " + "VALUES (?, ?, ?, ?)",
+        args: [
           subject.id,
           audio.voiceActorID,
           subject.level,
@@ -1320,15 +1421,16 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         self.db.inTransaction { db in
           if updatedAfter.isEmpty { SyncStore.replaceSnapshot(.voiceActors, in: db) }
           for voiceActor in voiceActors {
-            db.mustExecuteUpdate("REPLACE INTO voice_actors (id, pb) " +
-              "VALUES (?, ?)",
+            db.mustExecuteUpdate(
+              "REPLACE INTO voice_actors (id, pb) " + "VALUES (?, ?)",
               args: [
                 voiceActor.id,
                 try! voiceActor.serializedData(),
               ])
           }
-          db.mustExecuteUpdate("UPDATE sync SET voice_actors_updated_after = ?",
-                               args: [updatedAt])
+          db.mustExecuteUpdate(
+            "UPDATE sync SET voice_actors_updated_after = ?",
+            args: [updatedAt])
         }
       }
     }
@@ -1353,34 +1455,34 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
         self.db.inTransaction { db in
           if updatedAfter.isEmpty { SyncStore.replaceSnapshot(.statistics, in: db) }
           for stat in reviewStats {
-            db.mustExecuteUpdate("REPLACE INTO review_stats (id, subject_id, pb) " +
-              "VALUES (?, ?, ?)",
+            db.mustExecuteUpdate(
+              "REPLACE INTO review_stats (id, subject_id, pb) " + "VALUES (?, ?, ?)",
               args: [
                 stat.id,
                 stat.subjectID,
                 try! stat.serializedData(),
               ])
           }
-          db.mustExecuteUpdate("UPDATE sync SET review_stats_updated_after = ?",
-                               args: [updatedAt])
+          db.mustExecuteUpdate(
+            "UPDATE sync SET review_stats_updated_after = ?",
+            args: [updatedAt])
         }
       }
     }
   }
 
   func updateRecentMistakesFromCloud(skipReuploadToCloud: Bool) {
-    let mergedMistakes = RecentMistakeHandler.mergeMistakes(original: getRecentMistakeTimes(),
-                                                            other: recentMistakeHandler
-                                                              .getCloudMistakes())
+    let mergedMistakes = RecentMistakeHandler.mergeMistakes(
+      original: getRecentMistakeTimes(),
+      other:
+        recentMistakeHandler
+        .getCloudMistakes())
     // write data to db
     db.inDatabase { db in
-      mergedMistakes.forEach { item in
-        db
-          .mustExecuteUpdate("UPDATE subject_progress SET last_mistake_time = ? WHERE id = ?",
-                             args: [
-                               dateFormatter.string(from: item.value),
-                               item.key,
-                             ])
+      for (id, time) in mergedMistakes {
+        db.mustExecuteUpdate(
+          "UPDATE subject_progress SET last_mistake_time = ? WHERE id = ?",
+          args: [dateFormatter.string(from: time), id])
       }
     }
     // make sure cloud is up to date in case we synced incomplete data earlier.
@@ -1422,7 +1524,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     let subjectProgressUnits: Int64 = quick ? 1 : 20
 
     // Limit how many progress to send from the remaining rate limit quota.
-    var requestsAvailable = client
+    var requestsAvailable =
+      client
       .requestsRemainingInInterval - Int(assignmentProgressUnits + subjectProgressUnits + 4 + 2)
     let pendingProgress = getAllPendingProgress(limit: requestsAvailable)
     requestsAvailable -= pendingProgress.count
@@ -1431,11 +1534,8 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     // if you add/edit items in the `.then { _ in when(fulfilled: [` section below,
     // make sure to update the progress.totalUnitCount calculation here.
     progress.totalUnitCount =
-      Int64(pendingProgress.count) +
-      Int64(pendingStudyMaterials.count) +
-      subjectProgressUnits +
-      assignmentProgressUnits +
-      5
+      Int64(pendingProgress.count) + Int64(pendingStudyMaterials.count) + subjectProgressUnits
+      + assignmentProgressUnits + 5
 
     let childProgress = { (units: Int64) in
       Progress(totalUnitCount: -1, parent: progress, pendingUnitCount: units)
@@ -1450,8 +1550,9 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
     return when(fulfilled: [
       sendPendingProgress(pendingProgress, progress: childProgress(Int64(pendingProgress.count))),
-      sendPendingStudyMaterials(pendingStudyMaterials,
-                                progress: childProgress(Int64(pendingStudyMaterials.count))),
+      sendPendingStudyMaterials(
+        pendingStudyMaterials,
+        progress: childProgress(Int64(pendingStudyMaterials.count))),
 
       // Fetch subjects before fetching anything else - we need to know subject levels to use them
       // in assignment protos.
@@ -1475,10 +1576,12 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     }.ensure {
       try? lifetime.withActive {
         // we need to make sure that our current, local batch of recent mistakes go up to the cloud
-        let mergedMistakes = RecentMistakeHandler
-          .mergeMistakes(original: self.getRecentMistakeTimes(),
-                         other: self.recentMistakeHandler
-                           .getCloudMistakes())
+        let mergedMistakes =
+          RecentMistakeHandler
+          .mergeMistakes(
+            original: self.getRecentMistakeTimes(),
+            other: self.recentMistakeHandler
+              .getCloudMistakes())
         self.recentMistakeHandler.uploadMistakesToCloud(mistakes: mergedMistakes)
 
         self._availableSubjects.invalidate()

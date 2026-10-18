@@ -15,12 +15,21 @@
 import StudyCore
 import StudyUI
 import SwiftUI
+import WaniKaniAPI
 
 /// Temporary navigation host while the app shell migrates. Settings themselves are SwiftUI.
 class ReviewContainerViewController: UIViewController, ReviewViewControllerDelegate,
   UIAdaptivePresentationControllerDelegate {
   private var services: TKMServices!
   var reviewVC: ReviewViewController!
+
+  static func practice(services: TKMServices, subject: TKMSubject) -> ReviewContainerViewController {
+    var assignment = TKMAssignment()
+    assignment.subjectType = subject.subjectType
+    let controller = StoryboardScene.ReviewContainer.initialScene.instantiate()
+    controller.setup(services: services, items: [ReviewItem(assignment: assignment, subject: subject)], isPracticeSession: true)
+    return controller
+  }
 
   func setup(services: TKMServices, items: [ReviewItem], isPracticeSession: Bool = false) {
     self.services = services

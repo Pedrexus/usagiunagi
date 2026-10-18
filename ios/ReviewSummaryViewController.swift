@@ -48,7 +48,7 @@ final class ReviewSummaryViewController: UIHostingController<SessionSummaryView?
                                  image: { images[$0] }) { [weak self] index in
       guard let self, let subject = subjects[index] else { return }
       let vc = StoryboardScene.SubjectDetails.initialScene.instantiate()
-      vc.setup(services: services, subject: subject, showHints: false, hideBackButton: false, index: 0)
+      vc.setup(services: services, subject: subject)
       navigationController?.pushViewController(vc, animated: true)
     }
   }

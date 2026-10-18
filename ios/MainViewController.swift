@@ -416,7 +416,7 @@ class MainViewController: UIViewController, LoginViewControllerDelegate,
 
   func searchResultSelected(subject: TKMSubject) {
     let vc = StoryboardScene.SubjectDetails.initialScene.instantiate()
-    vc.setup(services: services, subject: subject, showHints: true)
+    vc.setup(services: services, subject: subject)
     // Dismiss the search dialog, then push the subject details onto the main navigation stack.
     dismiss(animated: true) {
       self.navigationController?.pushViewController(vc, animated: true)

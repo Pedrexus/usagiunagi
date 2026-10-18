@@ -14,6 +14,7 @@
 
 import FMDB
 import Foundation
+import StudyCore
 import WaniKaniAPI
 
 /// Merge downloaded snapshots without treating unacknowledged local work as disposable cache.
@@ -22,11 +23,12 @@ enum SyncStore {
   enum Resource { case subjects, voiceActors, statistics }
 
   static func requestFullRefresh(in db: FMDatabase) {
-    db.mustExecuteStatements("""
-    UPDATE sync SET assignments_updated_after = '', subjects_updated_after = '',
-      voice_actors_updated_after = '', study_materials_updated_after = '',
-      review_stats_updated_after = '';
-    """)
+    db.mustExecuteStatements(
+      """
+      UPDATE sync SET assignments_updated_after = '', subjects_updated_after = '',
+        voice_actors_updated_after = '', study_materials_updated_after = '',
+        review_stats_updated_after = '';
+      """)
   }
 
   static func replaceSnapshot(_ resource: Resource, in db: FMDatabase) {
@@ -52,24 +54,72 @@ enum SyncStore {
   }
 
   static func saveLocalMaterial(subjectID: Int64, payload: Data, in db: FMDatabase) {
-    db.mustExecuteUpdate("""
-    INSERT INTO study_materials (id, pb, local_revision) VALUES (?, ?, 1)
-    ON CONFLICT (id) DO UPDATE SET pb = excluded.pb, local_revision = local_revision + 1
-    """, args: [subjectID, payload])
-    db.mustExecuteUpdate("INSERT OR IGNORE INTO pending_study_materials (id) VALUES (?)",
-                         args: [subjectID])
+    db.mustExecuteUpdate(
+      """
+      INSERT INTO study_materials (id, pb, local_revision) VALUES (?, ?, 1)
+      ON CONFLICT (id) DO UPDATE SET pb = excluded.pb, local_revision = local_revision + 1
+      """, args: [subjectID, payload])
+    db.mustExecuteUpdate(
+      "INSERT OR IGNORE INTO pending_study_materials (id) VALUES (?)",
+      args: [subjectID])
+  }
+
+  enum MaterialEditResult: Equatable {
+    case changed(TKMStudyMaterials)
+    case unchanged, stale, accountChanged
+  }
+
+  /// The caller keeps identity, revision validation and queue insertion in one transaction.
+  static func saveEditedMaterial(
+    _ material: StudyMaterial, expectedRevision: Int64?,
+    account: String, in db: FMDatabase
+  ) -> MaterialEditResult {
+    let userRow = db.query("SELECT pb FROM user")
+    let user: TKMUser? = userRow.next() ? userRow.proto(forColumnIndex: 0) : nil
+    userRow.close()
+    guard user?.username == account else { return .accountChanged }
+    let row = db.query(
+      "SELECT pb, local_revision FROM study_materials WHERE id = ?", args: [material.subjectID])
+    var saved = TKMStudyMaterials()
+    if row.next() {
+      guard row.longLongInt(forColumnIndex: 1) == expectedRevision,
+        let current: TKMStudyMaterials = row.proto(forColumnIndex: 0)
+      else {
+        row.close()
+        return .stale
+      }
+      saved = current
+    } else if expectedRevision != nil {
+      row.close()
+      return .stale
+    }
+    row.close()
+    saved.subjectID = material.subjectID
+    if saved.meaningNote == material.meaningNote && saved.readingNote == material.readingNote
+      && saved.meaningSynonyms == material.meaningSynonyms
+    {
+      return .unchanged
+    }
+    saved.meaningNote = material.meaningNote
+    saved.readingNote = material.readingNote
+    saved.meaningSynonyms = material.meaningSynonyms
+    saveLocalMaterial(subjectID: saved.subjectID, payload: try! saved.serializedData(), in: db)
+    return .changed(saved)
   }
 
   /// A revision captured before the request protects edits even if they upload before its response.
-  static func mergeMaterials(_ materials: [Int64: Data], baseline: [Int64: Int64],
-                             replacingAll: Bool, in db: FMDatabase) {
+  static func mergeMaterials(
+    _ materials: [Int64: Data], baseline: [Int64: Int64],
+    replacingAll: Bool, in db: FMDatabase
+  ) {
     if replacingAll {
       for (id, revision) in baseline where materials[id] == nil {
-        db.mustExecuteUpdate("""
-        DELETE FROM study_materials WHERE id = ? AND local_revision = ? AND NOT EXISTS (
-          SELECT 1 FROM pending_study_materials WHERE id = ?
-        )
-        """, args: [id, revision, id])
+        db.mustExecuteUpdate(
+          """
+          DELETE FROM study_materials WHERE id = ? AND local_revision = ? AND NOT EXISTS (
+            SELECT 1 FROM pending_study_materials WHERE id = ?
+          )
+          """, args: [id, revision, id])
       }
     }
     for (id, payload) in materials {
@@ -77,11 +127,12 @@ enum SyncStore {
       let current = row.next() ? row.longLongInt(forColumnIndex: 0) : nil
       row.close()
       if let current, baseline[id] != current { continue }
-      db.mustExecuteUpdate("""
-      INSERT INTO study_materials (id, pb)
-      SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM pending_study_materials WHERE id = ?)
-      ON CONFLICT (id) DO UPDATE SET pb = excluded.pb
-      """, args: [id, payload, id])
+      db.mustExecuteUpdate(
+        """
+        INSERT INTO study_materials (id, pb)
+        SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM pending_study_materials WHERE id = ?)
+        ON CONFLICT (id) DO UPDATE SET pb = excluded.pb
+        """, args: [id, payload, id])
     }
   }
 
@@ -96,24 +147,34 @@ enum SyncStore {
     return versions
   }
 
-  static func saveLocalProgress(_ progress: TKMProgress, srsStage: Int, mistakeTime: String,
-                                in db: FMDatabase) {
+  static func saveLocalProgress(
+    _ progress: TKMProgress, srsStage: Int, mistakeTime: String,
+    in db: FMDatabase
+  ) {
     let assignment = progress.assignment
-    db.mustExecuteUpdate("DELETE FROM assignments WHERE subject_id = ?",
-                         args: [assignment.subjectID])
-    db.mustExecuteUpdate("REPLACE INTO pending_progress (id, pb) VALUES (?, ?)",
-                         args: [assignment.subjectID, try! progress.serializedData()])
-    db.mustExecuteUpdate("""
-    INSERT INTO subject_progress (id, level, srs_stage, subject_type, last_mistake_time, local_revision)
-    VALUES (?, ?, ?, ?, ?, 1) ON CONFLICT (id) DO UPDATE SET level = excluded.level,
-      srs_stage = excluded.srs_stage, subject_type = excluded.subject_type,
-      last_mistake_time = excluded.last_mistake_time, local_revision = local_revision + 1
-    """, args: [assignment.subjectID, assignment.level, srsStage,
-                assignment.subjectType.rawValue, mistakeTime])
+    db.mustExecuteUpdate(
+      "DELETE FROM assignments WHERE subject_id = ?",
+      args: [assignment.subjectID])
+    db.mustExecuteUpdate(
+      "REPLACE INTO pending_progress (id, pb) VALUES (?, ?)",
+      args: [assignment.subjectID, try! progress.serializedData()])
+    db.mustExecuteUpdate(
+      """
+      INSERT INTO subject_progress (id, level, srs_stage, subject_type, last_mistake_time, local_revision)
+      VALUES (?, ?, ?, ?, ?, 1) ON CONFLICT (id) DO UPDATE SET level = excluded.level,
+        srs_stage = excluded.srs_stage, subject_type = excluded.subject_type,
+        last_mistake_time = excluded.last_mistake_time, local_revision = local_revision + 1
+      """,
+      args: [
+        assignment.subjectID, assignment.level, srsStage,
+        assignment.subjectType.rawValue, mistakeTime,
+      ])
   }
 
-  static func mergeAssignments(_ assignments: [TKMAssignment], baseline: [Int64: Int64],
-                               replacingAll: Bool, in db: FMDatabase) {
+  static func mergeAssignments(
+    _ assignments: [TKMAssignment], baseline: [Int64: Int64],
+    replacingAll: Bool, in db: FMDatabase
+  ) {
     let current = assignmentVersions(in: db)
     let changed = Set(current.keys).union(baseline.keys).filter { current[$0] != baseline[$0] }
     if replacingAll {
@@ -127,9 +188,10 @@ enum SyncStore {
         db.mustExecuteUpdate("DELETE FROM assignments WHERE subject_id = ?", args: [id])
       }
       for id in baseline.keys where !incoming.contains(id) && !changed.contains(id) {
-        db.mustExecuteUpdate("""
-        DELETE FROM subject_progress WHERE id = ? AND NOT EXISTS (SELECT 1 FROM pending_progress WHERE id = ?)
-        """, args: [id, id])
+        db.mustExecuteUpdate(
+          """
+          DELETE FROM subject_progress WHERE id = ? AND NOT EXISTS (SELECT 1 FROM pending_progress WHERE id = ?)
+          """, args: [id, id])
       }
     }
     for assignment in assignments where !changed.contains(assignment.subjectID) {
@@ -139,24 +201,31 @@ enum SyncStore {
 
   private static func mergeAssignment(_ assignment: TKMAssignment, in db: FMDatabase) {
     // A changed server assignment ID must not make a completed-but-pending subject reviewable.
-    db.mustExecuteUpdate("DELETE FROM assignments WHERE subject_id = ?",
-                         args: [assignment.subjectID])
-    let pending = db.query("SELECT 1 FROM pending_progress WHERE id = ?",
-                           args: [assignment.subjectID])
+    db.mustExecuteUpdate(
+      "DELETE FROM assignments WHERE subject_id = ?",
+      args: [assignment.subjectID])
+    let pending = db.query(
+      "SELECT 1 FROM pending_progress WHERE id = ?",
+      args: [assignment.subjectID])
     let isPending = pending.next()
     pending.close()
     guard !isPending else { return }
-    db.mustExecuteUpdate("INSERT INTO assignments (id, pb, subject_id) VALUES (?, ?, ?)",
-                         args: [
-                           assignment.id,
-                           try! assignment.serializedData(),
-                           assignment.subjectID,
-                         ])
-    db.mustExecuteUpdate("""
-    INSERT INTO subject_progress (id, level, srs_stage, subject_type, last_mistake_time)
-    VALUES (?, ?, ?, ?, '') ON CONFLICT (id) DO UPDATE SET level = excluded.level,
-      srs_stage = excluded.srs_stage, subject_type = excluded.subject_type
-    """, args: [assignment.subjectID, assignment.level, assignment.srsStageNumber,
-                assignment.subjectType.rawValue])
+    db.mustExecuteUpdate(
+      "INSERT INTO assignments (id, pb, subject_id) VALUES (?, ?, ?)",
+      args: [
+        assignment.id,
+        try! assignment.serializedData(),
+        assignment.subjectID,
+      ])
+    db.mustExecuteUpdate(
+      """
+      INSERT INTO subject_progress (id, level, srs_stage, subject_type, last_mistake_time)
+      VALUES (?, ?, ?, ?, '') ON CONFLICT (id) DO UPDATE SET level = excluded.level,
+        srs_stage = excluded.srs_stage, subject_type = excluded.subject_type
+      """,
+      args: [
+        assignment.subjectID, assignment.level, assignment.srsStageNumber,
+        assignment.subjectType.rawValue,
+      ])
   }
 }

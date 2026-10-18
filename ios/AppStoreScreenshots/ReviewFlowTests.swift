@@ -698,3 +698,162 @@ extension ReviewFlowTests {
     XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "3 selected")
   }
 }
+
+extension ReviewFlowTests {
+  @MainActor
+  private func revealIncorrectMeaning(in app: XCUIApplication) {
+    XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Meaning"))
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("banana")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
+    app.buttons["review.reveal"].tap()
+  }
+
+  @MainActor
+  private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, towardTop: Bool = false) {
+    let keyboardDone = app.buttons["material.keyboardDone"]
+    if keyboardDone.exists && keyboardDone.isHittable { keyboardDone.tap() }
+    for _ in 0..<16 {
+      if element.exists && element.isHittable { return }
+      let details = app.scrollViews["subject.scroll"]
+      let form = app.descendants(matching: .any).matching(identifier: "material.form").firstMatch
+      if form.exists && form.isHittable {
+        if element.exists && element.frame.midY < form.frame.minY {
+          form.swipeDown(velocity: .slow)
+        } else {
+          form.swipeUp(velocity: .slow)
+        }
+      } else if details.exists && details.isHittable {
+        if towardTop || element.exists && element.frame.midY < details.frame.minY {
+          details.swipeDown(velocity: .slow)
+        } else {
+          details.swipeUp(velocity: .slow)
+        }
+      } else {
+        app.swipeUp()
+      }
+    }
+    let hierarchy = XCTAttachment(string: app.debugDescription)
+    hierarchy.name = "Unreachable detail control"
+    hierarchy.lifetime = .keepAlways
+    add(hierarchy)
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "Unreachable detail control screen"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    XCTAssertTrue(element.exists && element.isHittable)
+  }
+
+  @MainActor
+  private func openMaterialEditor(in app: XCUIApplication) {
+    let edit = app.buttons["subject.editMaterial"]
+    scrollTo(edit, in: app, towardTop: true)
+    edit.tap()
+    XCTAssertTrue(app.buttons["material.save"].waitForExistence(timeout: 5))
+  }
+
+  @MainActor
+  func testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz() {
+    continueAfterFailure = false
+    let app = launchLessonPicker()
+    defer { clearFixture(app) }
+    app.buttons["lesson.select.3864"].tap()
+    app.buttons["lesson.startSelection"].tap()
+    expectLessonPage("Lesson 1 of 1", in: app)
+    openMaterialEditor(in: app)
+    let note = app.textViews["material.meaningNote"]
+    note.tap()
+    note.typeText("My personal meaning note")
+    let addSynonym = app.buttons["material.addSynonym"]
+    scrollTo(addSynonym, in: app)
+    addSynonym.tap()
+    let synonym = app.descendants(matching: .any).matching(identifier: "material.synonym")
+      .firstMatch
+    scrollTo(synonym, in: app)
+    synonym.tap()
+    synonym.typeText("custompersonal")
+    app.buttons["material.save"].tap()
+    XCTAssertFalse(app.buttons["material.save"].waitForExistence(timeout: 2))
+    openMaterialEditor(in: app)
+    XCTAssertEqual(note.value as? String, "My personal meaning note")
+    XCTAssertEqual(synonym.value as? String, "custompersonal")
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "Shared SwiftUI notes and synonyms editor"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    app.buttons["material.cancel"].tap()
+    app.buttons["lesson.quiz"].tap()
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("custompersonal")
+    app.buttons["review.submit"].tap()
+    let reading = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label CONTAINS %@", "Reading"),
+      object: app.staticTexts["review.prompt"])
+    XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+  }
+
+  @MainActor
+  func testReviewDetailsConcealUnansweredReadingAndBlurTranslations() {
+    continueAfterFailure = false
+    let app = launchSingleReview(extra: ["-blurContextSentences", "YES"])
+    defer { clearFixture(app) }
+    revealIncorrectMeaning(in: app)
+    let reading = app.descendants(matching: .any).matching(identifier: "subject.readingExplanation")
+      .firstMatch
+    XCTAssertFalse(reading.exists)
+    openMaterialEditor(in: app)
+    XCTAssertFalse(app.textViews["material.readingNote"].exists)
+    app.buttons["material.cancel"].tap()
+    app.buttons["All information"].tap()
+    XCTAssertTrue(reading.waitForExistence(timeout: 5))
+    let translation = app.buttons["subject.translation.0"]
+    scrollTo(translation, in: app)
+    let english = app.staticTexts["Personally, I'm indifferent to the zoo's issues."]
+    XCTAssertFalse(english.exists)
+    translation.tap()
+    XCTAssertTrue(english.waitForExistence(timeout: 5))
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "Shared SwiftUI review details and sentence translation"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+  }
+
+  @MainActor
+  func testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement() {
+    continueAfterFailure = false
+    let app = launchSingleReview(extra: ["MaterialConflictFixture"])
+    defer { clearFixture(app) }
+    revealIncorrectMeaning(in: app)
+    openMaterialEditor(in: app)
+    let note = app.textViews["material.meaningNote"]
+    note.tap()
+    note.typeText("My draft survives")
+    app.buttons["material.save"].tap()
+    XCTAssertTrue(app.buttons["material.save"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["material.save"].isEnabled)
+    XCTAssertEqual(note.value as? String, "My draft survives")
+    XCTAssertFalse(app.textViews["material.readingNote"].exists)
+    let replace = app.buttons["Replace saved version with my draft"]
+    scrollTo(replace, in: app)
+    replace.tap()
+    XCTAssertTrue(app.buttons["Replace with my draft"].waitForExistence(timeout: 5))
+    app.buttons["Replace with my draft"].tap()
+    XCTAssertFalse(app.buttons["material.save"].waitForExistence(timeout: 2))
+    app.buttons["All information"].tap()
+    let hiddenNote = app.staticTexts.matching(
+      NSPredicate(format: "label CONTAINS %@", "Concurrent hidden reading note")
+    ).firstMatch
+    scrollTo(hiddenNote, in: app)
+    XCTAssertTrue(hiddenNote.exists)
+    openMaterialEditor(in: app)
+    XCTAssertTrue(app.staticTexts["Excluded from lessons and reviews"].exists)
+    XCTAssertEqual(note.value as? String, "My draft survives")
+    XCTAssertEqual(
+      app.textViews["material.readingNote"].value as? String, "Concurrent hidden reading note")
+    app.buttons["material.cancel"].tap()
+  }
+}

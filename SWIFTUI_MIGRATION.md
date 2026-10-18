@@ -4,7 +4,7 @@ Audited 2026-10-17 against this fork and the installed Xcode 27.0 / Swift 6.4 to
 
 ## Recommendation
 
-Move the application UI to SwiftUI in small, working slices. Use Swift for app-owned logic. Retain a narrow UIKit input adapter until the Japanese keyboard and composition behavior have an equivalent implementation. Preserve existing data and grading semantics. Prioritize replacing legacy persistence/networking with Apple SwiftData and async URLSession before adding further custom infrastructure; retain the working database until a verified import and cutover is ready.
+Move the application UI to SwiftUI in small, working slices. Use Swift for app-owned logic. Retain a narrow UIKit input adapter until the Japanese keyboard and composition behavior have an equivalent implementation. Preserve existing data and grading semantics. The latest user direction prioritizes SwiftUI presentation; continue the shared SwiftData/async URLSession cutover without expanding legacy storage infrastructure, retaining the working database until a verified import and cutover is ready.
 
 SwiftUI is a UI framework, not a replacement for networking, persistence, speech recognition or data-generation tools. A repository containing several languages does not mean its screens use several competing UI frameworks. Rewriting generated or build-time code solely to improve GitHub's language percentages would add risk without simplifying the app people use.
 
@@ -55,7 +55,7 @@ No feature was disabled for this audit. UIKit keyboard/composition and rich-deta
 | Charts | Statistics uses Apple Swift Charts; the unused third-party Charts 4.1 dependency was removed | Migrate the remaining legacy upcoming-review drawing with its parent Home screen. |
 | Input | Shared Swift `KanaConverter`, Swift `TKMKanaInput`/`AnswerTextField`, keyboard overrides | Objective-C conversion removed after 86,210 full-string and 11,392 interactive comparisons. Keep the narrow native adapter for selection/composition and later wrap it in `UIViewRepresentable`; physical input-method checks remain open. The review screen now hosts this input through `UIViewRepresentable`. |
 | Grading | Shared Swift `AnswerGrader`/`GradingSubject`/`AnswerDistance`; thin iOS protobuf adapter | Full grader moved into StudyCore; 292,880 grade categories and 18,225 distance results compared with the original. Unicode highlight offsets fixed. Session/voice integration reuses this engine. |
-| Review sessions | Shared Swift `StudySession` and SwiftUI `ReviewScreen`, hosted by an iOS repository/navigation adapter | The old review layout, constraints, waves and custom success-animation implementation are removed. Native Mac reviews use the atomic session/outbox boundary. Preserve iOS rich subject details through a temporary table adapter while CATALOG migrates; iOS durable restoration/caller cutover and full mode parity remain. |
+| Review sessions | Shared Swift `StudySession`, SwiftUI `ReviewScreen` and shared rich subject details, hosted by an iOS repository/navigation adapter | The old review layout, constraints, waves, details table and custom success-animation implementation are removed. Native Mac reviews use the atomic session/outbox boundary. The iOS input and cache/session owner remain temporary adapters; durable restoration/caller cutover and full mode parity remain. |
 | Offline storage | FMDB / SQLite, protobuf blobs, pending review and study-material queues | Full refresh retains offline snapshots until complete responses arrive; revision-aware transaction-level merges protect pending notes and local review progress, including local changes acknowledged while a download is in flight. Additive schema 14/15 migrations preserve existing payloads. Download callbacks honor reset/logout lifetimes. Migrate to a shared SwiftData repository with typed models, actor isolation and explicit transaction boundaries. The production StudyPersistence store verifies atomic session/answer persistence, rollback, conditional acknowledgement, note merges and separate-process recovery. Mac cache callers have switched to it, with a one-time credential-bound JSON importer. The iOS database/callers have not switched yet. SwiftData does not import this legacy schema automatically: validate a one-time import and rollback path before switching callers, then remove FMDB and replaced wrappers. Do not maintain two permanent writable stores. |
 | Async/networking | Shared Swift 6 upload actor; legacy PromiseKit API/downloads, URLSession, Reachability | Immediate/background writes share one process-wide lane and reload current durable payloads. An adapter currently bridges the legacy client to async/await. Replace PromiseKit chains with URLSession async APIs and structured concurrency, deleting the replaced adapter paths. Keep WaniKani-specific response validation, rate-limit handling and account ownership; rejected/ambiguous review reconciliation remains open. Network path status is advisory, not proof a request will succeed. |
 | Review quick settings | Shared SwiftUI form in native iOS/Mac sheets; SwiftUI end/wrap-up confirmation | MMDrawerController, its Objective-C hook and the drawer-specific menu controllers are removed. iOS archived preference keys remain; Mac uses observed AppStorage with field-wise merging. Audio and font-library implementation still await Mac migration. |
@@ -493,12 +493,12 @@ absence of a Swift caller alone was not treated as proof that a UI class was unu
 | `ios/Resources/Lessons.storyboard` | Retains only the hosting scene and navigation identity. Removed page-control/back outlets and constraints; delete the scene when shell navigation migrates. |
 | `ios/BottomSheetAction.swift` | Deleted the unused custom action/sheet controller after checking both type names across sources and resources. Existing review menus use SwiftUI. |
 | `ios/BiggerTapAreaButton.swift` | Deleted; no remaining source or Interface Builder caller. Removed its project references. |
-| `ios/SubjectChip.swift` | Retained for rich subject details. Removed centered layout, its alignment parameter and bookkeeping; the two remaining layout calls both used left alignment. |
-| `ios/Tables/SubjectCollectionModelItem.swift` | Retained for subject components; updated its two left-layout calls. |
-| `ios/SubjectDetailsView.swift` | Retained: active rich teaching/review details, mnemonics, notes, synonyms and subject links need a SwiftUI replacement before deletion. |
-| `ios/SubjectDetailsViewController.swift` | Retained: lesson/details host still owns audio and saving study materials on disappearance. This is temporary interoperability, not a SwiftUI limitation. |
+| `ios/SubjectChip.swift` | Deleted after replacing the last component/combination/similar-subject callers with native SwiftUI related-subject buttons. |
+| `ios/Tables/SubjectCollectionModelItem.swift` | Deleted with the replaced subject-chip layout. |
+| `ios/SubjectDetailsView.swift` | Replaced its 758-line table implementation with shared SwiftUI content and a value/action cache bridge under Features/Catalog. No table editor or bitmap sentence blur remains. |
+| `ios/SubjectDetailsViewController.swift` | Replaced with a small SwiftUI host under Features/Catalog. Keeps existing storyboard/deep-link/navigation identities and keyboard commands; editing now saves explicitly through the existing checked writer. |
 | `ios/SubjectCatalogueViewController.swift` | Retained: still has active page-controller navigation, independently of the replaced lesson navigation. |
-| `ios/WavesView.swift` | Retained: login and subject-detail headers still call it. |
+| `ios/WavesView.swift` | Retained for login; subject-detail headers now use shared SwiftUI. |
 | `ios/GradientView.swift` | Retained: Main and Vacation Mode still reference it from code and Interface Builder. |
 | `ios/MainTitleView.swift` | Retained with its XIB: active home header. |
 
@@ -513,8 +513,9 @@ The lesson picker uses a compact four-column subject-color grid (two columns at
 accessibility text sizes). Teaching/quiz navigation uses direct subject chips and
 one Quiz control. Reviews again show white glyphs on the WaniKani subject color,
 with a dark reading strip and a native meaning strip. Study font settings remain
-owned by their existing hosts. Rich teaching and quiz input/content still cross
-temporary controller adapters; replacing navigation does not finish that migration.
+owned by their existing hosts. Rich teaching and review details now render directly
+in SwiftUI. The quiz retains its existing controller/input/writer adapter; replacing
+presentation does not finish the persistence, shell or Mac lesson migration.
 
 Coverage no longer stores a selected chart row as a sheet item or schedules a
 second presentation on dismissal. Each explicit target button expands its current
@@ -522,3 +523,60 @@ remaining-kanji grid in the page. The bundled StudyCore curriculum and saved
 WaniKani snapshot are the default data source, without a coverage download. Only an
 explicit kanji or Sources action opens its separate destination. See TASKS.md for
 exact test evidence and remaining acceptance gates.
+
+## Shared rich details and editing — 2026-10-18
+
+`SubjectDetailsContent` and `StudyMaterialEditor` now serve iOS teaching, review
+reveal, catalog details and the native Mac store. They take immutable subject/material
+values and host actions. The editor's generic revision type bridges the existing
+iOS Int64 revision and the native store's UUID without erasure or a second writer.
+The iOS adapter reuses the read-only importer's catalog conversion and the original
+audio, artwork, font, sentence-highlighting and navigation services. Teaching renders
+directly in SwiftUI; only the quiz retains its existing controller/input/writer host.
+
+A meaning/reading visibility value keeps unanswered information concealed, including
+reading explanations that could reveal meanings. Context translations now use an
+explicit native reveal button rather than bitmap blur; hidden English is absent
+from the accessibility tree. Existing archived preference keys are retained. The
+editor provides explicit Save/Cancel, discard protection, a keyboard Done action,
+and revision-conflict comparison/replacement. An unchanged note preserves exact
+bytes, synonyms and exclusion-marker placement. Conflict replacement applies only
+revealed editable fields to the currently compared material, preserving hidden
+reading notes and its current exclusion flag. iOS identity/revision validation and
+queue insertion share its existing database transaction; no-op saves do not enqueue.
+Native new-session selection honors imported vocabulary exclusions, while a resumed
+session keeps its recorded work unchanged.
+
+Additional file decisions from Mainboard's exact source/function/resource/project
+audit follow. The scene retains only its SwiftUI host identity; generated scene
+accessors remain valid until shell navigation migrates.
+
+| File | Decision |
+| --- | --- |
+| `ios/Tables/ReadingModelItem.swift` | Deleted; shared reading labels and audio actions replace it. |
+| `ios/Tables/ContextSentenceModelItem.swift` | Deleted; shared context sentences retain conjugation highlighting and explicit translation reveal. |
+| `ios/Extensions/CGContext+Blur.swift` | Deleted after checking all helper symbols; the removed sentence renderer was its last consumer. Removes that Accelerate import and manual bitmap contexts. |
+| `ios/Tables/MarkupModelItem.swift` | Deleted after checking the global `render(formattedText:standardAttributes:)` functions; their last detail-table caller is replaced by the existing shared markup parser and SwiftUI attributed text. |
+| `ios/Tables/ArtworkModelItem.swift` | Deleted the table wrapper; retained its native cached request view as Features/Catalog/SubjectArtwork.swift. Offline artwork/prefetch remains a separate open task. |
+| `StudyUI/Catalog/NativeStudyMaterialEditor.swift` | Replaced by one generic StudyMaterialEditor, used by both stores; no parallel editor implementation remains. |
+| `ios/Tables/HomeHeroItem.swift` | Native SwiftUI buttons replace manual UIButton stacks; the existing table adapter and callbacks remain until Home migrates. |
+| `ios/Tables/EditableTextModelItem.swift` | Retained: AppSettings still uses it for the custom email field. |
+| `ios/WavesView.swift` | Retained: Login still uses it. |
+| `ios/VocabularyHighlighter.swift` | Retained and reused for conjugation-aware Japanese example highlighting. |
+| `ios/Features/Catalog/SubjectDetailsViewController.swift` | A temporary navigation/storyboard host. The unused showHints parameter and callers were removed; the old value was never read. Developer subject logging and practice entry remain connected. |
+
+Apple's [item-based navigation destination](https://developer.apple.com/documentation/swiftui/view/navigationdestination(item:destination:))
+keeps native related-subject navigation outside lazy content. Foundation's
+[attributed-string conversion](https://developer.apple.com/documentation/foundation/attributedstring/init(_:)-1fru0)
+lets the existing Japanese highlighter feed SwiftUI without a label/table wrapper.
+For hardware keys, [system text/focus priority](https://developer.apple.com/documentation/uikit/uikeycommand/wantspriorityoversystembehavior)
+means the default UIKeyCommand priority preserves Copy before the review correction
+fallback; no recursive UIView selection walker is required. Physical keyboard and
+input-method acceptance still needs a device.
+
+These hosts are migration work, not capabilities SwiftUI cannot express. Japanese
+composition currently retains its narrow UIKit input bridge; remote SVG rendering
+retains WebKit until a suitable native renderer replaces it. Audio/speech,
+persistence, networking and watch connectivity are platform services, not screens.
+No lesson, review, note, synonym or catalog feature is disabled by this checkpoint.
+Exact tests, line counts and remaining UI acceptance are recorded in TASKS.md.

@@ -54,6 +54,10 @@ extension StudyStore {
     let subjects = try catalog(accountID: accountID)
     let byID = Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) })
     let pending = Set(try pendingReviews(accountID: accountID).map(\.subjectID))
+    let excluded = Set(
+      try materials(accountID: accountID).filter { $0.material.isExcluded }.map {
+        $0.material.subjectID
+      })
     let profile = try accountState(accountID: accountID)!.profile
     let due = try assignments(accountID: accountID).filter {
       $0.startedAt != nil && (1...8).contains($0.srsStage) && $0.hidden != true
@@ -66,6 +70,7 @@ extension StudyStore {
         throw NativeReviewError.incompleteContent(assignment.subjectID)
       }
       if subject.hiddenAt != nil || subject.level > profile.maxLevelGranted { continue }
+      if subject.kind == .vocabulary && excluded.contains(subject.id) { continue }
       try requireReviewContent(subject, assignment: assignment)
       selected.append(assignment)
     }
