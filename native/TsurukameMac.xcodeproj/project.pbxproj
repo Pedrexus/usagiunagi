@@ -5,6 +5,17 @@
 	};
 	objectVersion = 46;
 	objects = {
+		EDEC7A94F407B6C75905901D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/MacLessonTests.swift; sourceTree = "<group>"; };
+		C3DF2530E9D987A1368CEC66 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = MacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0CB2D61E2B4D71467ADD842A = {isa = PBXBuildFile; fileRef = EDEC7A94F407B6C75905901D; };
+		5A1CF2D820B7146070996EC1 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (0CB2D61E2B4D71467ADD842A,); runOnlyForDeploymentPostprocessing = 0; };
+		1CE692F2E83ECB50342AB7F5 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		28313649BDF34D3620412E59 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_IDENTITY = "-"; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_BUNDLE_IDENTIFIER = dev.usagiunagi.MacUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = TsurukameMac;}; name = Debug; };
+		70B9191B46266AE7568D88B7 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_IDENTITY = "-"; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_BUNDLE_IDENTIFIER = dev.usagiunagi.MacUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = TsurukameMac;}; name = Release; };
+		4813793BC925AC17834B45B0 = {isa = XCConfigurationList; buildConfigurations = (28313649BDF34D3620412E59, 70B9191B46266AE7568D88B7,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		DB921FEDA989105C67CB5129 = {isa = PBXContainerItemProxy; containerPortal = D535CD909C677255D0E17765; proxyType = 1; remoteGlobalIDString = F038067397D3AEA1AC43F316; remoteInfo = TsurukameMac; };
+		D0169E335A48C478EB5322B8 = {isa = PBXTargetDependency; target = F038067397D3AEA1AC43F316; targetProxy = DB921FEDA989105C67CB5129; };
+		03CC69626B48A79B2E3807BB = {isa = PBXNativeTarget; buildConfigurationList = 4813793BC925AC17834B45B0; buildPhases = (5A1CF2D820B7146070996EC1, 1CE692F2E83ECB50342AB7F5,); buildRules = (); dependencies = (D0169E335A48C478EB5322B8,); name = MacUITests; productName = MacUITests; productReference = C3DF2530E9D987A1368CEC66; productType = "com.apple.product-type.bundle.ui-testing"; };
 
 /* Begin PBXBuildFile section */
 		3AE2CE7D20558F0AC1B2EB73 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = EE80CAC7A4C0A857F5B75CF8 /* StudyCore */; };
@@ -66,6 +77,7 @@
 				E599646581F38A60310A1020 /* Products */,
 				7FA4E96D331434390BD2BA8B /* Frameworks */,
 				ABA8C5F4E914FDB6FE9994AC /* TsurukameMacApp.swift */,
+				EDEC7A94F407B6C75905901D,
 				B82F799EA3A44976AD5EE5F2 /* Branding */,
 			);
 			sourceTree = "<group>";
@@ -85,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				E13432C314D942AF9AA8FD8D /* TsurukameMac.app */,
+				C3DF2530E9D987A1368CEC66,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -144,6 +157,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				03CC69626B48A79B2E3807BB,
 				F038067397D3AEA1AC43F316 /* TsurukameMac */,
 			);
 		};

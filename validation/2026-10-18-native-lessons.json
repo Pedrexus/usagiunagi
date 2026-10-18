@@ -1,0 +1,227 @@
+{
+  "checkpoint": "Native Mac lesson entry and shared atomic lesson quizzes",
+  "date": "2026-10-18",
+  "baseCommit": "f78e4d9",
+  "sourceSHA256": {
+    "StudyKit/Sources/StudyPersistence/StudyStore+Reviews.swift": "586c74f05a73b7c28ad5e3cc5593ee194ffcffa9abd5badd2ac147f7a4125b37",
+    "StudyKit/Sources/StudyPersistence/StudyStore.swift": "8f5753ebd5c2fb17aa13d69b737f3d1805760fb81e952b34fb2c739c7958a8f4",
+    "StudyKit/Sources/StudyUI/Lessons/LessonFlowView.swift": "1eb3192092d0c08313a005d34cdf610559899257f3916051e2ab6c9145241462",
+    "StudyKit/Sources/StudyUI/Lessons/NativeLessonView.swift": "5eb7f18bac02bd0020ec8b99606494582fc3cc317713c49a7f4378211cd1cbdd",
+    "StudyKit/Sources/StudyUI/Reviews/NativeReviewView.swift": "9a9090948c42960c191db2771b1653db77ec46ff1a9b8d01da1cb5d8794d57f1",
+    "StudyKit/Tests/StudyPersistenceTests/NativeLessonTests.swift": "438810f4f26134245715d4da33a18076d923194b8511adb14632c8b93af5166b",
+    "StudyKit/Tests/StudyPersistenceTests/NativeReviewTests.swift": "82e9ae41daea6fd2920294a757fff6c17e50307957c89693e49c0f436e348f84",
+    "native/TsurukameMacApp.swift": "ac53fa4056555c264d8a9747872ffd6ce137cb16253fa8422b933d44450bdcc4",
+    "native/UITests/MacLessonTests.swift": "9d0426e20fb545659c9b709394ad168100d1f4d8a8e80e78b40aca5551b14a3b",
+    "native/TsurukameMac.xcodeproj/project.pbxproj": "87389865a19826df826b0fcb3994de24cd6477e951e8f320379761dbef6fac29",
+    "native/TsurukameMac.xcodeproj/xcshareddata/xcschemes/TsurukameMac.xcscheme": "39cca6a1ca0a4ddaf6078f440c3ec33e5c9fa26ca5a1c84cb88cf5ee73e86247"
+  },
+  "checks": [
+    {
+      "name": "ios",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardShared/Logs/Test/Test-StudyKit-Package-2026.10.18_20-35-06-+0900.xcresult",
+      "successful": true,
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 229,
+        "passedTests": 229,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 341,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "StudyKit-Package · Built with macOS 27.0.1",
+        "finishTime": 1792323312.505,
+        "runtimeWarnings": [],
+        "startTime": 1792323306.246,
+        "statistics": [
+          {
+            "subtitle": "138 test runs",
+            "title": "26 tests ran with dynamic parameters"
+          }
+        ],
+        "title": "Test - StudyKit-Package",
+        "topInsights": [
+          {
+            "category": "Longest Test Runs",
+            "impact": "15% of duration",
+            "text": "1 longest test run with outlier durations exceeding 0.15s (three standard deviations)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "phone-ui",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardApp/Logs/Test/Test-ReviewValidation-2026.10.18_20-32-22-+0900.xcresult",
+      "successful": true,
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 3,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "ReviewValidation · Built with macOS 27.0.1",
+        "finishTime": 1792323252.016,
+        "runtimeWarnings": [],
+        "startTime": 1792323142.666,
+        "statistics": [],
+        "title": "Test - ReviewValidation",
+        "topInsights": []
+      }
+    },
+    {
+      "name": "pad-ui",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/ios/build/MainboardHomePad/Logs/Test/Test-ReviewValidation-2026.10.18_20-32-24-+0900.xcresult",
+      "successful": true,
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+              "deviceName": "iPad Pro 11-inch (M5)",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 3,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "ReviewValidation · Built with macOS 27.0.1",
+        "finishTime": 1792323255.145,
+        "runtimeWarnings": [],
+        "startTime": 1792323144.483,
+        "statistics": [],
+        "title": "Test - ReviewValidation",
+        "topInsights": []
+      }
+    },
+    {
+      "name": "mac-ui",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/native/build/Mainboard/Logs/Test/Test-TsurukameMac-2026.10.18_20-30-04-+0900.xcresult",
+      "successful": false,
+      "summary": {
+        "result": "Failed",
+        "totalTestCount": 1,
+        "passedTests": 0,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [
+          {
+            "failureText": "The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.)",
+            "targetName": "MacUITests",
+            "testIdentifier": 1,
+            "testIdentifierString": "MacUITests-Runner (95071) encountered an error",
+            "testName": "MacUITests-Runner (95071) encountered an error"
+          }
+        ],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "00006040-000649442200801C",
+              "deviceName": "My Mac",
+              "modelName": "Mac mini",
+              "osBuildNumber": "26A434",
+              "osVersion": "27.0.1",
+              "platform": "macOS"
+            },
+            "expectedFailures": 0,
+            "failedTests": 1,
+            "passedTests": 0,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "TsurukameMac · Built with macOS 27.0.1",
+        "finishTime": 1792323078.102,
+        "runtimeWarnings": [],
+        "startTime": 1792323004.181,
+        "statistics": [],
+        "title": "Test - TsurukameMac",
+        "topInsights": []
+      }
+    }
+  ],
+  "sharedMac": {
+    "passedFunctions": 229,
+    "groups": {
+      "core": 118,
+      "persistence": 105,
+      "speech": 6
+    },
+    "logSHA256": "805b54a2cb38171fff942033d91d1525e500972fe44932cc9e39a1701ef90fc2"
+  },
+  "nativeMacBuild": {
+    "passed": true,
+    "logSHA256": "fa058ea3b7bf83ddcde228df590f88da435db96c5ea350b6cbca442f1e5c49c2"
+  },
+  "limitations": [
+    "Mac UI runner compiled but failed to initialize automation; neither of its two UI methods executed. The result counts one runner setup failure, not an application assertion.",
+    "Computer-use observed native lesson selection and enabled Start lessons; opening rich teaching content closed the control helper pipe while the app process remained alive. Teaching and native quiz UI acceptance remain unproven.",
+    "Developer testing mode was reported disabled by a read-only check. Permissions were not changed; this is diagnostic context, not proof of the automation timeout cause.",
+    "No real account, upload or microphone was used. iOS lesson parity uses synthetic fixtures.",
+    "Mac lesson audio, fonts, complete settings/mode parity and broad accessibility/device acceptance remain open. The iOS writer/storage cutover and remaining app migrations are not completed by this checkpoint."
+  ]
+}

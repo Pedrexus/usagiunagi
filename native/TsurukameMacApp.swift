@@ -215,7 +215,7 @@ final class MacStudyStore {
         }
         var assignment = CatalogAssignment(id: 101, subjectID: subject.id, kind: subject.kind)
         assignment.level = 1; assignment.srsStage = 3; assignment.startedAt = 1; assignment.availableAt = 1
-        if ProcessInfo.processInfo.arguments.contains("LessonRecoveryFixture") {
+        if ProcessInfo.processInfo.arguments.contains("LessonRecoveryFixture") || ProcessInfo.processInfo.arguments.contains("LessonFixture") {
             assignment.srsStage = 0; assignment.startedAt = nil; assignment.availableAt = nil; assignment.unlockedAt = 1
         }
         var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
@@ -310,11 +310,12 @@ private struct MacStudyRoot: View {
         return $reviewPreferences.colorScheme
     }
     private enum Destination: String, CaseIterable, Identifiable {
-        case reviews = "Reviews", practice = "Practice", statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
+        case reviews = "Reviews", lessons = "Lessons", practice = "Practice", statistics = "Statistics", subjects = "Subjects", savedWork = "Saved work", account = "Account"
         var id: Self { self }
         var symbol: String {
             switch self {
             case .reviews: "rectangle.and.pencil.and.ellipsis"
+            case .lessons: "books.vertical"
             case .practice: "square.and.pencil"
             case .statistics: "chart.bar.xaxis"
             case .subjects: "character.book.closed"
@@ -344,6 +345,12 @@ private struct MacStudyRoot: View {
                             NativeReviewView(store: cache, accountID: accountID).id(accountID)
                         } else {
                             ContentUnavailableView("Connect to review", systemImage: "rectangle.and.pencil.and.ellipsis", description: Text("Sample statistics do not contain a complete offline review catalog."))
+                        }
+                    } else if section == .lessons {
+                        if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
+                            NativeLessonView(store: cache, accountID: accountID).id(accountID)
+                        } else {
+                            ContentUnavailableView("Connect to study lessons", systemImage: "books.vertical", description: Text("Connect and refresh your account to save unlocked lessons on this Mac."))
                         }
                     } else if section == .savedWork {
                         if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
@@ -375,7 +382,7 @@ private struct MacStudyRoot: View {
                         .disabled(store.isSyncing || store.snapshot?.isSample != false)
                 }
                 .safeAreaInset(edge: .bottom) {
-                    if section == .reviews, store.snapshot?.requiresAssignmentRefresh == true {
+                    if [.reviews, .lessons].contains(section), store.snapshot?.requiresAssignmentRefresh == true {
                         Label("Refresh WaniKani to reload progress for archived answers.", systemImage: "arrow.clockwise")
                             .font(.callout).padding()
                     }
@@ -413,7 +420,7 @@ private struct MacStudyRoot: View {
     private var account: some View {
         Form {
             Section("WaniKani account") {
-                Text("Native Mac statistics, subject browsing and saved offline reviews. Lessons and full study settings are still being migrated.").foregroundStyle(.secondary)
+                Text("Native Mac statistics, subject browsing, lessons and saved offline reviews. Full study settings are still being migrated.").foregroundStyle(.secondary)
                 StudyTokenEntry(token: $token)
                 Text("Connect and refresh use reading access. Sending from Saved work also requires the corresponding review, assignment or study-material write permissions. The token stays in this Mac's Keychain; saved work stays on this device.").font(.caption).foregroundStyle(.secondary)
                 Button("Connect and sync") { Task { if await store.connect(token) { token = ""; section = .statistics } } }.disabled(store.isSyncing || token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

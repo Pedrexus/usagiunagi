@@ -232,8 +232,14 @@ extension NativeReviewTests {
       isPractice: isPractice)
     practice.nextQuestion()
     try await store.saveSession(practice, accountID: account, expectedRevision: nil)
-    await #expect(throws: StudyStoreError.self) {
-      try await store.openReviews(accountID: account, now: now)
+    if isPractice {
+      await #expect(throws: StudyStoreError.self) {
+        try await store.openReviews(accountID: account, now: now)
+      }
+    } else {
+      await #expect(throws: NativeReviewError.self) {
+        try await store.openReviews(accountID: account, now: now)
+      }
     }
     #expect(try await store.session(accountID: account)?.session.isPractice == isPractice)
   }

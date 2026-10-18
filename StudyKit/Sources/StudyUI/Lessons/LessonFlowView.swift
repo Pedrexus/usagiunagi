@@ -8,16 +8,17 @@ public struct LessonFlowView<Page: View>: View {
   private let image: (Int64) -> Image?
   private let page: (Int) -> Page
   private let back: () -> Void
-  private let playAudio: () -> Void
+  private let playAudio: (() -> Void)?
   @State private var index = 0
   @FocusState private var keyboardFocus: Bool
 
   public init(
-    subjects: [StudySubject], japaneseFont: String? = nil,
+    subjects: [StudySubject], initialPage: Int = 0, japaneseFont: String? = nil,
     image: @escaping (Int64) -> Image? = { _ in nil }, back: @escaping () -> Void,
-    playAudio: @escaping () -> Void, @ViewBuilder page: @escaping (Int) -> Page
+    playAudio: (() -> Void)? = nil, @ViewBuilder page: @escaping (Int) -> Page
   ) {
     self.subjects = subjects
+    self._index = State(initialValue: min(subjects.count, max(0, initialPage)))
     self.japaneseFont = japaneseFont
     self.image = image
     self.back = back
@@ -110,7 +111,9 @@ public struct LessonFlowView<Page: View>: View {
         case .leftArrow, "a": index = max(0, index - 1)
         case .rightArrow, .return, "d": index += 1
         case "q": index = subjects.count
-        case .space, "j": playAudio()
+        case .space, "j":
+          guard let playAudio else { return .ignored }
+          playAudio()
         default: return .ignored
         }
         return .handled

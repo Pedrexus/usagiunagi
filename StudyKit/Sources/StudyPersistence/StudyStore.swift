@@ -191,7 +191,9 @@ public enum StudyStoreError: Error, LocalizedError {
                 guard old.session.isPractice == session.isPractice,
                       old.session.items.count == session.items.count,
                       old.session.items.allSatisfy({ id, item in
-                          session.items[id]?.subjectID == item.subjectID && session.items[id]?.assignmentID == item.assignmentID
+                          session.items[id]?.subjectID == item.subjectID &&
+                          session.items[id]?.assignmentID == item.assignmentID &&
+                          session.items[id]?.isLesson == item.isLesson
                       }) else { throw StudyStoreError.invalidSession }
             }
             for submission in session.completedSubmissions where !previous.contains(submission.itemID) {

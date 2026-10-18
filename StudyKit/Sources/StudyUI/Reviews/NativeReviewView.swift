@@ -6,6 +6,9 @@ import SwiftUI
 public struct NativeReviewView: View {
   private let store: StudyStore
   private let accountID: String
+  private let lessonSubjectIDs: [Int64]?
+  private let finished: () -> Void
+  private var isLesson: Bool { lessonSubjectIDs != nil }
   @State private var review: NativeReviewState?
   @State private var screen = ReviewScreenState()
   @State private var busy = false
@@ -18,9 +21,14 @@ public struct NativeReviewView: View {
   @StoredReviewPreferences private var preferences
   @FocusState private var answerFocused: Bool
 
-  public init(store: StudyStore, accountID: String) {
+  public init(
+    store: StudyStore, accountID: String, lessonSubjectIDs: [Int64]? = nil,
+    finished: @escaping () -> Void = {}
+  ) {
     self.store = store
     self.accountID = accountID
+    self.lessonSubjectIDs = lessonSubjectIDs
+    self.finished = finished
   }
 
   public var body: some View {
@@ -36,7 +44,8 @@ public struct NativeReviewView: View {
         }
         if review.question == nil {
           ContentUnavailableView(
-            "Review session saved", systemImage: "checkmark.circle",
+            isLesson ? "Lesson quiz saved" : "Review session saved",
+            systemImage: "checkmark.circle",
             description: Text(
               "\(review.saved.session.completedIDs.count) completed · \(review.saved.session.successRate)% accuracy. Completed answers stay on this Mac until you sync Saved work."
             ))
@@ -45,6 +54,7 @@ public struct NativeReviewView: View {
               try await store.finishReviews(
                 accountID: accountID, expectedRevision: review.saved.revision)
               self.review = nil
+              finished()
             }
           }
         } else if let subject = review.subject {
@@ -94,11 +104,15 @@ public struct NativeReviewView: View {
         }
       } else {
         ContentUnavailableView(
-          "Offline reviews", systemImage: "rectangle.and.pencil.and.ellipsis",
+          isLesson ? "Lesson quiz" : "Offline reviews",
+          systemImage: "rectangle.and.pencil.and.ellipsis",
           description: Text(
-            "Start with the reviews due in your saved account, or resume the session already saved on this Mac."
+            isLesson
+              ? "Quiz the lessons you selected. Each completed lesson stays saved on this device until you sync."
+              : "Start with the reviews due in your saved account, or resume the session already saved on this Mac."
           ))
-        Button("Start or resume reviews") { load() }.buttonStyle(.borderedProminent)
+        Button(isLesson ? "Start or resume quiz" : "Start or resume reviews") { load() }
+          .buttonStyle(.borderedProminent)
       }
       if busy { ProgressView("Saving") }
       if let error {
@@ -115,14 +129,17 @@ public struct NativeReviewView: View {
       }
       .frame(minWidth: 380, minHeight: 460)
     }
-    .confirmationDialog("End review session?", isPresented: $confirmEnd, titleVisibility: .visible)
-    {
+    .confirmationDialog(
+      isLesson ? "End lesson quiz?" : "End review session?", isPresented: $confirmEnd,
+      titleVisibility: .visible
+    ) {
       if let review {
         Button("End session", role: .destructive) {
           run {
             try await store.endReviews(
               accountID: accountID, expectedRevision: review.saved.revision)
             self.review = nil
+            finished()
           }
         }
       }
@@ -144,7 +161,15 @@ public struct NativeReviewView: View {
   }
 
   private func load() {
-    run { present(try await store.openReviews(accountID: accountID)) }
+    run {
+      let state =
+        if let lessonSubjectIDs {
+          try await store.openLessons(accountID: accountID, subjectIDs: lessonSubjectIDs)
+        } else {
+          try await store.openReviews(accountID: accountID)
+        }
+      present(state)
+    }
   }
   private func run(_ operation: @escaping @MainActor () async throws -> Void) {
     guard !busy else { return }
@@ -159,7 +184,7 @@ public struct NativeReviewView: View {
     if review?.question != value.question { fullDetails = false }
     review = value
     let session = value.saved.session
-    screen.title = "Reviews"
+    screen.title = isLesson ? "Lesson quiz" : "Reviews"
     screen.question = value.subject?.japanese ?? ""
     screen.canAnswer =
       !screen.question.isEmpty
@@ -281,7 +306,8 @@ public struct NativeReviewView: View {
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
     screen.canSkip = preferences.allowSkipping
     screen.canOverride =
-      preferences.allowCorrections && review?.saved.session.currentDecision == .incorrect
+      !isLesson && preferences.allowCorrections
+      && review?.saved.session.currentDecision == .incorrect
     let available: Set<StudyQuestionKind> =
       review?.subject?.readings.isEmpty == false ? [.meaning, .reading] : [.meaning]
     screen.canShowAll = !available.isSubset(of: visibleQuestions)

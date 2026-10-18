@@ -37,6 +37,9 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference skipped="NO" parallelizable="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="03CC69626B48A79B2E3807BB" BuildableName="MacUITests.xctest" BlueprintName="MacUITests" ReferencedContainer="container:TsurukameMac.xcodeproj"/>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

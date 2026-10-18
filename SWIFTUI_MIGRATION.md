@@ -1022,3 +1022,13 @@ and [native alert builders](https://developer.apple.com/documentation/swiftui/vi
 The installed XCUIApplication header was inspected for launch/open/activate
 semantics; actual warm delivery uses Apple's simulator command and the normal
 system confirmation rather than restarting through the test application's launch API.
+
+### Native Mac lesson implementation (2026-10-18)
+
+NativeLessonView adds native lesson entry using the existing picker, teaching flow, rich details and review screen. The single account-bound session and atomic outbox remain the writer. There is no new network or persistence owner. Quiz start validates the selected unlocked lessons, rejects competing sessions, and resumes the exact saved selection. Answer saving rechecks unlock/start/access as well as assignment identity, stage and schedule. Saved lessons retain their type, and wrong-answer overrides remain unavailable in lessons. The existing lesson-start upload boundary is reused unchanged.
+
+LessonFlowView accepts an initial page (default zero preserves iOS behavior); the Mac can reopen a saved quiz. Its audio shortcut is optional when a host has no player, rather than invoking an empty callback. Native Mac lesson audio and font/settings integration are still required. iOS retains its functioning audio callback, input adapter and writer until the separately tracked native-store cutover.
+
+Validation: 229 shared functions pass on macOS and iOS; three lesson UI workflows pass on each of iPhone and iPad. Native Mac builds. Seven new persistence functions exercise eligibility, wrong/retry, disk resume, completed and partial cancellation, competing windows/modes, changed assignments and account restrictions. The exact source hashes, results and limitations are retained in validation/2026-10-18-native-lessons.json.
+
+Native Mac teaching/quiz UI acceptance remains open. Computer-use observed selection but disconnected at rich teaching content while the app stayed running. Native MacUITests and Mainboard usagi-test-mac-lessons now provide two compiled acceptance methods; the first run failed to initialize automation before either executed. The runner reported “Timed out while enabling automation mode.” The read-only developer-testing check reports disabled mode; no permissions were changed and this does not establish the timeout's cause. Retain this failed setup evidence and rerun the actual UI methods once native automation is available. The prior 90-test hosted iOS gate is historical and was not rerun here, since iOS writer/adapter sources did not change.

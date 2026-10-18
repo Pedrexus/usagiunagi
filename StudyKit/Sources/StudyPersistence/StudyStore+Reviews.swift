@@ -7,6 +7,7 @@ public struct NativeReviewState: Sendable {
   public let subjects: [Int64: CatalogSubject]
   /// A transient receipt for a newly saved correct answer; never replayed on resume.
   public let success: StudyMarkResult?
+  public var isLesson: Bool { saved.session.items.values.first?.isLesson == true }
   public var question: StudyQuestion? {
     guard let question = saved.session.question,
       saved.session.activeIDs.contains(question.itemID)
@@ -25,14 +26,20 @@ public struct NativeReviewAnswer: Sendable {
 }
 
 public enum NativeReviewError: Error, LocalizedError {
-  case unavailableAccount, vacation, noReviews
+  case unavailableAccount, vacation, noReviews, noLessons, invalidLessonSelection
+  case sessionInProgress(isLesson: Bool)
   case incompleteContent(Int64)
   case changedAssignment(Int64)
   public var errorDescription: String? {
     switch self {
     case .unavailableAccount: "Refresh this account before starting reviews."
-    case .vacation: "Reviews are paused while your account is on vacation."
+    case .vacation: "Study sessions are paused while your account is on vacation."
     case .noReviews: "No reviews are available in the saved account data."
+    case .noLessons: "No lessons are available in the saved account data."
+    case .invalidLessonSelection:
+      "These lessons are no longer available. Return to Lessons and choose again."
+    case .sessionInProgress(let isLesson):
+      "Finish or end your saved \(isLesson ? "lesson quiz" : "review session") before starting a different session. Completed answers will stay saved."
     case .incompleteContent(let id):
       "Subject \(id) is missing study content. Refresh before reviewing it."
     case .changedAssignment(let id):
@@ -51,7 +58,9 @@ extension StudyStore {
   public func openReviews(accountID: String, now: Date = .now) throws -> NativeReviewState {
     try requireReviewAccount(accountID)
     if let saved = try session(accountID: accountID) {
-      return try reviewState(saved, accountID: accountID)
+      let state = try reviewState(saved, accountID: accountID)
+      guard !state.isLesson else { throw NativeReviewError.sessionInProgress(isLesson: true) }
+      return state
     }
     let subjects = try catalog(accountID: accountID)
     let byID = Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) })
@@ -79,6 +88,70 @@ extension StudyStore {
     guard !selected.isEmpty else { throw NativeReviewError.noReviews }
     var session = try StudySession(
       items: selected.enumerated().map { $0.element.sessionItem(id: $0.offset, isLesson: false) })
+    session.nextQuestion()
+    let revision = try saveSession(session, accountID: accountID, expectedRevision: nil)
+    return try reviewState(.init(revision: revision, session: session), accountID: accountID)
+  }
+
+  /// Available means unlocked, unstarted, visible, accessible and not pending upload.
+  public func availableLessons(accountID: String) throws -> [CatalogSubject] {
+    try requireReviewAccount(accountID)
+    let byID = Dictionary(
+      uniqueKeysWithValues: try catalog(accountID: accountID).map { ($0.id, $0) })
+    let pending = Set(try pendingReviews(accountID: accountID).map(\.subjectID))
+    let excluded = Set(
+      try materials(accountID: accountID).filter { $0.material.isExcluded }.map {
+        $0.material.subjectID
+      })
+    let profile = try accountState(accountID: accountID)!.profile
+    var result: [CatalogSubject] = []
+    for assignment in try assignments(accountID: accountID)
+    where assignment.unlockedAt != nil
+      && assignment.startedAt == nil && assignment.srsStage == 0 && assignment.hidden != true
+      && !pending.contains(assignment.subjectID)
+    {
+      guard let subject = byID[assignment.subjectID] else {
+        throw NativeReviewError.incompleteContent(assignment.subjectID)
+      }
+      guard subject.hiddenAt == nil, subject.level <= profile.maxLevelGranted,
+        subject.kind != .vocabulary || !excluded.contains(subject.id)
+      else { continue }
+      try requireReviewContent(subject, assignment: assignment)
+      result.append(subject)
+    }
+    return result.sorted {
+      ($0.level, $0.lessonPosition ?? Int.max, $0.id) < (
+        $1.level, $1.lessonPosition ?? Int.max, $1.id
+      )
+    }
+  }
+
+  /// Lesson quizzes use the atomic review writer and never replace paused work.
+  public func openLessons(accountID: String, subjectIDs: [Int64]? = nil) throws -> NativeReviewState
+  {
+    try requireReviewAccount(accountID)
+    if let subjectIDs, subjectIDs.isEmpty || Set(subjectIDs).count != subjectIDs.count {
+      throw NativeReviewError.invalidLessonSelection
+    }
+    if let saved = try session(accountID: accountID) {
+      let state = try reviewState(saved, accountID: accountID)
+      guard state.isLesson else { throw NativeReviewError.sessionInProgress(isLesson: false) }
+      if let subjectIDs, Set(subjectIDs) != Set(saved.session.items.values.map(\.subjectID)) {
+        throw NativeReviewError.sessionInProgress(isLesson: true)
+      }
+      return state
+    }
+    guard let subjectIDs else { throw NativeReviewError.noLessons }
+    let available = Set(try availableLessons(accountID: accountID).map(\.id))
+    guard Set(subjectIDs).isSubset(of: available) else {
+      throw NativeReviewError.invalidLessonSelection
+    }
+    let byID = Dictionary(
+      uniqueKeysWithValues: try assignments(accountID: accountID).map { ($0.subjectID, $0) })
+    var session = try StudySession(
+      items: subjectIDs.enumerated().map {
+        byID[$0.element]!.sessionItem(id: $0.offset, isLesson: true)
+      })
     session.nextQuestion()
     let revision = try saveSession(session, accountID: accountID, expectedRevision: nil)
     return try reviewState(.init(revision: revision, session: session), accountID: accountID)
@@ -135,6 +208,7 @@ extension StudyStore {
       guard session.currentDecision == .incorrect else { throw StudyStoreError.invalidSession }
       session.nextQuestion()
     case .overrideCorrect:
+      guard !state.isLesson else { throw StudySessionError.invalidOverride }
       try validateCurrentAssignment(state, accountID: accountID)
       success = try session.mark(
         .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
@@ -187,7 +261,9 @@ extension StudyStore {
   ) throws
     -> NativeReviewState
   {
-    guard !saved.session.isPractice, saved.session.items.values.allSatisfy({ !$0.isLesson }) else {
+    guard !saved.session.isPractice, let first = saved.session.items.values.first,
+      saved.session.items.values.allSatisfy({ $0.isLesson == first.isLesson })
+    else {
       throw StudyStoreError.invalidSession
     }
     let subjects = try catalog(accountID: accountID)
@@ -212,8 +288,14 @@ extension StudyStore {
     else { throw StudyStoreError.invalidSession }
     let current = try assignments(accountID: accountID).first { $0.subjectID == item.subjectID }
     guard let current, current.id == item.assignmentID, current.srsStage == item.srsStage,
-      current.availableAt == item.availableAt, current.hidden != true, subject.hiddenAt == nil,
+      (current.availableAt ?? 0) == item.availableAt, current.hidden != true,
+      subject.hiddenAt == nil,
       subject.level <= profile.maxLevelGranted
+    else { throw NativeReviewError.changedAssignment(item.subjectID) }
+    guard
+      item.isLesson
+        ? current.unlockedAt != nil && current.startedAt == nil && current.srsStage == 0
+        : current.startedAt != nil && (1...8).contains(current.srsStage)
     else { throw NativeReviewError.changedAssignment(item.subjectID) }
     try requireReviewContent(subject, assignment: current)
   }
