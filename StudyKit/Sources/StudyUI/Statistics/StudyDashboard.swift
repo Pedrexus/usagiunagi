@@ -2,13 +2,6 @@ import SwiftUI
 import Charts
 import StudyCore
 
-public enum StudyPalette {
-    // WaniKani's subject identities, with system typography and surfaces.
-    public static let radical = Color(red: 0.02, green: 0.53, blue: 0.75)
-    public static let kanji = Color(red: 0.77, green: 0.12, blue: 0.43)
-    public static let vocabulary = Color(red: 0.52, green: 0.24, blue: 0.70)
-}
-
 public struct StudyDashboard: View {
     public let snapshot: StudySnapshot
     private let metrics: StudyMetrics

@@ -20,8 +20,10 @@ class SubjectCollectionModelItem: TableModelItem {
   let localCachingClient: LocalCachingClient
   weak var delegate: SubjectChipDelegate?
 
-  init(subjects: [Int64], fontSize: CGFloat, localCachingClient: LocalCachingClient,
-       delegate: SubjectChipDelegate? = nil) {
+  init(
+    subjects: [Int64], fontSize: CGFloat, localCachingClient: LocalCachingClient,
+    delegate: SubjectChipDelegate? = nil
+  ) {
     self.subjects = subjects
     self.fontSize = fontSize
     self.localCachingClient = localCachingClient
@@ -50,9 +52,11 @@ private class SubjectCollectionModelView: TableModelCell {
     // Create a chip for each subject.
     for subjectId in item.subjects {
       if let subject = item.localCachingClient.getSubject(id: subjectId),
-         let delegate = item.delegate {
-        let chip = SubjectChip(subject: subject, showMeaning: true, meaningFontSize: item.fontSize,
-                               delegate: delegate)
+        let delegate = item.delegate
+      {
+        let chip = SubjectChip(
+          subject: subject, showMeaning: true, meaningFontSize: item.fontSize,
+          delegate: delegate)
         contentView.addSubview(chip)
         chips.append(chip)
       }
@@ -63,7 +67,7 @@ private class SubjectCollectionModelView: TableModelCell {
   override func layoutSubviews() {
     super.layoutSubviews()
 
-    let frames = calculateSubjectChipFrames(chips: chips, width: frame.size.width, alignment: .left)
+    let frames = calculateSubjectChipFrames(chips: chips, width: frame.size.width)
     for (idx, frame) in frames.enumerated() {
       chips[idx].frame = frame
     }
@@ -73,12 +77,12 @@ private class SubjectCollectionModelView: TableModelCell {
     if chips.isEmpty {
       return size
     }
-    let frames = calculateSubjectChipFrames(chips: chips, width: frame.size.width, alignment: .left)
+    let frames = calculateSubjectChipFrames(chips: chips, width: frame.size.width)
     if frames.isEmpty {
       return size
     }
-    return CGSize(width: size.width,
-                  height: frames.last!.maxY +
-                    kSubjectChipCollectionEdgeInsets.bottom)
+    return CGSize(
+      width: size.width,
+      height: frames.last!.maxY + kSubjectChipCollectionEdgeInsets.bottom)
   }
 }

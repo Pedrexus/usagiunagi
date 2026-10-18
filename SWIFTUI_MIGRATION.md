@@ -472,3 +472,53 @@ do not provide a reliable historical receipt for an uncertain write. No blind re
 or exactly-once guarantee is added. Native synthetic UI and persistence tests cover
 these choices; the iOS writer/caller handoff and broader real-account/device checks
 remain open. See TASKS.md for exact checkpoint evidence.
+
+## SwiftUI presentation and file audit — 2026-10-18
+
+The user's current priority is SwiftUI presentation and deletion of replaced UI,
+while retaining familiar WaniKani colors and study interactions. Storage cutover
+remains required; it no longer precedes every screen migration. The original
+upstream default branch is `master` (`d20defc`), used as the lesson/review behavior
+reference. Identical layouts are not required.
+
+Mainboard's bounded source/resource/project searches checked the following files
+individually. References in storyboards, XIBs and Xcode build groups were included;
+absence of a Swift caller alone was not treated as proof that a UI class was unused.
+
+| File | Decision and remaining responsibility |
+| --- | --- |
+| `ios/Features/Lessons/LessonPickerViewController.swift` | Replaced its collection/cell/header/footer implementation with a small SwiftUI host. Keeps the existing cache, available-item revalidation and navigation. |
+| `ios/Features/Lessons/LessonsViewController.swift` | Replaced page-controller navigation with shared SwiftUI subject/quiz chips, swipe and keyboard handling. Keeps the quiz instance so an unfinished draft survives page changes. |
+| `ios/LessonsPageControl.swift` | Deleted; its custom sizing/layout and all project references are replaced. |
+| `ios/Resources/Lessons.storyboard` | Retains only the hosting scene and navigation identity. Removed page-control/back outlets and constraints; delete the scene when shell navigation migrates. |
+| `ios/BottomSheetAction.swift` | Deleted the unused custom action/sheet controller after checking both type names across sources and resources. Existing review menus use SwiftUI. |
+| `ios/BiggerTapAreaButton.swift` | Deleted; no remaining source or Interface Builder caller. Removed its project references. |
+| `ios/SubjectChip.swift` | Retained for rich subject details. Removed centered layout, its alignment parameter and bookkeeping; the two remaining layout calls both used left alignment. |
+| `ios/Tables/SubjectCollectionModelItem.swift` | Retained for subject components; updated its two left-layout calls. |
+| `ios/SubjectDetailsView.swift` | Retained: active rich teaching/review details, mnemonics, notes, synonyms and subject links need a SwiftUI replacement before deletion. |
+| `ios/SubjectDetailsViewController.swift` | Retained: lesson/details host still owns audio and saving study materials on disappearance. This is temporary interoperability, not a SwiftUI limitation. |
+| `ios/SubjectCatalogueViewController.swift` | Retained: still has active page-controller navigation, independently of the replaced lesson navigation. |
+| `ios/WavesView.swift` | Retained: login and subject-detail headers still call it. |
+| `ios/GradientView.swift` | Retained: Main and Vacation Mode still reference it from code and Interface Builder. |
+| `ios/MainTitleView.swift` | Retained with its XIB: active home header. |
+
+All 18 shared view/support files now live under StudyUI's `Catalog`, `Lessons`,
+`Practice`, `Recovery`, `Reviews`, `Shared` and `Statistics` feature folders. They
+remain one Swift package target with the same public API; no wrapper modules,
+parallel navigation system or new runtime dependency was added. Lesson adapters
+are grouped under `ios/Features/Lessons`, with their existing Xcode references
+updated. Mainboard builds both platforms after discovery of the moved sources.
+
+The lesson picker uses a compact four-column subject-color grid (two columns at
+accessibility text sizes). Teaching/quiz navigation uses direct subject chips and
+one Quiz control. Reviews again show white glyphs on the WaniKani subject color,
+with a dark reading strip and a native meaning strip. Study font settings remain
+owned by their existing hosts. Rich teaching and quiz input/content still cross
+temporary controller adapters; replacing navigation does not finish that migration.
+
+Coverage no longer stores a selected chart row as a sheet item or schedules a
+second presentation on dismissal. Each explicit target button expands its current
+remaining-kanji grid in the page. The bundled StudyCore curriculum and saved
+WaniKani snapshot are the default data source, without a coverage download. Only an
+explicit kanji or Sources action opens its separate destination. See TASKS.md for
+exact test evidence and remaining acceptance gates.

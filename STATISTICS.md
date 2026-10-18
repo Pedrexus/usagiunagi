@@ -37,7 +37,7 @@ Simulator sample-data checks do not establish real-account sync correctness, pre
 
 ## Curriculum charts and study targets
 
-The shared SwiftUI dashboard separates Progress, Coverage and Focus. Progress plots SRS stages, meaning/reading accuracy, next scheduled reviews and recent level durations. Coverage uses horizontal stacked bars, configurable Started/Guru+/Master+/Burned thresholds, exact counts, and a drill-down of remaining kanji. Focus exposes the underlying error counts and recovery streak.
+The shared SwiftUI dashboard separates Progress, Coverage and Focus. Progress plots SRS stages, meaning/reading accuracy, next scheduled reviews and recent level durations. Coverage uses horizontal stacked bars, configurable Started/Guru+/Master+/Burned thresholds, exact counts, and inline expandable grids of remaining kanji. Chart interaction never presents coverage sheets. Expanded counts use the current threshold and saved snapshot rather than a captured modal value. Reference lists ship in the StudyCore resource bundle; viewing coverage needs no download. Colored kanji open saved subject details; gray kanji remain visible when outside the synced catalog. Focus exposes the underlying error counts and recovery streak.
 
 The design was checked against the current [WaniKani public homepage](https://www.wanikani.com/), including its imagery. The app borrows clear hierarchy and WaniKani's radical blue, kanji pink and vocabulary purple identities, using system fonts, SF Symbols and native controls rather than copying the marketing illustrations. The authenticated WaniKani dashboard and WKStats account views were not accessed.
 

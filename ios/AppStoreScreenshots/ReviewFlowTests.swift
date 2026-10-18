@@ -16,13 +16,58 @@ import XCTest
 
 final class ReviewFlowTests: XCTestCase {
   @MainActor
+  func testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ShowStatistics", "ShowCoverage"]
+    app.launch()
+    defer { clearFixture(app) }
+    let row = app.buttons["coverage.target.N5"]
+    XCTAssertTrue(row.waitForExistence(timeout: 10))
+    if !row.isHittable { app.swipeUp() }
+    let remaining = app.staticTexts["coverage.remaining.N5"]
+    XCTAssertFalse(remaining.exists)
+    let chart = app.descendants(matching: .any).matching(identifier: "coverage.chart").firstMatch
+    XCTAssertTrue(chart.exists)
+    chart.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.25)).tap()
+    chart.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.75)).tap()
+    XCTAssertFalse(remaining.exists)
+    XCTAssertFalse(app.navigationBars["N5"].exists)
+    row.tap()
+    XCTAssertTrue(remaining.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Stats"].firstMatch.isHittable)
+    XCTAssertFalse(app.buttons["Done"].exists)
+    let expanded = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    expanded.name = "Inline offline curriculum coverage"
+    expanded.lifetime = .keepAlways
+    add(expanded)
+    row.tap()
+    XCTAssertFalse(remaining.exists)
+    app.swipeDown()
+    app.buttons["coverage.threshold"].tap()
+    app.buttons["Burned"].tap()
+    XCTAssertTrue(row.label.contains("at Burned"))
+    app.buttons["coverage.system"].tap()
+    app.buttons["School grades"].tap()
+    XCTAssertTrue(app.buttons["coverage.target.grade1"].waitForExistence(timeout: 5))
+    XCTAssertFalse(remaining.exists)
+    app.buttons["Home"].firstMatch.tap()
+    app.buttons["Stats"].firstMatch.tap()
+    XCTAssertTrue(app.buttons["coverage.target.grade1"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Done"].exists)
+    XCTAssertFalse(app.navigationBars["N5"].exists)
+  }
+
+  @MainActor
   func testUpcomingReviewsShowsStageAndSubjectCountsAndReturns() throws {
     continueAfterFailure = false
     let app = XCUIApplication()
     app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES"]
     app.launch()
     defer { clearFixture(app) }
-    let forecast = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", "Upcoming reviews:")).firstMatch
+    let forecast = app.cells.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "Upcoming reviews:")
+    ).firstMatch
     XCTAssertTrue(forecast.waitForExistence(timeout: 10))
     let due = try XCTUnwrap(forecast.label.split(separator: ":").last?.split(separator: " ").first)
     forecast.tap()
@@ -58,7 +103,8 @@ final class ReviewFlowTests: XCTestCase {
     for _ in 0..<3 {
       if complete.exists { break }
       XCTAssertTrue(field.waitForExistence(timeout: 5))
-      let answer = app.staticTexts["review.prompt"].label.contains("Reading") ? "watashijishin" : "personally"
+      let answer =
+        app.staticTexts["review.prompt"].label.contains("Reading") ? "watashijishin" : "personally"
       field.tap()
       field.typeText(answer)
       app.buttons["review.submit"].tap()
@@ -78,15 +124,19 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["Back"].tap()
     XCTAssertTrue(missed.waitForExistence(timeout: 5))
     app.navigationBars["Review Summary"].buttons["Done"].tap()
-    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews")).firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews")).firstMatch
+        .waitForExistence(timeout: 5))
   }
 
   @MainActor
   private func launchPractice(anki: Bool = false) -> XCUIApplication {
     let app = XCUIApplication()
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "-ankiMode", anki ? "YES" : "NO",
-                           "-ankiModeTaskType", "2", "-autoSwitchKeyboard", "NO",
-                           "-playAudioAutomatically", "NO", "-allowSkippingReviews", "NO"]
+    app.launchArguments = [
+      "-FASTLANE_SNAPSHOT", "YES", "-ankiMode", anki ? "YES" : "NO",
+      "-ankiModeTaskType", "2", "-autoSwitchKeyboard", "NO",
+      "-playAudioAutomatically", "NO", "-allowSkippingReviews", "NO",
+    ]
     app.launch()
     let tab = app.tabBars.buttons["Practice"]
     XCTAssertTrue(tab.waitForExistence(timeout: 10))
@@ -113,9 +163,10 @@ final class ReviewFlowTests: XCTestCase {
     field.tap()
     field.typeText("a")
     app.buttons["review.submit"].tap()
-    let next = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      app.staticTexts["review.question"].value as? String == "イ"
-    }, object: nil)
+    let next = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.staticTexts["review.question"].value as? String == "イ"
+      }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
     field.tap()
     field.typeText("i")
@@ -140,9 +191,10 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.buttons["review.correct"].waitForExistence(timeout: 5))
     app.buttons["review.correct"].tap()
-    let next = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      app.staticTexts["review.question"].value as? String == "イ"
-    }, object: nil)
+    let next = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.staticTexts["review.question"].value as? String == "イ"
+      }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
     app.buttons["review.close"].tap()
     XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
@@ -181,10 +233,7 @@ final class ReviewFlowTests: XCTestCase {
       app.launch()
       app.terminate()
     }
-    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
-      .firstMatch
-    XCTAssertTrue(start.waitForExistence(timeout: 10))
-    start.tap()
+    startReviews(in: app)
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     let question = app.staticTexts["review.question"]
@@ -195,7 +244,7 @@ final class ReviewFlowTests: XCTestCase {
     add(initial)
     let summary = app.staticTexts["Session complete"]
     let meanings = ["私自身": "personally", "私": "i", "自": "self", "身": "somebody"]
-    for _ in 0 ..< 5 {
+    for _ in 0..<5 {
       let previousQuestion = question.value as? String ?? ""
       let previousPrompt = prompt.label
       let answer = previousPrompt.contains("Reading") ? "watashijishin" : meanings[previousQuestion]
@@ -203,10 +252,12 @@ final class ReviewFlowTests: XCTestCase {
       field.tap()
       field.typeText(answer!)
       app.buttons["review.submit"].tap()
-      let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-        summary.exists || (question.value as? String != previousQuestion) || prompt
-          .label != previousPrompt
-      }, object: nil)
+      let changed = XCTNSPredicateExpectation(
+        predicate: NSPredicate { _, _ in
+          summary.exists || (question.value as? String != previousQuestion)
+            || prompt
+              .label != previousPrompt
+        }, object: nil)
       XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 10), .completed)
       if summary.exists { break }
     }
@@ -245,10 +296,7 @@ final class ReviewFlowTests: XCTestCase {
       app.launch()
       app.terminate()
     }
-    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
-      .firstMatch
-    XCTAssertTrue(start.waitForExistence(timeout: 10))
-    start.tap()
+    startReviews(in: app)
     XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 10))
     app.buttons["review.voice"].tap()
     XCTAssertTrue(app.buttons["voice.start"].waitForExistence(timeout: 5))
@@ -259,9 +307,10 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["voice.submit"].isEnabled)
     app.buttons["voice.submit"].tap()
     let prompt = app.staticTexts["review.prompt"]
-    let reading = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      prompt.exists && prompt.label.contains("Reading")
-    }, object: nil)
+    let reading = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        prompt.exists && prompt.label.contains("Reading")
+      }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
     app.buttons["review.voice"].tap()
     XCTAssertTrue(app.buttons["voice.start"].waitForExistence(timeout: 5))
@@ -269,8 +318,9 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
     app.buttons["voice.stop"].tap()
     XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
-    XCTAssertFalse(app.buttons["voice.submit"]
-      .isEnabled) // Kanji transcription is not a reading answer.
+    XCTAssertFalse(
+      app.buttons["voice.submit"]
+        .isEnabled)  // Kanji transcription is not a reading answer.
     let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
     attachment.name = "Voice reading correction"
     attachment.lifetime = .keepAlways
@@ -287,18 +337,35 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   private func launchSingleReview(extra: [String] = []) -> XCUIApplication {
     let app = XCUIApplication()
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "SingleReviewFixture",
-                           "-groupMeaningReading", "YES", "-meaningFirst", "YES", "-ankiMode", "NO",
-                           "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
-                           "-allowSkippingReviews", "NO", "-showAnswerImmediately", "NO",
-                           "-enableCheats", "YES"] + extra
+    app.launchArguments =
+      [
+        "-FASTLANE_SNAPSHOT", "YES", "SingleReviewFixture",
+        "-groupMeaningReading", "YES", "-meaningFirst", "YES", "-ankiMode", "NO",
+        "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
+        "-allowSkippingReviews", "NO", "-showAnswerImmediately", "NO",
+        "-enableCheats", "YES",
+      ] + extra
     app.launch()
-    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
-      .firstMatch
-    XCTAssertTrue(start.waitForExistence(timeout: 10))
-    start.tap()
+    startReviews(in: app)
     XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
     return app
+  }
+
+  @MainActor
+  private func startReviews(in app: XCUIApplication) {
+    let table = app.tables.firstMatch
+    XCTAssertTrue(table.waitForExistence(timeout: 10))
+    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
+      .firstMatch
+    // A self-sizing home row can leave the control outside the visible table.
+    // Xcode's automatic scroll-to-tap can lose its button snapshot on iOS 27.
+    for _ in 0..<5 {
+      if start.exists && start.isHittable { break }
+      table.swipeDown()
+    }
+    XCTAssertTrue(start.waitForExistence(timeout: 5))
+    XCTAssertTrue(start.isHittable)
+    start.tap()
   }
 
   @MainActor
@@ -359,13 +426,15 @@ final class ReviewFlowTests: XCTestCase {
   func testLandscapeReviewKeepsAnswerControlsAccessible() {
     continueAfterFailure = false
     let app = launchSingleReview()
-    defer { XCUIDevice.shared.orientation = .portrait
+    defer {
+      XCUIDevice.shared.orientation = .portrait
       clearFixture(app)
     }
     XCUIDevice.shared.orientation = .landscapeLeft
-    let rotated = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      app.windows.firstMatch.frame.width > app.windows.firstMatch.frame.height
-    }, object: nil)
+    let rotated = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.windows.firstMatch.frame.width > app.windows.firstMatch.frame.height
+      }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [rotated], timeout: 5), .completed)
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
@@ -415,9 +484,10 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["reviewSettings.done"].tap()
     XCTAssertEqual(field.value as? String, "personaly")
     app.buttons["review.submit"].tap()
-    let reading = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      app.staticTexts["review.prompt"].label.contains("Reading")
-    }, object: nil)
+    let reading = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.staticTexts["review.prompt"].label.contains("Reading")
+      }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
     field.tap()
     field.typeText("watashijishin")
@@ -491,5 +561,140 @@ final class ReviewFlowTests: XCTestCase {
       .firstMatch
     XCTAssertTrue(start.waitForExistence(timeout: 5))
     XCTAssertFalse(app.staticTexts["Session complete"].exists)
+  }
+}
+
+extension ReviewFlowTests {
+  @MainActor
+  private func launchLessonPicker() -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = [
+      "-FASTLANE_SNAPSHOT", "YES", "LessonFlowFixture",
+      "-groupMeaningReading", "YES", "-meaningFirst", "YES", "-ankiMode", "NO",
+      "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
+      "-allowSkippingReviews", "NO", "-showAnswerImmediately", "NO",
+      "-enableCheats", "YES",
+    ]
+    app.launch()
+    let choose = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose lessons"))
+      .firstMatch
+    XCTAssertTrue(choose.waitForExistence(timeout: 10))
+    choose.tap()
+    XCTAssertTrue(app.buttons["lesson.startSelection"].waitForExistence(timeout: 5))
+    return app
+  }
+
+  @MainActor
+  private func expectLessonPage(_ label: String, in app: XCUIApplication) {
+    let page = app.staticTexts["lesson.position"]
+    XCTAssertTrue(page.waitForExistence(timeout: 5))
+    let ready = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label CONTAINS %@", label), object: page)
+    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+  }
+
+  @MainActor
+  func testLessonPickerPreservesSelectionAndUnfinishedQuizDraft() {
+    continueAfterFailure = false
+    let app = launchLessonPicker()
+    defer { clearFixture(app) }
+    XCTAssertFalse(app.buttons["lesson.startSelection"].isEnabled)
+    let radical = app.buttons["lesson.select.293"]
+    radical.tap()
+    XCTAssertEqual(radical.value as? String, "Selected")
+    radical.tap()
+    XCTAssertEqual(radical.value as? String, "Not selected")
+    app.buttons["lesson.select.3864"].tap()
+    XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "1 selected")
+    let picker = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    picker.name = "SwiftUI lesson picker"
+    picker.lifetime = .keepAlways
+    add(picker)
+    app.buttons["lesson.startSelection"].tap()
+    expectLessonPage("Lesson 1 of 1", in: app)
+    let teaching = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    teaching.name = "SwiftUI lesson navigation"
+    teaching.lifetime = .keepAlways
+    add(teaching)
+    app.buttons["lesson.quiz"].tap()
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("pers")
+    app.buttons["lesson.page.0"].tap()
+    expectLessonPage("Lesson 1 of 1", in: app)
+    app.buttons["lesson.quiz"].tap()
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "pers")
+    let quiz = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    quiz.name = "SwiftUI lessons retain quiz draft"
+    quiz.lifetime = .keepAlways
+    add(quiz)
+    app.buttons["lesson.back"].tap()
+    XCTAssertTrue(app.buttons["lesson.select.3864"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "1 selected")
+  }
+
+  @MainActor
+  func testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson() {
+    continueAfterFailure = false
+    let app = launchLessonPicker()
+    defer { clearFixture(app) }
+    app.buttons["lesson.select.3864"].tap()
+    app.buttons["lesson.startSelection"].tap()
+    expectLessonPage("Lesson 1 of 1", in: app)
+    app.buttons["lesson.quiz"].tap()
+    let field = app.textFields["review.answer"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText("banana")
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
+    app.buttons["review.reveal"].tap()
+    XCTAssertFalse(app.buttons["review.correct"].exists)
+    app.buttons["review.submit"].tap()
+    let choose = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose lessons"))
+      .firstMatch
+    for _ in 0..<4 {
+      if choose.exists { break }
+      XCTAssertTrue(field.waitForExistence(timeout: 5))
+      let answer =
+        app.staticTexts["review.prompt"].label.contains("Reading") ? "watashijishin" : "personally"
+      field.tap()
+      field.typeText(answer)
+      app.buttons["review.submit"].tap()
+    }
+    XCTAssertTrue(choose.waitForExistence(timeout: 5))
+    choose.tap()
+    XCTAssertTrue(app.buttons["lesson.select.293"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["lesson.select.3864"].exists)
+    XCTAssertFalse(app.buttons["lesson.startSelection"].isEnabled)
+  }
+
+  @MainActor
+  func testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz() {
+    continueAfterFailure = false
+    let app = launchLessonPicker()
+    defer { clearFixture(app) }
+    for id in [293, 743, 3864] { app.buttons["lesson.select.\(id)"].tap() }
+    app.buttons["lesson.startSelection"].tap()
+    expectLessonPage("Lesson 1 of 3", in: app)
+    XCTAssertEqual(app.buttons["lesson.page.0"].value as? String, "Selected")
+    app.buttons["lesson.page.1"].tap()
+    expectLessonPage("Lesson 2 of 3", in: app)
+    app.buttons["lesson.page.0"].tap()
+    expectLessonPage("Lesson 1 of 3", in: app)
+    app.buttons["lesson.page.2"].tap()
+    expectLessonPage("Lesson 3 of 3", in: app)
+    app.swipeRight()
+    expectLessonPage("Lesson 2 of 3", in: app)
+    app.buttons["lesson.quiz"].tap()
+    expectLessonPage("Quiz", in: app)
+    XCTAssertEqual(app.buttons["lesson.quiz"].value as? String, "Selected")
+    app.buttons["lesson.page.2"].tap()
+    expectLessonPage("Lesson 3 of 3", in: app)
+    app.buttons["lesson.back"].tap()
+    XCTAssertTrue(app.buttons["lesson.startSelection"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "3 selected")
   }
 }

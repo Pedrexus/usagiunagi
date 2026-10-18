@@ -262,6 +262,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
       answerField.isEnabled = true
     }
     screen.isAnki = isAnkiModeActiveForCurrentTask
+    screen.questionKind = session.activeTaskType
     screen.canSkip = Settings.allowSkippingReviews
     screen.canOverride = delegate.allowsCheats(forReviewItem: session.activeTask)
     screen.canExclude = subject.hasVocabulary && Settings.allowExcludeItems
@@ -277,11 +278,11 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     let type: String
     switch assignment.subjectType {
     case .radical: type = "Radical"
-      screen.subjectColor = .cyan
+      screen.subjectColor = StudyPalette.radical
     case .kanji: type = "Kanji"
-      screen.subjectColor = .pink
+      screen.subjectColor = StudyPalette.kanji
     default: type = "Vocabulary"
-      screen.subjectColor = .purple
+      screen.subjectColor = StudyPalette.vocabulary
     }
     var task = session.activeTaskType == .reading ? "Reading" : subject
       .hasRadical ? "Name" : "Meaning"

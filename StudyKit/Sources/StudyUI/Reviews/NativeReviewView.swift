@@ -165,6 +165,7 @@ public struct NativeReviewView: View {
       !screen.question.isEmpty
       || (readyImage != nil && readyImage == value.subject?.characterImageURL)
     screen.prompt = value.question?.kind == .reading ? "Reading" : "Meaning"
+    screen.questionKind = value.question?.kind ?? .meaning
     screen.subjectColor =
       value.subject?.kind == .kanji
       ? StudyPalette.kanji

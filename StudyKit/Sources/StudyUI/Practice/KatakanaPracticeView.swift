@@ -122,6 +122,7 @@ private struct KatakanaPracticeSessionView: View {
     screen.title = "Katakana practice"
     screen.question = practice.subject?.japanese ?? ""
     screen.prompt = "Reading"
+    screen.questionKind = .reading
     screen.subjectColor = StudyPalette.vocabulary
     screen.completed = practice.session.completedIDs.count
     screen.remaining = practice.session.activeIDs.count + practice.session.queuedIDs.count

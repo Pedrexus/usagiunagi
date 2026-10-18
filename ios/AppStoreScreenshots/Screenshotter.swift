@@ -107,6 +107,7 @@ import WaniKaniAPI
   }
 
   class FakeLocalCachingClient: LocalCachingClient {
+    private var completedLessons: Set<Int64> = []
     private let subjectTextProtos: [Int64: String] = [
       // Subjects used in the search results for "sake". Abridged protos containing just the fields
       // displayed in search results.
@@ -1288,7 +1289,10 @@ import WaniKaniAPI
     }
 
     override func updateAvailableSubjects() -> (Int, [ReviewComposition]) {
-      (10,
+      if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
+        return (getAllAssignments().filter(\.isLessonStage).count, createComposition(0))
+      }
+      return (10,
        createComposition(getAllAssignments().count, 14, 8, 2, 1, 12, 42, 17, 9, 2, 0, 2, 17, 0, 0,
                          6, 0, 0, 0, 0,
                          4, 11, 0, 8, 6))
@@ -1318,6 +1322,22 @@ import WaniKaniAPI
     }
 
     override func getAllAssignments() -> [TKMAssignment] {
+      if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
+        return [Int64(293), 743, 3864].map { id in
+          let subject = getSubject(id: id)!
+          var assignment = TKMAssignment()
+          assignment.id = 100_000 + id
+          assignment.subjectID = id
+          assignment.subjectType = subject.subjectType
+          assignment.level = subject.level
+          assignment.srsStageNumber = completedLessons.contains(id) ? 1 : 0
+          if completedLessons.contains(id) {
+            assignment.startedAt = 100
+            assignment.availableAt = Int32.max
+          }
+          return assignment
+        }
+      }
       // Distinct subjects keep the sample review count consistent with statistics.
       let ids: [Int64] = ProcessInfo.processInfo.arguments
         .contains("VoiceReviewFixture") || ProcessInfo.processInfo.arguments
@@ -1454,8 +1474,11 @@ import WaniKaniAPI
         makePieSlices(.vocabulary, locked: 50, lesson: 8, apprentice: 4, guru: 0)
     }
 
-    override func sendProgress(_: [TKMProgress]) -> Promise<Void> {
-      Promise.value(())
+    override func sendProgress(_ progress: [TKMProgress]) -> Promise<Void> {
+      if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
+        completedLessons.formUnion(progress.filter(\.isLesson).map { $0.assignment.subjectID })
+      }
+      return Promise.value(())
     }
 
     override func updateStudyMaterial(_: TKMStudyMaterials) -> Promise<Void> {
