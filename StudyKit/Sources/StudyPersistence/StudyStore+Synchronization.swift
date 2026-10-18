@@ -67,7 +67,7 @@ extension StudyStore {
       }
       if operation == .refresh || operation == previous.operation { return previous.task }
     } else {
-      guard refreshRun == nil, uploadRun == nil else { throw StudyUploadError.alreadyRunning }
+      guard refreshRun == nil, uploadRun == nil, recoveryRun == nil else { throw StudyUploadError.alreadyRunning }
     }
     let id = UUID()
     let generation = uploadGeneration
@@ -108,14 +108,18 @@ extension StudyStore {
     let synchronization = synchronizationRun
     let refresh = refreshRun
     let upload = uploadRun
+    let recovery = recoveryRun
     synchronization?.task.cancel()
     refresh?.task.cancel()
     upload?.task.cancel()
+    recovery?.task.cancel()
     _ = await synchronization?.task.result
     _ = await refresh?.task.result
     _ = await upload?.task.result
+    _ = await recovery?.task.result
     if synchronizationRun?.id == synchronization?.id { synchronizationRun = nil }
     if refreshRun?.id == refresh?.id { refreshRun = nil }
     if uploadRun?.id == upload?.id { uploadRun = nil }
+    if recoveryRun?.id == recovery?.id { recoveryRun = nil }
   }
 }

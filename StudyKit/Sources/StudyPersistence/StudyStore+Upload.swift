@@ -3,7 +3,7 @@ import StudyCore
 import SwiftData
 
 public struct StudyUploadIssue: Codable, Sendable {
-    public enum Reason: String, Codable, Sendable { case uncertain, rejected, assignmentChanged, assignmentMissing }
+    public enum Reason: String, Codable, Sendable { case uncertain, rejected, assignmentChanged, assignmentMissing, materialChanged }
     public let reason: Reason
     public let httpStatus: Int?
     public let serverAssignment: CatalogAssignment?
@@ -39,7 +39,7 @@ extension StudyStore {
     /// One native upload lane per store. Account transitions must await cancelSynchronization before
     /// changing credentials or clearing data. No token is persisted in SwiftData.
     public func uploadPending(accountID: String, token: String, client: WaniKaniClient = .init()) async throws -> StudyUploadReport {
-        guard synchronizationCancellations == 0, uploadRun == nil else { throw StudyUploadError.alreadyRunning }
+        guard synchronizationCancellations == 0, uploadRun == nil, recoveryRun == nil else { throw StudyUploadError.alreadyRunning }
         let id = UUID(), generation = uploadGeneration
         let task = Task { try await self.performUpload(accountID: accountID, token: token, client: client, generation: generation) }
         uploadRun = (id, task)
@@ -123,6 +123,14 @@ extension StudyStore {
                 guard let current = try materialRecords(accountID: accountID).first(where: {
                     $0.subjectID == material.material.subjectID && $0.revision == material.revision && $0.pending
                 }) else { continue }
+                if let baseline = current.recoveryBaseline, baseline.remote != remote {
+                    try transaction {
+                        current.issue = .init(reason: .materialChanged, httpStatus: nil, serverAssignment: nil, detectedAt: Date())
+                        current.revision = UUID()
+                    }
+                    report.materialsNeedingAttention += 1
+                    continue
+                }
                 try transaction {
                     current.attemptedRevision = material.revision; current.attemptedMaterial = material.material
                 }
@@ -156,6 +164,8 @@ extension StudyStore {
                         $0.subjectID == material.material.subjectID && $0.attemptedRevision == material.revision
                     }) {
                         row.attemptedRevision = nil; row.attemptedMaterial = nil; row.serverID = result.id
+                        // A newer local edit must compare against our confirmed write next time.
+                        row.recoveryBaseline = row.revision == material.revision ? nil : row.recoveryBaseline.map { _ in .init(remote: result) }
                         if row.revision == material.revision { row.pending = false; row.revision = UUID(); row.issue = nil; report.uploadedMaterials += 1 }
                     }
                 }

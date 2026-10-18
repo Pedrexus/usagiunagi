@@ -167,6 +167,36 @@ final class MacStudyStore {
         "Sent \(report.uploadedReviews) reviews, \(report.uploadedLessons) lessons and \(report.uploadedMaterials) note edits. \(report.reviewsNeedingAttention + report.materialsNeedingAttention) items need attention."
             + (report.onVacation ? " Reviews and lessons are paused during vacation." : "")
     }
+    func compareMaterial(_ saved: SavedStudyMaterial) async throws -> StudyMaterialComparison {
+        #if DEBUG
+        if isReviewFixture, ProcessInfo.processInfo.arguments.contains("MaterialRecoveryFixture") {
+            guard saved.accountID == "review-fixture", let cache = savedWorkStore else { throw StudyStoreError.sampleData }
+            let client = WaniKaniClient { request in
+                guard request.httpMethod == "GET" else { throw StudyStoreError.sampleData }
+                let json: String
+                switch request.url?.lastPathComponent {
+                case "user":
+                    json = #"{"object":"user","data":{"id":"review-fixture","username":"Synthetic review fixture","level":1,"current_vacation_started_at":null}}"#
+                case "study_materials":
+                    json = #"{"object":"collection","total_count":1,"pages":{"next_url":null},"data":[{"id":201,"object":"study_material","data":{"subject_id":1,"meaning_note":"Server version of the note.","reading_note":"いち","meaning_synonyms":["Server synonym"]}}]}"#
+                default: throw StudyStoreError.sampleData
+                }
+                return (Data(json.utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+            }
+            return try await cache.compareMaterial(saved, credentialID: "review-fixture", token: "fixture", client: client)
+        }
+        #endif
+        guard !isReviewFixture, snapshot?.isSample == false,
+              snapshot?.accountID == saved.accountID,
+              let token = try TokenKeychain.load() else { throw StudyStoreError.invalidIdentity }
+        let epoch = generation, credential = credentialID(token)
+        try beginRequest(credential: credential); defer { finishRequest(epoch) }
+        let cache = try await repository()
+        try checkRequest(epoch)
+        let comparison = try await cache.compareMaterial(saved, credentialID: credential, token: token, client: reader)
+        try checkRequest(epoch)
+        return comparison
+    }
     #if DEBUG
     private func restoreReviewFixture() async throws {
         let cache = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
@@ -200,6 +230,11 @@ final class MacStudyStore {
             fixture.subjects = [subject, component, vocabulary]
             fixture.materials = [.init(serverID: 0, value: .init(subjectID: subject.id, meaningNote: "A saved synthetic note.", meaningSynonyms: ["Single"]), pending: false, legacyRevision: 0)]
         } else { fixture.subjects = [subject] }
+        if ProcessInfo.processInfo.arguments.contains("MaterialRecoveryFixture") {
+            fixture.materials = [.init(serverID: 201,
+                value: .init(subjectID: 1, meaningNote: "Local saved note. 🐰\nSecond line.",
+                             readingNote: "いち", meaningSynonyms: ["Local synonym"]), pending: true, legacyRevision: 0)]
+        }
         fixture.assignments = [assignment]
         _ = try await cache.importLegacyAccount(fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",
             verifiedUsername: profile.username, credentialID: "review-fixture")
@@ -300,7 +335,8 @@ private struct MacStudyRoot: View {
                         }
                     } else if section == .savedWork {
                         if !snapshot.isSample, let accountID = snapshot.accountID, let cache = store.savedWorkStore {
-                            SavedWorkView(store: cache, accountID: accountID, isSyncing: store.isSyncing) {
+                            SavedWorkView(store: cache, accountID: accountID, isSyncing: store.isSyncing,
+                                          compareMaterial: store.compareMaterial) {
                                 try await store.syncSavedWork(accountID: accountID)
                             }.id(accountID)
                         } else {

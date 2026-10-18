@@ -38,3 +38,16 @@ revision checks and explicit conflict resolution. Edits enter the local durable
 queue; saving does not authorize an upload. Audio, fonts and broader catalog
 controls remain tracked. Sample-statistics mode has only summary
 content. The synthetic review fixture includes a small linked catalog for UI checks.
+
+Saved work can now compare pending notes/synonyms with WaniKani, then explicitly
+keep the local edit queued or adopt the shown server version. Keeping an edit
+records a durable server comparison; a changed record stops the next upload and
+asks for another decision. Comparing or choosing a version does not send work.
+Concurrent changes in another app during a network request can still conflict;
+uncertain review/lesson answers remain saved for separate reconciliation.
+
+For isolated recovery UI checks, launch a Debug build with
+`ReviewFixture MaterialRecoveryFixture`. Its notes and GET-only responses are synthetic and
+in-memory, and uploads remain disabled. Cancel/close preserves pending work;
+keeping a note leaves one queued edit; adopting the server fixture clears that
+pending edit and updates the native subject details.

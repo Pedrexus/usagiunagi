@@ -11,7 +11,7 @@ extension StudyStore {
     /// One complete read per store. Local edits and uploads may continue while downloading;
     /// revisions prevent the response from replacing work completed during that interval.
     public func refresh(credentialID: String, token: String, client: WaniKaniClient = .init()) async throws -> StudySnapshot {
-        guard synchronizationCancellations == 0, refreshRun == nil else { throw StudyUploadError.alreadyRunning }
+        guard synchronizationCancellations == 0, refreshRun == nil, recoveryRun == nil else { throw StudyUploadError.alreadyRunning }
         guard !credentialID.isEmpty else { throw StudyStoreError.invalidIdentity }
         let id = UUID(), generation = uploadGeneration
         let task = Task { try await self.performRefresh(credentialID: credentialID, token: token, client: client, generation: generation) }

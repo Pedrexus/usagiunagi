@@ -83,6 +83,7 @@ public enum StudyStoreError: Error, LocalizedError {
     var synchronizationCancellations = 0
     var refreshRun: (id: UUID, task: Task<StudySnapshot, any Error>)?
     var uploadRun: (id: UUID, task: Task<StudyUploadReport, any Error>)?
+    var recoveryRun: (id: UUID, task: Task<StudyMaterialComparison, any Error>)?
     @concurrent public static func open(at url: URL, inMemory: Bool = false) async throws -> StudyStore {
         let schema = Schema([SnapshotRecord.self, SessionRecord.self, ReviewRecord.self, MaterialRecord.self, ImportReceipt.self, CatalogRecord.self, AssignmentRecord.self, AccountRecord.self, UploadPauseRecord.self])
         let configuration: ModelConfiguration

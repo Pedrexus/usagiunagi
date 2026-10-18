@@ -2,6 +2,11 @@ import Foundation
 import StudyCore
 import SwiftData
 
+/// A wrapper distinguishes an observed missing record from an edit without a recovery check.
+struct StudyMaterialBaseline: Codable, Equatable, Sendable {
+    let remote: WaniKaniMaterial?
+}
+
 @Model final class MaterialRecord {
     #Unique<MaterialRecord>([\.accountID, \.subjectID])
     var accountID: String
@@ -12,6 +17,7 @@ import SwiftData
     @Attribute(.codable) var issue: StudyUploadIssue? = nil
     var attemptedRevision: UUID? = nil
     @Attribute(.codable) var attemptedMaterial: StudyMaterial? = nil
+    @Attribute(.codable) var recoveryBaseline: StudyMaterialBaseline? = nil
     @Attribute(.codable) var material: StudyMaterial
     init(accountID: String, material: StudyMaterial, pending: Bool) {
         self.accountID = accountID; self.subjectID = material.subjectID
@@ -68,6 +74,7 @@ extension StudyStore {
                 $0.subjectID == sent.material.subjectID && $0.revision == sent.revision
             }), row.attemptedRevision == nil || row.attemptedRevision == sent.revision {
                 row.pending = false; row.revision = UUID(); row.issue = nil; row.attemptedRevision = nil; row.attemptedMaterial = nil
+                row.recoveryBaseline = nil
             }
         }
     }

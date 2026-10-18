@@ -7,7 +7,7 @@ public struct WaniKaniAccount: Sendable {
     public let onVacation: Bool
 }
 
-public struct WaniKaniMaterial: Sendable {
+public struct WaniKaniMaterial: Codable, Equatable, Sendable {
     public let id: Int64
     public let value: StudyMaterial
 }

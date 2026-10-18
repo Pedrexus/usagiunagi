@@ -418,3 +418,33 @@ for the shared summary and schedule were inspected on iPhone/iPad. The native Ma
 build succeeds. Mainboard's exact bundles are recorded in TASKS.md; legacy iOS
 warnings and physical-device/account/microphone gates remain open. Mainboard tasks
 `usagi-similar-kanji` and `usagi-test-ui-ipad` cover the new developer workflows.
+
+## Native note recovery
+
+Saved work now compares a pending note with a fresh, account-verified WaniKani
+read. The user sees the current local edit, any older attempted revision, and the
+server version before choosing to keep the edit queued or adopt the shown server
+version locally. Both choices require confirmation. Comparison and resolution do
+not submit a note or replay a review answer.
+
+Keeping an edit persists the compared server ID and full note/synonym content,
+including observed absence. The normal uploader rechecks this baseline before a
+write; a changed, created, deleted or replaced record returns to recovery without
+sending. A confirmed older upload advances the baseline for a newer local edit.
+Stale windows, changed attempt metadata, account disconnect and cancellation are
+fenced on the store actor. Recovery reads share its existing synchronization
+exclusion/cancellation owner and preserve account backoff, including when a local
+edit races a throttled response. No second queue or credential store was added.
+
+The [official study-material contract](https://docs.api.wanikani.com/20170710/#study-materials)
+documents subject-filtered GETs and record-specific updates. It does not document
+an atomic conditional-update guarantee; read-before-write checks cannot prevent
+another client changing a note during the final request. This limitation is stated
+in the UI in plain language. Server equality is used as the user's chosen current
+state, not as proof that a historical write succeeded. Uncertain review/lesson
+reconciliation remains a separate open gate before the iOS writer handoff.
+
+The Mac debug-only `ReviewFixture MaterialRecoveryFixture` mode supplies an
+in-memory pending note and a GET-only synthetic server comparison. It bypasses
+Keychain and keeps refresh, connect, disconnect and saved-work uploads disabled.
+Normal and release account paths retain the real client and account checks.
