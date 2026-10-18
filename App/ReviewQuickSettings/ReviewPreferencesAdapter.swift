@@ -1,3 +1,5 @@
+import StudyCore
+
 // Copyright David Sansome
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +13,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import StudyCore
 
 /// Preserve archived keys and enum meanings; no user-defaults migration is needed.
 enum ReviewPreferencesAdapter {
@@ -77,5 +77,24 @@ enum ReviewPreferencesAdapter {
   var selectedFiles: Set<String> {
     get { Settings.selectedFonts }
     set { Settings.selectedFonts = newValue }
+  }
+}
+
+/// Keep the original iPhone archives while native audio uses the shared typed owner.
+@MainActor final class LegacyAudioPreferences: StudyAudioPreferences {
+  var options: StudyAudioOptions {
+    get {
+      var value = StudyAudioOptions()
+      value.enabled = Settings.offlineAudio
+      value.cellular = Settings.offlineAudioCellular
+      value.voiceIDs = Settings.offlineAudioVoiceActors
+      return value
+    }
+    set {
+      Settings.offlineAudio = newValue.enabled
+      Settings.offlineAudioCellular = newValue.cellular
+      Settings.offlineAudioVoiceActors = newValue.voiceIDs
+
+    }
   }
 }

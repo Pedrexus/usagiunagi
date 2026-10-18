@@ -1,3 +1,4 @@
+import Foundation
 import StudyCore
 import StudyPersistence
 import SwiftUI
@@ -8,6 +9,7 @@ public struct StudyRootView: View {
   private let appName: String
   private let appearance: ColorScheme?
   private let notice: String?
+  @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
   @State private var shell = StudyShellState()
@@ -25,6 +27,10 @@ public struct StudyRootView: View {
     self.appName = appName
     self.appearance = appearance
     self.notice = notice
+  }
+  private struct AudioReadKey: Equatable {
+    let accountID: String?
+    let savedAt: Date?
   }
   public var body: some View {
     NavigationStack {
@@ -87,12 +93,28 @@ public struct StudyRootView: View {
         shell.progress = active ? Progress(totalUnitCount: -1) : nil
       }
       .onChange(of: model.snapshot?.accountID) { _, _ in
+        audio.updateCatalog(nil)
         path = nil
         settingsPath = []
         showSettings = false
         subject = nil
         token = ""
         updateHeader()
+      }
+      .task(
+        id: AudioReadKey(accountID: model.snapshot?.accountID, savedAt: model.snapshot?.savedAt)
+      ) {
+        guard let snapshot = model.snapshot, !snapshot.isSample, let account = snapshot.accountID,
+          let store = model.savedWorkStore
+        else {
+          audio.updateCatalog(nil)
+          return
+        }
+        do {
+          let catalog = try await store.audioCatalog(accountID: account)
+          try Task.checkCancellation()
+          audio.updateCatalog(catalog)
+        } catch { if !Task.isCancelled { model.error = error.localizedDescription } }
       }
       .sheet(isPresented: $showSettings) {
         NavigationStack(path: $settingsPath) {
@@ -137,6 +159,7 @@ public struct StudyRootView: View {
     switch value {
     case .account: account
     case .fonts: FontLibraryView(library: fonts)
+    case .offlineAudio: AudioLibraryView(library: audio)
     case .reviewSettings:
       ReviewSettingsPanel(
         preferences: preferences,
@@ -144,7 +167,8 @@ public struct StudyRootView: View {
           do { try $preferences.applyChanges(from: old, to: new) } catch {
             model.error = error.localizedDescription
           }
-        }, fonts: { settingsPath.append(.fonts) }, supportsAudio: false,
+        }, fonts: { settingsPath.append(.fonts) },
+        offlineAudio: { settingsPath.append(.offlineAudio) },
         supportsSessionOptions: true)
     case .forecast: NativeForecastView(model: model)
     case .reviews, .lessons, .practice, .savedWork, .catalog, .search:

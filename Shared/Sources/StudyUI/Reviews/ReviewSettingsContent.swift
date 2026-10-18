@@ -62,8 +62,10 @@ public struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: 
       Section("Audio") {
         Toggle("Autoplay audio", isOn: $preferences.autoplayAudio)
           .accessibilityIdentifier("reviewSettings.autoplay")
-        Toggle("Interrupt background audio", isOn: $preferences.interruptBackgroundAudio)
-          .accessibilityIdentifier("reviewSettings.interruptAudio")
+        #if os(iOS)
+          Toggle("Interrupt background audio", isOn: $preferences.interruptBackgroundAudio)
+            .accessibilityIdentifier("reviewSettings.interruptAudio")
+        #endif
         audio
       }
     }

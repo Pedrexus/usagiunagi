@@ -25,7 +25,7 @@ class TKMServices {
   @MainActor let fontLibrary: StudyFontLibrary
 
   private(set) var offlineAudio: OfflineAudio!
-  private(set) var audio: Audio!
+  @MainActor let audio: StudyAudioLibrary
   private(set) var radicalCharacterImages: RadicalCharacterImages!
 
   var client: WaniKaniAPIClient!
@@ -34,8 +34,10 @@ class TKMServices {
   @MainActor init(fontLibrary: StudyFontLibrary? = nil, audioDownloads: StudyAudioDownloads? = nil)
   {
     self.fontLibrary = fontLibrary ?? StudyFontLibrary(preferences: LegacyFontPreferences())
-    offlineAudio = OfflineAudio(services: self, downloads: audioDownloads)
-    audio = Audio(services: self)
+    let downloads =
+      audioDownloads ?? StudyAudioDownloads(directory: .documentsDirectory.appending(path: "audio"))
+    audio = StudyAudioLibrary(downloads: downloads, preferences: LegacyAudioPreferences())
+    offlineAudio = OfflineAudio(services: self)
     radicalCharacterImages = RadicalCharacterImages(services: self)
   }
 }

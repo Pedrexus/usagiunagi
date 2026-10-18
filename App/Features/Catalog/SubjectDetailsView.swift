@@ -19,7 +19,7 @@ import SwiftUI
 import WaniKaniAPI
 
 /// Temporary iOS boundary: rendering is shared SwiftUI; the existing cache remains the writer.
-@Observable final class LegacySubjectDetailsModel: NSObject, AudioDelegate {
+@MainActor @Observable final class LegacySubjectDetailsModel {
   private let services: TKMServices
   private let client: LocalCachingClient
   private let account: String?
@@ -34,7 +34,8 @@ import WaniKaniAPI
   var questions: Set<StudyQuestionKind> = [.meaning, .reading]
   var reviewQuestion: StudyQuestionKind?
   var presentationID = UUID()
-  var audioState = SubjectAudioState.idle
+  var audioState: SubjectAudioState { subject.map { services.audio.state(for: $0.id) } ?? .idle }
+  var audioError: String? { subject.flatMap { services.audio.error(for: $0.id) } }
   var error: String?
   var fullAnswerPrompt = false
   private static var showAllCount = 0
@@ -45,7 +46,6 @@ import WaniKaniAPI
     self.client = client
     self.account = client.getUserInfo()?.username
     self.delegate = delegate
-    super.init()
   }
   var preferences: SubjectDetailsPreferences {
     var value = SubjectDetailsPreferences()
@@ -177,18 +177,8 @@ import WaniKaniAPI
   }
   func playAudio() {
     guard canPlayAudio, let subject else { return }
-    if services.audio.currentState == .playing {
-      services.audio.stopPlayback()
-    } else {
-      services.audio.play(subjectID: subject.id, delegate: self)
-    }
-  }
-  func audioPlaybackStateChanged(state: Audio.PlaybackState) {
-    switch state {
-    case .loading: audioState = .loading
-    case .playing: audioState = .playing
-    case .finished: audioState = .idle
-    }
+    services.audio.toggle(
+      subject: subject, interruptBackgroundAudio: Settings.interruptBackgroundAudio)
   }
   func sentenceText(_ sentence: CatalogSubject.Sentence) -> AttributedString {
     let text = NSAttributedString(string: sentence.japanese)
@@ -207,7 +197,7 @@ import WaniKaniAPI
   }
 }
 
-struct SubjectDetailsPage: View {
+@MainActor struct SubjectDetailsPage: View {
   @Bindable var model: LegacySubjectDetailsModel
   var showsHeader = false
   var back: (() -> Void)?
@@ -238,9 +228,10 @@ struct SubjectDetailsPage: View {
                   subject: subject, initial: try model.editableMaterial(),
                   questions: SubjectDetailVisibility(model.questions).editableQuestions)
               } catch { model.error = error.localizedDescription }
-            }, openSubject: model.openSubject,
-            playAudio: model.canPlayAudio ? model.playAudio : nil,
-            audioState: model.audioState, sentenceText: model.sentenceText
+            }, openSubject: { model.openSubject($0) },
+            playAudio: model.canPlayAudio ? { model.playAudio() } : nil,
+            audioState: model.audioState, audioError: model.audioError,
+            sentenceText: { model.sentenceText($0) }
           ).padding(.horizontal)
           extras(subject).padding(.horizontal)
           if let error = model.error { Text(error).foregroundStyle(.red).padding() }

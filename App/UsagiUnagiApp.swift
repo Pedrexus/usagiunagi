@@ -10,6 +10,7 @@ struct UsagiUnagiApp: App {
   #else
     @State private var model = StudyAppAssembly.makeModel()
     @State private var fonts = StudyAppAssembly.makeFonts()
+    @State private var audio = StudyAppAssembly.makeAudio()
   #endif
 
   var body: some Scene {
@@ -21,7 +22,7 @@ struct UsagiUnagiApp: App {
           model: model, appName: AppIdentity.name, appearance: StudyAppAssembly.appearance,
           notice: StudyAppAssembly.notice
         )
-        .environment(fonts)
+        .environment(fonts).environment(audio)
         .defaultAppStorage(StudyAppAssembly.reviewDefaults)
         .frame(minWidth: 640, minHeight: 500)
         .task {

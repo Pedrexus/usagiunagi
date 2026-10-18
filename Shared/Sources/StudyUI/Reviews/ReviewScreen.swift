@@ -69,25 +69,30 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   }
   @State private var confirmEnd = false
   @Bindable private var state: ReviewScreenState
+  private let audio: StudyAudioLibrary?
   private let action: (ReviewScreenAction) -> Void
   private let input: () -> Input
   private let details: () -> Details
   private let questionContent: () -> QuestionContent
 
   public init(
-    state: ReviewScreenState, action: @escaping (ReviewScreenAction) -> Void,
+    state: ReviewScreenState, audio: StudyAudioLibrary? = nil,
+    action: @escaping (ReviewScreenAction) -> Void,
     @ViewBuilder input: @escaping () -> Input, @ViewBuilder details: @escaping () -> Details
   ) where QuestionContent == EmptyView {
     self.init(
-      state: state, action: action, question: { EmptyView() }, input: input, details: details)
+      state: state, audio: audio, action: action, question: { EmptyView() }, input: input,
+      details: details)
   }
 
   public init(
-    state: ReviewScreenState, action: @escaping (ReviewScreenAction) -> Void,
+    state: ReviewScreenState, audio: StudyAudioLibrary? = nil,
+    action: @escaping (ReviewScreenAction) -> Void,
     @ViewBuilder question: @escaping () -> QuestionContent,
     @ViewBuilder input: @escaping () -> Input, @ViewBuilder details: @escaping () -> Details
   ) {
     self.state = state
+    self.audio = audio
     self.action = action
     self.input = input
     self.details = details
@@ -97,6 +102,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   public var body: some View {
     VStack(spacing: 12) {
       progress
+      if let audio { AudioPlaybackNotice(library: audio) }
       let layout =
         compactLandscape
         ? AnyLayout(HStackLayout(spacing: 16))

@@ -163,7 +163,7 @@ public struct CatalogReviewStatistic: Codable, Sendable {
   }
 }
 
-public struct StudyVoiceActor: Codable, Sendable {
+public struct StudyVoiceActor: Codable, Equatable, Sendable {
   public let id: Int64
   public var name = ""
   public var description = ""
@@ -194,7 +194,7 @@ public struct SubjectProgress: Codable, Sendable {
   }
 }
 
-public struct StudyAudioReference: Codable, Sendable {
+public struct StudyAudioReference: Codable, Equatable, Sendable {
   public let subjectID: Int64
   public let voiceActorID: Int64
   public let level: Int

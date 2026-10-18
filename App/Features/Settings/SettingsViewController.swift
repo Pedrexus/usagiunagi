@@ -152,8 +152,8 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
       },
       offlineAudio: { [weak self] in
         guard let self else { return }
-        let controller = StoryboardScene.OfflineAudio.initialScene.instantiate()
-        controller.setup(services: services)
+        services.offlineAudio.queueDownloads()
+        let controller = OfflineAudioViewController(library: services.audio)
         pushLegacy(controller)
       },
       developer: { [weak self] in

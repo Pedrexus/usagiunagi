@@ -59,6 +59,23 @@ import SwiftUI
         directory: URL.applicationSupportDirectory.appending(path: "TsurukameNative/fonts"),
         bundledFonts: nil))
   }
+  static func makeAudio() -> StudyAudioLibrary {
+    #if DEBUG
+      if isReviewFixture {
+        let directory = URL.temporaryDirectory.appending(
+          path: "mac-audio-fixture-\(UUID().uuidString)")
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [AudioFixtureProtocol.self]
+        return StudyAudioLibrary(
+          downloads: StudyAudioDownloads(directory: directory, configuration: configuration),
+          preferences: DefaultsStudyAudioPreferences(defaults: reviewDefaults),
+          playback: SampleAudioPlayback())
+      }
+    #endif
+    return StudyAudioLibrary(
+      downloads: StudyAudioDownloads(
+        directory: URL.applicationSupportDirectory.appending(path: "TsurukameNative/audio")))
+  }
   static func makeModel() -> StudyAppModel {
     #if DEBUG
       if isReviewFixture {
@@ -111,6 +128,16 @@ import SwiftUI
       subject.japanese = "一"
       subject.meanings = [.init("One", role: .primary)]
       subject.readings = [.init("いち", isPrimary: true, kind: .onyomi)]
+      if ProcessInfo.processInfo.arguments.contains("--audio-fixture") {
+        subject = CatalogSubject(id: 1, kind: .vocabulary)
+        subject.level = 1
+        subject.japanese = "一つ"
+        subject.meanings = [.init("One thing", role: .primary)]
+        subject.readings = [.init("ひとつ", isPrimary: true, kind: .unknown)]
+        subject.audio = [Int64(1), 2].map {
+          .init(url: "https://audio.example.test/\($0).mp3", voiceActorID: $0)
+        }
+      }
       if ProcessInfo.processInfo.arguments.contains("--radical-fixture") {
         subject = CatalogSubject(id: 8790, kind: .radical)
         subject.level = 1
@@ -132,6 +159,18 @@ import SwiftUI
         assignment.unlockedAt = 1
       }
       var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+      if ProcessInfo.processInfo.arguments.contains("--audio-fixture") {
+        fixture.voices = [Int64(1), 2].map { id in
+          var voice = StudyVoiceActor(id: id)
+          voice.name = "Voice \(id) fixture"
+          voice.description = "Tokyo accent"
+          return voice
+        }
+        fixture.audio = subject.audio.map {
+          .init(
+            subjectID: subject.id, voiceActorID: $0.voiceActorID, level: subject.level, url: $0.url)
+        }
+      }
       if subject.kind == .kanji {
         subject.meaningMnemonic = "A <kanji>single line</kanji> represents <b>one</b>."
         subject.meaningHint = "Count the line: <b>one</b>."

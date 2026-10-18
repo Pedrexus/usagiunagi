@@ -167,7 +167,7 @@ import Testing
   }
 }
 
-private struct AudioDownloadStub: Sendable {
+struct AudioDownloadStub: Sendable {
   struct State: Sendable {
     var data = Data("ID3-fixture".utf8)
     var status = 200

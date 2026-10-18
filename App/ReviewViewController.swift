@@ -162,7 +162,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     let field = answerField
     let details = subjectDetails
     let root = ReviewScreen(
-      state: screen, action: { [weak self] in self?.handle($0) },
+      state: screen, audio: services.audio, action: { [weak self] in self?.handle($0) },
       input: { ExistingReviewView(view: field) },
       details: { SubjectDetailsPage(model: details) })
     let host = UIHostingController(rootView: NavigationStack { root })
@@ -192,6 +192,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
 
   override func viewWillDisappear(_ animated: Bool) {
     saveDetails()
+    services.audio.stop()
     super.viewWillDisappear(animated)
   }
 
@@ -495,9 +496,10 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
         subject.hasVocabulary,
         !subject.vocabulary.audio.isEmpty
       {
-        services.audio.play(
-          subjectID: subject.id,
-          delegate: nil)
+        if let value = try? LegacyStudyImporter.catalogSubject(subject) {
+          services.audio.play(
+            subject: value, interruptBackgroundAudio: Settings.interruptBackgroundAudio)
+        }
       }
       if marked.subjectFinished, showSubjectHistory {
         previousSubject = subject
@@ -689,7 +691,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     guard let token = session.questionToken, screen.phase == .answering,
       !screen.isAnki
     else { return }
-    services.audio.stopPlayback()
+    services.audio.stop()
     answerField.resignFirstResponder()
     var model = VoiceReviewController(question: token)
     #if DEBUG
@@ -702,7 +704,7 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
       }
     #endif
     let panel = VoiceAnswerPanel(
-      model: model,
+      model: model, audio: services.audio,
       submit: { [weak self] transcript in
         guard let self, self.session.questionToken == token else { return }
         self.dismiss(animated: true) {

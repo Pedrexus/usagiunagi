@@ -8,6 +8,8 @@ public struct NativeSubjectDetailsView: View {
   private let subjectID: Int64
   private let reviewQuestion: StudyQuestionKind?
   private let visibleQuestions: Set<StudyQuestionKind>
+  @Environment(StudyAudioLibrary.self) private var audio
+  @StoredReviewPreferences private var preferences
   @State private var details: StudySubjectDetails?
   @State private var error: String?
   @State private var editing = false
@@ -36,7 +38,15 @@ public struct NativeSubjectDetailsView: View {
               components: details.components, combinations: details.combinations,
               similar: details.similar,
               visibleQuestions: visibleQuestions, reviewQuestion: reviewQuestion,
-              edit: { editing = true }, openSubject: { relatedSubject = $0 }
+              edit: { editing = true }, openSubject: { relatedSubject = $0 },
+              playAudio: details.subject.audio.isEmpty
+                ? nil
+                : {
+                  audio.toggle(
+                    subject: details.subject,
+                    interruptBackgroundAudio: preferences.interruptBackgroundAudio)
+                },
+              audioState: audio.state(for: subjectID), audioError: audio.error(for: subjectID)
             ).padding(.horizontal)
             if details.savedMaterial?.pending == true {
               Text("Changes saved on this device. Sync them from Saved work.").font(.caption)

@@ -201,6 +201,118 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(app.buttons["font.download.font-download.ttf"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.switches["font.selection.font-download.ttf"].exists)
   }
+  func testNativeOfflineAudioSettingsKeepTheUnsubmittedReviewDraft() {
+    let app = launch(["--audio-fixture"])
+    defer { app.terminate() }
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    input.click()
+    input.typeText("one thing")
+    app.buttons["review.settings"].click()
+    app.buttons["reviewSettings.offlineAudio"].click()
+    let enabled = app.switches["offlineAudio.enabled"]
+    XCTAssertTrue(enabled.waitForExistence(timeout: 5), app.debugDescription)
+    enabled.click()
+    let voice = app.switches["offlineAudio.voice.1"]
+    XCTAssertTrue(voice.waitForExistence(timeout: 5))
+    XCTAssertEqual((voice.value as? NSNumber)?.intValue, 1)
+    let complete = app.staticTexts["offlineAudio.status"]
+    let finished = XCTNSPredicateExpectation(
+      predicate: NSPredicate(
+        format: "value CONTAINS %@ OR label CONTAINS %@", "Up to date", "Up to date"),
+      object: complete)
+    XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 15), .completed, app.debugDescription)
+    let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    image.name = "Shared native offline audio"
+    image.lifetime = .keepAlways
+    add(image)
+    app.sheets.firstMatch.buttons["chevron.backward"].click()
+    app.buttons["reviewSettings.done"].click()
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertEqual(input.value as? String, "one thing")
+  }
+  func testNativeReadingAutoplayRetainsAStopControlAfterTheFinalAnswer() {
+    let app = launch(["--audio-fixture"])
+    defer { app.terminate() }
+    app.buttons["app.settings"].click()
+    app.buttons["Review settings"].click()
+    let autoplay = app.switches["reviewSettings.autoplay"]
+    XCTAssertTrue(autoplay.waitForExistence(timeout: 5))
+    autoplay.click()
+    app.buttons["Done"].click()
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    input.click()
+    input.typeText("one thing")
+    app.buttons["review.submit"].click()
+    XCTAssertFalse(app.buttons["review.stopAudio"].exists)
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    input.click()
+    input.typeText("hitotsu")
+    app.buttons["review.submit"].click()
+    XCTAssertTrue(
+      app.staticTexts["Review session saved"].waitForExistence(timeout: 5), app.debugDescription)
+    let stop = app.buttons["review.stopAudio"]
+    XCTAssertTrue(stop.waitForExistence(timeout: 5), app.debugDescription)
+    stop.click()
+    XCTAssertFalse(stop.exists)
+  }
+  private func openAudioSubject(in app: XCUIApplication) {
+    app.buttons["app.search"].click()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.click()
+    field.typeText("hitotsu")
+    let subject = app.buttons["catalog.subject.1"]
+    XCTAssertTrue(subject.waitForExistence(timeout: 5), app.debugDescription)
+    subject.click()
+    XCTAssertTrue(app.buttons["subject.audio"].waitForExistence(timeout: 5), app.debugDescription)
+  }
+  func testNativePronunciationFailureStaysInline() {
+    let app = launch(["--audio-fixture", "--audio-failure-fixture"])
+    defer { app.terminate() }
+    openAudioSubject(in: app)
+    app.buttons["subject.audio"].click()
+    XCTAssertTrue(
+      app.staticTexts["subject.audioError"].waitForExistence(timeout: 5), app.debugDescription)
+    XCTAssertTrue(app.alerts.allElementsBoundByIndex.isEmpty)
+    XCTAssertTrue(app.buttons["subject.audio"].isEnabled)
+  }
+  func testNativePronunciationLoadingCanBeCancelled() {
+    let app = launch(["--audio-fixture", "--audio-loading-fixture"])
+    defer { app.terminate() }
+    openAudioSubject(in: app)
+    let audio = app.buttons["subject.audio"]
+    app.typeKey("j", modifierFlags: [])
+    XCTAssertEqual(audio.label, "Cancel loading")
+    XCTAssertTrue(audio.isEnabled)
+    audio.click()
+    XCTAssertEqual(audio.label, "Play reading")
+    XCTAssertFalse(app.staticTexts["subject.audioError"].exists)
+  }
+
+  func testCombinedAnkiAutoplayWaitsForTheCorrectAssessment() {
+    let app = launch(["--audio-fixture", "--anki-fixture", "--combined-anki-fixture"])
+    defer { app.terminate() }
+    app.buttons["app.settings"].click()
+    app.buttons["Review settings"].click()
+    let autoplay = app.switches["reviewSettings.autoplay"]
+    XCTAssertTrue(autoplay.waitForExistence(timeout: 5))
+    autoplay.click()
+    app.buttons["Done"].click()
+    app.buttons["home.reviews"].click()
+    showAnswer(in: app)
+    XCTAssertFalse(app.buttons["review.stopAudio"].exists)
+    app.buttons["review.incorrect"].click()
+    showAnswer(in: app)
+    XCTAssertFalse(app.buttons["review.stopAudio"].exists)
+    app.buttons["review.correct"].click()
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.buttons["review.stopAudio"].waitForExistence(timeout: 5), app.debugDescription)
+  }
 
 }
 

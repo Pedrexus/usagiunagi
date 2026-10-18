@@ -8,7 +8,7 @@ public enum StudyDestination: Hashable, Sendable {
   case practice(StudyPracticeScope)
   case catalog(SubjectCatalogQuery, remaining: Bool = false)
   case search, forecast
-  case reviewSettings, savedWork, account, fonts
+  case reviewSettings, savedWork, account, fonts, offlineAudio
 }
 
 struct NativeHomeDashboardView: View {

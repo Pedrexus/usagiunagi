@@ -41,11 +41,6 @@ internal enum StoryboardScene {
 
     internal static let initialScene = InitialSceneType<Tsurukame.NavigationController>(storyboard: Self.self)
   }
-  internal enum OfflineAudio: StoryboardType {
-    internal static let storyboardName = "OfflineAudio"
-
-    internal static let initialScene = InitialSceneType<Tsurukame.OfflineAudioViewController>(storyboard: Self.self)
-  }
   internal enum Review: StoryboardType {
     internal static let storyboardName = "Review"
 

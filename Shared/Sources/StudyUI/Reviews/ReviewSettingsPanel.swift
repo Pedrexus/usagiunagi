@@ -7,6 +7,7 @@ public struct ReviewSettingsPanel: View {
   private let sourcePreferences: ReviewPreferences
   private let changed: (ReviewPreferences, ReviewPreferences) -> Void
   private let fonts: (() -> Void)?
+  private let offlineAudio: (() -> Void)?
   private let supportsAudio: Bool
   private let supportsSessionOptions: Bool
   private let done: (() -> Void)?
@@ -14,13 +15,15 @@ public struct ReviewSettingsPanel: View {
   public init(
     preferences: ReviewPreferences,
     changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
-    fonts: (() -> Void)? = nil, supportsAudio: Bool = true, supportsSessionOptions: Bool = false,
+    fonts: (() -> Void)? = nil, offlineAudio: (() -> Void)? = nil, supportsAudio: Bool = true,
+    supportsSessionOptions: Bool = false,
     done: (() -> Void)? = nil
   ) {
     _preferences = State(initialValue: preferences)
     sourcePreferences = preferences
     self.changed = changed
     self.fonts = fonts
+    self.offlineAudio = offlineAudio
     self.supportsAudio = supportsAudio
     self.supportsSessionOptions = supportsSessionOptions
     self.done = done
@@ -41,7 +44,13 @@ public struct ReviewSettingsPanel: View {
       if supportsSessionOptions { StudySessionSettingsContent(options: binding.sessionOptions) }
       ReviewSettingsContent(
         preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
-        display: { EmptyView() }, answers: { EmptyView() }, audio: { EmptyView() })
+        display: { EmptyView() }, answers: { EmptyView() },
+        audio: {
+          if let offlineAudio {
+            Button("Offline Audio", systemImage: "arrow.down.circle", action: offlineAudio)
+              .accessibilityIdentifier("reviewSettings.offlineAudio")
+          }
+        })
     }
     #if os(macOS)
       .formStyle(.grouped)

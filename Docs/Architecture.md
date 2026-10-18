@@ -24,7 +24,19 @@ Put business behavior and screens in Shared. Keep `#if os(...)` at the narrow pl
 
 Font files are validated before cache replacement, then activated at their final file URL through Core Text. Transfer identities prevent a cancelled completion from replacing a newer download. The iOS adapter retains `Settings.selectedFonts` in its existing archived format and the original Documents/fonts location. Native Mac uses a UserDefaults string array and Application Support/TsurukameNative/fonts. The small iOS hosting controller contains no download/catalog business logic; its obsolete font storyboard and loader were removed. Native review selection and gestures use the same glyph-filtered names without clearing an answer draft.
 
-Pronunciation playback, notification/watch integration and the remaining iOS writer/coordinator still need their own parity work. Shared font ownership does not establish complete media parity or change account/grading storage.
+Shared pronunciation ownership is described below. Notification/watch integration, physical media acceptance and the remaining iOS writer/coordinator still need parity work; font migration does not change account/grading storage.
+
+## Shared pronunciation and offline audio
+
+`StudyAudioLibrary` owns selected voices, download policy, the current account's accessible audio catalog and one playback engine. Both hosts use `AudioLibraryView`/`OfflineAudioView`; subject details and reviews consume the same player. iOS retains its three archived preferences and Documents/audio/a{subject}-{voice}.mp3 cache contract. Native Mac uses primitive UserDefaults values and Application Support/TsurukameNative/audio. Disabling downloads retains files; explicit deletion stops playback/downloads, disables downloading and retains voice choices. Priority remains current level, earlier levels in reverse order, then the next accessible level, with at most four active transfers per level.
+
+Native catalog reads omit hidden and subscription-locked subjects and reject another account. Changing/disconnecting the account cancels active transfers and playback without deleting the cache. Repeated reads of an unchanged catalog do not restart downloads. Playback rotates voices, prefers the chosen cached recording, then any other cached voice, and only then streams an HTTPS URL. Decode failures and loading can be recovered/cancelled through shared inline controls. The cache downloader validates response status, media type and nonempty bytes; the playback engine validates actual media decoding.
+
+`AppleStudyAudioPlayback` uses [AVFoundation's native Observation support](https://developer.apple.com/documentation/avfoundation/observing-playback-state-in-swiftui). It enables the global Observation setting before creating playback objects and creates each player lazily on play. Async observations and an item-specific completion stream replace manual KVO and UIKit alerts. Completion/failure/cancellation are fenced to that player; an old notification cannot stop a replacement. iOS releases the audio session before voice capture starts. Voice sheets hold a shared playback lease across windows and release it after capture cleanup, or after a finished transcript is confirmed for grading.
+
+Native autoplay follows a newly persisted successful reading, kana-only vocabulary meaning, or correct combined Anki assessment. Revealing/incorrectly assessing a card or reopening a saved session does not autoplay. Stop/error controls survive the final question. Subject details use the native J shortcut. The old `App/Audio.swift`, audio delegate and offline-audio storyboard were removed. Remaining iOS files adapt its existing catalog/archive and navigation only.
+
+The iOS background-audio policy uses AVAudioSession; macOS mixes with other apps and does not expose that mobile-only setting. This is a platform service difference, not a second UI or a SwiftUI limitation. Physical route changes, microphone/speech-model availability, interruptions and voice latency still require device acceptance. The iOS writer/coordinator and notification/watch services remain separate migration work.
 
 ## Bridges still required
 

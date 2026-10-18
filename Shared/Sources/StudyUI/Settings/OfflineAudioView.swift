@@ -1,13 +1,6 @@
 import StudyCore
 import SwiftUI
 
-public enum OfflineAudioAction {
-  case enabled(Bool)
-  case cellular(Bool)
-  case voice(Int64, Bool)
-  case retry, delete
-}
-
 public struct OfflineAudioView: View {
   let enabled: Bool
   let cellular: Bool

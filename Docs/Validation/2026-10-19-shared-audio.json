@@ -1,0 +1,445 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18T18:41:30Z",
+  "source_base_commit": "20a36c753adf03c7a752ac30e75cb0a1eeee1fb0",
+  "branch": "codex/swiftui-27-curriculum",
+  "status": "Shared pronunciation/offline media checkpoint; full modernization remains open",
+  "implementation": {
+    "owner": "StudyCore.StudyAudioLibrary; typed preferences, account/catalog selection, downloads, cached-voice fallback and one playback engine",
+    "playback": "AppleStudyAudioPlayback; global native AVFoundation Observation enabled before playback objects; lazy players, async observations and item-specific completion",
+    "errors": "Shared inline messages and loading cancellation; no UIKit playback alert or manual KVO",
+    "autoplay": "Newly persisted correct reading/kana-only meaning/combined-Anki assessment; no replay on reveal, incorrect assessment or session restore; final-answer stop control remains visible",
+    "voice": "Playback leases span windows and remain held until capture cancellation cleanup completes; confirmed finished transcripts release before grading/autoplay",
+    "offline": "Current level, earlier levels in reverse order, then the next accessible level; selected voices, bounded transfers, retained files on disable and explicit deletion",
+    "account": "Native audio catalog excludes hidden/locked subjects; account changes cancel media/transfers without deleting cache",
+    "legacy": "Existing iOS archived settings and Documents/audio/a{subject}-{voice}.mp3 paths preserved",
+    "native": "Primitive UserDefaults preferences and Application Support/TsurukameNative/audio",
+    "ui": "Common AudioLibraryView/OfflineAudioView, subject controls, J shortcut and review playback across platforms",
+    "deleted": [
+      "App/Audio.swift",
+      "App/Resources/OfflineAudio.storyboard"
+    ],
+    "bridges": "Small iOS catalog/archive/navigation adapters remain; iOS background ducking uses AVAudioSession, Mac mixes and hides the mobile-only control",
+    "new_dependencies": [],
+    "ios_writer_changed": false,
+    "live_wanikani_exercises_or_account_changes": false,
+    "pr_created": false,
+    "pushed": false
+  },
+  "source_sha256": {
+    "App/AppStoreScreenshots/AudioFixture.swift": "da0658c36fb7d56260c6a2155cb4611e96f0399c688873adfc82e39dc03bcebf",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "6e52337c0b8bbc51b8f4aa2c08c1948cd0c1c40cc6d8fbbda85ddf626693c374",
+    "App/AppTests/AudioLibraryTests.swift": "11876dcc3c9b7ea6202e53b1996d87187e5e53734c3cc816919323a8bcceff90",
+    "App/Application/StudyAppAssembly.swift": "ef685e78a90e912c5b73349a283536e8dd64ea1a410a36d4f40db54356ee030d",
+    "App/Features/Catalog/SubjectDetailsView.swift": "f4e4f2599b42549b2a355134bd28aa79e982e72e6455fe4cb05164741f9c7433",
+    "App/Features/Settings/OfflineAudio.swift": "86b64ac46c8962ec0d0a4ca08bd8ebcff609338eac41b879f8dc28d34aeb9176",
+    "App/Features/Settings/OfflineAudioViewController.swift": "8548b42dd2c80d0b02956bd78969cac68c3684a95b4ca825873b55206536af45",
+    "App/Features/Settings/SettingsViewController.swift": "444692e7661050714c9a5fc73a4c57d3a35c502d0176de2d53c4ccafcf1ce8db",
+    "App/Generated/IB-Scenes+Generated.swift": "613321f4a9e6e067e6521b3fa391dc45954b4ff578e821786e2ad78595053106",
+    "App/ReviewQuickSettings/ReviewPreferencesAdapter.swift": "64df7e918e9220ff66ee64026012a1eb6960efe4157603d7eaaa418c93a6b906",
+    "App/ReviewViewController.swift": "0e61280909211ce3ed2d64d64d756ca6606c983e281681c595b94dd410a379db",
+    "App/Services.swift": "0be1a63af72bc5b8dfb1c5581b6b0e204c0bcd9f32667ee28133eaf16cb1e127",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "006aaaa60cea1870d5abf387f8055740585073a497d2d38f9eedfb9e76e42e95",
+    "App/UsagiUnagiApp.swift": "59db1cd03444bf71c22bfba526ee2c09160371520661b289562c8a55b5818d5a",
+    "Shared/Sources/StudyCore/AppleStudyAudioPlayback.swift": "13934e6d0a9a960890b5aeac0bc72bc8e5ebe3575fd47362a7c01572311dd560",
+    "Shared/Sources/StudyCore/StudyAudioLibrary.swift": "b097bb5bd04d9c67b25ce857a9c556316bd727a66b9d6616c80df9ffd72cc6fc",
+    "Shared/Sources/StudyCore/StudyCatalog.swift": "4b5dd52fbf14f21e459594e9c5aabe8d2a62320bda9a452d2393a262f1943674",
+    "Shared/Sources/StudyPersistence/StudyStore+Audio.swift": "373bef7994e70f99cd37f8b9e210179a740803a56ab392f48527ccc4df9b24ea",
+    "Shared/Sources/StudySpeech/VoiceReviewController.swift": "f7a539bf02cd8c1b611d77beccb74f437dea7968217d8a3bcbe8f5b8f1c4564b",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "1a9b60eab95436c7f12e1c49dde886fb8c67b0c85e5a6cc620feeacbd1943462",
+    "Shared/Sources/StudyUI/Catalog/NativeSubjectDetailsView.swift": "d0c231243270cca64aeaaad98fcde30cfdac1757b0edba69f6d00905f7f5c8fb",
+    "Shared/Sources/StudyUI/Catalog/SubjectDetailsContent.swift": "c023bbd1d4c8dabff9d853878ad4f42c8f03290bd604fbc3a97c1bd0afe16af4",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "d01ce54663db93223fc870fc530387e24cffd804b698245e88806135b6c7fadf",
+    "Shared/Sources/StudyUI/Reviews/AudioPlaybackNotice.swift": "d0f87592c300eb2430b21d6a8361c60abbac411d8368b72df55cee3d4d2180b6",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "06229a08e2b10c026bd41cc4e1596e53d645c1b86cd4eec4da9fda543f57b951",
+    "Shared/Sources/StudyUI/Reviews/ReviewScreen.swift": "6a2a5f7eea979163b2eddeaf50a8c79717848b1eda6ba76c406cd8a0f5578218",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsContent.swift": "63c8782390ca4b999fe7c2b761d03734ad65feec0e96027bc7e6c6e2dcbfd881",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift": "cab2627d873f15f773e15fe40353151776ce34922b24850a7bc044350d8e9b96",
+    "Shared/Sources/StudyUI/Reviews/VoiceAnswerPanel.swift": "8c6ddb1a4a31ffd5c11c45a81793f2e66781b1de0d5e80ef525069f7e1d1cbfb",
+    "Shared/Sources/StudyUI/Settings/AudioLibraryView.swift": "94a7956f8563e11eca57bae09df3e75cee11d18962823f3891362453e77dd539",
+    "Shared/Sources/StudyUI/Settings/OfflineAudioView.swift": "b770f9b2e17caf926f357ae62375ee5df911e142354a207cd64c85e875d10120",
+    "Shared/Tests/StudyCoreTests/AppleAudioPlaybackTests.swift": "99df9fbd323794b77cd751f9cdcb5e79a7cfedfd8a296a0d329b8d672fcc64a9",
+    "Shared/Tests/StudyCoreTests/StudyAudioDownloadsTests.swift": "ca9ba26af622210771660f0c8d513a10e2a02878b06230647d7057bf3a5fc0f1",
+    "Shared/Tests/StudyCoreTests/StudyAudioLibraryTests.swift": "a24b9550311bd1b41237c90d86f4bc3ecdc6830fe938e1d86e54ea424039ec45",
+    "Shared/Tests/StudyPersistenceTests/AudioCatalogTests.swift": "a68364035755db66cb8a1332d4953a692759e2ed9f2655de7d87da710bdfb0d8",
+    "Shared/Tests/StudySpeechTests/VoiceReviewControllerTests.swift": "092939d2256e77c40fecc0fb4cd45039799af049e6c1d28ebdc7ef86d83a4dda"
+  },
+  "removed_source_sha256": {
+    "App/Audio.swift": "90aa293c050556b84ef9016de363ecc3d64ce9a9f43c2e7a9d9b6ce2832ca011",
+    "App/Resources/OfflineAudio.storyboard": "10cc7baf46c1ffdf5af1e6109790fc97c90bb306dea45687d796c7ce6b5ef787"
+  },
+  "validation": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-audio-final-shared-mac.log",
+      "log_sha256": "3bae498fe6f70660769226914cf11b83cc36e72dc52bef4e2a592d3de736f563",
+      "passed": 297,
+      "breakdown": {
+        "core": 154,
+        "persistence": 122,
+        "speech": 7,
+        "application": 14
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-audio-final-shared-ios-clean.log",
+      "log_sha256": "664a7fa5018505a0a270608d37743204e69568b1e157d82644b2e51bc7a3210e",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-30602dbbbedf46fa805b66fb5a2308ad.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 297,
+        "passedTests": 297,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 427,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "StudyKit-Package · Built with macOS 27.0.1",
+        "finishTime": 1792348820.365,
+        "runtimeWarnings": [],
+        "startTime": 1792348789.551,
+        "statistics": [
+          {
+            "subtitle": "167 test runs",
+            "title": "37 tests ran with dynamic parameters"
+          }
+        ],
+        "title": "Test - StudyKit-Package",
+        "topInsights": [
+          {
+            "category": "Longest Test Runs",
+            "impact": "59% of duration",
+            "text": "2 longest test runs with outlier durations exceeding 0.25s (three standard deviations)"
+          }
+        ]
+      }
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-audio-hosted-fourth.log",
+      "log_sha256": "d94600d49f03d96a7a4e74e091b6990c568c79e098b8fa8c376a42cc949ae002",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5786c71c676349888afa32bf9fac156a.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 89,
+        "passedTests": 89,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 98,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Tsurukame · Built with macOS 27.0.1",
+        "finishTime": 1792346908.338,
+        "runtimeWarnings": [],
+        "startTime": 1792346874.433,
+        "statistics": [
+          {
+            "subtitle": "13 test runs",
+            "title": "4 tests ran with dynamic parameters"
+          }
+        ],
+        "title": "Test - Tsurukame",
+        "topInsights": [
+          {
+            "category": "Longest Test Runs",
+            "impact": "73% of duration",
+            "text": "1 longest test run with outlier durations exceeding 0.09s (three standard deviations)"
+          },
+          {
+            "category": "Longest Test Runs",
+            "impact": "60% of duration",
+            "text": "3 longest test runs with outlier durations exceeding 0.08s (three standard deviations)"
+          }
+        ]
+      }
+    },
+    "native_mac": {
+      "log": "/private/tmp/usagi-audio-final-mac-ui.log",
+      "log_sha256": "9d2123608f8a64d8427ee59485da3c179328959e971ae8da6ca93088571b748d",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e8b37dc17f384bb2afde0a18d03cfb36.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 16,
+        "passedTests": 16,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "00006040-000649442200801C",
+              "deviceName": "My Mac",
+              "modelName": "Mac mini",
+              "osBuildNumber": "26A434",
+              "osVersion": "27.0.1",
+              "platform": "macOS"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 16,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+        "finishTime": 1792347263.551,
+        "runtimeWarnings": [],
+        "startTime": 1792347006.334,
+        "statistics": [],
+        "title": "Test - UsagiUnagi",
+        "topInsights": []
+      }
+    },
+    "native_account_key": {
+      "log": "/private/tmp/usagi-audio-account-ui.log",
+      "log_sha256": "fba50a47bdaae230759d8157d4351974d73d40c8d8a144f4efac822b81c2434b",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-be1ae0e20f544933802699d49f6a8fcf.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "00006040-000649442200801C",
+              "deviceName": "My Mac",
+              "modelName": "Mac mini",
+              "osBuildNumber": "26A434",
+              "osVersion": "27.0.1",
+              "platform": "macOS"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "UsagiUnagi · Built with macOS 27.0.1",
+        "finishTime": 1792348837.56,
+        "runtimeWarnings": [],
+        "startTime": 1792348791.741,
+        "statistics": [],
+        "title": "Test - UsagiUnagi",
+        "topInsights": []
+      }
+    },
+    "iphone": {
+      "log": "/private/tmp/usagi-audio-final-phone-clean.log",
+      "log_sha256": "7ac37b571bf58d5d3fa7e2d1e38701befaad17c2a45b43fe6e4bdf1b462c3f96",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0c2b5ad0015d43c8a47970dc1e736f11.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 7,
+        "passedTests": 7,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 7,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "ReviewValidation · Built with macOS 27.0.1",
+        "finishTime": 1792348349.249,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ],
+        "startTime": 1792348087.396,
+        "statistics": [],
+        "title": "Test - ReviewValidation",
+        "topInsights": []
+      }
+    },
+    "ipad": {
+      "log": "/private/tmp/usagi-audio-final-pad.log",
+      "log_sha256": "d72c9e39170958898fe844534e08beca35c710c1b0e6b330a4ffb9c072bc982f",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-aa357242a33047539ef9218726fb3d74.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 7,
+        "passedTests": 7,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+              "deviceName": "iPad Pro 11-inch (M5)",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 7,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "ReviewValidation · Built with macOS 27.0.1",
+        "finishTime": 1792348685.208,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ],
+        "startTime": 1792348429.65,
+        "statistics": [],
+        "title": "Test - ReviewValidation",
+        "topInsights": []
+      }
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-audio-final-release.log",
+      "log_sha256": "2681000ce3232382f957d7017352db7438337420f5bea1582850f5c4dcc27692",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-f9e0185db3154af4bff28ebabbdf1297.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0,
+        "errors": [],
+        "warnings": [],
+        "analyzerWarnings": [],
+        "actionTitle": "Build \"UsagiUnagi\"",
+        "destination": {
+          "architecture": "arm64",
+          "deviceId": "00006040-000649442200801C",
+          "deviceName": "My Mac",
+          "modelName": "Mac mini",
+          "osBuildNumber": "26A434",
+          "osVersion": "27.0.1",
+          "platform": "macOS"
+        },
+        "endTime": 1792348813.082,
+        "startTime": 1792348791.899
+      }
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-audio-format.log",
+      "owner_annotations_excluded": [
+        "App/AnswerChecker.swift",
+        "App/FullRefreshOverlayView.swift"
+      ]
+    },
+    "media_test_scope": "Real native failure, observed playing and natural completion with a silent WAV on Mac/iOS; UI uses isolated synthetic transport/playback and uploads are disabled"
+  },
+  "visual_acceptance": {
+    "window_only_screenshot": "/private/tmp/usagi-shared-audio-images/2F1BB6F2-D7EF-4302-84B5-735B3CDE9DD1.png",
+    "sha256": "28d0ba3acfcb3487552d7a7312cdc88ba2986ac8294de3e047d8ed17102a359b",
+    "result": "Native grouped form, selected voices, 8 kB cached, familiar vocabulary color and unchanged one-thing answer draft; no clipping"
+  },
+  "resolved_diagnostics": [
+    {
+      "logs": [
+        "/private/tmp/usagi-audio-hosted-first.log",
+        "/private/tmp/usagi-audio-mac-first.log"
+      ],
+      "reason": "Swift 5 fixture array literals defaulted to Int; voice actor IDs are explicitly Int64"
+    },
+    {
+      "logs": [
+        "/private/tmp/usagi-audio-hosted-second.log",
+        "/private/tmp/usagi-audio-hosted-third.log"
+      ],
+      "reason": "Legacy details model/view and callbacks now explicitly remain on MainActor; no isolation suppression"
+    },
+    {
+      "logs": [
+        "/private/tmp/usagi-audio-final-phone.log",
+        "/private/tmp/usagi-audio-trace-second.log"
+      ],
+      "reason": "Settings fixtures lower the mock account to level 1 while old audio fixtures hard-coded level 24. Correct filtering excluded them. Fixture now uses the account level; temporary traces removed"
+    },
+    {
+      "log": "/private/tmp/usagi-audio-phone-regressions.log",
+      "reason": "Both previously failing download/deletion/retry checks passed after the metadata correction"
+    }
+  ],
+  "references": [
+    "https://developer.apple.com/documentation/avfoundation/observing-playback-state-in-swiftui",
+    "https://developer.apple.com/documentation/avfoundation/avplayer/isobservationenabled"
+  ],
+  "remaining": "Docs/TASKS.md: physical audio/speech/IME, notification/watch parity, iOS writer handoff, full-account statistics validation and hosted Actions remain open",
+  "memory": "AIZK tools unavailable; no AIZK write claimed"
+}

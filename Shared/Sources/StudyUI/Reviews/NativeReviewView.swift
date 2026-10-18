@@ -24,8 +24,10 @@ public struct NativeReviewView: View {
   @State private var confirmEnd = false
   @State private var readyImage: String?
   @State private var voiceRequest: VoiceAnswerRequest?
+  @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @State private var settings = false
+  @State private var selectingAudio = false
   @State private var selectingFonts = false
   @State private var fontSubjectID: Int64?
   @State private var customFont = ""
@@ -45,6 +47,13 @@ public struct NativeReviewView: View {
 
   public var body: some View {
     VStack {
+      AudioPlaybackNotice(library: audio)
+      if audio.state != .idle {
+        Button(
+          audio.state == .loading ? "Cancel loading pronunciation" : "Stop pronunciation",
+          systemImage: "stop.circle"
+        ) { audio.stop() }.accessibilityIdentifier("review.stopAudio")
+      }
       if let review {
         if review.question != nil {
           HStack {
@@ -143,6 +152,7 @@ public struct NativeReviewView: View {
       }
     }
     .disabled(busy)
+    .onDisappear { audio.stop() }
     .onChange(of: preferences) { _, _ in applyPreferences() }
     .onChange(of: fonts.selectedFiles) { _, _ in chooseFont(newSubject: false) }
     .onChange(of: screen.phase) { _, _ in applyFont() }
@@ -150,18 +160,20 @@ public struct NativeReviewView: View {
       isPresented: $settings,
       onDismiss: {
         selectingFonts = false
+        selectingAudio = false
         answerFocused = screen.phase == .answering && !screen.isAnki
       }
     ) {
       NavigationStack {
         ReviewSettingsPanel(
           preferences: preferences, changed: savePreferences, fonts: { selectingFonts = true },
-          supportsAudio: false,
+          offlineAudio: { selectingAudio = true },
           supportsSessionOptions: true
         ) {
           settings = false
         }
         .navigationDestination(isPresented: $selectingFonts) { FontLibraryView(library: fonts) }
+        .navigationDestination(isPresented: $selectingAudio) { AudioLibraryView(library: audio) }
       }.frame(minWidth: 380, minHeight: 460)
     }
     .confirmationDialog(
@@ -186,7 +198,7 @@ public struct NativeReviewView: View {
           : "Completed answers stay saved. Progress on unfinished subjects will be discarded.")
     }
     .sheet(item: $voiceRequest) { request in
-      VoiceAnswerPanel(question: request.question) { text in
+      VoiceAnswerPanel(question: request.question, audio: audio) { text in
         voiceRequest = nil
         guard review?.question == request.question else { return }
         screen.answer = text
@@ -227,13 +239,21 @@ public struct NativeReviewView: View {
   }
   private func present(_ value: NativeReviewState) {
     if review?.question != value.question { fullDetails = false }
+    let previous = review
     review = value
+    if value.success != nil, let previous, let subject = previous.subject, !subject.audio.isEmpty,
+      preferences.autoplayAudio,
+      previous.question?.kind == .reading || subject.readings.isEmpty || previous.combinesAnki
+    {
+      audio.play(subject: subject, interruptBackgroundAudio: preferences.interruptBackgroundAudio)
+    }
     let newSubject = fontSubjectID != value.subject?.id
     fontSubjectID = value.subject?.id
     let session = value.saved.session
     screen.title =
       review?.saved.session.practiceScope?.title ?? (isLesson ? "Lesson quiz" : "Reviews")
     screen.question = value.subject?.japanese ?? ""
+    screen.canPlayAudio = !(value.subject?.audio.isEmpty ?? true)
     screen.canAnswer =
       !screen.question.isEmpty
       || (readyImage != nil && readyImage == value.subject?.characterImageURL)
@@ -352,9 +372,15 @@ public struct NativeReviewView: View {
       if screen.isAnki { assessAnki(false) }
     case .deferQuestion: change(.deferQuestion)
     case .voice:
+      audio.stop()
       voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
     case .focus: answerFocused = true
     case .settings: settings = true
+    case .playAudio:
+      if let subject = review?.subject {
+        audio.toggle(
+          subject: subject, interruptBackgroundAudio: preferences.interruptBackgroundAudio)
+      }
     case .toggleFont:
       if screen.canChangeFont {
         screen.questionFont = screen.questionFont.isEmpty ? customFont : ""
