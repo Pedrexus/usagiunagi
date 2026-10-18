@@ -37,10 +37,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     application.setMinimumBackgroundFetchInterval(UIApplication.backgroundFetchIntervalMinimum)
     #if DEBUG
       if let (loader, configuration) = Screenshotter.fontFixture() {
-        services = TKMServices(fontLoader: loader)
+        services = TKMServices(fontLoader: loader, audioDownloads: Screenshotter.audioFixture())
         services.fontLibrary = FontLibraryModel(loader: loader, configuration: configuration)
       } else {
-        services = TKMServices()
+        services = TKMServices(audioDownloads: Screenshotter.audioFixture())
       }
     #else
       services = TKMServices()

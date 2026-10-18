@@ -197,6 +197,7 @@
 		A27100000000000000000001 /* FontLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27100000000000000000002 /* FontLibraryTests.swift */; };
 		A27100000000000000000003 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = BB2909A5217FAF8B00B1816F /* fonts */; };
 		A27100000000000000000004 /* FontFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27100000000000000000005 /* FontFixture.swift */; };
+		A27200000000000000000001 /* AudioFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27200000000000000000002 /* AudioFixture.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -303,7 +304,7 @@
 		63344E7E2D291C9F002A4FED /* TestFlightRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TestFlightRelease.xcconfig; sourceTree = "<group>"; };
 		63344E832D291CAA002A4FED /* ReviewContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewContainerViewController.swift; sourceTree = "<group>"; };
 		63344E872D291CAA002A4FED /* ReviewPreferencesAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPreferencesAdapter.swift; sourceTree = "<group>"; };
-		63358E9927365FC70013A2AC /* OfflineAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAudio.swift; sourceTree = "<group>"; };
+		63358E9927365FC70013A2AC /* OfflineAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OfflineAudio.swift; path = Features/Settings/OfflineAudio.swift; sourceTree = "<group>"; };
 		63358E9B273664D40013A2AC /* SwitchModelItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchModelItem.swift; sourceTree = "<group>"; };
 		63358E9D273664F50013A2AC /* BasicModelItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicModelItem.swift; sourceTree = "<group>"; };
 		63358EA127366D720013A2AC /* CheckmarkModelItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheckmarkModelItem.swift; sourceTree = "<group>"; };
@@ -349,7 +350,7 @@
 		63A711E52BBBF8190047436A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		63A9A55C282389C800602D09 /* ReviewSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSession.swift; sourceTree = "<group>"; };
 		63B63FF627733ABC0098DAAD /* NotificationDispatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDispatcher.swift; sourceTree = "<group>"; };
-		63BFA78D218EB6890058E885 /* OfflineAudioViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAudioViewController.swift; sourceTree = "<group>"; };
+		63BFA78D218EB6890058E885 /* OfflineAudioViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OfflineAudioViewController.swift; path = Features/Settings/OfflineAudioViewController.swift; sourceTree = "<group>"; };
 		63C42A2321B6A28D008CA938 /* FontScreenshotter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FontScreenshotter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63C42A2521B6A28D008CA938 /* FontScreenshotterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FontScreenshotterApp.swift; path = FontScreenshotterApp.swift; sourceTree = "<group>"; };
 		63C42A3121B6A290008CA938 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -456,6 +457,7 @@
 		A27000000000000000000003 /* AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27100000000000000000002 /* FontLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FontLibraryTests.swift; path = AppTests/FontLibraryTests.swift; sourceTree = "<group>"; };
 		A27100000000000000000005 /* FontFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontFixture.swift; sourceTree = "<group>"; };
+		A27200000000000000000002 /* AudioFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFixture.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -702,6 +704,7 @@
 			isa = PBXGroup;
 			children = (
 				A27100000000000000000005 /* FontFixture.swift */,
+				A27200000000000000000002 /* AudioFixture.swift */,
 				6335B46423CF0C820071671E /* AppStoreScreenshots.swift */,
 				6335B46623CF0C820071671E /* Info.plist */,
 				6335B4E623CF14280071671E /* Screenshotter.swift */,
@@ -1393,6 +1396,7 @@ A27000000000000000000004 /* AppTests */ = {
 			buildActionMask = 2147483647;
 			files = (
 				A27100000000000000000004 /* FontFixture.swift in Sources */,
+				A27200000000000000000001 /* AudioFixture.swift in Sources */,
 				63A5598527E433E000E7BBCB /* NavigationController.swift in Sources */,
 				638A5C4E25A471F9001A7AEE /* AppDelegate.swift in Sources */,
 				633632EF201F3490006D582B /* Settings.swift in Sources */,

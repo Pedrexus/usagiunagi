@@ -110,7 +110,10 @@ import WaniKaniAPI
 
     static func createLocalCachingClient(client: WaniKaniAPIClient,
                                          reachability: Reachability) -> LocalCachingClient {
-      isActive ? FakeLocalCachingClient(client: client, reachability: reachability)
+      if isActive, ProcessInfo.processInfo.arguments.contains("AudioFlowFixture") {
+        return AudioFixtureCachingClient(client: client, reachability: reachability)
+      }
+      return isActive ? FakeLocalCachingClient(client: client, reachability: reachability)
         : LocalCachingClient(client: client, reachability: reachability)
     }
   }

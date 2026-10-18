@@ -661,7 +661,8 @@ only the three platform operations. Physical prompt/delivery acceptance remains 
 | EditableTextModelItem.swift and AttributedModelItem.swift | Deleted after proving AppSettings was their last consumer; a native email TextField replaces that path. |
 | SettingsTableViewController.swift and TableCards | Retained: developer tools and Home still have active callers. |
 | FontsViewController | Now a small navigation host for shared FontLibraryView; the old table/download controller and download cell are removed. Core Text registers fonts and URLSession owns downloads. Native Mac adoption remains open. |
-| OfflineAudioViewController and DeveloperOptionsViewController | Retained behind explicit host actions. These are migration work, not limitations of SwiftUI. Main settings UI does not claim those destinations are already ported. |
+| OfflineAudioViewController | Now a small Features/Settings hosting scene for the shared offline-audio form and Swift 6 downloader. The old table/progress/PromiseKit implementation is removed. Mac playback and settings adoption remain open. |
+| DeveloperOptionsViewController | Retained behind an explicit host action; its table infrastructure still has this active caller. This is migration work, not a limitation of SwiftUI. |
 
 The new Swift 6 AppTests target imports the built application with @testable.
 Its first five Swift Testing functions cover notification permission decisions,
@@ -755,3 +756,41 @@ include comments/blank lines and exclude tests, Debug fixture files, generated
 sources and third-party code; they do not describe the whole repository. Build,
 workflow and visual evidence is recorded in TASKS.md. UIKit keyboard/navigation,
 Mac feature parity, audio/developer screens and the iOS storage handoff remain open.
+
+## Offline audio form and shared Swift downloads — 2026-10-18
+
+| Audited file | Replacement and preserved behavior |
+| --- | --- |
+| ios/OfflineAudioViewController.swift | Removed after phone/iPad workflows passed. Features/Settings/OfflineAudioViewController.swift retains the scene type and existing navigation callers; its content uses ArchivedPreference bindings and shared OfflineAudioView. |
+| ios/OfflineAudio.swift | Replaced by the short Features/Settings adapter and StudyCore/StudyAudioDownloads.swift. No PromiseKit, dispatch work-item queue, custom progress observers or table-cell updates remain in this feature. |
+| StudyCore/StudyAudioDownloads.swift | One app-owned main-actor service publishes native Progress and status. Typed Sendable operations run up to four URLSession downloads within each priority level. Cancellation/revision checks protect file installation and UI state. Temporary files are removed after use; HTTP errors, wrong content types and empty responses cannot enter the cache. |
+| StudyUI/Settings/OfflineAudioView.swift | Native Form, Toggle, Label, ProgressView, cache size, retry and explicit Keep/Delete confirmation. Existing speaker choices and cellular policy remain. The voice setter uses the requested value; it fixes the old callback reusing the previous value. Deletion has a native progress state. |
+| ios/Resources/OfflineAudio.storyboard | Same initial scene and identifier, now only a hosting view. Removed the table and data-source/delegate outlets. |
+| ios/Services.swift and AppDelegate.swift | Services constructs the audio adapter on MainActor; the single service graph owns transfer lifetime. Optional Debug injection uses its own temporary directory/session. Normal account/review/lesson writers and playback callbacks are unchanged. |
+| AppStoreScreenshots/AudioFixture.swift and Screenshotter.swift | Synthetic voice metadata, URLSession transport and volatile archived preferences. Only the explicit AudioFlowFixture selects the new mock account subclass. The large existing fixture file has a minimal factory change rather than wholesale formatting. |
+| StudyCoreTests/StudyAudioDownloadsTests.swift | Seven native Swift Testing functions cover cache reopen, priority/deduplication, failures/retry, cancellation/deletion, replaced batches, insecure addresses, the four-request bound and repair of an empty legacy file. |
+| AppStoreScreenshots/ReviewFlowTests.swift | Three phone/iPad workflows verify preference/speaker persistence, retained cache versus explicit deletion and retry/error visibility. Existing Settings navigation also runs with isolated audio storage. |
+| Tsurukame.xcodeproj/project.pbxproj | Existing source identifiers point at Features/Settings; the old root-level files have no remaining references. New shared files are discovered by SwiftPM. |
+
+Cached `a<subject>-<voice>.mp3` names, `Documents/audio` location and all three archived
+keys remain compatible with the existing player. Selecting offline audio with no
+saved choices still selects all known voices. Disabling cancels in-flight requests
+and retains cached audio unless Delete is confirmed. The cache reports allocated
+disk size, and a successful replacement repairs a zero-byte old entry. Full server
+and microphone/MP3 playback acceptance remain device work; mocked audio bytes do
+not establish decoding quality. Downloads are app-owned foreground tasks and may
+pause during suspension; reliable system background transfers remain open.
+
+The shared form/service compile for native Mac, but Mac playback, account/settings
+integration and platform acceptance are unfinished. URLSession and file handling
+are native Swift services rather than SwiftUI responsibilities; this feature does
+not require disabling a capability because of SwiftUI. A directly actor-isolated
+task-group closure triggered a Swift 6.4 region-checker diagnostic; a typed
+MainActor/Sendable transfer operation resolves it without suppressing isolation.
+
+Same-scope production Swift across the removed/replacement audio files, shared
+form/service, Services and AppDelegate: **634 → 607 physical lines**, 27 fewer.
+Tests, Debug fixture files, generated sources and dependencies are excluded;
+comments/blank lines are included. The storyboard/project changes are additional,
+and this is not a whole-app LOC claim. Current verdicts and remaining gates are
+recorded in TASKS.md.

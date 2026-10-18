@@ -15,6 +15,96 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor private func launchOfflineAudio(extra: [String] = []) -> XCUIApplication {
+    let app = launchSettings(extra: ["AudioFlowFixture"] + extra)
+    app.buttons["settings.page.reviews"].tap()
+    let audio = app.buttons["settings.offlineAudio"]
+    scrollTo(audio, in: app)
+    audio.tap()
+    XCTAssertTrue(app.navigationBars["Offline Audio"].waitForExistence(timeout: 5))
+    return app
+  }
+
+  @MainActor func testOfflineAudioVoiceChoicesAndCellularSettingPersist() {
+    continueAfterFailure = false
+    let app = launchOfflineAudio(extra: ["AudioHeldFixture"])
+    defer { clearFixture(app) }
+    let enabled = app.switches["offlineAudio.enabled"]
+    let cellular = app.switches["offlineAudio.cellular"]
+    let first = app.switches["offlineAudio.voice.1"]
+    let second = app.switches["offlineAudio.voice.2"]
+    XCTAssertFalse(cellular.isEnabled)
+    XCTAssertFalse(first.isEnabled)
+    setSettingsSwitch(enabled, on: true, in: app)
+    XCTAssertEqual(first.value as? String, "1")
+    XCTAssertEqual(second.value as? String, "1")
+    setSettingsSwitch(first, on: false, in: app)
+    XCTAssertEqual(second.value as? String, "1")
+    setSettingsSwitch(cellular, on: true, in: app)
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "SwiftUI offline audio with selected voices"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.navigationBars["Offline Audio"].buttons.firstMatch.tap()
+    let audio = app.buttons["settings.offlineAudio"]
+    scrollTo(audio, in: app)
+    audio.tap()
+    XCTAssertTrue(enabled.waitForExistence(timeout: 5))
+    XCTAssertEqual(first.value as? String, "0")
+    XCTAssertEqual(second.value as? String, "1")
+    XCTAssertEqual(cellular.value as? String, "1")
+    setSettingsSwitch(enabled, on: false, in: app)
+    app.alerts["Delete offline audio?"].buttons["Keep"].tap()
+    XCTAssertFalse(cellular.isEnabled)
+    XCTAssertTrue(app.staticTexts["Downloads disabled"].exists)
+    XCTAssertFalse(app.alerts["Delete offline audio?"].exists)
+  }
+
+  @MainActor func testOfflineAudioDownloadsKeepAndExplicitDeletion() {
+    continueAfterFailure = false
+    let app = launchOfflineAudio()
+    defer { clearFixture(app) }
+    let enabled = app.switches["offlineAudio.enabled"]
+    setSettingsSwitch(enabled, on: true, in: app)
+    let status = app.staticTexts["Up to date"]
+    XCTAssertTrue(status.waitForExistence(timeout: 15))
+    let cache = app.descendants(matching: .any).matching(identifier: "offlineAudio.cacheSize")
+      .firstMatch
+    let saved = settingsPickerText(cache)
+    setSettingsSwitch(enabled, on: false, in: app)
+    app.alerts["Delete offline audio?"].buttons["Keep"].tap()
+    XCTAssertEqual(settingsPickerText(cache), saved)
+    let deletion = app.buttons["offlineAudio.delete"]
+    scrollTo(deletion, in: app)
+    deletion.tap()
+    app.alerts["Delete offline audio?"].buttons["Delete"].tap()
+    XCTAssertFalse(app.alerts["Delete offline audio?"].exists)
+    XCTAssertNotEqual(settingsPickerText(cache), saved)
+    XCTAssertEqual(enabled.value as? String, "0")
+    XCTAssertEqual(app.switches["offlineAudio.voice.1"].value as? String, "1")
+    XCTAssertEqual(app.switches["offlineAudio.voice.2"].value as? String, "1")
+    XCTAssertFalse(app.staticTexts["offlineAudio.error"].exists)
+  }
+
+  @MainActor func testOfflineAudioFailuresRemainVisibleAndCanRetry() {
+    continueAfterFailure = false
+    let app = launchOfflineAudio(extra: ["AudioFailedFixture"])
+    defer { clearFixture(app) }
+    let enabled = app.switches["offlineAudio.enabled"]
+    setSettingsSwitch(enabled, on: true, in: app)
+    let error = app.staticTexts["offlineAudio.error"]
+    XCTAssertTrue(error.waitForExistence(timeout: 15))
+    XCTAssertFalse(app.staticTexts["Up to date"].exists)
+    let retry = app.buttons["offlineAudio.retry"]
+    scrollTo(retry, in: app)
+    retry.tap()
+    XCTAssertTrue(error.waitForExistence(timeout: 15))
+    XCTAssertEqual(enabled.value as? String, "1")
+    setSettingsSwitch(enabled, on: false, in: app)
+    app.alerts["Delete offline audio?"].buttons["Keep"].tap()
+    XCTAssertTrue(app.navigationBars["Offline Audio"].exists)
+  }
+
   @MainActor private func launchFontLibrary(extra: [String] = []) -> XCUIApplication {
     let app = launchSingleReview(extra: ["FontFlowFixture"] + extra)
     let field = app.textFields["review.answer"]
@@ -1089,15 +1179,16 @@ extension ReviewFlowTests {
 }
 
 extension ReviewFlowTests {
-  @MainActor private func launchSettings() -> XCUIApplication {
+  @MainActor private func launchSettings(extra: [String] = []) -> XCUIApplication {
     let app = XCUIApplication()
-    app.launchArguments = [
-      "-FASTLANE_SNAPSHOT", "YES", "CatalogFlowFixture", "SettingsFlowFixture",
-      "-reviewItemsLimitEnabled", "NO", "-groupMeaningReading", "NO", "-meaningFirst", "YES",
-      "-ankiMode", "NO", "-ankiModeCombineReadingMeaning", "NO", "-ankiModeTaskType", "1",
-      "-showAllReadings", "NO", "-skipKanjiReadings", "NO", "-showFullAnswer", "NO",
-      "-lessonBatchSize", "5", "-interfaceStyle", "1", "-gravatarCustomEmail", "",
-    ]
+    app.launchArguments =
+      [
+        "-FASTLANE_SNAPSHOT", "YES", "CatalogFlowFixture", "SettingsFlowFixture",
+        "-reviewItemsLimitEnabled", "NO", "-groupMeaningReading", "NO", "-meaningFirst", "YES",
+        "-ankiMode", "NO", "-ankiModeCombineReadingMeaning", "NO", "-ankiModeTaskType", "1",
+        "-showAllReadings", "NO", "-skipKanjiReadings", "NO", "-showFullAnswer", "NO",
+        "-lessonBatchSize", "5", "-interfaceStyle", "1", "-gravatarCustomEmail", "",
+      ] + extra
     app.launch()
     XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 10))
     app.buttons["app.settings"].tap()
@@ -1162,7 +1253,7 @@ extension ReviewFlowTests {
 
   @MainActor func testSettingsReviewDependenciesAndDownloadNavigation() {
     continueAfterFailure = false
-    let app = launchSettings()
+    let app = launchSettings(extra: ["AudioFlowFixture"])
     defer { clearFixture(app) }
     app.buttons["settings.page.reviews"].tap()
     let limit = app.buttons["settings.reviewItemsLimit"]

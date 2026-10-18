@@ -14,6 +14,7 @@
 
 import Foundation
 import Reachability
+import StudyCore
 import WaniKaniAPI
 
 class TKMServices {
@@ -28,9 +29,9 @@ class TKMServices {
   var client: WaniKaniAPIClient!
   var localCachingClient: LocalCachingClient!
 
-  init(fontLoader: FontLoader = .init()) {
+  @MainActor init(fontLoader: FontLoader = .init(), audioDownloads: StudyAudioDownloads? = nil) {
     self.fontLoader = fontLoader
-    offlineAudio = OfflineAudio(services: self)
+    offlineAudio = OfflineAudio(services: self, downloads: audioDownloads)
     audio = Audio(services: self)
     radicalCharacterImages = RadicalCharacterImages(services: self)
   }
