@@ -139,7 +139,7 @@ public struct StudyDashboard: View {
                                 PointMark(x: .value("Level", trial.level), y: .value("Days", trial.actualDays))
                                     .foregroundStyle(by: .value("Series", "Actual"))
                             }.chartForegroundStyleScale(["Estimated": StudyPalette.radical, "Actual": StudyPalette.kanji])
-                                .chartXScale(domain: .automatic(includesZero: false))
+                                .chartXScale(domain: .automatic(includesZero: false), range: .plotDimension(padding: 12))
                                 .chartXAxis { AxisMarks(values: validation.trials.map(\.level)) }
                                 .chartYAxisLabel("Days").frame(height: 180)
                                 .accessibilityIdentifier("statistics.pace.validationChart")

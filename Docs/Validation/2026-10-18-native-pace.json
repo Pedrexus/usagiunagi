@@ -123,5 +123,28 @@
     "App/AnswerChecker.swift",
     "App/FullRefreshOverlayView.swift"
   ],
-  "next": "Shared app-model and verified iOS writer handoff; retain active bridges until equivalent behavior is proven."
+  "next": "Shared app-model and verified iOS writer handoff; retain active bridges until equivalent behavior is proven.",
+  "followup_plot_padding": {
+    "recorded_at": "2026-10-18T14:51:15Z",
+    "source_base_commit": "aa6bcae",
+    "scope": "After the full seven-case Mac pass, add 12-point horizontal plot padding so boundary points and labels remain visible; no calculation, grading or persistence changes.",
+    "source_sha256": {
+      "Shared/Sources/StudyUI/Statistics/StudyDashboard.swift": "6bf946fb772c0998292cdf4b82c608db15824e23d1fa6fe650532f6ebd6168c3"
+    },
+    "mac_chart": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-c07a63eadc844135be296981a2074e89.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "log": "/private/tmp/usagi-mac-pace-padded-final.log"
+    },
+    "ios_simulator_build": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-0a6e489dea8b48669939469dfd233152.xcresult",
+      "status": "succeeded",
+      "errors": 0,
+      "warnings": 60,
+      "log": "/private/tmp/usagi-pace-padded-ios-build.log",
+      "note": "Universal simulator build; existing Reachability, ClockKit and UIKit/media migration warnings remain. No new full hosted or seven-case Mac rerun claimed after this visual-only follow-up."
+    },
+    "visual_verified": ".build/Results/MacPacePadded/925959E1-645A-4B86-8FD5-2A1CA4D29B93.png"
+  }
 }
