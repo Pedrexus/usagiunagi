@@ -15,6 +15,91 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor private func launchDeveloperOptions() -> XCUIApplication {
+    let app = launchSettings(extra: ["DeveloperFlowFixture", "AudioFlowFixture"])
+    let developer = app.buttons["settings.developer"]
+    scrollTo(developer, in: app)
+    developer.tap()
+    XCTAssertTrue(app.navigationBars["Developer options"].waitForExistence(timeout: 5))
+    return app
+  }
+
+  @MainActor private func editDeveloperEndpoint(
+    _ value: String, in app: XCUIApplication, action: String
+  ) {
+    app.buttons["developer.endpoint"].tap()
+    let alert = app.alerts["API base URL"]
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    let field = alert.textFields.firstMatch
+    let current = field.value as? String ?? ""
+    field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + value)
+    XCTAssertEqual(field.value as? String, value)
+    alert.buttons[action].tap()
+    XCTAssertFalse(alert.exists)
+  }
+
+  @MainActor func testDeveloperEndpointCancelValidationPersistenceAndReset() {
+    continueAfterFailure = false
+    let app = launchDeveloperOptions()
+    defer { clearFixture(app) }
+    let endpoint = app.buttons["developer.endpoint"]
+    let standard = "https://api.wanikani.com/v2"
+    XCTAssertTrue(endpoint.label.contains(standard))
+    editDeveloperEndpoint("http://localhost:8080/cancelled", in: app, action: "Cancel")
+    XCTAssertTrue(endpoint.label.contains(standard))
+    editDeveloperEndpoint("not-a-url", in: app, action: "Save")
+    XCTAssertTrue(app.staticTexts["developer.endpoint.error"].waitForExistence(timeout: 5))
+    XCTAssertTrue(endpoint.label.contains(standard))
+    editDeveloperEndpoint("http://localhost:8080/api///", in: app, action: "Save")
+    XCTAssertTrue(endpoint.label.contains("http://localhost:8080/api"))
+    XCTAssertFalse(endpoint.label.contains("api///"))
+    XCTAssertFalse(app.staticTexts["developer.endpoint.error"].exists)
+    app.navigationBars["Developer options"].buttons.firstMatch.tap()
+    let developer = app.buttons["settings.developer"]
+    scrollTo(developer, in: app)
+    developer.tap()
+    XCTAssertTrue(endpoint.waitForExistence(timeout: 5))
+    XCTAssertTrue(endpoint.label.contains("http://localhost:8080/api"))
+    endpoint.tap()
+    app.alerts["API base URL"].buttons["Reset to default"].tap()
+    XCTAssertTrue(endpoint.label.contains(standard))
+  }
+
+  @MainActor func testDeveloperCacheFeedbackAndNativeDatabaseSharing() {
+    continueAfterFailure = false
+    let app = launchDeveloperOptions()
+    defer { clearFixture(app) }
+    app.buttons["developer.clearAvatarCache"].tap()
+    let confirmation = app.alerts["Image cache cleared"]
+    XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+    confirmation.buttons["OK"].tap()
+    XCTAssertFalse(confirmation.exists)
+    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    screenshot.name = "Native developer options and diagnostics"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.buttons["developer.export"].tap()
+    let save = app.descendants(matching: .any).matching(
+      NSPredicate(format: "label == %@", "Save to Files")
+    ).firstMatch
+    XCTAssertTrue(save.waitForExistence(timeout: 10))
+    let close = app.buttons["Close"].firstMatch
+    let cancel = app.buttons["Cancel"].firstMatch
+    if close.exists {
+      close.tap()
+    } else if cancel.exists {
+      cancel.tap()
+    } else {
+      let popup = app.popovers.firstMatch
+      XCTAssertTrue(popup.exists)
+      app.otherElements["PopoverDismissRegion"].coordinate(
+        withNormalizedOffset: CGVector(dx: popup.frame.midX < app.frame.midX ? 0.95 : 0.05, dy: 0.5)
+      ).tap()
+    }
+    XCTAssertFalse(save.exists)
+    XCTAssertTrue(app.navigationBars["Developer options"].exists)
+  }
+
   @MainActor private func launchOfflineAudio(extra: [String] = []) -> XCUIApplication {
     let app = launchSettings(extra: ["AudioFlowFixture"] + extra)
     app.buttons["settings.page.reviews"].tap()

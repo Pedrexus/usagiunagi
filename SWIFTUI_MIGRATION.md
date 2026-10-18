@@ -659,10 +659,10 @@ only the three platform operations. Physical prompt/delivery acceptance remains 
 | Five subsidiary settings/order storyboards | Deleted their source/build/resource references and generated factories/segues after moving navigation into SwiftUI. The Settings root is a blank hosting scene for Main's active segue. |
 | SettingChoiceListViewController.swift | Deleted; native typed Pickers replace its only callers. |
 | EditableTextModelItem.swift and AttributedModelItem.swift | Deleted after proving AppSettings was their last consumer; a native email TextField replaces that path. |
-| SettingsTableViewController.swift and TableCards | Retained: developer tools and Home still have active callers. |
+| SettingsTableViewController.swift | Deleted after Developer options, its last consumer, moved to SwiftUI. The custom title/font/card preparation is obsolete. TableCards remains active in Home. |
 | FontsViewController | Now a small navigation host for shared FontLibraryView; the old table/download controller and download cell are removed. Core Text registers fonts and URLSession owns downloads. Native Mac adoption remains open. |
 | OfflineAudioViewController | Now a small Features/Settings hosting scene for the shared offline-audio form and Swift 6 downloader. The old table/progress/PromiseKit implementation is removed. Mac playback and settings adoption remain open. |
-| DeveloperOptionsViewController | Retained behind an explicit host action; its table infrastructure still has this active caller. This is migration work, not a limitation of SwiftUI. |
+| DeveloperOptionsViewController | Now a small Features/Settings host for shared native controls and ShareLink. Removed the old table screen, switch/checkmark rows and settings-table base after verification. |
 
 The new Swift 6 AppTests target imports the built application with @testable.
 Its first five Swift Testing functions cover notification permission decisions,
@@ -794,3 +794,37 @@ Tests, Debug fixture files, generated sources and dependencies are excluded;
 comments/blank lines are included. The storyboard/project changes are additional,
 and this is not a whole-app LOC claim. Current verdicts and remaining gates are
 recorded in TASKS.md.
+
+## Developer settings and obsolete table cleanup — 2026-10-18
+
+| Audited file | Decision and behavior |
+| --- | --- |
+| ios/DeveloperOptionsViewController.swift | Replaced by Features/Settings/DeveloperOptionsViewController.swift, retaining the programmatic navigation type and swipe-back contract. Shared DeveloperSettingsView owns the native form, URL alert, validation feedback, cache confirmation and ShareLink. |
+| ios/SettingsTableViewController.swift | Removed after its last consumer migrated. Its custom font sizing, card styling and largeTitleFont helper have no remaining callers. |
+| ios/Tables/SwitchModelItem.swift | Removed: all former settings/font/audio consumers already use native Toggle. The cell has no remaining caller. |
+| ios/Tables/CheckmarkModelItem.swift | Removed after verifying no remaining constructor, nib or runtime-name references. |
+| StudyCore/DeveloperEndpoint.swift | Preserves HTTP(S) custom servers, whitespace/trailing-slash trimming, empty-to-default and reset. Rejects missing/empty hosts and invalid schemes without overwriting the saved endpoint. |
+| StudyPersistence/SQLiteDiagnosticArchive.swift | Native Transferable file representation creates a standalone SQLite backup on demand. Read-only source connection and SQLite's online backup preserve committed WAL rows, schema/version, row identifiers and payloads. Bounded work/cancellation and failure cleanup protect the source and discard incomplete output. |
+| StudyUI/Settings/DeveloperSettingsView.swift | Standard grouped form and system font/symbols; plain API row, inline invalid-input feedback and standard diagnostic section footer. ShareLink supplies platform sharing and iPad positioning. |
+| Features/Settings/SettingsViewController.swift | Invalidates the native avatar image identity when the controller receives the cache-clear notification, including while hidden behind Developer options. Clearing real caches purges both Haneke and URLCache. |
+| AppStoreScreenshots/DeveloperFixture.swift | Provides a per-process temporary SQLite file and volatile API preference. Cache clearing is a no-op in these UI fixtures. Real account files/caches are never used by the diagnostic workflows. |
+| Tsurukame.xcodeproj/project.pbxproj | Existing developer source identifier now points at its feature folder; retired base/cell source/group/build memberships are removed. Active Home table/card/UIControl helpers remain. |
+
+[Apple ShareLink](https://developer.apple.com/documentation/swiftui/sharelink)
+replaces the owned UIActivityViewController presentation, including native iPad
+anchoring. Its [file representation](https://developer.apple.com/documentation/coretransferable/filerepresentation)
+provides actual file activities. The [SQLite online backup API](https://www.sqlite.org/backup.html)
+creates a consistent live-database export without changing source rows. A raw
+live-file share can omit committed WAL pages; VACUUM INTO can change implicit
+row identifiers, so the snapshot uses backup rather than a schema rebuild.
+SQLite access remains a legacy-format service, not a SwiftUI layout exception.
+No feature was disabled and no third-party dependency was added.
+
+The remaining UIKit navigation host will disappear with the root navigation
+migration. Native Mac wiring/acceptance for developer settings and diagnostics
+is still open; compiling the shared form does not complete that feature there.
+Same-scope production Swift across the old/new developer screen/base/cells,
+shared form, endpoint/snapshot services and main-settings observer: **552 → 420
+physical lines**, 132 fewer. Comments/blank lines are included; tests, Debug
+fixtures, generated and third-party code are excluded. TASKS.md contains the
+current verdicts and explicit limits.

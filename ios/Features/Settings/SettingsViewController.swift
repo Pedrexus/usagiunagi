@@ -5,6 +5,10 @@ import Observation
 import StudyUI
 import SwiftUI
 
+extension Notification.Name {
+  static let avatarCacheCleared = Notification.Name("avatarCacheCleared")
+}
+
 @MainActor @Observable final class SettingsNavigation {
   enum Page: String, Hashable, CaseIterable {
     case appearance = "Appearance & Notifications"
@@ -24,6 +28,7 @@ import SwiftUI
   var username = ""
   var level = 0
   var pendingReviews = 0
+  var avatarRevision = 0
 }
 
 struct ApplicationSettings: View {
@@ -51,7 +56,8 @@ struct ApplicationSettings: View {
               } placeholder: {
                 Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.secondary)
               }
-              .frame(width: 52, height: 52).clipShape(Circle()).id(email)
+              .frame(width: 52, height: 52).clipShape(Circle()).id(email).id(
+                navigation.avatarRevision)
               VStack(alignment: .leading, spacing: 4) {
                 Text(navigation.username).font(.headline)
                 Text("Level \(navigation.level) · WaniKani").font(.subheadline).foregroundStyle(
@@ -160,6 +166,9 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
       notifications.add(name: name) { [weak self] _ in
         DispatchQueue.main.async { self?.reloadAccount() }
       }
+    }
+    notifications.add(name: .avatarCacheCleared) { [weak self] _ in
+      Task { @MainActor [weak self] in self?.state.avatarRevision &+= 1 }
     }
   }
   override func viewWillAppear(_ animated: Bool) {
