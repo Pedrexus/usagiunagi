@@ -17,6 +17,8 @@ public struct StudyRootView: View {
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
+  @AppStorage("native.gravatarCustomEmail") private var avatarEmail = ""
+  @Environment(\.displayScale) private var displayScale
   @State private var shell = StudyShellState()
   @State private var tab = StudyTab.home
   @State private var path: [StudyDestination] = []
@@ -172,6 +174,9 @@ public struct StudyRootView: View {
         }
       }
       .onChange(of: model.dataRevision) { _, _ in updateHeader() }
+      .onChange(of: showSettings) { _, visible in if !visible { updateHeader() } }
+      .onChange(of: avatarEmail) { _, _ in if !showSettings { updateHeader() } }
+      .onChange(of: displayScale) { _, _ in if !showSettings { updateHeader() } }
       .onChange(of: model.isSyncing) { _, active in
         shell.progress = active ? Progress(totalUnitCount: -1) : nil
       }
@@ -208,29 +213,26 @@ public struct StudyRootView: View {
       }
       .sheet(isPresented: $showSettings) {
         NavigationStack(path: $settingsPath) {
-          Form {
-            Button("Lessons") { settingsPath.append(.lessonSettings) }.accessibilityIdentifier(
-              "settings.page.lessons")
-            Button("Subject details") { settingsPath.append(.subjectSettings) }
-              .accessibilityIdentifier("settings.page.subjects")
-            Button("Review settings") { settingsPath.append(.reviewSettings) }
-            Button("Notifications") { settingsPath.append(.notificationSettings) }
-              .accessibilityIdentifier("settings.page.notifications")
+          StudySettingsView(
+            account: model.snapshot == nil ? nil : shell, destination: settingsDestination
+          ) {
+            EmptyView()
+          } accountActions: {
             Button("Saved work") { settingsPath.append(.savedWork) }
             Button("WaniKani account") { settingsPath = [.account] }
-          }.formStyle(.grouped).navigationTitle("Settings")
-            .navigationDestination(for: StudyDestination.self) { value in
-              destination(value).toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                  Button("Done") { showSettings = false }
-                }
-              }
-            }
-            .toolbar {
+          }
+          .navigationDestination(for: StudyDestination.self) { value in
+            destination(value).toolbar {
               ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { showSettings = false }
               }
             }
+          }
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Done") { showSettings = false }
+            }
+          }
         }.presentationSizing(.form)
       }
       .sheet(item: $subject) { value in
@@ -250,18 +252,32 @@ public struct StudyRootView: View {
         }
         .presentationSizing(.form)
       }
+      .tint(StudyPalette.radical)
+  }
+  private func settingsDestination(_ page: StudySettingsPage) -> StudyDestination {
+    switch page {
+    case .appearance: .appearanceSettings
+    case .lessons: .lessonSettings
+    case .reviews: .reviewSettings
+    case .subjects: .subjectSettings
+    }
   }
   @ViewBuilder private func destination(_ value: StudyDestination) -> some View {
     switch value {
     case .account: account
     case .lessonSettings: LessonSettingsView(settings: lessonSettings)
-    case .notificationSettings:
-      if let notifications {
-        Form { NotificationSettingsSection(notifications: notifications) }
-          .formStyle(.grouped).navigationTitle("Notifications")
-      } else {
-        ContentUnavailableView("Connect to receive review reminders", systemImage: "bell")
-      }
+    case .appearanceSettings:
+      AppearanceSettingsView(
+        appearance: Binding(
+          get: { preferences.appearance },
+          set: { value in
+            let old = preferences
+            var new = old
+            new.appearance = value
+            do { try $preferences.applyChanges(from: old, to: new) } catch {
+              model.error = error.localizedDescription
+            }
+          }), email: $avatarEmail, notifications: notifications)
     case .subjectSettings:
       SubjectSettingsView(
         settings: subjectSettings,
@@ -368,6 +384,11 @@ public struct StudyRootView: View {
     shell.username = model.snapshot?.username ?? appName
     shell.level = model.snapshot?.currentLevel ?? 0
     shell.onVacation = model.snapshot?.onVacation ?? false
+    if !showSettings {
+      shell.avatar =
+        model.snapshot?.isSample == false
+        ? StudyAvatar.url(email: avatarEmail, pixelSize: Double(80 * displayScale)) : nil
+    }
     guard let snapshot = model.snapshot, !snapshot.requiresAssignmentRefresh else {
       shell.learnedKanji = nil
       return

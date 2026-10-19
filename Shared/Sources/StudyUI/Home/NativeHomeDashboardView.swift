@@ -11,7 +11,7 @@ public enum StudyDestination: Hashable, Sendable {
   case subject(Int64)
   case search, forecast
   case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings, subjectSettings,
-    notificationSettings
+    appearanceSettings
   init(resuming session: StudySession) {
     if let scope = session.practiceScope {
       self = .practice(scope)

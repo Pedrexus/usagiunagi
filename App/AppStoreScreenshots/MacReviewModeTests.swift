@@ -125,7 +125,7 @@
       let app = launch([])
       defer { app.terminate() }
       app.buttons["app.settings"].click()
-      let settings = app.buttons["Review settings"]
+      let settings = app.buttons["settings.page.reviews"]
       XCTAssertTrue(settings.waitForExistence(timeout: 5))
       settings.click()
       let mode = app.popUpButtons["reviewSettings.answerMode"]
@@ -578,10 +578,18 @@
           .count, 1)
     }
     func testSharedNotificationSettingsPersistAndKeepTheCurrentWindow() {
-      let app = launch(["--light-fixture"])
+      let app = launch([])
       defer { app.terminate() }
       app.buttons["app.settings"].click()
-      app.buttons["settings.page.notifications"].click()
+      app.buttons["settings.page.appearance"].click()
+      let style = app.popUpButtons["settings.interfaceStyle"]
+      XCTAssertTrue(style.waitForExistence(timeout: 5))
+      style.click()
+      app.menuItems["Dark"].click()
+      let email = app.textFields["settings.gravatarCustomEmail"]
+      XCTAssertTrue(email.waitForExistence(timeout: 5))
+      email.click()
+      email.typeText("fixture@example.invalid")
       let choices = [
         ("settings.notificationsAllReviews", true),
         ("settings.notificationsBadging", false), ("settings.notificationSounds", true),
@@ -593,12 +601,14 @@
         XCTAssertEqual((toggle.value as? NSNumber)?.boolValue, enabled)
       }
       let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
-      screenshot.name = "Shared native notification settings"
+      screenshot.name = "Shared native appearance and notification settings"
       screenshot.lifetime = .keepAlways
       add(screenshot)
       app.buttons["Done"].click()
       app.buttons["app.settings"].click()
-      app.buttons["settings.page.notifications"].click()
+      app.buttons["settings.page.appearance"].click()
+      XCTAssertEqual(style.value as? String, "Dark")
+      XCTAssertEqual(email.value as? String, "fixture@example.invalid")
       for (id, enabled) in choices {
         let toggle = app.switches[id]
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
@@ -672,7 +682,7 @@
       let app = launch([])
       defer { app.terminate() }
       app.buttons["app.settings"].click()
-      app.buttons["Review settings"].click()
+      app.buttons["settings.page.reviews"].click()
       let fonts = app.buttons["reviewSettings.fonts"]
       XCTAssertTrue(fonts.waitForExistence(timeout: 5))
       fonts.click()
@@ -742,7 +752,7 @@
       let app = launch(["--audio-fixture"])
       defer { app.terminate() }
       app.buttons["app.settings"].click()
-      app.buttons["Review settings"].click()
+      app.buttons["settings.page.reviews"].click()
       let paired = app.switches["reviewSettings.groupMeaningReading"]
       XCTAssertTrue(paired.waitForExistence(timeout: 5))
       paired.click()
@@ -788,7 +798,7 @@
       let app = launch(["--audio-fixture", "--anki-fixture", "--combined-anki-fixture"])
       defer { app.terminate() }
       app.buttons["app.settings"].click()
-      app.buttons["Review settings"].click()
+      app.buttons["settings.page.reviews"].click()
       app.sheets.firstMatch.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -300)
       let corrections = app.switches["reviewSettings.corrections"]
       XCTAssertTrue(corrections.waitForExistence(timeout: 5))
@@ -919,7 +929,7 @@
       let app = launch(["--audio-fixture", "--anki-fixture", "--combined-anki-fixture"])
       defer { app.terminate() }
       app.buttons["app.settings"].click()
-      app.buttons["Review settings"].click()
+      app.buttons["settings.page.reviews"].click()
       let autoplay = app.switches["reviewSettings.autoplay"]
       XCTAssertTrue(autoplay.waitForExistence(timeout: 5))
       autoplay.click()

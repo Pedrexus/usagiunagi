@@ -1,0 +1,247 @@
+{
+  "date": "2026-10-20",
+  "baseline": "045514f592df641678c97c7b09b4e095d077528d",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Common SwiftUI settings menu, appearance picker and avatar rendering/URL policy on existing native and legacy hosts. Retain preference archives, diagnostics and logout warning; retire one-use appearance wrapper and unused app digest extensions. No grading, writer, sync, schema, API transport or credential migration change.",
+  "validatedFiles": {
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "54f8a105b13f593a0c633d0ab0a657ce272ec21d6f40af7bc290f8f7dc3a9b40",
+    "App/AppTests/NotificationPreferencesTests.swift": "ff1b8e3c4e104452c0b86254f7fd491945d8bb6a9675805448c0f33b6694c325",
+    "App/Features/Home/MainViewController.swift": "5725b7256872727154ce6f99c7070784d1cb90d95172d9736a0f0549dcc28c31",
+    "App/Features/Settings/LegacyPreferences.swift": "faf6a46ce1839c990f012322471dbdcedad33aa721bdac5f91063a3b8f7003a6",
+    "App/Features/Settings/SettingsViewController.swift": "dc9d83389406e41725579e5cb1427bee7cdf7afcd6d1177e37fd58d10d823745",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "e8af49bdc50af918cc6d9235041f74eeaf33bf44a8009803980e66f55b48abfa",
+    "Docs/Architecture.md": "4bb1b948b7ef6c63a5df5cbd364ee56ebcc0840681e1b82bbd6851927341d750",
+    "Docs/Development.md": "8c18baf77161c6ebbf8cab086a62aebc36ffed4baa9a4719b1f988d942cc34cf",
+    "Docs/History/task-checkpoints.md": "5f7acbc4c903f7da9be31a236fd0337f81eec54839efbbe7c4a8f769b5a348ec",
+    "Docs/TASKS.md": "75892f6d36e3484ce408f32ea6ea4d0bfa72e39f4a3a47e24e610de41350de97",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "863d1a959a40d93e44ee1e8ad1ff14fa04b8b9a8bab82feafa1ae3ff6ef5e4fd",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "4b83782bfeb13b0604d57f4fa4141e9da6d7be730ef3e37e2ac112d9a9167eab",
+    "Shared/Sources/StudyUI/Home/StudyShellView.swift": "e2b52846b441cf2192372139fef6404261efdb219c704dd75911ea81a56b16e8",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsContent.swift": "4533515a6fecbe4105c6c27ea27c3e31883516faec3e701184499e4a0b29b8f1",
+    "Shared/Sources/StudyCore/StudyAvatar.swift": "b36a98f40b1fe9f5f7e8ec9f5810d5ec8bf45eb95210b4db9d2046f75872f665",
+    "Shared/Sources/StudyUI/Settings/AppearanceSettingsView.swift": "103d6f106e1da3044a09c4d97207caef7f888057cf637a83d0466d0f91cf879d",
+    "Shared/Sources/StudyUI/Settings/StudySettingsView.swift": "55a38f6b1a91c4cb90ed3a33f383d330e5a8d4c87ffa35a1b57cf842d1c2ac31",
+    "Shared/Sources/StudyUI/Shared/StudyAvatarView.swift": "7250eb169dd6c20aa7aa014a5d288743640ff3e428432b2ce0f17da036ee82df",
+    "Shared/Tests/StudyCoreTests/StudyAvatarTests.swift": "90ef6bc89e9d78fd866674d6fe2ecd95c8da8c3d7d7007faf91ccdfce907a731"
+  },
+  "deletedFiles": {
+    "App/Extensions/String+SHA256.swift": "01e0f784683f851ad2c6dbf048c1cd1f9630874180eb8b788e7e417118218590",
+    "App/Features/Settings/AppearanceSettings.swift": "3958ae7e706f021f8035ae0b970646e95f6135275ae91d800e056889dac9f8b7",
+    "App/Tests/String+SHA256Test.swift": "4a191589c48ffaccdb7d326f442f36f0e1b6ce9df3ace25bc9854f33930eb3a8"
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30186,
+    "after": 30267,
+    "changed": [
+      {
+        "path": "App/Extensions/String+SHA256.swift",
+        "before": 26,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Home/MainViewController.swift",
+        "before": 364,
+        "after": 347
+      },
+      {
+        "path": "App/Features/Settings/AppearanceSettings.swift",
+        "before": 30,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Settings/LegacyPreferences.swift",
+        "before": 178,
+        "after": 187
+      },
+      {
+        "path": "App/Features/Settings/SettingsViewController.swift",
+        "before": 211,
+        "after": 169
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 586,
+        "after": 607
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/StudyShellView.swift",
+        "before": 140,
+        "after": 129
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/ReviewSettingsContent.swift",
+        "before": 87,
+        "after": 84
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyAvatar.swift",
+        "before": 0,
+        "after": 20
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/AppearanceSettingsView.swift",
+        "before": 0,
+        "after": 44
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/StudySettingsView.swift",
+        "before": 0,
+        "after": 90
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Shared/StudyAvatarView.swift",
+        "before": 0,
+        "after": 26
+      }
+    ]
+  },
+  "productionIncrease": 81,
+  "lineCountMeaning": "This supplies native appearance/avatar and a common settings surface; it adds 81 net production lines, rather than claiming a cleanup reduction. The old wrapper and hash helpers are removed after their replacements are wired.",
+  "checks": {
+    "sharedMac": {
+      "log": "/private/tmp/usagi-shared-settings-shared-mac-final.log",
+      "sha256": "36025dd77e9fd708f199cc7e00d0b4eb5fe0eefff7f902bbb263235a5867c627",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 422,
+        "suiteCounts": [
+          52,
+          7,
+          162,
+          201
+        ]
+      },
+      "bundle": null
+    },
+    "sharedIOS": {
+      "log": "/private/tmp/usagi-shared-settings-shared-ios-final.log",
+      "sha256": "0381cd89f5bf53119d442e6da4a69d9f65acf087cc91f3eaa8deb78777989428",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 422,
+        "passedTests": 422,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-c61a240759f3442b99589fa153a9c528.xcresult"
+    },
+    "hostedIOS": {
+      "log": "/private/tmp/usagi-shared-settings-hosted-final.log",
+      "sha256": "98a2eb176fe871e4d0b3b1c522c2d0ad8dd045497bbee764dd1aeee62b7723b3",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 92,
+        "passedTests": 92,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-60b11ec536a443c8a65445153a2f5d2d.xcresult"
+    },
+    "phoneUI": {
+      "log": "/private/tmp/usagi-shared-settings-phone-ui.log",
+      "sha256": "7598f5034ac716f5068954182e1ae32f86b5764b55520107fe36ae6cca3ec645",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-23c6054f320e4d45918a3db84e430648.xcresult"
+    },
+    "tabletUI": {
+      "log": "/private/tmp/usagi-shared-settings-pad-ui.log",
+      "sha256": "e7a3fdf31f49cb7d408910ba7fabe546260b47cd5fdc029d68177c36d43a83c9",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-fb8a242e71e64cbe894e201c3e37640e.xcresult"
+    },
+    "releaseMac": {
+      "log": "/private/tmp/usagi-shared-settings-release-mac.log",
+      "sha256": "b8534baaa52f5c6087472fe69c779face53e2024f6b56b36e75fc2b5432bbedb",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-50d2207fd4af40609c0dfaf434444beb.xcresult"
+    },
+    "releaseIOS": {
+      "log": "/private/tmp/usagi-shared-settings-release-ios.log",
+      "sha256": "689f4355bf64016082f5fe42a5b35249a6153fe116aabd77fbe7b0da44eef9e2",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 41,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-b011a532021241c388dd6e061d53bbf4.xcresult"
+    }
+  },
+  "testCoverage": {
+    "shared": "Three parameterized avatar functions cover official normalization/hash, empty-address fallback and the exact legacy URL/cache contract at 80, 160 and 240 pixels. They replace the app-only SDK digest test; all other shared/hosted behavior remains.",
+    "hosted": "The disconnected-settings regression follows the consolidated account state and also requires an empty avatar. An initial compile failure exposed old field references; the final assertions are ported, not disabled.",
+    "phoneAndTablet": "Four existing cases per device cover menu/lesson order and persistence, review dependencies/download routes, isolated notifications, appearance/email/subject settings and cancellation of logout. All exercise/account data is synthetic."
+  },
+  "nativeMacAutomation": {
+    "result": "Not accepted",
+    "log": "/private/tmp/usagi-shared-settings-mac-ui-final.log",
+    "sha256": "cfcb8b37600d3b148979de290322a6c581a747fbed6481e4fbb76fe8331af723",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-4cc23e155dfe4f0fa0f2c28d48cdd373.xcresult",
+    "reason": "The runner timed out enabling UI automation before app launch. No selected native cases ran; this is not a passing gate or a diagnosed product defect."
+  },
+  "nativeMacDirect": {
+    "kind": "Direct app-window CUA observations in this chat; not XCUITest",
+    "configuration": "Debug --review-fixture -ApplePersistenceIgnoreState YES, isolated in-memory service/store and fixture defaults/notification client.",
+    "executable": ".build/Xcode/UnifiedMac/Build/Products/Debug/Tsurukame.app/Contents/MacOS/Tsurukame.debug.dylib",
+    "executableSHA256": "eed922252308337e38ce1e378f87b497ed541b5e8efb3541d5fd2a429fff1628",
+    "observed": [
+      "Synthetic review fixture / Level 1 remained visible; no review was started or answered.",
+      "Settings exposed the same four pages, version, Saved work and WaniKani account actions.",
+      "Dark, fixture@example.invalid and Notify for all available reviews = on persisted after closing/reopening settings in the first direct run.",
+      "In the final direct run, selecting Light changed the sheet to its light rendering; email/reminder values remained present.",
+      "After returning Home and opening Reviews, reviewSettings.appearance showed Light, proving the same appearance owner.",
+      "Done returned to Home; the fixture app was then closed. Screenshots were limited to its own sheet/window."
+    ],
+    "limits": "These observations do not prove all three automated Mac cases, restart persistence, active-window accent color, physical delivery or a signed upgrade. The fixture resets its defaults at launch. The final Mac debug UI sources match the observed build; later iOS-only wrapper/project-reference retirement does not alter those Mac components."
+  },
+  "preferences": "Native appearance merges into existing StoredReviewPreferences; a string AppStorage value holds the custom avatar address in injected defaults. Legacy enum/email archives and the archived fallback address remain. Avatar fetches are deferred during native Settings editing; URL normalization omits the plain address.",
+  "nativeBoundaries": "The menu and appearance controls are SwiftUI. Version selection uses the native text-selection API. Temporary iOS lifecycle/navigation/window-style callbacks and its archived preference stores still bridge the legacy coordinator; no new UIKit/AppKit UI adapter is added.",
+  "formatting": {
+    "log": "/private/tmp/usagi-shared-settings-format-final.log",
+    "sha256": "3ea69ed92fee80a3276167078a662346c6abeceba56de7a045b352cfa0d59efe",
+    "checkedSwiftFiles": 14
+  },
+  "initialIntegrationFailure": {
+    "log": "/private/tmp/usagi-shared-settings-hosted.log",
+    "sha256": "73854e911a6719644163a329ce280382a194e0f555b74ebcfcb0ffa4cfe70eb2",
+    "resolution": "Port old navigation username/level references to navigation.account and retain the same cleared-state assertions plus avatar nil. Final hosted suite passes 92."
+  },
+  "officialReferences": [
+    "https://docs.gravatar.com/rest/hash/",
+    "https://developer.apple.com/documentation/swiftui/environmentvalues/displayscale",
+    "https://developer.apple.com/documentation/swiftui/view/textselection(_:)"
+  ],
+  "remaining": [
+    "Native review ordering, batch caps and leech thresholds; diagnostics/account-action parity; preference archive/fallback-avatar handoff.",
+    "Production native iOS scene/bootstrap/writer/background ownership and signed-device parity.",
+    "Mac automated launch/reopen and active-window visual acceptance; physical speech, IME, notification/watch/media acceptance and other tracked goal gates."
+  ],
+  "limits": "No real WaniKani exercises, OS permission/security changes, hosted Actions pass, new dependency/tool publication, PR or push. iOS Release retains legacy framework/protobuf warnings; diagnostics are incremental rather than a whole-project warning audit.",
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "rootAndMainboard": "No parent manifest, Mainboard implementation or unrelated owner changes were edited/staged."
+}

@@ -33,11 +33,7 @@ enum ReviewPreferencesAdapter {
   }
   static var current: ReviewPreferences {
     var value = ReviewPreferences()
-    switch Settings.interfaceStyle {
-    case .system: value.appearance = .system
-    case .light: value.appearance = .light
-    case .dark: value.appearance = .dark
-    }
+    value.appearance = Settings.interfaceStyle.nativeAppearance
     switch Settings.srsLevelIndicatorStyle {
     case .none: value.stageIndicator = .none
     case .bubble: value.stageIndicator = .name
@@ -50,11 +46,7 @@ enum ReviewPreferencesAdapter {
 
   static func apply(_ value: ReviewPreferences, replacing old: ReviewPreferences) {
     if value.appearance != old.appearance {
-      switch value.appearance {
-      case .system: Settings.interfaceStyle = .system
-      case .light: Settings.interfaceStyle = .light
-      case .dark: Settings.interfaceStyle = .dark
-      }
+      Settings.interfaceStyle = InterfaceStyle(value.appearance)
     }
     if value.stageIndicator != old.stageIndicator {
       switch value.stageIndicator {
@@ -174,5 +166,22 @@ enum ReviewPreferencesAdapter {
   func set(_ value: Bool, for option: NotificationPreference) {
     var setting = Setting(option.defaultValue, option.key)
     setting.wrappedValue = value
+  }
+}
+
+extension InterfaceStyle {
+  var nativeAppearance: ReviewPreferences.Appearance {
+    switch self {
+    case .system: .system
+    case .light: .light
+    case .dark: .dark
+    }
+  }
+  init(_ appearance: ReviewPreferences.Appearance) {
+    switch appearance {
+    case .system: self = .system
+    case .light: self = .light
+    case .dark: self = .dark
+    }
   }
 }

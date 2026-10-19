@@ -11,25 +11,10 @@ extension Notification.Name {
 }
 
 @MainActor @Observable final class SettingsNavigation {
-  enum Page: String, Hashable, CaseIterable {
-    case appearance = "Appearance & Notifications"
-    case lessons = "Lessons"
-    case reviews = "Reviews"
-    case subjects = "Radicals, Kanji & Vocabulary"
-    var symbol: String {
-      switch self {
-      case .appearance: "bell.badge"
-      case .lessons: "book"
-      case .reviews: "rectangle.and.pencil.and.ellipsis"
-      case .subjects: "character.book.closed"
-      }
-    }
-  }
+  typealias Page = StudySettingsPage
   var path: [Page] = []
-  var username = ""
-  var level = 0
+  let account = StudyShellState()
   var pendingReviews = 0
-  var avatarRevision = 0
 }
 
 struct ApplicationSettings: View {
@@ -43,76 +28,40 @@ struct ApplicationSettings: View {
   let developer: () -> Void
   let appearanceChanged: (InterfaceStyle) -> Void
   @ArchivedPreference(Settings.$gravatarCustomEmail) private var email: String
+  @ArchivedPreference(Settings.$interfaceStyle) private var appearance: InterfaceStyle
   @State private var confirmingLogout = false
-  private var version: String {
-    let info = Bundle.main.infoDictionary ?? [:]
-    return
-      "\(info["CFBundleShortVersionString"] as? String ?? "") (\(info["CFBundleVersion"] as? String ?? ""))"
-  }
+  @Environment(\.displayScale) private var displayScale
   var body: some View {
     NavigationStack(path: $navigation.path) {
-      Form {
-        if !navigation.username.isEmpty {
-          Section {
-            HStack(spacing: 14) {
-              AsyncImage(url: currentUserProfileImageURL()) { image in
-                image.resizable().scaledToFill()
-              } placeholder: {
-                Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.secondary)
-              }
-              .frame(width: 52, height: 52).clipShape(Circle()).id(email).id(
-                navigation.avatarRevision)
-              VStack(alignment: .leading, spacing: 4) {
-                Text(navigation.username).font(.headline)
-                Text("Level \(navigation.level) · WaniKani").font(.subheadline).foregroundStyle(
-                  .secondary)
-              }
-            }.padding(.vertical, 8)
-          }
-        }
-        Section("Settings") {
-          ForEach(SettingsNavigation.Page.allCases, id: \.self) { page in
-            NavigationLink(value: page) { Label(page.rawValue, systemImage: page.symbol) }
-              .accessibilityIdentifier("settings.page.\(page)")
-          }
-        }
-        Section("Diagnostics") {
-          LabeledContent("Version") { Text(version).textSelection(.enabled) }
-            .contextMenu {
-              Button("Copy version", systemImage: "doc.on.doc") {
-                UIPasteboard.general.string = version
-              }
-            }
-          Button("Developer options", systemImage: "hammer", action: developer)
-            .accessibilityIdentifier("settings.developer")
-        }
-        Section {
-          Button("Log out", role: .destructive) { confirmingLogout = true }
-            .accessibilityIdentifier("settings.logout")
-        }
-        Section {
-          Link(
-            destination: URL(
-              string:
-                "https://github.com/Pedrexus/usagiunagi/issues/new?title=Visual%20redesign%20feedback"
-            )!
-          ) {
-            Label("Give feedback on the new app look", systemImage: "bubble.left")
-          }
-        }
+      StudySettingsView(
+        account: navigation.account.username.isEmpty ? nil : navigation.account,
+        destination: { $0 }
+      ) {
+        Button("Developer options", systemImage: "hammer", action: developer)
+          .accessibilityIdentifier("settings.developer")
+      } accountActions: {
+        Button("Log out", role: .destructive) { confirmingLogout = true }
+          .accessibilityIdentifier("settings.logout")
       }
-      .navigationTitle("Settings")
       .toolbar {
         ToolbarItem(placement: .navigation) {
           Button("Back", systemImage: "chevron.backward", action: back)
             .accessibilityIdentifier("settings.back")
         }
       }
+      .onAppear { updateAvatar() }
+      .onChange(of: navigation.path) { _, path in if path.isEmpty { updateAvatar() } }
+      .onChange(of: email) { _, _ in if navigation.path.isEmpty { updateAvatar() } }
+      .onChange(of: displayScale) { _, _ in if navigation.path.isEmpty { updateAvatar() } }
       .navigationDestination(for: SettingsNavigation.Page.self) { page in
         switch page {
         case .appearance:
-          AppearanceSettings(
-            appearanceChanged: appearanceChanged, notifications: notificationSettings)
+          AppearanceSettingsView(
+            appearance: Binding(
+              get: { appearance.nativeAppearance }, set: { appearance = InterfaceStyle($0) }),
+            email: $email, notifications: notificationSettings
+          )
+          .onChange(of: appearance) { _, value in appearanceChanged(value) }
         case .lessons:
           LessonSettingsView(settings: lessons)
         case .reviews:
@@ -140,6 +89,11 @@ struct ApplicationSettings: View {
     }
     .tint(StudyPalette.radical)
   }
+  private func updateAvatar() {
+    navigation.account.avatar =
+      navigation.account.username.isEmpty ? nil : currentUserProfileImageURL(scale: displayScale)
+  }
+
 }
 
 /// Only legacy scene, navigation and service callbacks remain outside SwiftUI.
@@ -183,7 +137,7 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
       }
     }
     notifications.add(name: .avatarCacheCleared) { [weak self] _ in
-      Task { @MainActor [weak self] in self?.state.avatarRevision &+= 1 }
+      Task { @MainActor [weak self] in self?.state.account.avatarRevision &+= 1 }
     }
   }
   override func viewWillAppear(_ animated: Bool) {
@@ -193,14 +147,18 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
   }
   private func reloadAccount() {
     guard let client = services?.localCachingClient else {
-      state.username = ""
-      state.level = 0
+      state.account.username = ""
+      state.account.level = 0
+      state.account.avatar = nil
       state.pendingReviews = 0
       return
     }
     let user = client.getUserInfo()
-    state.username = user?.username ?? ""
-    state.level = Int(user?.level ?? 0)
+    state.account.username = user?.username ?? ""
+    state.account.level = Int(user?.level ?? 0)
+    state.account.avatar =
+      state.account.username.isEmpty
+      ? nil : currentUserProfileImageURL(scale: view.traitCollection.displayScale)
     state.pendingReviews = client.pendingProgressCount
   }
   private func pushLegacy(_ controller: UIViewController) {

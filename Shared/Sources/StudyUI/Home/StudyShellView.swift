@@ -51,19 +51,8 @@ public struct StudyShellView<Content: View>: View {
   public var body: some View {
     VStack(spacing: 0) {
       HStack(spacing: 12) {
-        Group {
-          if let url = state.avatar {
-            AsyncImage(request: URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)) {
-              image in
-              image.resizable().scaledToFill()
-            } placeholder: {
-              Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.secondary)
-            }
-          } else {
-            Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.secondary)
-          }
-        }.frame(width: 42, height: 42).clipShape(Circle()).accessibilityHidden(true)
-          .id(state.avatarRevision)
+        StudyAvatarView(url: state.avatar, revision: state.avatarRevision).frame(
+          width: 42, height: 42)
         VStack(alignment: .leading, spacing: 3) {
           Text(state.username).font(.headline).accessibilityIdentifier("app.username")
           Text(

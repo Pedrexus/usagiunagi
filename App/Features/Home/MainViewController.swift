@@ -14,33 +14,16 @@
 
 import Foundation
 import PromiseKit
+import StudyCore
 import StudyUI
 import SwiftUI
 import WaniKaniAPI
 
-private let kDefaultProfileImageURL =
-  "https://cdn.wanikani.com/default-avatar-300x300-20121121.png"
-private let kProfileImageSize: CGFloat = 80
-
-// The user's Gravatar, or WaniKani's default avatar if they haven't given an email address.
-func currentUserProfileImageURL() -> URL {
-  let email =
-    Settings.gravatarCustomEmail.isEmpty
-    ? Settings.userEmailAddress : Settings.gravatarCustomEmail
-  return email.isEmpty
-    ? URL(string: kDefaultProfileImageURL)!
-    : userProfileImageURL(emailAddress: email)
-}
-
-private func userProfileImageURL(emailAddress: String) -> URL {
-  let address = emailAddress.trimmingCharacters(in: .whitespaces).lowercased()
-  // Gravatar asks for an SHA-256 hash: https://docs.gravatar.com/general/hash/
-  let hash = address.sha256()
-
-  let size = kProfileImageSize * UIScreen.main.scale
-
-  return URL(
-    string: "https://www.gravatar.com/avatar/\(hash).jpg?s=\(size)&d=\(kDefaultProfileImageURL)")!
+// Retain the archived address fallback until the native account handoff.
+func currentUserProfileImageURL(scale: CGFloat) -> URL {
+  StudyAvatar.url(
+    email: Settings.gravatarCustomEmail.isEmpty
+      ? Settings.userEmailAddress : Settings.gravatarCustomEmail, pixelSize: Double(80 * scale))
 }
 
 final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewControllerDelegate,
@@ -263,7 +246,7 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
     shell.username = user.username
     shell.level = Int(user.level)
     shell.learnedKanji = client.guruKanjiCount
-    let avatar = currentUserProfileImageURL()
+    let avatar = currentUserProfileImageURL(scale: view.traitCollection.displayScale)
     if avatarRequest != avatar {
       avatarRequest = avatar
       avatarRestoreTask?.cancel()

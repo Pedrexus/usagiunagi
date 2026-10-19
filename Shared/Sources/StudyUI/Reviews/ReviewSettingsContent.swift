@@ -24,11 +24,8 @@ public struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: 
   }
   public var body: some View {
     Section("Display") {
-      Picker("Appearance", selection: $preferences.appearance) {
-        Text("System").tag(ReviewPreferences.Appearance.system)
-        Text("Light").tag(ReviewPreferences.Appearance.light)
-        Text("Dark").tag(ReviewPreferences.Appearance.dark)
-      }.accessibilityIdentifier("reviewSettings.appearance")
+      StudyAppearancePicker(selection: $preferences.appearance).accessibilityIdentifier(
+        "reviewSettings.appearance")
       Picker("SRS indicator", selection: $preferences.stageIndicator) {
         Text("Off").tag(ReviewPreferences.StageIndicator.none)
         Text("Name").tag(ReviewPreferences.StageIndicator.name)

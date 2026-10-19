@@ -10,11 +10,14 @@ struct NotificationPreferencesTests {
   @Test func disconnectedSettingsHostIgnoresLateAccountNotifications() async {
     let controller = StoryboardScene.Settings.initialScene.instantiate()
     controller.loadViewIfNeeded()
-    controller.rootView?.navigation.username = "Waiting for an account update"
+    controller.rootView?.navigation.account.username = "Waiting for an account update"
     NotificationCenter.default.post(name: .lccPendingItemsChanged, object: nil)
-    for _ in 0..<100 where controller.rootView?.navigation.username != "" { await Task.yield() }
-    #expect(controller.rootView?.navigation.username == "")
-    #expect(controller.rootView?.navigation.level == 0)
+    for _ in 0..<100 where controller.rootView?.navigation.account.username != "" {
+      await Task.yield()
+    }
+    #expect(controller.rootView?.navigation.account.username == "")
+    #expect(controller.rootView?.navigation.account.level == 0)
+    #expect(controller.rootView?.navigation.account.avatar == nil)
     #expect(controller.rootView?.navigation.pendingReviews == 0)
   }
 
