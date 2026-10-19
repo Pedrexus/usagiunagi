@@ -92,7 +92,7 @@ private actor BootstrapServer: WaniKaniAccountReader {
           meaningNote: "offline\u{0000}note\n猫", meaningSynonyms: ["kitty"]), pending: true,
         legacyRevision: 9)
     ]
-    source = .init(token: "synthetic-migration-token", account: account)
+    source = .init(token: "synthetic-migration-token", account: account, preferences: .init())
   }
   func read() throws -> StudyLegacySource {
     reads += 1
@@ -102,19 +102,24 @@ private actor BootstrapServer: WaniKaniAccountReader {
 }
 
 @MainActor @Suite(.timeLimit(.minutes(1))) struct LegacyBootstrapTests {
-  @MainActor private struct Environment {
+  @MainActor private final class Environment {
+    let domain = "usagi-bootstrap-" + UUID().uuidString
+    let defaults: UserDefaults
     let store: StudyStore
     let input = BootstrapInput()
     let credentials = BootstrapCredentials()
     let server: BootstrapServer
+    deinit { UserDefaults(suiteName: domain)?.removePersistentDomain(forName: domain) }
     init() async throws {
+      defaults = UserDefaults(suiteName: domain)!
       store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
       server = BootstrapServer(input.source.account.profile)
     }
     func bootstrap() -> StudyLegacyBootstrap {
       .init(
-        store: store, sourceID: "ios-main", credentials: credentials, client: server,
-        readLegacy: { try input.read() })
+        store: store, sourceID: "ios-main", credentials: credentials,
+        preferences: .init(defaults: defaults), client: { _ in self.server },
+        readLegacy: { try self.input.read() })
     }
   }
 
@@ -191,7 +196,8 @@ private actor BootstrapServer: WaniKaniAccountReader {
     changed.profile.level += 1
     env.input.source = .init(
       token: changeToken ? "different-token" : env.input.source.token,
-      account: changeToken ? env.input.source.account : changed)
+      account: changeToken ? env.input.source.account : changed,
+      preferences: env.input.source.preferences)
     await gate.resume()
     await #expect(throws: StudyBootstrapError.self) { try await activation.value }
     #expect(try await env.store.accountState(accountID: "migration-account") == nil)
@@ -227,7 +233,8 @@ private actor BootstrapServer: WaniKaniAccountReader {
     await #expect(throws: CocoaError.self) { try await env.bootstrap().activate() }
     var changed = env.input.source.account
     changed.profile.level += 1
-    env.input.source = .init(token: env.input.source.token, account: changed)
+    env.input.source = .init(
+      token: env.input.source.token, account: changed, preferences: env.input.source.preferences)
     env.credentials.fault = nil
     await env.server.configure(offline: true)
     await #expect(throws: LegacyImportError.self) { try await env.bootstrap().activate() }
@@ -292,7 +299,8 @@ private actor BootstrapServer: WaniKaniAccountReader {
           readingWrong: false,
           meaningWrongCount: 0, readingWrongCount: 0, createdAt: nil))
     ]
-    env.input.source = .init(token: env.input.source.token, account: invalid)
+    env.input.source = .init(
+      token: env.input.source.token, account: invalid, preferences: env.input.source.preferences)
     await #expect(throws: LegacyImportError.self) { try await env.bootstrap().activate() }
     #expect(try await env.store.catalog(accountID: "migration-account").isEmpty)
     #expect(try await env.store.accountState(accountID: "migration-account") == nil)
@@ -342,6 +350,104 @@ private actor BootstrapServer: WaniKaniAccountReader {
     #expect(result.activated && env.credentials.token == env.input.source.token)
     #expect(await env.server.reads == 1)
     #expect(env.credentials.saves == 1)
+  }
+  @Test func changedPreferencesCannotPassVerificationOrResumeAPreparedImport() async throws {
+    let env = try await Environment()
+    let gate = StudyTaskGate()
+    await env.server.configure(gate: gate)
+    let bootstrap = env.bootstrap()
+    let activation = Task { try await bootstrap.activate() }
+    await gate.waitForEntry()
+    var changed = env.input.source.preferences
+    changed.review.exactMatch.toggle()
+    env.input.source = .init(
+      token: env.input.source.token, account: env.input.source.account, preferences: changed)
+    await gate.resume()
+    await #expect(throws: StudyBootstrapError.self) { try await activation.value }
+    #expect(
+      try await env.store.legacyHandoff(sourceID: "ios-main") == nil && env.credentials.saves == 0)
+    env.credentials.fault = .beforeSave
+    await #expect(throws: CocoaError.self) { try await env.bootstrap().activate() }
+    #expect(env.defaults.object(forKey: "native.reviewPreferences") == nil)
+    var newer = changed
+    newer.audio.cellular.toggle()
+    env.input.source = .init(
+      token: env.input.source.token, account: env.input.source.account, preferences: newer)
+    env.credentials.fault = nil
+    await env.server.configure(offline: true)
+    await #expect(throws: StudyBootstrapError.self) { try await env.bootstrap().activate() }
+    #expect(try await env.store.legacyHandoff(sourceID: "ios-main")?.activated == false)
+    #expect(try await env.store.pendingReviews(accountID: "migration-account").count == 1)
+  }
+  @Test func activatedReceiptRestoresMissingPreferencesWithoutReadingTheRetiredSource() async throws
+  {
+    let env = try await Environment()
+    let first = try await env.bootstrap().activate()
+    #expect(
+      first.preferences == env.input.source.preferences && first.mediaLayout == .legacyDocuments)
+    env.defaults.removePersistentDomain(forName: env.domain)
+    env.input.fail = true
+    env.credentials.failLoads = true
+    await env.server.configure(offline: true)
+    let reads = env.input.reads
+    #expect(try await env.bootstrap().activate() == first)
+    let data = try #require(env.defaults.data(forKey: "native.reviewPreferences"))
+    #expect(
+      try JSONDecoder().decode(ReviewPreferences.self, from: data) == first.preferences?.review)
+    var edited = try JSONDecoder().decode(ReviewPreferences.self, from: data)
+    edited.exactMatch.toggle()
+    let bytes = try JSONEncoder().encode(edited)
+    env.defaults.set(bytes, forKey: "native.reviewPreferences")
+    #expect(try await env.bootstrap().activate() == first)
+    #expect(
+      env.defaults.data(forKey: "native.reviewPreferences") == bytes && env.input.reads == reads)
+    #expect(await env.server.reads == 1)
+  }
+  @Test func preferenceRecoveryNeverReopensAnActivatedLegacyWriter() async throws {
+    let env = try await Environment()
+    let corrupt = Data("invalid-native-preference".utf8)
+    env.defaults.set(corrupt, forKey: "native.reviewPreferences")
+    await #expect(throws: StudyPreferenceImportError.self) { try await env.bootstrap().activate() }
+    let saved = try #require(await env.store.legacyHandoff(sourceID: "ios-main"))
+    #expect(saved.activated && env.defaults.data(forKey: "native.reviewPreferences") == corrupt)
+    env.defaults.removeObject(forKey: "native.reviewPreferences")
+    env.input.fail = true
+    env.credentials.failLoads = true
+    await env.server.configure(offline: true)
+    #expect(try await env.bootstrap().activate() == saved)
+    #expect(try await env.store.pendingReviews(accountID: saved.accountID).count == 1)
+  }
+  @Test func earlierReceiptBytesKeepTheirOneWayChoiceWithoutPreferenceMetadata() async throws {
+    let env = try await Environment()
+    let first = try await env.bootstrap().activate()
+    var object = try #require(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(first)) as? [String: Any])
+    object.removeValue(forKey: "preferences")
+    let decoded = try JSONDecoder().decode(
+      StudyLegacyHandoff.self, from: JSONSerialization.data(withJSONObject: object))
+    #expect(decoded.activated && decoded.preferences == nil && decoded.mediaLayout == .native)
+    #expect(decoded.accountID == first.accountID && decoded.credentialID == first.credentialID)
+  }
+  @Test func configuredEndpointSelectsTheAccountVerifierAndIsPreservedInNativeSettings()
+    async throws
+  {
+    let env = try await Environment()
+    let endpoint = URL(string: "http://localhost:8080/v2")!
+    var preferences = env.input.source.preferences
+    preferences.apiBaseURL = endpoint
+    env.input.source = .init(
+      token: env.input.source.token, account: env.input.source.account, preferences: preferences)
+    let server = env.server
+    let bootstrap = StudyLegacyBootstrap(
+      store: env.store, sourceID: "ios-main", credentials: env.credentials,
+      preferences: .init(defaults: env.defaults),
+      client: { url in
+        #expect(url == endpoint)
+        return server
+      }, readLegacy: { try env.input.read() })
+    let result = try await bootstrap.activate()
+    #expect(result.preferences?.apiBaseURL == endpoint)
+    #expect(env.defaults.string(forKey: "native.apiBaseUrl") == endpoint.absoluteString)
   }
 
 }

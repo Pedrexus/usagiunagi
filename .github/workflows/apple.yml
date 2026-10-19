@@ -47,10 +47,17 @@ jobs:
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe read-attempts "$report/study.store"
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe write-catalog "$report/catalog.store"
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe read-catalog "$report/catalog.store"
+          set -o pipefail
           for phase in import-handoff save-handoff activate-handoff; do
+            case "$phase" in
+              import-handoff) checkpoint="prepared import before credential write" ;;
+              save-handoff) checkpoint="saved credential before writer activation" ;;
+              activate-handoff) checkpoint="activated writer before preference hydration" ;;
+            esac
             handoff_status=0
-            uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe "$phase" "$report/handoff.store" || handoff_status=$?
+            uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe "$phase" "$report/handoff.store" 2>&1 | tee "$report/$phase.log" || handoff_status=$?
             test "$handoff_status" -eq 86
+            grep -Fx "CHECKPOINT: $checkpoint" "$report/$phase.log"
           done
           for phase in edit-handoff read-handoff; do
             uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe "$phase" "$report/handoff.store"

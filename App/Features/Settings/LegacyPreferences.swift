@@ -1,3 +1,4 @@
+import Foundation
 import StudyCore
 import WaniKaniAPI
 
@@ -17,7 +18,7 @@ import WaniKaniAPI
 
 /// Preserve archived keys and enum meanings; no user-defaults migration is needed.
 enum ReviewPreferencesAdapter {
-  private static var booleans: [(WritableKeyPath<ReviewPreferences, Bool>, Setting<Bool>)] {
+  static var booleans: [(WritableKeyPath<ReviewPreferences, Bool>, Setting<Bool>)] {
     [
       (\.revealAnswers, Settings.$showAnswerImmediately),
       (\.revealFullAnswer, Settings.$showFullAnswer),
@@ -52,8 +53,7 @@ enum ReviewPreferencesAdapter {
     value.minimizePenalty = Settings.minimizeReviewPenalty
     return value
   }
-  private static var sessionBooleans: [(WritableKeyPath<StudySessionOptions, Bool>, Setting<Bool>)]
-  {
+  static var sessionBooleans: [(WritableKeyPath<StudySessionOptions, Bool>, Setting<Bool>)] {
     [
       (\.groupMeaningReading, Settings.$groupMeaningReading),
       (\.meaningFirst, Settings.$meaningFirst),
@@ -61,7 +61,7 @@ enum ReviewPreferencesAdapter {
       (\.minimizePenalty, Settings.$minimizeReviewPenalty),
     ]
   }
-  private static var sessionIntegers: [(WritableKeyPath<StudySessionOptions, Int>, Setting<Int>)] {
+  static var sessionIntegers: [(WritableKeyPath<StudySessionOptions, Int>, Setting<Int>)] {
     [
       (\.batchSize, Settings.$reviewBatchSize),
       (\.incorrectAnswerDelay, Settings.$incorrectAnswerReturnDelay),
@@ -212,7 +212,7 @@ enum ReviewPreferencesAdapter {
 
 /// The same display policy, backed by the original archived iOS keys until writer handoff.
 @MainActor final class LegacySubjectPreferences: StudySubjectPreferenceStore {
-  private var fields: [(WritableKeyPath<SubjectDetailsPreferences, Bool>, Setting<Bool>)] {
+  static var fields: [(WritableKeyPath<SubjectDetailsPreferences, Bool>, Setting<Bool>)] {
     [
       (\.useKatakanaForOnyomi, Settings.$useKatakanaForOnyomi),
       (\.showDeprecatedMnemonic, Settings.$showOldMnemonic),
@@ -226,12 +226,12 @@ enum ReviewPreferencesAdapter {
     get {
       var value = SubjectDetailsPreferences()
       value.primaryKanjiReadingsOnly = !Settings.showAllReadings
-      for (path, stored) in fields { value[keyPath: path] = stored.wrappedValue }
+      for (path, stored) in Self.fields { value[keyPath: path] = stored.wrappedValue }
       return value
     }
     set {
       Settings.showAllReadings = !newValue.primaryKanjiReadingsOnly
-      for (path, stored) in fields {
+      for (path, stored) in Self.fields {
         var setting = stored
         setting.wrappedValue = newValue[keyPath: path]
       }
@@ -263,6 +263,143 @@ extension InterfaceStyle {
     case .system: self = .system
     case .light: self = .light
     case .dark: self = .dark
+    }
+  }
+}
+
+/// A cold read never invokes Setting getters, which can rewrite missing/raw source values.
+@MainActor enum LegacyPreferenceImporter {
+  static func read(defaults: UserDefaults) throws -> LegacyStudyPreferences {
+    try capture(Archive(values: defaults.dictionaryRepresentation()))
+  }
+  static func sourceValues(defaults: UserDefaults) throws -> (
+    token: String, preferences: LegacyStudyPreferences
+  ) {
+    let archive = Archive(values: defaults.dictionaryRepresentation())
+    return try (archive.value(Settings.$userApiToken), capture(archive))
+  }
+  private static func capture(_ archive: Archive) throws -> LegacyStudyPreferences {
+    var result = LegacyStudyPreferences()
+    result.review.appearance = try archive.value(Settings.$interfaceStyle).nativeAppearance
+    switch try archive.value(Settings.$srsLevelIndicatorStyle) {
+    case .none: result.review.stageIndicator = .none
+    case .bubble: result.review.stageIndicator = .name
+    case .dots: result.review.stageIndicator = .dots
+    }
+    if archive.values["showSRSLevelIndicator"] != nil,
+      try archive.value(false, key: "showSRSLevelIndicator")
+    {
+      result.review.stageIndicator = .name
+    }
+    result.review.fontScale = Double(try archive.value(Settings.$fontSize))
+    for (path, field) in ReviewPreferencesAdapter.booleans {
+      result.review[keyPath: path] = try archive.value(field)
+    }
+    for (path, field) in ReviewPreferencesAdapter.sessionBooleans {
+      result.review.sessionOptions[keyPath: path] = try archive.value(field)
+    }
+    for (path, field) in ReviewPreferencesAdapter.sessionIntegers {
+      result.review.sessionOptions[keyPath: path] = try archive.value(field)
+    }
+    if try archive.value(Settings.$ankiMode) {
+      switch try archive.value(Settings.$ankiModeTaskType) {
+      case .both: result.review.sessionOptions.ankiMode = .both
+      case .readingOnly: result.review.sessionOptions.ankiMode = .reading
+      case .meaningOnly: result.review.sessionOptions.ankiMode = .meaning
+      }
+      let combined = try archive.value(Settings.$ankiModeCombineReadingMeaning)
+      result.review.sessionOptions.combinedAnki =
+        result.review.sessionOptions.ankiMode == .both && combined
+    }
+    result.review.policy.order = StudyReviewOrder(
+      rawValue: try archive.value(Settings.$reviewOrder).rawValue)!
+    result.review.policy.limitEnabled = try archive.value(Settings.$reviewItemsLimitEnabled)
+    result.review.policy.limit = try archive.value(Settings.$reviewItemsLimit)
+    result.review.policy.leechThreshold = Double(try archive.value(Settings.$leechThreshold))
+    result.lessons.batchSize = try archive.value(Settings.$lessonBatchSize)
+    result.lessons.prioritizeCurrentLevel = try archive.value(Settings.$prioritizeCurrentLevel)
+    result.lessons.apprenticeLimit = try archive.value(Settings.$apprenticeLessonsLimit)
+    result.lessons.includeKanaVocabulary = try archive.value(Settings.$showKanaOnlyVocab)
+    result.lessons.allowVocabularyExclusion = try archive.value(Settings.$allowExcludeItems)
+    result.lessons.order = try archive.value(Settings.$lessonOrder).compactMap {
+      switch $0 {
+      case .radical: SubjectKind.radical
+      case .kanji: .kanji
+      case .vocabulary: .vocabulary
+      default: nil
+      }
+    }
+    result.subjects.primaryKanjiReadingsOnly = try !archive.value(Settings.$showAllReadings)
+    for (path, field) in LegacySubjectPreferences.fields {
+      result.subjects[keyPath: path] = try archive.value(field)
+    }
+    result.fonts = try archive.value(Settings.$selectedFonts)
+    result.audio.enabled = try archive.value(Settings.$offlineAudio)
+    result.audio.cellular = try archive.value(Settings.$offlineAudioCellular)
+    result.audio.voiceIDs = try archive.value(Settings.$offlineAudioVoiceActors)
+    result.notifications = []
+    for option in NotificationPreference.allCases
+    where try archive.value(option.defaultValue, key: option.key) {
+      result.notifications.insert(option)
+    }
+    result.customAvatarEmail = try archive.value(Settings.$gravatarCustomEmail)
+    result.fallbackAvatarEmail = try archive.value(Settings.$userEmailAddress)
+    result.showCatalogAnswers = try archive.value(Settings.$subjectCatalogueViewShowAnswers)
+    result.autoSwitchKeyboard = try archive.value(Settings.$autoSwitchKeyboard)
+    result.showMinutesForNextLevelUpReview = try archive.value(
+      Settings.$showMinutesForNextLevelUpReview)
+    guard
+      let endpoint = DeveloperEndpoint.normalized(
+        try archive.value(Settings.$apiBaseUrl),
+        defaultURL: WaniKaniClient.defaultBaseURL.absoluteString),
+      let url = URL(string: endpoint)
+    else { throw StudyPreferenceImportError.invalidSource("apiBaseUrl") }
+    result.apiBaseURL = url
+    result.lessons = result.lessons.normalized
+    try result.validate()
+    return result
+  }
+  private struct Archive {
+    let values: [String: Any]
+    private func object(for key: String) throws -> Any? {
+      guard let stored = values[key] else { return nil }
+      guard let data = stored as? Data else { return stored }
+      do {
+        guard
+          let decoded = try NSKeyedUnarchiver.unarchivedObject(
+            ofClasses: [NSString.self, NSNumber.self, NSArray.self, NSSet.self], from: data)
+        else { throw StudyPreferenceImportError.invalidSource(key) }
+        return decoded
+      } catch { throw StudyPreferenceImportError.invalidSource(key) }
+    }
+    func value<Value>(_ fallback: Value, key: String) throws -> Value {
+      guard let object = try object(for: key) else { return fallback }
+      guard let result = object as? Value else {
+        throw StudyPreferenceImportError.invalidSource(key)
+      }
+      return result
+    }
+    func value<Element>(_ field: Setting<Set<Element>>) throws -> Set<Element> {
+      guard let object = try object(for: field.key) else { return field.defaultValue }
+      if let set = object as? Set<Element> { return set }
+      if let array = object as? [Element] { return Set(array) }
+      throw StudyPreferenceImportError.invalidSource(field.key)
+    }
+    func value<Value>(_ field: Setting<Value>) throws -> Value {
+      try value(field.defaultValue, key: field.key)
+    }
+    func value<Value>(_ field: EnumSetting<Value>) throws -> Value {
+      guard let result = Value(rawValue: try value(field.defaultValue.rawValue, key: field.key))
+      else { throw StudyPreferenceImportError.invalidSource(field.key) }
+      return result
+    }
+    func value<Value>(_ field: EnumArraySetting<Value>) throws -> [Value] {
+      try value(field.defaultValue, key: field.key).map {
+        guard let result = Value(rawValue: $0) else {
+          throw StudyPreferenceImportError.invalidSource(field.key)
+        }
+        return result
+      }
     }
   }
 }

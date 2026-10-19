@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-public struct StudyAudioOptions: Equatable, Sendable {
+public struct StudyAudioOptions: Codable, Equatable, Sendable {
   public var enabled = false
   public var cellular = false
   public var voiceIDs: Set<Int64> = []

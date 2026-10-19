@@ -42,19 +42,26 @@ import SwiftUI
       false
     #endif
   }
-  static func make() -> Self {
+  static func make(
+    mediaLayout: StudyMediaLayout = .native, baseURL: URL = WaniKaniClient.defaultBaseURL
+  ) -> Self {
     #if DEBUG
       if isReviewFixture { return NativeStudyFixture.make() }
     #endif
     let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
+    let media = mediaLayout.directories(nativeRoot: directory)
     return Self(
       model: StudyAppModel(
         credentials: KeychainStudyCredentialStore(service: "TsurukameNative.WaniKani"),
+        client: WaniKaniClient(baseURL: baseURL),
         legacySnapshotURL: directory.appending(path: "snapshot-v1.json"),
         openStore: { try await StudyStore.open(at: directory.appending(path: "study.store")) }),
       fonts: StudyFontLibrary(
-        catalog: .init(directory: directory.appending(path: "fonts"), bundledFonts: nil)),
+        catalog: .init(
+          directory: media.fonts,
+          bundledFonts: mediaLayout == .legacyDocuments
+            ? Bundle.main.resourceURL?.appending(path: "fonts") : nil)),
       audio: StudyAudioLibrary(
-        downloads: StudyAudioDownloads(directory: directory.appending(path: "audio"))))
+        downloads: StudyAudioDownloads(directory: media.audio)))
   }
 }

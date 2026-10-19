@@ -18,6 +18,7 @@ public struct StudyRootView: View {
   @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
   @AppStorage("native.gravatarCustomEmail") private var avatarEmail = ""
+  @AppStorage("native.avatarFallbacks") private var avatarFallbacks = Data()
   @Environment(\.displayScale) private var displayScale
   @State private var shell = StudyShellState()
   @State private var tab = StudyTab.home
@@ -176,6 +177,7 @@ public struct StudyRootView: View {
       .onChange(of: model.dataRevision) { _, _ in updateHeader() }
       .onChange(of: showSettings) { _, visible in if !visible { updateHeader() } }
       .onChange(of: avatarEmail) { _, _ in if !showSettings { updateHeader() } }
+      .onChange(of: avatarFallbacks) { _, _ in if !showSettings { updateHeader() } }
       .onChange(of: displayScale) { _, _ in if !showSettings { updateHeader() } }
       .onChange(of: model.isSyncing) { _, active in
         shell.progress = active ? Progress(totalUnitCount: -1) : nil
@@ -387,7 +389,10 @@ public struct StudyRootView: View {
     if !showSettings {
       shell.avatar =
         model.snapshot?.isSample == false
-        ? StudyAvatar.url(email: avatarEmail, pixelSize: Double(80 * displayScale)) : nil
+        ? StudyAvatar.url(
+          email: StudyAvatar.email(
+            custom: avatarEmail, fallbacks: avatarFallbacks, accountID: model.snapshot?.accountID),
+          pixelSize: Double(80 * displayScale)) : nil
     }
     guard let snapshot = model.snapshot, !snapshot.requiresAssignmentRefresh else {
       shell.learnedKanji = nil

@@ -151,6 +151,23 @@ private actor ProbeServer: WaniKaniService {
   { throw URLError(.timedOut) }
 }
 
+/// A disposable defaults domain that can terminate before the first native preference write.
+private final class ProbeDefaults: UserDefaults, @unchecked Sendable {
+  private let crashBeforeHydration: Bool
+  init?(suite: String, crashBeforeHydration: Bool) {
+    self.crashBeforeHydration = crashBeforeHydration
+    super.init(suiteName: suite)
+  }
+  override func set(_ value: Any?, forKey key: String) {
+    if crashBeforeHydration && key == "native.reviewPreferences" {
+      FileHandle.standardOutput.write(
+        Data("CHECKPOINT: activated writer before preference hydration\n".utf8))
+      _exit(86)
+    }
+    super.set(value, forKey: key)
+  }
+}
+
 @MainActor private struct ProbeCredentials: StudyCredentialStore {
   let url: URL
   let command: String
@@ -226,13 +243,20 @@ extension Probe {
     let server = ProbeServer(
       accountID: "handoff-account", profile: profile,
       offline: command != "import-handoff" && command != "rollback-handoff")
-    let bootstrap = StudyLegacyBootstrap(
-      store: store, sourceID: "ios-main", credentials: credentials, client: server
-    ) {
-      precondition(
-        command != "read-handoff" && command != "edit-handoff", "Retired source was accessed")
-      return .init(token: "synthetic-handoff-token", account: frozen)
+    let preferenceDomain = "usagi-probe-" + StudyCredentialID.forToken(url.path)
+    let defaults = ProbeDefaults(
+      suite: preferenceDomain, crashBeforeHydration: command == "activate-handoff")!
+    if command == "import-handoff" || command == "rollback-handoff" {
+      defaults.removePersistentDomain(forName: preferenceDomain)
     }
+    let bootstrap = StudyLegacyBootstrap(
+      store: store, sourceID: "ios-main", credentials: credentials,
+      preferences: .init(defaults: defaults), client: { _ in server },
+      readLegacy: {
+        precondition(
+          command != "read-handoff" && command != "edit-handoff", "Retired source was accessed")
+        return .init(token: "synthetic-handoff-token", account: frozen, preferences: .init())
+      })
     let savedCredential = try credentials.load()
     if command == "verify-rollback-handoff" {
       let catalog = try await store.catalog(accountID: "handoff-account")
@@ -269,6 +293,13 @@ extension Probe {
     }
     let result = try await bootstrap.activate()
     precondition(result.activated && result.accountID == "handoff-account")
+    precondition(
+      result.preferences == LegacyStudyPreferences() && result.mediaLayout == .legacyDocuments)
+    let preferences = try JSONDecoder().decode(
+      ReviewPreferences.self, from: defaults.data(forKey: "native.reviewPreferences")!)
+    precondition(preferences == LegacyStudyPreferences().review)
+    precondition(defaults.object(forKey: "userApiToken") == nil)
+
     let sourceAfter = try sourceBytes(frozen)
     precondition(sourceAfter == sourceBefore)
     if command == "activate-handoff" {

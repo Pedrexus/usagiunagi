@@ -1,0 +1,278 @@
+{
+  "date": "2026-10-20",
+  "baseline": "18cd7ca2f7d4def91560eb935c79612e47efc362",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Preserve effective old preferences and compatible media paths through the recoverable native handoff, without selecting the production iOS writer.",
+  "validatedFiles": {
+    ".github/workflows/apple.yml": "49cb431f00c75b80a9c5e333f601d965b72fbe822451072ea52c951ad188d3c1",
+    "App/AppTests/ReviewSessionOptionsTests.swift": "fc3b389dfc3529f8336f09dc84a74c0ea5cc5175d7ae58ed246a6d67ad45b895",
+    "App/Application/StudyAppAssembly.swift": "80cf2828190ee0110ba9a9c22b2c8d5fed0ea424583488c6ea05f775c82619a7",
+    "App/Features/Settings/LegacyPreferences.swift": "0ad254f90953e5f49ae6a71b1a9f08dd3bf9bdc626ee5fe102afd13a75112c8a",
+    "App/LegacyStudyImporter.swift": "0ff0d1d7e2ecdef795a25002cd54f3c82692697c54dbe43b1b1f4e11a79c9388",
+    "App/Settings.swift": "5010057d7ce3196da34633669ee59ce60ac5b461805edf0961fb16014d558eeb",
+    "App/Tests/LegacyStudyImporterTest.swift": "5cb9df95f967619e98f5dce71ba807697f40ed6c33558a93e47c84273e3ad2f4",
+    "App/Tests/PersistenceProbe/README.md": "0c555350688c0dbe28b409cb18c76f63de0ab1556166f5c92091359b7ddc9422",
+    "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/main.swift": "aac1430c88ae72c4464b61da018186da694b5754c54ba217f927dcadac22b07e",
+    "Docs/Architecture.md": "8133b08a61494d6c5da257f81025de80980e66b6377191f48cf606478b14274b",
+    "Docs/Development.md": "11d3d5c6df1360c18bac84580d5a4a26e70b0c4eddd32478f12c878c8cc7f172",
+    "Docs/History/task-checkpoints.md": "e54ba3c23edd7b2b57a856a982d4743204bc6cb323bc9e02dd0d15d2f37ea054",
+    "Docs/TASKS.md": "ff7bce54fba28c31f3d09fe2318988cac419b1cfc836c21edc2aa4d9934c45d7",
+    "Shared/Sources/StudyCore/LegacyStudyPreferences.swift": "7f76e1711ed7216958cb8d30bc09c43aa5ce491210b4a12165c1c067ac91d03b",
+    "Shared/Sources/StudyCore/StudyAudioLibrary.swift": "b7e29ac798a63fc128b15c3bb4b9094d2b3f8abbef94284c3b297e6be9610ee1",
+    "Shared/Sources/StudyCore/StudyAvatar.swift": "fd0f93dde2a314073757c077201fed154f6265c8c6fe21c0fb309a9f9cd2265c",
+    "Shared/Sources/StudyCore/StudyNotificationPlan.swift": "af25c6f6296e16aa1e771cf3184bac511feb94e52d107cabc05efaa7ca9ed66e",
+    "Shared/Sources/StudyPersistence/StudyLegacyBootstrap.swift": "810f0ef96fbc7ba1439903313412d41ef5e468155b6dc9d975a8a13f39c07174",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "dccee9e176ab964f9f8eff9b980d222a29dc7dc7640c2e9f2f09a85322a18f50",
+    "Shared/Tests/StudyCoreTests/LegacyStudyPreferencesTests.swift": "df6e731cc2174931a5ab8c0c03d9d3d7835d443c26d7c150aea291e855b67149",
+    "Shared/Tests/StudyPersistenceTests/LegacyBootstrapTests.swift": "4ca51b7595a872a188f9f0c4c1f412758359ad65bf355715481ea3f3615c0c96"
+  },
+  "deletedFiles": {
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30510,
+    "after": 30795,
+    "changed": [
+      {
+        "path": "App/Application/StudyAppAssembly.swift",
+        "before": 60,
+        "after": 67
+      },
+      {
+        "path": "App/Features/Settings/LegacyPreferences.swift",
+        "before": 268,
+        "after": 405
+      },
+      {
+        "path": "App/LegacyStudyImporter.swift",
+        "before": 416,
+        "after": 422
+      },
+      {
+        "path": "App/Settings.swift",
+        "before": 285,
+        "after": 264
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyAvatar.swift",
+        "before": 20,
+        "after": 27
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyLegacyBootstrap.swift",
+        "before": 202,
+        "after": 227
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 607,
+        "after": 612
+      },
+      {
+        "path": "Shared/Sources/StudyCore/LegacyStudyPreferences.swift",
+        "before": 0,
+        "after": 119
+      }
+    ]
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-preferences-shared.log",
+    "sha256": "02b43a21e0b8ba7ccb7d3fc131304507074a2fa1f1ee3709f4940aee6ee4f3ed",
+    "testFunctions": 445,
+    "byModule": {
+      "core": 215,
+      "persistence": 171,
+      "speech": 7,
+      "ui": 52
+    }
+  },
+  "sharedIOS": {
+    "log": "/private/tmp/usagi-preferences-shared-ios.log",
+    "sha256": "76d4ea33b547318822bb2ea69de7c878fea2f44beb9bfdf43cef20c9f1b5720b",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-61ddc8db2b59453ab4d917b8ba6407bd.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 445,
+      "passedTests": 445,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "hostedIOS": {
+    "log": "/private/tmp/usagi-preferences-app.log",
+    "sha256": "a4fe1393619aa2517a5346dbef35e634b0afa5874ff2e5fe2c60e176e1add2f4",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a918319d528a460dad59adf28e8228a9.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 99,
+      "passedTests": 99,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "phoneOrderUI": {
+    "log": "/private/tmp/usagi-preferences-order-phone.log",
+    "sha256": "3027cab4931b22ceebc477ba31fc6fa41c48cd75424a80ccb2a40ae082b9970b",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7f907a97e8324cd5b0fd3da80ba809b7.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "padOrderUI": {
+    "log": "/private/tmp/usagi-preferences-order-pad.log",
+    "sha256": "b02403e8dd9df5bb73b617b425dd66afb931d8fa9f514a3076c6c9c4b78d61ca",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-178b193549e748fe8b2f702a4e973e62.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "macRelease": {
+    "log": "/private/tmp/usagi-preferences-release-mac.log",
+    "sha256": "1f16b0b1272030f8c423a239424d74f99e5c0b8530654626f50c164354cfab95",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-7ce9811a3b28416591aeaffefb5d08c9.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "iosRelease": {
+    "log": "/private/tmp/usagi-preferences-release-ios.log",
+    "sha256": "7a06399ac625ad7854a594c7dc10b1c47291f50bd5e58fb7afc167d15962d972",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-292cddbf698249cbb6a090c9582242fd.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 41,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "watchDebug": {
+    "log": "/private/tmp/usagi-preferences-watch.log",
+    "sha256": "cb54c55e891dd56e98cb625c9457bd7a2bab62d426487f61840e8efc6eff9508",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-c04621dec5a04821b28a7c294a26b952.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 41,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "persistenceRestart": {
+    "log": "/private/tmp/usagi-preferences-persistence.log",
+    "sha256": "6f5de9913131a80a54a71a68df7f6c1f9a792866c92963e0a1dc6deb17963a95"
+  },
+  "handoffProcesses": {
+    "report": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7",
+    "phases": [
+      {
+        "phase": "import-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: prepared import before credential write",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7/import-handoff.log",
+        "sha256": "8226d1f89dc0f9b7692fe04fdcff3d68ecd7760ee1fc4aa4d1f4e78120f35818"
+      },
+      {
+        "phase": "save-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: saved credential before writer activation",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7/save-handoff.log",
+        "sha256": "3900df602a3a55731e898cea023a96dd95220dc2fedc610d666a50cbf1a2c7f8"
+      },
+      {
+        "phase": "activate-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: activated writer before preference hydration",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7/activate-handoff.log",
+        "sha256": "198423b500da8b0c2c4ec09a82336f59aa7a878b99740e3bcc451579968168bb"
+      },
+      {
+        "phase": "edit-handoff",
+        "status": 0,
+        "checkpoint": null,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7/edit-handoff.log",
+        "sha256": "0953d2e11387a947c549b614dae64ef3915889199dd95975f702455f146c46bb"
+      },
+      {
+        "phase": "read-handoff",
+        "status": 0,
+        "checkpoint": null,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7/read-handoff.log",
+        "sha256": "19b6c0ef68d7c8030ed6ccb9889cf9828d5a85cb2122cacb0a8448714d556ef3"
+      },
+      {
+        "phase": "rollback-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: failed import rolled back before credential write",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7/rollback-handoff.log",
+        "sha256": "5421a30864ed675c9f169118e7346fed34a20391e51c3579f02b28baf0e5e2c1"
+      },
+      {
+        "phase": "verify-rollback-handoff",
+        "status": 0,
+        "checkpoint": null,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/PreferenceHandoff.20261020-6836-1c04xz7/verify-rollback-handoff.log",
+        "sha256": "e93ede57a7aeaf96b124855cacc007d7c711c12bf6e28e66d92bddf36317c3d3"
+      }
+    ]
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-preferences-format.log",
+    "sha256": "e3772a00b077ac59b18da06e34dcefd090ec107f642cb932079a8e197529d7aa"
+  },
+  "accepted": [
+    "Cold source uses actual keyed archives and one defaults snapshot, without mutating source values.",
+    "Missing legacy SRS indicator and minimize-penalty defaults are retained.",
+    "Native values and later edits win; malformed existing native data remains intact and blocks recovery.",
+    "Activated receipt restores missing preferences without retired source, credential or network access.",
+    "Account-bound avatar fallback cannot be borrowed by another account; explicit override wins.",
+    "Compatible Documents font/audio paths retain existing bytes and names without file copies.",
+    "Configured endpoint is passed to the identity verifier; all snapshot preference values are typed and token-free."
+  ],
+  "limits": [
+    "Production iOS scene/root/writer composition remains gated; this engine is not the production cutover.",
+    "Native keyboard selection, minute timing, developer/account actions and background/watch integration remain open.",
+    "The media test proves path/cache identity, not audio decoding or physical routes.",
+    "Actual Keychain, signed-device upgrade, OS permission/delivery and physical Japanese input are unverified.",
+    "No live account, credential/token extraction, exercise or network upload was used.",
+    "No hosted Actions run is claimed; commits are local and no push/PR is authorized.",
+    "This checkpoint adds 285 production Swift lines; it is not a net LOC reduction."
+  ],
+  "references": [
+    "https://developer.apple.com/documentation/foundation/nskeyedunarchiver/unarchivedobject(ofclasses:from:)-3h32t"
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

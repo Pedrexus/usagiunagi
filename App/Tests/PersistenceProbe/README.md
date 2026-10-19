@@ -10,11 +10,11 @@ The same binary has handoff checkpoints. With a **fresh** disposable path, run t
 | --- | --- | --- |
 | `import-handoff` | 86 | Import and verified prepared binding committed; credential not saved |
 | `save-handoff` | 86 | Synthetic credential file persisted; writer not activated |
-| `activate-handoff` | 86 | Native writer choice committed before abrupt exit |
+| `activate-handoff` | 86 | Native writer choice committed; abrupt exit before first preference write |
 | `edit-handoff` | 0 | Change native work, consume the old answer and simulate logout |
 | `read-handoff` | 0 | Reopen offline without reading retired data or resurrecting old work |
 
-Exit 86 is deliberate `_exit(86)`, skipping SwiftData/Swift teardown. The latter processes cannot verify identity online, so successful recovery requires the durable binding. Credentials use a separate disposable file; that exercises commit ordering, not Apple's Keychain internals. Do not run a new writer over an existing account store.
+Exit 86 is deliberate `_exit(86)`, skipping SwiftData/Swift teardown. The latter processes cannot verify identity online, so successful recovery requires the durable binding and preference snapshot. The activation phase uses a disposable defaults subclass to exit before hydration; resumed phases verify original preferences and the absence of a token preference. The workflow requires the exact checkpoint message as well as exit 86. Credentials use a separate disposable file; that exercises commit ordering, not Apple's Keychain internals. Do not run a new writer over an existing account store.
 
 With a second fresh path, `rollback-handoff` must exit 86 after a malformed pending answer rolled back. `verify-rollback-handoff` then exits 0 only if a fresh process finds no partial catalog, account, snapshot, receipt binding, pending work or credential. The existing shared GitHub Actions job includes all phases through Mainboard. Timeouts, crashes with another exit code and unexpectedly normal exits fail the gate.
 

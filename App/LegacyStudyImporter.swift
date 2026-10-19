@@ -22,7 +22,13 @@ import WaniKaniAPI
 /// One-time compatibility boundary. Opens a consistent read-only transaction and never changes
 /// the legacy database. The caller must stop legacy writers and verify the account before cutover.
 enum LegacyStudyImporter {
+  @MainActor static func source(database: URL, defaults: UserDefaults) throws -> StudyLegacySource {
+    let values = try LegacyPreferenceImporter.sourceValues(defaults: defaults)
+    return try .init(
+      token: values.token, account: read(from: database), preferences: values.preferences)
+  }
   static func read(from url: URL) throws -> LegacyStudyExport {
+
     let db = try Reader(url)
     try db.execute("BEGIN")
     defer { try? db.execute("ROLLBACK") }

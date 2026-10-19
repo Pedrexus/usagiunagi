@@ -5,9 +5,11 @@ import SwiftData
 public struct StudyLegacySource: Sendable {
   public let token: String
   public let account: LegacyStudyExport
-  public init(token: String, account: LegacyStudyExport) {
+  public let preferences: LegacyStudyPreferences
+  public init(token: String, account: LegacyStudyExport, preferences: LegacyStudyPreferences) {
     self.token = token
     self.account = account
+    self.preferences = preferences
   }
 }
 
@@ -16,6 +18,8 @@ public struct StudyLegacyHandoff: Codable, Equatable, Sendable {
   public let sourceID: String
   public let accountID: String
   public let credentialID: String
+  public let preferences: LegacyStudyPreferences?
+  public var mediaLayout: StudyMediaLayout { preferences == nil ? .native : .legacyDocuments }
   public fileprivate(set) var activated = false
   var receiptID: String { "ios:" + accountID + ":" + sourceID }
 }
@@ -40,19 +44,24 @@ public enum StudyBootstrapError: Error, LocalizedError {
   private let store: StudyStore
   private let sourceID: String
   private let credentials: any StudyCredentialStore
-  private let client: any WaniKaniAccountReader
+  private let client: @Sendable (URL) -> any WaniKaniAccountReader
+  private let preferenceImport: StudyPreferenceImport
   private let readLegacy: @MainActor () async throws -> StudyLegacySource
   private var run: Task<StudyLegacyHandoff, any Error>?
 
   public init(
     store: StudyStore, sourceID: String, credentials: any StudyCredentialStore,
-    client: any WaniKaniAccountReader = WaniKaniClient(),
+    preferences: StudyPreferenceImport,
+    client: @escaping @Sendable (URL) -> any WaniKaniAccountReader = {
+      WaniKaniClient(baseURL: $0)
+    },
     readLegacy: @escaping @MainActor () async throws -> StudyLegacySource
   ) {
     self.store = store
     self.sourceID = sourceID
     self.credentials = credentials
     self.client = client
+    self.preferenceImport = preferences
     self.readLegacy = readLegacy
   }
 
@@ -83,8 +92,9 @@ public enum StudyBootstrapError: Error, LocalizedError {
     guard !sourceID.isEmpty else { throw StudyBootstrapError.invalidState }
     let previous = try await store.legacyHandoff(sourceID: sourceID)
     // Never inspect the retired source, network or credential to choose the writer again.
-    if let previous, previous.activated { return previous }
+    if let previous, previous.activated { return try restorePreferences(previous) }
     let source = try await readLegacy()
+    try source.preferences.validate()
     let token = source.token.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !token.isEmpty else { throw StudyBootstrapError.credentialConflict }
     let credentialID = StudyCredentialID.forToken(token)
@@ -97,27 +107,37 @@ public enum StudyBootstrapError: Error, LocalizedError {
       // The receipt already binds the exact source digest and credential to a verified account.
       prepared = try await store.prepareLegacyHandoff(
         source.account, sourceID: sourceID,
-        accountID: previous.accountID, credentialID: credentialID, identity: nil)
+        accountID: previous.accountID, credentialID: credentialID, identity: nil,
+        preferences: source.preferences)
     } else {
-      let identity = try await client.account(token: token)
+      let identity = try await client(source.preferences.apiBaseURL).account(token: token)
       try identity.requireLegacyAccount(source.account.profile)
       guard identity.profile != nil else { throw WaniKaniClient.APIError.invalidResponse }
       let current = try await readLegacy()
       guard current.token.trimmingCharacters(in: .whitespacesAndNewlines) == token,
-        try current.account.importDigest == source.account.importDigest
+        try current.account.importDigest == source.account.importDigest,
+        current.preferences == source.preferences
       else { throw StudyBootstrapError.sourceChanged }
       prepared = try await store.prepareLegacyHandoff(
         source.account, sourceID: sourceID,
-        accountID: identity.id, credentialID: credentialID, identity: identity)
+        accountID: identity.id, credentialID: credentialID, identity: identity,
+        preferences: source.preferences)
     }
-    if prepared.activated { return prepared }
+    if prepared.activated { return try restorePreferences(prepared) }
     // Recheck after actor suspension; never overwrite another account's newer credential.
     if try requireCredential(credentialID) == nil { try credentials.save(token) }
     guard try requireCredential(credentialID) != nil else {
       throw StudyBootstrapError.credentialConflict
     }
-    return try await store.activateLegacyHandoff(prepared)
+    return try restorePreferences(await store.activateLegacyHandoff(prepared))
   }
+  private func restorePreferences(_ handoff: StudyLegacyHandoff) throws -> StudyLegacyHandoff {
+    if let preferences = handoff.preferences {
+      try preferenceImport.apply(preferences, accountID: handoff.accountID)
+    }
+    return handoff
+  }
+
 }
 
 extension LegacyStudyExport {
@@ -140,15 +160,20 @@ extension StudyStore {
 
   func prepareLegacyHandoff(
     _ source: LegacyStudyExport, sourceID: String, accountID: String,
-    credentialID: String, identity: WaniKaniAccount?
+    credentialID: String, identity: WaniKaniAccount?, preferences: LegacyStudyPreferences
   ) throws -> StudyLegacyHandoff {
+    try preferences.validate()
     let handoff = StudyLegacyHandoff(
-      sourceID: sourceID, accountID: accountID, credentialID: credentialID)
+      sourceID: sourceID, accountID: accountID, credentialID: credentialID, preferences: preferences
+    )
     if let previous = try legacyHandoff(sourceID: sourceID) {
       guard previous.accountID == accountID, previous.credentialID == credentialID else {
         throw StudyBootstrapError.credentialConflict
       }
       if previous.activated { return previous }
+      if let saved = previous.preferences, saved != preferences {
+        throw StudyBootstrapError.sourceChanged
+      }
     } else {
       guard let identity, identity.id == accountID else { throw StudyBootstrapError.invalidState }
       try identity.requireLegacyAccount(source.profile)

@@ -1,6 +1,6 @@
 import Foundation
 
-public enum NotificationPreference: String, CaseIterable, Identifiable, Sendable {
+public enum NotificationPreference: String, Codable, CaseIterable, Identifiable, Sendable {
   case reviews, badge, sound
   public var id: Self { self }
   public var title: String {

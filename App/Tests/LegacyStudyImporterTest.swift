@@ -420,6 +420,15 @@ import WaniKaniAPI
   @Test(arguments: Array(9...15))
   func bootstrapVerifiesEveryActualSchemaWithoutChangingItsSource(version: Int) async throws {
     let url = try fixture(version: version)
+    let domain = "usagi-importer-prefs-" + UUID().uuidString
+    let defaults = UserDefaults(suiteName: domain)!
+    defer { defaults.removePersistentDomain(forName: domain) }
+    defaults.set(
+      try NSKeyedArchiver.archivedData(
+        withRootObject: "synthetic-import-token", requiringSecureCoding: true),
+      forKey: "userApiToken")
+    let oldDefaults = defaults.persistentDomain(forName: domain) as NSDictionary?
+
     let original = try Data(contentsOf: url)
     let source = try LegacyStudyImporter.read(from: url)
     let credentials = ImporterBootstrapCredentials()
@@ -429,12 +438,15 @@ import WaniKaniAPI
     do {
       let store = try await StudyStore.open(at: native)
       let bootstrap = StudyLegacyBootstrap(
-        store: store, sourceID: "ios-main", credentials: credentials, client: verifier
-      ) {
-        .init(token: "synthetic-import-token", account: try LegacyStudyImporter.read(from: url))
-      }
+        store: store, sourceID: "ios-main", credentials: credentials,
+        preferences: .init(defaults: defaults), client: { _ in verifier },
+        readLegacy: { try LegacyStudyImporter.source(database: url, defaults: defaults) })
       handoff = try await bootstrap.activate()
-      #expect(handoff.activated)
+      #expect(
+        handoff.activated && handoff.preferences != nil && handoff.mediaLayout == .legacyDocuments)
+      #expect(
+        (defaults.persistentDomain(forName: domain)?["userApiToken"] as? Data) == oldDefaults?[
+          "userApiToken"] as? Data)
       let answers = try await store.pendingReviews(accountID: handoff.accountID)
       let notes = try await store.materials(accountID: handoff.accountID)
       #expect(
@@ -447,10 +459,9 @@ import WaniKaniAPI
     #expect(try Data(contentsOf: url) == original)
     let reopened = try await StudyStore.open(at: native)
     let resumed = StudyLegacyBootstrap(
-      store: reopened, sourceID: "ios-main", credentials: credentials, client: verifier
-    ) {
-      throw CocoaError(.fileReadNoSuchFile)  // The activated writer never reads the retired source.
-    }
+      store: reopened, sourceID: "ios-main", credentials: credentials,
+      preferences: .init(defaults: defaults), client: { _ in verifier },
+      readLegacy: { throw CocoaError(.fileReadNoSuchFile) })
     #expect(try await resumed.activate() == handoff)
     #expect(
       try await reopened.pendingReviews(accountID: handoff.accountID).first?.submission

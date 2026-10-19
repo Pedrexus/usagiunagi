@@ -148,39 +148,18 @@ where T.RawValue: Codable {
   var projectedValue: EnumSetting<T> { self }
 }
 
-@propertyWrapper struct EnumArraySetting<A: Sequence, T: RawRepresentable>
-where
-  A.Element == T,
-  T.RawValue: Codable
-{
-  private let defaultValue: [T.RawValue]
-  private let key: String
-
-  init(_ defaultValues: A, _ key: String) {
-    defaultValue = EnumArraySetting<A, T>.toRawArray(defaultValues)
+@propertyWrapper struct EnumArraySetting<T: RawRepresentable> where T.RawValue: Codable {
+  let defaultValue: [T.RawValue]
+  let key: String
+  init(_ values: [T], _ key: String) {
+    defaultValue = values.map(\.rawValue)
     self.key = key
   }
-
-  private static func toRawArray(_ values: A) -> [T.RawValue] {
-    var ret = [T.RawValue]()
-    for value in values {
-      ret.append(value.rawValue)
-    }
-    return ret
+  var wrappedValue: [T] {
+    get { getArchiveData(defaultValue, key: key).map { T(rawValue: $0)! } }
+    set { setArchiveData(newValue.map(\.rawValue), key: key) }
   }
-
-  private static func fromRawArray(_ values: [T.RawValue]) -> A {
-    var ret = [T]()
-    for value in values {
-      ret.append(T(rawValue: value)!)
-    }
-    return ret as! A
-  }
-
-  var wrappedValue: A {
-    get { EnumArraySetting<A, T>.fromRawArray(getArchiveData(defaultValue, key: key)) }
-    set(newValue) { setArchiveData(EnumArraySetting<A, T>.toRawArray(newValue), key: key) }
-  }
+  var projectedValue: Self { self }
 }
 
 @objcMembers class Settings: NSObject {
