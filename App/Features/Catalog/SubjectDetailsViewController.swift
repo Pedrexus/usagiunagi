@@ -55,11 +55,6 @@ final class SubjectDetailsViewController: UIHostingController<SubjectDetailsPage
     controller.setup(services: services, subject: subject)
     navigationController?.pushViewController(controller, animated: true)
   }
-  func openPracticeReview(_ subject: TKMSubject) {
-    guard FeatureFlags.showSubjectDeveloperOptions else { return }
-    navigationController?.pushViewController(
-      ReviewContainerViewController.practice(services: services, subject: subject), animated: true)
-  }
   override var canBecomeFirstResponder: Bool { true }
   override var keyCommands: [UIKeyCommand]? {
     [

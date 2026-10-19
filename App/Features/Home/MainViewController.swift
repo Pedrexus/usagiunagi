@@ -56,9 +56,8 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
     let home = StoryboardScene.Main.home.instantiate()
     home.setup(services: services, delegate: self)
     homeViewController = home
-    let practice =
-      FeatureFlags.showOtherPracticeModes ? StoryboardScene.Main.practice.instantiate() : nil
-    practice?.setup(services: services)
+    let practice = StoryboardScene.Main.practice.instantiate()
+    practice.setup(services: services)
     rootView = MainShellRoot(
       state: shell, home: home, practice: practice,
       statistics: StatisticsViewController(services: services),
@@ -308,7 +307,7 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
 struct MainShellRoot: View {
   let state: StudyShellState
   let home: MainWaniKaniTabViewController
-  let practice: MainPracticeTabViewController?
+  let practice: MainPracticeTabViewController
   let statistics: StatisticsViewController
   let search: () -> Void
   let settings: () -> Void
@@ -325,10 +324,10 @@ struct MainShellRoot: View {
     StudyShellView(
       state: state, search: search, settings: settings, signIn: signIn, manageToken: manageToken
     ) {
-      StudyTabs(selection: $selection, showsPractice: practice != nil) {
+      StudyTabs(selection: $selection) {
         ShellDestination(controller: home)
       } practice: {
-        if let practice { ShellDestination(controller: practice) }
+        ShellDestination(controller: practice)
       } statistics: {
         ShellDestination(controller: statistics)
       }

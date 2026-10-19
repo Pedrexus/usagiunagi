@@ -20,7 +20,8 @@ public final class StudyAppModel {
   private var activeRequests = 0
   @ObservationIgnored private var activeCredential: String?
   @ObservationIgnored private var generation = UUID()
-  @ObservationIgnored private var restored = false
+  private var restored = false
+  @ObservationIgnored private var restoration: Task<Void, Never>?
   @ObservationIgnored private let credentials: any StudyCredentialStore
   @ObservationIgnored private let openStore: @Sendable () async throws -> StudyStore
   @ObservationIgnored private let legacySnapshotURL: URL?
@@ -70,8 +71,19 @@ public final class StudyAppModel {
     guard generation == epoch else { throw CancellationError() }
   }
   public func restore() async {
+    if let restoration {
+      await restoration.value
+      return
+    }
     guard !restored, !isSyncing else { return }
-    restored = true
+    let task = Task {
+      defer { restoration = nil }
+      await restoreAccount()
+    }
+    restoration = task
+    await task.value
+  }
+  private func restoreAccount() async {
     let epoch = generation
     do {
       try beginRequest(credential: nil)
@@ -97,12 +109,32 @@ public final class StudyAppModel {
         snapshot = restoredSnapshot
         profile = restoredProfile
       }
+      try checkRequest(epoch)
+      restored = true
     } catch {
       if generation == epoch {
         restored = false
         self.error = "Couldn't read saved statistics: \(error.localizedDescription)"
       }
     }
+  }
+  var serviceSourceReady: Bool { restored && !isDisconnecting && snapshot?.isSample != true }
+  func serviceSnapshot(lessonPreferences: StudyLessonPreferences) async throws
+    -> StudyServiceSnapshot
+  {
+    guard serviceSourceReady else { throw CancellationError() }
+    guard let snapshot else { return .init() }
+    guard let accountID = snapshot.accountID, let store = savedWorkStore else {
+      throw StudyStoreError.invalidIdentity
+    }
+    let revision = dataRevision
+    let value = try await store.availability(
+      accountID: accountID, lessonPreferences: lessonPreferences)
+    try Task.checkCancellation()
+    guard serviceSourceReady, dataRevision == revision, self.snapshot?.accountID == accountID else {
+      throw CancellationError()
+    }
+    return value.serviceSnapshot
   }
   public func reloadSavedSnapshot() async {
     guard !isSyncing, let accountID = snapshot?.accountID, let cache = savedWorkStore else {
@@ -245,6 +277,7 @@ public final class StudyAppModel {
   }
   public func disconnect() async {
     guard !isDisconnecting else { return }
+    restoration?.cancel()
     let connectingCredential = activeCredential
     generation = UUID()
     activeRequests = 0
@@ -256,6 +289,7 @@ public final class StudyAppModel {
       await cache.cancelSynchronization()
       let savedCredential = try credentials.load().map(Self.credentialID)
       try credentials.remove()
+      restored = true
       snapshot = nil
       profile = nil
       error = nil

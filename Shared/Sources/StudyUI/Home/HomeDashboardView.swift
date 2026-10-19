@@ -31,7 +31,7 @@ public struct HomeDashboardView: View {
     self.resume = resume
   }
   public var body: some View {
-    Form {
+    List {
       if let notice = data.notice {
         Text(notice).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier(
           "home.notice")
@@ -204,7 +204,7 @@ public struct HomeDashboardView: View {
         }
       }
     }
-    .formStyle(.grouped)
+    .listStyle(.inset)
     .frame(maxWidth: 960).frame(maxWidth: .infinity)
     .tint(StudyPalette.radical)
     .refreshable { await refresh() }.accessibilityIdentifier("home.dashboard")

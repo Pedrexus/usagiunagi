@@ -373,9 +373,10 @@ final class ReviewFlowTests: XCTestCase {
         XCTAssertFalse(choose.exists)
         XCTAssertFalse(
           app.descendants(matching: .any).matching(identifier: "home.forecast").firstMatch.exists)
-        XCTAssertTrue(
-          app.descendants(matching: .any).matching(identifier: "home.level.24.kanji").firstMatch
-            .exists)
+        let progress = app.descendants(matching: .any).matching(identifier: "home.level.24.kanji")
+          .firstMatch
+        scrollTo(progress, in: app)
+        XCTAssertTrue(progress.isHittable)
       } else {
         XCTAssertFalse(lessons.isEnabled)
         XCTAssertFalse(choose.isEnabled)

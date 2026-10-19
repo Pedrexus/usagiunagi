@@ -158,7 +158,6 @@ import WaniKaniAPI
     guard let subject = client.getSubject(id: id) else { return }
     delegate?.didTapSubject(subject)
   }
-  func openPractice() { if let original { delegate?.openPracticeReview(original) } }
   func showAllFields() {
     guard questions != [.meaning, .reading] else { return }
     questions = [.meaning, .reading]
@@ -269,9 +268,6 @@ import WaniKaniAPI
   @ViewBuilder private func extras(_ subject: CatalogSubject) -> some View {
     if model.showsOptions {
       SubjectExclusionControl(excluded: Binding(get: { model.excluded }, set: model.setExcluded))
-    }
-    if FeatureFlags.showSubjectDeveloperOptions {
-      Button("Open practice review", action: model.openPractice)
     }
   }
 }

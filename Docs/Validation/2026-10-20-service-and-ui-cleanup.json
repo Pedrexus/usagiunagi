@@ -1,0 +1,307 @@
+{
+  "date": "2026-10-20",
+  "baseline": "89f017a548cb771915db034e4d89f79c12a461a1",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Compact common Home list; remove developer subject-practice routes and flag variants; app-owned native restoration and notification/companion source. Production iOS writer/root is unchanged.",
+  "validatedFiles": {
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "1d966e5cd9d6b5503c3dd5fd2917f7d3d7646b4b24793f095164e14d078bab9e",
+    "App/AppTests/NativeAppAssemblyTests.swift": "c87f58235ef54fbe23e755f061029ccfdaf7ef28d9338c344eae1bbdd831b361",
+    "App/Application/StudyAppAssembly.swift": "58fea00099dbe99abc327179f2b9332d2659c27530053b9d6395f7481052f381",
+    "App/Features/Catalog/SubjectDetailsView.swift": "fda130de9acf245af3a27059b76491257d432e3dd1729ac9e6f4247b2f411890",
+    "App/Features/Catalog/SubjectDetailsViewController.swift": "aedaa997fdd96382c2c79b2ee2b8ebd6ffc9e0ec34c998db656b4f7bfbbdbd1c",
+    "App/Features/Home/MainViewController.swift": "b43c490376fe702aaf46dc6aff2e3d2417251a5ba9e68ddec38524cf2c87f196",
+    "App/Features/Lessons/LessonsViewController.swift": "b968fdfbb02a9e7b48c3f7df552bfe98bca7652ab9cbf00f87938ebc1f8da67a",
+    "App/ReviewQuickSettings/ReviewContainerViewController.swift": "e2c7b024f28802941d9fab9208b551a656f78067d745ccef3f5b4942aac71360",
+    "App/ReviewViewController.swift": "3aa16e4d3027fee21abedc2b57cab4368b1e39fd94bb2562bf5ac15023b89f9a",
+    "App/SubjectDelegate.swift": "8139205b3151bbaa4b4d5863517ad45b478c4f1e99b4e26276eb7f5698d560a2",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "6f60e1e6b095c526df4fa8e73c3aa93524f350c17665e3ad9f63c28627b71812",
+    "Docs/Architecture.md": "0c82d3051d347737b91bce72d486650a2bf8371d10c43187b62ed425e41e2019",
+    "Docs/Development.md": "b0d282d316e01aa2baeca8bd2c461a20150d058a031d1205e3fabc5f151fa31f",
+    "Docs/History/task-checkpoints.md": "90b10cc74470b6232a33419d471b0c04866151ff416c96ecb23ccee1f123cee7",
+    "Docs/TASKS.md": "53b1e8f8cbcd546cb98c4742424bd438397051d2581f559375d37a474f6f2cbf",
+    "Docs/WaniKani-Design.md": "b87d2484a75bc7aa316bed2aff1419b6f84cb8da40de9a6cb2e90802aefd61f0",
+    "Shared/Sources/StudyUI/Application/StudyAppModel.swift": "764f601767aafad9fdad98d99c6782e2530660241ddecf15e708d306670f066b",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "eb231b3ac6cc04c55c53b5d2d2a8a033d33b57867b6cddc7eaf20d09e36caacc",
+    "Shared/Sources/StudyUI/Home/HomeDashboardView.swift": "de49e235f9319d44e5bb70a8325eb94e7882d11e0ab4e925d11ef03661802cb6",
+    "Shared/Sources/StudyUI/Home/StudyTabs.swift": "1143e0bd2f26a3f845c7c89a81c6a7cae5a857d06febbab5d9fc721c6e2da133",
+    "Shared/Sources/StudyUI/Settings/StudyNotifications.swift": "cac87f0a85c25451bd6f3135821314b97a9c390671d78643812ca0c394008f23",
+    "Shared/Tests/StudyUITests/NativeServiceOwnerTests.swift": "b77985ab550d77636e67f5a6bf53dd8b4fdf88586844502a84e62cc3b6b8856a",
+    "Shared/Tests/StudyUITests/StudyAppModelTests.swift": "059b91dbc468039f7c313afb77ace8f178f4e268c4a6bc7567ce3e36d55b361a"
+  },
+  "deletedFiles": {
+    "App/FeatureFlags.swift": "ef82f3811975e503df7c2a8e09b245d73ae0cfe8408aee6adb4c8b225ba0410c"
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30868,
+    "after": 30871,
+    "changed": [
+      {
+        "path": "App/Application/StudyAppAssembly.swift",
+        "before": 67,
+        "after": 76
+      },
+      {
+        "path": "App/FeatureFlags.swift",
+        "before": 24,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Catalog/SubjectDetailsView.swift",
+        "before": 277,
+        "after": 273
+      },
+      {
+        "path": "App/Features/Catalog/SubjectDetailsViewController.swift",
+        "before": 75,
+        "after": 70
+      },
+      {
+        "path": "App/Features/Home/MainViewController.swift",
+        "before": 347,
+        "after": 346
+      },
+      {
+        "path": "App/Features/Lessons/LessonsViewController.swift",
+        "before": 131,
+        "after": 126
+      },
+      {
+        "path": "App/ReviewQuickSettings/ReviewContainerViewController.swift",
+        "before": 97,
+        "after": 86
+      },
+      {
+        "path": "App/ReviewViewController.swift",
+        "before": 772,
+        "after": 765
+      },
+      {
+        "path": "App/SubjectDelegate.swift",
+        "before": 25,
+        "after": 20
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyAppModel.swift",
+        "before": 271,
+        "after": 305
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 620,
+        "after": 592
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/StudyTabs.swift",
+        "before": 47,
+        "after": 43
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/StudyNotifications.swift",
+        "before": 255,
+        "after": 309
+      }
+    ],
+    "developerRouteAndTabLinesRemoved": 66,
+    "netIncrease": 3
+  },
+  "behavior": {
+    "sharedTabs": [
+      "Home",
+      "Practice",
+      "Stats"
+    ],
+    "homeLayout": "One native inset List on all platforms; original actions/charts and WaniKani colors retained.",
+    "nativeServiceOwner": "Assembly, independent of feature windows; no second active iOS writer.",
+    "restoration": "One app-owned coalesced task; cancelled waiter does not cancel it; logout fences old state; failure can retry.",
+    "serviceReads": "Observe account, lesson visibility and direct store changes; blocked network or OS notification I/O cannot delay companion publication.",
+    "removed": "FeatureFlags.swift, developer-only subject practice button/delegates/factory and optional-tab plumbing. Katakana practice is available in Debug and Release.",
+    "backgroundLifecycle": "No unused background wrapper retained. Actual native iOS OS scheduling/expiration and production root composition are still open."
+  },
+  "dataAudit": {
+    "activeSQLAdapters": [
+      "App/LegacyStudyImporter.swift",
+      "App/LocalCachingClient.swift",
+      "App/PendingUploadStore.swift",
+      "App/SyncStore.swift"
+    ],
+    "requiredAppleAssetIconJSONFiles": 54,
+    "standaloneSQLResources": 0,
+    "otherProductionJSONResources": [
+
+    ],
+    "retainedContracts": "Apple metadata, API encoding/decoding and isolated test payloads; legacy SQL/protobuf remains required by the active iOS writer and safe importer."
+  },
+  "releaseFixtureScans": {
+    "mac": {
+      "path": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Xcode/NativeCatalogsMac/Build/Products/Release/Tsurukame.app/Contents/MacOS/Tsurukame",
+      "sha256": "f5bd868d66cf6350a1fdcafe19942cefc5330cdc8b79021538a07e4eb169c885",
+      "fixtureMarkers": [
+
+      ]
+    },
+    "ios": {
+      "path": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Xcode/NativeCatalogsiOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Tsurukame",
+      "sha256": "3bb57424729ed042a08b41ec84cb50819432a4ceaec9dbfc2e9a272f1c39dd92",
+      "fixtureMarkers": [
+
+      ]
+    }
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-cleanup-shared.log",
+    "sha256": "32ac1ca8cd470356a0ba61999e988776bb261419ababd01fc5827d6ea4e8602e",
+    "testFunctions": 464,
+    "byModule": {
+      "core": 215,
+      "persistence": 173,
+      "speech": 7,
+      "ui": 69
+    }
+  },
+  "sharedIOS": {
+    "log": "/private/tmp/usagi-cleanup-shared-ios.log",
+    "sha256": "554a28c82793457c3c816832b57315d5e8f944210d5b64e15bacfb02e5eed9a1",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0197f2a1e15541c687800995e598d2dc.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 464,
+      "passedTests": 464,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "hostedIOS": {
+    "log": "/private/tmp/usagi-cleanup-app.log",
+    "sha256": "77c4e74db17f768e1d67d0bfef26595140125f5dd2cf628007f6d3b029b593a7",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-22420fd7fef34a13877f6f6f5be66d44.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 102,
+      "passedTests": 102,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "iphoneUI": {
+    "first": {
+      "log": "/private/tmp/usagi-cleanup-iphone-ui.log",
+      "sha256": "58700574062e35799daf49daa5f99ad1ccec2108d45b10c0bce32ff5ad8759cf",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7fedff374f524679952043efd0fdb7d0.xcresult",
+      "summary": {
+        "result": "Failed",
+        "totalTestCount": 4,
+        "passedTests": 3,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "correctedVacationRerun": {
+      "log": "/private/tmp/usagi-cleanup-iphone-vacation.log",
+      "sha256": "375da3b725a4418ee0188c02091d3277396e2f9fe589d8d4583ed2a5526145b2",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-da83b92f07b34b879e519fb395f9bd9c.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "correction": "The initial vacation assertion assumed every off-screen Form row existed. The native List creates rows lazily; use the existing scroll helper and require the progress row to be hittable. Three other cases passed initially; all four pass with this correction."
+  },
+  "ipadUI": {
+    "log": "/private/tmp/usagi-cleanup-ipad-ui.log",
+    "sha256": "43db453f1d835389d921d42d9ccf485ea487a3b7eeeac0b2aa26a43a3ae20046",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-09761797f28243b591a114dad8b31297.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 4,
+      "passedTests": 4,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "builds": {
+    "mac-release": {
+      "log": "/private/tmp/usagi-cleanup-mac-release.log",
+      "sha256": "cabe1c72d1679811a3a43314eb765e8049e42695d1655c326a941578b6d583ba",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-dfe86dc9f15f42f6afc30c505f79440e.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "ios-release": {
+      "log": "/private/tmp/usagi-cleanup-ios-release.log",
+      "sha256": "63f0932607f2d1af6d36985c3e06227e0a28974a70159012e4e0a23b22925b41",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-35ba810fe59d4dc1ab8e4a77266fa9d2.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 13
+      }
+    },
+    "watch": {
+      "log": "/private/tmp/usagi-cleanup-watch.log",
+      "sha256": "004945c82ef923ee34a23b76f7a48255c464de12a896ccce651d97e449fcc6c1",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-89b0f0368d4049c491cb90b6e5649645.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 13
+      }
+    },
+    "mac-tests-build": {
+      "log": "/private/tmp/usagi-cleanup-mac-tests-build.log",
+      "sha256": "5080da3e5cbd0ba8309f5e3cf98ff068e07f0f97e4400aca3a36899d7dc06213",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-for-testing-a6d3e1fa07494f1ea501e01787c4ec7c.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    }
+  },
+  "nativeMac": {
+    "observation": "Own synthetic app window only: compact Home, Reviews opens one Reading question; Back returns Home with Resume reviews. Final fresh lesson fixture shows the primary lesson action, sections and progress on one screen.",
+    "preview": "/Users/pedro/.codex/visualizations/2026/10/17/01a147eb-c528-7623-94bf-b15b762c13ae/usagiunagi-home.png",
+    "previewSHA256": "1d2333b5c8f1cf685d0089e00e6ccb85450be476474076077fe84f397974920c",
+    "limitation": "An extra lesson-navigation inspection lost the computer-control native pipe. The fixture process was confirmed alive, no current app crash report was found, and the exact synthetic process was closed through Mainboard. That additional action is not claimed as acceptance. Automated Mac execution remains unverified; its test target compiles."
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-native-services-format.log",
+    "sha256": "30c8f0cf3e9bc4e3e1c07918e7d07b6072c8289f43973ab94f6b44af497e97ef",
+    "changedSwiftFiles": 17,
+    "ownerAnnotationsExcluded": true
+  },
+  "unchangedEvidence": "No persistence/schema/transport changes in this checkpoint. Earlier restart, exact previous-writer upgrade and seven handoff phases remain historical evidence in the automatic-read receipt, not new runs.",
+  "remaining": [
+    "Production native iOS bootstrap/root and writer handoff before SQL/protobuf retirement.",
+    "OS background scheduling/expiration, actual paired watch transfer, notification permission/delivery and signed-device upgrades.",
+    "Native settings/endpoint/input parity, physical Japanese IME, microphone/media behavior and modern watch UI.",
+    "Full-account statistics calibration and verified remaining exam-level references; hosted Actions waits for authorized publication."
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "pushPerformed": false,
+  "pullRequestCreated": false
+}

@@ -8,14 +8,12 @@ public struct StudyTabs<Home: View, Practice: View, Statistics: View>: View {
   private let home: Home
   private let practice: Practice
   private let statistics: Statistics
-  private let showsPractice: Bool
   public init(
-    selection: Binding<StudyTab>, showsPractice: Bool = true,
+    selection: Binding<StudyTab>,
     @ViewBuilder home: () -> Home, @ViewBuilder practice: () -> Practice,
     @ViewBuilder statistics: () -> Statistics
   ) {
     _selection = selection
-    self.showsPractice = showsPractice
     self.home = home()
     self.practice = practice()
     self.statistics = statistics()
@@ -27,13 +25,11 @@ public struct StudyTabs<Home: View, Practice: View, Statistics: View>: View {
       } label: {
         Label("Home", systemImage: "house").accessibilityIdentifier("navigation.Home")
       }
-      if showsPractice {
-        Tab(value: StudyTab.practice) {
-          practice
-        } label: {
-          Label("Practice", systemImage: "square.and.pencil").accessibilityIdentifier(
-            "navigation.Practice")
-        }
+      Tab(value: StudyTab.practice) {
+        practice
+      } label: {
+        Label("Practice", systemImage: "square.and.pencil").accessibilityIdentifier(
+          "navigation.Practice")
       }
       Tab(value: StudyTab.statistics) {
         statistics

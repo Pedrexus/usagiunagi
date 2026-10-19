@@ -17,9 +17,4 @@ import WaniKaniAPI
 
 protocol SubjectDelegate: AnyObject {
   func didTapSubject(_ subject: TKMSubject)
-  func openPracticeReview(_ subject: TKMSubject)
-}
-
-extension SubjectDelegate {
-  func openPracticeReview(_: TKMSubject) {}
 }

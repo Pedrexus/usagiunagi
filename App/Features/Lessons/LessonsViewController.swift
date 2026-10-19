@@ -92,11 +92,6 @@ final class LessonsViewController: UIHostingController<LessonFlowView<LessonPage
     navigationController?.pushViewController(controller, animated: true)
   }
   func allowsCheats(forReviewItem _: ReviewItem) -> Bool { false }
-  func openPracticeReview(_ subject: TKMSubject) {
-    guard FeatureFlags.showSubjectDeveloperOptions else { return }
-    navigationController?.pushViewController(
-      ReviewContainerViewController.practice(services: services, subject: subject), animated: true)
-  }
   func allowsCustomFonts() -> Bool { false }
   func showsSuccessRate() -> Bool { false }
   func finishedAllReviewItems(_: ReviewViewController) {

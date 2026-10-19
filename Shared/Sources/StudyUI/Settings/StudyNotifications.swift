@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import StudyCore
+import StudyPersistence
 import UserNotifications
 
 public enum StudyNotificationAuthorization: Equatable, Sendable {
@@ -82,6 +83,9 @@ public struct StudyNotificationClient {
   private var intents: [NotificationPreference: UUID] = [:]
   private var source: (@MainActor () async throws -> StudyServiceSnapshot)?
   private var revision = 0
+  private var binding = UUID()
+  @ObservationIgnored private var modelRead: Task<Void, Never>?
+  @ObservationIgnored private var storeRead: Task<Void, Never>?
   @ObservationIgnored private var delivery: Task<Void, Never>?
   @ObservationIgnored private var dataRead: Task<StudyServiceSnapshot, any Error>?
   public private(set) var authorization: StudyNotificationAuthorization?
@@ -93,6 +97,53 @@ public struct StudyNotificationClient {
   ) {
     self.preferences = preferences
     self.client = client
+  }
+  deinit {
+    modelRead?.cancel()
+    storeRead?.cancel()
+  }
+  /// App-owned source; windows do not replace it or hold up companion publication on OS I/O.
+  public func observe(model: StudyAppModel, lessonSettings: StudyLessonSettings) {
+    modelRead?.cancel()
+    storeRead?.cancel()
+    dataRead?.cancel()
+    revision &+= 1
+    source = {
+      let preferences = lessonSettings.value
+      let snapshot = try await model.serviceSnapshot(lessonPreferences: preferences)
+      guard lessonSettings.value == preferences else { throw CancellationError() }
+      return snapshot
+    }
+    let id = UUID()
+    binding = id
+    modelRead = Task { [weak self] in
+      await model.restore()
+      var account: String?
+      let changes = Observations {
+        (model.serviceSourceReady, model.dataRevision, lessonSettings.value)
+      }
+      for await _ in changes {
+        guard let self, !Task.isCancelled, self.binding == id else { return }
+        let currentAccount = model.serviceSourceReady ? model.snapshot?.accountID : nil
+        if account != currentAccount {
+          account = currentAccount
+          self.storeRead?.cancel()
+          if let account, let store = model.savedWorkStore {
+            self.storeRead = Task { [weak self] in
+              for await _ in await store.changes() {
+                guard let self, !Task.isCancelled, self.binding == id else { return }
+                guard model.snapshot?.accountID == account, model.serviceSourceReady else {
+                  continue
+                }
+                self.requestRefresh()
+              }
+            }
+          }
+        }
+        guard model.serviceSourceReady else { continue }
+        self.requestRefresh()
+      }
+    }
   }
   public func enabled(_ option: NotificationPreference) -> Bool {
     _ = preferenceRevision
@@ -180,6 +231,10 @@ public struct StudyNotificationClient {
     await refresh()
   }
   public func refresh() async {
+    requestRefresh()
+    await delivery?.value
+  }
+  private func requestRefresh() {
     revision &+= 1
     let current = revision
     let load = source
@@ -194,7 +249,6 @@ public struct StudyNotificationClient {
       return value
     }
     if delivery == nil { delivery = Task { await deliver() } }
-    await delivery?.value
   }
   private func deliver() async {
     var completed: Int?

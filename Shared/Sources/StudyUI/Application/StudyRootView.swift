@@ -51,11 +51,6 @@ public struct StudyRootView: View {
     self.notice = notice
     self.notifications = notifications
   }
-  private struct NotificationReadKey: Equatable {
-    let accountID: String?
-    let revision: UUID
-    let preferences: StudyLessonPreferences
-  }
   private struct AudioReadKey: Equatable {
     let accountID: String?
     let savedAt: Date?
@@ -152,21 +147,12 @@ public struct StudyRootView: View {
       }
       .onAppear {
         updateHeader()
-        automaticSync.start()
         updateSyncActivity()
       }
       .onDisappear { automaticSync.removeScene(sceneID) }
-      .task(
-        id: NotificationReadKey(
-          accountID: model.snapshot?.accountID,
-          revision: model.dataRevision, preferences: lessonSettings.value)
-      ) {
-        await updateNotifications()
-      }
       .onChange(of: scenePhase) { _, phase in
         updateSyncActivity()
         if phase == .active { Task { await automaticSync.wake() } }
-        Task { await updateNotifications() }
       }
       .onChange(of: path) { _, values in
         updateSyncActivity()
@@ -508,20 +494,6 @@ public struct StudyRootView: View {
       incomingLinks.removeFirst()
       openIncomingLink = false
       linkMessage = error.localizedDescription
-    }
-  }
-  private func updateNotifications() async {
-    guard let notifications, model.snapshot?.isSample != true else { return }
-    await notifications.update { [model, lessonSettings] in
-      guard let snapshot = model.snapshot, !snapshot.isSample, let accountID = snapshot.accountID,
-        let store = model.savedWorkStore
-      else { return .init() }
-      let available = try await store.availability(
-        accountID: accountID, lessonPreferences: lessonSettings.value)
-      guard model.snapshot?.accountID == accountID, model.snapshot?.isSample == false else {
-        throw CancellationError()
-      }
-      return available.serviceSnapshot
     }
   }
   private var account: some View {

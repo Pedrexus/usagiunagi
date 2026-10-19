@@ -604,13 +604,6 @@ class ReviewViewController: UIViewController, UITextFieldDelegate, SubjectDelega
     if let previousSubject { didTapSubject(previousSubject) }
   }
 
-  func openPracticeReview(_ subject: TKMSubject) {
-    guard FeatureFlags.showSubjectDeveloperOptions else { return }
-    saveDetails()
-    navigationController?.pushViewController(
-      ReviewContainerViewController.practice(services: services, subject: subject), animated: true)
-  }
-
   @objc func showAllInformation() {
     if screen.phase == .details {
       subjectDetails.showAllFields()

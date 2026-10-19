@@ -19,6 +19,7 @@ import SwiftUI
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
+    companion: StudyCompanionDelivery? = nil,
     appearance: ColorScheme? = nil, notice: String? = nil, paths: AsyncStream<Bool>? = nil
   ) {
     self.model = model
@@ -34,6 +35,9 @@ import SwiftUI
       store: DefaultsStudySubjectPreferences(defaults: defaults))
     self.appearance = appearance
     self.notice = notice
+    if let companion { self.notifications.didRead = { companion.update($0) } }
+    self.notifications.observe(model: model, lessonSettings: lessonSettings)
+    automaticSync.start()
   }
   static var isReviewFixture: Bool {
     #if DEBUG
@@ -47,6 +51,11 @@ import SwiftUI
   ) -> Self {
     #if DEBUG
       if isReviewFixture { return NativeStudyFixture.make() }
+    #endif
+    #if os(iOS)
+      let companion: StudyCompanionDelivery? = WatchHelper.sharedInstance.companion
+    #else
+      let companion: StudyCompanionDelivery? = nil
     #endif
     let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
     let media = mediaLayout.directories(nativeRoot: directory)
@@ -62,6 +71,6 @@ import SwiftUI
           bundledFonts: mediaLayout == .legacyDocuments
             ? Bundle.main.resourceURL?.appending(path: "fonts") : nil)),
       audio: StudyAudioLibrary(
-        downloads: StudyAudioDownloads(directory: media.audio)))
+        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion)
   }
 }

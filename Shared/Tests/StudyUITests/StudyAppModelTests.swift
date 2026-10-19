@@ -393,4 +393,38 @@ private actor ModelRepository {
     #expect(await server.writes == 0)
   }
 
+  @Test func closingOneRestoreWaiterDoesNotCancelTheOtherWindowOrServiceOwner() async throws {
+    let cache = try await store(cached: true)
+    let gate = StudyTaskGate()
+    let opening = ServiceStoreOpening(cache, gate: gate)
+    let model = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), openStore: { try await opening.open() })
+    let first = Task { await model.restore() }
+    await gate.waitForEntry()
+    let other = Task { await model.restore() }
+    first.cancel()
+    await gate.resume()
+    await first.value
+    await other.value
+    #expect(await opening.calls == 1)
+    #expect(model.snapshot?.accountID == account && model.error == nil && !model.isSyncing)
+  }
+  @Test func disconnectDuringRestoreRejectsTheLateCachedAccount() async throws {
+    let cache = try await store(cached: true)
+    let gate = StudyTaskGate()
+    let opening = ServiceStoreOpening(cache, gate: gate)
+    let credentials = MemoryCredentials("fixture")
+    let model = StudyAppModel(credentials: credentials, openStore: { try await opening.open() })
+    let restore = Task { await model.restore() }
+    await gate.waitForEntry()
+    let disconnect = Task { await model.disconnect() }
+    for await busy in Observations({ model.isDisconnecting }) { if busy { break } }
+    await gate.resume()
+    await disconnect.value
+    await restore.value
+    #expect(model.snapshot == nil && credentials.token == nil && model.error == nil)
+    await model.restore()
+    #expect(model.snapshot == nil)
+  }
+
 }
