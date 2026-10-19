@@ -27,6 +27,7 @@
 			<string>com.davidsansome.wanikani</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>usagiunagi</string>
 				<string>tsurukame</string>
 			</array>
 		</dict>
@@ -71,5 +72,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.tsurukame.reviews</string>
+		<string>com.tsurukame.lessons</string>
+	</array>
 </dict>
 </plist>

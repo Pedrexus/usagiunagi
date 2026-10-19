@@ -15,14 +15,12 @@
 import CoreSpotlight
 import Foundation
 import Intents
-import MobileCoreServices
+import StudyCore
 import UIKit
+import UniformTypeIdentifiers
 
 class SiriShortcutHelper: NSObject {
-  enum ShortcutType: String {
-    case reviews = "com.tsurukame.reviews"
-    case lessons = "com.tsurukame.lessons"
-  }
+  typealias ShortcutType = StudyActivity
 
   public static let shared = SiriShortcutHelper()
 
@@ -46,7 +44,7 @@ class SiriShortcutHelper: NSObject {
   }
 
   private func configureType(_ type: ShortcutType, activity: NSUserActivity) {
-    let attributes = CSSearchableItemAttributeSet(itemContentType: kUTTypeItem as String)
+    let attributes = CSSearchableItemAttributeSet(contentType: .item)
     switch type {
     case .reviews:
       activity.title = "Start Wanikani Reviews"

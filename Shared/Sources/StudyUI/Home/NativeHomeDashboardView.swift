@@ -7,8 +7,18 @@ public enum StudyDestination: Hashable, Sendable {
   case lessons(automatic: Bool)
   case practice(StudyPracticeScope)
   case catalog(SubjectCatalogQuery, remaining: Bool = false)
+  case subject(Int64)
   case search, forecast
   case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings, subjectSettings
+  init(resuming session: StudySession) {
+    if let scope = session.practiceScope {
+      self = .practice(scope)
+    } else if session.items.values.first?.isLesson == true {
+      self = .lessons(automatic: true)
+    } else {
+      self = .reviews
+    }
+  }
 }
 
 struct NativeHomeDashboardView: View {
@@ -158,13 +168,7 @@ struct NativeHomeDashboardView: View {
         await load()
         return
       }
-      if let scope = session.practiceScope {
-        route(.practice(scope))
-      } else if session.items.values.first?.isLesson == true {
-        route(.lessons(automatic: true))
-      } else {
-        route(.reviews)
-      }
+      route(StudyDestination(resuming: session))
     } catch { self.error = error.localizedDescription }
   }
 }

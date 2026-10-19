@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import UIKit
 import WaniKaniAPI
 
@@ -21,9 +22,8 @@ import WaniKaniAPI
   let navigationController = NavigationController()
   private let services: TKMServices
   private let appDelegate: AppDelegate
-  private var pendingURLs: [URL] = []
+  private var pendingLinks: [StudyLink] = []
   private var pendingActivities: [String] = []
-  private var launchAction: (() -> Void)?
 
   init(services: TKMServices, appDelegate: AppDelegate) {
     self.services = services
@@ -38,7 +38,6 @@ import WaniKaniAPI
     nc.addObserver(self, selector: #selector(logout), name: .logout, object: nil)
 
     if !Settings.userApiToken.isEmpty {
-      launchAction = { [weak self] in self?.openPendingURLs() }
       setMainViewControllerAnimated(animated: false, clearUserData: false)
     } else {
       pushLoginViewController()
@@ -61,12 +60,12 @@ import WaniKaniAPI
   }
 
   func openURL(_ url: URL) {
-    guard !Settings.userApiToken.isEmpty else { return }
+    guard let link = StudyLink(url: url), link != .activate else { return }
     guard findMainWaniKaniTabViewController() != nil else {
-      pendingURLs.append(url)
+      pendingLinks.append(link)
       return
     }
-    _ = handleApplink(url: url)
+    open(link)
   }
 
   private func openPendingURLs() {
@@ -74,9 +73,9 @@ import WaniKaniAPI
     let activities = pendingActivities
     pendingActivities.removeAll()
     for type in activities { startUserActivity(type: type) }
-    let urls = pendingURLs
-    pendingURLs.removeAll()
-    for url in urls { _ = handleApplink(url: url) }
+    let links = pendingLinks
+    pendingLinks.removeAll()
+    for link in links { open(link) }
   }
 
   func startUserActivity(type userActivityType: String) {
@@ -133,8 +132,7 @@ import WaniKaniAPI
     let pushMainViewController = { () in
       let vc = StoryboardScene.Main.initialScene.instantiate()
       vc.setup(services: self.services)
-      vc.onFirstAppearance = self.launchAction
-      self.launchAction = nil
+      vc.onFirstAppearance = { [weak self] in self?.openPendingURLs() }
       self.navigationController.setViewControllers([vc], animated: animated)
     }
 
@@ -176,69 +174,31 @@ import WaniKaniAPI
     navigationController.pushViewController(vc, animated: true)
   }
 
-  func handleApplink(url: URL) -> Bool {
-    // This function handles both universal links (like https://tsurukame.app) and custom URL
-    // schemes (like tsurukame:). It ignores the scheme and the host - only looking at the path.
-    let path = URLComponents(url: url, resolvingAgainstBaseURL: false)?.path ?? ""
-    let components = path.split(separator: "/")
-
-    guard !components.isEmpty else {
-      // An empty path should just bring the app to the foreground, which has been done already.
-      return true
+  private func open(_ link: StudyLink) {
+    guard let main = findMainWaniKaniTabViewController() else { return }
+    switch link {
+    case .activate: break
+    case .reviews: main.perform(segue: StoryboardSegue.Main.startReviews)
+    case .lessons: main.perform(segue: StoryboardSegue.Main.startLessons)
+    case .subject(let reference):
+      let subject: TKMSubject?
+      switch reference {
+      case .id(let id): subject = services.localCachingClient.getSubject(id: id)
+      case .japanese(let kind, let text):
+        let type: TKMSubject.TypeEnum
+        switch kind {
+        case .radical: type = .radical
+        case .kanji: type = .kanji
+        case .vocabulary: type = .vocabulary
+        }
+        subject = services.localCachingClient.getSubject(japanese: text, type: type)
+      }
+      if let subject { openSubjectDetails(subject: subject) }
+    case .wrapUp:
+      let active = navigationController.viewControllers.compactMap {
+        $0 as? ReviewContainerViewController
+      }.first
+      active?.reviewVC.wrappingUp = true
     }
-
-    guard let mainVC = findMainWaniKaniTabViewController() else {
-      // If the main VC isn't there maybe the user isn't signed in. Don't do anything else.
-      return false
-    }
-
-    switch components[0] {
-    case "reviews":
-      mainVC.perform(segue: StoryboardSegue.Main.startReviews)
-    case "lessons":
-      mainVC.perform(segue: StoryboardSegue.Main.startLessons)
-    case "subject":
-      if components.count > 1,
-        let subjectID = Int64(components[1]),
-        let subject = services.localCachingClient.getSubject(id: subjectID)
-      {
-        openSubjectDetails(subject: subject)
-      }
-    case "radical":
-      if components.count > 1,
-        let subject = services.localCachingClient.getSubject(
-          japanese: String(components[1]),
-          type: .radical)
-      {
-        openSubjectDetails(subject: subject)
-      }
-    case "kanji":
-      if components.count > 1,
-        let subject = services.localCachingClient.getSubject(
-          japanese: String(components[1]),
-          type: .kanji)
-      {
-        openSubjectDetails(subject: subject)
-      }
-    case "vocabulary":
-      if components.count > 1,
-        let subject = services.localCachingClient.getSubject(
-          japanese: String(components[1]),
-          type: .vocabulary)
-      {
-        openSubjectDetails(subject: subject)
-      }
-    case "wrap-up":
-      if let reviewContainerVC = navigationController.viewControllers.first(where: {
-        $0 is ReviewContainerViewController
-      }) as? ReviewContainerViewController {
-        reviewContainerVC.reviewVC.wrappingUp = true
-      }
-    default:
-      print("Unsupported applink path: \(url.path)")
-      return false
-    }
-
-    return true
   }
 }

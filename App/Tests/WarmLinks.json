@@ -1,5 +1,9 @@
 {
   "runner_bundle": "com.davidsansome.wanikani.AppStoreScreenshots.xctrunner",
   "marker": "tmp/usagi-warm-link.json",
-  "routes": ["tsurukame:///reviews", "tsurukame:///lessons", "tsurukame:///subject/3864"]
+  "routes": [
+    "usagiunagi:///reviews",
+    "usagiunagi:///lessons",
+    "usagiunagi:///subject/3864"
+  ]
 }

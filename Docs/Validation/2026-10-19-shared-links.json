@@ -1,0 +1,252 @@
+{
+  "recorded_at": "2026-10-19T20:33:55+09:00",
+  "baseline": "a063cfb9fd68e6283711e0b8281b27a52a86f194",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Typed incoming-link parser and account-checked subject resolver shared by native Mac and temporary iOS host; native scene/path delivery, existing-work preservation and contextual feedback. No writer cutover, schema, grading, upload or credential change.",
+  "sources": {
+    "App/AppStoreScreenshots/MacLessonTests.swift": "d6f23a203726d24880074229ba9370b8dce9a1d04ff0a460b63baf5840d2dc39",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "ca985861fa9e69cee36d1e80d6780c7b1ab6eef80dd1ed78cd4e2ca842a235c4",
+    "App/AppStoreScreenshots/MacStatisticsTests.swift": "34073bd11defb39a428ac5b435ad28d013261f100e91db60b3eb2115e00931b3",
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "7e495e70c79764f60dfddfe25c2e9a6ac7fd189dc9663e2fc98cf89ba1bce49e",
+    "App/Configuration/macOS.plist": "8272fbc55b98a615e05097f449798ebf154e06849a105dda2d7204495d557413",
+    "App/Info.plist": "2461684c5c09a05f923f362824175a64ce510285830c90254ef40b3b7350707d",
+    "App/Platform/LegacyStudyCoordinator.swift": "75568a7d6abefb264f3d53ffd02ace2e46f2f509d36822f5d29ca75b54d3266c",
+    "App/SiriShortcutHelper.swift": "6febd1242807f7b415ce4ca740e9d28b6b0708182b2f9f9c7cb07e3a9a0e5fef",
+    "App/Tests/WarmLinks.json": "6fd92d5934c3ee88b9611d38a446be2b270d924665f0505c5eb83e31463dd82d",
+    "Shared/Sources/StudyCore/StudyLink.swift": "d34ed13421869c922793a0a26ab624f26364c1daa76bf53e0c3d5afd0ea2e63f",
+    "Shared/Sources/StudyPersistence/StudyStore+Links.swift": "1127f2fd99c5b85403db765f440fb2a5106a81e827a1faef926c21814d2c34a8",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "bd3f4222fc172802ebf7606dc3acd3d858d08e6a8c0811ade1655aabf4a61ed4",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "581c01830373332125e414a623196c506bf83f24c28660370c0dcff62cdc8d88",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "90d22044cd84e5ef21d19e4d901695cb06f5b081ee04cc59fbeac2eb7b6d3ad3",
+    "Shared/Tests/StudyCoreTests/StudyLinkTests.swift": "cbd3cd7fba33c227d92ad97869ae48bbbea8c9c5c206e0dc3b65d5ca93d8af45",
+    "Shared/Tests/StudyPersistenceTests/SubjectPresentationTests.swift": "101a8944323b9e38425144c75ef385cec8fd7cac5fc39069506eaab60f28ef9b"
+  },
+  "checks": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-links-final-shared-mac.log",
+      "sha256": "fb4d32b6ecd076b84d351d1555e602e00b3e6223c879ef29a2d22ebc6391548a",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 336,
+        "suiteCounts": [
+          14,
+          7,
+          145,
+          170
+        ]
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-links-final-shared-ios.log",
+      "sha256": "3047dfa79e8673acf90f3bc2430d52bcb5daf8cf396cfa7c5f13d0cde3ab3c1a",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5799214657f14c0c80118329e7d922da.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 336,
+        "passedTests": 336,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-links-final-hosted.log",
+      "sha256": "55d20f73a172fe6d050a3f932be43cc9352fbcff603c72fcff444785125fe1ae",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d2bf405e10b54c27a25a7f33152d0aed.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "corrected_native_modal": {
+      "log": "/private/tmp/usagi-links-modal-ui.log",
+      "sha256": "cf3a4b91fcefa0239ae8edc60d9ea0fb39d325f7c56a93a50f17fa492707fb24",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-ce22023267284e9dbdbf881184b4568f.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "native_feedback": {
+      "log": "/private/tmp/usagi-links-feedback-ui.log",
+      "sha256": "b53fc9b92f0b855c16ec5133b1354a219df91d75d36ce0b8a4553fe186621e00",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8958c712fc8b4a1fb2db360939bb9e72.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "phone_ui": {
+      "log": "/private/tmp/usagi-links-phone-final-ui.log",
+      "sha256": "2261ffa3dfd8e309442abd0fda18578809af7e6653ee3ce9541e89c3faf23195",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-49df05f143df4c889c4cf2cc64816d20.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "warm_routes_delivered": [
+        "/reviews",
+        "/lessons",
+        "/subject/3864"
+      ]
+    },
+    "pad_ui": {
+      "log": "/private/tmp/usagi-links-pad-ui.log",
+      "sha256": "11ef72fd37421a68e0f13d8de595dbf2feefc9c42d1fb368f98f5d8b68f9bab9",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-30354068d04547dbb46408c7a097498a.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "warm_routes_delivered": [
+        "/reviews",
+        "/lessons",
+        "/subject/3864"
+      ]
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-links-release-final.log",
+      "sha256": "c96b68d843ffa90c502b8307aa6e8c1e32fc208112a7ca4fa72747e41aa1f848",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-fde9eaaaa0d34a73b7a34bef17795034.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      }
+    },
+    "expanded_native_run": {
+      "log": "/private/tmp/usagi-links-final-native-ui.log",
+      "sha256": "1a617907ade0e673e233a006f986485b3c49a85b78388fddb13162439c206e03",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-971ec04cb19f49abb36e76f7139d6263.xcresult",
+      "summary": {
+        "result": "Failed",
+        "totalTestCount": 12,
+        "passedTests": 11,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          },
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      },
+      "failure": "Only the modal case failed: an isHittable assertion did not represent native sheet behavior. Replaced with an actual pointer click behind the sheet and verified it and the draft remained; corrected acceptance passes separately."
+    },
+    "ordinary_release_reopen": {
+      "log": "/private/tmp/usagi-links-final-reopen.log",
+      "sha256": "7510a453c0e7d26c27c7f92a4b17f4c43a88a83a7e994def9f97db41dc3218c6",
+      "cycles": [
+        {
+          "cycle": 1,
+          "processID": 57104,
+          "visibleMainWindows": 1
+        },
+        {
+          "cycle": 2,
+          "processID": 57122,
+          "visibleMainWindows": 1
+        }
+      ]
+    }
+  },
+  "acceptance": {
+    "shared": "336 test functions on each platform: Core 170, Persistence 145, Speech 7, app model 14; dynamic invocations are not additional functions.",
+    "native": "Fourteen distinct accepted cases across the expanded run (11 passed, 1 failed), corrected modal case (1 passed), and feedback run (3 passed, one overlapping). No green fourteen-case bundle is claimed. The expanded result retains two internal priority warnings; no checker was disabled.",
+    "mobile": "Three test functions on each device cover three cold legacy URLs, three warm preferred-scheme URLs, and one preferred-scheme URL queued before fake sign-in. Mainboard required all three warm deliveries.",
+    "release": "Build reports zero compiler/analyzer warnings and errors; ordinary sample-data OS launch/reopen each produced one visible main window."
+  },
+  "initial_failures": [
+    "Test-only Swift Testing await/Equatable misuse fixed without adding a production Error conformance.",
+    "Missing handlesExternalEvents preferences created a second Mac window; SwiftUI view preferences now target an existing scene.",
+    "Parent accessibility identifier propagated to both Open/Dismiss buttons; retained only child identifiers.",
+    "Mac test dependency scanning failed iOS compilation until all three Mac-only test files were platform-guarded.",
+    "The failed modal hittability assertion is retained in the expanded result, with corrected physical interaction tested separately."
+  ],
+  "loc": {
+    "baseline": "a063cfb9fd68e6283711e0b8281b27a52a86f194",
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29118,
+    "after": 29320,
+    "changed": [
+      {
+        "path": "App/Platform/LegacyStudyCoordinator.swift",
+        "before": 244,
+        "after": 204
+      },
+      {
+        "path": "App/SiriShortcutHelper.swift",
+        "before": 66,
+        "after": 64
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 387,
+        "after": 525
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift",
+        "before": 244,
+        "after": 248
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift",
+        "before": 526,
+        "after": 535
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyLink.swift",
+        "before": 0,
+        "after": 63
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Links.swift",
+        "before": 0,
+        "after": 30
+      }
+    ],
+    "artwork_bytes": 27986,
+    "artwork_sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "remaining": [
+    "Common sign-in/native iOS root and safe single-writer bootstrap/import/rollback; legacy SQLite remains active on iOS.",
+    "Real signed universal-link association delivery, full AppIntents/shortcut discovery and notifications/watch parity.",
+    "Physical IME/speech/media checks, full-account calibrated statistics and release signing/store publication.",
+    "Prior notes keyboard invalid-frame warning and sample-only launch-XCUITest discrepancy remain separate open investigations.",
+    "Unsubmitted text is scene-scoped, not guaranteed durable across scene destruction."
+  ],
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "boundaries": "Only isolated synthetic account tests and ordinary sample-data release launches. No live WaniKani exercises, real account/credential changes, OS permission/security changes, push or PR."
+}

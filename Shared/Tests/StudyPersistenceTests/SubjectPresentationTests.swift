@@ -65,6 +65,37 @@ struct SubjectPresentationTests {
     #expect(try await store.assignments(accountID: account) == assignments)
     #expect(try await store.pendingReviews(accountID: account).isEmpty)
   }
+  @Test func subjectLinksResolveExactKindsWithoutChangingStudyWork() async throws {
+    let store = try await store()
+    let assignments = try await store.assignments(accountID: account)
+    #expect(try await store.linkedSubjectID(.id(1), accountID: account) == 1)
+    #expect(try await store.linkedSubjectID(.japanese(.kanji, "二"), accountID: account) == 2)
+    #expect(try await store.linkedSubjectID(.japanese(.vocabulary, "二"), accountID: account) == 6)
+    #expect(try await store.assignments(accountID: account) == assignments)
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+    #expect(try await store.session(accountID: account) == nil)
+  }
+  @Test func subjectLinksRejectHiddenLockedMissingAndOtherAccountContent() async throws {
+    let store = try await store()
+    for reference in [
+      StudyLink.Subject.id(5), .id(99), .japanese(.kanji, "隠"), .japanese(.kanji, "外"),
+      .japanese(.radical, "二"),
+    ] {
+      await #expect(throws: SubjectDetailsError.self) {
+        try await store.linkedSubjectID(reference, accountID: account)
+      }
+    }
+    do {
+      _ = try await store.linkedSubjectID(.id(4), accountID: account)
+      Issue.record("A subscription-locked subject resolved")
+    } catch SubjectDetailsError.subscriptionLimit(let level) {
+      #expect(level == 3)
+    }
+    await #expect(throws: StudyStoreError.self) {
+      try await store.linkedSubjectID(.id(1), accountID: "other-account")
+    }
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+  }
   @Test func hidingThePriorLevelChangesOnlyHomePresentation() async throws {
     let store = try await store()
     #expect(try await store.homeData(accountID: account).levels.map(\.id) == [1, 2])

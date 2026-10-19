@@ -16,12 +16,17 @@ public struct StudyRootView: View {
   @StoredReviewPreferences private var preferences
   @State private var shell = StudyShellState()
   @State private var tab = StudyTab.home
-  @State private var path: StudyDestination?
+  @State private var path: [StudyDestination] = []
   @State private var settingsPath: [StudyDestination] = []
   @State private var showSettings = false
   @State private var subject: StudySubject?
   @State private var token = ""
+  @State private var incomingLinks: [StudyLink] = []
+  @State private var linkMessage: String?
+  @State private var openIncomingLink = false
+  @State private var wrapUpRequested = false
   @Environment(\.openURL) private var openURL
+  @Environment(\.appearsActive) private var appearsActive
   public init(
     model: StudyAppModel, appName: String, appearance: ColorScheme? = nil, notice: String? = nil
   ) {
@@ -35,9 +40,9 @@ public struct StudyRootView: View {
     let savedAt: Date?
   }
   public var body: some View {
-    NavigationStack {
+    NavigationStack(path: $path) {
       StudyShellView(
-        state: shell, search: { path = .search },
+        state: shell, search: { path = [.search] },
         settings: {
           settingsPath = []
           showSettings = true
@@ -55,8 +60,8 @@ public struct StudyRootView: View {
             if model.snapshot == nil {
               account
             } else {
-              NativeHomeDashboardView(model: model, active: tab == .home && path == nil) {
-                path = $0
+              NativeHomeDashboardView(model: model, active: tab == .home && path.isEmpty) {
+                path = [$0]
               }
             }
           }
@@ -72,31 +77,76 @@ public struct StudyRootView: View {
           }
         }
       }.navigationTitle(tab == .home ? "Home" : tab == .practice ? "Practice" : "Stats")
-        .navigationDestination(item: $path) { value in destination(value) }
+        .navigationDestination(for: StudyDestination.self) { value in destination(value) }
         .toolbar {
           if tab == .home { savedWorkButton }
           if tab != .practice { refreshButton }
         }
     }.preferredColorScheme(appearance ?? $preferences.colorScheme)
+      .handlesExternalEvents(preferring: appearsActive ? ["*"] : [], allowing: ["*"])
       .safeAreaInset(edge: .bottom) {
         VStack(spacing: 4) {
           if let notice {
             Text(notice).font(.caption).padding(6)
+          }
+          if let link = incomingLinks.first {
+            HStack {
+              Text(link.title)
+              Button("Open") { openIncomingLink = true }.accessibilityIdentifier("applink.open")
+                .disabled(model.isSyncing || model.snapshot?.isSample != false)
+              Button("Dismiss") {
+                if incomingLinks.first == link { incomingLinks.removeFirst() }
+                openIncomingLink = false
+              }
+              .accessibilityIdentifier("applink.dismiss")
+            }.font(.callout).padding(8)
+          }
+          if let message = linkMessage {
+            Label(message, systemImage: "link").font(.callout).padding(8).accessibilityIdentifier(
+              "applink.message")
           }
           if let error = model.error {
             Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding(8)
           }
         }
       }
+      .onOpenURL { url in if let link = StudyLink(url: url) { receive(link) } }
+      .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+        if let url = activity.webpageURL, let link = StudyLink(url: url) { receive(link) }
+      }
+      .onContinueUserActivity(StudyActivity.reviews.rawValue) { _ in receive(.reviews) }
+      .onContinueUserActivity(StudyActivity.lessons.rawValue) { _ in receive(.lessons) }
+      .task(
+        id: LinkReadKey(
+          account: model.snapshot?.accountID, busy: model.isSyncing,
+          link: incomingLinks.first,
+          canOpen: canOpenIncomingLink)
+      ) {
+        await openLinkIfReady()
+      }
       .onAppear { updateHeader() }
+      .onChange(of: path) { _, values in
+        if !values.contains(where: {
+          switch $0 {
+          case .reviews, .practice: true
+          default: false
+          }
+        }) {
+          wrapUpRequested = false
+        }
+      }
       .onChange(of: model.snapshot?.savedAt) { _, _ in updateHeader() }
       .onChange(of: model.snapshot?.pendingReviews) { _, _ in updateHeader() }
       .onChange(of: model.isSyncing) { _, active in
         shell.progress = active ? Progress(totalUnitCount: -1) : nil
       }
-      .onChange(of: model.snapshot?.accountID) { _, _ in
+      .onChange(of: model.snapshot?.accountID) { previous, current in
+        if previous != nil, previous != current { incomingLinks.removeAll() }
+        openIncomingLink = false
+        linkMessage = nil
+        wrapUpRequested = false
         audio.updateCatalog(nil)
-        path = nil
+        path = []
         settingsPath = []
         showSettings = false
         subject = nil
@@ -191,12 +241,15 @@ public struct StudyRootView: View {
         offlineAudio: { settingsPath.append(.offlineAudio) },
         supportsSessionOptions: true)
     case .forecast: NativeForecastView(model: model)
-    case .reviews, .lessons, .practice, .savedWork, .catalog, .search:
+    case .reviews, .lessons, .practice, .savedWork, .catalog, .search, .subject:
       if let snapshot = model.snapshot, !snapshot.isSample, let accountID = snapshot.accountID,
         let store = model.savedWorkStore
       {
         switch value {
-        case .reviews: NativeReviewView(store: store, accountID: accountID, finished: finished)
+        case .reviews:
+          NativeReviewView(
+            store: store, accountID: accountID, wrapUpRequested: $wrapUpRequested,
+            finished: finished)
         case .lessons(let automatic):
           NativeLessonView(
             store: store, accountID: accountID,
@@ -204,7 +257,11 @@ public struct StudyRootView: View {
             finished: finished)
         case .practice(let scope):
           NativeReviewView(
-            store: store, accountID: accountID, mode: .practice(scope), finished: finished)
+            store: store, accountID: accountID, mode: .practice(scope),
+            wrapUpRequested: $wrapUpRequested, finished: finished)
+        case .subject(let id):
+          NativeSubjectDetailsView(store: store, accountID: accountID, subjectID: id)
+            .navigationTitle("Subject")
         case .savedWork:
           SavedWorkView(
             store: store, accountID: accountID, isSyncing: model.isSyncing,
@@ -245,11 +302,11 @@ public struct StudyRootView: View {
       .disabled(model.isSyncing || model.snapshot?.isSample != false)
   }
   private var savedWorkButton: some View {
-    Button("Saved work", systemImage: "tray.and.arrow.up") { path = .savedWork }
+    Button("Saved work", systemImage: "tray.and.arrow.up") { path = [.savedWork] }
       .accessibilityIdentifier("home.savedWork")
   }
   private func finished() {
-    path = nil
+    path = []
     Task { await model.reloadSavedSnapshot() }
   }
   private func updateHeader() {
@@ -277,6 +334,87 @@ public struct StudyRootView: View {
     ) { subject = $0 }
   }
 
+  private struct LinkReadKey: Equatable {
+    let account: String?
+    let busy: Bool
+    let link: StudyLink?
+    let canOpen: Bool
+  }
+  private var canOpenIncomingLink: Bool {
+    openIncomingLink || (path.isEmpty && tab != .practice && !showSettings && subject == nil)
+  }
+  private func receive(_ link: StudyLink) {
+    guard link != .activate, incomingLinks.last != link else { return }
+    linkMessage = nil
+    incomingLinks.append(link)
+  }
+  private func navigate(to destination: StudyDestination) {
+    let existing = path.lastIndex { value in
+      if case .lessons = destination, case .lessons = value { return true }
+      return value == destination
+    }
+    if let existing {
+      path = Array(path.prefix(through: existing))
+    } else {
+      path.append(destination)
+    }
+  }
+  private func openLinkIfReady() async {
+    guard let link = incomingLinks.first, !model.isSyncing,
+      let accountID = model.snapshot?.accountID, model.snapshot?.isSample == false,
+      let store = model.savedWorkStore,
+      canOpenIncomingLink
+    else { return }
+    do {
+      let target: StudyDestination?
+      var message: String?
+      switch link {
+      case .reviews, .lessons:
+        if let saved = try await store.session(accountID: accountID) {
+          target = StudyDestination(resuming: saved.session)
+          let requested: StudyDestination = link == .reviews ? .reviews : .lessons(automatic: true)
+          if target != requested {
+            message =
+              "Resumed your saved study session. Finish or end it before starting different work."
+          }
+        } else {
+          target = link == .reviews ? .reviews : .lessons(automatic: true)
+        }
+      case .subject(let reference):
+        target = .subject(try await store.linkedSubjectID(reference, accountID: accountID))
+      case .activate, .wrapUp: target = nil
+      }
+      try Task.checkCancellation()
+      guard model.snapshot?.accountID == accountID, incomingLinks.first == link else { return }
+      incomingLinks.removeFirst()
+      openIncomingLink = false
+      showSettings = false
+      subject = nil
+      linkMessage = message
+      if let target { navigate(to: target) }
+      if link == .wrapUp {
+        let index = path.lastIndex { value in
+          switch value {
+          case .reviews, .practice: true
+          default: false
+          }
+        }
+        if let index {
+          path = Array(path.prefix(through: index))
+          wrapUpRequested = true
+        } else {
+          linkMessage = "Open a review session before wrapping it up."
+        }
+      }
+    } catch {
+      guard !Task.isCancelled, model.snapshot?.accountID == accountID,
+        incomingLinks.first == link
+      else { return }
+      incomingLinks.removeFirst()
+      openIncomingLink = false
+      linkMessage = error.localizedDescription
+    }
+  }
   private var account: some View {
     Form {
       Section("WaniKani account") {
@@ -310,13 +448,13 @@ public struct StudyRootView: View {
           model.loadSample(freeLevels: true)
           showSettings = false
           tab = .home
-          path = .catalog(.init())
+          path = [.catalog(.init())]
         }.disabled(model.isSyncing)
         Button("Use sample data") {
           model.loadSample()
           showSettings = false
           tab = .home
-          path = nil
+          path = []
         }.disabled(model.isSyncing)
         Text(
           "The level preview contains display readings and meanings for browsing. Demo progress is synthetic. Neither is uploaded or saved over your account cache."

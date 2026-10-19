@@ -27,6 +27,7 @@
 			<string>com.davidsansome.wanikani</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>usagiunagi</string>
 				<string>tsurukame</string>
 			</array>
 		</dict>
@@ -49,5 +50,10 @@
 	<string>Speak review answers instead of typing them. Audio is transcribed on this device.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.tsurukame.reviews</string>
+		<string>com.tsurukame.lessons</string>
+	</array>
 </dict>
 </plist>

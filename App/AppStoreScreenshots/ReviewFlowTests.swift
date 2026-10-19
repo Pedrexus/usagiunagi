@@ -190,7 +190,7 @@ final class ReviewFlowTests: XCTestCase {
       XCTAssertTrue(app.buttons["Coverage"].waitForExistence(timeout: 5))
       let marker = FileManager.default.temporaryDirectory.appendingPathComponent(
         "usagi-warm-link.json")
-      let request = ["id": UUID().uuidString, "url": "tsurukame:///" + route]
+      let request = ["id": UUID().uuidString, "url": "usagiunagi:///" + route]
       try JSONSerialization.data(withJSONObject: request).write(to: marker, options: .atomic)
       let open = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Open"]
         .firstMatch
@@ -213,6 +213,26 @@ final class ReviewFlowTests: XCTestCase {
     }
   }
 
+  @MainActor func testColdStudyLinkWaitsForSignInBeforeOpeningTheReview() {
+    continueAfterFailure = false
+    let app = XCUIApplication()
+    app.launchArguments = [
+      "-FASTLANE_SNAPSHOT", "YES", "LoginFlowFixture", "SingleReviewFixture",
+      "-playAudioAutomatically", "NO", "-autoSwitchKeyboard", "NO",
+    ]
+    defer { clearFixture(app) }
+    app.open(URL(string: "usagiunagi:///reviews")!)
+    let token = app.secureTextFields["login.token"]
+    XCTAssertTrue(token.waitForExistence(timeout: 10), app.debugDescription)
+    XCTAssertFalse(app.textFields["review.answer"].exists)
+    token.tap()
+    token.typeText("fixture-token")
+    app.buttons["login.submit"].tap()
+    XCTAssertTrue(
+      app.textFields["review.answer"].waitForExistence(timeout: 10), app.debugDescription)
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 5))
+  }
   @MainActor func testShellColdReviewLessonAndSubjectLinksReturnToHome() {
     continueAfterFailure = false
     let app = XCUIApplication()

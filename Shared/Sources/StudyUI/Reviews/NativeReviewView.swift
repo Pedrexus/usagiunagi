@@ -15,6 +15,7 @@ public struct NativeReviewView: View {
   private let mode: NativeStudyMode
   private var lessonSubjectIDs: [Int64]? { if case .lessons(let ids) = mode { ids } else { nil } }
   private var isPractice: Bool { if case .practice = mode { true } else { false } }
+  @Binding private var wrapUpRequested: Bool
   private let finished: () -> Void
   private var isLesson: Bool { lessonSubjectIDs != nil }
   @State private var review: NativeReviewState?
@@ -43,11 +44,12 @@ public struct NativeReviewView: View {
 
   public init(
     store: StudyStore, accountID: String, mode: NativeStudyMode = .reviews,
-    finished: @escaping () -> Void = {}
+    wrapUpRequested: Binding<Bool> = .constant(false), finished: @escaping () -> Void = {}
   ) {
     self.store = store
     self.accountID = accountID
     self.mode = mode
+    _wrapUpRequested = wrapUpRequested
     self.finished = finished
   }
 
@@ -170,6 +172,8 @@ public struct NativeReviewView: View {
     .onChange(of: screen.answer) { _, _ in rememberDraft() }
     .onChange(of: screen.phase) { _, _ in rememberDraft() }
     .onChange(of: screen.feedback) { _, _ in rememberDraft() }
+    .onChange(of: wrapUpRequested, initial: true) { _, _ in applyWrapUpRequest() }
+    .onChange(of: busy) { _, _ in applyWrapUpRequest() }
     .onChange(of: preferences) { _, _ in applyPreferences() }
     .onChange(of: lessonSettings.value.allowVocabularyExclusion) { _, _ in applyPreferences() }
     .onChange(of: fonts.selectedFiles) { _, _ in chooseFont(newSubject: false) }
@@ -328,6 +332,11 @@ public struct NativeReviewView: View {
     draftAnswer = screen.answer
     draftFeedback = screen.feedback
     draftPhase = screen.phase
+  }
+  private func applyWrapUpRequest() {
+    guard wrapUpRequested, !busy, let review else { return }
+    wrapUpRequested = false
+    if review.question != nil { change(.wrapUp) }
   }
   private func change(_ action: NativeReviewAction) {
     guard let review else { return }

@@ -6,6 +6,8 @@ For **iOS/iPadOS 27+ and native macOS 27+**, using shared Swift, SwiftUI, SwiftD
 
 Modernization is ongoing. iPhone/iPad retain the existing offline writer during migration. The account/sync model and native Home/navigation are shared Swift 6. Extra study reuses the review engine without changing scheduled progress. Native Mac lessons/Anki modes and durable resume pass synthetic UI acceptance; iOS root adoption, media/platform parity and the storage handoff remain open. See [current tasks](Docs/TASKS.md) and the [shared-code architecture](Docs/Architecture.md).
 
+Open reviews, lessons or a subject using `usagiunagi:///reviews`, `usagiunagi:///lessons` or `usagiunagi:///subject/42`. Existing `tsurukame` links remain supported. Active native study stays in place until you choose to open an incoming request.
+
 ## Repository
 
 | Folder | Purpose |
