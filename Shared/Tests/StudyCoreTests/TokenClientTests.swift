@@ -10,15 +10,23 @@ private actor TokenServer {
   let status: Int
   let message: String
   let next: String?
-  init(responseURL: URL? = nil, status: Int = 200, message: String = "", next: String? = nil) {
+  let startedAt: String?
+  init(
+    responseURL: URL? = nil, status: Int = 200, message: String = "", next: String? = nil,
+    startedAt: String? = DownloadFixture.date
+  ) {
     self.responseURL = responseURL
     self.status = status
     self.message = message
     self.next = next
+    self.startedAt = startedAt
   }
   func respond(_ request: URLRequest) throws -> (Data, HTTPURLResponse) {
     requests.append(request)
     var object: [String: Any] = DownloadFixture.user
+    var user = object["data"] as! [String: Any]
+    user["started_at"] = startedAt as Any? ?? NSNull()
+    object["data"] = user
     if status != 200 { object = ["error": message, "code": status] }
     if request.url?.lastPathComponent == "assignments" {
       object = [
@@ -38,6 +46,42 @@ private actor TokenServer {
 }
 
 struct TokenClientTests {
+  @Test(arguments: [true, false])
+  func reauthenticationAcceptsTheCachedIdentityDespiteProgressChanges(hasDate: Bool) async throws {
+    let server = TokenServer()
+    let account = try await server.client("https://fixture.example.test/v2").account(
+      token: "new-token")
+    var cached = StudyAccountProfile(username: "test")
+    cached.startedAt = hasDate ? 1_792_195_200 : nil
+    cached.level = 1
+    cached.maxLevelGranted = 3
+    cached.subscribed = false
+    try account.requireLegacyAccount(cached)
+    #expect(account.level == 12 && account.id == "fixture-user-id")
+  }
+  @Test(arguments: ["other learner", "", "Test"])
+  func reauthenticationRejectsAnotherOrUnidentifiableCachedAccount(username: String) async throws {
+    let server = TokenServer()
+    let account = try await server.client("https://fixture.example.test/v2").account(
+      token: "new-token")
+    let cached = StudyAccountProfile(username: username)
+    #expect(throws: StudySignInError.accountMismatch) { try account.requireLegacyAccount(cached) }
+  }
+  @Test(arguments: [nil, "2026-10-18T00:00:00.000000Z"] as [String?])
+  func reauthenticationRejectsMissingOrChangedSignupDate(startedAt: String?) async throws {
+    let server = TokenServer(startedAt: startedAt)
+    let account = try await server.client("https://fixture.example.test/v2").account(
+      token: "new-token")
+    var cached = StudyAccountProfile(username: "test")
+    cached.startedAt = 1_792_195_200
+    #expect(throws: StudySignInError.accountMismatch) { try account.requireLegacyAccount(cached) }
+  }
+  @Test func invalidSignupDateCannotBecomeAValidatedToken() async {
+    let server = TokenServer(startedAt: "not a timestamp")
+    await #expect(throws: WaniKaniClient.APIError.self) {
+      try await server.client("https://fixture.example.test/v2").account(token: "new-token")
+    }
+  }
   @Test(arguments: [
     "https://api.wanikani.com/v2", "http://localhost:8181/test/v2/",
     "https://fixture.example.test/api",
@@ -46,6 +90,7 @@ struct TokenClientTests {
     let server = TokenServer()
     let account = try await server.client(base).account(token: "fixture")
     #expect(account.id == "fixture-user-id" && account.username == "test")
+    #expect(account.startedAt == 1_792_195_200)
     let requests = await server.requests
     let request = try #require(requests.first)
     #expect(requests.count == 1 && request.httpMethod == "GET" && request.httpBody == nil)

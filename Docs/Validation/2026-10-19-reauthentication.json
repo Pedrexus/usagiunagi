@@ -1,0 +1,245 @@
+{
+  "recorded_at": "2026-10-19T22:23:38+09:00",
+  "baseline": "77dfa2013020d2d7fb70ac1379221e1b966dcce3",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Reject cross-account replacement tokens before writing legacy iOS credentials; use native typed encoding and Dictionary merging for existing recent-mistake iCloud archives. Preserve the existing writers, archives and native WaniKani-style UI.",
+  "sources": {
+    "App/AppStoreScreenshots/LoginFixture.swift": "c8a0f40c66bc969ef5fbf00f2d8e9602c73e0a1f76f169b7e1d62082c06d0e51",
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "01897f8c8f7132f40707fdb84651e5f072701c38521cd4aec25a6c908cfb4207",
+    "App/Features/Account/LoginViewController.swift": "f4ddbcaf30c4b46c3e46390e1b1902551217d5b462c1b457ccb517f5ab63d823",
+    "App/Features/Home/MainViewController.swift": "fbf427191cf9a644acf17296d63073d73318d7f4020a8a74a9c2f40c8843b56c",
+    "App/RecentMistakeHandler.swift": "48c7e521e60e72e3c1751d6113646099b644fdcad388e796e4f98d950605e07d",
+    "App/Tests/RecentMistakesTest.swift": "d31b27a97dbcf583a1172f9012c099e95aff8756fde2600bd94c6073f0c8e51c",
+    "Shared/Sources/StudyCore/StudySignIn.swift": "5f5551395c56dd6d7fcca2402116d7e301644dd619d2607c49dbc4b16d1eee71",
+    "Shared/Sources/StudyCore/WaniKaniClient+Study.swift": "b29b97a40e30b3a6733bb9a2146429c6d9d0993901b7cfb53b61df97ac001f5a",
+    "Shared/Tests/StudyCoreTests/TokenClientTests.swift": "47442cd9aaacc2f87b985826480840dbc868a12dd315e1c21fc4b42d818525fd"
+  },
+  "checks": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-identity-shared-mac.log",
+      "sha256": "ab5db7a9efa45ab2aa3d4b4d8178a5bf48b26f160a7e91688bd4b046cb448e55",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 350,
+        "suiteCounts": [
+          15,
+          7,
+          145,
+          183
+        ]
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-identity-shared-ios.log",
+      "sha256": "e05dbec625c177fb6b97cc7ca269abcb4e61d750c32be58dc2b07f3b59535677",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 350,
+        "passedTests": 350,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e090e66da89b4265a33ce6b28c83b632.xcresult"
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-identity-hosted.log",
+      "sha256": "9c6fa71fa368ab1bc3ab84bfb0ffff73c17f0536b260720fc1465560d498d331",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 94,
+        "passedTests": 94,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7ac6e62b929540a899ea8509228c4056.xcresult"
+    },
+    "phone_auth": {
+      "log": "/private/tmp/usagi-identity-phone-ui.log",
+      "sha256": "6d2b08f240980fe6eab8228f0f7a8db07fc3c78e4ca44bde32b88dff345dd9f0",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-4d9fa811a8d24d3aa64573d71578f2ea.xcresult"
+    },
+    "pad_auth": {
+      "log": "/private/tmp/usagi-identity-pad-ui.log",
+      "sha256": "9b56f19d1d82c6bb3c2b2d951d13724fed4ff8a24a7a8bb9eff18a3a293263bf",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d128d56b4827497f8af69f79cdf34251.xcresult"
+    },
+    "native_mac": {
+      "log": "/private/tmp/usagi-identity-mac-ui.log",
+      "sha256": "b3c359fdf000ad8f825c96aa0c0ece557e11fce89a88406d5a166846d2d019d6",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e0997cbcc9c6429f9a0f533cdef5c1e6.xcresult"
+    },
+    "release_mac": {
+      "log": "/private/tmp/usagi-identity-release-mac.log",
+      "sha256": "d8974eb684d2ebe85b8e16a8cb16e1a92e112b107438c3ee484c4885bfeb751c",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-54c5dbace5a4478ebf45ebcf7a6a830b.xcresult"
+    },
+    "release_ios": {
+      "log": "/private/tmp/usagi-identity-release-ios.log",
+      "sha256": "1158dd42f79e9a7a0cea916b1d2046d3065ffe700b20a7c99abe5305bdd21b6d",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 44,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-9ab685a02d4749fdb4dc3cb8efbd7d3f.xcresult"
+    },
+    "ordinary_release_reopen": {
+      "log": "/private/tmp/usagi-identity-release-reopen.log",
+      "sha256": "c35c94e8a4c506b16c04ec0dccf74582576d3090fc5929cd84b7eccaa1d37265",
+      "cycles": [
+        {
+          "cycle": 1,
+          "processID": 11125,
+          "visibleMainWindows": 1
+        },
+        {
+          "cycle": 2,
+          "processID": 11237,
+          "visibleMainWindows": 1
+        }
+      ]
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-identity-format.log",
+      "sha256": "a10df838704ff4a2fe4134670cc1c514c8893085211805264e3482195835587a",
+      "scope": "Nine changed Swift files; owner annotations excluded. The initial formatter exposed two existing forEach lint violations in the touched file; ordinary loops, subsequently replaced by native typed encoding, resolve them. No rule disabled."
+    }
+  },
+  "acceptance": {
+    "identity": "Legacy reconnect captures its current client and cached username/signup timestamp. Cancellation, changed client/cache identity, wrong username and mismatched/missing required signup date are rejected before Settings credential writes. User level/subscription changes are not identity changes. A valid replacement remains accepted; initial sign-in remains independent.",
+    "archive": "Nine merge functions migrated from XCTest to Swift Testing, three archive functions added (including three malformed parameter cases). Old string JSON is read, new JSON remains readable through the original dynamic reader; invalid IDs/dates are skipped, unreadable input is not rewritten, empty uploads and the sync marker remain. In-memory store overrides all exercised data writes/reads/synchronize; no real iCloud store access.",
+    "tests": "350 shared functions per platform: Core 183, persistence 145, speech 7 and app model 15. Hosted 94 functions; dynamic parameter executions are not extra functions. Phone/iPad 3 each test sign-in, errors, keyboard submit and wrong-account-then-valid reauthentication. Mac 3 test teaching/quiz pause/resume, Home/forecast/search and token errors/success within one window.",
+    "source_scope": "Phone/iPad auth checks ran against the final account-guard source, before the unrelated archive cleanup; hosted tests and iOS Release compile cover the final archive source. Mac does not compile the legacy RecentMistakeHandler. Mac UI and Release cover the shared identity DTO; no platform writer handoff or complete parity is claimed.",
+    "visual_review": "Inspected explicit app-window Home and lesson screenshots: shared vertical Home sequence, compact native lesson/review glass actions, system typography/SF Symbols and WaniKani subject colors remain. Existing native and embedded lesson Back controls have different destinations but unclear labels; a focused navigation-clarity follow-up is warranted, not another dashboard redesign."
+  },
+  "limits": [
+    "Old protobuf account caches have no stable API UUID. Signup-date-absent caches can only match username; renamed accounts fail closed. This guard does not establish the cold-start Keychain/import identity and writer cutover.",
+    "One internal thread-priority warning remains in the Mac UI bundle; app cause is unproven. Mac Release has zero retained compiler warnings; iOS Release retains 44 legacy warnings. Incremental counts do not establish a warning reduction.",
+    "App-written SQL remains required for active iOS offline/pending uploads and recoverable schema 9–15 import. JSON remains the network/cloud wire format and bundled offline reference format; diagnostic test fixtures are not production account data.",
+    "Native iOS root/platform handoff, crash/rollback migration, notifications/watch, physical speech/IME/media, full-account prediction checks, hosted CI and publication remain open. No real WaniKani exercises, credentials or iCloud operations were performed."
+  ],
+  "release": {
+    "mac": {
+      "path": ".build/Xcode/UnifiedMacRelease/Build/Products/Release/Tsurukame.app/Contents/MacOS/Tsurukame",
+      "sha256": "a590a463fe506b0c4118fe3a05f857f677fbcf795ba03815b1d2d20f461950e0",
+      "retired_and_fixture_markers_present": {
+        "WaniKaniWebClient": false,
+        "PMKFoundation": false,
+        "other-account-token": false,
+        "fixture-fred": false,
+        "--review-fixture": false
+      }
+    },
+    "ios": {
+      "path": ".build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Tsurukame",
+      "sha256": "85d839374946ad6f18d504a2e3c934d1f30ed71e0c922bc64c8d4fd7d7bdda95",
+      "retired_and_fixture_markers_present": {
+        "WaniKaniWebClient": false,
+        "PMKFoundation": false,
+        "other-account-token": false,
+        "fixture-fred": false,
+        "--review-fixture": false
+      }
+    }
+  },
+  "screenshots": [
+    {
+      "path": "/private/tmp/usagi-identity-mac-images/2F8C52CD-04B7-4B8F-996C-B68FF404029B.png",
+      "sha256": "a736650cc863c5cc71a5d9bd9fc6b42dfb6c0a5262e622f2b1c30d0e54bd0e02"
+    },
+    {
+      "path": "/private/tmp/usagi-identity-mac-images/377BC746-ADC8-4BC1-9BF4-03AE8AD1B004.png",
+      "sha256": "f516be5fb18eb1b61173ff3258e80cd52274a7939bde59bfa470600b3a0d74c7"
+    },
+    {
+      "path": "/private/tmp/usagi-identity-mac-images/AEFB8FBB-627D-45B7-B9E8-7F55463A143F.png",
+      "sha256": "242d32a5fcd470dcfad257d8bd1e4946ab3facabc4e701757a12cefaa8926d60"
+    },
+    {
+      "path": "/private/tmp/usagi-identity-mac-images/FC85E721-44B0-4E56-A551-69881013090B.png",
+      "sha256": "b856fba303e394f7d9074753b3cd2ae4617ac4eaf182ed8ba513a52a35824900"
+    }
+  ],
+  "loc": {
+    "baseline": "77dfa2013020d2d7fb70ac1379221e1b966dcce3",
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29013,
+    "after": 29025,
+    "changed": [
+      {
+        "path": "App/Features/Account/LoginViewController.swift",
+        "before": 62,
+        "after": 79
+      },
+      {
+        "path": "App/Features/Home/MainViewController.swift",
+        "before": 363,
+        "after": 364
+      },
+      {
+        "path": "App/RecentMistakeHandler.swift",
+        "before": 100,
+        "after": 72
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudySignIn.swift",
+        "before": 76,
+        "after": 81
+      },
+      {
+        "path": "Shared/Sources/StudyCore/WaniKaniClient+Study.swift",
+        "before": 230,
+        "after": 247
+      }
+    ],
+    "artwork_bytes": 27986,
+    "artwork_sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "delivery": "Commit only to the existing app branch. No PR or push. Mainboard sources/task selectors unchanged; AIZK tools unavailable, so this receipt and current task/architecture docs retain the development record."
+}

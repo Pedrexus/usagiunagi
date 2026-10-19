@@ -5,6 +5,22 @@ public struct WaniKaniAccount: Sendable {
   public let username: String
   public let level: Int
   public let onVacation: Bool
+  public let startedAt: Int64?
+  public init(id: String, username: String, level: Int, onVacation: Bool, startedAt: Int64? = nil) {
+    self.id = id
+    self.username = username
+    self.level = level
+    self.onVacation = onVacation
+    self.startedAt = startedAt
+  }
+  /// Older caches have no API UUID. Match all identity metadata they actually retain.
+  public func requireLegacyAccount(_ expected: StudyAccountProfile) throws(StudySignInError) {
+    guard !expected.username.isEmpty, username == expected.username,
+      expected.startedAt == nil || startedAt == expected.startedAt
+    else {
+      throw .accountMismatch
+    }
+  }
 }
 
 public struct WaniKaniMaterial: Codable, Equatable, Sendable {
@@ -69,7 +85,8 @@ extension WaniKaniClient {
     let user = try await accountData(token: token)
     return .init(
       id: user.id, username: user.username, level: user.level,
-      onVacation: user.currentVacationStartedAt != nil)
+      onVacation: user.currentVacationStartedAt != nil, startedAt: try user.startedAt.map(timestamp)
+    )
   }
 
   func accountData(token: String) async throws -> AccountData {

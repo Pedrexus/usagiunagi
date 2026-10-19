@@ -294,7 +294,8 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
     }
 
     let vc = LoginViewController(
-      forcedEmail: Settings.userEmailAddress.isEmpty ? nil : Settings.userEmailAddress)
+      forcedEmail: Settings.userEmailAddress.isEmpty ? nil : Settings.userEmailAddress,
+      reauthenticating: services)
     vc.delegate = self
     navigationController?.pushViewController(vc, animated: true)
   }

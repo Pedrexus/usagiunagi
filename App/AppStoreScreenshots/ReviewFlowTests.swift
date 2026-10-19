@@ -44,6 +44,14 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertFalse(app.buttons["login.method"].exists)
     let token = app.secureTextFields["login.token"]
     token.tap()
+    token.typeText("other-account-token")
+    app.buttons["login.submit"].tap()
+    let mismatch = app.staticTexts["login.error"]
+    XCTAssertTrue(mismatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(mismatch.label.contains("does not match the saved WaniKani account"))
+    XCTAssertTrue(app.staticTexts["login.account"].exists)
+    token.tap()
+    token.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 40))
     token.typeText("fixture-token")
     app.buttons["login.submit"].tap()
     XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))

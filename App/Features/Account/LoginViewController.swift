@@ -26,13 +26,25 @@ protocol LoginViewControllerDelegate: AnyObject { func loginComplete() }
 final class LoginViewController: UIHostingController<StudySignInView?> {
   weak var delegate: LoginViewControllerDelegate?
 
-  init(forcedEmail: String? = nil) {
+  init(forcedEmail: String? = nil, reauthenticating services: TKMServices? = nil) {
     super.init(rootView: nil)
-    let model = StudySignIn(forcedEmail: forcedEmail, authenticate: Self.authenticate)
-    rootView = StudySignInView(appName: AppIdentity.name, model: model) { [weak self] token in
-      guard let self else { return }
+    let client = services?.localCachingClient
+    let expected = Self.identity(client)
+    let model = StudySignIn(forcedEmail: forcedEmail) { token in
+      let account = try await Self.account(token)
+      try Task.checkCancellation()
+      if let services {
+        guard let client, services.localCachingClient === client, let expected,
+          let current = Self.identity(client), current.username == expected.username,
+          current.startedAt == expected.startedAt
+        else { throw StudySignInError.accountChanged }
+        try account.requireLegacyAccount(expected)
+      }
       Settings.userApiToken = token
       Settings.userEmailAddress = forcedEmail ?? ""
+    }
+    rootView = StudySignInView(appName: AppIdentity.name, model: model) { [weak self] _ in
+      guard let self else { return }
       self.delegate?.loginComplete()
     }
   }
@@ -44,19 +56,24 @@ final class LoginViewController: UIHostingController<StudySignInView?> {
     navigationController?.isNavigationBarHidden = true
   }
 
-  @MainActor private static func authenticate(_ token: String) async throws {
+  private static func identity(_ client: LocalCachingClient?) -> StudyAccountProfile? {
+    guard let user = client?.getUserInfo() else { return nil }
+    var profile = StudyAccountProfile(username: user.username)
+    profile.startedAt = user.hasStartedAt ? Int64(user.startedAt) : nil
+    return profile
+  }
+  @MainActor private static func account(_ token: String) async throws -> WaniKaniAccount {
     #if DEBUG
       if Screenshotter.isActive,
         ["LoginFlowFixture", "ReauthFlowFixture"].contains(
           where: ProcessInfo.processInfo.arguments.contains)
       {
-        try await LoginFixture.authenticate(token)
-        return
+        return try await LoginFixture.account(token)
       }
     #endif
     guard let endpoint = URL(string: Settings.apiBaseUrl) else {
       throw WaniKaniClient.APIError.invalidResponse
     }
-    _ = try await WaniKaniClient(baseURL: endpoint).account(token: token)
+    return try await WaniKaniClient(baseURL: endpoint).account(token: token)
   }
 }

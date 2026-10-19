@@ -31,11 +31,14 @@
   }
 
   @MainActor enum LoginFixture {
-    static func authenticate(_ token: String) async throws {
+    static func account(_ token: String) async throws -> WaniKaniAccount {
       try await Task.sleep(for: .milliseconds(400))
       switch token {
       case "hibernating": throw StudySignInError.hibernating
-      case "fixture-token": return
+      case "fixture-token":
+        return .init(id: "fixture-fred", username: "Fred", level: 24, onVacation: false)
+      case "other-account-token":
+        return .init(id: "fixture-other", username: "Other learner", level: 24, onVacation: false)
       default: throw StudySignInError.message("The fixture credentials were rejected.")
       }
     }
