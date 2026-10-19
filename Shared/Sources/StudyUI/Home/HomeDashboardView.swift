@@ -15,6 +15,7 @@ public struct HomeDashboardView: View {
   let action: (HomeAction) -> Void
   let refresh: () async -> Void
   let resume: (() -> Void)?
+  @Environment(\.isEnabled) private var isEnabled
   private let stageColors: [Color] = [
     StudyPalette.kanji, StudyPalette.vocabulary,
     Color(red: 47.0 / 255, green: 85.0 / 255, blue: 181.0 / 255),
@@ -30,7 +31,7 @@ public struct HomeDashboardView: View {
     self.resume = resume
   }
   public var body: some View {
-    List {
+    Form {
       if let notice = data.notice {
         Text(notice).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier(
           "home.notice")
@@ -203,11 +204,8 @@ public struct HomeDashboardView: View {
         }
       }
     }
-    #if os(iOS)
-      .listStyle(.insetGrouped)
-    #else
-      .listStyle(.inset).frame(maxWidth: 960).frame(maxWidth: .infinity)
-    #endif
+    .formStyle(.grouped)
+    .frame(maxWidth: 960).frame(maxWidth: .infinity)
     .tint(StudyPalette.radical)
     .refreshable { await refresh() }.accessibilityIdentifier("home.dashboard")
   }
@@ -244,23 +242,21 @@ public struct HomeDashboardView: View {
   private var lessonCard: some View {
     studyButton(
       "Lessons", count: data.lessons, symbol: "book.closed", color: StudyPalette.kanji,
-      action: .lessons
+      action: .lessons, disabled: lessonsUnavailable
     )
-    .disabled(lessonsUnavailable)
     .accessibilityLabel("Lessons, \(data.lessonsDisabledMessage ?? "\(data.lessons) available")")
     .accessibilityIdentifier("home.lessons")
   }
   private var reviewCard: some View {
     studyButton(
       "Reviews", count: data.reviews, symbol: "rectangle.stack", color: StudyPalette.radical,
-      action: .reviews
+      action: .reviews, disabled: data.reviews == 0 || data.studyUnavailableMessage != nil
     )
-    .disabled(data.reviews == 0 || data.studyUnavailableMessage != nil)
     .accessibilityLabel("Start reviews, \(data.reviews) ready").accessibilityIdentifier(
       "home.reviews")
   }
   private func studyButton(
-    _ title: String, count: Int, symbol: String, color: Color, action: HomeAction
+    _ title: String, count: Int, symbol: String, color: Color, action: HomeAction, disabled: Bool
   ) -> some View {
     Button {
       self.action(action)
@@ -269,7 +265,8 @@ public struct HomeDashboardView: View {
         Label(title, systemImage: symbol).font(.headline)
         Spacer()
         Text(count.formatted()).font(.title2.bold()).monospacedDigit()
-      }.frame(maxWidth: .infinity).padding(.vertical, 8)
-    }.buttonStyle(.glassProminent).controlSize(.large).tint(color)
+      }.foregroundStyle(isEnabled && !disabled ? Color.white : Color.primary)
+        .frame(maxWidth: .infinity).padding(.vertical, 8)
+    }.buttonStyle(.glassProminent).controlSize(.large).tint(color).disabled(disabled)
   }
 }

@@ -1,0 +1,213 @@
+{
+  "date": "2026-10-20",
+  "baseline": "f1624bccc0ece1ecd66061e6fe39b0a666acd02e",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Typed synthetic iOS subject fixtures, six equivalent legacy database collection reads, one unused note helper and a common native grouped SwiftUI Home. No account, schema, query, grading, outbox, API token, transport or curriculum-format change.",
+  "sourceHashes": {
+    "App/AppStoreScreenshots/Screenshotter.swift": "22b24d76c30140654d1188de6af7467f53f73387c3982dfff033da00b07ba050",
+    "App/LocalCachingClient.swift": "5d43796204d47063bacf69f67e5402f78ab65dec79f3aa3bcd119e72dd1dff99",
+    "Shared/Sources/StudyUI/Home/HomeDashboardView.swift": "642467bfd0a3c07df4668f0c5b577e3112c7932aed262e4c02de6593001fdc94"
+  },
+  "lineCounts": {
+    "productionBefore": 29340,
+    "productionAfter": 29303,
+    "productionReduction": 37,
+    "fixtureBefore": 1611,
+    "fixtureAfter": 865,
+    "fixtureReduction": 746,
+    "totalSwiftReduction": 783,
+    "productionScope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift."
+  },
+  "fixtureEquivalence": {
+    "count": 60,
+    "method": "Evaluate original Swift multiline literals, decode original protobuf text, construct final formatted Swift values, compare SwiftProtobuf equality and serializedData bytes. Includes optional-field presence and ordered repeated fields. Temporary verifier compiled with the existing generated schema and local SwiftProtobuf product through Mainboard; no temporary conversion tool added to the app.",
+    "log": "/private/tmp/usagi-fixture-equivalence.log",
+    "sha256": "28d7941bfe6001ebbfbc688f1328057f9f133bbd67b74a042df697ca97d231ec"
+  },
+  "checks": {
+    "sharedMac": {
+      "log": "/private/tmp/usagi-cleanup-final-shared-mac.log",
+      "sha256": "e807cbaa59ab995ff4b9260d9d7606ba7de8b17888aa219bfca3e4036d50afff",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 377,
+        "suiteCounts": [
+          34,
+          7,
+          145,
+          191
+        ]
+      }
+    },
+    "sharedIOS": {
+      "log": "/private/tmp/usagi-cleanup-final-shared-ios.log",
+      "sha256": "bd320a0d106f54dcc44e5606c5333be706b805a4eed63717b08646c4a10a2c69",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 377,
+        "passedTests": 377,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-470151be66c14e4eb5051c4105734a42.xcresult"
+    },
+    "nativeMac": {
+      "log": "/private/tmp/usagi-cleanup-final-native-ui.log",
+      "sha256": "f0175e8a994aca2a2f696787e2fbef31791692f935b840a6a4df550e63d6910a",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-2513fd7f79da4b928f7af6e4a22cab8f.xcresult"
+    },
+    "phoneGroupedGate": {
+      "log": "/private/tmp/usagi-cleanup-phone-ui.log",
+      "sha256": "97132483b9e97731fa13c9f11f2bf805fe05e1889a8235d9356502605e3f4ff8",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 7,
+        "passedTests": 7,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e22b5915fe8d4e9f9b8e96993221e866.xcresult"
+    },
+    "tabletGroupedGate": {
+      "log": "/private/tmp/usagi-cleanup-pad-ui.log",
+      "sha256": "1a9ffbd840055ea895199a78912ed8a7903594a960e54bce37c7d321b3d71c88",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 7,
+        "passedTests": 7,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-09b74585f5a44d6eaa4925e0f3f28b02.xcresult"
+    },
+    "phoneFinalHome": {
+      "log": "/private/tmp/usagi-cleanup-final-phone-ui.log",
+      "sha256": "e3f228360133e4660be79ced71f8ea6226223b869febb10ccc30114c65492b19",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a472ea64d96849f5850ee0fcac6a5fe6.xcresult"
+    },
+    "tabletFinalHome": {
+      "log": "/private/tmp/usagi-cleanup-final-pad-ui.log",
+      "sha256": "6a9aab9467b9ac3d0eba1b2764966b6d773d8bb495b0d0c2a3659d72466929f8",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a0c5452c5b094f009744d2e7ebd66246.xcresult"
+    },
+    "hostedIOS": {
+      "log": "/private/tmp/usagi-cleanup-hosted.log",
+      "sha256": "a370b0251b82b1a26bc7485b90035bf98980f325758be303ac1645e70b740053",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6c1d6e2608674b04b17b0dee791e5b1c.xcresult"
+    },
+    "releaseMac": {
+      "log": "/private/tmp/usagi-cleanup-final-release-mac.log",
+      "sha256": "b23a3dd9b9cf0b157e10cdaa2819207b87085703ea4c6b52759d7ade30e19b10",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-02cb2dd61009416a97a9114a7cc2f3ee.xcresult"
+    },
+    "releaseIOS": {
+      "log": "/private/tmp/usagi-cleanup-final-release-ios.log",
+      "sha256": "5f9e8d271937edd455365fdd46bdea4b28d2af74ed9393d1ffdb8daf26810b72",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 42,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-b7d830eb0cfe4b0587541ae05c5fa7ea.xcresult"
+    }
+  },
+  "screenshots": [
+    {
+      "path": "/private/tmp/usagi-20261020-cleanup-verified-native-images/3D871946-F154-4887-9668-E7F6929BAC54.png",
+      "sha256": "d4f4f2a687ddba4a942831f6bab24492fc4bbe41fcf1391dd2bfb10349cf901d"
+    },
+    {
+      "path": "/private/tmp/usagi-20261020-cleanup-verified-native-images/6E1DB5C5-0C8A-49E0-8853-DFF3B9C355AE.png",
+      "sha256": "4bf9610350a233f8caa47e7a582f8b238aca9439536ad8e13bc76e0956c6ab14"
+    },
+    {
+      "path": "/private/tmp/usagi-20261020-cleanup-verified-native-images/98138E9B-6A1D-4D22-89CF-46220508E4A9.png",
+      "sha256": "a0fef5b4b755e21c89b0d8138b355012f16c227cff43c6e540a2d2f250a98be9"
+    },
+    {
+      "path": "/private/tmp/usagi-20261020-cleanup-verified-native-images/C7402EBE-66D5-4847-A6EE-79E6867DB3CE.png",
+      "sha256": "2946fc817f030ecce5f8fcaa2e7f2a76d5c7b9564948287666ee75b2951c9a4c"
+    }
+  ],
+  "contrastRegression": {
+    "before": "/private/tmp/usagi-20261020-cleanup-phone-images/9230FDE5-AA4A-4395-9F06-CB47F9C7E3B5.png",
+    "after": "/private/tmp/usagi-20261020-cleanup-verified-phone-images/636AB0E9-8C63-4BB4-AC91-B3964E82AD24.png",
+    "result": "Visually verified: blue inherited symbols were low contrast/invisible on colored buttons; the explicit white foreground renders active lesson/review symbols clearly; disabled buttons use the system primary foreground and retain native disabled dimming."
+  },
+  "testScope": "The full seven-case phone/tablet grouped-layout gates passed before the final presentation-only foreground-contrast corrections. Final Home/rotation cases rerun the corrected source on each simulator; final native, shared and Release evidence uses the corrected source. The 93 hosted integration functions preceded the final disabled-label presentation refinement; all covered legacy storage, archive, account and media source files were unchanged. Fixture values, queries and grading logic did not change between these runs.",
+  "disabledContrastAfter": "/private/tmp/usagi-20261020-cleanup-verified-native-images/6E1DB5C5-0C8A-49E0-8853-DFF3B9C355AE.png",
+  "visualReview": "Inspected light and dark app-window Home screenshots: grouped native section surfaces, centered readable wide layout, Lessons/Reviews remain first, forecast and extra study retain their order, WaniKani subject colors and existing glass controls remain. Phone/tablet gate includes rotation, empty/limited/vacation queues and existing study/catalog/Coverage routes.",
+  "officialReference": "https://developer.apple.com/documentation/swiftui/groupedformstyle",
+  "limits": [
+    "This is a cleanup checkpoint, not completion of the full SwiftUI/native iOS migration.",
+    "Live iOS SQLite and read-only schema 9–15 import remain required. No uncertain submissions were replayed; all UI exercises use synthetic fixtures.",
+    "JSON remains the WaniKani wire and bundled curriculum/preview format; response fixtures remain for protocol/recovery acceptance.",
+    "Native automatic upload of confirmed saved work is still open; the current native app requires explicit Saved work sync.",
+    "Physical-device speech, IME, notifications, paired-watch delivery, full-account statistics and hosted Actions remain separate gates.",
+    "Mac UI results retain an internal thread-priority runtime warning. Release diagnostics are incremental build evidence, not a whole-project warning audit."
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "unrelatedRootAndMainboardChanges": "Untouched; no parent repository commit, new task alias, pull request or push."
+}

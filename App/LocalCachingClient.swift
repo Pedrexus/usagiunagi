@@ -459,14 +459,6 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return updateStudyMaterial(studyMaterials)
   }
 
-  func makeMeaningNote(
-    studyMaterials: TKMStudyMaterials,
-    note: String
-  ) -> String {
-    let excluded = isExcluded(studyMaterials: studyMaterials)
-    return excluded ? note.appending(excludedText) : note
-  }
-
   func getExcludedAssignments() -> [TKMAssignment] {
     getAllAssignments().filter { assignment in
       if assignment.subjectType != .vocabulary {
@@ -522,11 +514,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   }
 
   private func getAllAssignments(transaction db: FMDatabase) -> [TKMAssignment] {
-    var ret = [TKMAssignment]()
-    for cursor in db.query("SELECT pb FROM assignments") {
-      ret.append(cursor.proto(forColumnIndex: 0)!)
-    }
-    return ret
+    db.query("SELECT pb FROM assignments").map { $0.proto(forColumnIndex: 0)! }
   }
 
   private func getAllRecentMistakeAssignments(transaction db: FMDatabase) -> [TKMAssignment] {
@@ -612,15 +600,11 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       return [TKMProgress]()
     }
 
-    var ret = [TKMProgress]()
     var query = "SELECT pb FROM pending_progress"
     if let limit = limit {
       query += " LIMIT \(limit)"
     }
-    for cursor in db.query(query) {
-      ret.append(cursor.proto(forColumnIndex: 0)!)
-    }
-    return ret
+    return db.query(query).map { $0.proto(forColumnIndex: 0)! }
   }
 
   func getStudyMaterial(subjectId: Int64) -> TKMStudyMaterials? {
@@ -837,11 +821,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   }
 
   private func getAllSubjects(transaction db: FMDatabase) -> [TKMSubject] {
-    var ret = [TKMSubject]()
-    for cursor in db.query("SELECT pb FROM subjects") {
-      ret.append(cursor.proto(forColumnIndex: 0)!)
-    }
-    return ret
+    db.query("SELECT pb FROM subjects").map { $0.proto(forColumnIndex: 0)! }
   }
 
   func getSubject(id: Int64) -> TKMSubject? {
@@ -931,23 +911,13 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
 
   func getAllReviewStatistics() -> [TKMReviewStatistic] {
     db.inDatabase { db in
-      var result = [TKMReviewStatistic]()
-      for cursor in db.query("SELECT pb FROM review_stats") {
-        if let statistic: TKMReviewStatistic = cursor.proto(forColumnIndex: 0) {
-          result.append(statistic)
-        }
-      }
-      return result
+      db.query("SELECT pb FROM review_stats").compactMap { $0.proto(forColumnIndex: 0) }
     }
   }
 
   func getAllLevelProgressions() -> [TKMLevel] {
     db.inDatabase { db in
-      var ret = [TKMLevel]()
-      for cursor in db.query("SELECT pb FROM level_progressions") {
-        ret.append(cursor.proto(forColumnIndex: 0)!)
-      }
-      return ret
+      db.query("SELECT pb FROM level_progressions").map { $0.proto(forColumnIndex: 0)! }
     }
   }
 
@@ -1229,11 +1199,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
   }
 
   private func getVoiceActors(transaction db: FMDatabase) -> [TKMVoiceActor] {
-    var ret = [TKMVoiceActor]()
-    for cursor in db.query("SELECT pb FROM voice_actors") {
-      ret.append(cursor.proto(forColumnIndex: 0)!)
-    }
-    return ret
+    db.query("SELECT pb FROM voice_actors").map { $0.proto(forColumnIndex: 0)! }
   }
 
   // MARK: - Syncing

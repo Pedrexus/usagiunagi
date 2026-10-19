@@ -27,8 +27,10 @@ import WaniKaniAPI
   class Screenshotter: NSObject {
     static let isActive = false
     class func setUp() {}
-    static func createLocalCachingClient(client: WaniKaniAPIClient,
-                                         reachability: Reachability) -> LocalCachingClient {
+    static func createLocalCachingClient(
+      client: WaniKaniAPIClient,
+      reachability: Reachability
+    ) -> LocalCachingClient {
       LocalCachingClient(client: client, reachability: reachability)
     }
   }
@@ -41,8 +43,10 @@ import WaniKaniAPI
     private var callback: VoiceCaptureReport?
     private var recordingID: UUID?
     init(transcript: String) { self.transcript = transcript }
-    func start(id: UUID, locale _: Locale, downloadModel _: Bool,
-               report: @escaping VoiceCaptureReport) async {
+    func start(
+      id: UUID, locale _: Locale, downloadModel _: Bool,
+      report: @escaping VoiceCaptureReport
+    ) async {
       recordingID = id
       callback = report
       await report(.listening)
@@ -76,30 +80,41 @@ import WaniKaniAPI
         // preferences.
         let defaults = UserDefaults.standard
         var arguments = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
-        for key in ["groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
-                    "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
-                    "allowSkippingReviews", "exactMatch", "showAnswerImmediately", "enableCheats",
-                    "ankiModeCombineReadingMeaning", "blurContextSentences", "allowExcludeItems", "showPreviousLevelGraph",
-                    "showAllReadings", "useKatakanaForOnyomi", "showStatsSection", "showOldMnemonic",
-                    "showArtwork", "showSimilarKanjiAboveLevel", "notificationsAllReviews",
-                    "notificationsBadging", "notificationSounds", "showFullAnswer",
-                    "animateParticleExplosion", "animatePlusOne", "animateLevelUpPopup"] {
+        for key in [
+          "groupMeaningReading", "meaningFirst", "ankiMode", "autoSwitchKeyboard",
+          "playAudioAutomatically", "reviewItemsLimitEnabled", "skipKanjiReadings",
+          "allowSkippingReviews", "exactMatch", "showAnswerImmediately", "enableCheats",
+          "ankiModeCombineReadingMeaning", "blurContextSentences", "allowExcludeItems",
+          "showPreviousLevelGraph",
+          "showAllReadings", "useKatakanaForOnyomi", "showStatsSection", "showOldMnemonic",
+          "showArtwork", "showSimilarKanjiAboveLevel", "notificationsAllReviews",
+          "notificationsBadging", "notificationSounds", "showFullAnswer",
+          "animateParticleExplosion", "animatePlusOne", "animateLevelUpPopup",
+        ] {
           if let value = arguments[key] as? String, ["YES", "NO"].contains(value),
-             let data = try? NSKeyedArchiver.archivedData(withRootObject: value == "YES",
-                                                          requiringSecureCoding: true) {
+            let data = try? NSKeyedArchiver.archivedData(
+              withRootObject: value == "YES",
+              requiringSecureCoding: true)
+          {
             arguments[key] = data
           }
         }
         if ProcessInfo.processInfo.arguments.contains("SettingsFlowFixture"),
-           let data = try? NSKeyedArchiver.archivedData(withRootObject: Settings.lessonOrder.map(\.rawValue), requiringSecureCoding: true) {
+          let data = try? NSKeyedArchiver.archivedData(
+            withRootObject: Settings.lessonOrder.map(\.rawValue), requiringSecureCoding: true)
+        {
           arguments["lessonOrder"] = data
         }
         if ProcessInfo.processInfo.arguments.contains("HomeLimitFixture"),
-           let data = try? NSKeyedArchiver.archivedData(withRootObject: 0, requiringSecureCoding: true) {
+          let data = try? NSKeyedArchiver.archivedData(
+            withRootObject: 0, requiringSecureCoding: true)
+        {
           arguments["apprenticeLessonsLimit"] = data
         }
         defaults.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
-        if ProcessInfo.processInfo.arguments.contains("ResetUserDefaults") || ProcessInfo.processInfo.arguments.contains("LoginFlowFixture") {
+        if ProcessInfo.processInfo.arguments.contains("ResetUserDefaults")
+          || ProcessInfo.processInfo.arguments.contains("LoginFlowFixture")
+        {
           // We're run again after testing finishes to remove the dummy user.
           Settings.userApiToken = ""
           Settings.userEmailAddress = ""
@@ -112,8 +127,10 @@ import WaniKaniAPI
       }
     }
 
-    static func createLocalCachingClient(client: WaniKaniAPIClient,
-                                         reachability: Reachability) -> LocalCachingClient {
+    static func createLocalCachingClient(
+      client: WaniKaniAPIClient,
+      reachability: Reachability
+    ) -> LocalCachingClient {
       if isActive, ProcessInfo.processInfo.arguments.contains("ReauthFlowFixture") {
         return AccountIssueFixtureCachingClient(client: client, reachability: reachability)
       }
@@ -126,1181 +143,379 @@ import WaniKaniAPI
       if isActive, ProcessInfo.processInfo.arguments.contains("AudioFlowFixture") {
         return AudioFixtureCachingClient(client: client, reachability: reachability)
       }
-      return isActive ? FakeLocalCachingClient(client: client, reachability: reachability)
+      return isActive
+        ? FakeLocalCachingClient(client: client, reachability: reachability)
         : LocalCachingClient(client: client, reachability: reachability)
     }
   }
 
   class FakeLocalCachingClient: LocalCachingClient {
     private var completedLessons: Set<Int64> = []
-    private var editedMaterials: [Int64: StudyMaterial] = ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") ? [3864: StudyMaterial(subjectID: 3864, meaningNote: StudyMaterial.exclusionMarker)] : [:]
-    private var materialVersions: [Int64: Int64] = ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") ? [3864: 0] : [:]
+    private var editedMaterials: [Int64: StudyMaterial] =
+      ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture")
+      ? [3864: StudyMaterial(subjectID: 3864, meaningNote: StudyMaterial.exclusionMarker)] : [:]
+    private var materialVersions: [Int64: Int64] =
+      ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") ? [3864: 0] : [:]
     private var conflicts: Set<Int64> = []
-    private let subjectTextProtos: [Int64: String] = [
-      // Subjects used in the search results for "sake". Abridged protos containing just the fields
-      // displayed in search results.
-      743: """
-        id: 743
-        level: 10
-        japanese: "酒"
-        readings {
-          reading: "しゅ"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "さけ"
-          is_primary: false
-          type: KUNYOMI
-        }
-        readings {
-          reading: "さか"
-          is_primary: false
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Alcohol"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      3163: """
-        id: 3163
-        level: 10
-        japanese: "お酒"
-        readings {
-          reading: "おさけ"
-          is_primary: true
-        }
-        meanings {
-          meaning: "Sake"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Alcohol"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      3164: """
-        id: 3164
-        level: 10
-        japanese: "日本酒"
-        readings {
-          reading: "にほんしゅ"
-          is_primary: true
-        }
-        readings {
-          reading: "にっぽんしゅ"
-          is_primary: false
-        }
-        meanings {
-          meaning: "Japanese Style Alcohol"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Japanese Alcohol"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Sake"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      355: """
-        id: 355
-        level: 35
-        japanese: "為"
-        meanings {
-          meaning: "Sake"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "fake"
-          type: BLACKLIST
-        }
-        radical {}
-      """,
-
-      1600: """
-        id: 1600
-        level: 35
-        japanese: "為"
-        readings {
-          reading: "い"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "ため"
-          is_primary: false
-          type: KUNYOMI
-        }
-        readings {
-          reading: "な"
-          is_primary: false
-          type: KUNYOMI
-        }
-        readings {
-          reading: "す"
-          is_primary: false
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Sake"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Fake"
-          type: BLACKLIST
-        }
-        kanji {}
-      """,
-
-      8911: """
-        id: 8911
-        level: 36
-        japanese: "鮭"
-        readings {
-          reading: "さけ"
-          is_primary: true
-          type: KUNYOMI
-        }
-        readings {
-          reading: "しゃけ"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Salmon"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      8918: """
-        id: 8918
-        level: 36
-        japanese: "鮭"
-        readings {
-          reading: "さけ"
-          is_primary: true
-        }
-        readings {
-          reading: "しゃけ"
-          is_primary: false
-        }
-        meanings {
-          meaning: "Salmon"
-          type: PRIMARY
-        }
-        vocabulary {}
-      """,
-
-      1787: """
-        id: 1787
-        level: 41
-        japanese: "酎"
-        readings {
-          reading: "ちゅう"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "ちゅ"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "かも"
-          is_primary: false
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Sake"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1803: """
-        id: 1803
-        level: 41
-        japanese: "偽"
-        readings {
-          reading: "ぎ"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "にせ"
-          is_primary: false
-          type: KUNYOMI
-        }
-        readings {
-          reading: "いつわ"
-          is_primary: false
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Fake"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Sake"
-          type: BLACKLIST
-        }
-        kanji {}
-      """,
-
-      6556: """
-        id: 6556
-        level: 41
-        japanese: "偽"
-        readings {
-          reading: "にせ"
-          is_primary: true
-        }
-        meanings {
-          meaning: "Fake"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Imitation"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Sake"
-          type: BLACKLIST
-        }
-        vocabulary {}
-      """,
-
-      1892: """
-        id: 1892
-        level: 44
-        japanese: "叫"
-        readings {
-          reading: "きょう"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "さけ"
-          is_primary: false
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Shout"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      3516: """
-        id: 3516
-        level: 12
-        japanese: "酒飲み"
-        readings {
-          reading: "さけのみ"
-          is_primary: true
-        }
-        meanings {
-          meaning: "Alcoholic"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Boozer"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Drunkard"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Big Drinker"
-          type: AUXILIARY_WHITELIST
-        }
-        meanings {
-          meaning: "Drinker"
-          type: AUXILIARY_WHITELIST
-        }
-        meanings {
-          meaning: "Drink"
-          type: BLACKLIST
-        }
-        meanings {
-          meaning: "alcohol"
-          type: BLACKLIST
-        }
-        vocabulary {}
-      """,
-
-      3515: """
-        id: 3515
-        level: 13
-        japanese: "酒好き"
-        readings {
-          reading: "さけずき"
-          is_primary: true
-        }
-        meanings {
-          meaning: "Drinker"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Alcoholic"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      5907: """
-        id: 5907
-        level: 35
-        japanese: "為に"
-        readings {
-          reading: "ために"
-          is_primary: true
-        }
-        meanings {
-          meaning: "For"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "For The Sake Of"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "To"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Sake Of"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      6163: """
-        id: 6163
-        level: 38
-        japanese: "避ける"
-        readings {
-          reading: "さける"
-          is_primary: true
-        }
-        readings {
-          reading: "よける"
-          is_primary: false
-        }
-        meanings {
-          meaning: "To Avoid"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "To Dodge"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      6812: """
-        id: 6812
-        level: 44
-        japanese: "叫ぶ"
-        readings {
-          reading: "さけぶ"
-          is_primary: true
-        }
-        meanings {
-          meaning: "To Shout"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "To Scream"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      6960: """
-        id: 6960
-        level: 46
-        japanese: "叫び"
-        readings {
-          reading: "さけび"
-          is_primary: true
-        }
-        meanings {
-          meaning: "Shout"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Scream"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "A Shout"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "A Scream"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      6961: """
-        id: 6961
-        level: 46
-        japanese: "叫び声"
-        readings {
-          reading: "さけびごえ"
-          is_primary: true
-        }
-        meanings {
-          meaning: "Shout"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Yell"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Scream"
-          type: SECONDARY
-        }
-        vocabulary {}
-      """,
-
-      // Full proto for the subject details view.
-      3864: """
-        id: 3864
-        level: 8
-        slug: "私自身"
-        document_url: "https://www.wanikani.com/vocabulary/%E7%A7%81%E8%87%AA%E8%BA%AB"
-        japanese: "私自身"
-        readings {
-          reading: "わたしじしん"
-          is_primary: true
-        }
-        readings {
-          reading: "わたくしじしん"
-          is_primary: false
-        }
-        meanings {
-          meaning: "Personally"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "As For Me"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Myself"
-          type: SECONDARY
-        }
-        component_subject_ids: [923, 578, 689]
-        vocabulary {
-          meaning_explanation: "\\"When it comes to <kanji>somebody</kanji> like my<kanji>self</kanji>... aka <kanji>I</kanji>...\\" When you say this you're really saying \\"<vocabulary>personally</vocabulary>\\" or \\"<vocabulary>as for me</vocabulary>.\\""
-          reading_explanation: "The readings are a bit weird here. The <ja>私</ja> is <ja>わたし</ja> and the rest is on'yomi kanji readings. So, it's a mix of both, I'm afraid. \\"When it comes to me, I like mixing up on'yomi and kun'yomi because I hate myself.\\""
-          sentences {
-            japanese: "私自身は、その動物園の問題にはあまり関心がないんです。"
-            english: "Personally, I'm indifferent to the zoo's issues."
-          }
-          sentences {
-            japanese: "私自身は、そんなにきょくたんなことじゃなければ、どんな食生活でも良いと思っています。"
-            english: "As for me, as long as it isn't too extreme, I think any kind of diet is okay."
-          }
-          sentences {
-            japanese: "あなたがもし私自身よりも私のことを知っていると思ったら、 それはとんだ大間違いよ。"
-            english: "You’re way off base if you think you know me better than I know myself."
-          }
-          parts_of_speech: [PRONOUN]
-        }
-      """,
-
-      // Component subject IDs in the above.
-      923: """
-        id: 923
-        japanese: "私"
-        meanings {
-          meaning: "I"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      578: """
-        id: 578
-        japanese: "自"
-        meanings {
-          meaning: "Self"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      689: """
-        id: 689
-        japanese: "身"
-        meanings {
-          meaning: "Somebody"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      // Catalogue view by level. All radicals and kanji for level 24, with just enough info for the
-      // list view.
-      293: """
-        id: 293
-        level: 24
-        japanese: "旦"
-        meanings {
-          meaning: "Dawn"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Sunrise"
-          type: AUXILIARY_WHITELIST
-        }
-        radical {}
-      """,
-
-      294: """
-        id: 294
-        level: 24
-        japanese: "韋"
-        meanings {
-          meaning: "Korea"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Cow God"
-          type: AUXILIARY_WHITELIST
-        }
-        radical {}
-      """,
-
-      295: """
-        id: 295
-        level: 24
-        japanese: "客"
-        meanings {
-          meaning: "Guest"
-          type: PRIMARY
-        }
-        radical {}
-      """,
-
-      296: """
-        id: 296
-        level: 24
-        japanese: "制"
-        meanings {
-          meaning: "Control"
-          type: PRIMARY
-        }
-        radical {}
-      """,
-
-      297: """
-        id: 297
-        level: 24
-        japanese: "然"
-        meanings {
-          meaning: "Nature"
-          type: PRIMARY
-        }
-        radical {}
-      """,
-
-      298: """
-        id: 298
-        level: 24
-        japanese: "受"
-        meanings {
-          meaning: "Accept"
-          type: PRIMARY
-        }
-        radical {}
-      """,
-
-      1217: """
-        id: 1217
-        level: 24
-        japanese: "担"
-        readings {
-          reading: "たん"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Carry"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Bear"
-          type: SECONDARY
-        }
-        kanji {}
-      """,
-
-      1218: """
-        id: 1218
-        level: 24
-        japanese: "額"
-        readings {
-          reading: "がく"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Amount"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Framed Picture"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "Forehead"
-          type: SECONDARY
-        }
-        kanji {}
-      """,
-
-      1219: """
-        id: 1219
-        level: 24
-        japanese: "製"
-        readings {
-          reading: "せい"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Manufacture"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1220: """
-        id: 1220
-        level: 24
-        japanese: "違"
-        readings {
-          reading: "ちが"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Different"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1221: """
-        id: 1221
-        level: 24
-        japanese: "輸"
-        readings {
-          reading: "ゆ"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Transport"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1222: """
-        id: 1222
-        level: 24
-        japanese: "燃"
-        readings {
-          reading: "ねん"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Burn"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1223: """
-        id: 1223
-        level: 24
-        japanese: "祝"
-        readings {
-          reading: "しゅく"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "しゅう"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Celebrate"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1224: """
-        id: 1224
-        level: 24
-        japanese: "届"
-        readings {
-          reading: "とど"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Deliver"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1225: """
-        id: 1225
-        level: 24
-        japanese: "狭"
-        readings {
-          reading: "せま"
-          is_primary: true
-          type: KUNYOMI
-        }
-        readings {
-          reading: "せば"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Narrow"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1226: """
-        id: 1226
-        level: 24
-        japanese: "肩"
-        readings {
-          reading: "かた"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Shoulder"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1227: """
-        id: 1227
-        level: 24
-        japanese: "腕"
-        readings {
-          reading: "うで"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Arm"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1228: """
-        id: 1228
-        level: 24
-        japanese: "腰"
-        readings {
-          reading: "こし"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Waist"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1229: """
-        id: 1229
-        level: 24
-        japanese: "触"
-        readings {
-          reading: "しょく"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Touch"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1230: """
-        id: 1230
-        level: 24
-        japanese: "載"
-        readings {
-          reading: "さい"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Publish"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1231: """
-        id: 1231
-        level: 24
-        japanese: "層"
-        readings {
-          reading: "そう"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Layer"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1232: """
-        id: 1232
-        level: 24
-        japanese: "型"
-        readings {
-          reading: "けい"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Model"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Type"
-          type: SECONDARY
-        }
-        kanji {}
-      """,
-
-      1233: """
-        id: 1233
-        level: 24
-        japanese: "庁"
-        readings {
-          reading: "ちょう"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Agency"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Government Office"
-          type: SECONDARY
-        }
-        kanji {}
-      """,
-
-      1234: """
-        id: 1234
-        level: 24
-        japanese: "視"
-        readings {
-          reading: "し"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Look At"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1235: """
-        id: 1235
-        level: 24
-        japanese: "差"
-        readings {
-          reading: "さ"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Distinction"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1236: """
-        id: 1236
-        level: 24
-        japanese: "管"
-        readings {
-          reading: "かん"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Pipe"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1237: """
-        id: 1237
-        level: 24
-        japanese: "象"
-        readings {
-          reading: "ぞう"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "しょう"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Elephant"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Phenomenon"
-          type: SECONDARY
-        }
-        kanji {}
-      """,
-
-      1238: """
-        id: 1238
-        level: 24
-        japanese: "量"
-        readings {
-          reading: "りょう"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Quantity"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Amount"
-          type: SECONDARY
-        }
-        meanings {
-          meaning: "quality"
-          type: BLACKLIST
-        }
-        kanji {}
-      """,
-
-      1239: """
-        id: 1239
-        level: 24
-        japanese: "境"
-        readings {
-          reading: "きょう"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Boundary"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1240: """
-        id: 1240
-        level: 24
-        japanese: "環"
-        readings {
-          reading: "かん"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Loop"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1241: """
-        id: 1241
-        level: 24
-        japanese: "武"
-        readings {
-          reading: "ぶ"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Military"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1242: """
-        id: 1242
-        level: 24
-        japanese: "質"
-        readings {
-          reading: "しつ"
-          is_primary: true
-          type: ONYOMI
-        }
-        readings {
-          reading: "しち"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Quality"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1243: """
-        id: 1243
-        level: 24
-        japanese: "述"
-        readings {
-          reading: "じゅつ"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Mention"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1244: """
-        id: 1244
-        level: 24
-        japanese: "供"
-        readings {
-          reading: "きょう"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Servant"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Companion"
-          type: SECONDARY
-        }
-        kanji {}
-      """,
-
-      1245: """
-        id: 1245
-        level: 24
-        japanese: "展"
-        readings {
-          reading: "てん"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Expand"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1246: """
-        id: 1246
-        level: 24
-        japanese: "販"
-        readings {
-          reading: "はん"
-          is_primary: true
-          type: ONYOMI
-        }
-        meanings {
-          meaning: "Sell"
-          type: PRIMARY
-        }
-        kanji {}
-      """,
-
-      1247: """
-        id: 1247
-        level: 24
-        japanese: "株"
-        readings {
-          reading: "かぶ"
-          is_primary: true
-          type: KUNYOMI
-        }
-        meanings {
-          meaning: "Stocks"
-          type: PRIMARY
-        }
-        meanings {
-          meaning: "Shares"
-          type: SECONDARY
-        }
-        kanji {}
-      """,
-
-      8790: """
-        id: 8790
-        level: 24
-        meanings {
-          meaning: "Death Star"
-          type: PRIMARY
-        }
-        radical {
-          character_image: "https://cdn.wanikani.com/images/363-subject-8790-with-css-original.svg?1520987154"
-          has_character_image_file: true
-        }
-      """,
-    ]
+    private enum Subjects {
+      static let all: [Int64: TKMSubject] = [
+        743: subject(
+          id: 743, level: 10, japanese: "酒",
+          readings: [
+            reading("しゅ", primary: true, type: .onyomi),
+            reading("さけ", primary: false, type: .kunyomi),
+            reading("さか", primary: false, type: .kunyomi),
+          ], meanings: [meaning("Alcohol", type: .primary)], kanji: .init()),
+        3163: subject(
+          id: 3163, level: 10, japanese: "お酒", readings: [reading("おさけ", primary: true)],
+          meanings: [meaning("Sake", type: .primary), meaning("Alcohol", type: .secondary)],
+          vocabulary: .init()),
+        3164: subject(
+          id: 3164, level: 10, japanese: "日本酒",
+          readings: [reading("にほんしゅ", primary: true), reading("にっぽんしゅ", primary: false)],
+          meanings: [
+            meaning("Japanese Style Alcohol", type: .primary),
+            meaning("Japanese Alcohol", type: .secondary), meaning("Sake", type: .secondary),
+          ], vocabulary: .init()),
+        355: subject(
+          id: 355, level: 35, japanese: "為",
+          meanings: [meaning("Sake", type: .primary), meaning("fake", type: .blacklist)],
+          radical: .init()),
+        1600: subject(
+          id: 1600, level: 35, japanese: "為",
+          readings: [
+            reading("い", primary: true, type: .onyomi),
+            reading("ため", primary: false, type: .kunyomi),
+            reading("な", primary: false, type: .kunyomi),
+            reading("す", primary: false, type: .kunyomi),
+          ], meanings: [meaning("Sake", type: .primary), meaning("Fake", type: .blacklist)],
+          kanji: .init()),
+        8911: subject(
+          id: 8911, level: 36, japanese: "鮭",
+          readings: [
+            reading("さけ", primary: true, type: .kunyomi),
+            reading("しゃけ", primary: true, type: .kunyomi),
+          ], meanings: [meaning("Salmon", type: .primary)], kanji: .init()),
+        8918: subject(
+          id: 8918, level: 36, japanese: "鮭",
+          readings: [reading("さけ", primary: true), reading("しゃけ", primary: false)],
+          meanings: [meaning("Salmon", type: .primary)], vocabulary: .init()),
+        1787: subject(
+          id: 1787, level: 41, japanese: "酎",
+          readings: [
+            reading("ちゅう", primary: true, type: .onyomi),
+            reading("ちゅ", primary: true, type: .onyomi),
+            reading("かも", primary: false, type: .kunyomi),
+          ], meanings: [meaning("Sake", type: .primary)], kanji: .init()),
+        1803: subject(
+          id: 1803, level: 41, japanese: "偽",
+          readings: [
+            reading("ぎ", primary: true, type: .onyomi),
+            reading("にせ", primary: false, type: .kunyomi),
+            reading("いつわ", primary: false, type: .kunyomi),
+          ], meanings: [meaning("Fake", type: .primary), meaning("Sake", type: .blacklist)],
+          kanji: .init()),
+        6556: subject(
+          id: 6556, level: 41, japanese: "偽", readings: [reading("にせ", primary: true)],
+          meanings: [
+            meaning("Fake", type: .primary), meaning("Imitation", type: .secondary),
+            meaning("Sake", type: .blacklist),
+          ], vocabulary: .init()),
+        1892: subject(
+          id: 1892, level: 44, japanese: "叫",
+          readings: [
+            reading("きょう", primary: true, type: .onyomi),
+            reading("さけ", primary: false, type: .kunyomi),
+          ], meanings: [meaning("Shout", type: .primary)], kanji: .init()),
+        3516: subject(
+          id: 3516, level: 12, japanese: "酒飲み", readings: [reading("さけのみ", primary: true)],
+          meanings: [
+            meaning("Alcoholic", type: .primary), meaning("Boozer", type: .secondary),
+            meaning("Drunkard", type: .secondary),
+            meaning("Big Drinker", type: .auxiliaryWhitelist),
+            meaning("Drinker", type: .auxiliaryWhitelist), meaning("Drink", type: .blacklist),
+            meaning("alcohol", type: .blacklist),
+          ], vocabulary: .init()),
+        3515: subject(
+          id: 3515, level: 13, japanese: "酒好き", readings: [reading("さけずき", primary: true)],
+          meanings: [meaning("Drinker", type: .primary), meaning("Alcoholic", type: .secondary)],
+          vocabulary: .init()),
+        5907: subject(
+          id: 5907, level: 35, japanese: "為に", readings: [reading("ために", primary: true)],
+          meanings: [
+            meaning("For", type: .primary), meaning("For The Sake Of", type: .secondary),
+            meaning("To", type: .secondary), meaning("Sake Of", type: .secondary),
+          ], vocabulary: .init()),
+        6163: subject(
+          id: 6163, level: 38, japanese: "避ける",
+          readings: [reading("さける", primary: true), reading("よける", primary: false)],
+          meanings: [meaning("To Avoid", type: .primary), meaning("To Dodge", type: .secondary)],
+          vocabulary: .init()),
+        6812: subject(
+          id: 6812, level: 44, japanese: "叫ぶ", readings: [reading("さけぶ", primary: true)],
+          meanings: [meaning("To Shout", type: .primary), meaning("To Scream", type: .secondary)],
+          vocabulary: .init()),
+        6960: subject(
+          id: 6960, level: 46, japanese: "叫び", readings: [reading("さけび", primary: true)],
+          meanings: [
+            meaning("Shout", type: .primary), meaning("Scream", type: .secondary),
+            meaning("A Shout", type: .secondary), meaning("A Scream", type: .secondary),
+          ], vocabulary: .init()),
+        6961: subject(
+          id: 6961, level: 46, japanese: "叫び声", readings: [reading("さけびごえ", primary: true)],
+          meanings: [
+            meaning("Shout", type: .primary), meaning("Yell", type: .secondary),
+            meaning("Scream", type: .secondary),
+          ], vocabulary: .init()),
+        3864: subject(
+          id: 3864, level: 8, japanese: "私自身", slug: "私自身",
+          documentURL: "https://www.wanikani.com/vocabulary/%E7%A7%81%E8%87%AA%E8%BA%AB",
+          readings: [reading("わたしじしん", primary: true), reading("わたくしじしん", primary: false)],
+          meanings: [
+            meaning("Personally", type: .primary), meaning("As For Me", type: .secondary),
+            meaning("Myself", type: .secondary),
+          ], componentSubjectIDs: [923, 578, 689],
+          vocabulary: .with {
+            $0.meaningExplanation =
+              "\"When it comes to <kanji>somebody</kanji> like my<kanji>self</kanji>... aka <kanji>I</kanji>...\" When you say this you're really saying \"<vocabulary>personally</vocabulary>\" or \"<vocabulary>as for me</vocabulary>.\""
+            $0.readingExplanation =
+              "The readings are a bit weird here. The <ja>私</ja> is <ja>わたし</ja> and the rest is on'yomi kanji readings. So, it's a mix of both, I'm afraid. \"When it comes to me, I like mixing up on'yomi and kun'yomi because I hate myself.\""
+            $0.sentences = [
+              .with {
+                $0.japanese = "私自身は、その動物園の問題にはあまり関心がないんです。"
+                $0.english = "Personally, I'm indifferent to the zoo's issues."
+              },
+              .with {
+                $0.japanese = "私自身は、そんなにきょくたんなことじゃなければ、どんな食生活でも良いと思っています。"
+                $0.english =
+                  "As for me, as long as it isn't too extreme, I think any kind of diet is okay."
+              },
+              .with {
+                $0.japanese = "あなたがもし私自身よりも私のことを知っていると思ったら、 それはとんだ大間違いよ。"
+                $0.english =
+                  "You’re way off base if you think you know me better than I know myself."
+              },
+            ]
+            $0.partsOfSpeech = [.pronoun]
+          }),
+        923: subject(
+          id: 923, japanese: "私", meanings: [meaning("I", type: .primary)], kanji: .init()),
+        578: subject(
+          id: 578, japanese: "自", meanings: [meaning("Self", type: .primary)], kanji: .init()),
+        689: subject(
+          id: 689, japanese: "身", meanings: [meaning("Somebody", type: .primary)], kanji: .init()),
+        293: subject(
+          id: 293, level: 24, japanese: "旦",
+          meanings: [
+            meaning("Dawn", type: .primary), meaning("Sunrise", type: .auxiliaryWhitelist),
+          ], radical: .init()),
+        294: subject(
+          id: 294, level: 24, japanese: "韋",
+          meanings: [
+            meaning("Korea", type: .primary), meaning("Cow God", type: .auxiliaryWhitelist),
+          ], radical: .init()),
+        295: subject(
+          id: 295, level: 24, japanese: "客", meanings: [meaning("Guest", type: .primary)],
+          radical: .init()),
+        296: subject(
+          id: 296, level: 24, japanese: "制", meanings: [meaning("Control", type: .primary)],
+          radical: .init()),
+        297: subject(
+          id: 297, level: 24, japanese: "然", meanings: [meaning("Nature", type: .primary)],
+          radical: .init()),
+        298: subject(
+          id: 298, level: 24, japanese: "受", meanings: [meaning("Accept", type: .primary)],
+          radical: .init()),
+        1217: subject(
+          id: 1217, level: 24, japanese: "担",
+          readings: [reading("たん", primary: true, type: .onyomi)],
+          meanings: [meaning("Carry", type: .primary), meaning("Bear", type: .secondary)],
+          kanji: .init()),
+        1218: subject(
+          id: 1218, level: 24, japanese: "額",
+          readings: [reading("がく", primary: true, type: .onyomi)],
+          meanings: [
+            meaning("Amount", type: .primary), meaning("Framed Picture", type: .secondary),
+            meaning("Forehead", type: .secondary),
+          ], kanji: .init()),
+        1219: subject(
+          id: 1219, level: 24, japanese: "製",
+          readings: [reading("せい", primary: true, type: .onyomi)],
+          meanings: [meaning("Manufacture", type: .primary)], kanji: .init()),
+        1220: subject(
+          id: 1220, level: 24, japanese: "違",
+          readings: [reading("ちが", primary: true, type: .kunyomi)],
+          meanings: [meaning("Different", type: .primary)], kanji: .init()),
+        1221: subject(
+          id: 1221, level: 24, japanese: "輸",
+          readings: [reading("ゆ", primary: true, type: .onyomi)],
+          meanings: [meaning("Transport", type: .primary)], kanji: .init()),
+        1222: subject(
+          id: 1222, level: 24, japanese: "燃",
+          readings: [reading("ねん", primary: true, type: .onyomi)],
+          meanings: [meaning("Burn", type: .primary)], kanji: .init()),
+        1223: subject(
+          id: 1223, level: 24, japanese: "祝",
+          readings: [
+            reading("しゅく", primary: true, type: .onyomi),
+            reading("しゅう", primary: true, type: .onyomi),
+          ], meanings: [meaning("Celebrate", type: .primary)], kanji: .init()),
+        1224: subject(
+          id: 1224, level: 24, japanese: "届",
+          readings: [reading("とど", primary: true, type: .kunyomi)],
+          meanings: [meaning("Deliver", type: .primary)], kanji: .init()),
+        1225: subject(
+          id: 1225, level: 24, japanese: "狭",
+          readings: [
+            reading("せま", primary: true, type: .kunyomi),
+            reading("せば", primary: true, type: .kunyomi),
+          ], meanings: [meaning("Narrow", type: .primary)], kanji: .init()),
+        1226: subject(
+          id: 1226, level: 24, japanese: "肩",
+          readings: [reading("かた", primary: true, type: .kunyomi)],
+          meanings: [meaning("Shoulder", type: .primary)], kanji: .init()),
+        1227: subject(
+          id: 1227, level: 24, japanese: "腕",
+          readings: [reading("うで", primary: true, type: .kunyomi)],
+          meanings: [meaning("Arm", type: .primary)], kanji: .init()),
+        1228: subject(
+          id: 1228, level: 24, japanese: "腰",
+          readings: [reading("こし", primary: true, type: .kunyomi)],
+          meanings: [meaning("Waist", type: .primary)], kanji: .init()),
+        1229: subject(
+          id: 1229, level: 24, japanese: "触",
+          readings: [reading("しょく", primary: true, type: .onyomi)],
+          meanings: [meaning("Touch", type: .primary)], kanji: .init()),
+        1230: subject(
+          id: 1230, level: 24, japanese: "載",
+          readings: [reading("さい", primary: true, type: .onyomi)],
+          meanings: [meaning("Publish", type: .primary)], kanji: .init()),
+        1231: subject(
+          id: 1231, level: 24, japanese: "層",
+          readings: [reading("そう", primary: true, type: .onyomi)],
+          meanings: [meaning("Layer", type: .primary)], kanji: .init()),
+        1232: subject(
+          id: 1232, level: 24, japanese: "型",
+          readings: [reading("けい", primary: true, type: .onyomi)],
+          meanings: [meaning("Model", type: .primary), meaning("Type", type: .secondary)],
+          kanji: .init()),
+        1233: subject(
+          id: 1233, level: 24, japanese: "庁",
+          readings: [reading("ちょう", primary: true, type: .onyomi)],
+          meanings: [
+            meaning("Agency", type: .primary), meaning("Government Office", type: .secondary),
+          ], kanji: .init()),
+        1234: subject(
+          id: 1234, level: 24, japanese: "視",
+          readings: [reading("し", primary: true, type: .onyomi)],
+          meanings: [meaning("Look At", type: .primary)], kanji: .init()),
+        1235: subject(
+          id: 1235, level: 24, japanese: "差",
+          readings: [reading("さ", primary: true, type: .onyomi)],
+          meanings: [meaning("Distinction", type: .primary)], kanji: .init()),
+        1236: subject(
+          id: 1236, level: 24, japanese: "管",
+          readings: [reading("かん", primary: true, type: .onyomi)],
+          meanings: [meaning("Pipe", type: .primary)], kanji: .init()),
+        1237: subject(
+          id: 1237, level: 24, japanese: "象",
+          readings: [
+            reading("ぞう", primary: true, type: .onyomi),
+            reading("しょう", primary: true, type: .onyomi),
+          ],
+          meanings: [meaning("Elephant", type: .primary), meaning("Phenomenon", type: .secondary)],
+          kanji: .init()),
+        1238: subject(
+          id: 1238, level: 24, japanese: "量",
+          readings: [reading("りょう", primary: true, type: .onyomi)],
+          meanings: [
+            meaning("Quantity", type: .primary), meaning("Amount", type: .secondary),
+            meaning("quality", type: .blacklist),
+          ], kanji: .init()),
+        1239: subject(
+          id: 1239, level: 24, japanese: "境",
+          readings: [reading("きょう", primary: true, type: .onyomi)],
+          meanings: [meaning("Boundary", type: .primary)], kanji: .init()),
+        1240: subject(
+          id: 1240, level: 24, japanese: "環",
+          readings: [reading("かん", primary: true, type: .onyomi)],
+          meanings: [meaning("Loop", type: .primary)], kanji: .init()),
+        1241: subject(
+          id: 1241, level: 24, japanese: "武",
+          readings: [reading("ぶ", primary: true, type: .onyomi)],
+          meanings: [meaning("Military", type: .primary)], kanji: .init()),
+        1242: subject(
+          id: 1242, level: 24, japanese: "質",
+          readings: [
+            reading("しつ", primary: true, type: .onyomi),
+            reading("しち", primary: true, type: .onyomi),
+          ], meanings: [meaning("Quality", type: .primary)], kanji: .init()),
+        1243: subject(
+          id: 1243, level: 24, japanese: "述",
+          readings: [reading("じゅつ", primary: true, type: .onyomi)],
+          meanings: [meaning("Mention", type: .primary)], kanji: .init()),
+        1244: subject(
+          id: 1244, level: 24, japanese: "供",
+          readings: [reading("きょう", primary: true, type: .onyomi)],
+          meanings: [meaning("Servant", type: .primary), meaning("Companion", type: .secondary)],
+          kanji: .init()),
+        1245: subject(
+          id: 1245, level: 24, japanese: "展",
+          readings: [reading("てん", primary: true, type: .onyomi)],
+          meanings: [meaning("Expand", type: .primary)], kanji: .init()),
+        1246: subject(
+          id: 1246, level: 24, japanese: "販",
+          readings: [reading("はん", primary: true, type: .onyomi)],
+          meanings: [meaning("Sell", type: .primary)], kanji: .init()),
+        1247: subject(
+          id: 1247, level: 24, japanese: "株",
+          readings: [reading("かぶ", primary: true, type: .kunyomi)],
+          meanings: [meaning("Stocks", type: .primary), meaning("Shares", type: .secondary)],
+          kanji: .init()),
+        8790: subject(
+          id: 8790, level: 24, meanings: [meaning("Death Star", type: .primary)],
+          radical: .with {
+            $0.characterImage =
+              "https://cdn.wanikani.com/images/363-subject-8790-with-css-original.svg?1520987154"
+            $0.hasCharacterImageFile_p = true
+          }),
+      ]
+      private static func subject(
+        id: Int64, level: Int32? = nil, japanese: String? = nil, slug: String? = nil,
+        documentURL: String? = nil, readings: [TKMReading] = [], meanings: [TKMMeaning] = [],
+        componentSubjectIDs: [Int64] = [], radical: TKMRadical? = nil, kanji: TKMKanji? = nil,
+        vocabulary: TKMVocabulary? = nil
+      ) -> TKMSubject {
+        .with {
+          $0.id = id
+          if let level { $0.level = level }
+          if let japanese { $0.japanese = japanese }
+          if let slug { $0.slug = slug }
+          if let documentURL { $0.documentURL = documentURL }
+          $0.readings = readings
+          $0.meanings = meanings
+          $0.componentSubjectIds = componentSubjectIDs
+          if let radical { $0.radical = radical }
+          if let kanji { $0.kanji = kanji }
+          if let vocabulary { $0.vocabulary = vocabulary }
+        }
+      }
+      private static func reading(
+        _ text: String, primary: Bool? = nil, type: TKMReading.TypeEnum? = nil
+      ) -> TKMReading {
+        .with {
+          $0.reading = text
+          if let primary { $0.isPrimary = primary }
+          if let type { $0.type = type }
+        }
+      }
+      private static func meaning(_ text: String, type: TKMMeaning.TypeEnum? = nil) -> TKMMeaning {
+        .with {
+          $0.meaning = text
+          if let type { $0.type = type }
+        }
+      }
+    }
 
     override func countRows(inTable _: String) -> Int {
       0
@@ -1309,22 +524,29 @@ import WaniKaniAPI
     private func createComposition(_ source: Int...) -> [ReviewComposition] {
       var composition: [ReviewComposition] = []
       for reviews in source {
-        composition.append(ReviewComposition(availableReviews: reviews,
-                                             countByType: [.radical: reviews],
-                                             countByCategory: [.apprentice: 0]))
+        composition.append(
+          ReviewComposition(
+            availableReviews: reviews,
+            countByType: [.radical: reviews],
+            countByCategory: [.apprentice: 0]))
       }
       return composition
     }
 
     override func updateAvailableSubjects() -> (Int, [ReviewComposition]) {
-      if ProcessInfo.processInfo.arguments.contains("HomeEmptyFixture") { return (0, createComposition(0)) }
+      if ProcessInfo.processInfo.arguments.contains("HomeEmptyFixture") {
+        return (0, createComposition(0))
+      }
       if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
         return (getAllAssignments().filter(\.isLessonStage).count, createComposition(0))
       }
-      return (10,
-       createComposition(getAllAssignments().count, 14, 8, 2, 1, 12, 42, 17, 9, 2, 0, 2, 17, 0, 0,
-                         6, 0, 0, 0, 0,
-                         4, 11, 0, 8, 6))
+      return (
+        10,
+        createComposition(
+          getAllAssignments().count, 14, 8, 2, 1, 12, 42, 17, 9, 2, 0, 2, 17, 0, 0,
+          6, 0, 0, 0, 0,
+          4, 11, 0, 8, 6)
+      )
     }
 
     override func updateGuruKanjiCount() -> Int {
@@ -1332,7 +554,9 @@ import WaniKaniAPI
     }
 
     override func updateSrsCategoryCounts() -> [Int] {
-      guard ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") else { return [86, 120, 485, 786, 2056] }
+      guard ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") else {
+        return [86, 120, 485, 786, 2056]
+      }
       var counts = Array(repeating: 0, count: 6)
       for item in catalogAssignments() where !item.isLocked && item.srsStageNumber > 0 {
         counts[item.srsStage.category.rawValue] += 1
@@ -1341,8 +565,7 @@ import WaniKaniAPI
     }
 
     override func getSubject(id: Int64) -> TKMSubject? {
-      if let textProto = subjectTextProtos[id] {
-        var subject = try! TKMSubject(textFormatString: textProto)
+      if var subject = Subjects.all[id] {
         if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
           subject.level = [Int64(294): Int32(2), 923: 2][id] ?? 1
         }
@@ -1356,11 +579,13 @@ import WaniKaniAPI
     }
 
     override func getAllSubjects() -> [TKMSubject] {
-      subjectTextProtos.keys.sorted().compactMap { getSubject(id: $0) }
+      Subjects.all.keys.sorted().compactMap { getSubject(id: $0) }
     }
 
     override func getAllAssignments() -> [TKMAssignment] {
-      if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") { return catalogAssignments() }
+      if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
+        return catalogAssignments()
+      }
       if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
         return [Int64(293), 743, 3864].map { id in
           let subject = getSubject(id: id)!
@@ -1379,9 +604,14 @@ import WaniKaniAPI
       }
       // Distinct subjects keep the sample review count consistent with statistics.
       let feedbackFixture = ProcessInfo.processInfo.arguments.contains("ReviewFeedbackFixture")
-      let ids: [Int64] = feedbackFixture ? [3864, 923] : ProcessInfo.processInfo.arguments
-        .contains("VoiceReviewFixture") || ProcessInfo.processInfo.arguments
-        .contains("SingleReviewFixture") ? [3864] : [3864, 923, 578, 689]
+      let ids: [Int64] =
+        feedbackFixture
+        ? [3864, 923]
+        : ProcessInfo.processInfo.arguments
+          .contains("VoiceReviewFixture")
+          || ProcessInfo.processInfo.arguments
+            .contains("SingleReviewFixture")
+          ? [3864] : [3864, 923, 578, 689]
       return ids.map { id in
         var a = TKMAssignment()
         a.subjectID = id
@@ -1396,10 +626,17 @@ import WaniKaniAPI
       [Int64(293), 294, 743, 923, 578, 3864, 689, 8790].map { id in
         let subject = getSubject(id: id)!
         var value = TKMAssignment()
-        value.id = 100_000 + id; value.subjectID = id; value.subjectType = subject.subjectType; value.level = subject.level
+        value.id = 100_000 + id
+        value.subjectID = id
+        value.subjectType = subject.subjectType
+        value.level = subject.level
         if ![294, 8790].contains(id) {
-          value.srsStageNumber = [Int64(293): Int32(5), 743: 2, 923: 5, 578: 0, 3864: 3, 689: 9][id]!
-          if value.srsStageNumber > 0 { value.startedAt = 42; value.availableAt = id == 923 ? Int32.max : 42 }
+          value.srsStageNumber = [Int64(293): Int32(5), 743: 2, 923: 5, 578: 0, 3864: 3, 689: 9][
+            id]!
+          if value.srsStageNumber > 0 {
+            value.startedAt = 42
+            value.availableAt = id == 923 ? Int32.max : 42
+          }
         }
         return value
       }
@@ -1413,7 +650,7 @@ import WaniKaniAPI
 
     override func getAllReviewStatistics() -> [TKMReviewStatistic] {
       var result = [TKMReviewStatistic]()
-      for index in 0 ..< 12 {
+      for index in 0..<12 {
         var stat = TKMReviewStatistic()
         stat.subjectID = index == 0 ? 3864 : Int64(1200 + index)
         stat.type = .vocabulary
@@ -1449,21 +686,31 @@ import WaniKaniAPI
     override func getStudyMaterial(subjectId: Int64) -> TKMStudyMaterials? {
       guard let material = editedMaterials[subjectId] else { return nil }
       var value = TKMStudyMaterials()
-      value.subjectID = subjectId; value.meaningNote = material.meaningNote
-      value.readingNote = material.readingNote; value.meaningSynonyms = material.meaningSynonyms
+      value.subjectID = subjectId
+      value.meaningNote = material.meaningNote
+      value.readingNote = material.readingNote
+      value.meaningSynonyms = material.meaningSynonyms
       return value
     }
 
-    override func editableStudyMaterial(subjectID: Int64, account: String) -> StudyMaterialEdit<Int64>? {
+    override func editableStudyMaterial(subjectID: Int64, account: String) -> StudyMaterialEdit<
+      Int64
+    >? {
       guard account == getUserInfo()?.username else { return nil }
-      return StudyMaterialEdit(material: editedMaterials[subjectID] ?? StudyMaterial(subjectID: subjectID),
+      return StudyMaterialEdit(
+        material: editedMaterials[subjectID] ?? StudyMaterial(subjectID: subjectID),
         version: materialVersions[subjectID])
     }
 
-    override func saveEditedStudyMaterial(_ material: StudyMaterial, expectedRevision: Int64?, account: String) -> Bool {
+    override func saveEditedStudyMaterial(
+      _ material: StudyMaterial, expectedRevision: Int64?, account: String
+    ) -> Bool {
       guard account == getUserInfo()?.username else { return false }
-      if ProcessInfo.processInfo.arguments.contains("MaterialConflictFixture"), conflicts.insert(material.subjectID).inserted {
-        editedMaterials[material.subjectID] = StudyMaterial(subjectID: material.subjectID,
+      if ProcessInfo.processInfo.arguments.contains("MaterialConflictFixture"),
+        conflicts.insert(material.subjectID).inserted
+      {
+        editedMaterials[material.subjectID] = StudyMaterial(
+          subjectID: material.subjectID,
           meaningNote: "Concurrent saved note\n" + StudyMaterial.exclusionMarker,
           readingNote: "Concurrent hidden reading note")
         materialVersions[material.subjectID, default: 0] += 1
@@ -1478,7 +725,9 @@ import WaniKaniAPI
       var user = TKMUser()
       user.level = 24
       if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") { user.level = 1 }
-      if ProcessInfo.processInfo.arguments.contains("HomeVacationFixture") { user.vacationStartedAt = 50 }
+      if ProcessInfo.processInfo.arguments.contains("HomeVacationFixture") {
+        user.vacationStartedAt = 50
+      }
       user.username = "Fred"
       user.maxLevelGrantedBySubscription = 60
       return user
@@ -1497,44 +746,46 @@ import WaniKaniAPI
         return catalogAssignments().filter { $0.level == level }
       }
       // Return just enough to populate the level catalog.
-      let subjects = [293,
-                      294,
-                      295,
-                      296,
-                      297,
-                      298,
-                      1217,
-                      1218,
-                      1219,
-                      1220,
-                      1221,
-                      1222,
-                      1223,
-                      1224,
-                      1225,
-                      1226,
-                      1227,
-                      1228,
-                      1229,
-                      1230,
-                      1231,
-                      1232,
-                      1233,
-                      1234,
-                      1235,
-                      1236,
-                      1237,
-                      1238,
-                      1239,
-                      1240,
-                      1241,
-                      1242,
-                      1243,
-                      1244,
-                      1245,
-                      1246,
-                      1247,
-                      8790].map {
+      let subjects = [
+        293,
+        294,
+        295,
+        296,
+        297,
+        298,
+        1217,
+        1218,
+        1219,
+        1220,
+        1221,
+        1222,
+        1223,
+        1224,
+        1225,
+        1226,
+        1227,
+        1228,
+        1229,
+        1230,
+        1231,
+        1232,
+        1233,
+        1234,
+        1235,
+        1236,
+        1237,
+        1238,
+        1239,
+        1240,
+        1241,
+        1242,
+        1243,
+        1244,
+        1245,
+        1246,
+        1247,
+        8790,
+      ].map {
         getSubject(id: $0)!
       }
 
@@ -1560,9 +811,9 @@ import WaniKaniAPI
       if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
         return catalogAssignments().filter { $0.level == 1 }
       }
-      return makePieSlices(.radical, locked: 0, lesson: 2, apprentice: 4, guru: 1) +
-        makePieSlices(.kanji, locked: 8, lesson: 4, apprentice: 12, guru: 1) +
-        makePieSlices(.vocabulary, locked: 50, lesson: 8, apprentice: 4, guru: 0)
+      return makePieSlices(.radical, locked: 0, lesson: 2, apprentice: 4, guru: 1)
+        + makePieSlices(.kanji, locked: 8, lesson: 4, apprentice: 12, guru: 1)
+        + makePieSlices(.vocabulary, locked: 50, lesson: 8, apprentice: 4, guru: 0)
     }
 
     override func sendProgress(_ progress: [TKMProgress]) -> Promise<Void> {
@@ -1573,7 +824,8 @@ import WaniKaniAPI
     }
 
     override func updateStudyMaterial(_ value: TKMStudyMaterials) -> Promise<Void> {
-      editedMaterials[value.subjectID] = StudyMaterial(subjectID: value.subjectID, meaningNote: value.meaningNote,
+      editedMaterials[value.subjectID] = StudyMaterial(
+        subjectID: value.subjectID, meaningNote: value.meaningNote,
         readingNote: value.readingNote, meaningSynonyms: value.meaningSynonyms)
       materialVersions[value.subjectID, default: 0] += 1
       return Promise.value(())
@@ -1592,15 +844,17 @@ import WaniKaniAPI
       return ret
     }
 
-    private func makePieSlices(_ type: TKMSubject.TypeEnum,
-                               locked: Int,
-                               lesson: Int,
-                               apprentice: Int,
-                               guru: Int) -> [TKMAssignment] {
-      Array(repeating: makeAssignment(type, srsStage: -1), count: locked) +
-        Array(repeating: makeAssignment(type, srsStage: 0), count: lesson) +
-        Array(repeating: makeAssignment(type, srsStage: 1), count: apprentice) +
-        Array(repeating: makeAssignment(type, srsStage: 6), count: guru)
+    private func makePieSlices(
+      _ type: TKMSubject.TypeEnum,
+      locked: Int,
+      lesson: Int,
+      apprentice: Int,
+      guru: Int
+    ) -> [TKMAssignment] {
+      Array(repeating: makeAssignment(type, srsStage: -1), count: locked)
+        + Array(repeating: makeAssignment(type, srsStage: 0), count: lesson)
+        + Array(repeating: makeAssignment(type, srsStage: 1), count: apprentice)
+        + Array(repeating: makeAssignment(type, srsStage: 6), count: guru)
     }
 
     override func sync(quick _: Bool, progress _: Progress) -> PMKFinalizer {
