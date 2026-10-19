@@ -24,17 +24,7 @@ private func uiColorFromHex(_ hexColor: Int32) -> UIColor {
 }
 
 private func adaptiveColor(light: UIColor, dark: UIColor) -> UIColor {
-  if #available(iOS 13, *) {
-    return UIColor { (tc: UITraitCollection) -> UIColor in
-      if tc.userInterfaceStyle == .dark {
-        return dark
-      } else {
-        return light
-      }
-    }
-  } else {
-    return light
-  }
+  UIColor { $0.userInterfaceStyle == .dark ? dark : light }
 }
 
 private func adaptiveColorHex(light: Int32, dark: Int32) -> UIColor {
@@ -183,24 +173,5 @@ class TKMStyle: NSObject {
     static let markupKanjiBackground = adaptiveColorHex(light: 0xF7E4EC, dark: 0x45283A)
     static let markupVocabularyForeground = label
     static let markupVocabularyBackground = adaptiveColorHex(light: 0xEEE5F5, dark: 0x3A2D47)
-
-    static var placeholderText: UIColor {
-      if #available(iOS 13.0, *) {
-        return UIColor.placeholderText
-      }
-      return UIColor(red: 0, green: 0, blue: 0.0980392, alpha: 0.22)
-    }
-  }
-
-  // Wrapper around UITraitCollection.performAsCurrent that just does nothing
-  // on iOS < 13.
-  class func withTraitCollection(_ tc: UITraitCollection, f: () -> Void) {
-    if #available(iOS 13.0, *) {
-      tc.performAsCurrent {
-        f()
-      }
-    } else {
-      f()
-    }
   }
 }

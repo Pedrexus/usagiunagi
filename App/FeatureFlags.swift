@@ -16,37 +16,30 @@
 enum FeatureFlags {
   // Whether to show a tab bar at the bottom of the main screen to select between WaniKani and other
   // practice modes.
-  static let showOtherPracticeModes = (config != .AppStoreRelease)
-
-  // Whether to print the Subject textproto when loading a SubjectDetailsView.
-  static let dumpSubjectTextproto = (config == .DeveloperDebug)
+  static let showOtherPracticeModes = (config != .appStoreRelease)
 
   // Whether to show an extra Developer Options section at the bottom of the SubjectDetailsView.
-  static let showSubjectDeveloperOptions = (config == .DeveloperDebug)
-
-  // Whether to show subjects from all levels, regardless of whether the user has an active
-  // subscription.
-  static let showAllLevelsForFreeUsers = (config == .DeveloperDebug)
+  static let showSubjectDeveloperOptions = (config == .developerDebug)
 
   // Whether to show a username/password login mode in addition to API
   // key login.
-  static let showUsernamePasswordLogin = (config == .DeveloperDebug)
+  static let showUsernamePasswordLogin = (config == .developerDebug)
 
   private enum BuildConfig {
-    case DeveloperDebug
-    case TestFlightRelease
-    case AppStoreRelease
+    case developerDebug
+    case testFlightRelease
+    case appStoreRelease
   }
 
-  // These SWIFT_ACTIVE_COMPILATION_CONDITIONS are set by the .xcconfig files in the BuildConfigs
+  // These SWIFT_ACTIVE_COMPILATION_CONDITIONS are set by the .xcconfig files in the Configuration
   // directory.
   #if TSURUKAME_CONFIG_DEVELOPER_DEBUG
-    private static let config = BuildConfig.DeveloperDebug
+    private static let config = BuildConfig.developerDebug
   #endif
   #if TSURUKAME_CONFIG_TESTFLIGHT_RELEASE
-    private static let config = BuildConfig.TestFlightRelease
+    private static let config = BuildConfig.testFlightRelease
   #endif
   #if TSURUKAME_CONFIG_APP_STORE_RELEASE
-    private static let config = BuildConfig.AppStoreRelease
+    private static let config = BuildConfig.appStoreRelease
   #endif
 }

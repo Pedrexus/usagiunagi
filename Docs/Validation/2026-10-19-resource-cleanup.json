@@ -1,0 +1,304 @@
+{
+  "recorded_at": "2026-10-19T20:57:37+09:00",
+  "baseline": "4cce16a3a687857e2846d185569ff1f2979f99ae",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Consolidate duplicate subject supplements; remove raw subject dumps, debug-only subscription bypass, pre-iOS 13 fallbacks, unused appearance/header wrappers and unused packaged build configs. Preserve supported-OS UI, archive formats, subjects, grading, active iOS writer and migration safety.",
+  "sources": {
+    "App/Extensions/UIWindow+InterfaceStyle.swift": "79188a54c535ff3565a510fa24b8c683dd6a0b6158e17b91365186b62a43bf07",
+    "App/FeatureFlags.swift": "6f7d087614c8dd34ae7fa8d77f5daf05eb4d9412b1f7a62a6db97a1fd30ad8f2",
+    "App/Features/Catalog/SubjectDetailsView.swift": "39645b7b10cbd9b78624d024093b20e913bf733c79aaac2ea62c0cf60ed102d2",
+    "App/LocalCachingClient.swift": "f7fe35e3c11c58d1981493d492191985bc97e0170bed1326962334157656fd8f",
+    "App/Settings.swift": "d4ad02580a9fd4e677339c97d7c4bb21757a342386e3b491e85346af63dda1af",
+    "App/SiriShortcutHelper.swift": "47bf321ac0486f231e5f0991e2865142afbe1c88e86159401349bbf656c7b1fd",
+    "App/Style.swift": "4413f127e0b5d3f21451a5967821e90fee81ad0fe5d5c180ab1696311b86b1c0",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "369cbe060daeecc6bd5e2695de710667ad85cac79eca41638d2348d034e0ddca",
+    "App/WaniKaniAPI/Package.swift": "530846b5870f2ca5899adbba4e1b035d4b28653fb47738b1b0b98bd0d1a06310",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/APIClient.swift": "0323b801e4c35d21dd3fa0ea8e6e04e6502871775930fee2b94d0d487aa5ff7a",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/Subject.swift": "a05e8fd73c062911edc9d569e3e02218da0b720e5afc9320a594f083500938a3",
+    "Shared/Sources/StudyCore/StudySubjectSupplements.swift": "6efd48820706a74645e116b6d422cbbee4dba38f10310e21a662e7f5641f9d13",
+    "Shared/Sources/StudyCore/WaniKaniClient+Download.swift": "ba1be822e8e6d0353ede42f32d914591a8459416579420f85873d71e2909239d",
+    "Shared/Tests/StudyCoreTests/SubjectSupplementTests.swift": "531587dfa3560ba1728902f359eab0593e376aa79302c129163d43b1a25caba8"
+  },
+  "deleted": {
+    "App/BuildConfigs/AppStoreRelease.xcconfig": "c8e2e0cd678ac0b6d20a8de414255ff5be17307da0a4fd56d54714629221494b",
+    "App/BuildConfigs/DeveloperDebug.xcconfig": "dc7699fa11d6901769d01cdbdcb3cc4758fd1ce8dbf91b718067555058926e75",
+    "App/BuildConfigs/TestFlightRelease.xcconfig": "c057b2fbeaf610572d6b9544c4f83d2928708522df5c1a546f8dbd5d9a39d197",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/HTTPURLResponse+valueForHeaderField.swift": "aaccdefa84cf9c27236232829333251e5d32bfc2d46ad16d083d83fff3c2f052",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/Resources/old-mnemonics.json": "995333a5eaef7696f1395192ea7e5c859f07b512aafe40451841aaf70323f55e",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/Resources/visually-similar-kanji.json": "156cea19f47e434e7fa0cb3e864b63f3e47ac1b71b3c9a57f89dff01a3ffc640"
+  },
+  "resource_consolidation": [
+    {
+      "retained": "Shared/Sources/StudyCore/Resources/old-mnemonics.json",
+      "deleted": "App/WaniKaniAPI/Sources/WaniKaniAPI/Resources/old-mnemonics.json",
+      "bytes": 16476,
+      "sha256": "995333a5eaef7696f1395192ea7e5c859f07b512aafe40451841aaf70323f55e",
+      "entries": 79
+    },
+    {
+      "retained": "Shared/Sources/StudyCore/Resources/visually-similar-kanji.json",
+      "deleted": "App/WaniKaniAPI/Sources/WaniKaniAPI/Resources/visually-similar-kanji.json",
+      "bytes": 155942,
+      "sha256": "156cea19f47e434e7fa0cb3e864b63f3e47ac1b71b3c9a57f89dff01a3ffc640",
+      "entries": 2380
+    }
+  ],
+  "packaged_resources": {
+    "ios_release": {
+      "app": ".build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app",
+      "catalogs": [
+        ".build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/StudyKit_StudyCore.bundle/old-mnemonics.json",
+        ".build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/StudyKit_StudyCore.bundle/visually-similar-kanji.json"
+      ],
+      "packaged_xcconfigs": [],
+      "test_plugins": [],
+      "debug_fixture_literals_present": {
+        "--review-fixture": false,
+        "Synthetic review fixture": false
+      }
+    },
+    "mac_release": {
+      "app": ".build/Xcode/UnifiedMacRelease/Build/Products/Release/Tsurukame.app",
+      "catalogs": [
+        ".build/Xcode/UnifiedMacRelease/Build/Products/Release/Tsurukame.app/Contents/Resources/StudyKit_StudyCore.bundle/Contents/Resources/old-mnemonics.json",
+        ".build/Xcode/UnifiedMacRelease/Build/Products/Release/Tsurukame.app/Contents/Resources/StudyKit_StudyCore.bundle/Contents/Resources/visually-similar-kanji.json"
+      ],
+      "packaged_xcconfigs": [],
+      "test_plugins": [],
+      "debug_fixture_literals_present": {}
+    }
+  },
+  "packaging_scope": "Release iOS/Mac app products contain one copy of each catalog and no XCTest plugins or xcconfig files. Hosted debug installations embed additional test resource bundles (and the old iPad test plugin retained a stale legacy bundle); those are not used for the release size assertion. No build artifacts were hand-deleted to make this check pass.",
+  "checks": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-cleanup-shared-mac.log",
+      "sha256": "68c6fbbd371e2a7efca634aced5ad7d8c2050cb60f4f522fee9b53e5edfc64fc",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 337,
+        "suiteCounts": [
+          14,
+          7,
+          145,
+          171
+        ]
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-cleanup-shared-ios.log",
+      "sha256": "9269e6c9c5d2a7736c934dd2a4956e12744bc195c781a37e62ba7b8ed1d21471",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 337,
+        "passedTests": 337,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-cfdf37e833f148b0afa9df8778157378.xcresult"
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-cleanup-final-hosted.log",
+      "sha256": "c42717a6c4f7aefd3ea5ea1d6e8726d9ce33960a6ebacedc48b1fcbf38787c99",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-fd0e42de77ae40969e4bb9e91847fb5c.xcresult"
+    },
+    "legacy_api": {
+      "log": "/private/tmp/usagi-cleanup-legacy-api.log",
+      "sha256": "162e70ab22095d23cc7615bda07312fbe1b33a47f1c7ff9be642e96029aaad3d",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 34,
+        "note": "Mocked WaniKaniAPITests only; the selected prober target ran zero tests."
+      }
+    },
+    "native_mac_ui": {
+      "log": "/private/tmp/usagi-cleanup-native-ui.log",
+      "sha256": "ce41bc1727dd277470eb6c43f3827a0a7ff965223b77736714154e7f3bd52294",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6a2c4936302e4986870beafe882a9299.xcresult"
+    },
+    "phone_ui": {
+      "log": "/private/tmp/usagi-cleanup-phone-ui.log",
+      "sha256": "ea811d724f0b89a5cc71c8542d37b66023ad4d9126626350a26d176ac02d93e7",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-cef44ece9ea2473187e20d78e684ad2a.xcresult"
+    },
+    "pad_ui": {
+      "log": "/private/tmp/usagi-cleanup-pad-ui.log",
+      "sha256": "eeb94bdda36ffb1489070388f9174113e5fc4c001537efbb9c1f0657cbc28e0d",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-4982e4a1ea09443da403febb6e0b7831.xcresult"
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-cleanup-release.log",
+      "sha256": "98520dcb73d0516fc4d2fc78095e0f61e618b6b655c1babcc300de8813f8aa31",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-99e90867d5794591bb318c05aacc1870.xcresult"
+    },
+    "ios_release": {
+      "log": "/private/tmp/usagi-cleanup-ios-release.log",
+      "sha256": "da9df893d019b43ac65652a2c347e7ee3d741bcfd53ddded302df7929f9e0789",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 104,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-91498bab64d940b786fe197bd1eed815.xcresult"
+    },
+    "ordinary_release_reopen": {
+      "log": "/private/tmp/usagi-cleanup-final-reopen.log",
+      "sha256": "e43fadd60fa8cb4fecc8378147c313f8112fa2b33a1037cf608f60fe6ad6c229",
+      "cycles": [
+        {
+          "cycle": 1,
+          "visibleMainWindows": 1,
+          "processID": 76386
+        },
+        {
+          "cycle": 2,
+          "visibleMainWindows": 1,
+          "processID": 76613
+        }
+      ]
+    }
+  },
+  "loc": {
+    "baseline": "4cce16a3a687857e2846d185569ff1f2979f99ae",
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29320,
+    "after": 29231,
+    "changed": [
+      {
+        "path": "App/Extensions/UIWindow+InterfaceStyle.swift",
+        "before": 31,
+        "after": 29
+      },
+      {
+        "path": "App/FeatureFlags.swift",
+        "before": 52,
+        "after": 45
+      },
+      {
+        "path": "App/Features/Catalog/SubjectDetailsView.swift",
+        "before": 278,
+        "after": 277
+      },
+      {
+        "path": "App/LocalCachingClient.swift",
+        "before": 1684,
+        "after": 1681
+      },
+      {
+        "path": "App/Settings.swift",
+        "before": 290,
+        "after": 297
+      },
+      {
+        "path": "App/SiriShortcutHelper.swift",
+        "before": 64,
+        "after": 57
+      },
+      {
+        "path": "App/Style.swift",
+        "before": 206,
+        "after": 177
+      },
+      {
+        "path": "App/WaniKaniAPI/Package.swift",
+        "before": 47,
+        "after": 27
+      },
+      {
+        "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/APIClient.swift",
+        "before": 996,
+        "after": 997
+      },
+      {
+        "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/HTTPURLResponse+valueForHeaderField.swift",
+        "before": 28,
+        "after": 0
+      },
+      {
+        "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/Subject.swift",
+        "before": 353,
+        "after": 339
+      },
+      {
+        "path": "Shared/Sources/StudyCore/WaniKaniClient+Download.swift",
+        "before": 183,
+        "after": 176
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudySubjectSupplements.swift",
+        "before": 0,
+        "after": 21
+      }
+    ],
+    "artwork_bytes": 27986,
+    "artwork_sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "appearance": {
+    "note": "Existing shared Home keeps the original iPad section sequence, system type, SF Symbols, WaniKani colors and glass study controls. No new visual theme is introduced in this cleanup.",
+    "native_window_screenshots": "/private/tmp/usagi-cleanup-native-attachments/manifest.json",
+    "home": "/private/tmp/usagi-cleanup-native-attachments/7DBAAD48-DFB1-4BA9-8526-CF9C4104DBCF.png"
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-cleanup-format-final-check.log",
+    "note": "Nine files pass the Mainboard formatter check. Changed statements in older API/download/store files use native Swift formatting at their existing indentation. The legacy Subject DTO retains 42 existing snake_case wire-field lint violations; no rule or checker is disabled, and no wire fields are renamed for this cleanup."
+  },
+  "retained_warnings": [
+    "The fresh legacy API/iOS compilation surfaces existing generated protobuf Sendable warnings with the legacy dependency locks; the temporary API remains in Swift 5 mode. No suppression or unverified Swift 6 conformance is added.",
+    "The existing watch target emits a deprecated ClockKit configuration warning.",
+    "Earlier notes-keyboard invalid-frame and internal priority warnings remain recorded in their original receipts; these selected UI result bundles contain no runtimeWarnings."
+  ],
+  "remaining": [
+    "Shared sign-in/native iOS root and notification/watch/AppIntents parity; remaining practice/password/subject-practice gates need separate feature acceptance.",
+    "Verified account-bound cold writer handoff/import/crash/rollback before retiring active SQLite, protobuf and PromiseKit adapters.",
+    "Physical speech/audio/IME and full-account calibrated statistics, signing/store and hosted CI acceptance.",
+    "JSON wire responses, bundled study references, isolated UI fixtures and iCloud mistake archive format remain in use."
+  ],
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "boundaries": "Synthetic offline/mocked account acceptance only; no real WaniKani exercises, credential/account edits, OS security changes, push or PR."
+}

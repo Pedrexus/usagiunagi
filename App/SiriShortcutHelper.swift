@@ -25,13 +25,10 @@ class SiriShortcutHelper: NSObject {
   public static let shared = SiriShortcutHelper()
 
   func attachShortcutActivity(_ vc: UIViewController, type: ShortcutType) {
-    if #available(iOS 12.0, *) {
-      vc.userActivity = newShortcutActivity(type: type)
-      vc.userActivity?.becomeCurrent()
-    }
+    vc.userActivity = newShortcutActivity(type: type)
+    vc.userActivity?.becomeCurrent()
   }
 
-  @available(iOS 12.0, *)
   func newShortcutActivity(type: ShortcutType) -> NSUserActivity {
     let activity = NSUserActivity(activityType: type.rawValue)
     activity.persistentIdentifier = NSUserActivityPersistentIdentifier(type.rawValue)
@@ -48,15 +45,11 @@ class SiriShortcutHelper: NSObject {
     switch type {
     case .reviews:
       activity.title = "Start Wanikani Reviews"
-      if #available(iOS 12.0, *) {
-        activity.suggestedInvocationPhrase = "Start Wanikani Reviews"
-      }
+      activity.suggestedInvocationPhrase = "Start Wanikani Reviews"
       attributes.contentDescription = "Keep it up and burn every one"
     case .lessons:
       activity.title = "Start Wanikani Lessons"
-      if #available(iOS 12.0, *) {
-        activity.suggestedInvocationPhrase = "Start Wanikani Lessons"
-      }
+      activity.suggestedInvocationPhrase = "Start Wanikani Lessons"
       attributes.contentDescription = "Learn something new"
     }
     activity.contentAttributeSet = attributes

@@ -105,8 +105,9 @@ public class WaniKaniAPIClient: NSObject {
   }
 
   private func updateRateLimit(from response: HTTPURLResponse, roundTripTime: TimeInterval) {
-    guard let serverDateStr = response.valueForHeaderField("Date"),
-          let serverDate = httpDateFormatter.date(from: serverDateStr) else { return }
+    guard let serverDateStr = response.value(forHTTPHeaderField: "Date"),
+      let serverDate = httpDateFormatter.date(from: serverDateStr)
+    else { return }
 
     let calendar = Calendar(identifier: .gregorian)
     if let lastRequestServerDate = lastRequestServerDate,

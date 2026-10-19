@@ -17,7 +17,7 @@ If changing the JLPT revision, update the generator and this attribution. Run St
 
 ## Legacy study supplements
 
-`old-mnemonics.json` and `visually-similar-kanji.json` are byte-identical copies of this fork's existing `App/WaniKaniAPI/Sources/WaniKaniAPI/Resources` files (previously `ios/WaniKaniAPI/...`), inherited from davidsansome/tsurukame. They preserve the legacy radical mnemonic and similar-kanji features in the native catalog reader. The original resource copies remain temporarily because the active iOS legacy API module still uses them; remove those copies when that module's callers are retired.
+`old-mnemonics.json` and `visually-similar-kanji.json` are inherited from davidsansome/tsurukame, originally in `ios/WaniKaniAPI/...` and later `App/WaniKaniAPI/Sources/WaniKaniAPI/Resources`. `StudySubjectSupplements` now owns one typed, immutable catalog for both the shared reader and the temporary legacy API module. The two duplicate legacy files and their resource directory are deleted after verifying byte identity, removing 172,418 bytes without changing content. All 79 mnemonic and 2,380 similar-kanji entries are covered by canonical SHA-256 checks in Swift Testing. Original resource digests are `995333a5eaef7696f1395192ea7e5c859f07b512aafe40451841aaf70323f55e` and `156cea19f47e434e7fa0cb3e864b63f3e47ac1b71b3c9a57f89dff01a3ffc640`, respectively. These resources preserve study content; they are not mock API replies.
 
 ## WaniKani display preview
 

@@ -86,12 +86,7 @@ typealias SettingEnum = CaseIterable & Codable & CustomStringConvertible & RawRe
 }
 
 private func setArchiveData<T: Codable>(_ object: T, key: String) {
-  var data: Data!
-  if #available(iOS 11.0, *) {
-    data = try! NSKeyedArchiver.archivedData(withRootObject: object, requiringSecureCoding: true)
-  } else {
-    data = NSKeyedArchiver.archivedData(withRootObject: object)
-  }
+  let data = try! NSKeyedArchiver.archivedData(withRootObject: object, requiringSecureCoding: true)
 
   #if DEBUG
     // Keep interactive screenshot-test overrides mutable and isolated from saved preferences.
@@ -145,7 +140,7 @@ protocol SettingProtocol {
 }
 
 @propertyWrapper struct EnumSetting<T: RawRepresentable>: SettingProtocol
-  where T.RawValue: Codable {
+where T.RawValue: Codable {
   typealias ValueType = T
 
   let defaultValue: T
@@ -164,8 +159,11 @@ protocol SettingProtocol {
   var projectedValue: EnumSetting<T> { self }
 }
 
-@propertyWrapper struct EnumArraySetting<A: Sequence, T: RawRepresentable> where A.Element == T,
-  T.RawValue: Codable {
+@propertyWrapper struct EnumArraySetting<A: Sequence, T: RawRepresentable>
+where
+  A.Element == T,
+  T.RawValue: Codable
+{
   private let defaultValue: [T.RawValue]
   private let key: String
 
@@ -200,22 +198,25 @@ protocol SettingProtocol {
   @Setting("", #keyPath(userCookie)) static var userCookie: String
   @Setting("", #keyPath(userEmailAddress)) static var userEmailAddress: String
   @Setting("", #keyPath(userApiToken)) static var userApiToken: String
-  @Setting(WaniKaniAPIClient.defaultBaseUrl,
-           #keyPath(apiBaseUrl)) static var apiBaseUrl: String
+  @Setting(
+    WaniKaniAPIClient.defaultBaseUrl,
+    #keyPath(apiBaseUrl)) static var apiBaseUrl: String
 
-  @EnumSetting(InterfaceStyle.system,
-               #keyPath(interfaceStyle)) static var interfaceStyle: InterfaceStyle
+  @EnumSetting(
+    InterfaceStyle.system,
+    #keyPath(interfaceStyle)) static var interfaceStyle: InterfaceStyle
 
   @Setting(false, #keyPath(notificationsAllReviews)) static var notificationsAllReviews: Bool
   @Setting(true, #keyPath(notificationsBadging)) static var notificationsBadging: Bool
   @Setting(false, #keyPath(notificationSounds)) static var notificationSounds: Bool
 
   @Setting(false, #keyPath(prioritizeCurrentLevel)) static var prioritizeCurrentLevel: Bool
-  @EnumArraySetting([
-    .radical,
-    .kanji,
-    .vocabulary,
-  ], "lessonOrder") static var lessonOrder: [TKMSubject.TypeEnum]
+  @EnumArraySetting(
+    [
+      .radical,
+      .kanji,
+      .vocabulary,
+    ], "lessonOrder") static var lessonOrder: [TKMSubject.TypeEnum]
   @Setting(5, #keyPath(lessonBatchSize)) static var lessonBatchSize: Int
   @Setting(true, #keyPath(showStatsSection)) static var showStatsSection: Bool
   @Setting(false, #keyPath(showArtwork)) static var showArtwork: Bool
@@ -238,23 +239,28 @@ protocol SettingProtocol {
   @Setting(true, #keyPath(showOldMnemonic)) static var showOldMnemonic: Bool
   @Setting(true, #keyPath(blurContextSentences)) static var blurContextSentences: Bool
   @Setting(false, #keyPath(useKatakanaForOnyomi)) static var useKatakanaForOnyomi: Bool
-  @EnumSetting(SRSLevelIndicatorStyle.none,
-               #keyPath(srsLevelIndicatorStyle)) static var srsLevelIndicatorStyle: SRSLevelIndicatorStyle
-  @Setting(false,
-           #keyPath(showMinutesForNextLevelUpReview)) static var showMinutesForNextLevelUpReview: Bool
+  @EnumSetting(
+    SRSLevelIndicatorStyle.none,
+    #keyPath(srsLevelIndicatorStyle)) static var srsLevelIndicatorStyle: SRSLevelIndicatorStyle
+  @Setting(
+    false,
+    #keyPath(showMinutesForNextLevelUpReview)) static var showMinutesForNextLevelUpReview: Bool
   @Setting(false, #keyPath(showAllReadings)) static var showAllReadings: Bool
   @Setting(false, #keyPath(autoSwitchKeyboard)) static var autoSwitchKeyboard: Bool
   @Setting(false, #keyPath(allowSkippingReviews)) static var allowSkippingReviews: Bool
   @Setting(true, #keyPath(minimizeReviewPenalty)) static var minimizeReviewPenalty: Bool
   @Setting(false, #keyPath(ankiMode)) static var ankiMode: Bool
-  @EnumSetting(AnkiModeTaskType.both,
-               #keyPath(ankiModeTaskType)) static var ankiModeTaskType: AnkiModeTaskType
-  @Setting(false,
-           #keyPath(ankiModeCombineReadingMeaning)) static var ankiModeCombineReadingMeaning: Bool
+  @EnumSetting(
+    AnkiModeTaskType.both,
+    #keyPath(ankiModeTaskType)) static var ankiModeTaskType: AnkiModeTaskType
+  @Setting(
+    false,
+    #keyPath(ankiModeCombineReadingMeaning)) static var ankiModeCombineReadingMeaning: Bool
   @Setting(true, #keyPath(showPreviousLevelGraph)) static var showPreviousLevelGraph: Bool
   @Setting(true, #keyPath(showKanaOnlyVocab)) static var showKanaOnlyVocab: Bool
-  @Setting(false,
-           #keyPath(showSimilarKanjiAboveLevel)) static var showSimilarKanjiAboveLevel: Bool
+  @Setting(
+    false,
+    #keyPath(showSimilarKanjiAboveLevel)) static var showSimilarKanjiAboveLevel: Bool
 
   @Setting(1.0, #keyPath(leechThreshold)) static var leechThreshold: Float
 
@@ -272,8 +278,9 @@ protocol SettingProtocol {
   @Setting(true, #keyPath(animateLevelUpPopup)) static var animateLevelUpPopup: Bool
   @Setting(true, #keyPath(animatePlusOne)) static var animatePlusOne: Bool
 
-  @Setting(true,
-           #keyPath(subjectCatalogueViewShowAnswers)) static var subjectCatalogueViewShowAnswers: Bool
+  @Setting(
+    true,
+    #keyPath(subjectCatalogueViewShowAnswers)) static var subjectCatalogueViewShowAnswers: Bool
   @Setting(true, #keyPath(allowExcludeItems)) static var allowExcludeItems: Bool
 
   // Converts settings stored by older versions of the app to their new form.

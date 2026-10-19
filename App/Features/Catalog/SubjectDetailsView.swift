@@ -79,7 +79,6 @@ import WaniKaniAPI
     subject: TKMSubject, assignment: TKMAssignment?, task: ReviewItem? = nil,
     reviewQuestion: StudyQuestionKind? = nil, material: TKMStudyMaterials? = nil
   ) {
-    if FeatureFlags.dumpSubjectTextproto { print(subject) }
     self.original = subject
     self.assignment = assignment
     self.reviewQuestion = reviewQuestion

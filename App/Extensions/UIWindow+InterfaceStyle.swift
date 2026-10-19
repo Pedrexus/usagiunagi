@@ -17,15 +17,13 @@ import UIKit
 
 extension UIWindow {
   @objc func setInterfaceStyle(_ style: InterfaceStyle) {
-    if #available(iOS 13.0, *) {
-      switch style {
-      case .system:
-        self.overrideUserInterfaceStyle = .unspecified
-      case .dark:
-        self.overrideUserInterfaceStyle = .dark
-      case .light:
-        self.overrideUserInterfaceStyle = .light
-      }
+    switch style {
+    case .system:
+      self.overrideUserInterfaceStyle = .unspecified
+    case .dark:
+      self.overrideUserInterfaceStyle = .dark
+    case .light:
+      self.overrideUserInterfaceStyle = .light
     }
   }
 }

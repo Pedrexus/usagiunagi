@@ -139,9 +139,6 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
       self.updateSrsCategoryCounts()
     }
     _maxLevelGrantedBySubscription.updateBlock = {
-      if FeatureFlags.showAllLevelsForFreeUsers {
-        return 60
-      }
       return Int(self.getUserInfo()?.maxLevelGrantedBySubscription ?? 0)
     }
   }

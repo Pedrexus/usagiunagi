@@ -129,9 +129,9 @@ extension WaniKaniClient {
         }
         value.partOfSpeechNames = data.partsOfSpeech
         value.partsOfSpeech = (data.partsOfSpeech ?? []).compactMap(Self.legacyPartOfSpeech)
-        let supplements = try Self.supplements.get()
-        value.deprecatedMnemonic = supplements.mnemonics[String(id)] ?? ""
-        value.visuallySimilarKanji = supplements.similar[value.japanese] ?? ""
+        let supplements = try StudySubjectSupplements.bundled.get()
+        value.deprecatedMnemonic = supplements.deprecatedMnemonic(subjectID: id) ?? ""
+        value.visuallySimilarKanji = supplements.similarKanji(to: value.japanese) ?? ""
         return value
     }
 
@@ -172,12 +172,5 @@ extension WaniKaniClient {
             .replacingOccurrences(of: "の_adjective", with: "no_adjective").replacingOccurrences(of: "な_adjective", with: "na_adjective")
             .replacingOccurrences(of: "い_adjective", with: "i_adjective").replacingOccurrences(of: "する_verb", with: "suru_verb")
         return names.firstIndex(of: normalized).map { $0 + 1 }
-    }
-    private static let supplements: Result<(mnemonics: [String: String], similar: [String: String]), any Error> = Result {
-        func load(_ name: String) throws -> [String: String] {
-            guard let url = Bundle.module.url(forResource: name, withExtension: "json") else { throw CocoaError(.fileReadNoSuchFile) }
-            return try JSONDecoder().decode([String: String].self, from: Data(contentsOf: url))
-        }
-        return try (load("old-mnemonics"), load("visually-similar-kanji"))
     }
 }

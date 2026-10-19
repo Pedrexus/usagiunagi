@@ -13,26 +13,11 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 
-private func jsonFromBundle<T>(_ fileName: String) -> T {
-  let path = Bundle.module.path(forResource: fileName, ofType: nil)
-  let data = try! Data(contentsOf: URL(fileURLWithPath: path!))
-  return try! JSONSerialization.jsonObject(with: data, options: []) as! T
-}
+private let studySupplements = try? StudySubjectSupplements.bundled.get()
 
-private let kDeprecatedMnemonics: [Int64: String] = {
-  let data: [String: String] = jsonFromBundle("old-mnemonics.json")
-
-  var ret = [Int64: String]()
-  for (id, text) in data {
-    ret[Int64(id)!] = text
-  }
-  return ret
-}()
-
-private let kVisuallySimilarKanji: [String: String] = jsonFromBundle("visually-similar-kanji.json")
-
-/** Response type for /subjects. */
+/// Response type for /subjects.
 struct SubjectData: Codable {
   // Common attributes.
   var auxiliary_meanings: [AuxiliaryMeaning]?
@@ -52,14 +37,14 @@ struct SubjectData: Codable {
   var meaning_hint: String?
   var reading_hint: String?
 
-  var amalgamation_subject_ids: [Int64]? // Radical and Kanji.
-  var character_images: [CharacterImage]? // Radical.
-  var component_subject_ids: [Int64]? // Kanji and Vocabulary.
-  var readings: [Reading]? // Kanji and Vocabulary.
-  var visually_similar_subject_ids: [Int64]? // Kanji.
-  var context_sentences: [ContextSentence]? // Vocabulary.
-  var parts_of_speech: [String]? // Vocabulary.
-  var pronunciation_audios: [PronounciationAudio]? // Vocabulary.
+  var amalgamation_subject_ids: [Int64]?  // Radical and Kanji.
+  var character_images: [CharacterImage]?  // Radical.
+  var component_subject_ids: [Int64]?  // Kanji and Vocabulary.
+  var readings: [Reading]?  // Kanji and Vocabulary.
+  var visually_similar_subject_ids: [Int64]?  // Kanji.
+  var context_sentences: [ContextSentence]?  // Vocabulary.
+  var parts_of_speech: [String]?  // Vocabulary.
+  var pronunciation_audios: [PronounciationAudio]?  // Vocabulary.
 
   struct Meaning: Codable {
     var meaning: String
@@ -76,7 +61,7 @@ struct SubjectData: Codable {
     var reading: String
     var primary: Bool
     var accepted_answer: Bool
-    var type: String? // kunyomi, nanori, or onyomi
+    var type: String?  // kunyomi, nanori, or onyomi
   }
 
   struct CharacterImage: Codable {
@@ -149,7 +134,7 @@ struct SubjectData: Codable {
         ret.radical.hasCharacterImageFile_p = true
       }
 
-      if let deprecatedMnemonic = kDeprecatedMnemonics[id] {
+      if let deprecatedMnemonic = studySupplements?.deprecatedMnemonic(subjectID: id) {
         ret.radical.deprecatedMnemonic = deprecatedMnemonic
       }
 
@@ -167,7 +152,7 @@ struct SubjectData: Codable {
       if let reading_hint = reading_hint {
         ret.kanji.readingHint = reading_hint
       }
-      if let visuallySimilarKanji = kVisuallySimilarKanji[ret.japanese] {
+      if let visuallySimilarKanji = studySupplements?.similarKanji(to: ret.japanese) {
         ret.kanji.visuallySimilarKanji = visuallySimilarKanji
       }
       if let visuallySimilarSubjectIds = visually_similar_subject_ids {
@@ -198,8 +183,9 @@ struct SubjectData: Codable {
     if let character_images = character_images {
       for image in character_images {
         if image.content_type == "image/svg+xml",
-           let inline_styles = image.metadata.inline_styles,
-           inline_styles {
+          let inline_styles = image.metadata.inline_styles,
+          inline_styles
+        {
           return image.url
         }
       }

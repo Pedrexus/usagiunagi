@@ -38,9 +38,6 @@
 		6324AE3E2F9DC8040089066C /* RadicalCharacterImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6324AE3D2F9DC7FF0089066C /* RadicalCharacterImages.swift */; platformFilter = ios; };
 		6324AE412F9DCEAD0089066C /* SVGKit in Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; productRef = 6324AE402F9DCEAD0089066C /* SVGKit */; };
 		633252882727E8A700ABBA04 /* LegacyCatalogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633252872727E8A700ABBA04 /* LegacyCatalogViewController.swift */; platformFilter = ios; };
-		63344E802D291C9F002A4FED /* AppStoreRelease.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 63344E7C2D291C9F002A4FED /* AppStoreRelease.xcconfig */; platformFilter = ios; };
-		63344E812D291C9F002A4FED /* DeveloperDebug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 63344E7D2D291C9F002A4FED /* DeveloperDebug.xcconfig */; platformFilter = ios; };
-		63344E822D291C9F002A4FED /* TestFlightRelease.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 63344E7E2D291C9F002A4FED /* TestFlightRelease.xcconfig */; platformFilter = ios; };
 		63344E8A2D291CAA002A4FED /* ReviewContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E832D291CAA002A4FED /* ReviewContainerViewController.swift */; platformFilter = ios; };
 		63344E8E2D291CAA002A4FED /* LegacyPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63344E872D291CAA002A4FED /* LegacyPreferences.swift */; platformFilter = ios; };
 		63358E9A27365FC70013A2AC /* OfflineAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63358E9927365FC70013A2AC /* OfflineAudio.swift */; platformFilter = ios; };
@@ -273,9 +270,6 @@
 		631CAD71234B4A96008CEA73 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
 		6324AE3D2F9DC7FF0089066C /* RadicalCharacterImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadicalCharacterImages.swift; sourceTree = "<group>"; };
 		633252872727E8A700ABBA04 /* LegacyCatalogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LegacyCatalogViewController.swift; path = Features/Catalog/LegacyCatalogViewController.swift; sourceTree = "<group>"; };
-		63344E7C2D291C9F002A4FED /* AppStoreRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppStoreRelease.xcconfig; sourceTree = "<group>"; };
-		63344E7D2D291C9F002A4FED /* DeveloperDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = DeveloperDebug.xcconfig; sourceTree = "<group>"; };
-		63344E7E2D291C9F002A4FED /* TestFlightRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TestFlightRelease.xcconfig; sourceTree = "<group>"; };
 		63344E832D291CAA002A4FED /* ReviewContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewContainerViewController.swift; sourceTree = "<group>"; };
 		63344E872D291CAA002A4FED /* LegacyPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LegacyPreferences.swift; path = Features/Settings/LegacyPreferences.swift; sourceTree = "<group>"; };
 		63358E9927365FC70013A2AC /* OfflineAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OfflineAudio.swift; path = Features/Settings/OfflineAudio.swift; sourceTree = "<group>"; };
@@ -545,7 +539,6 @@
 				63391B562779B7FC005CDA72 /* AppearanceSettings.swift */,
 				6335B46323CF0C820071671E /* AppStoreScreenshots */,
 				6335B46223CF0C820071671E /* AppStoreScreenshots.xctest */,
-				63344E7F2D291C9F002A4FED /* BuildConfigs */,
 				C90846AD237F1C770068A272 /* Complication */,
 				C90846BC237F1C790068A272 /* ComplicationExtension */,
 				41897D93237228F100F6A0B7 /* Extensions */,
@@ -622,16 +615,6 @@
 				28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */,
 				CDCF339AD753BED5324CE83C /* SubjectPreferenceArchiveTests.swift */,
 			);
-			sourceTree = "<group>";
-		};
-		63344E7F2D291C9F002A4FED /* BuildConfigs */ = {
-			isa = PBXGroup;
-			children = (
-				63344E7C2D291C9F002A4FED /* AppStoreRelease.xcconfig */,
-				63344E7D2D291C9F002A4FED /* DeveloperDebug.xcconfig */,
-				63344E7E2D291C9F002A4FED /* TestFlightRelease.xcconfig */,
-			);
-			path = BuildConfigs;
 			sourceTree = "<group>";
 		};
 		63344E892D291CAA002A4FED /* ReviewQuickSettings */ = {
@@ -1037,9 +1020,6 @@
 				63C4EA682C258DF0003D3C0B /* UpcomingReviews.storyboard in Resources */,
 				63C4EA6A2C258E0E003D3C0B /* LessonPicker.storyboard in Resources */,
 				63C4EA4C2C257B8A003D3C0B /* Navigation.storyboard in Resources */,
-				63344E802D291C9F002A4FED /* AppStoreRelease.xcconfig in Resources */,
-				63344E812D291C9F002A4FED /* DeveloperDebug.xcconfig in Resources */,
-				63344E822D291C9F002A4FED /* TestFlightRelease.xcconfig in Resources */,
 				6365041F25D7DE0900801C2D /* Lessons.storyboard in Resources */,
 				6365040D25D7DC8000801C2D /* Settings.storyboard in Resources */,
 				9721708C2DBAF3A6001DFFED /* SubjectsExcluded.storyboard in Resources */,
