@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Presentation state only. The host owns grading, persistence and platform input.
 @MainActor @Observable public final class ReviewScreenState {
-  public enum Phase { case answering, incorrect, details }
+  public enum Phase: String { case answering, incorrect, details }
   public var phase = Phase.answering
   public var question = ""
   public var questionImage: Image?

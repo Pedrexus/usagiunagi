@@ -223,6 +223,82 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(
       element.exists && scroll.frame.intersects(element.frame), element.debugDescription)
   }
+  func testTypedAnswerSurvivesPauseAndClearsForTheNextQuestion() {
+    let app = launch([])
+    defer { app.terminate() }
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    let prompt = app.staticTexts["review.prompt"]
+    let first = prompt.value as? String
+    XCTAssertTrue(first == "Meaning" || first == "Reading")
+    let answer = first == "Reading" ? "ichi" : "one"
+    input.click()
+    input.typeText(answer)
+    app.pauseStudyAndReturn()
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertEqual(input.value as? String, answer)
+    XCTAssertEqual(prompt.value as? String, first)
+    app.buttons["review.submit"].click()
+    let changed = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value != %@", first!), object: prompt)
+    XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
+    XCTAssertEqual(input.value as? String, "")
+    app.pauseStudyAndReturn()
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertEqual(input.value as? String, "")
+    input.click()
+    input.typeText(first == "Reading" ? "one" : "ichi")
+    app.buttons["review.submit"].click()
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+  }
+
+  func testRetryKeepsItsDraftAndAnsweringStateWhenResumed() {
+    let app = launch([])
+    defer { app.terminate() }
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    app.buttons["review.settings"].click()
+    let autoreveal = app.switches["reviewSettings.autoreveal"]
+    makeVisible(autoreveal, in: app.sheets.firstMatch.scrollViews.firstMatch)
+    XCTAssertEqual((autoreveal.value as? NSNumber)?.boolValue, true)
+    autoreveal.click()
+    app.buttons["Done"].click()
+    let reading = app.staticTexts["review.prompt"].value as? String == "Reading"
+    input.click()
+    input.typeText(reading ? "inu" : "wrong")
+    app.buttons["review.submit"].click()
+    let retry = app.buttons["Try again"]
+    XCTAssertTrue(retry.waitForExistence(timeout: 5), app.debugDescription)
+    retry.click()
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    input.click()
+    let partial = reading ? "ic" : "on"
+    input.typeText(partial)
+    app.pauseStudyAndReturn()
+    XCTAssertTrue(input.waitForExistence(timeout: 5), app.debugDescription)
+    XCTAssertEqual(input.value as? String, partial)
+    XCTAssertFalse(app.buttons["Try again"].exists)
+  }
+
+  func testDiscardingTheSessionCannotRestoreItsDraftIntoANewSession() {
+    let app = launch([])
+    defer { app.terminate() }
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    input.click()
+    input.typeText("Unsubmitted text")
+    app.buttons["review.end"].click()
+    app.buttons["review.confirmEnd"].click()
+    XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 5))
+    app.buttons["home.reviews"].click()
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertEqual(input.value as? String, "")
+    XCTAssertFalse(app.staticTexts["Review session saved"].exists)
+  }
+
   func testHomeForecastAndSavedSubjectSearchOpenNativeScreens() {
     let app = launch(["--light-fixture"])
     defer { app.terminate() }

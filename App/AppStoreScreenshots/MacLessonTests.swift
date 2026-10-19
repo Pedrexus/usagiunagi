@@ -49,11 +49,15 @@ final class MacLessonTests: XCTestCase {
       predicate: NSPredicate(format: "value != %@", initialPrompt),
       object: app.staticTexts["review.prompt"])
     XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
+    let input = app.textFields["review.answer"]
+    let draft = initialPrompt == "Reading" ? "one" : "ichi"
+    input.click()
+    input.typeText(draft)
     app.pauseStudyAndReturn()
-    XCTAssertTrue(
-      app.textFields["review.answer"].waitForExistence(timeout: 5), app.debugDescription)
+    XCTAssertTrue(input.waitForExistence(timeout: 5), app.debugDescription)
     XCTAssertNotEqual(app.staticTexts["review.prompt"].value as? String, initialPrompt)
-    try answer(in: app)
+    XCTAssertEqual(input.value as? String, draft)
+    app.buttons["review.submit"].click()
     XCTAssertTrue(
       app.staticTexts["Lesson quiz saved"].waitForExistence(timeout: 5), app.debugDescription)
     app.buttons["Finish session"].click()

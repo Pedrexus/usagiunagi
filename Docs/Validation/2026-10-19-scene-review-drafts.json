@@ -1,0 +1,166 @@
+{
+  "recorded_at": "2026-10-19T19:38:20+09:00",
+  "baseline": "8e845d0fa16896928a2105c7140594b714a9a7db",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Native scene-scoped unfinished typed review/lesson input and retry presentation. No data schema, grading, sync, credentials, writer selection or real account change.",
+  "sources": {
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "8c1280003fdad7002c130fbb5fa850ae9961542ae82ef3fd6297ebd2cc1c73fd",
+    "Shared/Sources/StudyUI/Reviews/ReviewScreen.swift": "b7ed3a5f0ac87039b26589931e431accfac8f4c8e35e4201fff1ff001dab4ab7",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "6b11c3839ae1f068fba0c7c72910975f3f65476248738b14bd5b0053aace19ad",
+    "App/AppStoreScreenshots/MacLessonTests.swift": "6017ae516c9021aeeec89687003c8b71b2b31aee2424b1173bcda1d9b1d1147e"
+  },
+  "checks": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-draft-shared-mac.log",
+      "sha256": "f7f3a6374745e2ff879e56c1a1b285c59f98a16ed5d040c522b036d94a786696",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 331
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-draft-shared-ios.log",
+      "sha256": "bb0937740d23cc4bd8d950d978309fe57b2dcb1c28fed72166122ee8b1b41a5d",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-11854c9a3a6a4eec86c263b8bbeb85e1.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 331,
+        "passedTests": 331,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-draft-hosted.log",
+      "sha256": "1da3a9e00814df39f94fc7849a61d2a771832b84396db4d114641db347e2af8a",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-1e39cfa116fe472089959b9a26e9ebe4.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "retry_ui": {
+      "log": "/private/tmp/usagi-draft-retry-ui.log",
+      "sha256": "9d556cbf09e6d45d3c11ec4650ecde4b552101930649ae2b985977b11b0f6771",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6d544a61237e4937980aab8c9504f1c0.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      }
+    },
+    "lesson_draft_ui": {
+      "log": "/private/tmp/usagi-draft-lesson-typed-ui.log",
+      "sha256": "09b251f764dd58597032cf7013f739971f15fbd09ff8c076561382a98b0a6905",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-66fc271e894044269e3ac66fdcf5dd65.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      }
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-draft-release.log",
+      "sha256": "e36f2c68ea5afa7c24de2b22543ae6358799f593b27dc59905dca8497c61f4d6",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-50a733d83a8547a18b4349c454120b02.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-draft-final-format.log",
+      "sha256": "f038cd69117a840e1e1b820e18a00006e23704bac612e6c2f249f7c4bcb4cd4e"
+    }
+  },
+  "native_ui": {
+    "distinct_passing_cases": [
+      "testCombinedAnkiPreservesTheRevealedCardAcrossNavigationAndCompletesBothSides()",
+      "testDiscardingTheSessionCannotRestoreItsDraftIntoANewSession()",
+      "testReadingOnlyAnkiLeavesMeaningTyped()",
+      "testRetryKeepsItsDraftAndAnsweringStateWhenResumed()",
+      "testTeachingQuizPauseResumeAndFinish()",
+      "testTypedAnswerSurvivesPauseAndClearsForTheNextQuestion()"
+    ],
+    "evidence": "Five cases passed in an expanded run whose retry setup failed. The corrected retry case passed separately. The existing lesson case was then strengthened to type an answer before pausing and passed again. This is six distinct accepted cases across runs, not a claimed green six-case bundle.",
+    "expanded_run": {
+      "bundle": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/test-c9eefcd4f49c4f50bb8c31c9fe7c1e12.xcresult",
+      "log": "/private/tmp/usagi-draft-native-ui.log",
+      "result_file": "/private/tmp/usagi-draft-native-result.json",
+      "result_sha256": "4f516c82ea644a1891ccb5a838e1b82fe8e99e3c558c541caad76ffba99e18eb",
+      "result": "Failed",
+      "passed": 5,
+      "failed": 1,
+      "runtime_warnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+        }
+      ]
+    },
+    "initial_failure": "The new retry test assumed a retry button with default automatic reveal. It now explicitly disables automatic reveal before entering the incorrect answer; production reveal behavior is unchanged."
+  },
+  "before_fix": {
+    "log": "/private/tmp/usagi-draft-before.log",
+    "sha256": "2b6fe79dc2ce44e41c40de938dce059da7f35143916582e243552e2d685ff32c",
+    "failure": "The actual paused field changed from ichi to an empty string; the new regression failed before scene storage was implemented."
+  },
+  "production_swift_loc": {
+    "baseline": "8e845d0fa16896928a2105c7140594b714a9a7db",
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29081,
+    "after": 29118,
+    "changed": [
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift",
+        "before": 489,
+        "after": 526
+      }
+    ],
+    "artwork_bytes": 27986,
+    "artwork_sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "apple_reference": "https://developer.apple.com/documentation/swiftui/scenestorage",
+  "limits": [
+    "Scene storage is lightweight per-scene UI continuity, with no guaranteed persistence schedule; destroying the scene destroys the draft.",
+    "The account and saved-session revision fence stale drafts; submitted queues, decisions and outbox writes retain their existing native transactions.",
+    "Native scene UI was executed on Mac and compiled/tested in the iOS shared package. iOS production still uses the legacy root until the documented handoff gates pass.",
+    "The Mac UI results report an internal thread-priority runtime warning; app cause is not established, no checker is disabled and no warning-free UI claim is made.",
+    "The earlier iOS/iPadOS notes-keyboard invalid-frame warning remains open and was not changed by this feature.",
+    "Shared sign-in/routes, notifications/watch, cold writer handoff and physical/full-account acceptance remain open."
+  ],
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

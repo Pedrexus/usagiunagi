@@ -34,6 +34,11 @@ public struct NativeReviewView: View {
   @State private var customFont = ""
   @State private var fullDetails = false
   @StoredReviewPreferences private var preferences
+  // Only transient UI state. Submitted answers remain in the revision-checked store/outbox.
+  @SceneStorage("review.draft.identity") private var draftIdentity = ""
+  @SceneStorage("review.draft.answer") private var draftAnswer = ""
+  @SceneStorage("review.draft.feedback") private var draftFeedback = ""
+  @SceneStorage("review.draft.phase") private var draftPhase = ReviewScreenState.Phase.answering
   @FocusState private var answerFocused: Bool
 
   public init(
@@ -62,6 +67,7 @@ public struct NativeReviewView: View {
             Button("Quick settings", systemImage: "slider.horizontal.3") { settings = true }
               .accessibilityIdentifier("review.settings")
             Button("End session", systemImage: "xmark") { confirmEnd = true }
+              .accessibilityIdentifier("review.end")
           }.padding(.horizontal)
         }
         if review.question == nil {
@@ -157,7 +163,13 @@ public struct NativeReviewView: View {
       }
     }
     .disabled(busy)
-    .onDisappear { audio.stop() }
+    .onDisappear {
+      rememberDraft()
+      audio.stop()
+    }
+    .onChange(of: screen.answer) { _, _ in rememberDraft() }
+    .onChange(of: screen.phase) { _, _ in rememberDraft() }
+    .onChange(of: screen.feedback) { _, _ in rememberDraft() }
     .onChange(of: preferences) { _, _ in applyPreferences() }
     .onChange(of: lessonSettings.value.allowVocabularyExclusion) { _, _ in applyPreferences() }
     .onChange(of: fonts.selectedFiles) { _, _ in chooseFont(newSubject: false) }
@@ -195,7 +207,7 @@ public struct NativeReviewView: View {
             self.review = nil
             finished()
           }
-        }
+        }.accessibilityIdentifier("review.confirmEnd")
       }
     } message: {
       Text(
@@ -249,6 +261,9 @@ public struct NativeReviewView: View {
   private func present(_ value: NativeReviewState) {
     if review?.question != value.question { fullDetails = false }
     let previous = review
+    let restoringDraft =
+      previous == nil && value.question != nil && !value.isAnki
+      && draftIdentity == draftKey(value)
     review = value
     if value.success != nil, let previous, let subject = previous.subject, !subject.audio.isEmpty,
       preferences.autoplayAudio,
@@ -283,14 +298,36 @@ public struct NativeReviewView: View {
     screen.phase =
       session.currentDecision == .incorrect
       ? (value.isAnki || preferences.revealAnswers ? .details : .incorrect) : .answering
-    screen.answer = ""
+    screen.answer = restoringDraft ? draftAnswer : ""
     screen.feedback =
       session.currentDecision == .incorrect ? "Incorrect answer. Try again or reveal it." : ""
+    if restoringDraft {
+      screen.phase = draftPhase
+      screen.feedback = draftFeedback
+    }
     applyPreferences()
+    rememberDraft()
     screen.success = nil
     if let success = value.success { screen.recordSuccess(success) }
     chooseFont(newSubject: newSubject)
     answerFocused = !value.isAnki
+  }
+  private func draftKey(_ state: NativeReviewState) -> String {
+    accountID + ":" + state.saved.revision.uuidString
+  }
+  private func rememberDraft() {
+    guard let review else { return }
+    guard review.question != nil, !review.isAnki else {
+      draftIdentity = ""
+      draftAnswer = ""
+      draftFeedback = ""
+      draftPhase = .answering
+      return
+    }
+    draftIdentity = draftKey(review)
+    draftAnswer = screen.answer
+    draftFeedback = screen.feedback
+    draftPhase = screen.phase
   }
   private func change(_ action: NativeReviewAction) {
     guard let review else { return }

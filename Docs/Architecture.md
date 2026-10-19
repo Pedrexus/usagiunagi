@@ -18,6 +18,12 @@ Mac consumes the shared root/model/store. iOS still uses its legacy coordinator/
 
 Put business behavior and screens in Shared. Keep `#if os(...)` at the narrow platform capability edges; prefer layout and availability adaptation inside views. There is one SwiftUI app entry point; the iOS legacy coordinator remains a temporary destination. `App/Platform` contains temporary capability bridges; platform configuration stays in `App/Configuration`. The remaining watch target is a companion, not another phone/Mac app.
 
+## Unfinished review input
+
+`NativeReviewView` uses SwiftUI `SceneStorage` for the unfinished typed answer, validation feedback and answering/retry phase. The key includes the account ID and the store's current saved-session revision. Reopening that same question restores the text and retry presentation; another account, an advanced/discarded session or a different stored revision cannot receive that draft. Anki presentation is reconstructed from the existing persisted decision and does not consume a typed draft.
+
+This is lightweight UI continuity within a scene. [Apple documents](https://developer.apple.com/documentation/swiftui/scenestorage) that scene storage is separate per scene, has no guaranteed persistence schedule and is destroyed when the scene is explicitly destroyed. The app does not promise unsubmitted text survives closing a Mac window or destroying an iPad scene. Grades, queues and uploads remain owned by the existing revision-checked SwiftData transaction; no schema, query, account credential, grading or sync changes are involved.
+
 ## Shared lesson choices
 
 `StudyLessonPreferences` owns the original defaults, normalized batch sizes, subject order, current-level priority, Apprentice limit and kana-only vocabulary choice. One strict level/type/ID comparator is used by native selection and the temporary iOS adapter. `StudyLessonSettings` merges individual edits into the latest stored value; all native windows share the app-owned observable instance. `LessonSettingsView` is common SwiftUI, with native list reordering on iOS and small move buttons on Mac.
