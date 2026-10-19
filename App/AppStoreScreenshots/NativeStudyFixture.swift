@@ -118,7 +118,8 @@
     private static func reviewFixtureStore() async throws -> (StudyStore, StudyDownload) {
       let cache = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
       var profile = StudyAccountProfile(username: "Synthetic review fixture")
-      profile.level = 1
+      let statistics = ProcessInfo.processInfo.arguments.contains("--statistics-fixture")
+      profile.level = statistics ? 24 : 1
       profile.maxLevelGranted = 60
       var subject = CatalogSubject(id: 1, kind: .kanji)
       subject.level = 1
@@ -264,6 +265,22 @@
               meaningWrong: !lesson, readingWrong: false, meaningWrongCount: lesson ? 0 : 1,
               readingWrongCount: 0, createdAt: 100))
         ]
+      }
+      if statistics {
+        var start = Date.now.addingTimeInterval(-95 * 86400)
+        for (index, days) in [10, 12, 11, 14, 9, 13, 12, 13].enumerated() {
+          let end = start.addingTimeInterval(Double(days) * 86400)
+          var level = CatalogLevelProgression(id: Int64(index + 1))
+          level.level = index + 16
+          level.unlockedAt = Int64(start.timeIntervalSince1970)
+          level.passedAt = Int64(end.timeIntervalSince1970)
+          fixture.levels.append(level)
+          start = end
+        }
+        var current = CatalogLevelProgression(id: 9)
+        current.level = 24
+        current.unlockedAt = Int64(start.timeIntervalSince1970)
+        fixture.levels.append(current)
       }
       _ = try await cache.importLegacyAccount(
         fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",

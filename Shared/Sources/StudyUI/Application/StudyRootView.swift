@@ -532,19 +532,13 @@ public struct StudyRootView: View {
       }
       Section("Explore") {
         Button("Preview free levels 1–3") {
-          model.loadSample(freeLevels: true)
+          model.loadPreview()
           showSettings = false
           tab = .home
           path = [.catalog(.init())]
         }.disabled(model.isSyncing)
-        Button("Use sample data") {
-          model.loadSample()
-          showSettings = false
-          tab = .home
-          path = []
-        }.disabled(model.isSyncing)
         Text(
-          "The level preview contains display readings and meanings for browsing. Demo progress is synthetic. Neither is uploaded or saved over your account cache."
+          "The level preview contains display readings and meanings for browsing. It is never uploaded or saved over your account cache."
         ).font(.caption).foregroundStyle(.secondary)
       }
     }.formStyle(.grouped).navigationTitle("Account").onDisappear { signIn.cancel() }

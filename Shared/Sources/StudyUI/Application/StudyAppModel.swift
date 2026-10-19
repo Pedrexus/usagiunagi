@@ -120,10 +120,10 @@ public final class StudyAppModel {
       profile = savedProfile
     } catch { if generation == epoch { self.error = error.localizedDescription } }
   }
-  public func loadSample(freeLevels: Bool = false) {
+  public func loadPreview() {
     guard !isSyncing else { return }
     do {
-      snapshot = try (freeLevels ? StudySnapshot.freeLevelsPreview() : StudySnapshot.sample())
+      snapshot = try StudySnapshot.freeLevelsPreview()
       profile = nil
       error = nil
       syncSummary = nil

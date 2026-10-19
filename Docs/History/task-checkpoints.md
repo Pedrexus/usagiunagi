@@ -1,4 +1,4 @@
-> Historical record through 2026-10-18. Paths and counts describe their original checkpoints. See [current tasks](../TASKS.md), [architecture](../Architecture.md) and [development workflow](../Development.md).
+> Historical checkpoints. Paths and counts describe their original checkpoints. See [current tasks](../TASKS.md), [architecture](../Architecture.md) and [development workflow](../Development.md).
 
 # usagiunagi task tracker
 
@@ -652,3 +652,10 @@ Shared suites pass 434 functions on each platform; hosted integration passes 95 
 Settings and its font/audio/developer destinations now use one SwiftUI navigation path on iOS. Three replaced UIKit controller wrappers are removed; the shared font/audio/diagnostic views, service owners and original archives remain. A common quick-settings sheet replaces separate host navigation state and the old dismiss-then-push Fonts flow. Back returns to quick settings; Done returns directly to the unchanged review draft. Native in-session controls now match the original quick-settings scope, with queue/session controls retained in main Settings.
 
 Shared suites still contain 434 functions per platform and hosted integration contains 95. The existing route, media, draft and diagnostic acceptance cases are renewed with their assertions preserved. Direct Mac observations verify both media routes, font selection and an unchanged unsubmitted draft. Current final results and line counts belong to [settings-navigation validation](Validation/2026-10-20-settings-navigation.json). The native Mac automated runner, native iOS scene/writer adoption, diagnostics/account parity, archive handoff and physical-device acceptance remain separate open gates.
+
+
+## Preference-handoff checkpoint before native cleanup
+
+The recoverable handoff now includes original settings and media ownership. A validated, nonmutating archive reader captures the effective old defaults, enum codes, sets, notifications, endpoint, catalog visibility and avatar fallback together. Native bootstrap restores absent keys from the durable receipt after activation, preserving later choices and recovering even if the process stops before its first preference write. Existing font/audio caches stay in their original directories. Actual SQLite schemas 9–15 now exercise this source adapter with disposable preferences; source database and archive bytes remain unchanged.
+
+Shared suites pass 445 functions on each platform and hosted integration passes 99. Seven separate-process phases verify exact crash checkpoints, offline recovery and rollback. This adds required migration code rather than claiming a LOC reduction. Exact builds, tests, source hashes and limitations are in [preference-handoff validation](Validation/2026-10-20-preference-handoff.json). Production iOS scene/root/writer adoption, native diagnostics/account controls, keyboard/timing behavior and physical/signed-device checks remain open.

@@ -42,8 +42,6 @@ public struct StudyTabs<Home: View, Practice: View, Statistics: View>: View {
           "navigation.Statistics")
       }
     }
-    #if os(iOS)
-      .tabViewStyle(.sidebarAdaptable)
-    #endif
+    .tabViewStyle(.tabBarOnly)
   }
 }

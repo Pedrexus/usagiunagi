@@ -6,7 +6,9 @@
     func testPastPaceChartExpandsWithoutOpeningASheet() throws {
       continueAfterFailure = false
       let app = XCUIApplication()
-      app.launchArguments = ["-ApplePersistenceIgnoreState", "YES", "--sample-data"]
+      app.launchArguments = [
+        "-ApplePersistenceIgnoreState", "YES", "--review-fixture", "--statistics-fixture",
+      ]
       app.launch()
       app.activate()
       defer { app.terminate() }

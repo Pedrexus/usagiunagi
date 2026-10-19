@@ -20,8 +20,7 @@ struct UsagiUnagiApp: App {
           model: services.model, automaticSync: services.automaticSync, appName: AppIdentity.name,
           appearance: services.appearance,
           notice: services.notice,
-          notifications: ProcessInfo.processInfo.arguments.contains("--sample-data")
-            ? nil : services.notifications
+          notifications: services.notifications
         )
         .environment(services.fonts).environment(services.audio).environment(
           services.lessonSettings
@@ -30,11 +29,7 @@ struct UsagiUnagiApp: App {
         .defaultAppStorage(services.defaults)
         .frame(minWidth: 640, minHeight: 500)
         .task {
-          if ProcessInfo.processInfo.arguments.contains("--sample-data") {
-            services.model.loadSample()
-          } else {
-            await services.model.restore()
-          }
+          await services.model.restore()
         }
       #endif
     }

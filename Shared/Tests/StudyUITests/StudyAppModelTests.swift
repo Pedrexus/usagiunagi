@@ -252,7 +252,7 @@ private actor ModelRepository {
     #expect(model.isSyncing)
     await model.restore()
     #expect(model.error == nil)
-    model.loadSample()
+    model.loadPreview()
     #expect(model.snapshot == nil)
     await #expect(throws: StudyUploadError.self) { try await model.connect("other") }
     await gate.resume()
@@ -316,7 +316,7 @@ private actor ModelRepository {
     await model.restore()
     await model.refresh()
     #expect(try await cache.savedWork(accountID: account).materials.count == 1)
-    model.loadSample(freeLevels: true)
+    model.loadPreview()
     #expect(model.snapshot?.isSample == true && model.snapshot?.subjects.count == 357)
     await #expect(throws: StudyStoreError.self) {
       try await model.syncSavedWork(accountID: account)

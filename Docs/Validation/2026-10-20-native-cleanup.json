@@ -1,0 +1,264 @@
+{
+  "date": "2026-10-20",
+  "baseline": "17b62598f25327d2e581add83651575730b98bcc",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Remove shipping synthetic-progress mode; share native tab-bar presentation; replace six reference source JSON catalogs with lossless Apple property lists, retaining current runtime data and active iOS behavior.",
+  "validatedFiles": {
+    "App/AppStoreScreenshots/MacStatisticsTests.swift": "d61f2355a34779796291e59b3fe229c3472c50fae87bd07245230dda47f01412",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "4a20a919b9d22cb768e491b3c663f888943ddc9f8a7ef71fcbadb966716b024d",
+    "App/UsagiUnagiApp.swift": "346610da0c0a8909507b57837d371811d88fc4b62e18c680dab9105344c5e853",
+    "Docs/Architecture.md": "baf7d1b839d8ffbca73ac3f03a766d973e0853de0e91cf54ca02aa02f7b7668b",
+    "Docs/Development.md": "97c22686ddd16f6f4ef866f4692544d926d86443e85e9410d70f20a9901f8e06",
+    "Docs/History/task-checkpoints.md": "1ec6f943956581c78298a047acdeb9958e7ddbf5db5cfdeb2af5ede367836010",
+    "Docs/TASKS.md": "9e92e8bddf661b8a9fe9abcc39ed0038a7c23e4fc59fd6c334bbecf3757dff12",
+    "Resources/Generators/SimilarKanji/README.md": "05bb7c4d4125aa16bba6a6248aa9af93b14cf8851ca9f4c576038908ff8b575e",
+    "Resources/Generators/SimilarKanji/from_keisei.plist": "b820b78ab991e8f4b00d821259996368e8f7c82506ac56dc9a2e17f72c55b51b",
+    "Resources/Generators/SimilarKanji/generate.swift": "7f98b798af6547e5b5bb593705c5399c0f20a579e0bb71e110c48568d0f97353",
+    "Resources/Generators/SimilarKanji/manual.plist": "eb40158615af3d6956ae0ba42ee9dee6e3e65631074a2d552c9c809f25b34fa2",
+    "Resources/Generators/SimilarKanji/old_script.plist": "94a421ada47cf293072d0a6d9912f659a446c8aa2663f014e92016ba9663ffb8",
+    "Resources/Generators/SimilarKanji/stroke_edit_dist.plist": "ba614c146c509d6ef3c02e5850b0afb733695f6a4c80aa912b347ebd200f0593",
+    "Resources/Generators/SimilarKanji/wk_niai_noto.plist": "c349582accfd13a0c3b29b0cee0b259727dbea73f6d1e4f6f8ae86d51dbab25c",
+    "Resources/Generators/SimilarKanji/yl_radical.plist": "1c7c046816ca1086ff9224ed1e3d57371858434b3a09fb0b564566b2dd10deb8",
+    "Shared/Sources/StudyUI/Application/StudyAppModel.swift": "33a5e5b8dddb3646a92ca8f03d1837a990b1728f6cb347cb99b627ec1313caf8",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "967cf1c7ffea7450930c7f3ddb55e3e360ed1cba780e253a23425ca25170445e",
+    "Shared/Sources/StudyUI/Home/StudyTabs.swift": "4fc6e2c55ac450bcce80927694b5bcebe283b9956086e5339223e1b84534fc0b",
+    "Shared/Tests/StudyPersistenceTests/StudyStoreTests.swift": "be6211f128767a3bb4c57acb756a854ea444c3f4d077b5b3adbfd6289e867c6e",
+    "Shared/Tests/StudyTestSupport/SampleSnapshot.swift": "e07ffccfb7d25f6e46d95e4aab816c1cf93560f20086b7d44af1125f7d1b00db",
+    "Shared/Tests/StudyUITests/StudyAppModelTests.swift": "d2a3359f78309aadecf544251bc26a97fe100554a61281d7882a3126da686a68"
+  },
+  "deletedFiles": {
+    "Resources/Generators/SimilarKanji/from_keisei.json": "a7e86ee472844e4616d85f0be597618b0b7e7dd9d477eb78a30b49030f18a3ed",
+    "Resources/Generators/SimilarKanji/manual.json": "2bb98e917fd561886cd8cb4605a4560bbaaf39ef854d68031234143b10219ec6",
+    "Resources/Generators/SimilarKanji/old_script.json": "720a584988536f1d8570b38929bf650a53cd2c2f6a048a3b0ce707b6fe394610",
+    "Resources/Generators/SimilarKanji/stroke_edit_dist.json": "6da8b33092240e7d710e987f1a8e0c71b0bccf64597640ad745599e1b517065d",
+    "Resources/Generators/SimilarKanji/wk_niai_noto.json": "5b94863afd9d5667da84f2355e57f9e4cd9bedae2fac92ebe25aa95e20b374c3",
+    "Resources/Generators/SimilarKanji/yl_radical.json": "3088426283e3aa70d2305df0499036c3dd07daf1e799c60b08d1b9f38527787d",
+    "Shared/Sources/StudyCore/SampleSnapshot.swift": "208fe26bbbe4a024c59cda630d513257278ee3cc20c723fcd98fc7419c5accbb"
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30795,
+    "after": 30753,
+    "changed": [
+      {
+        "path": "App/UsagiUnagiApp.swift",
+        "before": 59,
+        "after": 54
+      },
+      {
+        "path": "Shared/Sources/StudyCore/SampleSnapshot.swift",
+        "before": 29,
+        "after": 0
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 612,
+        "after": 606
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/StudyTabs.swift",
+        "before": 49,
+        "after": 47
+      }
+    ]
+  },
+  "referenceSourceConversion": {
+    "files": [
+      {
+        "afterBytes": 63852,
+        "beforeBytes": 142721,
+        "decodedValuesIdentical": true,
+        "name": "from_keisei",
+        "sourceLines": 10847
+      },
+      {
+        "afterBytes": 635,
+        "beforeBytes": 3613,
+        "decodedValuesIdentical": true,
+        "name": "manual",
+        "sourceLines": 272
+      },
+      {
+        "afterBytes": 72320,
+        "beforeBytes": 118008,
+        "decodedValuesIdentical": true,
+        "name": "old_script",
+        "sourceLines": 11775
+      },
+      {
+        "afterBytes": 689948,
+        "beforeBytes": 1104960,
+        "decodedValuesIdentical": true,
+        "name": "stroke_edit_dist",
+        "sourceLines": 81692
+      },
+      {
+        "afterBytes": 4757356,
+        "beforeBytes": 8041438,
+        "decodedValuesIdentical": true,
+        "name": "wk_niai_noto",
+        "sourceLines": 436970
+      },
+      {
+        "afterBytes": 678919,
+        "beforeBytes": 1071325,
+        "decodedValuesIdentical": true,
+        "name": "yl_radical",
+        "sourceLines": 81692
+      }
+    ],
+    "beforeBytes": 10482065,
+    "afterBytes": 6263030,
+    "removedJSONLines": 623248,
+    "generatorSwiftBefore": 58,
+    "generatorSwiftAfter": 61,
+    "conversion": {
+      "log": "/private/tmp/usagi-kanji-source-conversion.log",
+      "sha256": "8d90619fa32ab726822f1d399005c6b5690799db695a1febbdd4a4ebc42bc486"
+    },
+    "comparison": {
+      "log": "/private/tmp/usagi-kanji-output-comparison.log",
+      "sha256": "04c0d57b09a4407ddacf0ff15dac168313a62ab11bdc06777977182d2942cb3f"
+    },
+    "generatedEntries": 2380,
+    "runtimeCatalog": {
+      "path": "Shared/Sources/StudyCore/Resources/visually-similar-kanji.plist",
+      "sha256": "6a230345467c6f3423aa72fe39e8b35843040e2b26f3400db0f92bfdeb6ac50f",
+      "unchanged": true
+    },
+    "precision": "Read original Double values from property lists; explicitly retain the old Float rounding before thresholding, merging and sorting."
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-shell-cleanup-shared.log",
+    "sha256": "177f55db7c5da297c24d3bbb4d19f564970597528dbca1061859c41cf4d6c3df",
+    "testFunctions": 445,
+    "byModule": {
+      "core": 215,
+      "persistence": 171,
+      "speech": 7,
+      "ui": 52
+    }
+  },
+  "sharedIOS": {
+    "log": "/private/tmp/usagi-shell-cleanup-shared-ios.log",
+    "sha256": "4331969865661eb6c934a2294e721a6290142c717d6ffe4487aa8a01a3775981",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-1d834817a6524edda91f6fbd05ff3913.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 445,
+      "passedTests": 445,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "phoneUI": {
+    "log": "/private/tmp/usagi-shell-cleanup-phone.log",
+    "sha256": "7a335664556df21fd35995c37ca75ac5c10c2a2a40a0e56bf164efc4d5c9c6e5",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-dbb0b420ec5c4e8786a4334e82391d26.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "padUI": {
+    "log": "/private/tmp/usagi-shell-cleanup-pad.log",
+    "sha256": "7a874b5c746d3f8e4a255798b7644940acbd4d12606ccc52e767cf730658e73d",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-78d102bff0a3442495dcff7f1b7a52b5.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "macBuildForTesting": {
+    "log": "/private/tmp/usagi-shell-cleanup-mac-debug.log",
+    "sha256": "0aead876800cf1156ec83956cd2e42df8fef5e2f1941a4a98d08ab550daa37cc",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-for-testing-e7829c8c265641c88a1397cedea5c7ce.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "macRelease": {
+    "log": "/private/tmp/usagi-shell-cleanup-release-mac.log",
+    "sha256": "37d71548783131ac4cc5b082d6ddcdc67b9ec7d7d4ce68e71a60dbfa3cd56cb2",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-522cbfee0d4a4c54a38521a598ede714.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "iosRelease": {
+    "log": "/private/tmp/usagi-shell-cleanup-release-ios.log",
+    "sha256": "143c89135cf7edd83e924ca4dede5c6c2e3612d7426033cd27316980b4cfc60f",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-e21f62c528ab426ebb8b9a5fccb0aa55.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 41,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "nativeMac": {
+    "environment": "DEBUG-only synthetic review fixture, memory-only store and simulated service",
+    "observations": [
+      "Home has native Home/Practice/Stats tabs; no sidebar or header overlap.",
+      "Stats contains the original eight pace values and Past average error: 1.8 days across 5 levels.",
+      "Compare past estimates expands its chart inline without a sheet.",
+      "Back from an unanswered review exposes Resume reviews.",
+      "Resume preserves the unsubmitted みほん draft with 0 completed and 1 remaining."
+    ],
+    "screenshot": "/private/tmp/usagi-native-tabs-home.png",
+    "submittedAnswers": 0,
+    "liveAccountAccess": false,
+    "screenshotSHA256": "36fad4feec08465a265a33615ed3e8819cda60149111355e34607e538758298c"
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-shell-cleanup-format.log",
+    "sha256": "71c792be864c238af3c4c0686506f00821bbfe9416bc6f12f5c3317a8b99885c"
+  },
+  "previousHandoffValidation": "2026-10-20-preference-handoff.json",
+  "limits": [
+    "The active iOS SQLite/protobuf writer is retained until native scene/root/bootstrap and platform behavior are ready.",
+    "JSON API payloads, Apple icon/asset metadata and the original native cache recovery reader remain necessary contracts.",
+    "Reference JSON line removal is data cleanup, separate from the 42-line production Swift reduction; the standalone reference generator adds 3 Swift lines.",
+    "The prior preference handoff adds 285 production lines, so these two commits together add 243 net production lines while preparing safe legacy-writer retirement.",
+    "No sidebar or prototype header changes are shipped. Mac follows native tabs, rather than claiming a complete new Mac design.",
+    "Mac automated runner acceptance, physical speech/input/permissions, signed upgrades, full-account statistics and hosted Actions remain open.",
+    "No live account access, exercise, credential extraction, push or PR occurred."
+  ],
+  "references": [
+    "https://developer.apple.com/documentation/swiftui/tabbaronlytabviewstyle"
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

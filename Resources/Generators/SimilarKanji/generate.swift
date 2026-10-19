@@ -5,11 +5,12 @@ import Foundation
 struct SimilarKanjiIndex {
   struct Entry: Codable {
     let kan: String
-    var score: Float
+    var score: Double
   }
   private var entries: [String: [Entry]] = [:]
 
   mutating func add(_ character: String, similar: String, score: Float) {
+    let score = Double(score)
     if let index = entries[character]?.firstIndex(where: { $0.kan == similar }) {
       entries[character]![index].score = max(entries[character]![index].score, score)
     } else {
@@ -18,18 +19,20 @@ struct SimilarKanjiIndex {
   }
 
   mutating func load(from directory: URL) throws {
-    let decoder = JSONDecoder()
+    let decoder = PropertyListDecoder()
     for name in ["from_keisei", "manual", "old_script"] {
-      let data = try Data(contentsOf: directory.appendingPathComponent("\(name).json"))
+      let data = try Data(contentsOf: directory.appendingPathComponent("\(name).plist"))
       for (character, values) in try decoder.decode([String: [String]].self, from: data) {
         for value in values { add(character, similar: value, score: 1) }
       }
     }
     for name in ["stroke_edit_dist", "wk_niai_noto", "yl_radical"] {
-      let data = try Data(contentsOf: directory.appendingPathComponent("\(name).json"))
+      let data = try Data(contentsOf: directory.appendingPathComponent("\(name).plist"))
       for (character, values) in try decoder.decode([String: [Entry]].self, from: data) {
-        for value in values where value.score > 0.4 {
-          add(character, similar: value.kan, score: value.score)
+        for value in values {
+          // Preserve the original JSON decoder’s Float rounding, threshold and equal-score ties.
+          let score = Float(value.score)
+          if score > 0.4 { add(character, similar: value.kan, score: score) }
         }
       }
     }
