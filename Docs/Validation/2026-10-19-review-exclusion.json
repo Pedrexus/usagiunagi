@@ -1,0 +1,434 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-19T09:27:10Z",
+  "source_base_commit": "5759aa3d9313b427bbca5ee7a4bc7d0ad52697b8",
+  "branch": "codex/swiftui-27-curriculum",
+  "status": "Atomic review exclusion and native assembly/Home cleanup; full modernization remains open",
+  "implementation": {
+    "review_exclusion": "The existing correction menu removes revealed vocabulary from the queue and changes only the latest notes marker in one store transaction. No completion, assignment change or review submission is created for that item. Older completed/attempted uploads, server identity, notes, synonyms and recovery state are preserved. Stale/invalid actions roll back both writes.",
+    "eligibility": "Typed review corrections and revealed Anki review/lesson/practice follow original rules. Typed lessons cannot exclude. The common lesson visibility preference hides the menu action without clearing exclusions.",
+    "catalogue": "Catalog toggles still preserve paused queues. Only explicit review-menu exclusion removes the current question.",
+    "persistence": "Public session/material writers reuse transaction-owned internal writes; no nested independent commits or schema changes.",
+    "composition": "One State-owned StudyAppAssembly. DEBUG-native fixture accounts/transports move to the existing AppStoreScreenshots support area. Both hosts use one installed-font fixture catalog.",
+    "home": "One shared Home with compact WaniKani-tinted glass actions, one lesson picker, no redundant slogans/cards and no all-zero forecast plot; original iPad section order retained. Native Mac uses an inset list bounded to 960 points.",
+    "loc": {
+      "metric": "Physical Swift lines including moved fixture, excluding new atomic-exclusion tests and unrelated source",
+      "before": 690,
+      "after": 674,
+      "net": -16,
+      "production_assembly_before": 287,
+      "production_assembly_after": 50,
+      "whole_codebase_reduction_claimed": false
+    },
+    "json_sql": "Synthetic wire-format replies remain DEBUG test data. Codable/API/curriculum JSON and active iOS SQLite/migration SQL remain necessary; neither is replaced by fake production data or deleted before writer handoff.",
+    "ios_writer_changed": false,
+    "new_dependencies": [],
+    "live_wanikani_changes": false,
+    "pushed": false,
+    "pr_created": false
+  },
+  "source_sha256": {
+    "App/AppStoreScreenshots/FontFixture.swift": "46b4909cee3f7942073a45afe584362ec59d250fde8f059ab8b780aa2b4d897e",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "6c64f29329cf941ce199c15dca98da796124be9654f8792f5dc924550feaee9d",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "12d1042b080f9dc9bc30963ec8cbb466cccc36f5561ca875a06ffab2c61d27b9",
+    "App/Application/StudyAppAssembly.swift": "c0c89c50a16d06e2d11e9b19918ff279344aadd50e74b27ad62a4e57ef0ca7af",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "619fb4e58cb629aadc559a3b3033cdfdbe621a968f7d3fecb8803b7e92b099d2",
+    "App/UsagiUnagiApp.swift": "159f36460b8dac2c6bdd74b5ee06af4ddb023d122a2bc235ba78b3b3b699669b",
+    "Shared/Sources/StudyPersistence/StudyStore+Materials.swift": "36d266cdd87b4655059850b6305e6c34eb5143198228d414eb1359b4b9d437c2",
+    "Shared/Sources/StudyPersistence/StudyStore+Reviews.swift": "b7efc298783db0b66f9ff59ac103799388a274f8798145b103f388ccb92bd9df",
+    "Shared/Sources/StudyPersistence/StudyStore+SubjectDetails.swift": "c21f7358f4f1790116cfb7edf94ea8182e11850b3bf915fb988e90da1256cce5",
+    "Shared/Sources/StudyPersistence/StudyStore.swift": "8c9d8fc119f48511477bb92588f8d77dc7a8f0c44b34f1f4c522ce123d91ba2b",
+    "Shared/Sources/StudyUI/Home/HomeDashboardView.swift": "646f1e8867fe406e64595dfbe1b08c20fb19dcc2f938828d622b2d28ef286a45",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "d110c0389becba881a83047dc3d3a600aa01f56e0562a7da646ca7fd53099a83",
+    "Shared/Sources/StudyUI/Reviews/ReviewScreen.swift": "e70a8894b9557341b155f5b588419145cff6bd4028ddd37a277e2f3f0da24773",
+    "Shared/Tests/StudyPersistenceTests/ReviewExclusionTests.swift": "502fbe7b6888e5b531c3aa2204be72a363577f95c39d0c57d8ae6222ec0a5f49"
+  },
+  "validation": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-cleanup-shared-mac.log",
+      "log_sha256": "1e42c6f011a97c785d4dcfbc323cbfc366ea7a79749ab12f7ca994b4cf947b09",
+      "passed": 323,
+      "breakdown": {
+        "core": 161,
+        "persistence": 141,
+        "speech": 7,
+        "application": 14
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-cleanup-shared-ios.log",
+      "log_sha256": "25eb60289d318f9e8bae7365131159f6d4e9192bbeed9b5ad9947ece4f90ab6a",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-1660cb0b669c4f66a31cde79c2bf7788.xcresult",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 323,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 480,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "native_mac": {
+      "distinct_workflows_passing": 12,
+      "latest_result_by_workflow": {
+        "MacLessonTests/testNativeApprenticeLimitDisablesOnlyNewLessonsAndCanBeChanged": "passed",
+        "MacLessonTests/testNativeLessonChoicesReorderAndTeachTheConfiguredBatch": "passed",
+        "MacLessonTests/testPrimaryLessonActionOpensTeachingWithoutThePicker": "passed",
+        "MacLessonTests/testTeachingQuizPauseResumeAndFinish": "passed",
+        "MacReviewModeTests/testAnkiLessonMenuExcludesWithoutStartingTheLesson": "passed",
+        "MacReviewModeTests/testAnkiReviewMenuExcludesWithTypedCorrectionsDisabled": "passed",
+        "MacReviewModeTests/testCombinedAnkiPreservesTheRevealedCardAcrossNavigationAndCompletesBothSides": "passed",
+        "MacReviewModeTests/testFontFailuresCancelAndDeleteAreNativeAndRecoverable": "passed",
+        "MacReviewModeTests/testHomeForecastAndSavedSubjectSearchOpenNativeScreens": "passed",
+        "MacReviewModeTests/testNativeVocabularyExclusionUpdatesHomeAndCanBeReversed": "passed",
+        "MacReviewModeTests/testSessionModeCanBeConfiguredBeforeOpeningReviews": "passed",
+        "MacReviewModeTests/testTypedReviewMenuExcludesWithoutCreditingTheSubject": "passed"
+      },
+      "attempts": [
+        {
+          "log": "/private/tmp/usagi-cleanup-native-acceptance.log",
+          "log_sha256": "1599d624523a6f3b24efab82b2665c67296f2ed6a42bf962d5835a7fb426f8e2",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-1df4ac3d6f4144f5b84bad9b4671cf9b.xcresult",
+          "summary": {
+            "result": "Passed",
+            "passedTests": 12,
+            "failedTests": 0,
+            "skippedTests": 0,
+            "runtimeWarnings": [],
+            "devicesAndConfigurations": [
+              {
+                "device": {
+                  "architecture": "arm64",
+                  "deviceId": "00006040-000649442200801C",
+                  "deviceName": "My Mac",
+                  "modelName": "Mac mini",
+                  "osBuildNumber": "26A434",
+                  "osVersion": "27.0.1",
+                  "platform": "macOS"
+                },
+                "expectedFailures": 0,
+                "failedTests": 0,
+                "passedTests": 12,
+                "skippedTests": 0,
+                "testPlanConfiguration": {
+                  "configurationId": "1",
+                  "configurationName": "Test Scheme Action"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "log": "/private/tmp/usagi-cleanup-native-fonts.log",
+          "log_sha256": "232abf0fb3fe51bf62478a1512eac35b49de1e4a70f01311c4aa41ba2f8901f5",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-96ff23aa69fc404197ca7f998c727f7c.xcresult",
+          "summary": null
+        },
+        {
+          "log": "/private/tmp/usagi-cleanup-native-fonts-final.log",
+          "log_sha256": "5b16c64393a6e5252e382f7f2ac255199ac3b4e93b6662e2cc9c11333974003c",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0fc80aac3faa4aa29af2fea9e8e26018.xcresult",
+          "summary": null
+        },
+        {
+          "log": "/private/tmp/usagi-cleanup-native-fonts-ready.log",
+          "log_sha256": "67c21710a0d77fff8d24af31f4e0c2df74ae332eb8d9a5b2209519cb5cc1a392",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-720ebbc945304dacadb47737b6c20b6c.xcresult",
+          "summary": {
+            "result": "Passed",
+            "passedTests": 1,
+            "failedTests": 0,
+            "skippedTests": 0,
+            "runtimeWarnings": [],
+            "devicesAndConfigurations": [
+              {
+                "device": {
+                  "architecture": "arm64",
+                  "deviceId": "00006040-000649442200801C",
+                  "deviceName": "My Mac",
+                  "modelName": "Mac mini",
+                  "osBuildNumber": "26A434",
+                  "osVersion": "27.0.1",
+                  "platform": "macOS"
+                },
+                "expectedFailures": 0,
+                "failedTests": 0,
+                "passedTests": 1,
+                "skippedTests": 0,
+                "testPlanConfiguration": {
+                  "configurationId": "1",
+                  "configurationName": "Test Scheme Action"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "font_test_fix": "After the directory contract was restored, the old Mac test clicked the successful-download button above the visible scroll viewport after visiting the lower held/failure rows. Diagnostics showed button y=379..403 versus scroll viewport y=402.5..690. Start the successful download while visible, assert progress, verify it survives navigation, then exercise cancel/failure/deletion. Production download code is unchanged."
+    },
+    "iphone_ui": {
+      "distinct_workflows_passing": 8,
+      "latest_result_by_workflow": {
+        "ReviewFlowTests/testCombinedAnkiIncorrectThenCorrectCompletesOneSubject": "passed",
+        "ReviewFlowTests/testCompleteSampleReviewsThroughTypedAnswers": "passed",
+        "ReviewFlowTests/testFontDownloadContinuesAfterLeavingThePicker": "passed",
+        "ReviewFlowTests/testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled": "passed",
+        "ReviewFlowTests/testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft": "passed",
+        "ReviewFlowTests/testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson": "passed",
+        "ReviewFlowTests/testPracticeMenuPreservesAnkiReadingMode": "passed",
+        "ReviewFlowTests/testQuickSettingsPreservesDraftAndAppliesExactMatch": "passed"
+      },
+      "attempts": [
+        {
+          "log": "/private/tmp/usagi-cleanup-iphone.log",
+          "log_sha256": "b0c4377eedea95967620d3ba853872aefa8885d109869e85a473d85efe6ac169",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-ff2e5cf0512648f094290066aa60fcd6.xcresult",
+          "summary": null
+        },
+        {
+          "log": "/private/tmp/usagi-cleanup-iphone-fonts.log",
+          "log_sha256": "2a301d06487c5c2c1af5541dc93e36a138cb5be37ad7827168e988962a8c0c38",
+          "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-bc24cc43250547b4a3485f9dc15f6df4.xcresult",
+          "summary": {
+            "result": "Passed",
+            "passedTests": 3,
+            "failedTests": 0,
+            "skippedTests": 0,
+            "runtimeWarnings": [],
+            "devicesAndConfigurations": [
+              {
+                "device": {
+                  "architecture": "arm64",
+                  "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+                  "deviceName": "iPhone 18 Pro",
+                  "modelName": "iPhone 18 Pro",
+                  "osBuildNumber": "24A434",
+                  "osVersion": "27.0",
+                  "platform": "iOS Simulator"
+                },
+                "expectedFailures": 0,
+                "failedTests": 0,
+                "passedTests": 3,
+                "skippedTests": 0,
+                "testPlanConfiguration": {
+                  "configurationId": "1",
+                  "configurationName": "Test Scheme Action"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "initial_failure": "Sharing the fixture omitted creation of the original empty temporary cache directory. The delete-confirmation control correctly disappeared. Restored the directory setup and reran all three affected font workflows; no production cache behavior was changed."
+    },
+    "ipad_ui": {
+      "log": "/private/tmp/usagi-cleanup-ipad.log",
+      "log_sha256": "2a55d13e4d0eb80240000c03dd32c64b87cbe9378001770845f4047e979521a6",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a7712d1df5574844886a59e96d3dc180.xcresult",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8A9FC885-61CA-4401-876A-05FCA3FC8EB1",
+              "deviceName": "iPad Pro 11-inch (M5)",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 6,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-cleanup-mac-release.log",
+      "log_sha256": "7a0f7a46fda4c3ff300c02740c09a56139350a5a1c673d84ac804e83b444baa4",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-f8fcdb996e5d4f1da555f747a6191083.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "release_fixture_sentinels": {
+      "binary_sha256": "a95494be28ff991ad03ad6ea8eed309fe982bddf3780ee283669d3c30c40131d",
+      "strings_present": {
+        "Synthetic review fixture · memory only · uploads disabled": false,
+        "Server version of the note.": false,
+        "Server synonym": false
+      }
+    },
+    "release_launch_and_reopen": {
+      "log": "/private/tmp/usagi-cleanup-release-reopen.log",
+      "log_sha256": "7e3ca083a6f5218d9aac02df7e6af52fd422530acdcbbd376041bbc279129421",
+      "launches": [
+        {
+          "processID": 2162,
+          "visibleMainWindows": 1,
+          "cycle": 1
+        },
+        {
+          "processID": 2173,
+          "visibleMainWindows": 1,
+          "cycle": 2
+        }
+      ],
+      "mechanism": "Normal NSWorkspace OS launch with sample data, visible main-window geometry only, then confirmed graceful termination. No credentials, real exercises or account changes."
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-review-exclusion-format.log",
+      "log_sha256": "96dbefd5342a61205cb6bcea9f70bafdf6255ea51842184738110694092c7ac7",
+      "changed_swift_files": 13
+    },
+    "screenshots": [
+      {
+        "path": "/private/tmp/usagi-cleanup-native-images/834F5557-57ED-45A5-B197-013C697C55DD.png",
+        "sha256": "aeb6e9645b283735df35ba39e183f89f1899d9d623d4e69728000c65fe9e4b2c",
+        "scope": "App window only; isolated synthetic account",
+        "visually_inspected": true
+      },
+      {
+        "path": "/private/tmp/usagi-cleanup-native-images/3C3F9E32-431E-4BF7-A567-05EB3C4B8300.png",
+        "sha256": "01714e569db1aa67f68b0bb5023a8ae36c69bd6e68461d119a298ac0841aeced",
+        "scope": "App window only; isolated synthetic account",
+        "visually_inspected": true
+      },
+      {
+        "path": "/private/tmp/usagi-cleanup-native-images/9945C4E2-1BDC-41F8-9B18-BCAB4855C46C.png",
+        "sha256": "e4306761733b5af058c1fdedf3566cae9b2989190454edc507a500bd1b050607",
+        "scope": "App window only; isolated synthetic account",
+        "visually_inspected": true
+      }
+    ],
+    "earlier_hosted_ios": {
+      "log": "/private/tmp/usagi-review-exclusion-hosted.log",
+      "log_sha256": "6c62a5036fa9089bd0985393d76a26999a3c1685300f483a02205aceb94e1faf",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-69345a6ac45b48d7b87348fc17ea9ab6.xcresult",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 91,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 100,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      },
+      "scope": "Passed for atomic store action before assembly/Home cleanup; not claimed as a new hosted pass of the final UI cleanup"
+    }
+  },
+  "crash_report": {
+    "path": "/Users/pedro/.codex/attachments/423817e2-6bfa-4514-b046-b8445cb62fc7/Pasted text.txt",
+    "sha256": "34a981e978da4b5ff4b747d55109abff5c2878bcbace4c3fce3a1acb23ac2dd5",
+    "process_id": 16437,
+    "crashed_at": "2026-10-19T01:16:31+09:00",
+    "site": "SwiftUI NavigationColumnState.boundPathChange; EXC_BREAKPOINT",
+    "matching_earlier_test_log": "/private/tmp/usagi-home-mac-ui.log",
+    "interpretation": "Matches an earlier failed settings-navigation test before the shared-root checkpoint. The thrown error is not exposed in the report. Current selected native workflows and normal OS sample launches do not reproduce it; no speculative navigation/window workaround is claimed."
+  },
+  "earlier_iterations": [
+    {
+      "log": "/private/tmp/usagi-review-exclusion-mac-ui.log",
+      "log_sha256": "75667c38c96cc6215c80277a42dbd90d4d7f50674c58bb20419c63920f79ff2f",
+      "note": "Runner setup failed before any UI case executed; timed out enabling automation."
+    },
+    {
+      "log": "/private/tmp/usagi-review-exclusion-mac-serial.log",
+      "log_sha256": "bca85067e8d7e1c3224291e1eb187d0ac7ead63681bee67aa517bfffeeb88518",
+      "note": "The serial attempt had the same runner setup failure; not a test pass."
+    },
+    {
+      "log": "/private/tmp/usagi-review-exclusion-shared-fixed.log",
+      "log_sha256": "13ef3665a786f16a0e7944152faf9c2fced8963cdfa3e84edac1d4d443de6a1b",
+      "note": "Wrong-reading fixtures omitted the required okurigana suffix. The grader correctly requested retry; fixtures were corrected without changing production grading."
+    },
+    {
+      "log": "/private/tmp/usagi-review-exclusion-mac-acceptance.log",
+      "log_sha256": "cf584b2172ca9764b67f5e8a8105c6d3444c203aed2f4e4e64b031abaf46d609",
+      "note": "New typed test wrongly expected manual reveal despite default automatic reveal. A sample-launch test had only a menu bar under the runner. Anki/lesson/navigation cases passed; not a green overall gate."
+    },
+    {
+      "log": "/private/tmp/usagi-review-exclusion-mac-launch-check.log",
+      "log_sha256": "b8722439b1db04fdabd76e4da3d28593e116dbb10d5c29a49e172a8b7eb59344",
+      "note": "Corrected typed test passed. The sample-only runner launch still lacked a window."
+    },
+    {
+      "log": "/private/tmp/usagi-native-single-window.log",
+      "log_sha256": "adf00d587b059c6997d8a9d51c259b53e2afa2d43a33fb57bbec3983a3d978f9",
+      "note": "Single-window experiment did not resolve the runner discrepancy and was discarded."
+    },
+    {
+      "log": "/private/tmp/usagi-native-window-restoration-fix.log",
+      "log_sha256": "5e24f65b0c403aaa24918006c65926d2e4b23f2add0b89e9e1ab102d2d15ed04",
+      "note": "Restoration opt-out experiment did not resolve the runner discrepancy and was discarded."
+    },
+    {
+      "log": "/private/tmp/usagi-native-deferred-services.log",
+      "log_sha256": "376d7af66ffba3d54e1b26fe1906a1835ee44ec11f84c1844941b78f3d86276f",
+      "note": "Deferred media setup did not resolve the runner discrepancy and was discarded."
+    }
+  ],
+  "remaining": [
+    "Full iOS root/account and single-writer migration with crash/rollback gates",
+    "Remaining subject display, sign-in/routes, notifications and watch parity",
+    "Isolated diagnosis of sample-only XCUITest launch discrepancy; it is not a demonstrated release-app failure",
+    "Physical voice/audio/IME/accessibility and full-account prediction acceptance",
+    "Unpublished Mainboard commit and hosted Actions validation; no push authorized"
+  ],
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

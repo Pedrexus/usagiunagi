@@ -8,10 +8,7 @@ struct UsagiUnagiApp: App {
   #if os(iOS)
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
   #else
-    @State private var model = StudyAppAssembly.makeModel()
-    @State private var fonts = StudyAppAssembly.makeFonts()
-    @State private var audio = StudyAppAssembly.makeAudio()
-    @State private var lessonSettings = StudyAppAssembly.makeLessonSettings()
+    @State private var services = StudyAppAssembly.make()
   #endif
 
   var body: some Scene {
@@ -20,17 +17,19 @@ struct UsagiUnagiApp: App {
         LegacyStudyWindow(services: appDelegate.services, appDelegate: appDelegate)
       #else
         StudyRootView(
-          model: model, appName: AppIdentity.name, appearance: StudyAppAssembly.appearance,
-          notice: StudyAppAssembly.notice
+          model: services.model, appName: AppIdentity.name, appearance: services.appearance,
+          notice: services.notice
         )
-        .environment(fonts).environment(audio).environment(lessonSettings)
-        .defaultAppStorage(StudyAppAssembly.reviewDefaults)
+        .environment(services.fonts).environment(services.audio).environment(
+          services.lessonSettings
+        )
+        .defaultAppStorage(services.defaults)
         .frame(minWidth: 640, minHeight: 500)
         .task {
           if ProcessInfo.processInfo.arguments.contains("--sample-data") {
-            model.loadSample()
+            services.model.loadSample()
           } else {
-            await model.restore()
+            await services.model.restore()
           }
         }
       #endif
@@ -41,9 +40,9 @@ struct UsagiUnagiApp: App {
       .restorationBehavior(StudyAppAssembly.isReviewFixture ? .disabled : .automatic)
       .commands {
         CommandGroup(after: .newItem) {
-          Button("Refresh WaniKani") { Task { await model.refresh() } }
+          Button("Refresh WaniKani") { Task { await services.model.refresh() } }
           .keyboardShortcut("r")
-          .disabled(model.isSyncing || model.snapshot?.isSample != false)
+          .disabled(services.model.isSyncing || services.model.snapshot?.isSample != false)
         }
       }
     #endif

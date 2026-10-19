@@ -36,12 +36,14 @@ public struct NativeReviewAnswer: Sendable {
 public enum NativeReviewError: Error, LocalizedError, Equatable {
   case unavailableAccount, vacation, noReviews, noLessons, apprenticeLimitReached,
     invalidLessonSelection,
-    incompatibleAnswerMode, noPracticeItems, practiceInProgress
+    incompatibleAnswerMode, noPracticeItems, practiceInProgress, exclusionUnavailable
   case sessionInProgress(isLesson: Bool)
   case incompleteContent(Int64)
   case changedAssignment(Int64)
   public var errorDescription: String? {
     switch self {
+    case .exclusionUnavailable:
+      "Exclude vocabulary after revealing an answer. Typed lesson answers cannot use this action."
     case .noPracticeItems: "No items are available for this practice selection."
     case .practiceInProgress:
       "Resume or end your saved practice before starting a different study session."
@@ -66,7 +68,7 @@ public enum NativeReviewError: Error, LocalizedError, Equatable {
 }
 
 public enum NativeReviewAction: Sendable {
-  case advance, overrideCorrect, deferQuestion, wrapUp, stopWrapping
+  case advance, overrideCorrect, deferQuestion, wrapUp, stopWrapping, exclude
 }
 
 extension StudyStore {
@@ -249,6 +251,21 @@ extension StudyStore {
       success = try session.mark(
         .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
       session.nextQuestion()
+    case .exclude:
+      guard session.currentDecision == .incorrect, let subject = state.subject,
+        subject.kind == .vocabulary,
+        !state.isLesson || state.isAnki
+      else { throw NativeReviewError.exclusionUnavailable }
+      try validateCurrentAssignment(state, accountID: accountID)
+      let current = try subjectDetails(subjectID: subject.id, accountID: accountID)
+      var material = current.material ?? StudyMaterial(subjectID: current.subject.id)
+      material.isExcluded = true
+      try session.excludeQuestion(question)
+      session.nextQuestion()
+      let saved = try commitReviewExclusion(
+        session, material: .init(material: material, version: current.savedMaterial?.revision),
+        accountID: accountID, expectedRevision: expectedRevision, now: now)
+      return try reviewState(saved, accountID: accountID)
     case .deferQuestion:
       try session.deferQuestion(question)
       session.nextQuestion()
@@ -261,6 +278,22 @@ extension StudyStore {
     }
     return try saveReviewState(
       session, accountID: accountID, expectedRevision: expectedRevision, success: success, now: now)
+  }
+
+  /// One transaction owns the exclusion marker and queue removal; it never credits the item.
+  func commitReviewExclusion(
+    _ session: StudySession, material: StudyMaterialEdit<UUID>, accountID: String,
+    expectedRevision: UUID, now: Date
+  ) throws -> SavedStudySession {
+    let revision = UUID()
+    try transaction {
+      try writeSubjectMaterial(
+        material.material, accountID: accountID, expectedRevision: material.version)
+      try writeSession(
+        session, accountID: accountID, expectedRevision: expectedRevision, revision: revision,
+        now: now)
+    }
+    return .init(revision: revision, session: session)
   }
 
   /// Revealing an Anki answer records the provisional miss before presenting its details,

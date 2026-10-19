@@ -1065,3 +1065,26 @@ The native settings acceptance fixture adds six synthetic lessons and an optiona
 | StudyStore+SubjectDetails.swift and NativeSubjectDetailsView.swift | Revalidate account, content access and vocabulary kind; read current notes before a revision-checked local edit; show errors inline and retain explicit Saved work upload. |
 
 Shared tests cover no-op writes, exact notes/identity, hiding controls without including items, inaccessible content, stale notes editors and paused-review preservation. UI acceptance and exact current source hashes are retained in the exclusion receipt. Existing IME/SVG/lifecycle/watch and iOS storage bridges remain; no live WaniKani exercise or account mutation was used. The owner SDK annotations remain outside this commit.
+
+### Atomic native review exclusion and launch investigation (2026-10-19)
+
+| Audited source | Replacement and preservation |
+| --- | --- |
+| StudyStore session/material writers | Extract transaction-owned internal writes, retaining the public account/revision, outbox and recovery rules. The explicit review-menu exclusion commits both writes together; it does not nest independent transactions. |
+| NativeReviewView / ReviewScreen | Reuse the existing correction menu and lesson visibility preference. Typed reviews require a revealed incorrect answer and enabled corrections; Anki reveal supports review/lesson/practice exclusion independently of typed corrections. Typed lessons stay ineligible. Audio stops after a successful exclusion commit. |
+| ReviewExclusionTests | Ten Swift Testing functions cover typed ordering/partially answered items, 18 Anki variants, invalid/revised access, other windows/accounts, rollback after a material write, unchanged markers, retained earlier attempted submissions and disk reopen. Okurigana mismatch correctly asks for a retry; wrong-reading fixtures retain the required suffix rather than changing the grader. |
+| MacReviewModeTests | Native review-menu acceptance and shared Home/navigation regressions with isolated synthetic accounts. A normal sample launch XCUITest was investigated and retired from the gate because its missing-window behavior did not match normal OS release launch; no pass is claimed for it. |
+
+The pasted crash reports process 16437 at 01:16:31, matching the earlier Home test log before the shared-root checkpoint. Its stack traps inside SwiftUI navigation; the report alone does not expose the thrown error. Current checks and their exact outcomes belong in the review-exclusion receipt; do not count the two earlier automation setup timeouts as executed tests. No OS permissions, real account work, iOS writer cutover, push or PR is included. Remaining modernization gates stay open in TASKS.md.
+
+### Native assembly and Home cleanup (2026-10-19)
+
+| Audited source | Result |
+| --- | --- |
+| App/Application/StudyAppAssembly.swift | 287 → 50 physical lines. One State-owned assembly supplies stable services and archive-compatible preferences. Repeated fixture branches and raw synthetic API replies move out of production composition. |
+| App/AppStoreScreenshots/NativeStudyFixture.swift | Existing synthetic catalog, recovery cases and transport stay DEBUG-only in the existing test-support area. No real API write is available. |
+| App/AppStoreScreenshots/FontFixture.swift | Both platforms use one font definition/configuration with temporary caches and the actual installed PostScript name. |
+| Shared/StudyUI/HomeDashboardView.swift | Compact WaniKani-tinted glass study controls, one lesson picker action, original section order and no all-zero plot. One common view supplies Mac/iPhone/iPad. Mac has an inset list with a readable maximum width. |
+| Active iOS SQL and importer | Retained after audit: they still own offline/pending work and read-only migration. Removing them before a verified writer handoff is unsafe. No new SQL or data/tool dependency is added. |
+
+The exact five-file cleanup scope is 690 → 674 physical Swift lines, including the moved native fixture; it excludes the separately added atomic-exclusion tests and is not a total-codebase reduction claim. The UI-fixture/client boundary, native account services, review grading and pending upload ownership remain explicit. The current acceptance receipt records the changed sources, failed harness experiments and final checks; the modernization task table stays open.

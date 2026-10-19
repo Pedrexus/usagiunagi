@@ -341,7 +341,10 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         Menu("Correct answer", systemImage: "ellipsis") {
           Button("My answer was correct") { action(.correct) }
           Button("Ask again later") { action(.deferQuestion) }
-          if state.canExclude { Button("Exclude this item") { action(.exclude) } }
+          if state.canExclude {
+            Button("Exclude this item") { action(.exclude) }.accessibilityIdentifier(
+              "review.exclude")
+          }
           if state.canAddSynonym { Button("Add synonym") { action(.synonym) } }
         }.accessibilityIdentifier("review.corrections")
       }

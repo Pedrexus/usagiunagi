@@ -12,29 +12,35 @@
         guard isActive, ProcessInfo.processInfo.arguments.contains("FontFlowFixture") else {
           return nil
         }
-        let font = CTFontCreateWithName("HiraMinProN-W3" as CFString, 24, nil)
-        let family = CTFontCopyFamilyName(font) as String
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
-          "font-fixture-\(UUID().uuidString)")
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let loader = StudyFontCatalog(
-          definitions: [
-            .init(family, "font-ready.ttf", "Installed font fixture", 1024),
-            .init("DownloadFontFixture", "font-download.ttf", "Download font fixture", 1024),
-            .init("MissingFontFixture", "font-failed.ttf", "Failed font fixture", 1024),
-            .init("HeldFontFixture", "font-held.ttf", "Held font fixture", 1024),
-          ], directory: directory, bundledFonts: nil)
         var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
         arguments["selectedFonts"] = try? NSKeyedArchiver.archivedData(
           withRootObject: Set<String>(), requiringSecureCoding: true)
         UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [FontFixtureProtocol.self]
-        return (loader, configuration)
+        return StudyFontFixture.make()
       }
     }
 
   #endif
+
+  @MainActor enum StudyFontFixture {
+    static func make() -> (StudyFontCatalog, URLSessionConfiguration) {
+      let font = CTFontCreateWithName("HiraMinProN-W3" as CFString, 24, nil)
+      let name = CTFontCopyPostScriptName(font) as String
+      let directory = URL.temporaryDirectory.appending(path: "font-fixture-\(UUID())")
+      try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      let catalog = StudyFontCatalog(
+        definitions: [
+          .init(name, "font-ready.ttf", "Installed font fixture", 1024),
+          .init("DownloadFontFixture", "font-download.ttf", "Download font fixture", 1024),
+          .init("MissingFontFixture", "font-failed.ttf", "Failed font fixture", 1024),
+          .init("HeldFontFixture", "font-held.ttf", "Held font fixture", 1024),
+        ], directory: directory,
+        bundledFonts: nil)
+      let configuration = URLSessionConfiguration.ephemeral
+      configuration.protocolClasses = [FontFixtureProtocol.self]
+      return (catalog, configuration)
+    }
+  }
 
   // URLProtocol invokes callbacks outside the main actor; cancellation state is mutex-protected.
   nonisolated final class FontFixtureProtocol: URLProtocol, @unchecked Sendable {

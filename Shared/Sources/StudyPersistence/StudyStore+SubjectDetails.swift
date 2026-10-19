@@ -93,6 +93,15 @@ extension StudyStore {
   public func saveSubjectMaterial(
     _ material: StudyMaterial, accountID: String, expectedRevision: UUID?
   ) throws {
+    try transaction {
+      try writeSubjectMaterial(material, accountID: accountID, expectedRevision: expectedRevision)
+    }
+  }
+
+  /// Caller owns the transaction; retain access checks and unchanged-edit semantics.
+  func writeSubjectMaterial(_ material: StudyMaterial, accountID: String, expectedRevision: UUID?)
+    throws
+  {
     let details = try subjectDetails(subjectID: material.subjectID, accountID: accountID)
     guard details.savedMaterial?.revision == expectedRevision else {
       throw StudyStoreError.staleMaterial
@@ -100,6 +109,6 @@ extension StudyStore {
     guard material != (details.material ?? StudyMaterial(subjectID: material.subjectID)) else {
       return
     }
-    try saveMaterial(material, accountID: accountID, expectedRevision: expectedRevision)
+    _ = try writeMaterial(material, accountID: accountID, expectedRevision: expectedRevision)
   }
 }

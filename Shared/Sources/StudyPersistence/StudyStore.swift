@@ -247,70 +247,79 @@ public enum StudyStoreError: Error, LocalizedError {
     _ session: StudySession, accountID: String,
     expectedRevision: UUID?, now: Date = .now
   ) throws -> UUID {
-    try requireAccount(accountID)
     let revision = UUID()
     try transaction {
-      let old = try sessionRecord(accountID)
-      guard old?.revision == expectedRevision else { throw StudyStoreError.staleSession }
-      let previous = Set(old?.session.completedIDs ?? [])
-      guard previous.isSubset(of: Set(session.completedIDs)) else {
-        throw StudyStoreError.invalidSession
-      }
-      if let old {
-        guard old.session.isPractice == session.isPractice,
-          old.session.practiceScope == session.practiceScope,
-          old.session.items.count == session.items.count,
-          old.session.items.allSatisfy({ id, item in
-            session.items[id]?.subjectID == item.subjectID
-              && session.items[id]?.assignmentID == item.assignmentID
-              && session.items[id]?.isLesson == item.isLesson
-          })
-        else { throw StudyStoreError.invalidSession }
-      }
-      for submission in session.completedSubmissions where !previous.contains(submission.itemID) {
-        let subjectID = submission.subjectID
-        guard subjectID > 0, submission.assignmentID > 0,
-          let item = session.items[submission.itemID]
-        else { throw StudyStoreError.invalidSession }
-        guard
-          try modelContext.fetchCount(
-            FetchDescriptor<ReviewRecord>(
-              predicate:
-                #Predicate { $0.accountID == accountID && $0.subjectID == subjectID })) == 0
-        else {
-          throw StudyStoreError.pendingReview(subjectID)
-        }
-        modelContext.insert(
-          ReviewRecord(accountID: accountID, submission: submission, originalItem: item))
-        if submission.meaningWrong || submission.readingWrong,
-          let row = try modelContext.fetch(
-            FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
-          ).first,
-          let subject = try catalog(accountID: accountID).first(where: { $0.id == subjectID })
-        {
-          var state = row.state
-          if let index = state.progress.firstIndex(where: { $0.subjectID == subjectID }) {
-            state.progress[index].lastMistakeAt = Int64(now.timeIntervalSince1970)
-          } else {
-            state.progress.append(
-              .init(
-                subjectID: subjectID, level: subject.level, srsStage: item.srsStage,
-                kind: subject.kind, lastMistakeLocalTime: nil, legacyRevision: 0,
-                lastMistakeAt: Int64(now.timeIntervalSince1970)))
-          }
-          row.state = state
-        }
-
-      }
-      if let old {
-        old.session = session
-        old.revision = revision
-      } else {
-        modelContext.insert(
-          SessionRecord(accountID: accountID, session: session, revision: revision))
-      }
+      try writeSession(
+        session, accountID: accountID, expectedRevision: expectedRevision, revision: revision,
+        now: now)
     }
     return revision
+  }
+
+  /// Caller owns the transaction, allowing a queue change and notes edit to commit together.
+  func writeSession(
+    _ session: StudySession, accountID: String, expectedRevision: UUID?, revision: UUID, now: Date
+  ) throws {
+    try requireAccount(accountID)
+    let old = try sessionRecord(accountID)
+    guard old?.revision == expectedRevision else { throw StudyStoreError.staleSession }
+    let previous = Set(old?.session.completedIDs ?? [])
+    guard previous.isSubset(of: Set(session.completedIDs)) else {
+      throw StudyStoreError.invalidSession
+    }
+    if let old {
+      guard old.session.isPractice == session.isPractice,
+        old.session.practiceScope == session.practiceScope,
+        old.session.items.count == session.items.count,
+        old.session.items.allSatisfy({ id, item in
+          session.items[id]?.subjectID == item.subjectID
+            && session.items[id]?.assignmentID == item.assignmentID
+            && session.items[id]?.isLesson == item.isLesson
+        })
+      else { throw StudyStoreError.invalidSession }
+    }
+    for submission in session.completedSubmissions where !previous.contains(submission.itemID) {
+      let subjectID = submission.subjectID
+      guard subjectID > 0, submission.assignmentID > 0,
+        let item = session.items[submission.itemID]
+      else { throw StudyStoreError.invalidSession }
+      guard
+        try modelContext.fetchCount(
+          FetchDescriptor<ReviewRecord>(
+            predicate:
+              #Predicate { $0.accountID == accountID && $0.subjectID == subjectID })) == 0
+      else {
+        throw StudyStoreError.pendingReview(subjectID)
+      }
+      modelContext.insert(
+        ReviewRecord(accountID: accountID, submission: submission, originalItem: item))
+      if submission.meaningWrong || submission.readingWrong,
+        let row = try modelContext.fetch(
+          FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
+        ).first,
+        let subject = try catalog(accountID: accountID).first(where: { $0.id == subjectID })
+      {
+        var state = row.state
+        if let index = state.progress.firstIndex(where: { $0.subjectID == subjectID }) {
+          state.progress[index].lastMistakeAt = Int64(now.timeIntervalSince1970)
+        } else {
+          state.progress.append(
+            .init(
+              subjectID: subjectID, level: subject.level, srsStage: item.srsStage,
+              kind: subject.kind, lastMistakeLocalTime: nil, legacyRevision: 0,
+              lastMistakeAt: Int64(now.timeIntervalSince1970)))
+        }
+        row.state = state
+      }
+
+    }
+    if let old {
+      old.session = session
+      old.revision = revision
+    } else {
+      modelContext.insert(
+        SessionRecord(accountID: accountID, session: session, revision: revision))
+    }
   }
 
   public func removeSession(accountID: String, expectedRevision: UUID) throws {

@@ -67,13 +67,17 @@ public struct NativeReviewView: View {
         if review.question == nil {
           ContentUnavailableView(
             isPractice
-              ? "Practice complete" : isLesson ? "Lesson quiz saved" : "Review session saved",
+              ? "Practice complete"
+              : review.saved.session.completedIDs.isEmpty
+                ? "Session complete" : isLesson ? "Lesson quiz saved" : "Review session saved",
             systemImage: "checkmark.circle",
             description: Text(
-              "\(review.saved.session.completedIDs.count) completed · \(review.saved.session.successRate)% accuracy. "
-                + (isPractice
-                  ? "Practice does not change WaniKani progress or create uploads."
-                  : "Completed answers stay on this device until you sync Saved work.")
+              review.saved.session.completedIDs.isEmpty
+                ? "No subjects completed. Saved notes and exclusions stay on this device until you sync Saved work."
+                : "\(review.saved.session.completedIDs.count) completed · \(review.saved.session.successRate)% accuracy. "
+                  + (isPractice
+                    ? "Practice answers do not change WaniKani progress or create review uploads."
+                    : "Completed answers stay on this device until you sync Saved work.")
             ))
           Button("Finish session") {
             run {
@@ -134,7 +138,7 @@ public struct NativeReviewView: View {
           systemImage: "rectangle.and.pencil.and.ellipsis",
           description: Text(
             isPractice
-              ? "Practice uses your saved subjects without changing WaniKani progress or creating uploads."
+              ? "Practice answers use your saved subjects without changing WaniKani progress or creating review uploads."
               : isLesson
                 ? "Quiz the lessons you selected. Each completed lesson stays saved on this device until you sync."
                 : "Start with the reviews due in your saved account, or resume the session already saved on this device."
@@ -155,6 +159,7 @@ public struct NativeReviewView: View {
     .disabled(busy)
     .onDisappear { audio.stop() }
     .onChange(of: preferences) { _, _ in applyPreferences() }
+    .onChange(of: lessonSettings.value.allowVocabularyExclusion) { _, _ in applyPreferences() }
     .onChange(of: fonts.selectedFiles) { _, _ in chooseFont(newSubject: false) }
     .onChange(of: screen.phase) { _, _ in applyFont() }
     .sheet(
@@ -290,9 +295,13 @@ public struct NativeReviewView: View {
   private func change(_ action: NativeReviewAction) {
     guard let review else { return }
     run {
-      present(
-        try await store.changeReview(
-          action, accountID: accountID, expectedRevision: review.saved.revision))
+      let value = try await store.changeReview(
+        action, accountID: accountID, expectedRevision: review.saved.revision)
+      if case .exclude = action, let subject = review.subject, audio.state(for: subject.id) != .idle
+      {
+        audio.stop()
+      }
+      present(value)
     }
   }
   private func revealAnki() {
@@ -375,6 +384,11 @@ public struct NativeReviewView: View {
     case .incorrect:
       if screen.isAnki { assessAnki(false) }
     case .deferQuestion: change(.deferQuestion)
+    case .exclude:
+      guard screen.phase == .details, screen.canExclude, screen.canOverride || screen.isAnki else {
+        return
+      }
+      change(.exclude)
     case .voice:
       audio.stop()
       voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
@@ -434,6 +448,8 @@ public struct NativeReviewView: View {
     screen.feedbackPreferences = preferences
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
     screen.canSkip = preferences.allowSkipping
+    screen.canExclude =
+      review?.subject?.kind == .vocabulary && lessonSettings.value.allowVocabularyExclusion
     screen.canOverride =
       !isLesson && preferences.allowCorrections
       && review?.saved.session.currentDecision == .incorrect

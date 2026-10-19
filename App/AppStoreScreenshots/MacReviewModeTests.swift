@@ -113,8 +113,12 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertFalse(app.staticTexts["home.notice"].exists)
   }
   func testHomeForecastAndSavedSubjectSearchOpenNativeScreens() {
-    let app = launch([])
+    let app = launch(["--light-fixture"])
     defer { app.terminate() }
+    let home = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    home.name = "Native Home"
+    home.lifetime = .keepAlways
+    add(home)
     app.buttons["home.forecast"].click()
     let hour = app.descendants(matching: .any).matching(identifier: "schedule.hour.0").firstMatch
     XCTAssertTrue(hour.waitForExistence(timeout: 5), app.debugDescription)
@@ -175,6 +179,17 @@ final class MacReviewModeTests: XCTestCase {
     let fonts = app.buttons["reviewSettings.fonts"]
     XCTAssertTrue(fonts.waitForExistence(timeout: 5))
     fonts.click()
+    app.buttons["font.download.font-download.ttf"].click()
+    XCTAssertTrue(
+      app.descendants(matching: .any).matching(identifier: "font.progress.font-download.ttf")
+        .firstMatch.waitForExistence(timeout: 5), app.debugDescription)
+    let back = app.sheets.firstMatch.buttons["chevron.backward"]
+    XCTAssertTrue(back.waitForExistence(timeout: 5), app.debugDescription)
+    back.click()
+    fonts.click()
+    XCTAssertTrue(
+      app.switches["font.selection.font-download.ttf"].waitForExistence(timeout: 12),
+      app.debugDescription)
     let held = app.buttons["font.download.font-held.ttf"]
     XCTAssertTrue(held.waitForExistence(timeout: 5))
     held.click()
@@ -184,12 +199,6 @@ final class MacReviewModeTests: XCTestCase {
     failed.click()
     XCTAssertTrue(app.staticTexts["font.error.font-failed.ttf"].waitForExistence(timeout: 5))
     XCTAssertEqual(failed.label, "Retry")
-    app.buttons["font.download.font-download.ttf"].click()
-    let back = app.sheets.firstMatch.buttons["chevron.backward"]
-    XCTAssertTrue(back.waitForExistence(timeout: 5), app.debugDescription)
-    back.click()
-    fonts.click()
-    XCTAssertTrue(app.switches["font.selection.font-download.ttf"].waitForExistence(timeout: 12))
     let picker = app.sheets.firstMatch.scrollViews.firstMatch
     let delete = app.buttons["fonts.deleteAll"]
     for _ in 0..<5 {
@@ -263,6 +272,61 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(stop.waitForExistence(timeout: 5), app.debugDescription)
     stop.click()
     XCTAssertFalse(stop.exists)
+  }
+  func testTypedReviewMenuExcludesWithoutCreditingTheSubject() {
+    let app = launch(["--audio-fixture"])
+    defer { app.terminate() }
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    input.click()
+    let reading = app.staticTexts["review.prompt"].value as? String == "Reading"
+    input.typeText(reading ? "bananatsu" : "banana")
+    app.buttons["review.submit"].click()
+    XCTAssertTrue(
+      app.menuButtons["review.corrections"].waitForExistence(timeout: 5), app.debugDescription)
+    excludeCurrentReview(in: app)
+  }
+  func testAnkiReviewMenuExcludesWithTypedCorrectionsDisabled() {
+    let app = launch(["--audio-fixture", "--anki-fixture", "--combined-anki-fixture"])
+    defer { app.terminate() }
+    app.buttons["app.settings"].click()
+    app.buttons["Review settings"].click()
+    app.sheets.firstMatch.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -300)
+    let corrections = app.switches["reviewSettings.corrections"]
+    XCTAssertTrue(corrections.waitForExistence(timeout: 5))
+    corrections.click()
+    XCTAssertEqual((corrections.value as? NSNumber)?.intValue, 0)
+    app.buttons["Done"].click()
+    app.buttons["home.reviews"].click()
+    showAnswer(in: app)
+    excludeCurrentReview(in: app)
+  }
+  func testAnkiLessonMenuExcludesWithoutStartingTheLesson() {
+    let app = launch([
+      "--audio-fixture", "--lesson-fixture", "--anki-fixture", "--combined-anki-fixture",
+    ])
+    defer { app.terminate() }
+    app.buttons["home.lessons"].click()
+    XCTAssertTrue(app.buttons["lesson.quiz"].waitForExistence(timeout: 5))
+    app.buttons["lesson.quiz"].click()
+    showAnswer(in: app)
+    excludeCurrentReview(in: app, lesson: true)
+  }
+  private func excludeCurrentReview(in app: XCUIApplication, lesson: Bool = false) {
+    app.menuButtons["review.corrections"].click()
+    app.menuItems["Exclude this item"].click()
+    XCTAssertTrue(
+      app.staticTexts["Session complete"].waitForExistence(timeout: 5), app.debugDescription)
+    let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    image.name = "Native review-menu exclusion"
+    image.lifetime = .keepAlways
+    add(image)
+    app.buttons["Finish session"].click()
+    let start = app.buttons[lesson ? "home.lessons" : "home.reviews"]
+    XCTAssertTrue(start.waitForExistence(timeout: 5))
+    XCTAssertFalse(start.isEnabled)
+    XCTAssertTrue(app.buttons["home.extra.excluded"].exists, app.debugDescription)
   }
   func testNativeVocabularyExclusionUpdatesHomeAndCanBeReversed() {
     let app = launch(["--audio-fixture"])

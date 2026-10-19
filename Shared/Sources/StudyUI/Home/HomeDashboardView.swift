@@ -51,6 +51,11 @@ public struct HomeDashboardView: View {
               reviewCard
             }
           }.padding(.vertical, 4)
+          Button("Choose lessons", systemImage: "list.bullet") { action(.chooseLessons) }
+            .accessibilityIdentifier("home.chooseLessons").disabled(lessonsUnavailable)
+          if let message = data.studyUnavailableMessage ?? data.lessonsDisabledMessage {
+            Text(message).font(.callout).foregroundStyle(.secondary)
+          }
         }
         Section("Upcoming reviews") {
           if let message = data.scheduleUnavailableMessage {
@@ -66,30 +71,32 @@ public struct HomeDashboardView: View {
                     ? "Nothing more in the next 24 hours"
                     : "+\(data.hourlyReviews.dropFirst().reduce(0,+)) in the next 24 hours"
                 ).font(.caption).foregroundStyle(.secondary)
-                Chart(Array(data.hourlyReviews.enumerated()), id: \.offset) { hour, count in
-                  BarMark(x: .value("Hour", hour), y: .value("Reviews", count))
-                    .foregroundStyle(hour == 0 ? StudyPalette.kanji : StudyPalette.radical)
-                }.frame(height: 115).chartXScale(
-                  domain: -0.5...Double(max(24, data.hourlyReviews.count)) - 0.5
-                )
-                .chartXAxis {
-                  AxisMarks(values: [0, 6, 12, 18, 24].filter { $0 < data.hourlyReviews.count }) {
-                    value in
-                    if let hour = value.as(Int.self) {
-                      AxisValueLabel {
-                        if hour == 0 {
-                          Text("Now")
-                        } else {
-                          Text(
-                            data.date.addingTimeInterval(Double(hour) * 3600),
-                            format: .dateTime.hour())
+                if data.hourlyReviews.contains(where: { $0 > 0 }) {
+                  Chart(Array(data.hourlyReviews.enumerated()), id: \.offset) { hour, count in
+                    BarMark(x: .value("Hour", hour), y: .value("Reviews", count))
+                      .foregroundStyle(hour == 0 ? StudyPalette.kanji : StudyPalette.radical)
+                  }.frame(height: 115).chartXScale(
+                    domain: -0.5...Double(max(24, data.hourlyReviews.count)) - 0.5
+                  )
+                  .chartXAxis {
+                    AxisMarks(values: [0, 6, 12, 18, 24].filter { $0 < data.hourlyReviews.count }) {
+                      value in
+                      if let hour = value.as(Int.self) {
+                        AxisValueLabel {
+                          if hour == 0 {
+                            Text("Now")
+                          } else {
+                            Text(
+                              data.date.addingTimeInterval(Double(hour) * 3600),
+                              format: .dateTime.hour())
+                          }
                         }
                       }
                     }
                   }
+                  .chartYAxis { AxisMarks(position: .leading) }
                 }
-                .chartYAxis { AxisMarks(position: .leading) }
-              }.foregroundStyle(.primary)
+              }.frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(.primary)
             }.buttonStyle(.plain).accessibilityElement(children: .ignore)
               .accessibilityLabel(
                 "Upcoming reviews: \(data.hourlyReviews.first ?? 0) now, \(data.hourlyReviews.dropFirst().reduce(0,+)) more in the next 24 hours"
@@ -160,7 +167,7 @@ public struct HomeDashboardView: View {
           navigationButton("Show all", id: "home.catalog.\(level.id)", action: .catalog(level.id))
         }
       }
-      Section("Item spread · all levels") {
+      Section("All levels") {
         if let message = data.progressUnavailableMessage {
           Text(message).foregroundStyle(.secondary)
         } else {
@@ -198,6 +205,8 @@ public struct HomeDashboardView: View {
     }
     #if os(iOS)
       .listStyle(.insetGrouped)
+    #else
+      .listStyle(.inset).frame(maxWidth: 960).frame(maxWidth: .infinity)
     #endif
     .tint(StudyPalette.radical)
     .refreshable { await refresh() }.accessibilityIdentifier("home.dashboard")
@@ -229,57 +238,38 @@ public struct HomeDashboardView: View {
     }.buttonStyle(.plain).accessibilityIdentifier("home.extra.\(String(describing: action))")
       .disabled(action != .excluded && data.studyUnavailableMessage != nil)
   }
+  private var lessonsUnavailable: Bool {
+    data.lessons == 0 || data.lessonsDisabledMessage != nil || data.studyUnavailableMessage != nil
+  }
   private var lessonCard: some View {
-    studyCard("Lessons", count: data.lessons, symbol: "book.closed", color: StudyPalette.kanji) {
-      Text(data.studyUnavailableMessage ?? data.lessonsDisabledMessage ?? "Learn something new.")
-        .font(.callout).foregroundStyle(.secondary)
-      Button("Lessons") { action(.lessons) }
-        .buttonStyle(.borderedProminent)
-        .disabled(
-          data.lessons == 0 || data.lessonsDisabledMessage != nil
-            || data.studyUnavailableMessage != nil
-        )
-        .accessibilityLabel(
-          "Lessons, \(data.lessonsDisabledMessage ?? "\(data.lessons) available")"
-        ).accessibilityIdentifier("home.lessons")
-      Button("Choose lessons", systemImage: "list.bullet") { action(.chooseLessons) }
-        .accessibilityIdentifier("home.chooseLessons")
-        .buttonStyle(.bordered)
-        .disabled(
-          data.lessons == 0 || data.lessonsDisabledMessage != nil
-            || data.studyUnavailableMessage != nil)
-    }
+    studyButton(
+      "Lessons", count: data.lessons, symbol: "book.closed", color: StudyPalette.kanji,
+      action: .lessons
+    )
+    .disabled(lessonsUnavailable)
+    .accessibilityLabel("Lessons, \(data.lessonsDisabledMessage ?? "\(data.lessons) available")")
+    .accessibilityIdentifier("home.lessons")
   }
   private var reviewCard: some View {
-    studyCard(
-      "Reviews", count: data.reviews, symbol: "rectangle.stack", color: StudyPalette.radical
-    ) {
-      Text(
-        data.studyUnavailableMessage
-          ?? (data.reviews > 0 ? "Keep your learning moving." : "All caught up.")
-      )
-      .font(.callout).foregroundStyle(.secondary)
-      Button("Start reviews") { action(.reviews) }
-        .buttonStyle(.borderedProminent).disabled(
-          data.reviews == 0 || data.studyUnavailableMessage != nil
-        )
-        .accessibilityLabel("Start reviews, \(data.reviews) ready").accessibilityIdentifier(
-          "home.reviews")
-    }
+    studyButton(
+      "Reviews", count: data.reviews, symbol: "rectangle.stack", color: StudyPalette.radical,
+      action: .reviews
+    )
+    .disabled(data.reviews == 0 || data.studyUnavailableMessage != nil)
+    .accessibilityLabel("Start reviews, \(data.reviews) ready").accessibilityIdentifier(
+      "home.reviews")
   }
-  private func studyCard<Content: View>(
-    _ title: String, count: Int, symbol: String, color: Color,
-    @ViewBuilder content: () -> Content
+  private func studyButton(
+    _ title: String, count: Int, symbol: String, color: Color, action: HomeAction
   ) -> some View {
-    VStack(alignment: .leading, spacing: 12) {
+    Button {
+      self.action(action)
+    } label: {
       HStack {
         Label(title, systemImage: symbol).font(.headline)
         Spacer()
         Text(count.formatted()).font(.title2.bold()).monospacedDigit()
-      }.foregroundStyle(color)
-      content()
-    }.controlSize(.large).tint(color)
-      .frame(maxWidth: .infinity, alignment: .leading).padding(16)
-      .background(color.opacity(0.08), in: .rect(cornerRadius: 16))
+      }.frame(maxWidth: .infinity).padding(.vertical, 8)
+    }.buttonStyle(.glassProminent).controlSize(.large).tint(color)
   }
 }
