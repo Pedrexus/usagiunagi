@@ -11,11 +11,7 @@ private struct LevelReference: Decodable {
 extension StudySnapshot {
   /// Display-only catalog with local negative IDs; it cannot supply real review grading or uploads.
   public static func freeLevelsPreview(now: Date = .now) throws -> StudySnapshot {
-    guard let url = Bundle.module.url(forResource: "free-levels-preview", withExtension: "json")
-    else {
-      throw CocoaError(.fileReadNoSuchFile)
-    }
-    let references = try JSONDecoder().decode([LevelReference].self, from: Data(contentsOf: url))
+    let references: [LevelReference] = try StudyResources.decode("free-levels-preview")
     let subjects = references.enumerated().map { index, reference in
       StudySubject(
         id: -Int64(index + 1), characters: reference.characters, meaning: reference.displayMeaning,

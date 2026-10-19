@@ -104,96 +104,43 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
 
   override func prepare(for segue: UIStoryboardSegue, sender _: Any?) {
     switch StoryboardSegue.Main(segue) {
-    case .startReviews:
-      let assignments = services.localCachingClient.getNonExcludedAssignments()
-      var items = ReviewItem.readyForReview(
-        assignments: assignments,
-        localCachingClient: services.localCachingClient)
-      if items.count == 0 {
-        return
+    case .startReviews, .startRecentMistakeReviews, .startRecentLessonReviews,
+      .startAlreadyPassedApprenticeReviews, .startAllLeechReviews, .startBurnedItemReviews:
+      let client = services.localCachingClient!
+      let route = StoryboardSegue.Main(segue)
+      var items: [ReviewItem]
+      switch route {
+      case .startReviews:
+        items = sortReviewItems(
+          items: ReviewItem.readyForReview(
+            assignments: client.getNonExcludedAssignments(), localCachingClient: client),
+          services: services)
+        if Settings.reviewItemsLimitEnabled {
+          items = Array(items.prefix(Int(Settings.reviewItemsLimit)))
+        }
+      case .startRecentMistakeReviews:
+        items = ReviewItem.readyForRecentReview(
+          assignments: client.getAllRecentMistakeAssignments(), localCachingClient: client)
+      case .startRecentLessonReviews:
+        items = ReviewItem.readyForRecentReview(
+          assignments: client.getAllRecentLessonAssignments(), localCachingClient: client)
+      case .startAlreadyPassedApprenticeReviews:
+        items = ReviewItem.readyForAlreadyPassedApprenticeReview(
+          assignments: client.getAssignmentsInCategory(category: .apprentice),
+          localCachingClient: client)
+      case .startAllLeechReviews:
+        items = ReviewItem.readyForLeechReview(
+          assignments: client.getAllLeeches(), localCachingClient: client)
+      case .startBurnedItemReviews:
+        items = ReviewItem.readyForBurnedReview(
+          assignments: client.getAllBurnedAssignments(), localCachingClient: client)
+      default: return
       }
-
-      items = sortReviewItems(items: items, services: services)
-
-      if Settings.reviewItemsLimitEnabled && items.count > Settings.reviewItemsLimit {
-        print("Truncating \(items.count) review items to \(Settings.reviewItemsLimit)")
-        items = Array(items[0..<Int(Settings.reviewItemsLimit)])
-      }
-
-      let vc = segue.destination as! ReviewContainerViewController
-      vc.setup(services: services, items: items)
-
-    case .startRecentMistakeReviews:
-      let assignments = services.localCachingClient.getAllRecentMistakeAssignments()
-      let items = ReviewItem.readyForRecentMistakesReview(
-        assignments: assignments,
-        localCachingClient: services
-          .localCachingClient
-      ).shuffled()
-      if items.count == 0 {
-        return
-      }
-
-      let vc = segue.destination as! ReviewContainerViewController
-      vc.setup(services: services, items: items, isPracticeSession: true)
-
-    case .startRecentLessonReviews:
-      let assignments = services.localCachingClient.getAllRecentLessonAssignments()
-      let items = ReviewItem.readyForRecentLessonReview(
-        assignments: assignments,
-        localCachingClient: services
-          .localCachingClient
-      ).shuffled()
-      if items.count == 0 {
-        return
-      }
-
-      let vc = segue.destination as! ReviewContainerViewController
-      vc.setup(services: services, items: items, isPracticeSession: true)
-
-    case .startAlreadyPassedApprenticeReviews:
-      // load apprentice items, then keep the ones that have been passed.
-      let apprenticeItems = services.localCachingClient
-        .getAssignmentsInCategory(category: SRSStageCategory.apprentice)
-      let items = ReviewItem.readyForAlreadyPassedApprenticeReview(
-        assignments: apprenticeItems,
-        localCachingClient: services
-          .localCachingClient
-      ).shuffled()
-      if items.count == 0 {
-        return
-      }
-
-      let vc = segue.destination as! ReviewContainerViewController
-      vc.setup(services: services, items: items, isPracticeSession: true)
-
-    case .startAllLeechReviews:
-      let leechItems = services.localCachingClient.getAllLeeches()
-      let items = ReviewItem.readyForLeechReview(
-        assignments: leechItems,
-        localCachingClient: services
-          .localCachingClient
-      ).shuffled()
-      if items.count == 0 {
-        return
-      }
-
-      let vc = segue.destination as! ReviewContainerViewController
-      vc.setup(services: services, items: items, isPracticeSession: true)
-
-    case .startBurnedItemReviews:
-      let assignments = services.localCachingClient.getAllBurnedAssignments()
-      let items = ReviewItem.readyForBurnedReview(
-        assignments: assignments,
-        localCachingClient: services
-          .localCachingClient
-      ).shuffled()
-      if items.count == 0 {
-        return
-      }
-
-      let vc = segue.destination as! ReviewContainerViewController
-      vc.setup(services: services, items: items, isPracticeSession: true)
+      guard !items.isEmpty else { return }
+      let practice = route != .startReviews
+      if practice { items.shuffle() }
+      let controller = segue.destination as! ReviewContainerViewController
+      controller.setup(services: services, items: items, isPracticeSession: practice)
 
     case .startLessons:
       let assignments = services.localCachingClient.getNonExcludedAssignments()

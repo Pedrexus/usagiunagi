@@ -45,11 +45,14 @@ struct SimilarKanjiIndex {
   }
 }
 
+guard CommandLine.arguments.count == 2 else {
+  fatalError("Expected an output property-list path")
+}
 let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
 var index = SimilarKanjiIndex()
 try index.load(from: directory)
-let encoder = JSONEncoder()
-encoder.outputFormatting = .sortedKeys
-var output = try encoder.encode(index.compact)
-output.append(0x0A)
-try FileHandle.standardOutput.write(contentsOf: output)
+let encoder = PropertyListEncoder()
+encoder.outputFormat = .binary
+let output = try encoder.encode(index.compact)
+try output.write(to: URL(fileURLWithPath: CommandLine.arguments[1]), options: .atomic)
+print("Wrote \(index.compact.count) similar-kanji entries")

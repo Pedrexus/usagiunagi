@@ -8,13 +8,9 @@ public struct StudySubjectSupplements: Sendable {
   let mnemonics: [String: String]
   let similar: [String: String]
   public static let bundled: Result<Self, any Error> = Result {
-    func load(_ name: String) throws -> [String: String] {
-      guard let url = Bundle.module.url(forResource: name, withExtension: "json") else {
-        throw CocoaError(.fileReadNoSuchFile)
-      }
-      return try JSONDecoder().decode([String: String].self, from: Data(contentsOf: url))
-    }
-    return try Self(mnemonics: load("old-mnemonics"), similar: load("visually-similar-kanji"))
+    return try Self(
+      mnemonics: StudyResources.decode("old-mnemonics"),
+      similar: StudyResources.decode("visually-similar-kanji"))
   }
   public func deprecatedMnemonic(subjectID: Int64) -> String? { mnemonics[String(subjectID)] }
   public func similarKanji(to characters: String) -> String? { similar[characters] }

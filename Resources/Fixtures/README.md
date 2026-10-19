@@ -1,6 +1,6 @@
 # Levels 1–3 display catalog
 
-`free-levels.parquet` is a Zstandard-compressed development reference. The native app reads the matching compact `Shared/Sources/StudyCore/Resources/free-levels-preview.json` through Foundation; no Arrow/Parquet runtime is added to the app. On Mac, Account → Preview free levels 1–3 opens it offline. Demo IDs are negative, account identity is absent and no assignments/answers are invented or uploaded.
+`free-levels.parquet` is a Zstandard-compressed development reference. The native app reads the matching binary Apple property list `Shared/Sources/StudyCore/Resources/free-levels-preview.plist` through Foundation; no Arrow/Parquet runtime is added to the app. On Mac, Account → Preview free levels 1–3 opens it offline. Demo IDs are negative, account identity is absent and no assignments/answers are invented or uploaded.
 
 Captured read-only on 2026-10-18 from the visible subject grids in the user's existing Chrome session:
 
@@ -14,10 +14,11 @@ All 357 rows contain only level, kind, characters, displayed reading and display
 
 These are authentic **display fields**, not complete API subjects. They lack WaniKani IDs, all accepted/auxiliary answers, alternate readings, mnemonics, component relationships, SRS rules and audio. The preview is for browsing and UI mocks; a complete review/lesson fixture still needs an authorized API catalog. WaniKani content is governed separately by [its terms](https://www.wanikani.com/terms); no broader content license is asserted.
 
-Regenerate the development Parquet using Mainboard's existing Zstandard exporter, from this repository:
+Export the property list to temporary JSON with Apple’s built-in `plutil`, then regenerate the development Parquet using Mainboard's existing Zstandard exporter, from Developer/Projects:
 
 ```sh
-mainboard query "SELECT * FROM read_json_auto('Shared/Sources/StudyCore/Resources/free-levels-preview.json')" --out /tmp/free-levels.parquet
+mainboard run --as-is plutil -convert json -o /tmp/free-levels-preview.json apps/usagiunagi/Shared/Sources/StudyCore/Resources/free-levels-preview.plist
+mainboard query "SELECT * FROM read_json_auto('/tmp/free-levels-preview.json')" --out /tmp/free-levels.parquet
 ```
 
 The exporter refuses overwriting evidence. Inspect row counts with `read_parquet` and the compression column in `parquet_metadata` before replacing the committed development artifact. Updates require a fresh visible capture and matching row-count/integrity review, rather than guessing curriculum changes.

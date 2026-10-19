@@ -1,0 +1,269 @@
+{
+  "date": "2026-10-20",
+  "baseline": "dbc8feb5063962c9f75ba1df8a42ac5195ebc41f",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Preserve four bundled reference catalogs in native binary property lists, share Codable loading, consolidate existing review/practice preparation and make generators write binary files directly. No presentation, grading, store schema, SQL, API transport or writer handoff change.",
+  "validatedFiles": {
+    "App/Features/Home/MainWaniKaniTabViewController.swift": "2b41bbf19deb131736b072125ca4f9c442c0ec5bf7168645a290c7267cf4dc87",
+    "App/ReviewItem.swift": "a2e4a5b284e253fc6113a9c11edf5387fa9688df8bbe7621ab983a1631ede42c",
+    "Docs/Architecture.md": "33e4bf6e10c040c56ac08f2afb59c3672ac49d9f0c6ac08634060dbb1ebe77f0",
+    "Docs/Development.md": "2057fc89f08da25cf5dd56e00ba1550cf51b720288e70d4eb1b23aa7179a47aa",
+    "Docs/TASKS.md": "8087edd7b407094d7cd321c4278fd6c88661f044754dc9d43261ec575003feba",
+    "Resources/Fixtures/README.md": "8ee9c15e7436afedd9eab28166b5f7deafd6a288b1b53a559264f2880e4e5eff",
+    "Resources/Generators/SimilarKanji/README.md": "ac8dfe162571c4b87f1b1c581ca49311d1a8b7c8b7cc222dd5cecf3fbad5d4cb",
+    "Resources/Generators/SimilarKanji/generate.swift": "a52db18a6f7458b62a0dc054f8711313931a367df2140d5141f9ef27eab12ea6",
+    "Resources/Generators/update-curricula.swift": "d8c6ab525c3a00dc3f7cdc248771952b7c8b2a80f25d64608361a3a0806e03c0",
+    "Shared/Sources/StudyCore/Curriculum.swift": "7bf44cfd7bc2142da7224b9d52204d9fcaa4d0a0d87b5ccda645800cdecb7e7a",
+    "Shared/Sources/StudyCore/FreeLevelsPreview.swift": "f523e84b1e11df342f28de91f72f8af3f57675de6f063221eb9215821629435c",
+    "Shared/Sources/StudyCore/Resources/SOURCES.md": "527afc6369e439d816690bca2ac1addf06cd1a9aa25e0d4d2e15a06cf53cc4aa",
+    "Shared/Sources/StudyCore/StudySubjectSupplements.swift": "43a928e04170e3e6b3339eee38c2d38411182a9bdec55b6ea0845d132db13be4",
+    "Shared/Sources/StudyCore/Resources/curricula.plist": "1d1842df42d8595ef12fb43c015d178c294e505afe9ecec2ebda670f92bdc699",
+    "Shared/Sources/StudyCore/Resources/free-levels-preview.plist": "b09e54c0b4a010a4cf1c393234524f06997a5e56e0bd529e07a6034f14b52995",
+    "Shared/Sources/StudyCore/Resources/old-mnemonics.plist": "6021d56be5c678d6b23ada7d212d305c9d7abb88c0436245772c1b0c25e27097",
+    "Shared/Sources/StudyCore/Resources/visually-similar-kanji.plist": "6a230345467c6f3423aa72fe39e8b35843040e2b26f3400db0f92bfdeb6ac50f",
+    "Shared/Sources/StudyCore/StudyResources.swift": "e45584c22b214095543866e530aea97c44a0871952b9ae264c8b397b03411639"
+  },
+  "deletedFiles": {
+    "Shared/Sources/StudyCore/Resources/curricula.json": "b361178b1e144cf9c5387fbcdd8cfc2ce6d23185e6f2de4bb078e27e2c913fc5",
+    "Shared/Sources/StudyCore/Resources/free-levels-preview.json": "c788cc41caea130b0b04056dc82b438256629f8b1b648a858432281eae67d912",
+    "Shared/Sources/StudyCore/Resources/old-mnemonics.json": "995333a5eaef7696f1395192ea7e5c859f07b512aafe40451841aaf70323f55e",
+    "Shared/Sources/StudyCore/Resources/visually-similar-kanji.json": "156cea19f47e434e7fa0cb3e864b63f3e47ac1b71b3c9a57f89dff01a3ffc640"
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30216,
+    "after": 30186,
+    "changed": [
+      {
+        "path": "App/Features/Home/MainWaniKaniTabViewController.swift",
+        "before": 331,
+        "after": 278
+      },
+      {
+        "path": "App/ReviewItem.swift",
+        "before": 159,
+        "after": 147
+      },
+      {
+        "path": "Shared/Sources/StudyCore/Curriculum.swift",
+        "before": 79,
+        "after": 111
+      },
+      {
+        "path": "Shared/Sources/StudyCore/FreeLevelsPreview.swift",
+        "before": 29,
+        "after": 25
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudySubjectSupplements.swift",
+        "before": 21,
+        "after": 17
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyResources.swift",
+        "before": 0,
+        "after": 11
+      }
+    ]
+  },
+  "productionReduction": 30,
+  "referenceConversion": {
+    "method": "Foundation JSONSerialization → binary PropertyListSerialization → sorted JSON equality for every original field; no value or array-order change.",
+    "files": [
+      {
+        "afterBytes": 56142,
+        "beforeBytes": 154832,
+        "binarySHA256": "1d1842df42d8595ef12fb43c015d178c294e505afe9ecec2ebda670f92bdc699",
+        "canonicalSHA256": "b47c921163939330f6ba7be0fa9ce5c16d81c27e6ba17db1f66fc25f0a761cd1",
+        "name": "curricula",
+        "originalJSONSHA256": "b361178b1e144cf9c5387fbcdd8cfc2ce6d23185e6f2de4bb078e27e2c913fc5"
+      },
+      {
+        "afterBytes": 15429,
+        "beforeBytes": 36890,
+        "binarySHA256": "b09e54c0b4a010a4cf1c393234524f06997a5e56e0bd529e07a6034f14b52995",
+        "canonicalSHA256": "bf2bc19001c206a39a586529033250cc049d585b38c390f0ba813ed3eac251f5",
+        "name": "free-levels-preview",
+        "originalJSONSHA256": "c788cc41caea130b0b04056dc82b438256629f8b1b648a858432281eae67d912"
+      },
+      {
+        "afterBytes": 17841,
+        "beforeBytes": 16476,
+        "binarySHA256": "6021d56be5c678d6b23ada7d212d305c9d7abb88c0436245772c1b0c25e27097",
+        "canonicalSHA256": "18498936ada1f61ea59c5cd8b436f63332d87a65e5cc88375518b9f78665c28a",
+        "name": "old-mnemonics",
+        "originalJSONSHA256": "995333a5eaef7696f1395192ea7e5c859f07b512aafe40451841aaf70323f55e"
+      },
+      {
+        "afterBytes": 131366,
+        "beforeBytes": 155942,
+        "binarySHA256": "6a230345467c6f3423aa72fe39e8b35843040e2b26f3400db0f92bfdeb6ac50f",
+        "canonicalSHA256": "06f31e3f6939dbc46c3e5b2a027788bb355c26f4049a72d649e2b92ec4843b06",
+        "name": "visually-similar-kanji",
+        "originalJSONSHA256": "156cea19f47e434e7fa0cb3e864b63f3e47ac1b71b3c9a57f89dff01a3ffc640"
+      }
+    ],
+    "beforeBytes": 364140,
+    "afterBytes": 220778,
+    "bytesRemoved": 143362,
+    "lineCountLimit": "Removed JSON text lines are a storage-format conversion, not removed production Swift logic."
+  },
+  "checks": {
+    "sharedMac": {
+      "log": "/private/tmp/usagi-native-cleanup-shared-mac.log",
+      "sha256": "2dc13544e5ff15d06783899ca47b79236748721df571be25ea68326f902b0e1f",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 419,
+        "suiteCounts": [
+          52,
+          7,
+          162,
+          198
+        ]
+      },
+      "bundle": null
+    },
+    "sharedIOS": {
+      "log": "/private/tmp/usagi-native-cleanup-shared-ios.log",
+      "sha256": "22232780c7f08cf6c80cbbf87e777f8a9d5bc7a30ab1ca1c31a2a5f74543d85f",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 419,
+        "passedTests": 419,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6e86aa23ce984c3c8473ba7e4bebc0c8.xcresult"
+    },
+    "hostedIOS": {
+      "log": "/private/tmp/usagi-native-cleanup-hosted.log",
+      "sha256": "a357401c0edce5e253b564b79b561cead2d52164e9b03c078fc7922006e1ff83",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-32db05cc889449a2ab56810c59dde4c0.xcresult"
+    },
+    "phoneUI": {
+      "log": "/private/tmp/usagi-native-cleanup-phone-ui.log",
+      "sha256": "f57d3acf66eb669761232b4bff741aa469c6701208473b6f934e7d82c5b89f67",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-2b26aeffe51e448481259ac3c783d655.xcresult"
+    },
+    "tabletUI": {
+      "log": "/private/tmp/usagi-native-cleanup-pad-ui.log",
+      "sha256": "0e1f9b773ac250adf49115fd1690188f59dafc267453aa0137d634087f96a5b4",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 3,
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e7177c0141a149e493c8d2178b483989.xcresult"
+    },
+    "freshReleaseMac": {
+      "log": "/private/tmp/usagi-native-cleanup-release-mac.log",
+      "sha256": "a99ee8bdc60c28683c5ebca6313bcf55f2f6d54d0aa27dad831f3b308950d780",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-9d1fc6f8296c4b42a7f0f13a6ce5b672.xcresult"
+    },
+    "freshReleaseIOS": {
+      "log": "/private/tmp/usagi-native-cleanup-release-ios.log",
+      "sha256": "4458d6192599b4e4783ed5ef94f7280bb5ef9ad2c82df3cbb71ab83676f598ea",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 102,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-701c1fbb33f549e8bdc7ff560edf28bc.xcresult"
+    }
+  },
+  "builtResourceAudit": {
+    "NativeCatalogsMac": {
+      "directory": ".build/Xcode/NativeCatalogsMac/Build/Products/Release/Tsurukame.app/Contents/Resources/StudyKit_StudyCore.bundle/Contents/Resources",
+      "catalogHashes": {
+        "curricula.plist": "1d1842df42d8595ef12fb43c015d178c294e505afe9ecec2ebda670f92bdc699",
+        "free-levels-preview.plist": "b09e54c0b4a010a4cf1c393234524f06997a5e56e0bd529e07a6034f14b52995",
+        "old-mnemonics.plist": "6021d56be5c678d6b23ada7d212d305c9d7abb88c0436245772c1b0c25e27097",
+        "visually-similar-kanji.plist": "6a230345467c6f3423aa72fe39e8b35843040e2b26f3400db0f92bfdeb6ac50f"
+      },
+      "oldCatalogJSONFiles": []
+    },
+    "NativeCatalogsiOS": {
+      "directory": ".build/Xcode/NativeCatalogsiOS/Build/Products/Release-iphonesimulator/Tsurukame.app/StudyKit_StudyCore.bundle",
+      "catalogHashes": {
+        "curricula.plist": "1d1842df42d8595ef12fb43c015d178c294e505afe9ecec2ebda670f92bdc699",
+        "free-levels-preview.plist": "b09e54c0b4a010a4cf1c393234524f06997a5e56e0bd529e07a6034f14b52995",
+        "old-mnemonics.plist": "6021d56be5c678d6b23ada7d212d305c9d7abb88c0436245772c1b0c25e27097",
+        "visually-similar-kanji.plist": "6a230345467c6f3423aa72fe39e8b35843040e2b26f3400db0f92bfdeb6ac50f"
+      },
+      "oldCatalogJSONFiles": []
+    }
+  },
+  "generators": {
+    "curriculum": {
+      "log": "/private/tmp/usagi-native-curriculum-equivalence.log",
+      "sha256": "6f797b983b02f548feff26731867fb13863ebdbf55604f98f36b816ad24cba38",
+      "result": "All regenerated fields match the bundled catalog exactly using the retained local source snapshots."
+    },
+    "similar": {
+      "bundledCount": 2380,
+      "bundledSHA256": "0333448af560175d4e7541267b3348a2a7c3550d2506618d9fb7026d4ca53711",
+      "bundledSnapshotReplacedByRegeneration": false,
+      "currentCount": 2380,
+      "currentSHA256": "9f8094679a8943db22fa9ca36a3b7add8349e638e246fa9c131e720a15255424",
+      "generatorValuesUnchanged": true,
+      "preexistingSnapshotDifferences": 1594,
+      "previousCount": 2380,
+      "previousSHA256": "9f8094679a8943db22fa9ca36a3b7add8349e638e246fa9c131e720a15255424"
+    },
+    "similarLimit": "Both old and new generators produce identical decoded values. The retained source database already differs from the historical bundled order for 1,594 entries; this cleanup does not refresh or replace that snapshot.",
+    "output": "Binary stdout was corrupted by text task-log capture during the first generator check. The retained generator now writes atomically to its explicit file argument and logs only text; the existing Mainboard task was executed successfully. No new app tool or dependency.",
+    "previewParquet": {
+      "differences": 0,
+      "rows": 357,
+      "compression": "ZSTD"
+    }
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-native-cleanup-format.log",
+    "sha256": "eab2f0c8574d4066bc82998b143018eb0acea42583a0ca6cf73ebc769f0c928b",
+    "result": "Mainboard swift-format fix/check passed on all eight changed/new Swift files; owner annotations excluded."
+  },
+  "design": "Existing shared Home source is unchanged: original lesson/review-first sections, WaniKani colors, system typography and native glass controls. This checkpoint adds no visual redesign. Phone/iPad checks cover Home/rotation, inline Coverage plots and a complete synthetic typed review.",
+  "limits": [
+    "Current Mac UI acceptance remains pending the two prelaunch automation startup failures recorded in 2026-10-20-shared-companion.json; builds/shared tests do not replace that gate.",
+    "API JSON, compatible archives and deterministic protocol fixtures remain. Active iOS SQL/protobuf and the read-only importer must remain until the documented native writer handoff preserves functionality.",
+    "iOS Release retains legacy framework/protobuf warnings. No hosted CI, new signing/distribution, real account exercise, paired-watch/physical speech acceptance, PR or push is claimed."
+  ],
+  "officialReferences": [
+    "https://developer.apple.com/documentation/foundation/propertylistdecoder",
+    "https://developer.apple.com/documentation/swiftui/groupedformstyle"
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "rootAndMainboard": "No parent manifest, Mainboard implementation or unrelated owner changes were edited/staged."
+}
