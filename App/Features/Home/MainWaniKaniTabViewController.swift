@@ -47,27 +47,9 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
         .init(number: level - 1, legacyAssignments: client.getAssignments(level: level - 1)))
     }
     data.levels.append(.init(number: level, legacyAssignments: assignments))
-    if !data.onVacation
-      && assignments.contains(where: { $0.hasSubjectType && $0.subjectType == .kanji })
-    {
-      let next = HomeTiming.nextReview(
-        services: services, currentLevelAssignments: assignments)
-      data.timing.append(
-        .init(
-          "Next level-up review",
-          next < Date()
-            ? "Now"
-            : next == .distantFuture
-              ? "N/A"
-              : HomeTiming.intervalString(
-                next, showMinutes: Settings.showMinutesForNextLevelUpReview)))
-      let remaining = HomeTiming.levelRemaining(
-        services: services, currentLevelAssignments: assignments)
-      data.timing.append(
-        .init(
-          remaining.isEstimate ? "Time remaining (estimated)" : "Time remaining",
-          remaining.finish < Date() ? "Now" : HomeTiming.intervalString(remaining.finish)))
-    }
+    data.timing = HomeTiming.rows(
+      services: services, assignments: assignments,
+      showMinutes: Settings.showMinutesForNextLevelUpReview)
     let counts = client.srsCategoryCounts
     data.stageCounts = (0..<5).map { counts.indices.contains($0) ? Int(counts[$0]) : 0 }
     data.excluded = Settings.allowExcludeItems ? client.excludedCount() : 0

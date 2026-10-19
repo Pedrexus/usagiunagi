@@ -314,7 +314,9 @@ private actor ModelRepository {
     let model = StudyAppModel(
       credentials: credentials, client: await server.client, openStore: { cache })
     await model.restore()
+    credentials.failSaves = true
     await model.refresh()
+    #expect(model.error == nil && credentials.saved.isEmpty)
     #expect(try await cache.savedWork(accountID: account).materials.count == 1)
     model.loadPreview()
     #expect(model.snapshot?.isSample == true && model.snapshot?.subjects.count == 357)
@@ -425,6 +427,35 @@ private actor ModelRepository {
     #expect(model.snapshot == nil && credentials.token == nil && model.error == nil)
     await model.restore()
     #expect(model.snapshot == nil)
+  }
+
+  @Test func savedCredentialCanReadAColdCatalogWithoutRewritingTheKeychain() async throws {
+    let cache = try await store()
+    let credentials = MemoryCredentials("fixture")
+    credentials.failSaves = true
+    let model = StudyAppModel(
+      credentials: credentials,
+      client: WaniKaniClient(transport: DownloadFixture.response), openStore: { cache })
+    await model.refresh()
+    #expect(model.snapshot?.accountID == account && model.error == nil && model.restorationComplete)
+    #expect(credentials.saved.isEmpty)
+  }
+  @Test func endpointCannotChangeWhileAnAccountOperationIsRunning() async throws {
+    let cache = try await store(cached: true, pendingNote: true)
+    let gate = StudyTaskGate()
+    let opening = ServiceStoreOpening(cache, gate: gate)
+    let model = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), openStore: { try await opening.open() })
+    let restoring = Task { await model.restore() }
+    await gate.waitForEntry()
+    #expect(throws: StudyUploadError.self) {
+      try model.setAPIEndpoint(WaniKaniClient.defaultBaseURL)
+    }
+    await gate.resume()
+    await restoring.value
+    try model.setAPIEndpoint(WaniKaniClient.defaultBaseURL)
+    #expect(model.snapshot?.accountID == account)
+    #expect(try await cache.savedWork(accountID: account).materials.count == 1)
   }
 
 }

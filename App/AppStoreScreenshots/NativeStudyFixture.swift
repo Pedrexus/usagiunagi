@@ -43,6 +43,9 @@
         notifications: StudyNotifications(
           preferences: DefaultsStudyNotificationPreferences(defaults: defaults),
           client: NotificationFixture.client),
+        avatars: LegacyAvatarCache(
+          directory: URL.temporaryDirectory.appending(path: "native-avatar-fixture-\(UUID())"),
+          cache: URLCache(memoryCapacity: 1_048_576, diskCapacity: 0)),
         appearance: arguments.contains("--light-fixture")
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
         notice: "Synthetic review fixture · memory only · simulated sync",

@@ -21,12 +21,13 @@ public final class StudyAppModel {
   @ObservationIgnored private var activeCredential: String?
   @ObservationIgnored private var generation = UUID()
   private var restored = false
+  public var restorationComplete: Bool { restored }
   @ObservationIgnored private var restoration: Task<Void, Never>?
   @ObservationIgnored private let credentials: any StudyCredentialStore
   @ObservationIgnored private let openStore: @Sendable () async throws -> StudyStore
   @ObservationIgnored private let legacySnapshotURL: URL?
   @ObservationIgnored private var persistence: Task<StudyStore, any Error>?
-  @ObservationIgnored private let reader: any WaniKaniService
+  @ObservationIgnored private var reader: any WaniKaniService
 
   public init(
     credentials: any StudyCredentialStore, client: any WaniKaniService = WaniKaniClient(),
@@ -198,12 +199,12 @@ public final class StudyAppModel {
   }
   public func refresh() async {
     do {
-      guard let token = try credentials.load() else {
-        error = "Connect a WaniKani account first."
-        return
-      }
-      try await connect(token)
+      _ = try await performSynchronization(.refresh, accountID: snapshot?.accountID)
     } catch { self.error = error.localizedDescription }
+  }
+  public func setAPIEndpoint(_ url: URL) throws {
+    guard !isSyncing else { throw StudyUploadError.alreadyRunning }
+    reader = WaniKaniClient(baseURL: url)
   }
   /// Read through the same fenced lane without rewriting credentials or sending pending work.
   public func refresh(accountID: String) async throws {
@@ -218,13 +219,16 @@ public final class StudyAppModel {
   {
     try await performSynchronization(.uploadSavedWork(accountID: accountID), accountID: accountID)
   }
-  private func performSynchronization(_ operation: StudySynchronization, accountID: String)
+  private func performSynchronization(_ operation: StudySynchronization, accountID: String?)
     async throws
     -> StudyUploadReport?
   {
-    guard snapshot?.accountID == accountID, snapshot?.isSample == false,
-      let token = try credentials.load()
+    guard snapshot?.isSample != true,
+      accountID == nil ? operation == .refresh : snapshot?.accountID == accountID
     else { throw StudyStoreError.invalidIdentity }
+    guard let token = try credentials.load() else {
+      throw StudySignInError.message("Connect a WaniKani account first.")
+    }
     let epoch = generation
     let credential = Self.credentialID(token)
     try beginRequest(credential: credential)
@@ -240,6 +244,7 @@ public final class StudyAppModel {
       try checkRequest(epoch)
       snapshot = result.snapshot
       profile = result.profile
+      restored = true
       if let report = result.upload { syncSummary = summary(report) }
       return result.upload
     } catch let failure as StudySynchronizationFailure {

@@ -1,82 +1,38 @@
 // Copyright David Sansome
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Licensed under the Apache License, Version 2.0. See LICENSE for terms.
 
-import Foundation
-import StudyCore
-import StudyUI
-import UIKit
-import WaniKaniAPI
+#if DEBUG
+  import Observation
+  import StudyCore
+  import StudyUI
+  import UIKit
 
-class AppDelegate: UIResponder, UIApplicationDelegate {
-  // Owned here rather than by the scene delegate: these outlive any individual scene, and are used
-  // for background fetches that happen while no scene is connected.
-  private(set) var services: TKMServices!
-
-  func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
-  )
-    -> Bool
-  {
-    Settings.migrate()
-    Screenshotter.setUp()
-    let notifications = StudyNotifications(
-      preferences: LegacyNotificationPreferences(),
-      client: {
-        #if DEBUG
-          if Screenshotter.isActive { return NotificationFixture.client }
-        #endif
-        return .system
-      }())
-
-    application.setMinimumBackgroundFetchInterval(UIApplication.backgroundFetchIntervalMinimum)
-    #if DEBUG
+  /// Temporary old-host test setup. Shipping lifecycle and views are SwiftUI.
+  @MainActor @Observable final class AppDelegate: UIResponder, UIApplicationDelegate {
+    private(set) var legacyFixtureServices: TKMServices?
+    func application(
+      _ application: UIApplication,
+      didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+      guard Screenshotter.isActive else { return true }
+      Settings.migrate()
+      Screenshotter.setUp()
+      let notifications = StudyNotifications(
+        preferences: LegacyNotificationPreferences(),
+        client: NotificationFixture.client)
       if let (loader, configuration) = Screenshotter.fontFixture() {
-        services = TKMServices(
-          fontLibrary: StudyFontLibrary(
-            catalog: loader, preferences: LegacyFontPreferences(), configuration: configuration),
+        legacyFixtureServices = TKMServices(
+          fontLibrary: .init(
+            catalog: loader,
+            preferences: LegacyFontPreferences(), configuration: configuration),
           audioDownloads: Screenshotter.audioFixture(), notifications: notifications,
           companion: NotificationFixture.companion)
       } else {
-        services = TKMServices(
-          audioDownloads: Screenshotter.audioFixture(), notifications: notifications,
-          companion: NotificationFixture.companion)
+        legacyFixtureServices = TKMServices(
+          audioDownloads: Screenshotter.audioFixture(),
+          notifications: notifications, companion: NotificationFixture.companion)
       }
-    #else
-      services = TKMServices(notifications: notifications)
-    #endif
-
-    return true
-  }
-
-  func application(
-    _: UIApplication,
-    performFetchWithCompletionHandler completionHandler:
-      @escaping (UIBackgroundFetchResult)
-      -> Void
-  ) {
-    guard let lcc = services.localCachingClient else {
-      completionHandler(.noData)
-      return
-    }
-
-    lcc.sync(quick: true, progress: Progress(totalUnitCount: -1)).finally {
-      Task { @MainActor in
-        await self.services.updateStudyServices()
-        completionHandler(.newData)
-      }
+      return true
     }
   }
-
-}
+#endif

@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreSpotlight
 import Foundation
-import Intents
 import StudyCore
+import StudyUI
 import UIKit
-import UniformTypeIdentifiers
 
-class SiriShortcutHelper: NSObject {
+@MainActor final class SiriShortcutHelper: NSObject {
   typealias ShortcutType = StudyActivity
 
   public static let shared = SiriShortcutHelper()
@@ -31,27 +29,9 @@ class SiriShortcutHelper: NSObject {
 
   func newShortcutActivity(type: ShortcutType) -> NSUserActivity {
     let activity = NSUserActivity(activityType: type.rawValue)
-    activity.persistentIdentifier = NSUserActivityPersistentIdentifier(type.rawValue)
-    activity.isEligibleForSearch = true
-    activity.isEligibleForPrediction = true
-
-    configureType(type, activity: activity)
+    type.configure(activity)
 
     return activity
   }
 
-  private func configureType(_ type: ShortcutType, activity: NSUserActivity) {
-    let attributes = CSSearchableItemAttributeSet(contentType: .item)
-    switch type {
-    case .reviews:
-      activity.title = "Start Wanikani Reviews"
-      activity.suggestedInvocationPhrase = "Start Wanikani Reviews"
-      attributes.contentDescription = "Keep it up and burn every one"
-    case .lessons:
-      activity.title = "Start Wanikani Lessons"
-      activity.suggestedInvocationPhrase = "Start Wanikani Lessons"
-      attributes.contentDescription = "Learn something new"
-    }
-    activity.contentAttributeSet = attributes
-  }
 }

@@ -15,12 +15,15 @@ import SwiftUI
   let subjectSettings: StudySubjectSettings
   let appearance: ColorScheme?
   let notice: String?
+  let database: URL?
+  let avatars: LegacyAvatarCache
 
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
-    companion: StudyCompanionDelivery? = nil,
-    appearance: ColorScheme? = nil, notice: String? = nil, paths: AsyncStream<Bool>? = nil
+    companion: StudyCompanionDelivery? = nil, avatars: LegacyAvatarCache? = nil,
+    appearance: ColorScheme? = nil, notice: String? = nil, database: URL? = nil,
+    paths: AsyncStream<Bool>? = nil
   ) {
     self.model = model
     automaticSync = StudyAutomaticSync(model: model, paths: paths)
@@ -35,9 +38,13 @@ import SwiftUI
       store: DefaultsStudySubjectPreferences(defaults: defaults))
     self.appearance = appearance
     self.notice = notice
+    self.database = database
+    self.avatars =
+      avatars
+      ?? LegacyAvatarCache(
+        directory: URL.cachesDirectory.appending(path: "com.hpique.haneke/shared"))
     if let companion { self.notifications.didRead = { companion.update($0) } }
     self.notifications.observe(model: model, lessonSettings: lessonSettings)
-    automaticSync.start()
   }
   static var isReviewFixture: Bool {
     #if DEBUG
@@ -46,12 +53,7 @@ import SwiftUI
       false
     #endif
   }
-  static func make(
-    mediaLayout: StudyMediaLayout = .native, baseURL: URL = WaniKaniClient.defaultBaseURL
-  ) -> Self {
-    #if DEBUG
-      if isReviewFixture { return NativeStudyFixture.make() }
-    #endif
+  static func make(mediaLayout: StudyMediaLayout, baseURL: URL, store: StudyStore) -> Self {
     #if os(iOS)
       let companion: StudyCompanionDelivery? = WatchHelper.sharedInstance.companion
     #else
@@ -64,13 +66,14 @@ import SwiftUI
         credentials: KeychainStudyCredentialStore(service: "TsurukameNative.WaniKani"),
         client: WaniKaniClient(baseURL: baseURL),
         legacySnapshotURL: directory.appending(path: "snapshot-v1.json"),
-        openStore: { try await StudyStore.open(at: directory.appending(path: "study.store")) }),
+        openStore: { store }),
       fonts: StudyFontLibrary(
         catalog: .init(
           directory: media.fonts,
           bundledFonts: mediaLayout == .legacyDocuments
             ? Bundle.main.resourceURL?.appending(path: "fonts") : nil)),
       audio: StudyAudioLibrary(
-        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion)
+        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion,
+      database: directory.appending(path: "study.store"))
   }
 }

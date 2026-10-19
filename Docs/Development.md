@@ -2,6 +2,13 @@
 
 Use Xcode 27.0 / Swift 6.4; Mainboard selects the toolchain. The obsolete Swift 5.1 swiftenv pin and unused Clang-format config were retired. Use the stable iOS 27.0 runtime. Open `App/UsagiUnagi.xcworkspace`, select the `UsagiUnagi` scheme and choose an iPhone, iPad or **My Mac** destination. My Mac is a native macOS build; Catalyst and the iPad compatibility destination are disabled. `Tsurukame` remains the internal app target/module for existing callers and data compatibility. `Tsurukame` also retains the hosted unit-test scheme.
 
+## Shared native scene acceptance
+
+The production app now uses one SwiftUI root and native store on iPhone, iPad and Mac. `AppStoreScreenshots/NativeRootFlowTests` launches that scene with injected memory-only account services via `--review-fixture`; the older `ReviewFlowTests` use the temporary legacy DEBUG host. Both are included in the mobile Actions gate. From the parent workspace run the generic Mainboard Apple executor with scheme `ReviewValidation`, action `test`, the iPhone/iPad simulator destination, and `--only-testing AppStoreScreenshots/NativeRootFlowTests`. Keep simulator GUI and hosted runs serialized. No live account exercise or OS microphone/notification authorization is part of these fixtures.
+
+The persistence probe additionally supports `write-native-selection` (expected abrupt exit 86) followed by `read-native-selection` (expected exit 0) against a disposable store. This proves a fresh installation retains its native-writer decision without reopening the old credentials/source after a process restart. The existing four restart phases and seven handoff/rollback phases continue to apply. The standalone Actions workflow includes all thirteen phases.
+
+
 ## Mainboard owns execution
 
 Generic Apple patterns live in Mainboard: native arguments, committed package resolution, process-tree timeout, fresh result bundles, diagnostics, test verdicts and simulator URL delivery. There is no app `Tools` folder or custom CI shell driver. Schemes, test filters, fixtures and resource generation remain app-specific.

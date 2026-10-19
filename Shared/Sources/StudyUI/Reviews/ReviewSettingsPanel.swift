@@ -9,14 +9,12 @@ public struct ReviewSettingsPanel: View {
   private let fonts: (() -> Void)?
   private let offlineAudio: (() -> Void)?
   private let supportsAudio: Bool
-  private let supportsSessionOptions: Bool
   private let done: (() -> Void)?
 
   public init(
     preferences: ReviewPreferences,
     changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
     fonts: (() -> Void)? = nil, offlineAudio: (() -> Void)? = nil, supportsAudio: Bool = true,
-    supportsSessionOptions: Bool = false,
     done: (() -> Void)? = nil
   ) {
     _preferences = State(initialValue: preferences)
@@ -25,7 +23,6 @@ public struct ReviewSettingsPanel: View {
     self.fonts = fonts
     self.offlineAudio = offlineAudio
     self.supportsAudio = supportsAudio
-    self.supportsSessionOptions = supportsSessionOptions
     self.done = done
   }
 
@@ -41,27 +38,20 @@ public struct ReviewSettingsPanel: View {
 
   public var body: some View {
     Form {
-      if supportsSessionOptions {
-        FullReviewSettingsContent(
-          preferences: binding, fonts: fonts, offlineAudio: offlineAudio,
-          display: { EmptyView() }, answers: { EmptyView() })
-      } else {
-
-        ReviewSettingsContent(
-          preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
-          display: { EmptyView() }, answers: { EmptyView() },
-          audio: {
-            if let offlineAudio {
-              Button("Offline Audio", systemImage: "arrow.down.circle", action: offlineAudio)
-                .accessibilityIdentifier("reviewSettings.offlineAudio")
-            }
-          })
-      }
+      ReviewSettingsContent(
+        preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
+        display: { EmptyView() }, answers: { EmptyView() },
+        audio: {
+          if let offlineAudio {
+            Button("Offline Audio", systemImage: "arrow.down.circle", action: offlineAudio)
+              .accessibilityIdentifier("reviewSettings.offlineAudio")
+          }
+        })
     }
     #if os(macOS)
       .formStyle(.grouped)
     #endif
-    .navigationTitle(supportsSessionOptions ? "Reviews" : "Quick settings")
+    .navigationTitle("Quick settings")
     .onChange(of: sourcePreferences) { _, value in preferences = value }
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)

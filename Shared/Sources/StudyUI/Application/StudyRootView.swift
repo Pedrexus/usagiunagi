@@ -11,12 +11,19 @@ public struct StudyRootView: View {
   private let appearance: ColorScheme?
   private let notice: String?
   private let notifications: StudyNotifications?
+  private let diagnostics: SQLiteDiagnosticArchive?
+  private let avatars: LegacyAvatarCache
   @Environment(\.scenePhase) private var scenePhase
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudySubjectSettings.self) private var subjectSettings
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
+  @AppStorage("native.apiBaseUrl") private var apiEndpoint = WaniKaniClient.defaultBaseURL
+    .absoluteString
+  @AppStorage("native.avatarCacheRevision") private var avatarCacheRevision = 0
+  @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
+  @AppStorage("native.showMinutesForNextLevelUpReview") private var showMinutes = false
   @AppStorage("native.gravatarCustomEmail") private var avatarEmail = ""
   @AppStorage("native.avatarFallbacks") private var avatarFallbacks = Data()
   @Environment(\.displayScale) private var displayScale
@@ -28,16 +35,19 @@ public struct StudyRootView: View {
   @State private var showSettings = false
   @State private var subject: StudySubject?
   @State private var signIn: StudySignIn
-  @State private var incomingLinks: [StudyLink] = []
+  @Bindable private var links: StudyLinkInbox
   @State private var linkMessage: String?
   @State private var openIncomingLink = false
   @State private var wrapUpRequested = false
+  @State private var confirmDisconnect = false
   @Environment(\.openURL) private var openURL
   @Environment(\.appearsActive) private var appearsActive
   public init(
     model: StudyAppModel, automaticSync: StudyAutomaticSync, appName: String,
     appearance: ColorScheme? = nil, notice: String? = nil,
-    notifications: StudyNotifications? = nil
+    notifications: StudyNotifications? = nil, diagnostics: SQLiteDiagnosticArchive? = nil,
+    avatars: LegacyAvatarCache,
+    links: StudyLinkInbox = .init()
   ) {
     self.model = model
     self.automaticSync = automaticSync
@@ -50,6 +60,9 @@ public struct StudyRootView: View {
     self.appearance = appearance
     self.notice = notice
     self.notifications = notifications
+    self.diagnostics = diagnostics
+    self.avatars = avatars
+    self.links = links
   }
   private struct AudioReadKey: Equatable {
     let accountID: String?
@@ -106,13 +119,13 @@ public struct StudyRootView: View {
           if let notice {
             Text(notice).font(.caption).padding(6)
           }
-          if let link = incomingLinks.first {
+          if let link = links.pending.first {
             HStack {
               Text(link.title)
               Button("Open") { openIncomingLink = true }.accessibilityIdentifier("applink.open")
                 .disabled(model.isSyncing || model.snapshot?.isSample != false)
               Button("Dismiss") {
-                if incomingLinks.first == link { incomingLinks.removeFirst() }
+                if links.pending.first == link { links.pending.removeFirst() }
                 openIncomingLink = false
               }
               .accessibilityIdentifier("applink.dismiss")
@@ -131,16 +144,10 @@ public struct StudyRootView: View {
           }
         }
       }
-      .onOpenURL { url in if let link = StudyLink(url: url) { receive(link) } }
-      .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
-        if let url = activity.webpageURL, let link = StudyLink(url: url) { receive(link) }
-      }
-      .onContinueUserActivity(StudyActivity.reviews.rawValue) { _ in receive(.reviews) }
-      .onContinueUserActivity(StudyActivity.lessons.rawValue) { _ in receive(.lessons) }
       .task(
         id: LinkReadKey(
           account: model.snapshot?.accountID, busy: model.isSyncing,
-          link: incomingLinks.first,
+          link: links.pending.first,
           canOpen: canOpenIncomingLink)
       ) {
         await openLinkIfReady()
@@ -167,6 +174,12 @@ public struct StudyRootView: View {
       }
       .onChange(of: model.dataRevision) { _, _ in updateHeader() }
       .onChange(of: showSettings) { _, visible in if !visible { updateHeader() } }
+      .task(id: shell.avatar) {
+        if let url = shell.avatar, await avatars.restore(url) { shell.avatarRevision += 1 }
+      }
+      .onChange(of: avatarCacheRevision) { _, _ in
+        shell.avatarRevision += 1
+      }
       .onChange(of: avatarEmail) { _, _ in if !showSettings { updateHeader() } }
       .onChange(of: avatarFallbacks) { _, _ in if !showSettings { updateHeader() } }
       .onChange(of: displayScale) { _, _ in if !showSettings { updateHeader() } }
@@ -174,7 +187,7 @@ public struct StudyRootView: View {
         shell.progress = active ? Progress(totalUnitCount: -1) : nil
       }
       .onChange(of: model.snapshot?.accountID) { previous, current in
-        if previous != nil, previous != current { incomingLinks.removeAll() }
+        if previous != nil, previous != current { links.pending.removeAll() }
         openIncomingLink = false
         linkMessage = nil
         wrapUpRequested = false
@@ -209,7 +222,8 @@ public struct StudyRootView: View {
           StudySettingsView(
             account: model.snapshot == nil ? nil : shell, destination: settingsDestination
           ) {
-            EmptyView()
+            NavigationLink("Developer options", value: StudyDestination.developerSettings)
+              .accessibilityIdentifier("settings.developer")
           } accountActions: {
             Button("Saved work") { settingsPath.append(.savedWork) }
             Button("WaniKani account") { settingsPath = [.account] }
@@ -256,6 +270,15 @@ public struct StudyRootView: View {
     }
     automaticSync.updateScene(sceneID, active: scenePhase == .active, studying: studying)
   }
+  private var reviewBinding: Binding<ReviewPreferences> {
+    Binding(
+      get: { preferences },
+      set: { value in
+        do { try $preferences.applyChanges(from: preferences, to: value) } catch {
+          model.error = error.localizedDescription
+        }
+      })
+  }
   private func settingsDestination(_ page: StudySettingsPage) -> StudyDestination {
     switch page {
     case .appearance: .appearanceSettings
@@ -267,44 +290,44 @@ public struct StudyRootView: View {
   @ViewBuilder private func destination(_ value: StudyDestination) -> some View {
     switch value {
     case .account: account
+    case .developerSettings:
+      DeveloperSettingsView(
+        endpoint: $apiEndpoint,
+        defaultEndpoint: WaniKaniClient.defaultBaseURL.absoluteString, archive: diagnostics,
+        applyEndpoint: { value in
+          guard let url = URL(string: value) else { throw WaniKaniClient.APIError.invalidResponse }
+          try model.setAPIEndpoint(url)
+        },
+        clearAvatarCache: {
+          try await avatars.clear()
+          avatarCacheRevision += 1
+        })
     case .lessonSettings: LessonSettingsView(settings: lessonSettings)
     case .appearanceSettings:
       AppearanceSettingsView(
-        appearance: Binding(
-          get: { preferences.appearance },
-          set: { value in
-            let old = preferences
-            var new = old
-            new.appearance = value
-            do { try $preferences.applyChanges(from: old, to: new) } catch {
-              model.error = error.localizedDescription
-            }
-          }), email: $avatarEmail, notifications: notifications)
+        appearance: reviewBinding.appearance, email: $avatarEmail,
+        notifications: notifications)
     case .subjectSettings:
       SubjectSettingsView(
         settings: subjectSettings,
-        skipKanjiReadings: Binding(
-          get: { preferences.sessionOptions.skipKanjiReadings },
-          set: { value in
-            let old = preferences
-            var new = old
-            new.sessionOptions.skipKanjiReadings = value
-            do { try $preferences.applyChanges(from: old, to: new) } catch {
-              model.error = error.localizedDescription
-            }
-          }))
+        skipKanjiReadings: reviewBinding.sessionOptions.skipKanjiReadings)
     case .fonts: FontLibraryView(library: fonts)
     case .offlineAudio: AudioLibraryView(library: audio)
     case .reviewSettings:
-      ReviewSettingsPanel(
-        preferences: preferences,
-        changed: { old, new in
-          do { try $preferences.applyChanges(from: old, to: new) } catch {
-            model.error = error.localizedDescription
-          }
-        }, fonts: { settingsPath.append(.fonts) },
-        offlineAudio: { settingsPath.append(.offlineAudio) },
-        supportsSessionOptions: true)
+      Form {
+        FullReviewSettingsContent(
+          preferences: reviewBinding,
+          fonts: { settingsPath.append(.fonts) },
+          offlineAudio: { settingsPath.append(.offlineAudio) }
+        ) {
+          Toggle("Show minutes for next level-up review", isOn: $showMinutes)
+            .accessibilityIdentifier("settings.showMinutesForNextLevelUpReview")
+        } answers: {
+          #if os(iOS)
+            StudyInputSettings(automaticJapanese: $automaticJapanese)
+          #endif
+        }
+      }.formStyle(.grouped).navigationTitle("Reviews")
     case .forecast: NativeForecastView(model: model)
     case .reviews, .lessons, .practice, .savedWork, .catalog, .search, .subject:
       if let snapshot = model.snapshot, !snapshot.isSample, let accountID = snapshot.accountID,
@@ -314,12 +337,16 @@ public struct StudyRootView: View {
         case .reviews:
           NativeReviewView(
             store: store, accountID: accountID, wrapUpRequested: $wrapUpRequested,
-            finished: finished)
+            finished: finished
+          )
+          .userActivity(StudyActivity.reviews.rawValue) { StudyActivity.reviews.configure($0) }
         case .lessons(let automatic):
           NativeLessonView(
             store: store, accountID: accountID,
             automaticBatchSize: automatic ? lessonSettings.value.batchSize : nil,
-            finished: finished)
+            finished: finished
+          )
+          .userActivity(StudyActivity.lessons.rawValue) { StudyActivity.lessons.configure($0) }
         case .practice(let scope):
           NativeReviewView(
             store: store, accountID: accountID, mode: .practice(scope),
@@ -424,11 +451,6 @@ public struct StudyRootView: View {
   private var canOpenIncomingLink: Bool {
     openIncomingLink || (path.isEmpty && tab != .practice && !showSettings && subject == nil)
   }
-  private func receive(_ link: StudyLink) {
-    guard link != .activate, incomingLinks.last != link else { return }
-    linkMessage = nil
-    incomingLinks.append(link)
-  }
   private func navigate(to destination: StudyDestination) {
     let existing = path.lastIndex { value in
       if case .lessons = destination, case .lessons = value { return true }
@@ -441,7 +463,7 @@ public struct StudyRootView: View {
     }
   }
   private func openLinkIfReady() async {
-    guard let link = incomingLinks.first, !model.isSyncing,
+    guard let link = links.pending.first, !model.isSyncing,
       let accountID = model.snapshot?.accountID, model.snapshot?.isSample == false,
       let store = model.savedWorkStore,
       canOpenIncomingLink
@@ -466,8 +488,8 @@ public struct StudyRootView: View {
       case .activate, .wrapUp: target = nil
       }
       try Task.checkCancellation()
-      guard model.snapshot?.accountID == accountID, incomingLinks.first == link else { return }
-      incomingLinks.removeFirst()
+      guard model.snapshot?.accountID == accountID, links.pending.first == link else { return }
+      links.pending.removeFirst()
       openIncomingLink = false
       showSettings = false
       subject = nil
@@ -489,9 +511,9 @@ public struct StudyRootView: View {
       }
     } catch {
       guard !Task.isCancelled, model.snapshot?.accountID == accountID,
-        incomingLinks.first == link
+        links.pending.first == link
       else { return }
-      incomingLinks.removeFirst()
+      links.pending.removeFirst()
       openIncomingLink = false
       linkMessage = error.localizedDescription
     }
@@ -512,7 +534,7 @@ public struct StudyRootView: View {
             LabeledContent("Content access", value: "Through level \(model.maximumContentLevel)")
           }
           Button("Disconnect and remove local snapshot", role: .destructive) {
-            Task { await model.disconnect() }
+            confirmDisconnect = true
           }.disabled(model.isDisconnecting)
         }
       }
@@ -528,6 +550,16 @@ public struct StudyRootView: View {
         ).font(.caption).foregroundStyle(.secondary)
       }
     }.formStyle(.grouped).navigationTitle("Account").onDisappear { signIn.cancel() }
+      .confirmationDialog(
+        "Disconnect account?", isPresented: $confirmDisconnect, titleVisibility: .visible
+      ) {
+        Button("Disconnect", role: .destructive) { Task { await model.disconnect() } }
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        Text(
+          "The API token and cached statistics are removed from this device. Saved answers and notes remain tied to this account and can sync after reconnecting."
+        )
+      }
   }
 }
 

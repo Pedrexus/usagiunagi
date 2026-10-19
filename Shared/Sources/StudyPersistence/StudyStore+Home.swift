@@ -26,7 +26,8 @@ extension StudyStore {
   public func homeData(
     accountID: String, now: Date = .now, calendar: Calendar = .current,
     lessonPreferences: StudyLessonPreferences = .init(),
-    subjectPreferences: SubjectDetailsPreferences = .init(), policy: StudyReviewPolicy = .init()
+    subjectPreferences: SubjectDetailsPreferences = .init(), policy: StudyReviewPolicy = .init(),
+    showMinutes: Bool = false
   ) throws
     -> HomeDashboardData
   {
@@ -52,6 +53,9 @@ extension StudyStore {
       }.count
     data.hourlyReviews = available.hourlyReviews
     data.stageCounts = available.stageCounts
+    do {
+      data.timing = try available.homeTiming(showMinutes: showMinutes, calendar: calendar)
+    } catch { data.timing = [.init("Level timing", error.localizedDescription)] }
     if !available.pending.isEmpty {
       data.notice =
         "\(available.pending.count) uploads pending. Completed work syncs automatically when online."

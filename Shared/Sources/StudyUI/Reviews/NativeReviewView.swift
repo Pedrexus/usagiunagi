@@ -32,13 +32,19 @@ public struct NativeReviewView: View {
   @State private var fontSubjectID: Int64?
   @State private var customFont = ""
   @State private var fullDetails = false
+  @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
+  @Environment(StudySubjectSettings.self) private var subjectSettings
   @StoredReviewPreferences private var preferences
   // Only transient UI state. Submitted answers remain in the revision-checked store/outbox.
   @SceneStorage("review.draft.identity") private var draftIdentity = ""
   @SceneStorage("review.draft.answer") private var draftAnswer = ""
   @SceneStorage("review.draft.feedback") private var draftFeedback = ""
   @SceneStorage("review.draft.phase") private var draftPhase = ReviewScreenState.Phase.answering
-  @FocusState private var answerFocused: Bool
+  #if os(iOS)
+    @State private var answerFocused = false
+  #else
+    @FocusState private var answerFocused: Bool
+  #endif
 
   public init(
     store: StudyStore, accountID: String, mode: NativeStudyMode = .reviews,
@@ -121,10 +127,22 @@ public struct NativeReviewView: View {
               }
             }
           ) {
-            TextField(screen.prompt, text: $screen.answer)
-              .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
-              .focused($answerFocused).onSubmit { act(.submit) }
-              .accessibilityIdentifier("review.answer")
+            #if os(iOS)
+              StudyAnswerInput(
+                prompt: screen.prompt, text: $screen.answer,
+                focused: Binding(get: { answerFocused }, set: { answerFocused = $0 }),
+                reading: screen.questionKind == .reading, automaticJapanese: automaticJapanese,
+                alphabet: subjectSettings.value.useKatakanaForOnyomi
+                  && subject.readings.first(where: \.isPrimary)?.kind == .onyomi
+                  ? .katakana : .hiragana,
+                submitted: { act(.submit) }
+              ).frame(minHeight: 44)
+            #else
+              TextField(screen.prompt, text: $screen.answer)
+                .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
+                .focused($answerFocused).onSubmit { act(.submit) }
+                .accessibilityIdentifier("review.answer")
+            #endif
           } details: {
             NativeSubjectDetailsView(
               store: store, accountID: accountID, subjectID: subject.id,

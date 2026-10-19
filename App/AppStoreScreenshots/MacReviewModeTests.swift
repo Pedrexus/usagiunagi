@@ -567,6 +567,15 @@
       app.buttons["app.settings"].click()
       app.buttons["WaniKani account"].click()
       app.buttons["Disconnect and remove local snapshot"].click()
+      XCTAssertTrue(app.buttons["Disconnect"].waitForExistence(timeout: 5))
+      if app.buttons["Cancel"].exists {
+        app.buttons["Cancel"].click()
+      } else {
+        app.typeKey(.escape, modifierFlags: [])
+      }
+      XCTAssertTrue(app.buttons["Disconnect and remove local snapshot"].exists)
+      app.buttons["Disconnect and remove local snapshot"].click()
+      app.buttons["Disconnect"].click()
       XCTAssertTrue(token.waitForExistence(timeout: 10))
       XCTAssertFalse(app.buttons["login.submit"].isEnabled)
       token.click()

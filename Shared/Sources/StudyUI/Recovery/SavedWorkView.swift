@@ -161,7 +161,12 @@ public struct SavedWorkView: View {
         }
       }
     }.formStyle(.grouped).navigationTitle("Saved work")
-      .task(id: accountID) { await reload() }
+      .task(id: accountID) {
+        for await _ in await store.changes() {
+          guard !Task.isCancelled else { return }
+          await reload()
+        }
+      }
       .onChange(of: isSyncing) { _, syncing in if !syncing { run {} } }
       .sheet(
         item: $comparison,

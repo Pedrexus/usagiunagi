@@ -11,7 +11,7 @@ public enum StudyDestination: Hashable, Sendable {
   case subject(Int64)
   case search, forecast
   case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings, subjectSettings,
-    appearanceSettings
+    appearanceSettings, developerSettings
   init(resuming session: StudySession) {
     if let scope = session.practiceScope {
       self = .practice(scope)
@@ -24,6 +24,7 @@ public enum StudyDestination: Hashable, Sendable {
 }
 
 struct NativeHomeDashboardView: View {
+  @AppStorage("native.showMinutesForNextLevelUpReview") private var showMinutes = false
   @StoredReviewPreferences private var reviewPreferences
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudySubjectSettings.self) private var subjectSettings
@@ -40,6 +41,7 @@ struct NativeHomeDashboardView: View {
     let date: Date
     let lessonPreferences: StudyLessonPreferences
     let policy: StudyReviewPolicy
+    let showMinutes: Bool
     let showPreviousLevelGraph: Bool
   }
   var body: some View {
@@ -49,7 +51,7 @@ struct NativeHomeDashboardView: View {
           active: active, account: model.snapshot?.accountID,
           revision: model.dataRevision, pending: model.snapshot?.pendingReviews,
           date: context.date, lessonPreferences: lessonSettings.value,
-          policy: reviewPreferences.policy,
+          policy: reviewPreferences.policy, showMinutes: showMinutes,
           showPreviousLevelGraph: subjectSettings.value.showPreviousLevelGraph)
       ) {
         if active { await load() }
@@ -82,7 +84,8 @@ struct NativeHomeDashboardView: View {
       if !snapshot.isSample, let accountID = snapshot.accountID, let store = model.savedWorkStore {
         value = try await store.homeData(
           accountID: accountID, lessonPreferences: lessonSettings.value,
-          subjectPreferences: subjectSettings.value, policy: reviewPreferences.policy)
+          subjectPreferences: subjectSettings.value, policy: reviewPreferences.policy,
+          showMinutes: showMinutes)
       } else {
         let available = Self.preview(snapshot)
         var preview = HomeDashboardData()

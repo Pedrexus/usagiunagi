@@ -12,46 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import UIKit
+import StudyUI
 
-class AnswerTextField: UITextField {
-  // Returns a Japanese-language UITextInputMode, if available.
-  // If this returns nil the user doesn't have a Japanese keyboard installed.
-  public class var japaneseTextInputMode: UITextInputMode? {
-    for textInputMode in UITextInputMode.activeInputModes {
-      if let primaryLanguage = textInputMode.primaryLanguage,
-         primaryLanguage.starts(with: "ja") {
-        return textInputMode
-      }
-    }
-    return nil
-  }
-
-  // Whether to show a Japanese-language keyboard for this text input.
-  public var useJapaneseKeyboard: Bool = false {
-    didSet {
-      if oldValue != useJapaneseKeyboard {
-        if isFirstResponder {
-          // Reload the keyboard if we just changed its language.
-          reloadInputViews()
-        }
-      }
-    }
-  }
-
-  // MARK: - UIResponder
-
-  override var textInputContextIdentifier: String? {
-    if useJapaneseKeyboard {
-      return "com.tsurukame.answer.ja"
-    }
-    return "com.tsurukame.answer"
-  }
-
-  override var textInputMode: UITextInputMode? {
-    if useJapaneseKeyboard, let mode = AnswerTextField.japaneseTextInputMode {
-      return mode
-    }
-    return super.textInputMode
-  }
-}
+class AnswerTextField: StudyJapaneseTextField {}

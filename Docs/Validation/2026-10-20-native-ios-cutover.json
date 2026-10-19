@@ -1,0 +1,746 @@
+{
+  "date": "2026-10-20",
+  "baseline": "5ee1e716769850d44283b57199a8ad72e22d4e9b",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "One production SwiftUI root/account/store on iPhone, iPad and Mac; recoverable iOS bootstrap; native timing/settings/input/diagnostics/background composition. Old UI/writer sources remain for legacy DEBUG test compatibility and read-only migration; this is not their final deletion.",
+  "validatedFiles": {
+    ".github/workflows/apple.yml": "03f0ae263e8a72bce91ca1713fd819bd61cac7ce09c1538acc0454911711460e",
+    "App/AnswerTextField.swift": "3c1e940a2a696f3ff00eb72ff00d7576a33c431de21b460ebffa7969139ec32e",
+    "App/AppDelegate.swift": "6b8cc7db0ec9bce7b20fa680c4d261551ef7b528b0c34538b0ff073c393ac247",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "025a5825239a0e784dac303b17ef67c3f3650c1645808411aaeedf18fef3d687",
+    "App/AppStoreScreenshots/NativeRootFlowTests.swift": "391eac1c92ff441095af998e80cac42896cab82a60ca5ea930f2281f4115c2cc",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "73ce8ab5b788c96e20e550dc4135cb414f34bebee100cb45e1a345a14d57f101",
+    "App/AppTests/NativeAppAssemblyTests.swift": "9205fe1b5db855a962430b80f1ac9da757915c4e9fd9ec245b1f41a4e9bc4065",
+    "App/Application/StudyAppAssembly.swift": "5e5cd7081b9a5c852f554e6c2ac27f49a9afea8c2c6302527939de2517c3b79a",
+    "App/Application/StudyApplicationOwner.swift": "918714e9a002a080105ae0b3082faf0cab12d1af67d660aa12b2860382ff4889",
+    "App/Features/Home/HomeTiming.swift": "ea6784a5732633d2fe12cd7cc044bdee539aa0cedd05490905acc539a35e44fa",
+    "App/Features/Home/MainWaniKaniTabViewController.swift": "37935c2ee34e0e590939897b8bfaf6f246b462512c4c16b44c9ea2bf48d540db",
+    "App/Features/Settings/LegacyPreferences.swift": "5e8c67e5bd8482fe0c43c864a70d4e2dec37319c07623dc6163f621fbdefae99",
+    "App/Info.plist": "352512b4ff452b9df85a7cc56d05aa1bd5fb8b238a1fca24ef85093ae061a56a",
+    "App/SiriShortcutHelper.swift": "91ffa0f0b438c1e06ac24c30dbee8132a7afc1c8f8d5663611937f7a1c52e813",
+    "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/main.swift": "d3fa4b1e133eed46f7e261e309bfddd76c4ab742771bffb283c83c0711f51b35",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "4a27dda3cf8deeaa90edeeff9b4f56475ece91ce1e4bbcf4b1551ce062dd65f6",
+    "App/UsagiUnagiApp.swift": "d59ca58a8a85744c11f6237aacc10623dc70609f57199691d0cf4d1a30b02df4",
+    "Docs/Architecture.md": "fdaf1cf27e745de76f19b4dbc82bd660d8c1f084fbe2fdaf6dda58fff7746f81",
+    "Docs/Development.md": "e89b310377d4364cc346ac11100319fbb5b7f68cc56b566311f3cec7ca1bed87",
+    "Docs/History/task-checkpoints.md": "3d7870487d848799970dfa6a034984c83033d620064a2268b55ddd5062dfe6a9",
+    "Docs/TASKS.md": "cf0a2b7cedcd0072f0a8f68db81e7f811a68879acfd24b0b42e6ac50f4ec38ad",
+    "Docs/WaniKani-Design.md": "c00288cc978a3113e8921449f1ecc7d7098cd2dc8cd8f83e23367751bb0f1e85",
+    "README.md": "049a3d5abb858a5bfd9a1a3566e694173fa237ca34c18974ff2d92483d5dbce4",
+    "Shared/Sources/StudyCore/StudyHomeTiming.swift": "5dcf24ab392bddd0d8782aa5a91a09b1d127e593f2c2ef6aa965a0ee45ab08b2",
+    "Shared/Sources/StudyPersistence/StudyLegacyBootstrap.swift": "4905e94cd34f5ff5f0af13a9d37b3cf7dfdcfdb72cdd13a4224430036b0d30e9",
+    "Shared/Sources/StudyPersistence/StudyStore+Home.swift": "9efe387d1af6e7b4f9e84120df5458318cf791c03fb751738286b31ee1587079",
+    "Shared/Sources/StudyUI/Application/StudyActivity.swift": "9744be4b939d46a1eabf9a66249ad5070b8bd09ff72a4ecc292580978e87d66b",
+    "Shared/Sources/StudyUI/Application/StudyAppModel.swift": "dd30b1ab17e5b4558e56bf6fd8d69f3e5180447ee4adabcad80477064f7d5698",
+    "Shared/Sources/StudyUI/Application/StudyLinkInbox.swift": "45f657d715e108d7733cfa1a2d7ca4855810670e905d890b0dee7bffb8ca587c",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "2121b4a16642548cf2e19cda3875606d39a0c838d3f5158de6be062f7bdd445a",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "5305ab613c2b5b5dfe2e845db80161f449089b3c1483c821e2fdc3d987d0a941",
+    "Shared/Sources/StudyUI/Practice/KatakanaPracticeView.swift": "d51967722f651d13a47ca11cc7f09b92dd8df6d14eb7fb1da980715963f5764d",
+    "Shared/Sources/StudyUI/Recovery/SavedWorkView.swift": "1b8aee0f4272dae0d2696a913c266a3a276452c699d836e837bdee17d076226a",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "1c4f1c6358b5bc58d5a2c2ee5ae168d99f9954267c3f4071af2c000b43ea2c35",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift": "9edc24cf56dffa5897dc747d949610c2124dc10e971f91ddd05baf8ef9260294",
+    "Shared/Sources/StudyUI/Reviews/StudyAnswerInput.swift": "3881628b29b9eceb93b3e5d5e8195e138956a0e9457e3b02fc993c115ab2dea0",
+    "Shared/Sources/StudyUI/Settings/DeveloperSettingsView.swift": "a05e91196a67f92d8580a03e7ad119b4bd0d589bf3ad0dac035f1bf0c44665fd",
+    "Shared/Tests/StudyCoreTests/StudyHomeTimingTests.swift": "85eaf06698cf801f1aa2deedf7b72c4eabf84d4b320e04e9c8671da65cefaa9f",
+    "Shared/Tests/StudyPersistenceTests/LegacyBootstrapTests.swift": "1b34e6f0e732ffd999931a82b0d299ad48d6da3139319c860970e2da4ecee5f5",
+    "Shared/Tests/StudyUITests/StudyAppModelTests.swift": "9b7c083ab206703435103dc0927deb67ce33371b0eb01ca63b94df02c49f7385"
+  },
+  "deletedFiles": {
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30871,
+    "after": 31226,
+    "changed": [
+      {
+        "path": "App/AnswerTextField.swift",
+        "before": 57,
+        "after": 17
+      },
+      {
+        "path": "App/AppDelegate.swift",
+        "before": 82,
+        "after": 38
+      },
+      {
+        "path": "App/Application/StudyAppAssembly.swift",
+        "before": 76,
+        "after": 79
+      },
+      {
+        "path": "App/Features/Home/HomeTiming.swift",
+        "before": 169,
+        "after": 49
+      },
+      {
+        "path": "App/Features/Home/MainWaniKaniTabViewController.swift",
+        "before": 295,
+        "after": 277
+      },
+      {
+        "path": "App/Features/Settings/LegacyPreferences.swift",
+        "before": 405,
+        "after": 408
+      },
+      {
+        "path": "App/SiriShortcutHelper.swift",
+        "before": 57,
+        "after": 37
+      },
+      {
+        "path": "App/UsagiUnagiApp.swift",
+        "before": 54,
+        "after": 71
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyLegacyBootstrap.swift",
+        "before": 227,
+        "after": 269
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Home.swift",
+        "before": 95,
+        "after": 99
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyAppModel.swift",
+        "before": 305,
+        "after": 310
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 592,
+        "after": 624
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift",
+        "before": 253,
+        "after": 256
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Practice/KatakanaPracticeView.swift",
+        "before": 205,
+        "after": 219
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Recovery/SavedWorkView.swift",
+        "before": 375,
+        "after": 380
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift",
+        "before": 526,
+        "after": 544
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift",
+        "before": 124,
+        "after": 114
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/DeveloperSettingsView.swift",
+        "before": 96,
+        "after": 119
+      },
+      {
+        "path": "App/Application/StudyApplicationOwner.swift",
+        "before": 0,
+        "after": 150
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyHomeTiming.swift",
+        "before": 0,
+        "after": 102
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyActivity.swift",
+        "before": 0,
+        "after": 23
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyLinkInbox.swift",
+        "before": 0,
+        "after": 12
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/StudyAnswerInput.swift",
+        "before": 0,
+        "after": 151
+      }
+    ],
+    "netIncrease": 355,
+    "netReductionClaimed": false
+  },
+  "behavior": {
+    "commonRoot": "One app-owned preparation and exactly one opened store supplied to assembly; shared SwiftUI Home/Practice/Stats and native workflows. No legacy writer is opened by normal application startup.",
+    "selection": "Existing handoff takes precedence; fresh-native selection uses an existing durable import-receipt row without schema changes. Activated/logout paths never inspect stale legacy credentials or restart the old writer. Failed preparation retains source and explicit retry.",
+    "refresh": "Read-only refresh does not save credentials or upload the outbox; account-bound automatic sending uses confirmed pending work only.",
+    "background": "Built-in SwiftUI backgroundTask(.appRefresh), system schedule/reschedule, cancellation checks and explicit shared synchronization. Background helper does not start an independent automatic worker.",
+    "input": "One shared Japanese UIKit boundary on iOS, native SwiftUI field on Mac. Marked-text/caret, kana conversion and keyboard policy retained. Responder changes occur after view-update transactions.",
+    "settings": "Full shared review/timing/keyboard controls; live validated API endpoint; app-owned compatible avatar cache; native store diagnostic copy; confirmed logout.",
+    "home": "Same compact inset list and WaniKani palette as prior checkpoint; level-up timing now uses typed shared cached SRS data and an explicit clock.",
+    "activities": "SwiftUI userActivity preserves scheduled review/lesson search and Siri identities. Native and legacy hosts share one metadata implementation; prediction eligibility is an iOS-only capability. Modern AppIntents discovery remains open.",
+    "data": "Saved Work follows committed store changes. No new app Tools driver, runtime hardcoded source JSON or SQL dataset."
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-native-cutover-shared-complete.log",
+    "sha256": "bd477144d5594e5bb57d17dbaa92561e68911957a0d3cac186be8c3e0a57567c",
+    "testFunctions": 478,
+    "byModule": {
+      "core": 222,
+      "persistence": 178,
+      "speech": 7,
+      "ui": 71
+    }
+  },
+  "sharedIOS": {
+    "log": "/private/tmp/usagi-native-cutover-shared-ios-complete.log",
+    "sha256": "19d05db49464a14ba8728c94d57746fe413b932b76f4c4597c3531bf61407d38",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-06c2ec9cad26489bb566c319adc863e5.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 478,
+      "passedTests": 478,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "cases": [
+
+    ]
+  },
+  "hostedIOS": {
+    "log": "/private/tmp/usagi-native-cutover-app-final.log",
+    "sha256": "fb8b55575394df30c8b186a3469e8ee0033d5c74f1decceb35ae30e03a4daf8e",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-253ac1d8b0e74059a6bef08a477e2e1d.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 107,
+      "passedTests": 107,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "cases": [
+
+    ]
+  },
+  "iphoneUI": {
+    "initial": {
+      "log": "/private/tmp/usagi-native-cutover-iphone-final.log",
+      "sha256": "8878f1be64a538b6a578b7c4f14e20bad3556217fc9c6303efbce491cfd40374",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-bfb4fbcb6e5340b185d1575ecbf40b6b.xcresult",
+      "summary": null,
+      "cases": [
+        {
+          "name": "testNativeCombinedAnkiFinishesOneSubject",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeKatakanaUsesTheSameInputAndDoesNotCreateUploads",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+          "result": "failed"
+        },
+        {
+          "name": "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+          "result": "failed"
+        },
+        {
+          "name": "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+          "result": "failed"
+        },
+        {
+          "name": "testNativeReviewConvertsRomajiAndPreservesDraftThroughSettingsAndPause",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeStatisticsCoverageStaysInline",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeTypedReviewCompletesAndUploadsWithoutAManualSync",
+          "result": "failed"
+        }
+      ]
+    },
+    "afterSceneFix": {
+      "log": "/private/tmp/usagi-native-cutover-iphone-accepted.log",
+      "sha256": "14e9cf8b47c679b95ec1e9d73a466075e91fc419305cf1ab308a04538652bacf",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-b1f5df4a0ee34e4c8de579ec118f8871.xcresult",
+      "summary": null,
+      "cases": [
+        {
+          "name": "testNativeCombinedAnkiFinishesOneSubject",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeKatakanaUsesTheSameInputAndDoesNotCreateUploads",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+          "result": "failed"
+        },
+        {
+          "name": "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+          "result": "failed"
+        },
+        {
+          "name": "testNativeReviewConvertsRomajiAndPreservesDraftThroughSettingsAndPause",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeStatisticsCoverageStaysInline",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeTypedReviewCompletesAndUploadsWithoutAManualSync",
+          "result": "passed"
+        }
+      ]
+    },
+    "settingsCorrection": {
+      "log": "/private/tmp/usagi-native-cutover-iphone-settings-final.log",
+      "sha256": "468d2230ed6ab9e8b45a32d2b27961db81cb23838460bd5b3ae45b9ea5851569",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-ccbc612741d44a978d6e5c798ee40fc4.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "name": "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+          "result": "passed"
+        }
+      ]
+    },
+    "coldLinks": {
+      "log": "/private/tmp/usagi-native-cutover-iphone-activities-complete.log",
+      "sha256": "424a86bc38f4735d41c66affa500b5c8651e36c74125b8f634f9dba7906f80dc",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-84e01f915b2348f7b971222b256abde0.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "name": "testNativeColdStudyLinksRouteFromTheSharedScene",
+          "result": "passed"
+        }
+      ]
+    },
+    "activityAdapterInitialCompile": {
+      "log": "/private/tmp/usagi-native-cutover-iphone-activities-final.log",
+      "sha256": "cdeac2271bf1091a70665700a020c235dcad2a8d6ab8b84f77bc97456b6cdbc1",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-f9f09ed1af1b42f49176927f30d8ff4e.xcresult",
+      "summary": null,
+      "cases": [
+
+      ]
+    },
+    "distinctPassedCases": [
+      "testNativeColdStudyLinksRouteFromTheSharedScene",
+      "testNativeCombinedAnkiFinishesOneSubject",
+      "testNativeKatakanaUsesTheSameInputAndDoesNotCreateUploads",
+      "testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+      "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+      "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+      "testNativeReviewConvertsRomajiAndPreservesDraftThroughSettingsAndPause",
+      "testNativeStatisticsCoverageStaysInline",
+      "testNativeTypedReviewCompletesAndUploadsWithoutAManualSync"
+    ]
+  },
+  "ipadUI": {
+    "first": {
+      "log": "/private/tmp/usagi-native-cutover-ipad-final.log",
+      "sha256": "e62d94f18e1031509980e216b2cc5058cf8109000f3cf4df4d01056860bc635c",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-095d35ba35a642edb653d4130edf9f87.xcresult",
+      "summary": null,
+      "cases": [
+        {
+          "name": "testNativeCombinedAnkiFinishesOneSubject",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeKatakanaUsesTheSameInputAndDoesNotCreateUploads",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+          "result": "failed"
+        },
+        {
+          "name": "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeReviewConvertsRomajiAndPreservesDraftThroughSettingsAndPause",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeStatisticsCoverageStaysInline",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeTypedReviewCompletesAndUploadsWithoutAManualSync",
+          "result": "passed"
+        }
+      ]
+    },
+    "initialColdAndAccount": {
+      "log": "/private/tmp/usagi-native-cutover-ipad-complete.log",
+      "sha256": "00d7b35df3a6d20fad847dc7d0028990344a135e5096e0068e7507f553cc0bd0",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-82f6ad48eda2498f8697250a8a620fc1.xcresult",
+      "summary": null,
+      "cases": [
+        {
+          "name": "testNativeColdStudyLinksRouteFromTheSharedScene",
+          "result": "failed"
+        },
+        {
+          "name": "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+          "result": "failed"
+        }
+      ]
+    },
+    "accountAndColdLinks": {
+      "log": "/private/tmp/usagi-native-cutover-ipad-accepted.log",
+      "sha256": "8e0464e7ea00c36a2991ec0136ddc3cf00e6c5b4417b3ad9288e8e9ca274a7d9",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-ebf535e680c14f549316b53afb3f1628.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "name": "testNativeColdStudyLinksRouteFromTheSharedScene",
+          "result": "passed"
+        },
+        {
+          "name": "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+          "result": "passed"
+        }
+      ]
+    },
+    "activities": {
+      "log": "/private/tmp/usagi-native-cutover-ipad-activities-final.log",
+      "sha256": "86d13dcfe9e5fa331ed1dcc71e12b3fdd1982333f10c75d1c884eac3f9de7644",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6712d31072774a38885613e7646fe6fe.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "name": "testNativeColdStudyLinksRouteFromTheSharedScene",
+          "result": "passed"
+        }
+      ]
+    },
+    "distinctPassedCases": [
+      "testNativeColdStudyLinksRouteFromTheSharedScene",
+      "testNativeCombinedAnkiFinishesOneSubject",
+      "testNativeKatakanaUsesTheSameInputAndDoesNotCreateUploads",
+      "testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+      "testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter",
+      "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+      "testNativeReviewConvertsRomajiAndPreservesDraftThroughSettingsAndPause",
+      "testNativeStatisticsCoverageStaysInline",
+      "testNativeTypedReviewCompletesAndUploadsWithoutAManualSync"
+    ]
+  },
+  "corrections": [
+    "Initial input regression hung after disabling/resigning UITextField synchronously inside updateUIView. Exact synthetic-process stack sample identified SwiftUI responder graph recursion. Deferring enabled/keyboard/focus and teardown changes fixed practice dismissal and grading.",
+    "Saved Work loaded once and could display a sent answer. Its task now observes committed store changes.",
+    "Startup could finish after scene activation and miss starting automatic synchronization. A scene-keyed SwiftUI task waits for shared preparation and starts the worker only for an active, uncancelled scene; lesson/review outboxes then drain automatically.",
+    "Native form rows are lazy; settings/account tests scroll to controls, activate the switch thumb and dismiss the topmost system popover when no Cancel button is shown. Cold subject routes assert native subject content instead of a retired scroll identifier. These do not replace or disable actual functionality.",
+    "The old UIKit activity adapter lacked actor isolation. Calling shared activity metadata exposed that mismatch at compile time; the adapter is now explicitly MainActor-isolated."
+  ],
+  "responderSample": {
+    "path": "/private/tmp/usagi-native-cutover-ios-hang.sample.txt",
+    "sha256": "e4bd681ae3b8607bec1ec9415e6c8f46e8982459bea01a4ab776d4705918b0e6"
+  },
+  "restartAndHandoff": {
+    "directory": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s",
+    "phases": [
+      {
+        "phase": "write",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/write.log",
+        "sha256": "7835eca93615b949f4aa0deb3c6b42bfa7a61d74cf2b8ecb16c0399f601a2f12"
+      },
+      {
+        "phase": "read-attempts",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/read-attempts.log",
+        "sha256": "02c361025ae03e31c01a9215f30f7556b3ebb71a07021fa94f55647d32cff64d"
+      },
+      {
+        "phase": "write-catalog",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/write-catalog.log",
+        "sha256": "ce91898b4ced80f31cc747222ebf6c6dca49ca7fde5e7bb44fe8c9ae83e9c668"
+      },
+      {
+        "phase": "read-catalog",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/read-catalog.log",
+        "sha256": "54ec2df74475671786ba3b2bc0b41e370e684e8055dcd823056139d5a18b8d62"
+      },
+      {
+        "phase": "import-handoff",
+        "exit": 86,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/import-handoff.log",
+        "sha256": "8226d1f89dc0f9b7692fe04fdcff3d68ecd7760ee1fc4aa4d1f4e78120f35818"
+      },
+      {
+        "phase": "save-handoff",
+        "exit": 86,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/save-handoff.log",
+        "sha256": "3900df602a3a55731e898cea023a96dd95220dc2fedc610d666a50cbf1a2c7f8"
+      },
+      {
+        "phase": "activate-handoff",
+        "exit": 86,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/activate-handoff.log",
+        "sha256": "198423b500da8b0c2c4ec09a82336f59aa7a878b99740e3bcc451579968168bb"
+      },
+      {
+        "phase": "edit-handoff",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/edit-handoff.log",
+        "sha256": "0953d2e11387a947c549b614dae64ef3915889199dd95975f702455f146c46bb"
+      },
+      {
+        "phase": "read-handoff",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/read-handoff.log",
+        "sha256": "19b6c0ef68d7c8030ed6ccb9889cf9828d5a85cb2122cacb0a8448714d556ef3"
+      },
+      {
+        "phase": "rollback-handoff",
+        "exit": 86,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/rollback-handoff.log",
+        "sha256": "5421a30864ed675c9f169118e7346fed34a20391e51c3579f02b28baf0e5e2c1"
+      },
+      {
+        "phase": "verify-rollback-handoff",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/verify-rollback-handoff.log",
+        "sha256": "e93ede57a7aeaf96b124855cacc007d7c711c12bf6e28e66d92bddf36317c3d3"
+      },
+      {
+        "phase": "write-native-selection",
+        "exit": 86,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/write-native-selection.log",
+        "sha256": "a72bdb824bc534c65b1463fed7d85deecb25d1c5a1a17ce988a936e7e2cdd7ae"
+      },
+      {
+        "phase": "read-native-selection",
+        "exit": 0,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/NativeCutover-20261020-67836-r0jp5s/read-native-selection.log",
+        "sha256": "2ca9b029790632c301bbb374baae4344243da1069b1f574e90cfb1c827eceb68"
+      }
+    ]
+  },
+  "dataAudit": {
+    "requiredAppleAssetIconJSONFiles": 54,
+    "standaloneSQLResources": 0,
+    "otherProductionJSONResources": [
+
+    ],
+    "legacySQLAdapters": [
+      "App/LegacyStudyImporter.swift",
+      "App/LocalCachingClient.swift",
+      "App/PendingUploadStore.swift",
+      "App/SyncStore.swift"
+    ],
+    "remainingJSONAndSQLResources": [
+      "App/Complication/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "App/Complication/Assets.xcassets/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Circular.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Extra Large.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Graphic Bezel.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Graphic Circular.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Graphic Corner.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Graphic Large Rectangular.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Modular.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Complication.complicationset/Utilitarian.imageset/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/Contents.json",
+      "App/ComplicationExtension/Assets.xcassets/miniCrab.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "App/Resources/Assets.xcassets/Contents.json",
+      "App/Resources/Assets.xcassets/Paper.colorset/Contents.json",
+      "App/Resources/Assets.xcassets/SRS Stages/Apprentice.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/SRS Stages/Burned.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/SRS Stages/Contents.json",
+      "App/Resources/Assets.xcassets/SRS Stages/Enlightened.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/SRS Stages/Guru.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/SRS Stages/Master.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/add.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/back.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_access_time_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_cancel_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_cloud_download_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_edit_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_menu_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_note_add_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_stop_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/baseline_volume_up_black_24pt.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/checkmark.circle.symbolset/Contents.json",
+      "App/Resources/Assets.xcassets/forward.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/goforward.plus.symbolset/Contents.json",
+      "App/Resources/Assets.xcassets/ic_arrow_forward_white.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/ic_search_white.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/ic_settings_white.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/inbox.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/offline.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/refresh.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/svg/Contents.json",
+      "App/Resources/Assets.xcassets/thumb.imageset/Contents.json",
+      "App/Resources/Assets.xcassets/tick.imageset/Contents.json",
+      "Resources/UsagiUnagi.icon/icon.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/ArmedBanana.imageset/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hina Mincho.imageset/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hosofuwafont.imageset/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Noto Serif JP.imageset/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Sawarabi Mincho.imageset/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/darts font.imageset/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/nagayama_kai.imageset/Contents.json",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/santyoume-font.imageset/Contents.json"
+    ],
+    "releaseBinaryScans": {
+      "mac": {
+        "binary": ".build/Xcode/NativeCatalogsMac/Build/Products/Release/Tsurukame.app/Contents/MacOS/Tsurukame",
+        "sha256": "5d68e55af25b31451446e73da87b090b1c80c51b59662b9437bec29289d137b1",
+        "inspectedSwitches": [
+          "--review-fixture",
+          "--lesson-fixture",
+          "--statistics-fixture",
+          "--anki-fixture",
+          "CatalogFlowFixture",
+          "SettingsFlowFixture"
+        ],
+        "found": [
+
+        ]
+      },
+      "ios": {
+        "binary": ".build/Xcode/NativeCatalogsiOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Tsurukame",
+        "sha256": "c032a3c880013d3417c0b2f33381d11fde5d4799a7e4dd7371a50137e667123b",
+        "inspectedSwitches": [
+          "--review-fixture",
+          "--lesson-fixture",
+          "--statistics-fixture",
+          "--anki-fixture",
+          "CatalogFlowFixture",
+          "SettingsFlowFixture"
+        ],
+        "found": [
+
+        ]
+      }
+    }
+  },
+  "builds": {
+    "macRelease": {
+      "log": "/private/tmp/usagi-native-cutover-mac-shipping-final.log",
+      "sha256": "1f3db59fd4b3ea71d5a75da6fd582327a5a4dc805542e9dfd478424254fb211a",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-579c9bd45bbd418189ade0da7a23090f.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "cases": [
+
+      ]
+    },
+    "iosRelease": {
+      "log": "/private/tmp/usagi-native-cutover-ios-shipping-final.log",
+      "sha256": "e48457b194784dd1387cdfc3a77371d00924963ab21ed4c3ff1dc18962e68394",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-f7e60f7f92ed4e2ba18333b7ddb0c46c.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 14
+      },
+      "cases": [
+
+      ]
+    },
+    "watch": {
+      "log": "/private/tmp/usagi-native-cutover-watch-final.log",
+      "sha256": "c1a7775d050a92597c782c0844fe94caa74eaa036968bb298fb03775e2a2ad46",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-28d670ac4c3040a0ae936087d24ac4a1.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 42
+      },
+      "cases": [
+
+      ]
+    },
+    "macTestsCompile": {
+      "log": "/private/tmp/usagi-native-cutover-mac-tests-final.log",
+      "sha256": "0c03f35bc22b82d2153d1666a917073050acdc505d9697c001a34662ae11615d",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-for-testing-d86812fe0b1d4ed6b93623b013aa82f2.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "cases": [
+
+      ]
+    }
+  },
+  "warnings": "Final Mac build/test compilation: zero warnings. iOS/watch retain existing legacy/protobuf/ClockKit warnings; no warning-free iOS/watch claim. Incremental warning counts are not a full clean-build warning inventory.",
+  "formatting": {
+    "log": "/private/tmp/usagi-native-cutover-format.log",
+    "sha256": "4031347a0ca17310884665efcdc38e3a37313480dbd85c13cd3399c997802fb4",
+    "changedSwiftFiles": 31,
+    "ownerAnnotationsExcluded": true
+  },
+  "remaining": [
+    "Port remaining legacy test host UI acceptance, then delete old controllers/storyboards/writer/build dependencies while retaining safe legacy import.",
+    "Signed-device Keychain upgrade, physical Japanese IME/caret, microphone models/latency/audio interruptions, OS background scheduling/expiration and notification permission/delivery.",
+    "Native warm-link interruption, universal links/AppIntents/shortcut discovery and paired watch transfer; modern watch UI/branding.",
+    "Full-account statistics calibration, verified KanKen 4/3/pre-2 references and full API-grade free-level fixture metadata.",
+    "Publish only with authorization, then verify hosted Actions; no push/PR or hosted CI result. iPhone Duo remains deferred."
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "pushPerformed": false,
+  "pullRequestCreated": false
+}

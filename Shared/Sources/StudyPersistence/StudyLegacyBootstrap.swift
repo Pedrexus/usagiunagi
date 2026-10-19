@@ -65,6 +65,25 @@ public enum StudyBootstrapError: Error, LocalizedError {
     self.readLegacy = readLegacy
   }
 
+  /// Select the native application before exposing any writer or background service.
+  public func prepareApplication(legacyToken: @MainActor () throws -> String) async throws
+    -> StudyMediaLayout
+  {
+    guard !sourceID.isEmpty else { throw StudyBootstrapError.invalidState }
+    let previous = try await store.legacyHandoff(sourceID: sourceID)
+    if previous?.activated == true { return try await activate().mediaLayout }
+    if try await store.nativeApplicationActivated(sourceID: sourceID) {
+      guard previous == nil else { throw StudyBootstrapError.invalidState }
+      return .native
+    }
+    if previous != nil { return try await activate().mediaLayout }
+    if !(try legacyToken()).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      return try await activate().mediaLayout
+    }
+    try await store.selectNativeApplication(sourceID: sourceID)
+    return .native
+  }
+
   /// Shared by bootstrap waiters; cancelling a scene does not interrupt the durable handoff.
   public func activate() async throws -> StudyLegacyHandoff {
     try Task.checkCancellation()
@@ -223,5 +242,28 @@ extension StudyStore {
       receipt.handoff = result
     }
     return result
+  }
+}
+
+extension StudyStore {
+  private func nativeApplicationReceipt(_ sourceID: String) throws -> ImportReceipt? {
+    let key = "native-application:" + sourceID
+    return try modelContext.fetch(
+      FetchDescriptor<ImportReceipt>(predicate: #Predicate { $0.sourceID == key })
+    ).first
+  }
+  func nativeApplicationActivated(sourceID: String) throws -> Bool {
+    guard let receipt = try nativeApplicationReceipt(sourceID) else { return false }
+    guard receipt.digest == "native-writer-v1", receipt.handoff == nil else {
+      throw StudyBootstrapError.invalidState
+    }
+    return true
+  }
+  func selectNativeApplication(sourceID: String) throws {
+    try transaction {
+      if try nativeApplicationActivated(sourceID: sourceID) { return }
+      modelContext.insert(
+        ImportReceipt(sourceID: "native-application:" + sourceID, digest: "native-writer-v1"))
+    }
   }
 }

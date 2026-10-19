@@ -272,6 +272,9 @@ extension InterfaceStyle {
   static func read(defaults: UserDefaults) throws -> LegacyStudyPreferences {
     try capture(Archive(values: defaults.dictionaryRepresentation()))
   }
+  static func token(defaults: UserDefaults) throws -> String {
+    try Archive(values: defaults.dictionaryRepresentation()).value(Settings.$userApiToken)
+  }
   static func sourceValues(defaults: UserDefaults) throws -> (
     token: String, preferences: LegacyStudyPreferences
   ) {

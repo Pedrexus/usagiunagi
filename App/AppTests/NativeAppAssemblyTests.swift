@@ -71,15 +71,37 @@ private actor AssemblyServer: WaniKaniService {
       remove: { _ in }, badge: { _ in }, add: { _ in })
   }
 }
+@MainActor private final class AssemblyGate {
+  private var continuation: CheckedContinuation<Void, Never>?
+  private let entered = AsyncStream<Void>.makeStream()
+  func pause() async {
+    await withCheckedContinuation { continuation in
+      self.continuation = continuation
+      entered.continuation.yield(())
+    }
+  }
+  func waitForEntry() async {
+    var iterator = entered.stream.makeAsyncIterator()
+    _ = await iterator.next()
+  }
+  func resume() {
+    continuation?.resume()
+    continuation = nil
+    entered.continuation.finish()
+  }
+}
 @MainActor @Suite(.timeLimit(.minutes(1))) struct NativeAppAssemblyTests {
   private let account = "assembly-fixture"
-  private func environment(connected: Bool = true, pending: Bool = false) async throws -> (
-    StudyAppAssembly, StudyStore, AssemblyServer, AssemblyNoticeSpy, String, URL
-  ) {
+  private func environment(connected: Bool = true, pending: Bool = false, persistent: Bool = false)
+    async throws -> (
+      StudyAppAssembly, StudyStore, AssemblyServer, AssemblyNoticeSpy, String, URL
+    )
+  {
     let domain = "usagi-native-assembly-" + UUID().uuidString
     let defaults = UserDefaults(suiteName: domain)!
     let directory = URL.temporaryDirectory.appending(path: UUID().uuidString)
-    let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
+    let store = try await StudyStore.open(
+      at: directory.appending(path: "study.store"), inMemory: !persistent)
     let server = AssemblyServer()
     _ = try await store.synchronize(
       credentialID: StudyCredentialID.forToken("assembly"), token: "assembly", client: server)
@@ -156,4 +178,87 @@ private actor AssemblyServer: WaniKaniService {
     #expect(await server.writes == 0)
     #expect(spy.requests == 0 && spy.packets.last?.level == 1)
   }
+  @Test func applicationPreparationIsSharedAcrossCancelledAndRemainingWindows() async throws {
+    let (assembly, _, _, _, domain, directory) = try await environment()
+    defer { cleanup(domain, directory) }
+    let gate = AssemblyGate()
+    var creations = 0
+    let owner = StudyApplicationOwner {
+      creations += 1
+      await gate.pause()
+      return assembly
+    }
+    let first = Task { await owner.prepare() }
+    await gate.waitForEntry()
+    let second = Task { await owner.prepare() }
+    first.cancel()
+    gate.resume()
+    await second.value
+    await first.value
+    #expect(creations == 1 && owner.failure == nil)
+    #expect(owner.services?.model === assembly.model)
+  }
+  @Test func failedApplicationPreparationRetainsAnExplicitRetry() async throws {
+    let (assembly, _, _, _, domain, directory) = try await environment()
+    defer { cleanup(domain, directory) }
+    var attempts = 0
+    let owner = StudyApplicationOwner {
+      attempts += 1
+      if attempts == 1 { throw CocoaError(.fileReadNoPermission) }
+      return assembly
+    }
+    await owner.prepare()
+    #expect(owner.services == nil && owner.failure != nil)
+    await owner.prepare()
+    #expect(attempts == 2 && owner.services?.model === assembly.model && owner.failure == nil)
+  }
+  @Test func nativeBackgroundTaskSendsConfirmedWork() async throws {
+    let (assembly, store, server, _, domain, directory) = try await environment(pending: true)
+    defer { cleanup(domain, directory) }
+    let owner = StudyApplicationOwner { assembly }
+    #expect(await owner.refreshInBackground())
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+    #expect(await server.writes == 1)
+  }
+  @Test func expiredBackgroundTaskDoesNotCancelSharedPreparationOrStartLateWrites() async throws {
+    let (assembly, store, server, _, domain, directory) = try await environment(pending: true)
+    defer { cleanup(domain, directory) }
+    let gate = AssemblyGate()
+    let owner = StudyApplicationOwner {
+      await gate.pause()
+      return assembly
+    }
+    let background = Task { await owner.refreshInBackground() }
+    await gate.waitForEntry()
+    background.cancel()
+    let foreground = Task { await owner.prepare() }
+    gate.resume()
+    await foreground.value
+    #expect(await background.value == false)
+    #expect(owner.services?.model === assembly.model)
+    #expect(await server.writes == 0)
+    #expect(try await store.pendingReviews(accountID: account).count == 1)
+    #expect(await owner.refreshInBackground())
+    #expect(await server.writes == 1)
+  }
+
+  @Test func nativeDiagnosticExportReopensTheLiveCatalogAndProtectedOutbox() async throws {
+    let (assembly, store, server, _, domain, directory) = try await environment(
+      pending: true, persistent: true)
+    defer { cleanup(domain, directory) }
+    await assembly.model.restore()
+    let source = directory.appending(path: "study.store")
+    let before = try Data(contentsOf: source)
+    let copy = try await SQLiteDiagnosticArchive.copy(from: source, directory: directory)
+    #expect(try Data(contentsOf: source) == before)
+    let exported = try await StudyStore.open(at: copy)
+    #expect(
+      try await exported.snapshot(credentialID: StudyCredentialID.forToken("assembly"))?.accountID
+        == account)
+    #expect(try await exported.catalog(accountID: account).first?.japanese == "一")
+    #expect(try await exported.pendingReviews(accountID: account).count == 1)
+    #expect(try await store.pendingReviews(accountID: account).count == 1)
+    #expect(await server.writes == 0)
+  }
+
 }

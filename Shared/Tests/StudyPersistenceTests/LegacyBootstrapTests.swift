@@ -450,4 +450,67 @@ private actor BootstrapServer: WaniKaniAccountReader {
     #expect(env.defaults.string(forKey: "native.apiBaseUrl") == endpoint.absoluteString)
   }
 
+  @Test func freshNativeSelectionNeverReadsRetiredDataOrCredentialsAgain() async throws {
+    let env = try await Environment()
+    #expect(try await env.bootstrap().prepareApplication(legacyToken: { "" }) == .native)
+    #expect(try await env.store.nativeApplicationActivated(sourceID: "ios-main"))
+    env.input.fail = true
+    env.credentials.failLoads = true
+    await env.server.configure(offline: true)
+    #expect(
+      try await env.bootstrap().prepareApplication(legacyToken: {
+        throw CocoaError(.fileReadNoPermission)
+      }) == .native)
+    #expect(env.input.reads == 0 && env.credentials.saves == 0)
+    #expect(await env.server.reads == 0)
+  }
+  @Test func existingLegacyAccountSelectsItsVerifiedHandoffAndRetainsProtectedWork() async throws {
+    let env = try await Environment()
+    #expect(
+      try await env.bootstrap().prepareApplication(legacyToken: { env.input.source.token })
+        == .legacyDocuments)
+    #expect(try await env.store.legacyHandoff(sourceID: "ios-main")?.activated == true)
+    #expect(try await env.store.pendingReviews(accountID: "migration-account").count == 1)
+    #expect(env.credentials.saves == 1)
+  }
+  @Test func failedLegacyVerificationCannotSelectAFreshNativeApplication() async throws {
+    let env = try await Environment()
+    await env.server.configure(offline: true)
+    await #expect(throws: URLError.self) {
+      try await env.bootstrap().prepareApplication(legacyToken: { env.input.source.token })
+    }
+    #expect(try await !env.store.nativeApplicationActivated(sourceID: "ios-main"))
+    #expect(try await env.store.legacyHandoff(sourceID: "ios-main") == nil)
+    #expect(env.credentials.token == nil && env.credentials.saves == 0)
+  }
+  @Test func activatedSelectionAfterLogoutDoesNotInspectTheOldTokenOrSource() async throws {
+    let env = try await Environment()
+    _ = try await env.bootstrap().activate()
+    let reads = env.input.reads
+    env.credentials.remove()
+    env.credentials.failLoads = true
+    env.input.fail = true
+    await env.server.configure(offline: true)
+    #expect(
+      try await env.bootstrap().prepareApplication(legacyToken: {
+        throw CocoaError(.fileReadNoPermission)
+      }) == .legacyDocuments)
+    #expect(env.input.reads == reads && env.credentials.token == nil)
+    #expect(await env.server.reads == 1)
+  }
+  @Test func preparedSourceWithALostOldTokenDoesNotBecomeAFreshInstallation() async throws {
+    let env = try await Environment()
+    env.credentials.fault = .beforeSave
+    await #expect(throws: CocoaError.self) { try await env.bootstrap().activate() }
+    env.credentials.fault = nil
+    let original = env.input.source
+    env.input.source = .init(
+      token: "", account: original.account, preferences: original.preferences)
+    await #expect(throws: StudyBootstrapError.self) {
+      try await env.bootstrap().prepareApplication(legacyToken: { "" })
+    }
+    #expect(try await !env.store.nativeApplicationActivated(sourceID: "ios-main"))
+    #expect(try await env.store.legacyHandoff(sourceID: "ios-main")?.activated == false)
+  }
+
 }

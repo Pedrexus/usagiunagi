@@ -11,15 +11,19 @@ import StudyPersistence
       [
         "write", "read", "read-attempts", "write-catalog", "read-catalog", "import-handoff",
         "save-handoff", "activate-handoff", "edit-handoff", "read-handoff", "rollback-handoff",
-        "verify-rollback-handoff",
+        "verify-rollback-handoff", "write-native-selection", "read-native-selection",
       ].contains(args[1])
     else {
       print(
-        "Usage: NativePersistenceProbe write|read|read-attempts|write-catalog|read-catalog|import-handoff|save-handoff|activate-handoff|edit-handoff|read-handoff|rollback-handoff|verify-rollback-handoff /path/to/disposable/study.store"
+        "Usage: NativePersistenceProbe write|read|read-attempts|write-catalog|read-catalog|import-handoff|save-handoff|activate-handoff|edit-handoff|read-handoff|rollback-handoff|verify-rollback-handoff|write-native-selection|read-native-selection /path/to/disposable/study.store"
       )
       exit(2)
     }
     let store = try await StudyStore.open(at: URL(fileURLWithPath: args[2]))
+    if args[1].hasSuffix("native-selection") {
+      try await nativeSelection(args[1], store: store, url: URL(filePath: args[2]))
+      return
+    }
     if args[1].hasSuffix("-handoff") {
       try await handoff(args[1], store: store, url: URL(filePath: args[2]))
       return
@@ -339,5 +343,36 @@ extension Probe {
     let encoder = JSONEncoder()
     encoder.outputFormatting = .sortedKeys
     return try encoder.encode(source)
+  }
+}
+
+extension Probe {
+  @MainActor private static func nativeSelection(_ command: String, store: StudyStore, url: URL)
+    async throws
+  {
+    let suite = "native-selection-probe-" + StudyCredentialID.forToken(url.path)
+    let defaults = UserDefaults(suiteName: suite)!
+    defer { defaults.removePersistentDomain(forName: suite) }
+    let credentials = ProbeCredentials(
+      url: url.appendingPathExtension("synthetic-token"), command: command)
+    let bootstrap = StudyLegacyBootstrap(
+      store: store, sourceID: "fresh-native-app",
+      credentials: credentials, preferences: .init(defaults: defaults),
+      readLegacy: {
+        throw CocoaError(.fileReadNoPermission)
+      })
+    let result = try await bootstrap.prepareApplication(legacyToken: {
+      if command == "write-native-selection" { return "" }
+      throw CocoaError(.fileReadNoPermission)
+    })
+    precondition(result == .native)
+    let previous = try await store.legacyHandoff(sourceID: "fresh-native-app")
+    precondition(previous == nil)
+    if command == "write-native-selection" {
+      credentials.crash("selected native writer without a legacy account")
+    }
+    print(
+      "PASS: fresh process retained native writer selection without inspecting retired credentials or source"
+    )
   }
 }

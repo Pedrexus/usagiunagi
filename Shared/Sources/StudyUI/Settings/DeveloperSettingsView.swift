@@ -5,7 +5,9 @@ import SwiftUI
 public struct DeveloperSettingsView: View {
   @Binding var endpoint: String
   let defaultEndpoint: String
-  let archive: SQLiteDiagnosticArchive
+  let archive: SQLiteDiagnosticArchive?
+  let applyEndpoint: (@MainActor (String) throws -> Void)?
+  @State private var endpointError: String?
   let clearAvatarCache: @MainActor () async throws -> Void
   @State private var editingEndpoint = false
   @State private var draft = ""
@@ -15,12 +17,14 @@ public struct DeveloperSettingsView: View {
   @State private var cacheError: String?
 
   public init(
-    endpoint: Binding<String>, defaultEndpoint: String, archive: SQLiteDiagnosticArchive,
+    endpoint: Binding<String>, defaultEndpoint: String, archive: SQLiteDiagnosticArchive?,
+    applyEndpoint: (@MainActor (String) throws -> Void)? = nil,
     clearAvatarCache: @escaping @MainActor () async throws -> Void
   ) {
     self._endpoint = endpoint
     self.defaultEndpoint = defaultEndpoint
     self.archive = archive
+    self.applyEndpoint = applyEndpoint
     self.clearAvatarCache = clearAvatarCache
   }
   public var body: some View {
@@ -42,9 +46,11 @@ public struct DeveloperSettingsView: View {
         }
       }
       Section {
-        ShareLink(item: archive, preview: SharePreview("Local database")) {
-          Label("Export local database", systemImage: "square.and.arrow.up")
-        }.accessibilityIdentifier("developer.export")
+        if let archive {
+          ShareLink(item: archive, preview: SharePreview("Local database")) {
+            Label("Export local database", systemImage: "square.and.arrow.up")
+          }.accessibilityIdentifier("developer.export")
+        }
         Button("Clear avatar image cache", systemImage: "person.crop.circle.badge.xmark") {
           clearingCache = true
           Task {
@@ -73,15 +79,25 @@ public struct DeveloperSettingsView: View {
         .autocorrectionDisabled().accessibilityIdentifier("developer.endpoint.draft")
       Button("Save") {
         if let value = DeveloperEndpoint.normalized(draft, defaultURL: defaultEndpoint) {
-          endpoint = value
+          saveEndpoint(value)
         } else {
           invalidEndpoint = true
         }
       }
-      Button("Reset to default", role: .destructive) { endpoint = defaultEndpoint }
+      Button("Reset to default", role: .destructive) { saveEndpoint(defaultEndpoint) }
       Button("Cancel", role: .cancel) {}
     } message: {
       Text("Default: \(defaultEndpoint)")
+    }
+    .alert(
+      "Could not change API URL",
+      isPresented: Binding(
+        get: { endpointError != nil },
+        set: { if !$0 { endpointError = nil } })
+    ) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text(endpointError ?? "")
     }
     .alert("Image cache cleared", isPresented: $cacheCleared) { Button("OK", role: .cancel) {} }
     .alert(
@@ -93,4 +109,11 @@ public struct DeveloperSettingsView: View {
       Text(cacheError ?? "")
     }
   }
+  private func saveEndpoint(_ value: String) {
+    do {
+      try applyEndpoint?(value)
+      endpoint = value
+    } catch { endpointError = error.localizedDescription }
+  }
+
 }
