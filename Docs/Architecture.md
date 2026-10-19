@@ -30,6 +30,30 @@ Both hosts validate tokens through `WaniKaniClient.account`. Its official defaul
 
 The remaining legacy API transport now uses Foundation URLSession directly inside its existing PromiseKit contract. PMKFoundation, the scraper-only regular-expression helpers and form encoder are removed. JSON body logging is also retired; JSON wire encoding remains. Swift 5/protobuf/PromiseKit persist only for the active iOS writer and its callers. The shared form does not migrate the iOS UserDefaults token archive into the native Keychain namespace; that recoverable credential ordering still belongs to the cold writer handoff.
 
+## Settings navigation and in-session media
+
+The temporary iOS settings host now owns one typed SwiftUI path for its four common settings pages, fonts, offline audio and developer diagnostics. Those destinations no longer push individual UIKit controllers. `DeveloperSettingsContent` retains only the original archived endpoint, service and diagnostic/cache capabilities; its actual form remains the shared `DeveloperSettingsView`. `SettingsViewController` still connects the legacy scene/services, account notifications and outer Back action until native root adoption. The separate Fonts, Offline Audio and Developer Options controller classes are removed.
+
+`ReviewSettingsSheet` owns the same quick-settings/media navigation on both hosts. Back from Fonts returns to quick settings; Done from a media page returns directly to the review. The iOS boundary refreshes the existing question presentation after either Done or interactive dismissal, preserving the draft and applying font changes even when an iPad sheet does not trigger the presenter's appearance callback. Font/download owners outlive the sheet. Native review queue/session controls stay in main Settings, matching the original quick-settings scope; hiding them from the in-session sheet does not remove those settings or rewrite saved session choices.
+
+The remaining UIKit presentation/input and lifecycle boundaries are still explicit. This cleanup does not select the native iOS writer, migrate archived credentials/preferences, add native Mac diagnostic capabilities or claim physical IME/notification/watch acceptance. The active iOS database and its diagnostic export remain available.
+
+## Preference handoff audit
+
+Source inspection after the settings-route cleanup confirms these are still migration requirements, not completed transfers:
+
+| Existing source | Native owner | Required preservation |
+| --- | --- | --- |
+| Review, appearance, order/cap and leech archives in `Settings` | `native.reviewPreferences` | Decode the existing enum codes/scalars and map every field through the shared types. Missing legacy SRS indicator defaults to **none**, while the native type defaults to **name**; legacy minimize-penalty defaults to **true**, native to **false**. Do not replace those effective old choices with native defaults. |
+| Lesson and subject archives | `native.lessonPreferences`, `native.subjectPreferences` | Preserve the values already mapped by the legacy preference adapters, including order, access/exclusion and graph/display choices. |
+| `selectedFonts`, `offlineAudio`, `offlineAudioCellular`, `offlineAudioVoiceActors` | `native.selectedFonts`, the three native audio keys and media libraries | Convert archived sets/scalars to the native storage types. Preserve offline files: the old libraries use Documents/fonts and Documents/audio; native assembly uses Application Support/TsurukameNative/fonts and audio. Copy/verify or retain a compatible cache before selecting the new owners. |
+| The three archived notification choices | `native.notificationsAllReviews`, `native.notificationsBadging`, `native.notificationSounds` | Decode actual booleans, then compose native scheduling/badge/companion ownership. Copying archive bytes into these boolean keys is not a migration. |
+| `gravatarCustomEmail`, with `userEmailAddress` fallback | Native avatar settings/header | Preserve the effective avatar without discarding an explicit new override or reusing another account's fallback email. The native header currently only reads the custom-address key. |
+| `subjectCatalogueViewShowAnswers` | `catalog.showAnswers` | Preserve the existing catalog answer-visibility choice; this key does not use the native prefix. |
+| `autoSwitchKeyboard`, `showMinutesForNextLevelUpReview`, `apiBaseUrl` | Native capability/settings work still missing | Supply equivalent keyboard selection, level-up timing presentation and configured native service/diagnostic behavior before retiring their old controls; they cannot simply be omitted from a preference export. |
+
+`Settings` getters can write archives when a key is absent or contains an unarchived value, and its enum getters force an unknown raw value. A cold handoff needs a validated, nonmutating read of the source preferences, isolated test defaults and a recoverable receipt before native activation. The current database/credential bootstrap receipt does not transfer these preferences or media files. Credential storage remains a separate Keychain handoff; account tokens must not enter preference or diagnostic exports. The legacy-only full-answer onboarding flag is not a grading setting.
+
 ## Shared review policy
 
 Both hosts use `FullReviewSettingsContent` for review order/cap, session choices, display, marking, audio and leech threshold. The iOS wrapper retains only its Japanese-keyboard capability/alert and legacy level-up display preference. The form uses the existing system typography, grouped sections, SF Symbols and WaniKani palette; no new visual theme is introduced. Quick settings continue to omit queue/session controls. The unused legacy enum-picker wrapper is retired after the last form caller moves to shared controls.

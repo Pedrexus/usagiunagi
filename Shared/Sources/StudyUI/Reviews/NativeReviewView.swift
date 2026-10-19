@@ -29,8 +29,6 @@ public struct NativeReviewView: View {
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @State private var settings = false
-  @State private var selectingAudio = false
-  @State private var selectingFonts = false
   @State private var fontSubjectID: Int64?
   @State private var customFont = ""
   @State private var fullDetails = false
@@ -181,23 +179,16 @@ public struct NativeReviewView: View {
     .sheet(
       isPresented: $settings,
       onDismiss: {
-        selectingFonts = false
-        selectingAudio = false
         answerFocused = screen.phase == .answering && !screen.isAnki
       }
     ) {
-      NavigationStack {
-        ReviewSettingsPanel(
-          preferences: preferences, changed: savePreferences, fonts: { selectingFonts = true },
-          offlineAudio: { selectingAudio = true },
-          supportsSessionOptions: true
-        ) {
-          settings = false
-        }
-        .navigationDestination(isPresented: $selectingFonts) { FontLibraryView(library: fonts) }
-        .navigationDestination(isPresented: $selectingAudio) { AudioLibraryView(library: audio) }
-      }.frame(minWidth: 380, minHeight: 460)
+      ReviewSettingsSheet(
+        preferences: preferences, changed: savePreferences, fonts: fonts, audio: audio
+      ) {
+        settings = false
+      }
     }
+
     .confirmationDialog(
       isPractice ? "End practice?" : isLesson ? "End lesson quiz?" : "End review session?",
       isPresented: $confirmEnd,

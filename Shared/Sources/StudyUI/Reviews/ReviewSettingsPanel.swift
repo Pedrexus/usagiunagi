@@ -75,3 +75,50 @@ public struct ReviewSettingsPanel: View {
     }
   }
 }
+
+/// In-session preferences and media stay in one sheet; queue choices live in main settings.
+public struct ReviewSettingsSheet: View {
+  private enum Page: Hashable { case fonts, offlineAudio }
+  private let preferences: ReviewPreferences
+  private let changed: (ReviewPreferences, ReviewPreferences) -> Void
+  private let fonts: StudyFontLibrary
+  private let audio: StudyAudioLibrary?
+  private let done: () -> Void
+  @State private var path: [Page] = []
+  public init(
+    preferences: ReviewPreferences,
+    changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
+    fonts: StudyFontLibrary, audio: StudyAudioLibrary? = nil, done: @escaping () -> Void
+  ) {
+    self.preferences = preferences
+    self.changed = changed
+    self.fonts = fonts
+    self.audio = audio
+    self.done = done
+  }
+  public var body: some View {
+    NavigationStack(path: $path) {
+      ReviewSettingsPanel(
+        preferences: preferences, changed: changed,
+        fonts: { path.append(.fonts) },
+        offlineAudio: audio == nil ? nil : { path.append(.offlineAudio) }, done: done
+      )
+      .navigationDestination(for: Page.self) { page in
+        Group {
+          switch page {
+          case .fonts: FontLibraryView(library: fonts)
+          case .offlineAudio: if let audio { AudioLibraryView(library: audio) }
+          }
+        }.toolbar {
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Done", action: done).accessibilityIdentifier("reviewSettings.done")
+          }
+        }
+      }
+    }
+    .presentationSizing(.form)
+    #if os(macOS)
+      .frame(minWidth: 380, minHeight: 460)
+    #endif
+  }
+}

@@ -1,0 +1,286 @@
+{
+  "date": "2026-10-20",
+  "baseline": "d769f470927f3c28b865b7a07bab28866d789731",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Move all current iOS settings/media/developer destinations into the existing SwiftUI stack; share the in-session settings/media sheet on Mac and iOS; remove replaced controller wrappers without migrating the active writer or archives.",
+  "validatedFiles": {
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "67f05876d5eaa8c6a7295f58f80578c071d34069da6e2c949a1bcddd5aaf6ab1",
+    "App/Features/Settings/SettingsViewController.swift": "31baf8e2e1783f27515e45d76da4ab9460e45f32f17c82ca6ce5920dda0300fe",
+    "App/ReviewQuickSettings/ReviewContainerViewController.swift": "d0ae1056e20e2a9a8f3c6c7da72532b3bb7d555a4437664f39d476b340b1a7c8",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "302e8fc5164e028beb51ed075e10a05b0ac33011676e730dc30e0035e8310a8b",
+    "Docs/Architecture.md": "bdb8948f145ab54e9b3cf647e5348e1ea3668d8b637f492ea1b74b272e5a937d",
+    "Docs/Development.md": "5e01eb6839eb6e37252ca4eac6317f5b9778abccdc63829eaf934add52eb44e0",
+    "Docs/History/task-checkpoints.md": "053e9314ef2bfda545cabb33b940f864e8a8858842ac7d08c07306e3e0c8f4c4",
+    "Docs/TASKS.md": "f1477b7a767a2d2d66d9e20fb07fdda7a36959058b237672d0980233c678d03d",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "806292a59ccfdfd55186dd235a26e0a08ff3a85ee1c6f81f8e8843c999d0085d",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift": "6cbe090074d113124a3d2ff04711032653fc84fcc5a9141e46d71c9a339ec82d",
+    "App/Features/Settings/DeveloperSettings.swift": "967bb74d04d55e70811d82dc1934939bb07209e7ee6e452b71e67d84a8dfa271"
+  },
+  "deletedFiles": {
+    "App/Features/Settings/DeveloperOptionsViewController.swift": "e2e82aa21d116c601df66ce897fe03b979694cb78ea99df22fe84e689885d5d6",
+    "App/Features/Settings/FontsViewController.swift": "7f2fb01dfa09666be2be337ca2e5de25863e045869c9591b6afb815aed23ff97",
+    "App/Features/Settings/OfflineAudioViewController.swift": "8548b42dd2c80d0b02956bd78969cac68c3684a95b4ca825873b55206536af45"
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30521,
+    "after": 30510,
+    "changed": [
+      {
+        "path": "App/Features/Settings/DeveloperOptionsViewController.swift",
+        "before": 56,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Settings/FontsViewController.swift",
+        "before": 16,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Settings/OfflineAudioViewController.swift",
+        "before": 11,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Settings/SettingsViewController.swift",
+        "before": 169,
+        "after": 166
+      },
+      {
+        "path": "App/ReviewQuickSettings/ReviewContainerViewController.swift",
+        "before": 102,
+        "after": 97
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift",
+        "before": 535,
+        "after": 526
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift",
+        "before": 77,
+        "after": 124
+      },
+      {
+        "path": "App/Features/Settings/DeveloperSettings.swift",
+        "before": 0,
+        "after": 42
+      }
+    ]
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-settings-navigation-shared.log",
+    "sha256": "4d154179739b33d5b31ef63dacc2adfe62894b40e56e6684a289b5adc2e4811b",
+    "testFunctions": 434,
+    "byModule": {
+      "core": 209,
+      "persistence": 166,
+      "speech": 7,
+      "ui": 52
+    }
+  },
+  "sharedIOS": {
+    "log": "/private/tmp/usagi-settings-navigation-shared-ios.log",
+    "sha256": "c5987de874961808e06f33c5cadde7501466dfd8a717dc44c2164e2f9ad2ff4c",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-79a05946cf924ae3b4818935bcf4316b.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 434,
+      "passedTests": 434,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "hostedIOS": {
+    "log": "/private/tmp/usagi-settings-navigation-app.log",
+    "sha256": "2cd7a1499cf3dc99759fa3332ab58b3423e3cf03eb68c589ef1b4b5ed42613ea",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7d00d977fb234fc2aa124771382904d7.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 95,
+      "passedTests": 95,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "phoneUI": {
+    "fullBatch": {
+      "log": "/private/tmp/usagi-settings-navigation-phone.log",
+      "sha256": "18a7dfad661d2d1ecd7ee5265ec4cd4f4188be713f066bb77e5ed425dae046ee",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6319a34f6918445bb0bf7403efab1338.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 13,
+        "passedTests": 13,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "testFailures": [
+
+        ],
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "finalConfirmationCase": {
+      "log": "/private/tmp/usagi-settings-navigation-dismissal-phone.log",
+      "sha256": "6fbf4508396a8c4053054d13931860debb5db79e70c7b41f98dd751cafa6e46c",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a2fdcbe352274e6cbdb3dc8738e96cfe.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "testFailures": [
+
+        ],
+        "runtimeWarnings": [
+
+        ]
+      }
+    }
+  },
+  "padUI": {
+    "initialBatch": {
+      "log": "/private/tmp/usagi-settings-navigation-pad-initial-results.log",
+      "sha256": "5f64d0c89a00d000b644b91c4aaa3c9b84a1ed50f6ec8a6ec203a6a0f5b741d3",
+      "bundle": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/test-a82e2bbd16b6490891f24599a8ff5779.xcresult",
+      "summary": {
+        "result": "Failed",
+        "totalTestCount": 13,
+        "passedTests": 12,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "testFailures": [
+          {
+            "failureText": "Failed to get matching snapshot: Find single matching element. Multiple matching elements found for <XCUIElementQuery: 0x1089cc640>.\nSparse tree of matches:\n→Application, pid: 90422, label: 'usagiunagi'\n  ↳Window (Main)\n    ↳Other\n    ⋅ ↳Other, identifier: 'PopoverDismissRegion', label: 'dismiss popup'\n    ↳Other\n    ⋅ ↳Other, identifier: 'PopoverDismissRegion', label: 'dismiss popup'\n    ↳Other\n      ↳Other\n        ↳Other, identifier: 'PopoverDismissRegion', label: 'dismiss popup'\nPossibly caused by runtime issues:\nAutomation type mismatch: computed Other from legacy attributes vs Toolbar from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 24;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIFloatingBarContainerView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIFloatingBarContainerView\";\n    \"XC_kAXXCAttributeTraits\" = 8589934592;\n}\nAutomation type mismatch: computed Other from legacy attributes vs ScrollView from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 46;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIInterfaceActionGroupHeaderScrollView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIInterfaceActionGroupHeaderScrollView\";\n    \"XC_kAXXCAttributeTraits\" = 8589934592;\n}\nAutomation type mismatch: computed Other from legacy attributes vs Popover from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 18;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIPopoverView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIPopoverView\";\n    \"XC_kAXXCAttributeTraits\" = 0;\n}\nAutomation type mismatch: computed Other from legacy attributes vs ScrollView from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 46;\n    \"XC_kAXXCAttributeElementBaseType\" = \"_UIInterfaceActionRepresentationsSequenceView\";\n    \"XC_kAXXCAttributeElementType\" = \"_UIInterfaceActionRepresentationsSequenceView\";\n    \"XC_kAXXCAttributeTraits\" = 8589934592;\n}\nAutomation type mismatch: computed Other from legacy attributes vs ProgressIndicator from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 35;\n    \"XC_kAXXCAttributeElementBaseType\" = NSObject;\n    \"XC_kAXXCAttributeElementType\" = \"SwiftUI.AccessibilityNode\";\n    \"XC_kAXXCAttributeTraits\" = 8589935104;\n}\nAutomation type mismatch: computed Other from legacy attributes vs StaticText from modern attribute. Input attributes and values: {\n    \"XC_kAXXCAttributeAutomationType\" = 48;\n    \"XC_kAXXCAttributeElementBaseType\" = UILabel;\n    \"XC_kAXXCAttributeElementType\" = UILabel;\n    \"XC_kAXXCAttributeTraits\" = 8590000128;\n}\nSee test report attachments for more detail.",
+            "targetName": "AppStoreScreenshots",
+            "testIdentifier": 4,
+            "testIdentifierString": "ReviewFlowTests/testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled()",
+            "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled",
+            "testName": "testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled()"
+          }
+        ],
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "finalConfirmationCase": {
+      "log": "/private/tmp/usagi-settings-navigation-dismissal-pad.log",
+      "sha256": "dab6bb3443ca22e628fe7d1870b0679a1f7500e300029d32fb96072b0d5c7a3f",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6524e6e86c514ece911883b2b8ad5d7d.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "testFailures": [
+
+        ],
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "passingDistinctCases": 13,
+    "interpretation": "The initial full batch passed 12 and failed one test on an ambiguous global PopoverDismissRegion query. The font case was corrected to tap the current Fonts navigation title outside its popover and passed in isolation. The other 12 functions and all production source are unchanged. This is combined case coverage, not a claim of one clean final 13-case iPad batch."
+  },
+  "macDebug": {
+    "log": "/private/tmp/usagi-settings-navigation-mac-debug.log",
+    "sha256": "88ca6887d754fbc6c38262c13ec7496947319385db1fd3739b5070a5f66996fc",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-5695598e72364ac2a951a13246f40e5c.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "macRelease": {
+    "log": "/private/tmp/usagi-settings-navigation-mac-release.log",
+    "sha256": "0364eaa112d01b16ee1ac90bee4e34c9a8495cb89dbd2917396319e9a05a17f3",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-98e116f79e1b4a6a973a19c7ff3b73c8.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "iosRelease": {
+    "log": "/private/tmp/usagi-settings-navigation-ios-release.log",
+    "sha256": "4e49f0a586c68f4a317bf2b51b7bf7ad2bcf56a240e1a69a0b93a03461b8b9b7",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-6f566306bfa244cf9aacd3c3ffb0996c.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 13,
+      "errors": [
+
+      ]
+    }
+  },
+  "nativeMacDirect": {
+    "kind": "Direct app-window CUA observations; not XCUITest",
+    "configuration": "--review-fixture -ApplePersistenceIgnoreState YES; isolated injected defaults, in-memory store and simulated service/media transports",
+    "executable": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Xcode/UnifiedMac/Build/Products/Debug/Tsurukame.app/Contents/MacOS/Tsurukame",
+    "executableSHA256": "af76f9168a0aef9b0d5b22afb07d8b3154bfc47e92600d26dfc3456388465ce3",
+    "observed": [
+      "Synthetic review fixture / memory only / simulated sync was visible before opening an unanswered reading question.",
+      "An unsubmitted みほん draft remained visible with 0 completed / 1 remaining after every navigation cycle.",
+      "Quick settings showed Display, Answers and marking, Audio and Review feedback, with no new-session queue controls. Its own-sheet screenshot showed grouped system controls and the blue accent.",
+      "Fonts opened inside the same sheet. Installed font fixture was switched on; Back returned to Quick settings; reopening Fonts retained that selection.",
+      "Done from Fonts returned directly to the same question and exact draft.",
+      "Offline Audio opened in the same sheet with downloads disabled; Done returned to the unchanged draft.",
+      "No answer was submitted, download enabled, microphone invoked or live account accessed. The bound fixture was closed with Quit; Mainboard confirmed no remaining app process before simulator GUI acceptance."
+    ],
+    "limits": "The fixture resets defaults on launch. This does not prove native XCUITest, physical IME, signed upgrade, real account/media or a full light/dark/accessibility audit."
+  },
+  "testOnlyFix": "Multiple system popup-dismiss regions exist with the Fonts page inside a sheet. Only the test tap target changed; the confirmation-closed, Fonts-visible and deletion-button-hittable assertions remain. The final case is rechecked on phone and iPad.",
+  "toolchainLimit": "Xcode additionally failed simulator-diagnostic collection with an unresolved simctl warning despite explicit DEVELOPER_DIR. Mainboard apple results reads the retained bundle and confirms the actual assertion failure. No Mainboard or OS configuration was changed; the earlier variable-only fix inference is corrected in Development.md.",
+  "preferenceAudit": "Architecture.md records remaining nonmutating archive conversion, default differences, offline media locations, avatar fallback and unsupported native controls. This turn does not migrate those values.",
+  "contracts": [
+    "One typed SwiftUI settings path replaces Fonts, Offline Audio and Developer Options controller pushes.",
+    "Original API endpoint archives/service updates, live SQLite diagnostic snapshot and avatar cache callbacks are retained in the legacy boundary.",
+    "Full settings tests cover all four main destinations and logout cancellation; developer tests retain endpoint validation/persistence/reset/cache/export assertions.",
+    "Font cases retain selection, failed/cancelled/retried/deletion/continued-download checks and unchanged drafts; Back-to-Quick and direct Done are verified.",
+    "Audio cases retain choice/cellular persistence, keep/delete, errors/retry and native navigation.",
+    "Queue/session controls remain in main Settings. Quick settings cannot silently replace saved native session choices.",
+    "The iOS dismissal boundary refreshes the same question without resetting its answer before restoring focus. Native font observation and media ownership remain unchanged."
+  ],
+  "formatting": {
+    "log": "/private/tmp/usagi-settings-navigation-format.log",
+    "sha256": "af4a8dfe29c36ce398c07d25cd01312cd9aa895280855295a26df0d0c415e726",
+    "checkedSwiftFiles": 6
+  },
+  "limits": [
+    "Release warning totals are incremental diagnostics, not a project-wide warning audit.",
+    "The watch build from the previous checkpoint is unchanged evidence; current edits do not change its Core/companion implementation.",
+    "Production iOS root/writer/credential/preference handoff, native diagnostics/account parity and shared-store companion/background composition remain open.",
+    "No OS permission/security changes, live exercises/account edits, hosted Actions run, new dependency, Mainboard or parent manifest edits, push or PR."
+  ],
+  "remainingLedger": "Docs/TASKS.md",
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

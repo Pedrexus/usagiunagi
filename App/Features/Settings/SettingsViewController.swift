@@ -11,7 +11,10 @@ extension Notification.Name {
 }
 
 @MainActor @Observable final class SettingsNavigation {
-  typealias Page = StudySettingsPage
+  enum Page: Hashable {
+    case settings(StudySettingsPage)
+    case fonts, offlineAudio, developer
+  }
   var path: [Page] = []
   let account = StudyShellState()
   var pendingReviews = 0
@@ -23,9 +26,10 @@ struct ApplicationSettings: View {
   let subjects: StudySubjectSettings
   let notificationSettings: StudyNotifications
   let back: () -> Void
-  let fonts: () -> Void
-  let offlineAudio: () -> Void
-  let developer: () -> Void
+  let fonts: StudyFontLibrary?
+  let audio: StudyAudioLibrary?
+  let developer: DeveloperSettingsContent?
+  let prepareAudio: () -> Void
   let appearanceChanged: (InterfaceStyle) -> Void
   @ArchivedPreference(Settings.$gravatarCustomEmail) private var email: String
   @ArchivedPreference(Settings.$interfaceStyle) private var appearance: InterfaceStyle
@@ -35,10 +39,12 @@ struct ApplicationSettings: View {
     NavigationStack(path: $navigation.path) {
       StudySettingsView(
         account: navigation.account.username.isEmpty ? nil : navigation.account,
-        destination: { $0 }
+        destination: SettingsNavigation.Page.settings
       ) {
-        Button("Developer options", systemImage: "hammer", action: developer)
-          .accessibilityIdentifier("settings.developer")
+        if developer != nil {
+          Button("Developer options", systemImage: "hammer") { navigation.path.append(.developer) }
+            .accessibilityIdentifier("settings.developer")
+        }
       } accountActions: {
         Button("Log out", role: .destructive) { confirmingLogout = true }
           .accessibilityIdentifier("settings.logout")
@@ -55,23 +61,31 @@ struct ApplicationSettings: View {
       .onChange(of: displayScale) { _, _ in if navigation.path.isEmpty { updateAvatar() } }
       .navigationDestination(for: SettingsNavigation.Page.self) { page in
         switch page {
-        case .appearance:
+        case .settings(.appearance):
           AppearanceSettingsView(
             appearance: Binding(
               get: { appearance.nativeAppearance }, set: { appearance = InterfaceStyle($0) }),
             email: $email, notifications: notificationSettings
           )
           .onChange(of: appearance) { _, value in appearanceChanged(value) }
-        case .lessons:
+        case .settings(.lessons):
           LessonSettingsView(settings: lessons)
-        case .reviews:
+        case .settings(.reviews):
           ReviewSettings(
-            fonts: fonts, offlineAudio: offlineAudio, appearanceChanged: appearanceChanged)
-        case .subjects:
+            fonts: { navigation.path.append(.fonts) },
+            offlineAudio: { navigation.path.append(.offlineAudio) },
+            appearanceChanged: appearanceChanged)
+        case .settings(.subjects):
           SubjectSettingsView(
             settings: subjects,
             skipKanjiReadings: Binding(
               get: { Settings.skipKanjiReadings }, set: { Settings.skipKanjiReadings = $0 }))
+        case .fonts:
+          if let fonts { FontLibraryView(library: fonts) }
+        case .offlineAudio:
+          if let audio { AudioLibraryView(library: audio).onAppear(perform: prepareAudio) }
+        case .developer: developer
+
         }
       }
       .alert("Log out?", isPresented: $confirmingLogout) {
@@ -115,21 +129,9 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
       notificationSettings: services?.notifications
         ?? StudyNotifications(preferences: LegacyNotificationPreferences()),
       back: { [weak self] in self?.navigationController?.popViewController(animated: true) },
-      fonts: { [weak self] in
-        guard let self else { return }
-        let controller = FontsViewController(library: services.fontLibrary)
-        pushLegacy(controller)
-      },
-      offlineAudio: { [weak self] in
-        guard let self else { return }
-        services.offlineAudio.queueDownloads()
-        let controller = OfflineAudioViewController(library: services.audio)
-        pushLegacy(controller)
-      },
-      developer: { [weak self] in
-        guard let self else { return }
-        pushLegacy(DeveloperOptionsViewController(services: services))
-      },
+      fonts: services?.fontLibrary, audio: services?.audio,
+      developer: services.map { DeveloperSettingsContent(services: $0) },
+      prepareAudio: { [weak self] in self?.services?.offlineAudio.queueDownloads() },
       appearanceChanged: { [weak self] value in self?.view.window?.setInterfaceStyle(value) })
     for name in [Notification.Name.lccUserInfoChanged, .lccPendingItemsChanged] {
       notifications.add(name: name) { [weak self] _ in
@@ -160,10 +162,5 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
       state.account.username.isEmpty
       ? nil : currentUserProfileImageURL(scale: view.traitCollection.displayScale)
     state.pendingReviews = client.pendingProgressCount
-  }
-  private func pushLegacy(_ controller: UIViewController) {
-    navigationController?.isNavigationBarHidden = false
-    navigationItem.backButtonTitle = state.path.last?.rawValue ?? "Settings"
-    navigationController?.pushViewController(controller, animated: true)
   }
 }

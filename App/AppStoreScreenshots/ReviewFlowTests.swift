@@ -586,6 +586,8 @@ final class ReviewFlowTests: XCTestCase {
     screenshot.lifetime = .keepAlways
     add(screenshot)
     app.navigationBars["Select Fonts"].buttons.firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Quick settings"].waitForExistence(timeout: 5))
+    app.buttons["reviewSettings.done"].tap()
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertEqual(field.value as? String, "personally")
@@ -627,8 +629,8 @@ final class ReviewFlowTests: XCTestCase {
     } else {
       let popup = app.popovers.firstMatch
       XCTAssertTrue(popup.exists)
-      app.otherElements["PopoverDismissRegion"].coordinate(
-        withNormalizedOffset: CGVector(dx: popup.frame.midX < app.frame.midX ? 0.95 : 0.05, dy: 0.5)
+      app.navigationBars["Select Fonts"].coordinate(
+        withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)
       ).tap()
     }
     XCTAssertFalse(confirmation.exists)
@@ -647,7 +649,7 @@ final class ReviewFlowTests: XCTestCase {
       identifier: "font.progress.font-download.ttf"
     ).firstMatch
     XCTAssertTrue(progress.waitForExistence(timeout: 5))
-    app.navigationBars["Select Fonts"].buttons.firstMatch.tap()
+    app.buttons["reviewSettings.done"].tap()
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertEqual(field.value as? String, "personally")
@@ -1311,7 +1313,7 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["reviewSettings.fonts"].tap()
     let navigation = app.navigationBars["Select Fonts"]
     XCTAssertTrue(navigation.waitForExistence(timeout: 5))
-    navigation.buttons.firstMatch.tap()
+    app.buttons["reviewSettings.done"].tap()
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertEqual(field.value as? String, "personally")
     app.buttons["review.close"].tap()

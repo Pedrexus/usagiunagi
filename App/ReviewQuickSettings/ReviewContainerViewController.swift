@@ -64,34 +64,29 @@ class ReviewContainerViewController: UIViewController, ReviewViewControllerDeleg
 
   func tappedMenuButton(reviewViewController _: ReviewViewController, menuButton _: UIView) {
     reviewVC.prepareForSettings()
-    let panel = ReviewSettingsPanel(
+    let panel = ReviewSettingsSheet(
       preferences: ReviewPreferencesAdapter.current,
       changed: { [weak self] old, new in
         ReviewPreferencesAdapter.apply(new, replacing: old)
         self?.view.window?.setInterfaceStyle(Settings.interfaceStyle)
         self?.reviewVC.quickSettingsChanged()
-      }, fonts: { [weak self] in self?.showFonts() },
+      }, fonts: services.fontLibrary,
       done: { [weak self] in self?.closeSettings() })
-    let host = UIHostingController(rootView: NavigationStack { panel })
+    let host = UIHostingController(rootView: panel)
     host.modalPresentationStyle = .formSheet
     host.presentationController?.delegate = self
     present(host, animated: true)
   }
 
   private func closeSettings() {
-    dismiss(animated: true) { [weak self] in self?.reviewVC.focusAnswerField() }
+    dismiss(animated: true) { [weak self] in self?.settingsClosed() }
   }
 
-  func presentationControllerDidDismiss(_: UIPresentationController) {
+  func presentationControllerDidDismiss(_: UIPresentationController) { settingsClosed() }
+
+  private func settingsClosed() {
+    reviewVC.quickSettingsChanged()
     reviewVC.focusAnswerField()
-  }
-
-  private func showFonts() {
-    dismiss(animated: true) { [weak self] in
-      guard let self else { return }
-      let fonts = FontsViewController(library: self.services.fontLibrary)
-      self.navigationController?.pushViewController(fonts, animated: true)
-    }
   }
 
   func finishedAllReviewItems(_ reviewViewController: ReviewViewController) {
