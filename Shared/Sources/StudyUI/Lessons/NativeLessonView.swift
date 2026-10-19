@@ -11,6 +11,7 @@ public struct NativeLessonView: View {
   private let finished: () -> Void
   @State private var initialBatchOpened = false
   @State private var items: [StudySubject] = []
+  @State private var selectedIDs: Set<Int64> = []
   @State private var selection: Selection?
   @State private var pausedReview = false
   @State private var pausedLesson: Selection?
@@ -36,10 +37,14 @@ public struct NativeLessonView: View {
         LessonFlowView(
           subjects: selection.subjects,
           initialPage: selection.resumeQuiz ? selection.subjects.count : 0,
-          backTitle: "Choose lessons",
+          backTitle: automaticBatchSize == nil ? "Choose lessons" : "Back",
           back: {
-            self.selection = nil
-            Task { await load() }
+            if automaticBatchSize != nil {
+              finished()
+            } else {
+              self.selection = nil
+              Task { await load() }
+            }
           }
         ) { index in
           if index == selection.subjects.count {
@@ -58,11 +63,11 @@ public struct NativeLessonView: View {
           }
         }.id(selection.id)
       } else if let pausedLesson {
-        ContentUnavailableView(
-          "Lesson quiz paused", systemImage: "pause.circle",
-          description: Text(
-            "Your answers are saved. Resume this quiz before choosing different lessons."))
-        Button("Resume lesson quiz") { selection = pausedLesson }.buttonStyle(.borderedProminent)
+        VStack {
+          Text("Finish or end your paused quiz before choosing different lessons.")
+            .font(.callout).foregroundStyle(.secondary).padding()
+          picker(pausedLesson.subjects, paused: pausedLesson)
+        }
       } else if pausedReview {
         ContentUnavailableView(
           "A review session is paused", systemImage: "pause.circle",
@@ -75,24 +80,37 @@ public struct NativeLessonView: View {
           "Lessons unavailable", systemImage: "books.vertical", description: Text(error))
         Button("Try again") { Task { await load() } }
       } else if loaded {
-        LessonPickerView(items: items) { ids in
-          let available = try await store.availableLessons(
-            accountID: accountID, lessonPreferences: lessonSettings.value)
-          let byID = Dictionary(uniqueKeysWithValues: available.map { ($0.id, $0.summary) })
-          guard !ids.isEmpty, ids.allSatisfy({ byID[$0] != nil }) else {
-            throw NativeReviewError.invalidLessonSelection
-          }
-          let selected = Set(ids)
-          selection = Selection(
-            subjects: available.filter { selected.contains($0.id) }.map(\.summary))
-        }
+        picker(items)
       } else {
         ProgressView("Loading saved lessons")
       }
-    }.navigationTitle("Lessons").task(
-      id: LessonReadKey(accountID: accountID, preferences: lessonSettings.value)
-    ) {
-      if selection == nil { await load() }
+    }.navigationTitle("Lessons")
+      #if os(iOS)
+        .navigationBarBackButtonHidden(selection != nil)
+      #endif
+      .task(
+        id: LessonReadKey(accountID: accountID, preferences: lessonSettings.value)
+      ) {
+        if selection == nil { await load() }
+      }
+  }
+  private func picker(_ items: [StudySubject], paused: Selection? = nil) -> some View {
+    LessonPickerView(items: items, selection: $selectedIDs) { ids in
+      if let paused {
+        guard Set(ids) == Set(paused.subjects.map(\.id)) else {
+          throw NativeReviewError.sessionInProgress(isLesson: true)
+        }
+        selection = Selection(subjects: paused.subjects)
+        return
+      }
+      let available = try await store.availableLessons(
+        accountID: accountID, lessonPreferences: lessonSettings.value)
+      let byID = Dictionary(uniqueKeysWithValues: available.map { ($0.id, $0.summary) })
+      guard !ids.isEmpty, ids.allSatisfy({ byID[$0] != nil }) else {
+        throw NativeReviewError.invalidLessonSelection
+      }
+      let selected = Set(ids)
+      selection = Selection(subjects: available.filter { selected.contains($0.id) }.map(\.summary))
     }
   }
   private struct LessonReadKey: Equatable {
@@ -120,6 +138,7 @@ public struct NativeLessonView: View {
           return subject.summary
         }
         try Task.checkCancellation()
+        selectedIDs = Set(subjects.map(\.id))
         let resumed = Selection(subjects: subjects, resumeQuiz: true)
         if automaticBatchSize != nil { selection = resumed } else { pausedLesson = resumed }
       } else {
@@ -127,6 +146,7 @@ public struct NativeLessonView: View {
           accountID: accountID, lessonPreferences: lessonSettings.value)
         try Task.checkCancellation()
         items = available.map(\.summary)
+        selectedIDs.formIntersection(items.map(\.id))
         loaded = true
         if let automaticBatchSize, !initialBatchOpened, !items.isEmpty {
           initialBatchOpened = true

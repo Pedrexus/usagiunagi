@@ -33,8 +33,10 @@
       if home.exists { home.tap() } else { app.navigationBars.buttons["Back"].firstMatch.tap() }
       XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 5), app.debugDescription)
     }
-    @MainActor private func answerOneSubject(_ app: XCUIApplication, complete title: String) {
-      for question in 0..<2 {
+    @MainActor private func answerOneSubject(
+      _ app: XCUIApplication, complete title: String, questions: Int = 2
+    ) {
+      for question in 0..<questions {
         let field = app.textFields["review.answer"]
         XCTAssertTrue(field.waitForExistence(timeout: 10), app.debugDescription)
         let prompt = app.staticTexts["review.prompt"]
@@ -42,7 +44,7 @@
         field.tap()
         field.typeText(before.contains("Reading") ? "ichi" : "one")
         app.buttons["review.submit"].tap()
-        if question == 0 {
+        if question < questions - 1 {
           let changed = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in
               let after =
@@ -109,7 +111,21 @@
       app.buttons["home.lessons"].tap()
       XCTAssertTrue(app.buttons["lesson.quiz"].waitForExistence(timeout: 10), app.debugDescription)
       app.buttons["lesson.quiz"].tap()
-      answerOneSubject(app, complete: "Lesson quiz saved")
+      let field = app.textFields["review.answer"]
+      XCTAssertTrue(field.waitForExistence(timeout: 5))
+      field.tap()
+      field.typeText("one")
+      app.buttons["lesson.back"].tap()
+      XCTAssertTrue(app.buttons["home.resume"].waitForExistence(timeout: 5), app.debugDescription)
+      app.buttons["home.resume"].tap()
+      XCTAssertTrue(field.waitForExistence(timeout: 5), app.debugDescription)
+      XCTAssertEqual(field.value as? String, "one")
+      app.buttons["review.submit"].tap()
+      let reading = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "label CONTAINS %@", "Reading"),
+        object: app.staticTexts["review.prompt"])
+      XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+      answerOneSubject(app, complete: "Lesson quiz saved", questions: 1)
       requireEmptyOutbox(app)
     }
     @MainActor func testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics() {
@@ -196,32 +212,6 @@
       tab("Home", in: app)
       XCTAssertTrue(app.buttons["home.reviews"].label.contains("1 ready"))
       requireEmptyOutbox(app)
-    }
-    @MainActor func testNativeColdStudyLinksRouteFromTheSharedScene() {
-      continueAfterFailure = false
-      let app = XCUIApplication()
-      defer { app.terminate() }
-      for route in ["reviews", "lessons", "subject/1"] {
-        app.terminate()
-        app.launchArguments =
-          ["--review-fixture", "--light-fixture"]
-          + (route == "lessons" ? ["--lesson-fixture"] : [])
-        app.open(URL(string: "usagiunagi:///" + route)!)
-        switch route {
-        case "reviews":
-          XCTAssertTrue(
-            app.textFields["review.answer"].waitForExistence(timeout: 15), app.debugDescription)
-        case "lessons":
-          XCTAssertTrue(
-            app.buttons["lesson.quiz"].waitForExistence(timeout: 15), app.debugDescription)
-        default:
-          XCTAssertTrue(
-            app.staticTexts["subject.characters"].waitForExistence(timeout: 15),
-            app.debugDescription)
-        }
-        backToHome(app)
-        XCTAssertFalse(app.otherElements["startup.failure"].exists)
-      }
     }
     @MainActor func testNativeStatisticsCoverageStaysInline() {
       let app = launch(["--statistics-fixture"])

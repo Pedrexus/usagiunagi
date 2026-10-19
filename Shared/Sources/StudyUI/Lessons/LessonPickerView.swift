@@ -7,18 +7,26 @@ public struct LessonPickerView: View {
   private let japaneseFont: String?
   private let image: (Int64) -> Image?
   private let start: @MainActor ([Int64]) async throws -> Void
-  @State private var selected: Set<Int64> = []
+  @State private var localSelection: Set<Int64> = []
+  private let selection: Binding<Set<Int64>>?
+  private var selected: Set<Int64> {
+    get { selection?.wrappedValue ?? localSelection }
+    nonmutating set {
+      if let selection { selection.wrappedValue = newValue } else { localSelection = newValue }
+    }
+  }
   @State private var busy = false
   @State private var error: String?
   @Environment(\.dynamicTypeSize) private var typeSize
   @ScaledMetric(relativeTo: .title2) private var glyphSize = 28
 
   public init(
-    items: [StudySubject], japaneseFont: String? = nil,
+    items: [StudySubject], selection: Binding<Set<Int64>>? = nil, japaneseFont: String? = nil,
     image: @escaping (Int64) -> Image? = { _ in nil },
     start: @escaping @MainActor ([Int64]) async throws -> Void
   ) {
     self.items = items
+    self.selection = selection
     self.japaneseFont = japaneseFont
     self.image = image
     self.start = start

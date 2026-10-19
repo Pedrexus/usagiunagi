@@ -1,0 +1,373 @@
+{
+  "date": "2026-10-20",
+  "baseline": "0ddf60513bea8c69a926b89197e417dd70dd48bc",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Migrate existing lesson/detail and link acceptance onto the production SwiftUI scene; preserve selection/drafts and page gestures; remove unused legacy lesson fixture and duplicate cold test. Other legacy host/controllers/writer remain pending their native acceptance.",
+  "validatedFiles": {
+    "App/AppStoreScreenshots/MacLessonTests.swift": "4ecbc5a2d6a5a9ce0b280be110bffe1e8395e8f981a8282c272a3921c1fc779c",
+    "App/AppStoreScreenshots/NativeRootFlowTests.swift": "6602c3d58d44ff0ccc1a8b7f6addc79e2b9671cb5deed0b74520e0a1079be629",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "2ad5a2ba56f64f6702c6d9958d41b017c1196097fe4e76b32146bfac3ea451a9",
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "6d0fb975f2e6969cb8f67da357aa6c6915b0a59115f24c9f576748b43d58e679",
+    "App/AppStoreScreenshots/Screenshotter.swift": "941a6917e71e5d16b077e6a6b1303ca28666bd74686525e861dd2e895018f8cd",
+    "App/Tests/WarmLinks.json": "4ea1f462ff6186326595208609a8be36049d1393b9ea028a7f7593f59f35f825",
+    "Docs/Architecture.md": "a85c425c6e6b239efb00c2161fa84d77b6ba1d276664adbdebb5b91094841411",
+    "Docs/Development.md": "3292073c7227c005ca2e5f323e18e16119dca279d51a7b2378da0d6e786e11cf",
+    "Docs/History/task-checkpoints.md": "91e0afa45976be147757f0861b86fc63af9e9798c19c4e8b581483cef32e16a6",
+    "Docs/TASKS.md": "e496176f87a8aadf37482eb3506e2c1e1568fc2062e87428b03764b9de35ab19",
+    "Shared/Sources/StudyUI/Catalog/NativeSubjectDetailsView.swift": "412cd434cce969d8a19a850a194b7af8be2e014abba09f579688d32ac693afa8",
+    "Shared/Sources/StudyUI/Lessons/LessonPickerView.swift": "7a002ec740eb8092c6af590c1de5fe3f772950974ae6ce8402c085036e891206",
+    "Shared/Sources/StudyUI/Lessons/NativeLessonView.swift": "0515fd00d9f2849318a6229ff987d2fec9f4aab767fdcabbac4dc57ac92e71e3"
+  },
+  "deletedFiles": {
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 31226,
+    "after": 31256,
+    "changed": [
+      {
+        "path": "Shared/Sources/StudyUI/Catalog/NativeSubjectDetailsView.swift",
+        "before": 136,
+        "after": 138
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Lessons/LessonPickerView.swift",
+        "before": 120,
+        "after": 128
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Lessons/NativeLessonView.swift",
+        "before": 138,
+        "after": 158
+      }
+    ],
+    "netIncrease": 30,
+    "netReductionClaimed": false
+  },
+  "corrections": [
+    "A rightward lesson page swipe reached the enclosing navigation Back gesture. Native lesson controls now own Back while teaching/quizzing; horizontal paging stays within the lesson.",
+    "Returning from a quiz replaced the picker with a paused-session screen and lost its selection. Parent-owned selection and a frozen paused picker preserve the draft/session; completed answers/outbox are unchanged.",
+    "Migrated fixture preferences explicitly disable autoreveal and fix question grouping to test the same original manual-reveal/no-cheat rules. Production user preferences are unchanged."
+  ],
+  "mobile": {
+    "iphone": {
+      "log": "/private/tmp/usagi-lesson-port-iphone-final.log",
+      "sha256": "3df6033c36aa3c7994ba926bedc40f5c9eaacab55bf92e170ff8921a29e0d09d",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0cfa819b5bbe4f2991e71f26e409a484.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "test": "NativeRootFlowTests.testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonPickerPreservesSelectionAndUnfinishedQuizDraft",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testShellColdReviewLessonAndSubjectLinksReturnToHome",
+          "result": "passed"
+        }
+      ]
+    },
+    "ipad": {
+      "log": "/private/tmp/usagi-lesson-port-ipad-final.log",
+      "sha256": "f4d342152782b02bce2e807fa87027a21f93dca4cbcbb4d8712d799ce12f369f",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-708decf5be6541a1b7bfd45ac65f6681.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "test": "NativeRootFlowTests.testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonPickerPreservesSelectionAndUnfinishedQuizDraft",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testShellColdReviewLessonAndSubjectLinksReturnToHome",
+          "result": "passed"
+        }
+      ]
+    },
+    "warmIphone": {
+      "log": "/private/tmp/usagi-lesson-port-warm-iphone-final.log",
+      "sha256": "bb6afc93272501795c6a3d1d8e68ab3220da5eabec676d6c62b632c2bf28bd65",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6ddf3ed17d644eb5bc64b0366f72da3f.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "test": "ReviewFlowTests.testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics",
+          "result": "passed"
+        }
+      ]
+    },
+    "warmIpad": {
+      "log": "/private/tmp/usagi-lesson-port-warm-ipad-final.log",
+      "sha256": "83e72b61b419400480f8a25db062c9d1d8c098cf2dba7cac766842a328f53a0e",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-19040cbca7134d2ca7359f245b94b8de.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "test": "ReviewFlowTests.testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics",
+          "result": "passed"
+        }
+      ]
+    }
+  },
+  "earlierRuns": {
+    "initial": {
+      "log": "/private/tmp/usagi-lesson-port-iphone.log",
+      "sha256": "ef8f955f7daa30c38bbef91427e5fe4be88b4a0e97af623e52d496935fe00534",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8bd2f1ae6eee478fa7613a906584e213.xcresult",
+      "summary": null,
+      "cases": [
+        {
+          "test": "ReviewFlowTests.testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz",
+          "result": "failed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonPickerPreservesSelectionAndUnfinishedQuizDraft",
+          "result": "failed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson",
+          "result": "failed"
+        }
+      ]
+    },
+    "correctedFour": {
+      "log": "/private/tmp/usagi-lesson-port-iphone-corrected.log",
+      "sha256": "324c08a0d9ce44f795844b82fa59d0922ba255f4f1745bce7ce1a0d3c9016bed",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0abc68ce60f64d3499b53f6f763aa049.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "test": "ReviewFlowTests.testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonPickerPreservesSelectionAndUnfinishedQuizDraft",
+          "result": "passed"
+        },
+        {
+          "test": "ReviewFlowTests.testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson",
+          "result": "passed"
+        }
+      ]
+    },
+    "warmRoutesOnly": {
+      "log": "/private/tmp/usagi-lesson-port-warm-iphone.log",
+      "sha256": "bb1f99f977d1e9f63f0f4e83b982f59fcc22548971c946f42ae398d00955f91a",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-859d395fbe864dd08f120d7a150001ed.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0
+      },
+      "cases": [
+        {
+          "test": "ReviewFlowTests.testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics",
+          "result": "passed"
+        }
+      ]
+    }
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-lesson-port-shared.log",
+    "sha256": "39e58ba9e600a2f27981bb527888bc71cfc2f81b7d0b0035dca271f49b53c6cd",
+    "testFunctions": 478
+  },
+  "builds": {
+    "macRelease": {
+      "log": "/private/tmp/usagi-lesson-port-mac-release.log",
+      "sha256": "621d94693bb196e4a422f3af2e2c58accbc3dddab15c4ecd2e39462909bf015b",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-945f814c62c04e22a46484c85793d9c6.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "cases": [
+
+      ]
+    },
+    "iosRelease": {
+      "log": "/private/tmp/usagi-lesson-port-ios-release.log",
+      "sha256": "1911dd8059c5df684c7fe5b7700ae515341acb2973c2cf5f3bd42bccb943d172",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-718f807024e044e297f1b9d2029954e9.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 14
+      },
+      "cases": [
+
+      ]
+    },
+    "macTests": {
+      "log": "/private/tmp/usagi-lesson-port-mac-tests.log",
+      "sha256": "e3e2985661731f2f7b1605c10b941f582e29f3b09d210b16c4907c5597360fd0",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-for-testing-f0b95e55a7d44d34b9f4778129aa0194.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "cases": [
+
+      ]
+    },
+    "macAlias": {
+      "log": "/private/tmp/usagi-lesson-port-mac-alias-build.log",
+      "sha256": "e44820dc64f8ae3c65fe223d326721b45c454c723aaeca83c87a978f4ea9c97c",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    }
+  },
+  "nativeMac": {
+    "log": "/private/tmp/usagi-lesson-port-mac-ui-workspace.log",
+    "sha256": "aefdafba3e7a7bb1d159ea971b5635c75dd0ec0346c9f24f86547cec64eb980f",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-811d6666ef894f0e983a194866704069.xcresult",
+    "summary": {
+      "result": "Failed",
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    "cases": [
+
+    ],
+    "infrastructureFailures": [
+      {
+        "failureText": "The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.)",
+        "targetName": "AppStoreScreenshots",
+        "testIdentifier": 1,
+        "testIdentifierString": "AppStoreScreenshots-Runner (99745) encountered an error",
+        "testName": "AppStoreScreenshots-Runner (99745) encountered an error"
+      }
+    ],
+    "applicationCasesExecuted": 0,
+    "resultReader": {
+      "path": "/private/tmp/usagi-lesson-port-mac-results.json",
+      "sha256": "925c3889a5579ffe286d58f7d4cffc85ba22c1a475178c0286c5839bba6b50df"
+    }
+  },
+  "macGuiPassed": false,
+  "initialMacAliasFailure": {
+    "log": "/private/tmp/usagi-lesson-port-mac-ui.log",
+    "sha256": "ac2a6770005fe2640c12cb4a4454b028c330160ce26f0a7fe21b954ef5115ba2",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-105680fcf50b4df2aeaa9d150adb08a3.xcresult",
+    "summary": null,
+    "cases": [
+
+    ]
+  },
+  "mainboardWorkflow": {
+    "repository": "/Users/pedro/Developer/projects",
+    "branch": "codex/usagi-apple-workflow",
+    "commit": "179e292d55b3d833bf02451792a5f7b4017c088a",
+    "path": "mainboard.toml",
+    "tasks": [
+      "usagi-test-mac-review-modes",
+      "usagi-test-mac-lessons",
+      "usagi-build-mac"
+    ],
+    "beforeSHA256": "7f66274b6e15648fad174386b0eab9fefbda61ab64431afd7c88892790a8cf4c",
+    "afterSHA256": "42bbd4f9a4f33ebfeb05a6ab9d7de7aba3d02b6777babaa7852bf8a2c6dc93dc",
+    "scope": "Only the previously clean manifest: three usagi Mac task rows. Project -> workspace and one shared native Mac cache; other owner changes and app gitlink left unstaged.",
+    "push": false
+  },
+  "removed": {
+    "fixtureMode": "LessonFlowFixture",
+    "mutableFixtureState": "completedLessons",
+    "duplicateTest": "NativeRootFlowTests.testNativeColdStudyLinksRouteFromTheSharedScene; equivalent six-route coverage is now in ReviewFlowTests.testShellColdReviewLessonAndSubjectLinksReturnToHome"
+  },
+  "unchangedEvidence": "Core grading/storage/synchronization, thirteen process phases, shared iOS and hosted integration tests are unchanged from 0ddf6051; those results are historical here. iOS Release retains legacy warnings. GUI/runtime diagnostics are retained in logs; no physical device or warning-free iOS claim.",
+  "formatting": {
+    "log": "/private/tmp/usagi-lesson-port-format.log",
+    "sha256": "eab2f0c8574d4066bc82998b143018eb0acea42583a0ca6cf73ebc769f0c928b",
+    "changedSwiftFiles": 8,
+    "ownerAnnotationsExcluded": true
+  },
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "pushPerformed": false,
+  "pullRequestCreated": false,
+  "remaining": [
+    "Port remaining legacy account, review/media and catalog acceptance before deleting host/controllers/writer/dependencies.",
+    "Physical Japanese IME/microphone/audio routes, signed Keychain upgrades and real OS background/notification/paired watch delivery.",
+    "Modern watch UI/branding, remaining verified exam references/statistics calibration and full API-grade free-level metadata.",
+    "Hosted CI after authorized publication; iPhone Duo remains deferred."
+  ]
+}

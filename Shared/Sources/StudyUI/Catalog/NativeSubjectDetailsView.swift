@@ -79,8 +79,10 @@ public struct NativeSubjectDetailsView: View {
               }
             }
             if details.savedMaterial?.pending == true {
-              Text("Changes saved on this device. Sync them from Saved work.").font(.caption)
-                .foregroundStyle(.secondary).padding(.horizontal)
+              Text("Changes saved on this device. They sync automatically when online.").font(
+                .caption
+              )
+              .foregroundStyle(.secondary).padding(.horizontal)
             }
             if details.unavailableRelatedCount > 0 {
               Text("Some related subjects are outside your saved catalog or content access.").font(
@@ -104,7 +106,7 @@ public struct NativeSubjectDetailsView: View {
             material: details.material ?? StudyMaterial(subjectID: subjectID),
             version: details.savedMaterial?.revision),
           visibleQuestions: SubjectDetailVisibility(visibleQuestions).editableQuestions,
-          saveMessage: "Save keeps changes on this device. Send them to WaniKani from Saved work."
+          saveMessage: "Save keeps changes on this device. They sync automatically when online."
         ) { material, version in
           do {
             try await store.saveSubjectMaterial(

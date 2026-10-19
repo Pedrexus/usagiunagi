@@ -14,6 +14,11 @@
       let defaults = UserDefaults(suiteName: suite)!
       defaults.removePersistentDomain(forName: suite)
       var preferences = ReviewPreferences()
+      if arguments.contains("--lesson-fixture") {
+        preferences.revealAnswers = false
+        preferences.sessionOptions.groupMeaningReading = true
+        preferences.sessionOptions.incorrectAnswerDelay = 0
+      }
       if arguments.contains("--anki-fixture") {
         preferences.sessionOptions.ankiMode =
           arguments.contains("--reading-anki-fixture") ? .reading : .both
@@ -205,7 +210,9 @@
           .init(
             serverID: 0,
             value: .init(
-              subjectID: subject.id, meaningNote: "A saved synthetic note.",
+              subjectID: subject.id,
+              meaningNote: ProcessInfo.processInfo.arguments.contains("--lesson-fixture")
+                ? "" : "A saved synthetic note.",
               meaningSynonyms: ["Single"]), pending: false, legacyRevision: 0)
         ]
       } else {

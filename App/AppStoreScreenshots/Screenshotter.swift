@@ -150,7 +150,6 @@ import WaniKaniAPI
   }
 
   class FakeLocalCachingClient: LocalCachingClient {
-    private var completedLessons: Set<Int64> = []
     private var editedMaterials: [Int64: StudyMaterial] =
       ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture")
       ? [3864: StudyMaterial(subjectID: 3864, meaningNote: StudyMaterial.exclusionMarker)] : [:]
@@ -537,9 +536,6 @@ import WaniKaniAPI
       if ProcessInfo.processInfo.arguments.contains("HomeEmptyFixture") {
         return (0, createComposition(0))
       }
-      if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
-        return (getAllAssignments().filter(\.isLessonStage).count, createComposition(0))
-      }
       return (
         10,
         createComposition(
@@ -585,22 +581,6 @@ import WaniKaniAPI
     override func getAllAssignments() -> [TKMAssignment] {
       if ProcessInfo.processInfo.arguments.contains("CatalogFlowFixture") {
         return catalogAssignments()
-      }
-      if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
-        return [Int64(293), 743, 3864].map { id in
-          let subject = getSubject(id: id)!
-          var assignment = TKMAssignment()
-          assignment.id = 100_000 + id
-          assignment.subjectID = id
-          assignment.subjectType = subject.subjectType
-          assignment.level = subject.level
-          assignment.srsStageNumber = completedLessons.contains(id) ? 1 : 0
-          if completedLessons.contains(id) {
-            assignment.startedAt = 100
-            assignment.availableAt = Int32.max
-          }
-          return assignment
-        }
       }
       // Distinct subjects keep the sample review count consistent with statistics.
       let feedbackFixture = ProcessInfo.processInfo.arguments.contains("ReviewFeedbackFixture")
@@ -817,9 +797,6 @@ import WaniKaniAPI
     }
 
     override func sendProgress(_ progress: [TKMProgress]) -> Promise<Void> {
-      if ProcessInfo.processInfo.arguments.contains("LessonFlowFixture") {
-        completedLessons.formUnion(progress.filter(\.isLesson).map { $0.assignment.subjectID })
-      }
       return Promise.value(())
     }
 

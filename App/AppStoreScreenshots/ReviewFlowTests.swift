@@ -169,42 +169,71 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
   }
 
+  @MainActor private func closeNativeStudy(_ app: XCUIApplication) {
+    if app.buttons["lesson.back"].exists {
+      app.buttons["lesson.back"].tap()
+    } else {
+      app.navigationBars.buttons.firstMatch.tap()
+    }
+    XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 5), app.debugDescription)
+  }
+  @MainActor private func requestNativeLink(_ route: String) throws {
+    let marker = FileManager.default.temporaryDirectory.appendingPathComponent(
+      "usagi-warm-link.json")
+    let request = ["id": UUID().uuidString, "url": "usagiunagi:///" + route]
+    try JSONSerialization.data(withJSONObject: request).write(to: marker, options: .atomic)
+    let open = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Open"]
+      .firstMatch
+    if open.waitForExistence(timeout: 5) { open.tap() }
+  }
   @MainActor func testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics() throws {
     continueAfterFailure = false
     let app = XCUIApplication()
-    addTeardownBlock { await MainActor.run { self.clearFixture(app) } }
-    for route in ["reviews", "lessons", "subject/3864"] {
+    defer { app.terminate() }
+    for route in ["reviews", "lessons", "subject/1"] {
       app.terminate()
-      app.launchArguments = [
-        "-FASTLANE_SNAPSHOT", "YES",
-        route == "lessons" ? "LessonFlowFixture" : "SingleReviewFixture",
-        "-playAudioAutomatically", "NO", "-autoSwitchKeyboard", "NO",
-      ]
+      app.launchArguments =
+        ["--review-fixture", "--light-fixture"]
+        + (route == "lessons" ? ["--lesson-fixture"] : [])
       app.launch()
-      XCTAssertTrue(app.buttons["Stats"].firstMatch.waitForExistence(timeout: 10))
-      app.buttons["Stats"].firstMatch.tap()
+      let stats = app.buttons["Stats"].firstMatch
+      XCTAssertTrue(stats.waitForExistence(timeout: 10))
+      stats.tap()
       XCTAssertTrue(app.buttons["Coverage"].waitForExistence(timeout: 5))
-      let marker = FileManager.default.temporaryDirectory.appendingPathComponent(
-        "usagi-warm-link.json")
-      let request = ["id": UUID().uuidString, "url": "usagiunagi:///" + route]
-      try JSONSerialization.data(withJSONObject: request).write(to: marker, options: .atomic)
-      let open = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Open"]
-        .firstMatch
-      if open.waitForExistence(timeout: 5) { open.tap() }
-
+      try requestNativeLink(route)
       switch route {
       case "reviews":
-        XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
-        app.buttons["review.close"].tap()
+        XCTAssertTrue(
+          app.textFields["review.answer"].waitForExistence(timeout: 10), app.debugDescription)
       case "lessons":
-        XCTAssertTrue(app.staticTexts["lesson.position"].waitForExistence(timeout: 10))
-        app.buttons["lesson.back"].tap()
+        XCTAssertTrue(
+          app.buttons["lesson.quiz"].waitForExistence(timeout: 10), app.debugDescription)
       default:
-        XCTAssertTrue(app.scrollViews["subject.scroll"].waitForExistence(timeout: 10))
-        app.buttons["subject.back"].tap()
+        XCTAssertTrue(
+          app.staticTexts["subject.characters"].waitForExistence(timeout: 10), app.debugDescription)
       }
-      XCTAssertTrue(app.buttons["Coverage"].waitForExistence(timeout: 5))
-      XCTAssertTrue(app.buttons["app.settings"].isHittable)
+      if route == "reviews" {
+        let field = app.textFields["review.answer"]
+        field.tap()
+        field.typeText("hold")
+        let draft = field.value as? String
+        XCTAssertFalse((draft ?? "").isEmpty)
+        app.buttons["review.settings"].tap()
+        XCTAssertTrue(app.buttons["reviewSettings.done"].waitForExistence(timeout: 5))
+        try requestNativeLink("subject/1")
+        XCTAssertTrue(app.buttons["reviewSettings.done"].isHittable, app.debugDescription)
+        app.buttons["reviewSettings.done"].tap()
+        XCTAssertEqual(field.value as? String, draft)
+        XCTAssertTrue(
+          app.buttons["applink.open"].waitForExistence(timeout: 5), app.debugDescription)
+        app.buttons["applink.open"].tap()
+        XCTAssertTrue(app.staticTexts["subject.characters"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertEqual(field.value as? String, draft)
+      }
+      closeNativeStudy(app)
+      XCTAssertTrue(app.buttons["Coverage"].waitForExistence(timeout: 5), app.debugDescription)
       XCTAssertFalse(app.alerts.firstMatch.exists)
     }
   }
@@ -232,28 +261,31 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testShellColdReviewLessonAndSubjectLinksReturnToHome() {
     continueAfterFailure = false
     let app = XCUIApplication()
-    defer { clearFixture(app) }
-    for route in ["reviews", "lessons", "subject/3864"] {
-      app.terminate()
-      app.launchArguments = [
-        "-FASTLANE_SNAPSHOT", "YES",
-        route == "lessons" ? "LessonFlowFixture" : "SingleReviewFixture", "-playAudioAutomatically",
-        "NO", "-autoSwitchKeyboard", "NO",
-      ]
-      app.open(URL(string: "tsurukame:///" + route)!)
-      switch route {
-      case "reviews":
-        XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
-        app.buttons["review.close"].tap()
-      case "lessons":
-        XCTAssertTrue(app.staticTexts["lesson.position"].waitForExistence(timeout: 10))
-        app.buttons["lesson.back"].tap()
-      default:
-        XCTAssertTrue(app.scrollViews["subject.scroll"].waitForExistence(timeout: 10))
-        app.buttons["subject.back"].tap()
+    defer { app.terminate() }
+    for scheme in ["usagiunagi", "tsurukame"] {
+      for route in ["reviews", "lessons", "subject/1"] {
+        app.terminate()
+        app.launchArguments =
+          ["--review-fixture", "--light-fixture"]
+          + (route == "lessons" ? ["--lesson-fixture"] : [])
+        app.open(URL(string: scheme + ":///" + route)!)
+        switch route {
+        case "reviews":
+          XCTAssertTrue(
+            app.textFields["review.answer"].waitForExistence(timeout: 15), app.debugDescription)
+        case "lessons":
+          XCTAssertTrue(
+            app.buttons["lesson.quiz"].waitForExistence(timeout: 15), app.debugDescription)
+        default:
+          XCTAssertTrue(
+            app.staticTexts["subject.characters"].waitForExistence(timeout: 15),
+            app.debugDescription)
+        }
+        closeNativeStudy(app)
+        XCTAssertTrue(
+          app.collectionViews["home.dashboard"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(app.otherElements["startup.failure"].exists)
       }
-      XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 5))
-      XCTAssertTrue(app.buttons["app.settings"].isHittable)
     }
   }
 
@@ -1347,11 +1379,7 @@ extension ReviewFlowTests {
   private func launchLessonPicker() -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = [
-      "-FASTLANE_SNAPSHOT", "YES", "LessonFlowFixture",
-      "-groupMeaningReading", "YES", "-meaningFirst", "YES", "-ankiMode", "NO",
-      "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
-      "-allowSkippingReviews", "NO", "-showAnswerImmediately", "NO",
-      "-enableCheats", "YES",
+      "--review-fixture", "--lesson-fixture", "--lesson-settings-fixture", "--light-fixture",
     ]
     app.launch()
     let choose = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose lessons"))
@@ -1375,22 +1403,22 @@ extension ReviewFlowTests {
   func testLessonPickerPreservesSelectionAndUnfinishedQuizDraft() {
     continueAfterFailure = false
     let app = launchLessonPicker()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     XCTAssertFalse(app.buttons["lesson.startSelection"].isEnabled)
-    let radical = app.buttons["lesson.select.293"]
+    let radical = app.buttons["lesson.select.10"]
     radical.tap()
     XCTAssertEqual(radical.value as? String, "Selected")
     radical.tap()
     XCTAssertEqual(radical.value as? String, "Not selected")
-    app.buttons["lesson.select.3864"].tap()
+    app.buttons["lesson.select.1"].tap()
     XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "1 selected")
-    let picker = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let picker = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     picker.name = "SwiftUI lesson picker"
     picker.lifetime = .keepAlways
     add(picker)
     app.buttons["lesson.startSelection"].tap()
     expectLessonPage("Lesson 1 of 1", in: app)
-    let teaching = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let teaching = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     teaching.name = "SwiftUI lesson navigation"
     teaching.lifetime = .keepAlways
     add(teaching)
@@ -1398,27 +1426,32 @@ extension ReviewFlowTests {
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
-    field.typeText("pers")
+    field.typeText("custom")
     app.buttons["lesson.page.0"].tap()
     expectLessonPage("Lesson 1 of 1", in: app)
     app.buttons["lesson.quiz"].tap()
     XCTAssertTrue(field.waitForExistence(timeout: 5))
-    XCTAssertEqual(field.value as? String, "pers")
-    let quiz = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    XCTAssertEqual(field.value as? String, "custom")
+    let quiz = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     quiz.name = "SwiftUI lessons retain quiz draft"
     quiz.lifetime = .keepAlways
     add(quiz)
     app.buttons["lesson.back"].tap()
-    XCTAssertTrue(app.buttons["lesson.select.3864"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["lesson.select.1"].waitForExistence(timeout: 5))
     XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "1 selected")
+    app.buttons["lesson.startSelection"].tap()
+    expectLessonPage("Lesson 1 of 1", in: app)
+    app.buttons["lesson.quiz"].tap()
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "custom")
   }
 
   @MainActor
   func testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson() {
     continueAfterFailure = false
     let app = launchLessonPicker()
-    defer { clearFixture(app) }
-    app.buttons["lesson.select.3864"].tap()
+    defer { app.terminate() }
+    app.buttons["lesson.select.1"].tap()
     app.buttons["lesson.startSelection"].tap()
     expectLessonPage("Lesson 1 of 1", in: app)
     app.buttons["lesson.quiz"].tap()
@@ -1431,21 +1464,21 @@ extension ReviewFlowTests {
     app.buttons["review.reveal"].tap()
     XCTAssertFalse(app.buttons["review.correct"].exists)
     app.buttons["review.submit"].tap()
-    let choose = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose lessons"))
-      .firstMatch
+    let saved = app.staticTexts["Lesson quiz saved"]
     for _ in 0..<4 {
-      if choose.exists { break }
+      if saved.exists { break }
       XCTAssertTrue(field.waitForExistence(timeout: 5))
-      let answer =
-        app.staticTexts["review.prompt"].label.contains("Reading") ? "watashijishin" : "personally"
       field.tap()
-      field.typeText(answer)
+      field.typeText(app.staticTexts["review.prompt"].label.contains("Reading") ? "ichi" : "one")
       app.buttons["review.submit"].tap()
     }
+    XCTAssertTrue(saved.waitForExistence(timeout: 5), app.debugDescription)
+    app.buttons["Finish session"].tap()
+    let choose = app.buttons["home.chooseLessons"]
     XCTAssertTrue(choose.waitForExistence(timeout: 5))
     choose.tap()
-    XCTAssertTrue(app.buttons["lesson.select.293"].waitForExistence(timeout: 5))
-    XCTAssertFalse(app.buttons["lesson.select.3864"].exists)
+    XCTAssertTrue(app.buttons["lesson.select.10"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["lesson.select.1"].exists)
     XCTAssertFalse(app.buttons["lesson.startSelection"].isEnabled)
   }
 
@@ -1453,8 +1486,8 @@ extension ReviewFlowTests {
   func testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz() {
     continueAfterFailure = false
     let app = launchLessonPicker()
-    defer { clearFixture(app) }
-    for id in [293, 743, 3864] { app.buttons["lesson.select.\(id)"].tap() }
+    defer { app.terminate() }
+    for id in [10, 1, 13] { app.buttons["lesson.select.\(id)"].tap() }
     app.buttons["lesson.startSelection"].tap()
     expectLessonPage("Lesson 1 of 3", in: app)
     XCTAssertEqual(app.buttons["lesson.page.0"].value as? String, "Selected")
@@ -1545,8 +1578,8 @@ extension ReviewFlowTests {
   func testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz() {
     continueAfterFailure = false
     let app = launchLessonPicker()
-    defer { clearFixture(app) }
-    app.buttons["lesson.select.3864"].tap()
+    defer { app.terminate() }
+    app.buttons["lesson.select.1"].tap()
     app.buttons["lesson.startSelection"].tap()
     expectLessonPage("Lesson 1 of 1", in: app)
     openMaterialEditor(in: app)
@@ -1556,8 +1589,7 @@ extension ReviewFlowTests {
     let addSynonym = app.buttons["material.addSynonym"]
     scrollTo(addSynonym, in: app)
     addSynonym.tap()
-    let synonym = app.descendants(matching: .any).matching(identifier: "material.synonym")
-      .firstMatch
+    let synonym = app.textFields.matching(identifier: "material.synonym").element(boundBy: 1)
     scrollTo(synonym, in: app)
     synonym.tap()
     synonym.typeText("custompersonal")
@@ -1566,7 +1598,7 @@ extension ReviewFlowTests {
     openMaterialEditor(in: app)
     XCTAssertEqual(note.value as? String, "My personal meaning note")
     XCTAssertEqual(synonym.value as? String, "custompersonal")
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "Shared SwiftUI notes and synonyms editor"
     attachment.lifetime = .keepAlways
     add(attachment)

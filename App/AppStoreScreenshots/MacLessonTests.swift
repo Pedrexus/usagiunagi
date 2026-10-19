@@ -29,7 +29,7 @@
       XCTAssertEqual(choose.label, "Choose lessons")
       choose.click()
       XCTAssertTrue(subject.waitForExistence(timeout: 5))
-      subject.click()
+      XCTAssertEqual(subject.value as? String, "Selected")
       app.buttons["lesson.startSelection"].click()
       XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
       let teaching = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())

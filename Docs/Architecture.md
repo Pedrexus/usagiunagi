@@ -26,6 +26,12 @@ Native settings now include the original timing display and iOS keyboard prefere
 
 The sections below also preserve migration decisions from earlier checkpoints. Statements describing native iOS composition as pending predate this cutover; remaining release gates are maintained in [TASKS](TASKS.md) and its current validation receipt.
 
+## Native lesson navigation acceptance
+
+The native lesson parent owns picker selection through a binding, preserving it when the teaching/quiz child leaves the hierarchy. The picker retains a local fallback only for its temporary legacy caller. A paused manual quiz exposes its existing subject selection and validates it against the frozen durable session; it cannot replace another session or credit unfinished work. Automatic batches use the page's Back control to return to the current parent tab. On iOS the enclosing navigation Back gesture is disabled while teaching/quiz paging is active, so a horizontal lesson swipe cannot pop the study route.
+
+Existing lesson/detail and cold/warm-link acceptance now use native services and the production scene. The canonical cold test covers both custom URL schemes; the warm test proves an incoming subject waits during an open review/settings sheet, then returns to its unchanged draft after explicit Open. `LessonFlowFixture` and its completion state are removed, while remaining legacy callers stay intact pending their equivalent native checks.
+
 ## Supported sign-in
 
 `StudySignInFields` supplies the same token entry, submission, errors and reactivation guidance to the standalone iOS form and native Mac account screen. `StudySignIn` owns the authentication task; closing its form cancels that operation and clears transient input. A request identity also rejects late results from noncooperative services. A cancelled parent propagates to the owned operation through Swift's cancellation handler. Native connection errors remain typed until the common UI presents them. App-owned cache synchronization may still finish for another scene; a cancelled form cannot commit credentials or switch the visible account.
