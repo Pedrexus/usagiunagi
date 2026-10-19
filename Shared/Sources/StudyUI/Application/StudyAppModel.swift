@@ -66,6 +66,7 @@ public final class StudyAppModel {
     if activeRequests == 0 { activeCredential = nil }
   }
   private func checkRequest(_ epoch: UUID) throws {
+    try Task.checkCancellation()
     guard generation == epoch else { throw CancellationError() }
   }
   public func restore() async {
@@ -126,11 +127,11 @@ public final class StudyAppModel {
       syncSummary = nil
     } catch { self.error = error.localizedDescription }
   }
-  @discardableResult public func connect(_ token: String) async -> Bool {
+  public func connect(_ token: String) async throws {
     let token = token.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !token.isEmpty else {
       error = "Enter your WaniKani API token."
-      return false
+      throw StudySignInError.message("Enter your WaniKani API token.")
     }
     let epoch = generation
     let credential = Self.credentialID(token)
@@ -154,12 +155,11 @@ public final class StudyAppModel {
         try await cache.removeSnapshot(credentialID: previous)
       }
       try checkRequest(epoch)
-      return true
     } catch {
       if generation == epoch, !(error is CancellationError) {
         self.error = error.localizedDescription
       }
-      return false
+      throw error
     }
   }
   public func refresh() async {
@@ -168,7 +168,7 @@ public final class StudyAppModel {
         error = "Connect a WaniKani account first."
         return
       }
-      await connect(token)
+      try await connect(token)
     } catch { self.error = error.localizedDescription }
   }
   /// Sending is an explicit Saved work action; ordinary refresh remains read-only.

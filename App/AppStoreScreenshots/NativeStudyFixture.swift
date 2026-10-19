@@ -43,25 +43,60 @@
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
         notice: "Synthetic review fixture · memory only · uploads disabled")
     }
-    private struct FixtureCredentials: StudyCredentialStore {
-      func load() -> String? { "fixture" }
-      func save(_ token: String) throws { throw StudyStoreError.sampleData }
-      func remove() throws { throw StudyStoreError.sampleData }
+    private final class FixtureCredentials: StudyCredentialStore {
+      private var token: String? = "fixture"
+      func load() -> String? { token }
+      func save(_ token: String) { self.token = token }
+      func remove() { token = nil }
     }
     private static var fixtureClient: WaniKaniClient {
       WaniKaniClient { request in
         guard request.httpMethod == "GET" else { throw StudyStoreError.sampleData }
+        if let token = request.value(forHTTPHeaderField: "Authorization"),
+          token == "Bearer rejected" || token == "Bearer hibernating"
+        {
+          let hibernating = token == "Bearer hibernating"
+          return (
+            try JSONSerialization.data(withJSONObject: [
+              "error": hibernating ? "Account is hibernating" : "Unauthorized"
+            ]),
+            HTTPURLResponse(
+              url: request.url!, statusCode: hibernating ? 403 : 401, httpVersion: nil,
+              headerFields: nil)!
+          )
+        }
         let json: String
         switch request.url?.lastPathComponent {
         case "user":
           json =
-            #"{"object":"user","data":{"id":"review-fixture","username":"Synthetic review fixture","level":1,"current_vacation_started_at":null}}"#
+            #"{"object":"user","data":{"id":"review-fixture","username":"Synthetic review fixture","level":1,"current_vacation_started_at":null,"profile_url":"https://www.wanikani.com/users/fixture","started_at":"2020-01-01T00:00:00Z","subscription":{"active":true,"max_level_granted":60,"period_ends_at":null}}}"#
         case "study_materials":
           json =
             #"{"object":"collection","total_count":1,"pages":{"next_url":null},"data":[{"id":201,"object":"study_material","data":{"subject_id":1,"meaning_note":"Server version of the note.","reading_note":"いち","meaning_synonyms":["Server synonym"]}}]}"#
         case "assignments":
           json =
             #"{"object":"collection","total_count":1,"pages":{"next_url":null},"data":[{"id":101,"object":"assignment","data":{"subject_id":1,"subject_type":"kanji","srs_stage":4,"available_at":"2099-01-01T00:00:00Z","started_at":"2020-01-01T00:00:00Z","unlocked_at":"2020-01-01T00:00:00Z","hidden":false}}]}"#
+        case "subjects":
+          let subject: [String: Any] = [
+            "id": 1, "object": "kanji",
+            "data": [
+              "characters": "一", "level": 1, "slug": "一",
+              "document_url": "https://www.wanikani.com/kanji/一",
+              "lesson_position": 0, "spaced_repetition_system_id": 1, "meaning_mnemonic": "One.",
+              "meanings": [["meaning": "One", "primary": true, "accepted_answer": true]],
+              "auxiliary_meanings": [],
+              "readings": [
+                ["reading": "いち", "primary": true, "accepted_answer": true, "type": "onyomi"]
+              ],
+            ],
+          ]
+          json = String(
+            decoding: try JSONSerialization.data(withJSONObject: [
+              "object": "collection", "total_count": 1,
+              "pages": ["next_url": NSNull()], "data": [subject],
+            ]), as: UTF8.self)
+        case "review_statistics", "level_progressions", "voice_actors":
+          json = #"{"object":"collection","total_count":0,"pages":{"next_url":null},"data":[]}"#
         default: throw StudyStoreError.sampleData
         }
         return (

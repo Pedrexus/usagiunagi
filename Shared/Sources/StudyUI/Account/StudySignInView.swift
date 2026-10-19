@@ -25,86 +25,76 @@ public struct StudyTokenEntry: View {
   }
 }
 
+/// Shared fields for the standalone iOS sign-in and native account form.
+/// The host cancels the owner when its entire form disappears, not when rows scroll away.
+public struct StudySignInFields: View {
+  @Bindable var model: StudySignIn
+  let submitTitle: String
+  let signedIn: (String) -> Void
+  public init(
+    model: StudySignIn, submitTitle: String = "Sign in", signedIn: @escaping (String) -> Void
+  ) {
+    self.model = model
+    self.submitTitle = submitTitle
+    self.signedIn = signedIn
+  }
+  public var body: some View {
+    Section("WaniKani account") {
+      if let email = model.forcedEmail {
+        Text("Reconnecting \(email)").foregroundStyle(.secondary).accessibilityIdentifier(
+          "login.account")
+      }
+      StudyTokenEntry(token: $model.token)
+      Button(action: submit) {
+        HStack {
+          Text(submitTitle)
+          if model.isBusy { ProgressView().accessibilityLabel("Signing in") }
+        }
+      }.buttonStyle(.borderedProminent).disabled(!model.canSubmit).accessibilityIdentifier(
+        "login.submit")
+    }.disabled(model.isBusy).onSubmit(submit)
+    if let error = model.error {
+      Section("Unable to sign in") {
+        Text(error).accessibilityIdentifier("login.error")
+        if model.isHibernating {
+          Link("Open WaniKani Website", destination: URL(string: "https://www.wanikani.com")!)
+            .accessibilityIdentifier("login.reactivate")
+        }
+      }
+    }
+    Section {
+      Link(
+        "Privacy policy",
+        destination: URL(string: "https://github.com/davidsansome/tsurukame/wiki/Privacy-Policy")!
+      )
+      .accessibilityIdentifier("login.privacy")
+    } footer: {
+      Text(
+        "Use a personal API token from WaniKani. Read access is enough to connect; sending answers and notes also requires assignment, review and study-material write permissions. This app does not request your password."
+      )
+    }
+  }
+  private func submit() {
+    Task { if let token = await model.submit() { signedIn(token) } }
+  }
+}
+
 public struct StudySignInView: View {
   let appName: String
-  @Bindable var model: StudySignIn
-  let signedIn: (StudySignInAccount) -> Void
-  @FocusState private var emailFocused: Bool
-  @FocusState private var passwordFocused: Bool
-
-  public init(appName: String, model: StudySignIn, signedIn: @escaping (StudySignInAccount) -> Void)
-  {
+  let model: StudySignIn
+  let signedIn: (String) -> Void
+  public init(appName: String, model: StudySignIn, signedIn: @escaping (String) -> Void) {
     self.appName = appName
     self.model = model
     self.signedIn = signedIn
   }
-
   public var body: some View {
     Form {
       Section {
         Text(appName).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
         Text("Sign in to your WaniKani account").foregroundStyle(.secondary)
       }
-      Section("Sign in") {
-        if model.method == .token {
-          StudyTokenEntry(token: $model.token)
-        } else {
-          TextField("Email", text: $model.email).textContentType(.username)
-            .autocorrectionDisabled().focused($emailFocused).submitLabel(.next)
-            #if os(iOS)
-              .textInputAutocapitalization(.never).keyboardType(.emailAddress)
-            #endif
-            .disabled(model.forcedEmail != nil).accessibilityIdentifier("login.email")
-            .onSubmit { passwordFocused = true }
-          SecureField("Password", text: $model.password).textContentType(.password)
-            .focused($passwordFocused).submitLabel(.go).privacySensitive()
-            .accessibilityIdentifier("login.password").onSubmit(submit)
-        }
-        Button(action: submit) {
-          HStack {
-            Text("Sign in")
-            if model.isBusy { ProgressView().accessibilityLabel("Signing in") }
-          }
-        }.buttonStyle(.borderedProminent).disabled(!model.canSubmit)
-          .accessibilityIdentifier("login.submit")
-        if model.allowsPassword {
-          Button(model.method == .token ? "Use email and password" : "Use API token") {
-            emailFocused = false
-            passwordFocused = false
-            model.switchMethod()
-          }.accessibilityIdentifier("login.method")
-        }
-      }.disabled(model.isBusy)
-      if let error = model.error {
-        Section("Unable to sign in") {
-          Text(error).accessibilityIdentifier("login.error")
-          if model.isHibernating {
-            Link("Open WaniKani Website", destination: URL(string: "https://www.wanikani.com")!)
-              .accessibilityIdentifier("login.reactivate")
-          }
-        }
-      }
-      Section {
-        Link(
-          "Privacy policy",
-          destination: URL(string: "https://github.com/davidsansome/tsurukame/wiki/Privacy-Policy")!
-        )
-        .accessibilityIdentifier("login.privacy")
-      } footer: {
-        Text(
-          model.method == .password
-            ? "Your password is used only to sign in to WaniKani and retrieve an API token. It is not saved by this app."
-            : "Use an API token with assignment, review and study-material write permissions to study and sync."
-        )
-      }
-    }.formStyle(.grouped).tint(StudyPalette.radical)
-      .onSubmit { if model.method == .token { submit() } }
-      .onDisappear { model.cancel() }
-  }
-
-  private func submit() {
-    emailFocused = false
-    passwordFocused = false
-    Task { if let account = await model.submit() { signedIn(account) } }
+      StudySignInFields(model: model, signedIn: signedIn)
+    }.formStyle(.grouped).tint(StudyPalette.radical).onDisappear { model.cancel() }
   }
 }

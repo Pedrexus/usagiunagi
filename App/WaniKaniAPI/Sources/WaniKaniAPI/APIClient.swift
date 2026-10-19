@@ -20,11 +20,7 @@ public protocol SubjectLevelGetter: AnyObject {
   func levelOf(subjectId: Int64) -> Int?
 }
 
-/**
- * Client for the WaniKani v2 API.
- * You need an API token to use this class.  Use WaniKaniWebClient to get an
- * API token from a username and password.
- */
+/// Temporary legacy WaniKani v2 client; authenticate with a personal API token.
 public class WaniKaniAPIClient: NSObject {
   public weak var subjectLevelGetter: SubjectLevelGetter!
 
@@ -565,11 +561,16 @@ public class WaniKaniAPIClient: NSObject {
   /** Fetches a single URL from the WaniKani API and returns its data. */
   private func query<Type: Codable>(_ req: URLRequest) -> Promise<Type> {
     let startTime = Date()
-    return firstly { () -> DataTaskPromise in
-      NSLog("%@ %@", req.httpMethod!, req.url!.absoluteString)
-      return session.dataTask(.promise, with: req)
+    return Promise<(Data, HTTPURLResponse)> { result in
+      session.dataTask(with: req) { data, response, error in
+        if let error { result.reject(error); return }
+        guard let data, let response = response as? HTTPURLResponse else {
+          result.reject(URLError(.badServerResponse))
+          return
+        }
+        result.fulfill((data, response))
+      }.resume()
     }.map { data, response -> Type in
-      let response = response as! HTTPURLResponse
       let endTime = Date()
 
       // Process the rate limit headers

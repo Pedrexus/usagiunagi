@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "PMKFoundation",
-        "repositoryURL": "https://github.com/PromiseKit/Foundation.git",
-        "state": {
-          "branch": null,
-          "revision": "985f17fa69ee0e5b7eb3ff9be87ffc4e05fc0927",
-          "version": "3.4.0"
-        }
-      },
-      {
         "package": "Hippolyte",
         "repositoryURL": "https://github.com/JanGorman/Hippolyte",
         "state": {

@@ -195,7 +195,6 @@ where
 }
 
 @objcMembers class Settings: NSObject {
-  @Setting("", #keyPath(userCookie)) static var userCookie: String
   @Setting("", #keyPath(userEmailAddress)) static var userEmailAddress: String
   @Setting("", #keyPath(userApiToken)) static var userApiToken: String
   @Setting(

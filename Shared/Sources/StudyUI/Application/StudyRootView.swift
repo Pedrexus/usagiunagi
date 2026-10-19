@@ -20,7 +20,7 @@ public struct StudyRootView: View {
   @State private var settingsPath: [StudyDestination] = []
   @State private var showSettings = false
   @State private var subject: StudySubject?
-  @State private var token = ""
+  @State private var signIn: StudySignIn
   @State private var incomingLinks: [StudyLink] = []
   @State private var linkMessage: String?
   @State private var openIncomingLink = false
@@ -31,6 +31,7 @@ public struct StudyRootView: View {
     model: StudyAppModel, appName: String, appearance: ColorScheme? = nil, notice: String? = nil
   ) {
     self.model = model
+    _signIn = State(initialValue: StudySignIn { try await model.connect($0) })
     self.appName = appName
     self.appearance = appearance
     self.notice = notice
@@ -105,7 +106,7 @@ public struct StudyRootView: View {
             Label(message, systemImage: "link").font(.callout).padding(8).accessibilityIdentifier(
               "applink.message")
           }
-          if let error = model.error {
+          if let error = model.error, signIn.error == nil {
             Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding(8)
           }
         }
@@ -150,7 +151,8 @@ public struct StudyRootView: View {
         settingsPath = []
         showSettings = false
         subject = nil
-        token = ""
+        signIn.cancel()
+        tab = .home
         updateHeader()
       }
       .task(
@@ -417,22 +419,13 @@ public struct StudyRootView: View {
   }
   private var account: some View {
     Form {
-      Section("WaniKani account") {
-        StudyTokenEntry(token: $token)
-        Text(
-          "Connect and refresh use reading access. Sending saved work also requires review, assignment or study-material write permissions. The token stays in this device's Keychain; saved work stays on this device."
-        )
-        .font(.caption).foregroundStyle(.secondary)
-        Button("Connect and sync") {
-          Task {
-            if await model.connect(token) {
-              token = ""
-              showSettings = false
-              tab = .home
-            }
-          }
-        }
-        .disabled(model.isSyncing || token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      StudySignInFields(model: signIn, submitTitle: "Connect and sync") { _ in
+        showSettings = false
+        tab = .home
+      }.disabled(model.isSyncing)
+      Section("On this device") {
+        Text("Your API token stays in this device's Keychain; saved work stays on this device.")
+          .font(.caption).foregroundStyle(.secondary)
         if let snapshot = model.snapshot, !snapshot.isSample {
           LabeledContent("Connected", value: snapshot.username)
           if model.contentAccessVerified {
@@ -460,7 +453,7 @@ public struct StudyRootView: View {
           "The level preview contains display readings and meanings for browsing. Demo progress is synthetic. Neither is uploaded or saved over your account cache."
         ).font(.caption).foregroundStyle(.secondary)
       }
-    }.formStyle(.grouped).navigationTitle("Account")
+    }.formStyle(.grouped).navigationTitle("Account").onDisappear { signIn.cancel() }
   }
 }
 

@@ -490,6 +490,43 @@
       XCTAssertFalse(app.buttons["home.resume"].exists)
       XCTAssertTrue(app.buttons["home.reviews"].isHittable)
     }
+    func testSharedTokenSignInErrorsHibernationAndSuccessKeepTheCurrentWindow() {
+      let app = launch(["--light-fixture"])
+      defer { app.terminate() }
+      app.buttons["app.settings"].click()
+      app.buttons["WaniKani account"].click()
+      let token = app.secureTextFields["login.token"]
+      XCTAssertTrue(token.waitForExistence(timeout: 5))
+      XCTAssertFalse(app.buttons["login.submit"].isEnabled)
+      XCTAssertFalse(app.secureTextFields["login.password"].exists)
+      for candidate in ["rejected", "hibernating", "fixture"] {
+        token.click()
+        token.typeKey("a", modifierFlags: .command)
+        token.typeText(candidate)
+        app.buttons["login.submit"].click()
+        if candidate == "fixture" {
+          XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 10))
+          XCTAssertFalse(token.exists)
+        } else {
+          let error = app.staticTexts["login.error"]
+          XCTAssertTrue(error.waitForExistence(timeout: 10), app.debugDescription)
+          XCTAssertEqual(app.links["login.reactivate"].exists, candidate == "hibernating")
+          XCTAssertTrue(app.buttons["login.submit"].isEnabled)
+        }
+      }
+      app.buttons["app.settings"].click()
+      app.buttons["WaniKani account"].click()
+      app.buttons["Disconnect and remove local snapshot"].click()
+      XCTAssertTrue(token.waitForExistence(timeout: 10))
+      XCTAssertFalse(app.buttons["login.submit"].isEnabled)
+      token.click()
+      token.typeText("fixture\n")
+      XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 10))
+      XCTAssertFalse(token.exists)
+      XCTAssertEqual(
+        app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "study-AppWindow-"))
+          .count, 1)
+    }
     func testHomeForecastAndSavedSubjectSearchOpenNativeScreens() {
       let app = launch(["--light-fixture"])
       defer { app.terminate() }

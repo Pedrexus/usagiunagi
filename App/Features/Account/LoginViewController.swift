@@ -13,11 +13,9 @@
 // limitations under the License.
 
 import Foundation
-import PromiseKit
 import StudyCore
 import StudyUI
 import SwiftUI
-import WaniKaniAPI
 
 extension Notification.Name {
   static let logout = Notification.Name("kLogoutNotification")
@@ -30,14 +28,11 @@ final class LoginViewController: UIHostingController<StudySignInView?> {
 
   init(forcedEmail: String? = nil) {
     super.init(rootView: nil)
-    let model = StudySignIn(
-      forcedEmail: forcedEmail,
-      allowsPassword: FeatureFlags.showUsernamePasswordLogin,
-      authenticate: { credentials in try await Self.authenticate(credentials) })
-    rootView = StudySignInView(appName: AppIdentity.name, model: model) { [weak self] account in
+    let model = StudySignIn(forcedEmail: forcedEmail, authenticate: Self.authenticate)
+    rootView = StudySignInView(appName: AppIdentity.name, model: model) { [weak self] token in
       guard let self else { return }
-      Settings.userApiToken = account.token
-      Settings.userEmailAddress = account.email
+      Settings.userApiToken = token
+      Settings.userEmailAddress = forcedEmail ?? ""
       self.delegate?.loginComplete()
     }
   }
@@ -49,41 +44,19 @@ final class LoginViewController: UIHostingController<StudySignInView?> {
     navigationController?.isNavigationBarHidden = true
   }
 
-  @MainActor private static func authenticate(_ credentials: StudyCredentials) async throws
-    -> StudySignInAccount
-  {
+  @MainActor private static func authenticate(_ token: String) async throws {
     #if DEBUG
       if Screenshotter.isActive,
         ["LoginFlowFixture", "ReauthFlowFixture"].contains(
           where: ProcessInfo.processInfo.arguments.contains)
       {
-        return try await LoginFixture.authenticate(credentials)
+        try await LoginFixture.authenticate(token)
+        return
       }
     #endif
-    do {
-      return try await withCheckedThrowingContinuation { continuation in
-        switch credentials {
-        case .token(let token):
-          WaniKaniAPIClient(apiToken: token, baseUrl: Settings.apiBaseUrl).user(
-            progress: Progress()
-          )
-          .done { _ in continuation.resume(returning: StudySignInAccount(token: token, email: "")) }
-          .catch { error in
-            if let api = error as? WaniKaniAPIError, api.message?.contains("hibernating") == true {
-              continuation.resume(throwing: StudySignInError.hibernating)
-            } else {
-              continuation.resume(throwing: error)
-            }
-          }
-        case .password(let email, let password):
-          WaniKaniWebClient().login(email: email, password: password)
-            .done { result in
-              continuation.resume(
-                returning: StudySignInAccount(token: result.apiToken, email: email))
-            }
-            .catch { error in continuation.resume(throwing: error) }
-        }
-      }
-    } catch WaniKaniWebClientError.accountHibernating { throw StudySignInError.hibernating }
+    guard let endpoint = URL(string: Settings.apiBaseUrl) else {
+      throw WaniKaniClient.APIError.invalidResponse
+    }
+    _ = try await WaniKaniClient(baseURL: endpoint).account(token: token)
   }
 }

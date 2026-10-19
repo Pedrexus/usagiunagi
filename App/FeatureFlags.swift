@@ -21,10 +21,6 @@ enum FeatureFlags {
   // Whether to show an extra Developer Options section at the bottom of the SubjectDetailsView.
   static let showSubjectDeveloperOptions = (config == .developerDebug)
 
-  // Whether to show a username/password login mode in addition to API
-  // key login.
-  static let showUsernamePasswordLogin = (config == .developerDebug)
-
   private enum BuildConfig {
     case developerDebug
     case testFlightRelease

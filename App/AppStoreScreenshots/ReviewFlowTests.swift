@@ -40,13 +40,11 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(warning.buttons["Manage tokens on WaniKani"].exists)
     warning.buttons["OK"].tap()
     XCTAssertTrue(app.secureTextFields["login.token"].waitForExistence(timeout: 5))
-    app.buttons["login.method"].tap()
-    let email = app.textFields["login.email"]
-    XCTAssertEqual(email.value as? String, "dummy")
-    XCTAssertFalse(email.isEnabled)
-    let password = app.secureTextFields["login.password"]
-    password.tap()
-    password.typeText("fixture-password")
+    XCTAssertTrue(app.staticTexts["login.account"].label.contains("dummy"))
+    XCTAssertFalse(app.buttons["login.method"].exists)
+    let token = app.secureTextFields["login.token"]
+    token.tap()
+    token.typeText("fixture-token")
     app.buttons["login.submit"].tap()
     XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
     XCTAssertFalse(app.alerts.firstMatch.exists)
@@ -147,29 +145,19 @@ final class ReviewFlowTests: XCTestCase {
     }
   }
 
-  @MainActor func testNativeLoginPasswordModePreservesDraftAndSubmitsFromKeyboard() {
+  @MainActor func testNativeLoginUsesOnlyTheTokenAndSubmitsFromKeyboard() {
     continueAfterFailure = false
     let app = XCUIApplication()
     app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "LoginFlowFixture"]
     app.launch()
     defer { clearFixture(app) }
-    XCTAssertTrue(app.buttons["login.method"].waitForExistence(timeout: 10))
-    app.buttons["login.method"].tap()
-    let email = app.textFields["login.email"]
-    XCTAssertTrue(email.waitForExistence(timeout: 5))
-    email.tap()
-    email.typeText("learner@example.test\n")
-    let password = app.secureTextFields["login.password"]
-    XCTAssertTrue(password.waitForExistence(timeout: 5))
-    password.typeText("fixture-password")
-    app.buttons["login.method"].tap()
-    XCTAssertTrue(app.secureTextFields["login.token"].exists)
-    app.buttons["login.method"].tap()
-    XCTAssertEqual(email.value as? String, "learner@example.test")
-    XCTAssertTrue(app.buttons["login.submit"].isEnabled)
-    attachHomeScreenshot("Native email login with preserved draft")
-    password.tap()
-    password.typeText("\n")
+    let token = app.secureTextFields["login.token"]
+    XCTAssertTrue(token.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.buttons["login.method"].exists)
+    XCTAssertFalse(app.secureTextFields["login.password"].exists)
+    XCTAssertFalse(app.textFields["login.email"].exists)
+    token.tap()
+    token.typeText("fixture-token\n")
     XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
   }
 

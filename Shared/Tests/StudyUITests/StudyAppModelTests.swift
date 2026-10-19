@@ -149,7 +149,7 @@ private actor ModelRepository {
     let server = ModelServer()
     let model = StudyAppModel(
       credentials: credentials, client: await server.client, openStore: { cache })
-    #expect(await model.connect("  fixture\n"))
+    try await model.connect("  fixture\n")
     #expect(credentials.token == "fixture" && credentials.saved == ["fixture"])
     #expect(model.snapshot?.accountID == account && model.profile?.username == "test")
     #expect(try await cache.snapshot(credentialID: credential)?.accountID == account)
@@ -165,7 +165,7 @@ private actor ModelRepository {
     let model = StudyAppModel(
       credentials: credentials, client: await server.client, openStore: { cache })
     await model.restore()
-    #expect(!(await model.connect("rejected")))
+    await #expect(throws: WaniKaniClient.APIError.self) { try await model.connect("rejected") }
     #expect(model.snapshot?.accountID == account && model.profile?.username == "test")
     #expect(credentials.token == "fixture" && credentials.saved.isEmpty)
     #expect(model.error != nil && !model.isSyncing)
@@ -181,7 +181,7 @@ private actor ModelRepository {
       credentials: credentials, client: await server.client, openStore: { cache })
     await model.restore()
     credentials.failSaves = true
-    #expect(!(await model.connect("other")))
+    await #expect(throws: CocoaError.self) { try await model.connect("other") }
     #expect(model.snapshot?.accountID == account && model.profile?.username == "test")
     #expect(credentials.token == "fixture" && credentials.saved.isEmpty)
     #expect(try await cache.snapshot(credentialID: credential)?.accountID == account)
@@ -194,7 +194,7 @@ private actor ModelRepository {
     let model = StudyAppModel(
       credentials: credentials, client: await server.client, openStore: { cache })
     await model.restore()
-    #expect(await model.connect("other"))
+    try await model.connect("other")
     #expect(model.snapshot?.accountID == "other-account" && model.profile?.username == "other")
     #expect(credentials.token == "other")
     #expect(try await cache.snapshot(credentialID: credential) == nil)
@@ -203,7 +203,7 @@ private actor ModelRepository {
     }
     #expect(try await cache.materials(accountID: account).filter(\.pending).count == 1)
     #expect(try await cache.savedWork(accountID: "other-account").isEmpty)
-    #expect(await model.connect("fixture"))
+    try await model.connect("fixture")
     #expect(model.snapshot?.accountID == account && credentials.token == "fixture")
     #expect(
       try await cache.savedWork(accountID: account).materials.first?.material.meaningNote
@@ -219,9 +219,9 @@ private actor ModelRepository {
     let model = StudyAppModel(
       credentials: credentials, client: await server.client,
       openStore: { try await repository.open() })
-    #expect(!(await model.connect("fixture")))
+    await #expect(throws: CocoaError.self) { try await model.connect("fixture") }
     #expect(model.error != nil && !model.isSyncing)
-    #expect(await model.connect("fixture"))
+    try await model.connect("fixture")
     #expect(model.snapshot?.accountID == account && model.error == nil)
     #expect(await repository.opens == 2)
   }
@@ -247,16 +247,16 @@ private actor ModelRepository {
     let model = StudyAppModel(
       credentials: MemoryCredentials(), client: await server.client,
       openStore: { cache })
-    let first = Task { await model.connect("fixture") }
+    let first = Task { try await model.connect("fixture") }
     await gate.waitForEntry()
     #expect(model.isSyncing)
     await model.restore()
     #expect(model.error == nil)
     model.loadSample()
     #expect(model.snapshot == nil)
-    #expect(!(await model.connect("other")))
+    await #expect(throws: StudyUploadError.self) { try await model.connect("other") }
     await gate.resume()
-    #expect(await first.value)
+    try await first.value
     #expect(model.snapshot?.accountID == account && !model.isSyncing)
     #expect(await server.subjectReads == 1)
   }
@@ -268,18 +268,42 @@ private actor ModelRepository {
     let credentials = MemoryCredentials()
     let model = StudyAppModel(
       credentials: credentials, client: await server.client, openStore: { cache })
-    let connection = Task { await model.connect("fixture") }
+    let connection = Task { try await model.connect("fixture") }
     await gate.waitForEntry()
     let disconnect = Task { await model.disconnect() }
     await gate.waitForCancellation()
     #expect(model.isDisconnecting && model.isSyncing)
-    #expect(!(await model.connect("other")))
+    await #expect(throws: StudyUploadError.self) { try await model.connect("other") }
     await gate.resume()
     await disconnect.value
-    #expect(!(await connection.value))
+    await #expect(throws: CancellationError.self) { try await connection.value }
     #expect(model.snapshot == nil && model.profile == nil && model.error == nil && !model.isSyncing)
     #expect(credentials.token == nil && credentials.saved.isEmpty)
     #expect(try await cache.snapshot(credentialID: credential) == nil)
+    #expect(await server.writes == 0)
+  }
+
+  @Test func closingTheSharedSignInCannotCommitNewCredentialsOrReplaceTheVisibleAccount()
+    async throws
+  {
+    let cache = try await store(pendingNote: true)
+    let credentials = MemoryCredentials("fixture")
+    let gate = StudyTaskGate()
+    let server = ModelServer(gate: gate)
+    let model = StudyAppModel(
+      credentials: credentials, client: await server.client, openStore: { cache })
+    await model.restore()
+    let signIn = StudySignIn { try await model.connect($0) }
+    signIn.token = "other"
+    let attempt = Task { await signIn.submit() }
+    await gate.waitForEntry()
+    signIn.cancel()
+    // The cache pass is app-owned and may finish for another scene; this form owns no credential commit.
+    await gate.resume()
+    #expect(await attempt.value == nil)
+    #expect(credentials.token == "fixture" && credentials.saved.isEmpty)
+    #expect(model.snapshot?.accountID == account && model.error == nil && !model.isSyncing)
+    #expect(try await cache.savedWork(accountID: account).materials.count == 1)
     #expect(await server.writes == 0)
   }
 
