@@ -469,10 +469,34 @@
     "Notifications/watch and physical media/speech/IME/accessibility acceptance",
     "Full-account and access-limit acceptance, calibrated predictions and sourced KanKen intermediate subsets",
     "Unpublished Mainboard/Actions evidence and store distribution; no push authorized",
-    "Sample-only XCUITest launch discrepancy remains separate from the passing normal OS release launch"
+    "Sample-only XCUITest launch discrepancy remains separate from the passing normal OS release launch",
+    "Isolate the nonfatal iOS/iPadOS notes-editor keyboard frame warning with a source/backtrace or minimal reproduction; do not suppress it or claim warning-free UI acceptance."
   ],
   "preserved_owner_edits": [
     "App/AnswerChecker.swift",
     "App/FullRefreshOverlayView.swift"
-  ]
+  ],
+  "layout_warning": {
+    "status": "open",
+    "message": "Invalid frame dimension (negative or non-finite).",
+    "affected_case": "ReviewFlowTests/testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz()",
+    "affected_platforms": [
+      "iPhone 18 Pro simulator, iOS 27",
+      "iPad Pro 11-inch (M5) simulator, iPadOS 27"
+    ],
+    "observation": "Saved app/test diagnostics place warnings at keyboard appearance/disappearance in the notes editor. Text, notes, synonyms and grading acceptance pass. The result issue has an empty source URL and no app backtrace, so an app-source or framework cause is not established.",
+    "diagnostic_files": {
+      "/private/tmp/usagi-subjects-layout-diagnostics/0_Test_iPhone 18 Pro_Diagnostics/AppStoreScreenshots-324A4A11-0AD1-4AB4-950D-FA5DC3C9CC65-Configuration-Test Scheme Action-Iteration-1/AppStoreScreenshots-E48CA4EF-3D87-423A-AD09-BE48C57F5140/StandardOutputAndStandardError.txt": "3ebae19d8a6a99a89cac5c5d1c74d8645788461bb66c991b3355753c019d05fe",
+      "/private/tmp/usagi-subjects-layout-diagnostics/0_Test_iPhone 18 Pro_Diagnostics/AppStoreScreenshots-324A4A11-0AD1-4AB4-950D-FA5DC3C9CC65-Configuration-Test Scheme Action-Iteration-1/AppStoreScreenshots-E48CA4EF-3D87-423A-AD09-BE48C57F5140/StandardOutputAndStandardError-com.davidsansome.wanikani.txt": "8ff481fc520eab001a5a183b89ec326257b74a66dc1debebdc941808e521f020"
+    },
+    "discarded_experiment": {
+      "change": "Replace the keyboard ToolbarItemGroup and Spacer with one ToolbarItem, retaining Done.",
+      "candidate_source_sha256": "c6f4dd50b67de80d8e3a692fba1bf34c3251e7bdfa6b53b5b6affae5ac0ac222",
+      "log": "/private/tmp/usagi-keyboard-phone.log",
+      "log_sha256": "656f8cc512a5035bbcc9a22bf24aad6be44c77f3f4a63465cffc6ebc97ef14c4",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-9f315080f3134e61a3bfd5a3cc427ba6.xcresult",
+      "result": "One notes/quiz test passed, but the same runtime warning remained. Exact original source restored; no speculative toolbar workaround shipped."
+    },
+    "retained_editor_sha256": "fee47ea8f3ca5d52eafd40fcc3dc7df1e952a6180df8f547964cb702d7f150f2"
+  }
 }
