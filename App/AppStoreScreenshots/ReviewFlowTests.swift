@@ -475,7 +475,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor private func launchOfflineAudio(extra: [String] = []) -> XCUIApplication {
     let app = launchSettings(extra: ["AudioFlowFixture"] + extra)
     app.buttons["settings.page.reviews"].tap()
-    let audio = app.buttons["settings.offlineAudio"]
+    let audio = app.buttons["reviewSettings.offlineAudio"]
     scrollTo(audio, in: app)
     audio.tap()
     XCTAssertTrue(app.navigationBars["Offline Audio"].waitForExistence(timeout: 5))
@@ -503,7 +503,7 @@ final class ReviewFlowTests: XCTestCase {
     screenshot.lifetime = .keepAlways
     add(screenshot)
     app.navigationBars["Offline Audio"].buttons.firstMatch.tap()
-    let audio = app.buttons["settings.offlineAudio"]
+    let audio = app.buttons["reviewSettings.offlineAudio"]
     scrollTo(audio, in: app)
     audio.tap()
     XCTAssertTrue(enabled.waitForExistence(timeout: 5))
@@ -1729,33 +1729,35 @@ extension ReviewFlowTests {
     XCTAssertTrue(limit.waitForExistence(timeout: 5))
     limit.tap()
     app.buttons["10 reviews"].tap()
-    setSettingsSwitch(app.switches["settings.groupMeaningReading"], on: true, in: app)
-    XCTAssertTrue(app.buttons["settings.meaningFirst"].exists)
-    XCTAssertFalse(app.buttons["settings.reviewBatchSize"].exists)
-    setSettingsSwitch(app.switches["settings.groupMeaningReading"], on: false, in: app)
-    XCTAssertTrue(app.buttons["settings.reviewBatchSize"].exists)
-    XCTAssertFalse(app.buttons["settings.meaningFirst"].exists)
-    setSettingsSwitch(app.switches["settings.ankiMode"], on: true, in: app)
-    let tasks = app.buttons["settings.ankiModeTaskType"]
-    scrollTo(tasks, in: app)
-    let combined = app.switches["settings.ankiModeCombineReadingMeaning"]
+    setSettingsSwitch(app.switches["reviewSettings.groupMeaningReading"], on: true, in: app)
+    XCTAssertTrue(app.buttons["reviewSettings.meaningFirst"].exists)
+    XCTAssertFalse(app.buttons["reviewSettings.batchSize"].exists)
+    setSettingsSwitch(app.switches["reviewSettings.groupMeaningReading"], on: false, in: app)
+    XCTAssertTrue(app.buttons["reviewSettings.batchSize"].exists)
+    XCTAssertFalse(app.buttons["reviewSettings.meaningFirst"].exists)
+    let tasks = app.buttons["reviewSettings.answerMode"]
+    scrollTo(tasks, in: app, towardTop: true)
+    tasks.tap()
+    app.buttons["Anki: meaning and reading"].tap()
+    let combined = app.switches["reviewSettings.combineAnki"]
     setSettingsSwitch(combined, on: true, in: app)
     tasks.tap()
-    app.buttons["Reading only"].tap()
+    app.buttons["Anki: reading only"].tap()
     XCTAssertFalse(combined.exists)
     tasks.tap()
-    app.buttons["Both"].tap()
+    app.buttons["Anki: meaning and reading"].tap()
     XCTAssertTrue(combined.waitForExistence(timeout: 5))
     XCTAssertEqual(combined.value as? String, "0")
-    setSettingsSwitch(app.switches["settings.ankiMode"], on: false, in: app)
-    XCTAssertFalse(tasks.exists)
+    tasks.tap()
+    app.buttons["Typed answers"].tap()
+    XCTAssertFalse(combined.exists)
     let fonts = app.buttons["reviewSettings.fonts"]
-    scrollTo(fonts, in: app, towardTop: true)
+    scrollTo(fonts, in: app)
     fonts.tap()
     XCTAssertTrue(app.navigationBars["Select Fonts"].waitForExistence(timeout: 5))
     app.navigationBars["Select Fonts"].buttons.firstMatch.tap()
     XCTAssertTrue(app.navigationBars["Reviews"].waitForExistence(timeout: 5))
-    let audio = app.buttons["settings.offlineAudio"]
+    let audio = app.buttons["reviewSettings.offlineAudio"]
     scrollTo(audio, in: app)
     audio.tap()
     XCTAssertTrue(app.navigationBars["Offline Audio"].waitForExistence(timeout: 5))

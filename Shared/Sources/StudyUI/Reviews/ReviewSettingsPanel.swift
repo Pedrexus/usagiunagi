@@ -41,21 +41,27 @@ public struct ReviewSettingsPanel: View {
 
   public var body: some View {
     Form {
-      if supportsSessionOptions { StudySessionSettingsContent(options: binding.sessionOptions) }
-      ReviewSettingsContent(
-        preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
-        display: { EmptyView() }, answers: { EmptyView() },
-        audio: {
-          if let offlineAudio {
-            Button("Offline Audio", systemImage: "arrow.down.circle", action: offlineAudio)
-              .accessibilityIdentifier("reviewSettings.offlineAudio")
-          }
-        })
+      if supportsSessionOptions {
+        FullReviewSettingsContent(
+          preferences: binding, fonts: fonts, offlineAudio: offlineAudio,
+          display: { EmptyView() }, answers: { EmptyView() })
+      } else {
+
+        ReviewSettingsContent(
+          preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
+          display: { EmptyView() }, answers: { EmptyView() },
+          audio: {
+            if let offlineAudio {
+              Button("Offline Audio", systemImage: "arrow.down.circle", action: offlineAudio)
+                .accessibilityIdentifier("reviewSettings.offlineAudio")
+            }
+          })
+      }
     }
     #if os(macOS)
       .formStyle(.grouped)
     #endif
-    .navigationTitle(supportsSessionOptions ? "Review settings" : "Quick settings")
+    .navigationTitle(supportsSessionOptions ? "Reviews" : "Quick settings")
     .onChange(of: sourcePreferences) { _, value in preferences = value }
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)

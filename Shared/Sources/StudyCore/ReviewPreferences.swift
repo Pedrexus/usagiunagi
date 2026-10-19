@@ -7,6 +7,7 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
   public var appearance = Appearance.system
   public var stageIndicator = StageIndicator.name
   public var fontScale = 1.0
+  public var policy = StudyReviewPolicy()
   public var sessionOptions = StudySessionOptions()
   public var revealAnswers = true
   public var revealFullAnswer = false
@@ -21,7 +22,7 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
   public init() {}
 
   private enum CodingKeys: String, CodingKey {
-    case appearance, stageIndicator, fontScale, revealAnswers, revealFullAnswer, exactMatch
+    case policy, appearance, stageIndicator, fontScale, revealAnswers, revealFullAnswer, exactMatch
     case allowCorrections, allowSkipping, autoplayAudio, interruptBackgroundAudio
     case correctAnswerFeedback, completedItemFeedback, srsMilestoneFeedback, sessionOptions
   }
@@ -30,6 +31,8 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
   public init(from decoder: any Decoder) throws {
     self.init()
     let values = try decoder.container(keyedBy: CodingKeys.self)
+    policy =
+      try values.decodeIfPresent(StudyReviewPolicy.self, forKey: .policy)?.normalized ?? policy
     sessionOptions =
       try values.decodeIfPresent(StudySessionOptions.self, forKey: .sessionOptions)
       ?? sessionOptions
@@ -58,6 +61,14 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
 
   /// A settings window only replaces fields it changed, preserving another window's edits.
   public mutating func applyChanges(from old: Self, to new: Self) {
+    if old.policy.order != new.policy.order { policy.order = new.policy.order }
+    if old.policy.limitEnabled != new.policy.limitEnabled {
+      policy.limitEnabled = new.policy.limitEnabled
+    }
+    if old.policy.limit != new.policy.limit { policy.limit = new.policy.normalized.limit }
+    if old.policy.leechThreshold != new.policy.leechThreshold {
+      policy.leechThreshold = new.policy.normalized.leechThreshold
+    }
     if old.sessionOptions.ankiMode != new.sessionOptions.ankiMode {
       sessionOptions.ankiMode = new.sessionOptions.ankiMode
     }
@@ -71,6 +82,7 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
     where old.sessionOptions[keyPath: key] != new.sessionOptions[keyPath: key] {
       sessionOptions[keyPath: key] = new.sessionOptions[keyPath: key]
     }
+    if sessionOptions.ankiMode != .both { sessionOptions.combinedAnki = false }
     if old.appearance != new.appearance { appearance = new.appearance }
     if old.stageIndicator != new.stageIndicator { stageIndicator = new.stageIndicator }
     if old.fontScale != new.fontScale { fontScale = new.fontScale }

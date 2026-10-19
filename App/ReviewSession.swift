@@ -95,25 +95,7 @@ final class ReviewSession {
   }
 
   static func currentOptions() -> StudySessionOptions {
-    var value = StudySessionOptions()
-    if Settings.ankiMode {
-      switch Settings.ankiModeTaskType {
-      case .both: value.ankiMode = .both
-      case .meaningOnly: value.ankiMode = .meaning
-      case .readingOnly: value.ankiMode = .reading
-      }
-    }
-    value.batchSize = Settings.reviewBatchSize
-    value.groupMeaningReading = Settings.groupMeaningReading
-    value.combinedAnki =
-      Settings.ankiMode && Settings.ankiModeCombineReadingMeaning
-      && Settings
-        .ankiModeTaskType == .both
-    value.meaningFirst = Settings.meaningFirst
-    value.incorrectAnswerDelay = Settings.incorrectAnswerReturnDelay
-    value.skipKanjiReadings = Settings.skipKanjiReadings
-    value.minimizePenalty = Settings.minimizeReviewPenalty
-    return value
+    ReviewPreferencesAdapter.currentSessionOptions
   }
 
   var questionToken: StudyQuestion? { state.question }

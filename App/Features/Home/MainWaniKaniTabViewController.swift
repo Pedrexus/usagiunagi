@@ -100,6 +100,27 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
     }
   }
 
+  private func selectReviews(items: [ReviewItem]) -> [ReviewItem] {
+    let policy = ReviewPreferencesAdapter.currentPolicy
+    let hour = floor(Date().timeIntervalSince1970 / 3600) * 3600
+    var generator = SystemRandomNumberGenerator()
+    return policy.select(items, using: &generator) { item in
+      let assignment = item.assignment
+      var ratio = 0.0
+      if policy.order == .longestRelativeWait,
+        let subject = services.localCachingClient.getSubject(id: assignment.subjectID)
+      {
+        let interval = assignment.srsStage.duration(subject)
+        if interval > 0 { ratio = (hour - Double(assignment.availableAt)) / interval }
+      }
+      return StudyReviewSortKey(
+        stage: Int(assignment.srsStageNumber), level: Int(assignment.level),
+        kind: assignment.subjectType == .radical
+          ? .radical : assignment.subjectType == .kanji ? .kanji : .vocabulary,
+        availableAt: Int64(assignment.availableAt), relativeWait: ratio)
+    }
+  }
+
   // MARK: - UIViewController
 
   override func prepare(for segue: UIStoryboardSegue, sender _: Any?) {
@@ -111,13 +132,9 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
       var items: [ReviewItem]
       switch route {
       case .startReviews:
-        items = sortReviewItems(
+        items = selectReviews(
           items: ReviewItem.readyForReview(
-            assignments: client.getNonExcludedAssignments(), localCachingClient: client),
-          services: services)
-        if Settings.reviewItemsLimitEnabled {
-          items = Array(items.prefix(Int(Settings.reviewItemsLimit)))
-        }
+            assignments: client.getNonExcludedAssignments(), localCachingClient: client))
       case .startRecentMistakeReviews:
         items = ReviewItem.readyForRecentReview(
           assignments: client.getAllRecentMistakeAssignments(), localCachingClient: client)

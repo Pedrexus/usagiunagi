@@ -1,12 +1,20 @@
 import StudyCore
 import SwiftUI
 
-/// Queue choices are captured when a session starts; paused work keeps its saved choices.
+/// The same session controls on the native and legacy hosts.
 struct StudySessionSettingsContent: View {
   @Binding var options: StudySessionOptions
   var body: some View {
     Section {
-      Picker("Answer mode", selection: $options.ankiMode) {
+      Picker(
+        "Answer mode",
+        selection: Binding(
+          get: { options.ankiMode },
+          set: {
+            options.ankiMode = $0
+            options.combinedAnki = false
+          })
+      ) {
         Text("Typed answers").tag(StudySessionOptions.AnkiMode.off)
         Text("Anki: meaning only").tag(StudySessionOptions.AnkiMode.meaning)
         Text("Anki: reading only").tag(StudySessionOptions.AnkiMode.reading)
@@ -41,7 +49,7 @@ struct StudySessionSettingsContent: View {
       Text("New study sessions")
     } footer: {
       Text(
-        "These choices apply to new review and lesson sessions. Paused sessions keep their saved choices. Skipping kanji readings completes kanji after the meaning answer."
+        "Choose how meaning and reading questions are presented. Skipping kanji readings completes kanji after the meaning answer."
       )
     }
   }

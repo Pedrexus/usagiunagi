@@ -132,27 +132,7 @@ public enum SRSStage: Int, CustomStringConvertible, Comparable, Strideable {
   public static let maxDuration: TimeInterval = 10_364_400
 
   public func duration(_ subject: TKMSubject) -> TimeInterval {
-    // From https://docs.api.wanikani.com/20170710/#spaced-repetition-systems
-    switch self {
-    case .apprentice1:
-      return subject.isAccelerated ? 7200 : 14400
-    case .apprentice2:
-      return subject.isAccelerated ? 14400 : 28800
-    case .apprentice3:
-      return subject.isAccelerated ? 28800 : 82800
-    case .apprentice4:
-      return subject.isAccelerated ? 82800 : 169_200
-    case .guru1:
-      return 601_200
-    case .guru2:
-      return 1_206_000
-    case .master:
-      return 2_588_400
-    case .enlightened:
-      return 10_364_400
-    case .unlocking, .burned:
-      return 0
-    }
+    StudySRSSystem.legacyInterval(stage: rawValue, accelerated: subject.isAccelerated)
   }
 
   public func minimumTimeUntilGuru(_ subject: TKMSubject) -> TimeInterval {

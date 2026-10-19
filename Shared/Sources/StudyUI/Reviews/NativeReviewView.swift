@@ -240,7 +240,7 @@ public struct NativeReviewView: View {
       case .reviews:
         state = try await store.openReviews(
           accountID: accountID, options: preferences.sessionOptions,
-          lessonPreferences: lessonSettings.value)
+          lessonPreferences: lessonSettings.value, policy: preferences.policy)
       case .lessons(let ids):
         state = try await store.openLessons(
           accountID: accountID, subjectIDs: ids, options: preferences.sessionOptions,
@@ -248,7 +248,7 @@ public struct NativeReviewView: View {
       case .practice(let scope):
         state = try await store.openPractice(
           accountID: accountID, scope: scope, options: preferences.sessionOptions,
-          lessonPreferences: lessonSettings.value)
+          lessonPreferences: lessonSettings.value, policy: preferences.policy)
       }
       present(state)
     }

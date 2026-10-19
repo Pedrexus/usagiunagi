@@ -26,12 +26,13 @@ extension StudyStore {
   public func homeData(
     accountID: String, now: Date = .now, calendar: Calendar = .current,
     lessonPreferences: StudyLessonPreferences = .init(),
-    subjectPreferences: SubjectDetailsPreferences = .init()
+    subjectPreferences: SubjectDetailsPreferences = .init(), policy: StudyReviewPolicy = .init()
   ) throws
     -> HomeDashboardData
   {
     let available = try availability(
-      accountID: accountID, now: now, calendar: calendar, lessonPreferences: lessonPreferences)
+      accountID: accountID, now: now, calendar: calendar,
+      leechThreshold: policy.normalized.leechThreshold, lessonPreferences: lessonPreferences)
     let snapshot = try snapshotForHome(accountID)
     var data = HomeDashboardData()
     data.date = now

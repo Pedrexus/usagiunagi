@@ -1,0 +1,355 @@
+{
+  "date": "2026-10-20",
+  "baseline": "bccb0febfd63491e84456862e43d8eec7e51e2a5",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Shared full review settings/order/cap/leech policy on existing hosts; actual typed offline SRS definitions for native relative-wait ordering; preserve archived settings and native paused/offline work. No production iOS writer/scene cutover.",
+  "validatedFiles": {
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "55203f881918f0dcca62d68f7d648971ed05245f74f09daedcca84fefb4396f6",
+    "App/Features/Home/MainWaniKaniTabViewController.swift": "e9de7ae23145b63dfbb94765faf64c70e4bf9a54668b466dce155e3086e40047",
+    "App/Features/Settings/ArchivedPreference.swift": "b560564306658f49801dbf7b19805e4a663feb4f5451fbfac6d25a76a70a3066",
+    "App/Features/Settings/LegacyPreferences.swift": "4d485dde79e999e6f0892e93413c0a46a12b1ff9e55aead252136d361f6c1a36",
+    "App/Features/Settings/ReviewSettings.swift": "4830f4c60a8449a2575350d37b7864a0f8dbd1eb7d3635b552230b7013327bba",
+    "App/LocalCachingClient.swift": "8296ea49698ae68c1f372501ec5b5fb06c3d69e0b0d816e064e388a2b2facfc3",
+    "App/ReviewSession.swift": "183d0749fd485ba9b248e814d2a18324cb057941612efda2260fd6492ecbb036",
+    "App/Settings.swift": "56b1937524e2bf5fff04d64b65f0e328cf0abcea147745cc4bb16b0e8067d440",
+    "App/Tests/ReviewPreferencesAdapterTest.swift": "2a4a2bac267f62ea41d0c4c7c93c0e46463b580dfc03d69120e7876fe608ac5a",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "5cf75a9ee6c318a36d9a6a134c53db714806cbccf8a7d50567616c3bd8d99c03",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/ProtobufExtensions.swift": "23b6c759cfc978e7d6d6f7dddb3daec53ac8fe27c71c01ef56f24e01e333b037",
+    "Docs/Architecture.md": "b10eeab5a197b78efb72b8b674c421dd964ebcb6fe7eab2ca6cb2beece1ab7ab",
+    "Docs/Development.md": "9b15bb5f6cffc0ed9e4b994aa6b7e1624b5300ba246eab22076512107cbdf2fa",
+    "Docs/History/task-checkpoints.md": "5aefc8ccbef33b543081b1310ffba9040f8cdd047059ddeb8138e59938f0f26e",
+    "Docs/TASKS.md": "75770bae0538a98544880e7f483c5c75c4f49a3897d82db7858de39f6848ffe8",
+    "Shared/Sources/StudyCore/LegacyStudyExport.swift": "9e987b7f633fc6866c98ac1e74411d47c34512dad1628c9ad682258139f91932",
+    "Shared/Sources/StudyCore/ReviewPreferences.swift": "0ebb9cc97329283362b9d3f2112ab2eb77004d02c52bafe6c3937f95a115364c",
+    "Shared/Sources/StudyCore/StudyAvailability.swift": "eb9800e13204835928a7733405970c605b3b5693535e5de59c9440e63e464a45",
+    "Shared/Sources/StudyCore/StudyDownload.swift": "70badaf71be03d30bb6f25440bd9266894298c7e13b0b9f00656ec49a5199632",
+    "Shared/Sources/StudyCore/WaniKaniClient+Download.swift": "81e618a0ddf7c9b4543f1740b8c84c8a982a842281145aa7c7f4ce852e45dd77",
+    "Shared/Sources/StudyPersistence/StudyStore+Home.swift": "72fd244e35416353d002a4aae32c1e3dbd5a3c8ac4acd034b50fc46cc4b25852",
+    "Shared/Sources/StudyPersistence/StudyStore+Refresh.swift": "50173ce0341b346f10264e8130336adbcec7997505105b8da47af9363dd411d8",
+    "Shared/Sources/StudyPersistence/StudyStore+Reviews.swift": "712cb7f8958fa61906f38e19c7206b26a287b96682fa0963df3ba7849aece98f",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "09d0f88a659c1e9b19db2d622522d32c82acdff8939ac20d02520863c5844458",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "32d516498d3b2ad8196ce1c2d75de25d33ca32735169b50ee20938669e5caf67",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsContent.swift": "9a60425d9fb9f0855bce33e8c030dec53d4417f7760ba75e7c3f270770a98128",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift": "3bdf64b4425c0158699335e6f71ec7fe9f8eaa9a5e3ff2a2e7203d67443e13c2",
+    "Shared/Sources/StudyUI/Reviews/StudySessionSettingsContent.swift": "a587efe14a8c89d1fb5e3737b2c4b27ac224ab9966c193a94864c47b439b58f0",
+    "Shared/Tests/StudyCoreTests/DownloadTests.swift": "ce6935d1fa69112bd6943b0c0df7ca9802cd956d762b26efab7cb33a3c631975",
+    "Shared/Tests/StudyTestSupport/DownloadFixture.swift": "8c2aa7ce53ca5fe788aefc954dfd24fbbbfb8743b34e7db34a31ffef6cadbf8e",
+    "Shared/Sources/StudyCore/StudyReviewPolicy.swift": "f6b0e46ed59b23dd05d13ad4b9050fcce16c0647096e7dcc37904886843b1af0",
+    "Shared/Sources/StudyCore/StudySRSSystem.swift": "e670911b9b435091171585a361109d7bfb317dad43efe5e5f010746b320f8861",
+    "Shared/Tests/StudyCoreTests/StudyReviewPolicyTests.swift": "e3dc14b4839c529448ac1e9362940a5d123fd849c9b21d435fb4bb17d072ef3b",
+    "Shared/Tests/StudyPersistenceTests/ReviewPolicyTests.swift": "08225243a2234a8f7243bd34af27101c129e00188f75eb8b2dadc33a82d743fc"
+  },
+  "deletedFiles": {
+    "App/ReviewUtils.swift": "2622377b72b18db5e2ccfd70adb46df5139553762ecff58681f19ff213cd0194"
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30267,
+    "after": 30521,
+    "changed": [
+      {
+        "path": "App/Features/Home/MainWaniKaniTabViewController.swift",
+        "before": 278,
+        "after": 295
+      },
+      {
+        "path": "App/Features/Settings/ArchivedPreference.swift",
+        "before": 65,
+        "after": 55
+      },
+      {
+        "path": "App/Features/Settings/LegacyPreferences.swift",
+        "before": 187,
+        "after": 268
+      },
+      {
+        "path": "App/Features/Settings/ReviewSettings.swift",
+        "before": 128,
+        "after": 56
+      },
+      {
+        "path": "App/LocalCachingClient.swift",
+        "before": 1647,
+        "after": 1644
+      },
+      {
+        "path": "App/ReviewSession.swift",
+        "before": 215,
+        "after": 197
+      },
+      {
+        "path": "App/ReviewUtils.swift",
+        "before": 116,
+        "after": 0
+      },
+      {
+        "path": "App/Settings.swift",
+        "before": 296,
+        "after": 285
+      },
+      {
+        "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/ProtobufExtensions.swift",
+        "before": 428,
+        "after": 408
+      },
+      {
+        "path": "Shared/Sources/StudyCore/LegacyStudyExport.swift",
+        "before": 61,
+        "after": 83
+      },
+      {
+        "path": "Shared/Sources/StudyCore/ReviewPreferences.swift",
+        "before": 81,
+        "after": 93
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyAvailability.swift",
+        "before": 209,
+        "after": 207
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyDownload.swift",
+        "before": 31,
+        "after": 43
+      },
+      {
+        "path": "Shared/Sources/StudyCore/WaniKaniClient+Download.swift",
+        "before": 272,
+        "after": 322
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Home.swift",
+        "before": 94,
+        "after": 95
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Refresh.swift",
+        "before": 222,
+        "after": 232
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Reviews.swift",
+        "before": 447,
+        "after": 463
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift",
+        "before": 250,
+        "after": 253
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/ReviewSettingsContent.swift",
+        "before": 84,
+        "after": 155
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift",
+        "before": 71,
+        "after": 77
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/StudySessionSettingsContent.swift",
+        "before": 48,
+        "after": 56
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyReviewPolicy.swift",
+        "before": 0,
+        "after": 111
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudySRSSystem.swift",
+        "before": 0,
+        "after": 86
+      }
+    ]
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-review-shared.log",
+    "sha256": "7411b525e0346636de1dab1d54f01644d79804d7b225cb0563fa267b68205188",
+    "testFunctions": 434,
+    "byModule": {
+      "core": 209,
+      "persistence": 166,
+      "speech": 7,
+      "ui": 52
+    }
+  },
+  "sharedIOS": {
+    "log": "/private/tmp/usagi-review-shared-ios.log",
+    "sha256": "ede8ca376c30d664f7d94b5fb921f6a15b8bdd5e0ff8dcfd041ea9d13d009134",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8a3bce93b18048c688135dde0b62eb2e.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 434,
+      "passedTests": 434,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "hostedIOS": {
+    "log": "/private/tmp/usagi-review-app-final.log",
+    "sha256": "d3602d3773b299a667d682403a48f711eddef6a09465caceb972f7ae10ed4463",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5e644a6158344ce8a3b3c8f18540b49e.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 95,
+      "passedTests": 95,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "phoneUI": {
+    "log": "/private/tmp/usagi-review-phone.log",
+    "sha256": "02cfecde6cda1fad3af84b841413852458dc743eecb47410fce146332f9a8e39",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-b3f778bcfa3449569e8fa369d0415501.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "padUI": {
+    "log": "/private/tmp/usagi-review-pad.log",
+    "sha256": "b5930942276e0b72a507e95cba6fd9e0829de862d69ff244338862959296dde1",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-905025c42eb24831a5dceea01d7c2709.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "testFailures": [
+
+      ],
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "iosRelease": {
+    "log": "/private/tmp/usagi-review-ios-release.log",
+    "sha256": "79256a9b60c3377d0b1426076cab66f50ed3e679332f96f114998012c716a400",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-47e457feb8b84828ad675399b549a270.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 41,
+      "errors": [
+
+      ]
+    }
+  },
+  "macRelease": {
+    "log": "/private/tmp/usagi-review-mac.log",
+    "sha256": "db15c1a4ea7bc20a8704e69dcce99b565c4d776550da3faa92f542e6bb9a6e63",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-03400a0e5f1d4870bb653a9349451f1a.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "macDebug": {
+    "log": "/private/tmp/usagi-review-mac-debug.log",
+    "sha256": "5d08050331a32cef14948d73a7b001b36fc2c4656d854941caa8e1b32354ea28",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-78e2f481cbad40a6a4eb6fad769aba22.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "watchBuild": {
+    "log": "/private/tmp/usagi-review-watch.log",
+    "sha256": "4e5d2de70718cb445baba273a0264f4a09d060c81c130ceb985f8422bbe331a5",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-08a8fd436a4a4a45b958eab295e52b74.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 41,
+      "errors": [
+
+      ]
+    }
+  },
+  "nativeMacDirect": {
+    "result": "observed",
+    "kind": "Direct app-window CUA observations in this chat, separate from XCUITest",
+    "configuration": "Debug --review-fixture -ApplePersistenceIgnoreState YES; Synthetic review fixture / memory only / simulated sync verified before every flow.",
+    "executable": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Xcode/UnifiedMac/Build/Products/Debug/Tsurukame.app/Contents/MacOS/Tsurukame",
+    "executableSHA256": "af76f9168a0aef9b0d5b22afb07d8b3154bfc47e92600d26dfc3456388465ce3",
+    "observed": [
+      "Home opened with one due review and the synthetic account label.",
+      "The common four-page settings menu opened Reviews with shared grouped sections, system typography and SF Symbol navigation.",
+      "Enabling Review items in batches revealed Batch size, initially 15; the menu exposed all nine original order choices.",
+      "Oldest available first and cap enabled persisted after closing/reopening the sheet.",
+      "Changing cap to 10 and leech threshold to 2.5 persisted after Done, return Home, and reopening Settings > Reviews; the authoritative AX values were on / 10 reviews / Oldest available first / 2.5.",
+      "Own-sheet screenshots show the blue controls and grouped dark rendering. No desktop/failure screenshot was opened.",
+      "No lesson or review was started or answered. Home retained one due review. The fixture was closed with its bound Quit action; Mainboard found no remaining Tsurukame.app process."
+    ],
+    "limits": "This is not an automated native Mac pass, full light/dark/accessibility audit, actual account acceptance or process-restart preference check. The fixture resets its defaults when launched."
+  },
+  "checks": [
+    "All nine original order/raw-value contracts; randomized ties; keys read once; scheduled cap after ordering.",
+    "Home counts every due item; practice is uncapped/shuffled; paused native review/practice keeps revision and choices.",
+    "Meaning-only leech filtering and common threshold; hidden/zero-streak exclusions.",
+    "API interval-unit normalization and malformed/missing-system rejection; custom-system ordering, cache/store reopen and old-byte decoding.",
+    "Typed legacy refresh does not erase cached systems; rejected metadata preserves saved session, account and outbox.",
+    "Renewed Swift Testing archive suite preserves original keys, live legacy session-option reads, fieldwise edits and Anki task/combined semantics.",
+    "Existing phone/iPad cases cover full settings dependencies and font/audio navigation, typed review completion and Anki reading practice."
+  ],
+  "sourceScope": "The final iOS Release and iPad builds also compile after pruning the unreferenced legacy enum-picker wrapper. No reachable implementation changed after shared/hosted/phone behavior acceptance. Mac builds do not compile that iOS-only helper.",
+  "compatibility": "One shared legacy interval table remains because protobuf subjects lack system IDs. Known-default older native caches can use it before refresh; unknown systems require metadata instead of a guessed interval. Current engine stage semantics are unchanged.",
+  "initialUIFailure": {
+    "log": "/private/tmp/usagi-review-phone-initial.log",
+    "sha256": "d5a179ec70623d7dc255a74f65335dc586cc83491f2928aa2e2751da2694fbd2",
+    "bundle": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/test-77042553624e4a268c0d3830ba84b62b.xcresult",
+    "result": "Two cases passed; settings case stopped at the shared scroll helper assertion.",
+    "resolution": "The old test scrolled upward to Fonts. In the common form Fonts is below session controls, so only that direction was corrected; no assertion was removed.",
+    "diagnosticLimit": "The initial failed custom command also lacked simctl in its effective developer environment. Final custom runs pass DEVELOPER_DIR directly to the Apple executor."
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-review-format.log",
+    "sha256": "7673c10bcbd9d2947bdbe20c0463e6d90f168edffe41a1642123592d1c393721"
+  },
+  "officialReferences": [
+    "https://docs.api.wanikani.com/20170710/#spaced-repetition-systems"
+  ],
+  "limits": [
+    "Direct Mac checks are separate from the previously failed XCUITest runner; no automated native Mac pass is claimed.",
+    "No full Mac redesign, signed-device acceptance, actual account/Keychain upgrade, native iOS scene/writer handoff, physical speech/IME/media/notification/watch delivery or calibrated exam forecast is claimed.",
+    "No real WaniKani exercises, OS permission/security changes, runtime JSON fixture, new SQL path, hosted Actions run, push, PR, Mainboard implementation or parent manifest change."
+  ],
+  "remainingLedger": "Docs/TASKS.md",
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

@@ -31,8 +31,54 @@ enum ReviewPreferencesAdapter {
       (\.srsMilestoneFeedback, Settings.$animateLevelUpPopup),
     ]
   }
+  static var currentSessionOptions: StudySessionOptions {
+    var value = StudySessionOptions()
+    if Settings.ankiMode {
+      switch Settings.ankiModeTaskType {
+      case .both: value.ankiMode = .both
+      case .meaningOnly: value.ankiMode = .meaning
+      case .readingOnly: value.ankiMode = .reading
+      }
+    }
+    value.batchSize = Settings.reviewBatchSize
+    value.groupMeaningReading = Settings.groupMeaningReading
+    value.combinedAnki =
+      Settings.ankiMode && Settings.ankiModeCombineReadingMeaning
+      && Settings
+        .ankiModeTaskType == .both
+    value.meaningFirst = Settings.meaningFirst
+    value.incorrectAnswerDelay = Settings.incorrectAnswerReturnDelay
+    value.skipKanjiReadings = Settings.skipKanjiReadings
+    value.minimizePenalty = Settings.minimizeReviewPenalty
+    return value
+  }
+  private static var sessionBooleans: [(WritableKeyPath<StudySessionOptions, Bool>, Setting<Bool>)]
+  {
+    [
+      (\.groupMeaningReading, Settings.$groupMeaningReading),
+      (\.meaningFirst, Settings.$meaningFirst),
+      (\.skipKanjiReadings, Settings.$skipKanjiReadings),
+      (\.minimizePenalty, Settings.$minimizeReviewPenalty),
+    ]
+  }
+  private static var sessionIntegers: [(WritableKeyPath<StudySessionOptions, Int>, Setting<Int>)] {
+    [
+      (\.batchSize, Settings.$reviewBatchSize),
+      (\.incorrectAnswerDelay, Settings.$incorrectAnswerReturnDelay),
+    ]
+  }
+  static var currentPolicy: StudyReviewPolicy {
+    var value = StudyReviewPolicy()
+    value.order = StudyReviewOrder(rawValue: Settings.reviewOrder.rawValue)!
+    value.limitEnabled = Settings.reviewItemsLimitEnabled
+    value.limit = Settings.reviewItemsLimit
+    value.leechThreshold = Double(Settings.leechThreshold)
+    return value.normalized
+  }
   static var current: ReviewPreferences {
     var value = ReviewPreferences()
+    value.sessionOptions = currentSessionOptions
+    value.policy = currentPolicy
     value.appearance = Settings.interfaceStyle.nativeAppearance
     switch Settings.srsLevelIndicatorStyle {
     case .none: value.stageIndicator = .none
@@ -45,7 +91,42 @@ enum ReviewPreferencesAdapter {
   }
 
   static func apply(_ value: ReviewPreferences, replacing old: ReviewPreferences) {
+    if value.policy.order != old.policy.order {
+      Settings.reviewOrder = ReviewOrder(rawValue: value.policy.order.rawValue)!
+    }
+    if value.policy.limitEnabled != old.policy.limitEnabled {
+      Settings.reviewItemsLimitEnabled = value.policy.limitEnabled
+    }
+    if value.policy.limit != old.policy.limit {
+      Settings.reviewItemsLimit = value.policy.normalized.limit
+    }
+    if value.policy.leechThreshold != old.policy.leechThreshold {
+      Settings.leechThreshold = Float(value.policy.normalized.leechThreshold)
+    }
+    let options = value.sessionOptions
+    let previous = old.sessionOptions
+    if options.ankiMode != previous.ankiMode {
+      Settings.ankiMode = options.ankiMode != .off
+      switch options.ankiMode {
+      case .both: Settings.ankiModeTaskType = .both
+      case .reading: Settings.ankiModeTaskType = .readingOnly
+      case .meaning: Settings.ankiModeTaskType = .meaningOnly
+      case .off: break  // Preserve the archived task preference while Anki is disabled.
+      }
+    }
+    if options.combinedAnki != previous.combinedAnki || options.ankiMode != previous.ankiMode {
+      Settings.ankiModeCombineReadingMeaning = options.ankiMode == .both && options.combinedAnki
+    }
+    for (path, stored) in sessionBooleans where options[keyPath: path] != previous[keyPath: path] {
+      var setting = stored
+      setting.wrappedValue = options[keyPath: path]
+    }
+    for (path, stored) in sessionIntegers where options[keyPath: path] != previous[keyPath: path] {
+      var setting = stored
+      setting.wrappedValue = options[keyPath: path]
+    }
     if value.appearance != old.appearance {
+
       Settings.interfaceStyle = InterfaceStyle(value.appearance)
     }
     if value.stageIndicator != old.stageIndicator {

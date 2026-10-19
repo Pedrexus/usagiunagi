@@ -79,6 +79,47 @@ extension WaniKaniClient {
     let completedAt: String?
     let abandonedAt: String?
   }
+  private struct SystemData: Decodable, Sendable {
+    struct Stage: Decodable, Sendable {
+      let position: Int
+      let interval: Double?
+      let intervalUnit: String?
+      func value() throws(APIError) -> StudySRSSystem.Stage {
+        guard let interval else {
+          guard intervalUnit == nil else { throw .invalidResponse }
+          return .init(position: position, interval: nil)
+        }
+        let multiplier: Double
+        switch intervalUnit {
+        case "milliseconds": multiplier = 0.001
+        case "seconds": multiplier = 1
+        case "minutes": multiplier = 60
+        case "hours": multiplier = 3600
+        case "days": multiplier = 86400
+        case "weeks": multiplier = 604800
+        default: throw .invalidResponse
+        }
+        return .init(position: position, interval: interval * multiplier)
+      }
+    }
+    let name: String
+    let unlockingStagePosition: Int
+    let startingStagePosition: Int
+    let passingStagePosition: Int
+    let burningStagePosition: Int
+    let stages: [Stage]
+  }
+  private func system(_ resource: Resource<SystemData>) throws -> StudySRSSystem {
+    let d = resource.data
+    let value = try StudySRSSystem(
+      id: resourceID(resource, kind: "spaced_repetition_system"), name: d.name,
+      unlockingStage: d.unlockingStagePosition, startingStage: d.startingStagePosition,
+      passingStage: d.passingStagePosition, burningStage: d.burningStagePosition,
+      stages: d.stages.map { try $0.value() })
+    try value.validate()
+    return value
+  }
+
   private struct VoiceData: Decodable, Sendable {
     let name: String
     let description: String
@@ -97,12 +138,20 @@ extension WaniKaniClient {
     async let statisticPages: [Resource<StatisticData>] = pages("review_statistics", token: token)
     async let levelPages: [Resource<LevelData>] = pages("level_progressions", token: token)
     async let voicePages: [Resource<VoiceData>] = pages("voice_actors", token: token)
-    let (subjects, assignments, materials, statistics, levels, voices) = try await (
-      subjectPages, assignmentPages, materialPages, statisticPages, levelPages, voicePages
+    async let systemPages: [Resource<SystemData>] = pages("spaced_repetition_systems", token: token)
+    let (subjects, assignments, materials, statistics, levels, voices, systems) = try await (
+      subjectPages, assignmentPages, materialPages, statisticPages, levelPages, voicePages,
+      systemPages
     )
     try Task.checkCancellation()
     let catalog = try subjects.map(subject)
     try uniqueIDs(catalog.map(\.id))
+    let fullSystems = try systems.map(system)
+    try uniqueIDs(fullSystems.map(\.id))
+    let systemIDs = Set(fullSystems.map(\.id))
+    guard catalog.allSatisfy({ $0.spacedRepetitionSystemID.map(systemIDs.contains) == true }) else {
+      throw APIError.invalidResponse
+    }
     let byID = Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
     let fullAssignments = try assignments.map { resource in
       var value = try assignment(resource, subjectID: resource.data.subjectId)
@@ -125,7 +174,8 @@ extension WaniKaniClient {
     ] { try uniqueIDs(ids) }
     return StudyDownload(
       accountID: user.id, profile: profile, subjects: catalog, assignments: fullAssignments,
-      materials: fullMaterials, levels: fullLevels, statistics: fullStatistics, voices: fullVoices)
+      materials: fullMaterials, levels: fullLevels, statistics: fullStatistics, voices: fullVoices,
+      systems: fullSystems)
   }
 
   private func uniqueIDs(_ ids: [Int64]) throws(APIError) {

@@ -40,6 +40,50 @@ struct DownloadTests {
   }
 
   @Test(arguments: [
+    ("milliseconds", 0.01), ("seconds", 10.0), ("minutes", 600.0), ("hours", 36000.0),
+    ("days", 864000.0), ("weeks", 6048000.0),
+  ])
+  func systemIntervalsNormalizeToSeconds(unit: String, seconds: Double) async throws {
+    let client = WaniKaniClient { request in
+      if request.url?.lastPathComponent != "spaced_repetition_systems" {
+        return try DownloadFixture.response(request)
+      }
+      var row = DownloadFixture.rows["spaced_repetition_systems"]![0]
+      var data = row["data"] as! [String: Any]
+      var stages = data["stages"] as! [[String: Any]]
+      stages[1]["interval_unit"] = unit
+      data["stages"] = stages
+      row["data"] = data
+      return try DownloadFixture.response(request, object: DownloadFixture.collection([row]))
+    }
+    let download = try await client.download(token: "fixture")
+    #expect(download.systems?.first?.stages.first { $0.position == 1 }?.interval == seconds)
+  }
+  @Test(arguments: ["missing", "duplicate", "unit", "negative", "endpoint", "position"])
+  func invalidSystemsPreventCompleteDownload(fault: String) async {
+    let client = WaniKaniClient { request in
+      if request.url?.lastPathComponent != "spaced_repetition_systems" {
+        return try DownloadFixture.response(request)
+      }
+      var rows = DownloadFixture.rows["spaced_repetition_systems"]!
+      var data = rows[0]["data"] as! [String: Any]
+      var stages = data["stages"] as! [[String: Any]]
+      if fault == "unit" { stages[1]["interval_unit"] = "months" }
+      if fault == "negative" { stages[1]["interval"] = -10 }
+      if fault == "endpoint" { stages[0]["interval_unit"] = "hours" }
+      if fault == "position" { stages[1]["position"] = 2 }
+      data["stages"] = stages
+      rows[0]["data"] = data
+      if fault == "missing" { rows = [] }
+      if fault == "duplicate" { rows.append(rows[0]) }
+      return try DownloadFixture.response(request, object: DownloadFixture.collection(rows))
+    }
+    await #expect(throws: WaniKaniClient.APIError.self) {
+      try await client.download(token: "fixture")
+    }
+  }
+
+  @Test(arguments: [
     "count", "duplicate", "orphan", "kind", "auxiliary", "reading", "date", "image",
   ])
   func malformedFullDownloadsFailWithoutPartialResults(fault: String) async {

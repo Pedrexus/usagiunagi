@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import WaniKaniAPI
 
 typealias SettingEnum = CaseIterable & Codable & CustomStringConvertible & RawRepresentable
@@ -28,19 +29,7 @@ typealias SettingEnum = CaseIterable & Codable & CustomStringConvertible & RawRe
   case oldestAvailableFirst = 6
   case longestRelativeWait = 8
 
-  var description: String {
-    switch self {
-    case .random: return "Random"
-    case .ascendingSRSStage: return "Ascending SRS stage"
-    case .descendingSRSStage: return "Descending SRS stage"
-    case .currentLevelFirst: return "Current level first"
-    case .lowestLevelFirst: return "Lowest level first"
-    case .newestAvailableFirst: return "Newest available first"
-    case .oldestAvailableFirst: return "Oldest available first"
-    case .longestRelativeWait: return "Longest relative wait"
-    case .alternatingSRSStage: return "Alternating SRS stage"
-    }
-  }
+  var description: String { StudyReviewOrder(rawValue: rawValue)!.description }
 }
 
 @objc enum InterfaceStyle: UInt, SettingEnum {

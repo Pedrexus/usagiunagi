@@ -140,14 +140,12 @@ public struct StudyAvailability: Sendable {
         guard item.passedAt != nil, item.burnedAt == nil, item.srsStage <= 8,
           let stats = statistics[item.subjectID], !stats.hidden
         else { return false }
-        let errors =
-          item.kind == .radical
-          ? stats.meaningIncorrect : max(stats.meaningIncorrect, stats.readingIncorrect)
-        let streak =
-          item.kind == .radical
-          ? stats.meaningCurrentStreak : min(stats.meaningCurrentStreak, stats.readingCurrentStreak)
-        return errors >= 0 && streak > 0
-          && Double(errors) / pow(Double(streak), 1.5) >= leechThreshold
+        var policy = StudyReviewPolicy()
+        policy.leechThreshold = leechThreshold
+        return policy.isLeech(
+          stats,
+          hasReading: item.kind != .radical && !item.isKanaOnlyVocabulary
+            && byID[item.subjectID]?.isKanaOnlyVocabulary != true)
       }
     }.sorted { $0.subjectID < $1.subjectID }
   }

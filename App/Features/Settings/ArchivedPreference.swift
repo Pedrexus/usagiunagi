@@ -53,13 +53,3 @@ struct SettingToggle: View {
     }.accessibilityIdentifier("settings.\(key)")
   }
 }
-
-struct EnumSettingPicker<Value: SettingEnum & Hashable>: View {
-  let title: String
-  @Binding var selection: Value
-  var body: some View {
-    Picker(title, selection: $selection) {
-      ForEach(Array(Value.allCases), id: \.self) { Text($0.description).tag($0) }
-    }
-  }
-}

@@ -122,7 +122,6 @@
 		9319FFE8FEE95DF84F5063AE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 46D1D93DB77B42DE86804E5F /* InfoPlist.strings */; };
 		96A3B56A248EC125F54921AB /* TKMKanaInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1BD289C0D84E0099A6BE537 /* TKMKanaInput.swift */; platformFilter = ios; };
 		9721708C2DBAF3A6001DFFED /* SubjectsExcluded.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9721708B2DBAF3A6001DFFED /* SubjectsExcluded.storyboard */; platformFilter = ios; };
-		97A120DF2D9C467100D19CAE /* ReviewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A120DE2D9C467100D19CAE /* ReviewUtils.swift */; platformFilter = ios; };
 		9B7342C437915FD7B2FBA42C /* SyncStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71D4BC28171A5694DB4ACE75 /* SyncStore.swift */; platformFilter = ios; };
 		A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27000000000000000000002 /* NotificationPreferencesTests.swift */; };
 		A27100000000000000000001 /* FontLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27100000000000000000002 /* FontLibraryTests.swift */; };
@@ -344,7 +343,6 @@
 		8393A5FBE687A9FBCE654348 /* PendingUploadStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingUploadStore.swift; sourceTree = "<group>"; };
 		86C64C7CDF56B2A1FA20A641 /* zh-Hant */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "Localizations/zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		9721708B2DBAF3A6001DFFED /* SubjectsExcluded.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = SubjectsExcluded.storyboard; sourceTree = "<group>"; };
-		97A120DE2D9C467100D19CAE /* ReviewUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewUtils.swift; sourceTree = "<group>"; };
 		9AA090A81B269F2E9AD6BD52 /* LegacyStudyWindow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LegacyStudyWindow.swift; path = Platform/LegacyStudyWindow.swift; sourceTree = "<group>"; };
 		A27000000000000000000002 /* NotificationPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NotificationPreferencesTests.swift; path = AppTests/NotificationPreferencesTests.swift; sourceTree = "<group>"; };
 		A27000000000000000000003 /* AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -553,7 +551,6 @@
 				63F7F52223D423E9006A31FB /* MainViewController.swift */,
 				63A702162C2DB97D00AB0504 /* MainWaniKaniTabViewController.swift */,
 				A27400000000000000000002 /* HomeTiming.swift */,
-				97A120DE2D9C467100D19CAE /* ReviewUtils.swift */,
 				63A5598427E433DF00E7BBCB /* NavigationController.swift */,
 				63B63FF627733ABC0098DAAD /* NotificationDispatcher.swift */,
 				63358E9927365FC70013A2AC /* OfflineAudio.swift */,
@@ -1238,7 +1235,6 @@
 				63BFA78E218EB6890058E885 /* OfflineAudioViewController.swift in Sources */,
 				63A16786253AD8D200B5BCD6 /* LocalCachingClient.swift in Sources */,
 				63C4EA7A2C267C85003D3C0B /* XCAssets+Generated.swift in Sources */,
-				97A120DF2D9C467100D19CAE /* ReviewUtils.swift in Sources */,
 				63391B592779B8BF005CDA72 /* ReviewSettings.swift in Sources */,
 				63344E8A2D291CAA002A4FED /* ReviewContainerViewController.swift in Sources */,
 				63344E8E2D291CAA002A4FED /* LegacyPreferences.swift in Sources */,

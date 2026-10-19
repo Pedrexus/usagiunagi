@@ -76,7 +76,7 @@ extension StudyStore {
   /// No network request or upload occurs here. Each window must use the returned revision.
   public func openReviews(
     accountID: String, options: StudySessionOptions = .init(), now: Date = .now,
-    lessonPreferences: StudyLessonPreferences = .init()
+    lessonPreferences: StudyLessonPreferences = .init(), policy: StudyReviewPolicy = .init()
   ) throws -> NativeReviewState {
     try requireReviewAccount(accountID)
     if let saved = try session(accountID: accountID) {
@@ -87,7 +87,8 @@ extension StudyStore {
     }
     let subjects = try catalog(accountID: accountID)
     let byID = Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) })
-    let profile = try accountState(accountID: accountID)!.profile
+    let account = try accountState(accountID: accountID)!
+    let profile = account.profile
     let due = try availability(accountID: accountID, now: now, lessonPreferences: lessonPreferences)
       .scheduled
     var selected: [CatalogAssignment] = []
@@ -99,7 +100,21 @@ extension StudyStore {
       try requireReviewContent(subject, assignment: assignment)
       selected.append(assignment)
     }
+    var generator = SystemRandomNumberGenerator()
+    let hour = floor(now.timeIntervalSince1970 / 3600) * 3600
+    selected = try policy.select(selected, using: &generator) { assignment in
+      let subject = byID[assignment.subjectID]!
+      let ratio =
+        policy.order == .longestRelativeWait
+        ? (hour - Double(assignment.availableAt ?? 0))
+          / (try StudySRSSystem.interval(
+            subject: subject, stage: assignment.srsStage, systems: account.systems)) : 0
+      return StudyReviewSortKey(
+        stage: assignment.srsStage, level: subject.level, kind: assignment.kind,
+        availableAt: assignment.availableAt ?? 0, relativeWait: ratio)
+    }
     guard !selected.isEmpty else { throw NativeReviewError.noReviews }
+
     var session = try StudySession(
       items: selected.enumerated().map { $0.element.sessionItem(id: $0.offset, isLesson: false) },
       options: nativeSessionOptions(options))
@@ -110,7 +125,7 @@ extension StudyStore {
   public func openPractice(
     accountID: String, scope: StudyPracticeScope,
     options: StudySessionOptions = .init(), now: Date = .now,
-    lessonPreferences: StudyLessonPreferences = .init()
+    lessonPreferences: StudyLessonPreferences = .init(), policy: StudyReviewPolicy = .init()
   ) throws -> NativeReviewState {
     try requireReviewAccount(accountID, practice: true)
     if let saved = try session(accountID: accountID) {
@@ -122,8 +137,9 @@ extension StudyStore {
       return state
     }
     let available = try availability(
-      accountID: accountID, now: now, lessonPreferences: lessonPreferences)
-    let selected = available.practice(scope)
+      accountID: accountID, now: now, leechThreshold: policy.normalized.leechThreshold,
+      lessonPreferences: lessonPreferences)
+    let selected = available.practice(scope).shuffled()
     guard !selected.isEmpty else { throw NativeReviewError.noPracticeItems }
     let subjects = Dictionary(uniqueKeysWithValues: available.subjects.map { ($0.id, $0) })
     for assignment in selected {

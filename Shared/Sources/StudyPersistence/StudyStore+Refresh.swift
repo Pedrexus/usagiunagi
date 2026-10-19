@@ -109,6 +109,15 @@ extension StudyStore {
         throw WaniKaniClient.APIError.invalidResponse
       }
     }
+    if let systems = download.systems {
+      guard Set(systems.map(\.id)).count == systems.count else {
+        throw WaniKaniClient.APIError.invalidResponse
+      }
+      for system in systems { try system.validate() }
+      let ids = Set(systems.map(\.id))
+      guard download.subjects.allSatisfy({ $0.spacedRepetitionSystemID.map(ids.contains) ?? true })
+      else { throw WaniKaniClient.APIError.invalidResponse }
+    }
     var visible = download.snapshot
     try transaction {
       let snapshots = try modelContext.fetch(FetchDescriptor<SnapshotRecord>())
@@ -193,6 +202,7 @@ extension StudyStore {
         pendingIDs.contains($0.subjectID) && !progressIDs.contains($0.subjectID)
       }
       var state = StudyAccountState(download: download, progress: progress)
+      state.systems = download.systems ?? stateRow?.state.systems
       state.supersededAssignments = stateRow?.state.supersededAssignments ?? []
       if let stateRow {
         stateRow.state = state
