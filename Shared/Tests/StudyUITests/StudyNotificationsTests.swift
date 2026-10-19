@@ -68,7 +68,7 @@ import UserNotifications
     let probe = NotificationProbe()
     return (StudyNotifications(preferences: preferences, client: probe.client), probe, preferences)
   }
-  private var snapshot: StudyNotificationSnapshot {
+  private var snapshot: StudyServiceSnapshot {
     .init(
       reviewDates: [Date.now.addingTimeInterval(-60), Date.now.addingTimeInterval(1800)],
       onVacation: false)
@@ -355,4 +355,76 @@ import UserNotifications
     #expect(probe.scheduled.count == 1)
     #expect(probe.scheduled.values.first?.content.body == "1 review available (1 new)")
   }
+  @Test func companionClearingIsIndependentOfNotificationPermissionsAndBlockedDelivery() async {
+    let (model, probe, _) = configured()
+    probe.authorization = .denied
+    let status = StudyTaskGate()
+    let published = StudyTaskGate()
+    probe.statusGate = status
+    var seen: [StudyCompanionSnapshot] = []
+    model.didRead = { value in
+      seen.append(.init(value))
+      if value.onVacation { Task { await published.pause() } }
+    }
+    let value = snapshot
+    let first = Task { await model.update { value } }
+    await status.waitForEntry()
+    #expect(seen.count == 1 && seen[0].reviews == 1 && probe.requests == 0)
+    let logout = Task { await model.update { .init() } }
+    await published.waitForEntry()
+    #expect(seen.count == 2 && seen.last?.reviews == 0 && seen.last?.level == 0)
+    await published.resume()
+    await status.resume()
+    await first.value
+    await logout.value
+    #expect(probe.requests == 0 && probe.badges.last == 0 && probe.scheduled.isEmpty)
+  }
+
+  @Test func aLateAccountReadNeverPublishesAfterTheNewerLogoutRead() async {
+    let (model, _, _) = configured()
+    let oldRead = StudyTaskGate()
+    let published = StudyTaskGate()
+    let value = snapshot
+    var seen: [StudyCompanionSnapshot] = []
+    model.didRead = { value in
+      seen.append(.init(value))
+      Task { await published.pause() }
+    }
+    let old = Task {
+      await model.update {
+        await oldRead.pause()
+        return value
+      }
+    }
+    await oldRead.waitForEntry()
+    let logout = Task { await model.update { .init() } }
+    await published.waitForEntry()
+    #expect(seen.count == 1 && seen[0].reviews == 0)
+    await published.resume()
+    await oldRead.resume()
+    await old.value
+    await logout.value
+    #expect(seen.count == 1 && seen[0].reviews == 0)
+  }
+
+  @Test func failedReadsDoNotPublishFabricatedCompanionProgress() async {
+    let (model, _, _) = configured()
+    var seen: [StudyCompanionSnapshot] = []
+    model.didRead = { seen.append(.init($0)) }
+    let value = snapshot
+    await model.update { value }
+    await model.update { throw NotificationProbe.Failure.expected }
+    #expect(seen.count == 1 && seen[0].reviews == 1 && model.deliveryError != nil)
+  }
+
+  @Test func permissionChecksWithoutAnAccountSourceDoNotPublishAFakeLogout() async {
+    let (model, _, _) = configured()
+    var reads = 0
+    model.didRead = { _ in reads += 1 }
+    await model.refresh()
+    #expect(reads == 0)
+    await model.update { .init() }
+    #expect(reads == 1)
+  }
+
 }

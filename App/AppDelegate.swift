@@ -46,10 +46,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         services = TKMServices(
           fontLibrary: StudyFontLibrary(
             catalog: loader, preferences: LegacyFontPreferences(), configuration: configuration),
-          audioDownloads: Screenshotter.audioFixture(), notifications: notifications)
+          audioDownloads: Screenshotter.audioFixture(), notifications: notifications,
+          companion: NotificationFixture.companion)
       } else {
         services = TKMServices(
-          audioDownloads: Screenshotter.audioFixture(), notifications: notifications)
+          audioDownloads: Screenshotter.audioFixture(), notifications: notifications,
+          companion: NotificationFixture.companion)
       }
     #else
       services = TKMServices(notifications: notifications)

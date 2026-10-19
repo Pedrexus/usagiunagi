@@ -481,7 +481,7 @@ public struct StudyRootView: View {
       guard model.snapshot?.accountID == accountID, model.snapshot?.isSample == false else {
         throw CancellationError()
       }
-      return available.notifications
+      return available.serviceSnapshot
     }
   }
   private var account: some View {

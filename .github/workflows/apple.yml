@@ -100,6 +100,12 @@ jobs:
           uv run --project .build/Mainboard --locked --no-sync mainboard apple execute Shared --scheme StudyKit-Package --action test
           --destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE,OS=27.0"
           --derived-data .build/Xcode/Shared --timeout 900
+      - name: Retained watch companion build
+        if: matrix.device == 'iPhone 18 Pro'
+        run: >-
+          uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace
+          --scheme "Tsurukame Complication" --action build --destination "generic/platform=watchOS Simulator"
+          --derived-data .build/Xcode/watchOS --setting CODE_SIGNING_ALLOWED=NO --timeout 900
       - name: Hosted iOS tests
         if: matrix.device == 'iPhone 18 Pro'
         run: >-

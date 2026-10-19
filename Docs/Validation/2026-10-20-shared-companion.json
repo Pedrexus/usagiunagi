@@ -1,0 +1,223 @@
+{
+  "date": "2026-10-20",
+  "baseline": "7c626ea20e4bd9e12be3263ddf8be47e53b8f83c",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Shared typed service/companion projection and app-owned queued delivery; live legacy iOS watch wiring; native source reuse; common protobuf level adapter; watch arithmetic fixes and retained-watch CI build. Production native iOS root/writer/background adoption is not activated.",
+  "sourceHashes": {
+    "App/AppDelegate.swift": "495bb1a4add2ba9591578c3c06015277058d368fe595ac53cc636202ba88172c",
+    "App/AppStoreScreenshots/NotificationFixture.swift": "ce4ade39b5f7f0ce71aad5ad7be1ee4429794c77f68111bb433c6661d3d78911",
+    "App/AppTests/NotificationPreferencesTests.swift": "e7536b4aea1a283346bbc06f8d7354bb2c5607d9aef23b0cfcef86b00dad1a4e",
+    "App/ComplicationExtension/ComplicationController.swift": "174bc18fd9541523649a0a538c64aac1959e6376e39f850170a1778d24bc3077",
+    "App/Features/Home/MainWaniKaniTabViewController.swift": "10a03f1908fc01bf568895975f7153b8f555cb63c0b8116ae4dab750bf8ad6d6",
+    "App/Services.swift": "f889e75c0c7047d1190bbb3e737e1c7f2b1fd72218f379ed1e12c0128bf1fcdf",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/ProtobufExtensions.swift": "2b044219ba9b685a14176de9445d9e927af414b8bdc30ee1e386b48867fc50ca",
+    "App/WatchHelper.swift": "a49eb15423d31c614df030d6a527f9f95c5650e5174fd7d465adcfbf96367bcb",
+    "Shared/Sources/StudyCore/StudyNotificationPlan.swift": "22d84eaa7d942353f9b1227a1bcfab361cd379f449d7ec5c356d47776aafc0a2",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "dd23427f1e9b6972917a54b5274a55d506a1dbdf763e62a32f7ec3ae6a14f7b4",
+    "Shared/Sources/StudyUI/Settings/StudyNotifications.swift": "63a7c49f56df4f190635a5b5549f7e38c777e51d61f11eb597eb2eadd3377db7",
+    "Shared/Tests/StudyCoreTests/StudyAvailabilityTests.swift": "54cc1f3566eaf06d8dec6eb38124bf4d8a722b788a625f4c86fbd043393861cc",
+    "Shared/Tests/StudyUITests/StudyNotificationsTests.swift": "60351e49a74dfbe02b3d98ebe8e433805e5f315424f85bed6557b44792fd181f",
+    "Shared/Sources/StudyCore/StudyServiceSnapshot.swift": "7daedf22c673ccf1f87aabb588f76de382841d616f3113cdbb080ec8e1d55dd0",
+    "Shared/Sources/StudyUI/Settings/StudyCompanionDelivery.swift": "a704614db3d336d48a02003c12102c30228bc5e0f7c763eb12166bdf00ef8b8d",
+    "Shared/Tests/StudyCoreTests/StudyCompanionSnapshotTests.swift": "d44060ab4531e11f1d7b4bf77d7c046f80cfa3a622bf5008ac0266a6548aec51",
+    "Shared/Tests/StudyUITests/StudyCompanionDeliveryTests.swift": "5bbcbd7309ae2b7769323b6c3282da5c5f76bf61f01190c26ec77a285e5ae09a"
+  },
+  "workflowHashes": {
+    ".github/workflows/apple.yml": "f3a59798a95b39eca4f63a6fa98268754d64506a771a9e6e983559fcd8c29b98"
+  },
+  "productionLines": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30119,
+    "after": 30216,
+    "changed": [
+      {
+        "path": "App/AppDelegate.swift",
+        "before": 80,
+        "after": 82
+      },
+      {
+        "path": "App/ComplicationExtension/ComplicationController.swift",
+        "before": 598,
+        "after": 641
+      },
+      {
+        "path": "App/Features/Home/MainWaniKaniTabViewController.swift",
+        "before": 345,
+        "after": 331
+      },
+      {
+        "path": "App/Services.swift",
+        "before": 72,
+        "after": 79
+      },
+      {
+        "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/ProtobufExtensions.swift",
+        "before": 412,
+        "after": 428
+      },
+      {
+        "path": "App/WatchHelper.swift",
+        "before": 201,
+        "after": 145
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyNotificationPlan.swift",
+        "before": 103,
+        "after": 84
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/StudyNotifications.swift",
+        "before": 238,
+        "after": 255
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyServiceSnapshot.swift",
+        "before": 0,
+        "after": 70
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/StudyCompanionDelivery.swift",
+        "before": 0,
+        "after": 31
+      }
+    ]
+  },
+  "lineCountMeaning": "Production Swift grows 97 physical lines (30,119 to 30,216), including touched legacy-controller formatting. WatchHelper shrinks 201 to 145 and legacy Home 345 to 331, with one common level adapter; this is not a net LOC reduction.",
+  "checks": {
+    "sharedMac": {
+      "log": "/private/tmp/usagi-companion-shared-mac-final.log",
+      "sha256": "acce4b2f2411d9923be23562662cc9dbaaa1eba67cf49d33ee559dcc17fb1e41",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 419,
+        "suiteCounts": [
+          52,
+          7,
+          162,
+          198
+        ]
+      }
+    },
+    "sharedIOS": {
+      "log": "/private/tmp/usagi-companion-shared-ios-accepted.log",
+      "sha256": "ebbaf9656707bbd15bda1af2594656fe1f9b919ac18d8a3fea7f38e08b942c2c",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 419,
+        "passedTests": 419,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-4dd92b439893418eab64500a318781a5.xcresult"
+    },
+    "hostedIOS": {
+      "log": "/private/tmp/usagi-companion-hosted-final.log",
+      "sha256": "a102edd168a54ff8b3e9b1be5a9146ab72d88b5f689656f29520e7b237788b8b",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5502bd2a58ac4af0999119aa922b3767.xcresult"
+    },
+    "phone": {
+      "log": "/private/tmp/usagi-companion-phone-ui.log",
+      "sha256": "2c3d385928a21952012c4b9b53919698b684388e8b7d641e153fda6635781781",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-f1baee923c184d5ba6cb8c08e299dff3.xcresult"
+    },
+    "tablet": {
+      "log": "/private/tmp/usagi-companion-pad-ui.log",
+      "sha256": "67fb7449285e8d51ac1af7b5de31b9d2d8b81553868b19df46fc7602a344bee7",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5e02fba6499a436aabf5725a6ee1f4c2.xcresult"
+    },
+    "nativeMac": {
+      "log": "/private/tmp/usagi-companion-mac-ui.log",
+      "sha256": "dcc5477c2890bd61b61c44aeddccee93bd58b789c992171b142e1bffb3973cfd",
+      "result": "Not accepted",
+      "reason": "The runner failed to initialize UI automation before the app launched. This is not a passing UI check or a diagnosed product defect.",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e3c47c256c96473c8eab6846144ba646.xcresult"
+    },
+    "releaseMac": {
+      "log": "/private/tmp/usagi-companion-release-mac.log",
+      "sha256": "55de7b4d765c521d21fb93c9a5fa8b3491c769e6748fc89a38984b957030d41a",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-4d40d2f8040845d39d072ecd1d5cf084.xcresult"
+    },
+    "releaseIOS": {
+      "log": "/private/tmp/usagi-companion-release-ios.log",
+      "sha256": "c71512f17ccb6a0cbda3179fafbb6130a169b48ec245a3508a0f2bd986686be1",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 87,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-2fe2c624b0384b19a9ae5dc4ed67160e.xcresult"
+    },
+    "retainedWatch": {
+      "log": "/private/tmp/usagi-companion-watch-build-accepted.log",
+      "sha256": "d4d35b8e9e79b051ad692e4fcfe8baf847d89764afdf5a50700c08278992fef4",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 46,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-9ee532d2a9824cc3b1e855ada58c6419.xcresult"
+    }
+  },
+  "invariants": [
+    "Watch transport accepts only typed projections, with all eight legacy packet fields/types preserved and the send timestamp appended at transfer.",
+    "The shared sender keeps only the latest absolute schedule while unavailable, recomputes counts/bins at activation and consumes the duplicate window only after an accepted send. Typed equality preserves changed-data and clock-rollback behavior.",
+    "Source reads are separate from system notification I/O. Denied/disabled notification choices and blocked notification status cannot delay a valid companion clear; stale reads and failed/unconfigured sources never publish fabricated new progress.",
+    "Vacation clears review forecasts while retaining known level progress; logout queues empty account data. Valid higher-level fallback preserves the existing half-level convention without a fabricated level 0.5.",
+    "Legacy Home and service projection share one protobuf level-progress initializer. Native availability supplies the same service type while retaining native visibility/access/pending/exclusion/kana rules.",
+    "The watch timeline horizon uses hourly units capped at 24 hours and empty progress rings produce a finite zero fraction. No watch UI redesign or modern widget replacement is claimed.",
+    "UI fixtures inject both notification and companion operations. No real watch session, notification prompt, app badge change or live WaniKani exercise is part of the selected UI acceptance."
+  ],
+  "validationLimits": {
+    "simulatorInterruptedRun": {
+      "log": "/private/tmp/usagi-companion-shared-ios-final.log",
+      "sha256": "bd1024d46414dc5388b0234ef130d1862fb368b6577e5b4036354f6d2348d5ca",
+      "reason": "A run overlapping hosted tests ended with a bootstrap SIGKILL and failed simctl diagnostics; an isolated rerun passed all 419. The cause is unproven; no product workaround or disabled check was introduced."
+    },
+    "nativeUIInitialFailure": {
+      "log": "/private/tmp/usagi-companion-mac-ui-initial-failure.log",
+      "sha256": "faa8d6691cfe22834c734d749db2234e054fbb0b8185919c0c767a6d888dd673"
+    },
+    "physical": "Builds and synthetic source/sender tests do not prove paired-device transfer, actual permissions, signed upgrades or physical speech/IME behavior.",
+    "legacy": "The WatchKit/ClockKit UI, character placeholder, watch branding/resources and modern widget replacement remain open. Native iOS companion/background composition and root/writer cutover still require the remaining parity work.",
+    "diagnostics": "Mac Release has zero reported warnings; iOS/watch retain legacy framework/protobuf warnings. These are incremental diagnostics, not whole-project warning-elimination evidence.",
+    "CI": "Workflow syntax and the once-per-iPhone-matrix retained-watch command are validated locally; no hosted Actions pass, tool publication, signing/store distribution, PR or push is claimed."
+  },
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "rootAndMainboard": "No parent manifest, Mainboard implementation or unrelated owner sources were edited or staged."
+}

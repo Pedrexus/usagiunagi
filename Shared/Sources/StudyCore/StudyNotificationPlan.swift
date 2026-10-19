@@ -76,25 +76,6 @@ public struct StudyNotificationPlan: Sendable {
   }
 }
 
-public struct StudyNotificationSnapshot: Sendable {
-  public var reviewDates: [Date]
-  public var onVacation: Bool
-  public init(reviewDates: [Date] = [], onVacation: Bool = true) {
-    self.reviewDates = reviewDates
-    self.onVacation = onVacation
-  }
-}
-
-extension StudyAvailability {
-  public var notifications: StudyNotificationSnapshot {
-    let known = Set(subjects.map(\.id))
-    return .init(
-      reviewDates: scheduledFuture.filter { known.contains($0.subjectID) }.compactMap {
-        $0.availableAt.map { Date(timeIntervalSince1970: Double($0)) }
-      }, onVacation: account.profile.vacationStartedAt != nil)
-  }
-}
-
 /// Ephemeral permission intent; later changes to the same option invalidate this request.
 public struct NotificationPermissionRequest: Identifiable, Sendable {
   public let id = UUID()

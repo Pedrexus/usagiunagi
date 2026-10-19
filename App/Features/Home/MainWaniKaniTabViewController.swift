@@ -44,9 +44,9 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
     let assignments = client.getAssignmentsAtUsersCurrentLevel()
     if Settings.showPreviousLevelGraph && level > 1 && !client.hasCompletedPreviousLevel() {
       data.levels.append(
-        progress(level: level - 1, assignments: client.getAssignments(level: level - 1)))
+        .init(number: level - 1, legacyAssignments: client.getAssignments(level: level - 1)))
     }
-    data.levels.append(progress(level: level, assignments: assignments))
+    data.levels.append(.init(number: level, legacyAssignments: assignments))
     if !data.onVacation
       && assignments.contains(where: { $0.hasSubjectType && $0.subjectType == .kanji })
     {
@@ -74,20 +74,6 @@ final class MainWaniKaniTabViewController: UIHostingController<HomeDashboardView
     rootView = HomeDashboardView(
       data: data, action: { [weak self] in self?.perform($0) },
       refresh: { [weak self] in self?.delegate?.didPullToRefresh() })
-  }
-  private func progress(level: Int, assignments: [TKMAssignment]) -> HomeDashboardData.Level {
-    let kinds: [(TKMSubject.TypeEnum, SubjectKind)] = [
-      (.radical, .radical), (.kanji, .kanji), (.vocabulary, .vocabulary),
-    ]
-    return .init(
-      number: level,
-      progress: kinds.map { type, kind in
-        StudyLevelProgress(
-          kind: kind,
-          stages: assignments.filter { $0.hasSubjectType && $0.subjectType == type }.map {
-            ($0.hasSrsStageNumber ? Int($0.srsStageNumber) : nil, $0.hasStartedAt)
-          })
-      })
   }
   private func perform(_ action: HomeAction) {
     switch action {

@@ -23,22 +23,28 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
 
   // MARK: - Timeline Configuration
 
-  func getSupportedTimeTravelDirections(for _: CLKComplication,
-                                        withHandler handler: @escaping (CLKComplicationTimeTravelDirections)
-                                          -> Void) {
+  func getSupportedTimeTravelDirections(
+    for _: CLKComplication,
+    withHandler handler:
+      @escaping (CLKComplicationTimeTravelDirections)
+      -> Void
+  ) {
     handler([.forward])
   }
 
-  func getTimelineStartDate(for _: CLKComplication,
-                            withHandler handler: @escaping (Date?) -> Void) {
+  func getTimelineStartDate(
+    for _: CLKComplication,
+    withHandler handler: @escaping (Date?) -> Void
+  ) {
     handler(nil)
   }
 
   func getTimelineEndDate(for _: CLKComplication, withHandler handler: @escaping (Date?) -> Void) {
     if let data = DataManager.sharedInstance.latestData,
-       let dataSentAt = data[WatchHelper.keySentAt] as? EpochTimeInt,
-       let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int] {
-      let endInterval = TimeInterval((60 * 60 * 24) * hourlyCounts.count)
+      let dataSentAt = data[WatchHelper.keySentAt] as? EpochTimeInt,
+      let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int]
+    {
+      let endInterval = TimeInterval(60 * 60 * min(24, hourlyCounts.count))
       let endDate = Date(timeIntervalSince1970: TimeInterval(dataSentAt))
         .addingTimeInterval(endInterval)
       handler(endDate)
@@ -47,24 +53,31 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
   }
 
-  func getPrivacyBehavior(for _: CLKComplication,
-                          withHandler handler: @escaping (CLKComplicationPrivacyBehavior) -> Void) {
+  func getPrivacyBehavior(
+    for _: CLKComplication,
+    withHandler handler: @escaping (CLKComplicationPrivacyBehavior) -> Void
+  ) {
     handler(.showOnLockScreen)
   }
 
   // MARK: - Timeline Population
 
-  func getCurrentTimelineEntry(for complication: CLKComplication,
-                               withHandler handler: @escaping (CLKComplicationTimelineEntry?)
-                                 -> Void) {
+  func getCurrentTimelineEntry(
+    for complication: CLKComplication,
+    withHandler handler:
+      @escaping (CLKComplicationTimelineEntry?)
+      -> Void
+  ) {
     if DataManager.sharedInstance.dataIsStale() {
       handler(staleTimelineEntry(complication: complication))
       return
     }
 
-    if let template = templateFor(complication,
-                                  userData: DataManager.sharedInstance.latestData,
-                                  dataSource: DataManager.sharedInstance.dataSource) {
+    if let template = templateFor(
+      complication,
+      userData: DataManager.sharedInstance.latestData,
+      dataSource: DataManager.sharedInstance.dataSource)
+    {
       let date = Date()
       let entry = CLKComplicationTimelineEntry(date: date, complicationTemplate: template)
       handler(entry)
@@ -73,20 +86,27 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
   }
 
-  func getTimelineEntries(for _: CLKComplication, before _: Date, limit _: Int,
-                          withHandler handler: @escaping ([CLKComplicationTimelineEntry]?)
-                            -> Void) {
+  func getTimelineEntries(
+    for _: CLKComplication, before _: Date, limit _: Int,
+    withHandler handler:
+      @escaping ([CLKComplicationTimelineEntry]?)
+      -> Void
+  ) {
     // Don't provide any timeline entries in the past
     handler(nil)
   }
 
-  func getTimelineEntries(for complication: CLKComplication, after: Date, limit _: Int,
-                          withHandler handler: @escaping ([CLKComplicationTimelineEntry]?)
-                            -> Void) {
+  func getTimelineEntries(
+    for complication: CLKComplication, after: Date, limit _: Int,
+    withHandler handler:
+      @escaping ([CLKComplicationTimelineEntry]?)
+      -> Void
+  ) {
     if DataManager.sharedInstance.dataSource == .ReviewCounts,
-       let data = DataManager.sharedInstance.latestData,
-       let dataSentAt = data[WatchHelper.keySentAt] as? EpochTimeInt,
-       let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int] {
+      let data = DataManager.sharedInstance.latestData,
+      let dataSentAt = data[WatchHelper.keySentAt] as? EpochTimeInt,
+      let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int]
+    {
       var entries: [CLKComplicationTimelineEntry] = []
       for (idx, _) in hourlyCounts.enumerated() {
         if idx > 23 {
@@ -95,18 +115,24 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         let entryInterval = TimeInterval((60 * 60) * idx)
         let entryDate = Date(timeIntervalSince1970: TimeInterval(dataSentAt))
           .addingTimeInterval(entryInterval)
-        if entryDate > after, let entryTemplate = templateForReviewCount(complication,
-                                                                         userData: data,
-                                                                         offset: idx) {
+        if entryDate > after,
+          let entryTemplate = templateForReviewCount(
+            complication,
+            userData: data,
+            offset: idx)
+        {
           entries
-            .append(CLKComplicationTimelineEntry(date: entryDate,
-                                                 complicationTemplate: entryTemplate))
+            .append(
+              CLKComplicationTimelineEntry(
+                date: entryDate,
+                complicationTemplate: entryTemplate))
         }
       }
       handler(entries)
     } else if let staleDate = DataManager.sharedInstance.dataStaleAfter(),
-              after.distance(to: staleDate) >= 0,
-              let staleEntry = staleTimelineEntry(complication: complication) {
+      after.distance(to: staleDate) >= 0,
+      let staleEntry = staleTimelineEntry(complication: complication)
+    {
       handler([staleEntry])
     } else {
       handler(nil)
@@ -115,7 +141,8 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
 
   func staleTimelineEntry(complication: CLKComplication) -> CLKComplicationTimelineEntry? {
     if let staleDate = DataManager.sharedInstance.dataStaleAfter(),
-       let template = templateForStaleData(complication) {
+      let template = templateForStaleData(complication)
+    {
       return CLKComplicationTimelineEntry(date: staleDate, complicationTemplate: template)
     }
     return nil
@@ -123,33 +150,41 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
 
   // MARK: - Placeholder Templates
 
-  func getLocalizableSampleTemplate(for complication: CLKComplication,
-                                    withHandler handler: @escaping (CLKComplicationTemplate?)
-                                      -> Void) {
+  func getLocalizableSampleTemplate(
+    for complication: CLKComplication,
+    withHandler handler:
+      @escaping (CLKComplicationTemplate?)
+      -> Void
+  ) {
     // This method will be called once per supported complication, and the results will be cached
-    let template = templateFor(complication,
-                               userData: DataManager.sharedInstance.latestData ?? [
-                                 WatchHelper.keyReviewCount: 8,
-                                 WatchHelper.keyReviewNextHourCount: 3,
-                                 WatchHelper.keyReviewUpcomingHourlyCounts: [3, 0, 0, 0, 4, 0, 0, 4,
-                                                                             1, 0, 1, 1, 1, 0, 4, 4,
-                                                                             0, 0, 0, 0, 0, 0, 0,
-                                                                             0],
-                                 WatchHelper.keyLevelCurrent: 6,
-                                 WatchHelper.keyLevelTotal: 80,
-                                 WatchHelper.keyLevelLearned: 12,
-                                 WatchHelper.keyLevelHalf: false,
-                                 WatchHelper.keyNextReviewAt: Date()
-                                   .addingTimeInterval(TimeInterval(300)).timeIntervalSince1970,
-                               ],
-                               dataSource: DataManager.sharedInstance.dataSource)
+    let template = templateFor(
+      complication,
+      userData: DataManager.sharedInstance.latestData ?? [
+        WatchHelper.keyReviewCount: 8,
+        WatchHelper.keyReviewNextHourCount: 3,
+        WatchHelper.keyReviewUpcomingHourlyCounts: [
+          3, 0, 0, 0, 4, 0, 0, 4,
+          1, 0, 1, 1, 1, 0, 4, 4,
+          0, 0, 0, 0, 0, 0, 0,
+          0,
+        ],
+        WatchHelper.keyLevelCurrent: 6,
+        WatchHelper.keyLevelTotal: 80,
+        WatchHelper.keyLevelLearned: 12,
+        WatchHelper.keyLevelHalf: false,
+        WatchHelper.keyNextReviewAt: Date()
+          .addingTimeInterval(TimeInterval(300)).timeIntervalSince1970,
+      ],
+      dataSource: DataManager.sharedInstance.dataSource)
     handler(template)
   }
 
   // MARK: - Internal helpers
 
-  func templateFor(_ complication: CLKComplication, userData: UserData?,
-                   dataSource: ComplicationDataSource) -> CLKComplicationTemplate? {
+  func templateFor(
+    _ complication: CLKComplication, userData: UserData?,
+    dataSource: ComplicationDataSource
+  ) -> CLKComplicationTemplate? {
     switch dataSource {
     case .ReviewCounts:
       return templateForReviewCount(complication, userData: userData)
@@ -160,8 +195,10 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
   }
 
-  func templateForReviewCount(_ complication: CLKComplication, userData: UserData?,
-                              offset: Int? = nil) -> CLKComplicationTemplate? {
+  func templateForReviewCount(
+    _ complication: CLKComplication, userData: UserData?,
+    offset: Int? = nil
+  ) -> CLKComplicationTemplate? {
     var reviewsPending = 0
     var nextHour = 0
     var nextReview: Date?
@@ -180,8 +217,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       }
 
       if let offsetIdx = offset,
-         let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int],
-         hourlyCounts.count >= offsetIdx + 2 {
+        let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int],
+        hourlyCounts.count >= offsetIdx + 2
+      {
         reviewsPending = hourlyCounts[offsetIdx]
         nextHour = hourlyCounts[offsetIdx + 1]
         nextReview = nil
@@ -233,9 +271,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         template.row2Column2TextProvider = CLKSimpleTextProvider(text: "until next")
       }
       return template
-    case .utilitarianSmall:
-      fallthrough
-    case .utilitarianSmallFlat:
+    case .utilitarianSmall, .utilitarianSmallFlat:
       let template = CLKComplicationTemplateUtilitarianSmallFlat()
       template.textProvider = CLKTextProvider(format: "NOW %d", reviewsPending)
       return template
@@ -254,8 +290,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         template.innerTextProvider = CLKTextProvider(format: "%d next hour", nextHour)
       } else {
         template
-          .innerTextProvider = CLKTextProvider(format: "%@ until next",
-                                               relativeDateProvider(date: nextReview!))
+          .innerTextProvider = CLKTextProvider(
+            format: "%@ until next",
+            relativeDateProvider(date: nextReview!))
       }
       return template
     case .graphicCircular:
@@ -304,8 +341,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         template.body2TextProvider = CLKTextProvider(format: "%d next hour", nextHour)
       } else {
         template
-          .body2TextProvider = CLKTextProvider(format: "%@ until next",
-                                               relativeDateProvider(date: nextReview!))
+          .body2TextProvider = CLKTextProvider(
+            format: "%@ until next",
+            relativeDateProvider(date: nextReview!))
       }
 
       if let img = UIImage(named: "miniCrab") {
@@ -318,13 +356,15 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     return nil
   }
 
-  func templateForLevel(_ complication: CLKComplication,
-                        userData: UserData?) -> CLKComplicationTemplate? {
+  func templateForLevel(
+    _ complication: CLKComplication,
+    userData: UserData?
+  ) -> CLKComplicationTemplate? {
     let currentLevel = userData?[WatchHelper.keyLevelCurrent] as? Int ?? 0
     let learned = userData?[WatchHelper.keyLevelLearned] as? Int ?? 0
     let total = userData?[WatchHelper.keyLevelTotal] as? Int ?? 0
     let halfLevel = userData?[WatchHelper.keyLevelHalf] as? Bool ?? false
-    let fillFraction = Float(learned) / Float(total)
+    let fillFraction: Float = total > 0 ? min(1, max(0, Float(learned) / Float(total))) : 0
 
     let levelTextProvider: CLKTextProvider
     let levelShortTextProvider: CLKTextProvider
@@ -367,9 +407,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       template.row2Column1TextProvider = CLKTextProvider(format: "%d", total - learned)
       template.row2Column2TextProvider = CLKSimpleTextProvider(text: "remaining")
       return template
-    case .utilitarianSmall:
-      fallthrough
-    case .utilitarianSmallFlat:
+    case .utilitarianSmall, .utilitarianSmallFlat:
       let template = CLKComplicationTemplateUtilitarianSmallFlat()
       template.textProvider = levelShortTextProvider
       if let img = UIImage(named: "miniCrab") {
@@ -381,8 +419,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       let template = CLKComplicationTemplateUtilitarianLargeFlat()
       if fillFraction > 0.8 {
         template
-          .textProvider = CLKTextProvider(format: "%@ • %d left", levelTextProvider,
-                                          total - learned)
+          .textProvider = CLKTextProvider(
+            format: "%@ • %d left", levelTextProvider,
+            total - learned)
       } else {
         template
           .textProvider = CLKTextProvider(format: "%@ • %d/%d", levelTextProvider, learned, total)
@@ -392,16 +431,18 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       let template = CLKComplicationTemplateGraphicCornerGaugeText()
       template.outerTextProvider = levelShortTextProvider
       template
-        .gaugeProvider = CLKSimpleGaugeProvider(style: .fill, gaugeColor: tsurukameHighlightColor,
-                                                fillFraction: fillFraction)
+        .gaugeProvider = CLKSimpleGaugeProvider(
+          style: .fill, gaugeColor: tsurukameHighlightColor,
+          fillFraction: fillFraction)
       template.trailingTextProvider = CLKTextProvider(format: "→%d", total - learned)
       return template
     case .graphicCircular:
       let template = CLKComplicationTemplateGraphicCircularOpenGaugeRangeText()
       template.centerTextProvider = CLKTextProvider(format: "%d", learned)
       template
-        .gaugeProvider = CLKSimpleGaugeProvider(style: .ring, gaugeColor: tsurukameHighlightColor,
-                                                fillFraction: fillFraction)
+        .gaugeProvider = CLKSimpleGaugeProvider(
+          style: .ring, gaugeColor: tsurukameHighlightColor,
+          fillFraction: fillFraction)
       template.leadingTextProvider = CLKSimpleTextProvider(text: "0")
       template.trailingTextProvider = CLKTextProvider(format: "%d", total)
       return template
@@ -409,14 +450,16 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       let circleTemplate = CLKComplicationTemplateGraphicCircularOpenGaugeRangeText()
       circleTemplate.centerTextProvider = CLKTextProvider(format: "%d", learned)
       circleTemplate
-        .gaugeProvider = CLKSimpleGaugeProvider(style: .ring, gaugeColor: tsurukameHighlightColor,
-                                                fillFraction: fillFraction)
+        .gaugeProvider = CLKSimpleGaugeProvider(
+          style: .ring, gaugeColor: tsurukameHighlightColor,
+          fillFraction: fillFraction)
       circleTemplate.leadingTextProvider = CLKSimpleTextProvider(text: "0")
       circleTemplate.trailingTextProvider = CLKTextProvider(format: "%d", total)
       let template = CLKComplicationTemplateGraphicBezelCircularText()
       template
-        .textProvider = CLKTextProvider(format: "%@ • %.0f%% complete", levelTextProvider,
-                                        (Float(learned) / Float(total)) * 100.0)
+        .textProvider = CLKTextProvider(
+          format: "%@ • %.0f%% complete", levelTextProvider,
+          (Float(learned) / Float(total)) * 100.0)
       template.circularTemplate = circleTemplate
       return template
     case .graphicRectangular:
@@ -427,8 +470,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         template.headerImageProvider = CLKFullColorImageProvider(fullColorImage: img)
       }
       template
-        .gaugeProvider = CLKSimpleGaugeProvider(style: .fill, gaugeColor: tsurukameHighlightColor,
-                                                fillFraction: fillFraction)
+        .gaugeProvider = CLKSimpleGaugeProvider(
+          style: .fill, gaugeColor: tsurukameHighlightColor,
+          fillFraction: fillFraction)
       return template
     default:
       return nil
@@ -463,9 +507,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       template.row2Column1TextProvider = dashTextProvider
       template.row2Column2TextProvider = CLKSimpleTextProvider(text: "next hour")
       return template
-    case .utilitarianSmall:
-      fallthrough
-    case .utilitarianSmallFlat:
+    case .utilitarianSmall, .utilitarianSmallFlat:
       let template = CLKComplicationTemplateUtilitarianSmallFlat()
       if let img = UIImage(named: "miniCrab") {
         template.imageProvider = CLKImageProvider(onePieceImage: img)
@@ -515,11 +557,11 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     return nil
   }
 
-  /**
-   Currently in testing: Is it useful to see a random character?
-   */
-  func templateForCharacter(_ complication: CLKComplication,
-                            userData _: UserData?) -> CLKComplicationTemplate? {
+  /// Currently in testing: Is it useful to see a random character?
+  func templateForCharacter(
+    _ complication: CLKComplication,
+    userData _: UserData?
+  ) -> CLKComplicationTemplate? {
     // TODO: Get the list of characters to pick from
     let character: String = ["森", "後"].randomElement()!
     let vocab: String = ["落とす"].randomElement()!
@@ -533,8 +575,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       let circ = CLKComplicationTemplateGraphicCircularClosedGaugeText()
       circ.centerTextProvider = CLKSimpleTextProvider(text: "30")
       circ
-        .gaugeProvider = CLKSimpleGaugeProvider(style: .fill, gaugeColor: tsurukameHighlightColor,
-                                                fillFraction: 3 / 10)
+        .gaugeProvider = CLKSimpleGaugeProvider(
+          style: .fill, gaugeColor: tsurukameHighlightColor,
+          fillFraction: 3 / 10)
       template.circularTemplate = circ
       return template
     case .graphicCircular:
@@ -543,8 +586,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         let template = CLKComplicationTemplateGraphicCircularClosedGaugeImage()
         template.imageProvider = CLKFullColorImageProvider(fullColorImage: img)
         template
-          .gaugeProvider = CLKSimpleGaugeProvider(style: .fill, gaugeColor: tsurukameHighlightColor,
-                                                  fillFraction: 3 / 10)
+          .gaugeProvider = CLKSimpleGaugeProvider(
+            style: .fill, gaugeColor: tsurukameHighlightColor,
+            fillFraction: 3 / 10)
         return template
       } else {
         let template = CLKComplicationTemplateGraphicCircularStackText()
@@ -563,10 +607,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     CLKRelativeDateTextProvider(date: date, style: .offsetShort, units: .hour)
   }
 
-  /**
-   Create a UIImage with a kanji character centered in it. Used to display larger
-   text.
-   */
+  /// Create a UIImage with a kanji character centered in it. Used to display larger text.
   func textToImage(drawText text: String, size: CGSize) -> UIImage? {
     let textColor = UIColor.white
     let textFont = UIFont.systemFont(ofSize: 26)
@@ -577,16 +618,18 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     let textStyle = NSMutableParagraphStyle()
     textStyle.alignment = .center
 
-    let textFontAttributes = [
-      NSAttributedString.Key.font: textFont,
-      NSAttributedString.Key.foregroundColor: textColor,
-      NSAttributedString.Key.paragraphStyle: textStyle,
-    ] as [NSAttributedString.Key: Any]
+    let textFontAttributes =
+      [
+        NSAttributedString.Key.font: textFont,
+        NSAttributedString.Key.foregroundColor: textColor,
+        NSAttributedString.Key.paragraphStyle: textStyle,
+      ] as [NSAttributedString.Key: Any]
 
     let textHeight = textFont.lineHeight
     let textY = (size.height - textHeight) / 2
-    let textRect = CGRect(x: 0, y: textY,
-                          width: size.width, height: textHeight)
+    let textRect = CGRect(
+      x: 0, y: textY,
+      width: size.width, height: textHeight)
 
     text.draw(in: textRect, withAttributes: textFontAttributes)
 

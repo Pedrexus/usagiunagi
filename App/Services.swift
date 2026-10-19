@@ -37,10 +37,12 @@ class TKMServices {
 
   @MainActor init(
     fontLibrary: StudyFontLibrary? = nil, audioDownloads: StudyAudioDownloads? = nil,
-    notifications: StudyNotifications? = nil
+    notifications: StudyNotifications? = nil, companion: StudyCompanionDelivery? = nil
   ) {
     self.notifications =
       notifications ?? StudyNotifications(preferences: LegacyNotificationPreferences())
+    let companion = companion ?? WatchHelper.sharedInstance.companion
+    self.notifications.didRead = { companion.update($0) }
     lessonSettings = StudyLessonSettings(store: LegacyLessonPreferences())
     subjectSettings = StudySubjectSettings(store: LegacySubjectPreferences())
     self.fontLibrary = fontLibrary ?? StudyFontLibrary(preferences: LegacyFontPreferences())
@@ -51,7 +53,6 @@ class TKMServices {
     radicalCharacterImages = RadicalCharacterImages(services: self)
   }
   @MainActor func updateStudyServices() async {
-    WatchHelper.sharedInstance.updatedData(client: localCachingClient)
     await notifications.update { [weak self] in
       guard let client = self?.localCachingClient, let user = client.getUserInfo() else {
         return .init()
@@ -65,7 +66,13 @@ class TKMServices {
           && valid.contains($0.subjectID)
           && (Settings.showKanaOnlyVocab || !$0.isKanaOnlyVocab)
       }.map(\.availableAtDate)
-      return StudyNotificationSnapshot(reviewDates: dates, onVacation: user.hasVacationStartedAt)
+      let level = Int(user.currentLevel)
+      return StudyServiceSnapshot(
+        reviewDates: dates, onVacation: user.hasVacationStartedAt,
+        currentLevel: .init(number: level, legacyAssignments: client.getAssignments(level: level)),
+        previousLevel: level > 1
+          ? .init(number: level - 1, legacyAssignments: client.getAssignments(level: level - 1))
+          : nil)
     }
   }
 

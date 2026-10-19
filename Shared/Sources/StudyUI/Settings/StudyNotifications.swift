@@ -76,12 +76,14 @@ public struct StudyNotificationClient {
     }
   }
   private let client: StudyNotificationClient
+  public var didRead: @MainActor (StudyServiceSnapshot) -> Void = { _ in }
   private let preferences: any StudyNotificationPreferences
   private var preferenceRevision = 0
   private var intents: [NotificationPreference: UUID] = [:]
-  private var source: @MainActor () async throws -> StudyNotificationSnapshot = { .init() }
+  private var source: (@MainActor () async throws -> StudyServiceSnapshot)?
   private var revision = 0
   @ObservationIgnored private var delivery: Task<Void, Never>?
+  @ObservationIgnored private var dataRead: Task<StudyServiceSnapshot, any Error>?
   public private(set) var authorization: StudyNotificationAuthorization?
   public private(set) var busy = false
   public private(set) var deliveryError: String?
@@ -171,7 +173,7 @@ public struct StudyNotificationClient {
     await refresh()
     return result
   }
-  public func update(source: @escaping @MainActor () async throws -> StudyNotificationSnapshot)
+  public func update(source: @escaping @MainActor () async throws -> StudyServiceSnapshot)
     async
   {
     self.source = source
@@ -179,6 +181,18 @@ public struct StudyNotificationClient {
   }
   public func refresh() async {
     revision &+= 1
+    let current = revision
+    let load = source
+    dataRead?.cancel()
+    dataRead = Task {
+      try Task.checkCancellation()
+      guard let load else { return StudyServiceSnapshot() }
+      let value = try await load()
+      try Task.checkCancellation()
+      guard current == revision else { throw CancellationError() }
+      didRead(value)
+      return value
+    }
     if delivery == nil { delivery = Task { await deliver() } }
     await delivery?.value
   }
@@ -187,6 +201,16 @@ public struct StudyNotificationClient {
     while completed != revision {
       let current = revision
       completed = current
+      deliveryError = nil
+      let snapshot: StudyServiceSnapshot
+      do {
+        guard let dataRead else { throw CancellationError() }
+        snapshot = try await dataRead.value
+      } catch {
+        snapshot = .init()
+        deliveryError = error.localizedDescription
+      }
+      guard current == revision else { continue }
       let authorization = await client.status()
       guard current == revision else { continue }
       self.authorization = authorization
@@ -202,13 +226,6 @@ public struct StudyNotificationClient {
       } else {
         features = []
       }
-      deliveryError = nil
-      let snapshot: StudyNotificationSnapshot
-      do { snapshot = try await source() } catch {
-        snapshot = .init()
-        deliveryError = error.localizedDescription
-      }
-      guard current == revision else { continue }
       let plan = StudyNotificationPlan(
         reviewDates: snapshot.reviewDates, onVacation: snapshot.onVacation, features: features)
       do { try await client.badge(plan.badge) } catch { deliveryError = error.localizedDescription }

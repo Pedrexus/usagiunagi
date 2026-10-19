@@ -44,30 +44,33 @@ struct NotificationPreferencesTests {
       !Settings.notificationsAllReviews && !Settings.notificationsBadging
         && !Settings.notificationSounds)
   }
-  @Test func theFirstWatchPacketParticipatesInTheThirtySecondDuplicateWindow() {
-    let helper = WatchHelper(session: nil)
-    let packet: [String: Any] = ["reviewCount": 2, "reviewHourly": [3, 4]]
-    let now = Date(timeIntervalSince1970: 10_000)
-    #expect(helper.shouldSendPacket(packet: packet, now: now))
-    #expect(!helper.shouldSendPacket(packet: packet, now: now.addingTimeInterval(1)))
-    #expect(!helper.shouldSendPacket(packet: packet, now: now.addingTimeInterval(29.99)))
-    #expect(helper.shouldSendPacket(packet: packet, now: now.addingTimeInterval(30)))
-  }
-  @Test func changedWatchDataAndClockRollbackAreNeverSuppressed() {
-    let helper = WatchHelper(session: nil)
-    let now = Date(timeIntervalSince1970: 10_000)
-    #expect(helper.shouldSendPacket(packet: ["reviewCount": 2], now: now))
-    #expect(helper.shouldSendPacket(packet: ["reviewCount": 3], now: now.addingTimeInterval(1)))
-    #expect(!helper.shouldSendPacket(packet: ["reviewCount": 3], now: now.addingTimeInterval(2)))
-    #expect(helper.shouldSendPacket(packet: ["reviewCount": 3], now: now.addingTimeInterval(-3600)))
-  }
   @Test func logoutQueuesAnEmptyWatchPacketWithoutActivatingARealSession() throws {
     let helper = WatchHelper(session: nil)
-    helper.updatedData(client: nil)
+    helper.companion.update(.init())
     let packet = try #require(helper.pendingPacket)
     #expect(packet["reviewCount"] as? Int == 0 && packet["reviewHrCount"] as? Int == 0)
     #expect(packet["reviewHourly"] as? [Int] == [] && packet["nextReview"] as? Int64 == 0)
     #expect(packet["levelTotal"] as? Int == 0 && packet["levelLearn"] as? Int == 0)
-    #expect(helper.lastPacketSignature == nil && helper.lastPacketSentAt == nil)
+    #expect(helper.companion.lastSentAt == nil)
   }
+  @Test func companionWirePacketRetainsEveryExistingKeyAndValueType() {
+    let now = Date(timeIntervalSince1970: 10_000)
+    let source = StudyServiceSnapshot(
+      reviewDates: [now, now.addingTimeInterval(3600)], onVacation: false,
+      currentLevel: .init(
+        number: 4, progress: [.init(kind: .kanji, stages: [(5, true), (1, true), (nil, false)])]))
+    let packet = WatchHelper.packet(StudyCompanionSnapshot(source, now: now))
+    #expect(
+      Set(packet.keys) == [
+        "reviewCount", "reviewHrCount", "reviewHourly", "level", "levelTotal", "levelLearn",
+        "levelHalf", "nextReview",
+      ])
+    #expect(packet["reviewCount"] as? Int == 1 && packet["reviewHrCount"] as? Int == 1)
+    #expect((packet["reviewHourly"] as? [Int])?.count == 24)
+    #expect(
+      packet["level"] as? Int == 4 && packet["levelTotal"] as? Int == 3
+        && packet["levelLearn"] as? Int == 1)
+    #expect(packet["levelHalf"] as? Bool == false && packet["nextReview"] as? Int64 == 13_600)
+  }
+
 }
