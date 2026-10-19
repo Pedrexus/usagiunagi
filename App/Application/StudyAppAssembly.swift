@@ -10,6 +10,7 @@ import SwiftUI
   let audio: StudyAudioLibrary
   let defaults: UserDefaults
   let lessonSettings: StudyLessonSettings
+  let subjectSettings: StudySubjectSettings
   let appearance: ColorScheme?
   let notice: String?
 
@@ -22,6 +23,8 @@ import SwiftUI
     self.audio = audio
     self.defaults = defaults
     lessonSettings = StudyLessonSettings(store: DefaultsStudyLessonPreferences(defaults: defaults))
+    subjectSettings = StudySubjectSettings(
+      store: DefaultsStudySubjectPreferences(defaults: defaults))
     self.appearance = appearance
     self.notice = notice
   }

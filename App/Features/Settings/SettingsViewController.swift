@@ -35,6 +35,7 @@ extension Notification.Name {
 struct ApplicationSettings: View {
   @Bindable var navigation: SettingsNavigation
   let lessons: StudyLessonSettings
+  let subjects: StudySubjectSettings
   let back: () -> Void
   let fonts: () -> Void
   let offlineAudio: () -> Void
@@ -114,7 +115,11 @@ struct ApplicationSettings: View {
         case .reviews:
           ReviewSettings(
             fonts: fonts, offlineAudio: offlineAudio, appearanceChanged: appearanceChanged)
-        case .subjects: SubjectDisplaySettings()
+        case .subjects:
+          SubjectSettingsView(
+            settings: subjects,
+            skipKanjiReadings: Binding(
+              get: { Settings.skipKanjiReadings }, set: { Settings.skipKanjiReadings = $0 }))
         }
       }
       .alert("Log out?", isPresented: $confirmingLogout) {
@@ -148,6 +153,8 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
     rootView = ApplicationSettings(
       navigation: state,
       lessons: services?.lessonSettings ?? StudyLessonSettings(store: LegacyLessonPreferences()),
+      subjects: services?.subjectSettings
+        ?? StudySubjectSettings(store: LegacySubjectPreferences()),
       back: { [weak self] in self?.navigationController?.popViewController(animated: true) },
       fonts: { [weak self] in
         guard let self else { return }

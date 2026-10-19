@@ -24,7 +24,17 @@ Put business behavior and screens in Shared. Keep `#if os(...)` at the narrow pl
 
 Native Home, the forecast and new lesson/review/practice selection use the same preferences. The Apprentice count includes pending and excluded workload; reaching the limit disables new lessons with an explanation while preserving the available-item count. Resuming a durable quiz returns its saved queue/options before applying new selection rules. A changed preference cannot rewrite a paused quiz or bypass assignment/account validation.
 
-Native settings use one Codable UserDefaults value. The temporary `App/Features/Settings/LegacyPreferences.swift` adapts the original iOS archived keys for lessons, reviews, fonts and audio; it replaces the former review-only adapter location. Vocabulary exclusion uses a shared control and archive-compatible lesson setting. Subject display preferences and other unmigrated settings/services still require parity work. The old app-specific lesson form is removed; no account database or iOS writer cutover occurs in this migration.
+Native settings use one Codable UserDefaults value. The temporary `App/Features/Settings/LegacyPreferences.swift` adapts the original iOS archived keys for lessons, reviews, subject display, fonts and audio; it replaces the former review-only adapter location. Vocabulary exclusion uses a shared control and archive-compatible lesson setting. Subject display also uses a common owner/form; other unmigrated settings and platform services still require parity work. The old app-specific lesson form is removed; no account database or iOS writer cutover occurs in this migration.
+
+## Shared subject display
+
+`StudySubjectSettings` is one app-owned observable preference value. `SubjectSettingsView` supplies the same nine original choices on both hosts; the skip-kanji-reading binding stays in the review policy instead of duplicating it in display preferences. Native windows merge only changed fields into their latest saved preferences. The temporary iOS adapter preserves all eight original display archives, including the inverse show-all-readings choice. Defaults match the original app: primary kanji readings and concealed context translations. Display choices do not change the grader's accepted answers.
+
+Shared details render optional assignment dates/SRS, readings, translations and mnemonic artwork. Native similar-kanji reads resolve supplementary glyphs to accessible kanji records before applying the current-level display choice; hidden/subscription-locked content cannot leak through raw supplementary text. Only the returned projection clears that text. Native Home and catalog honor the prior-level graph choice without changing stored work or paused queues.
+
+`StudyArtwork` decodes the original 469 artwork paths from a bundled binary Apple plist. The old app-specific artwork manager, image view, display form and duplicate stats presentation are retired. Artwork remains optional, attributed, network/cache-backed and hidden until the meaning is revealed; a missing catalog produces an inline unavailable label. See [resource provenance](../Shared/Sources/StudyCore/Resources/SOURCES.md).
+
+Review selection now honors skipping kanji readings before choosing a new question, including random, grouped, combined and practice modes. Previously completion honored the flag while selection could still ask a reading first. Vocabulary readings and already-presented durable questions remain intact; skipped readings do not fabricate attempts or errors. Existing grading, assignment and outbox rules remain.
 
 ## Subject edits and vocabulary exclusion
 

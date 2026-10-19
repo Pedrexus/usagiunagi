@@ -239,7 +239,9 @@ public struct StudySession: Codable, Sendable {
     let kind: StudyQuestionKind
     if item.meaning.answered || !item.hasMeaning {
       kind = .reading
-    } else if item.reading.answered || !item.hasReading {
+    } else if item.reading.answered || !item.hasReading
+      || (item.isKanji && options.skipKanjiReadings)
+    {
       kind = .meaning
     } else if options.groupMeaningReading || options.combinedAnki || isPractice {
       kind = options.meaningFirst ? .meaning : .reading

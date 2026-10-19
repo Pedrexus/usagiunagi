@@ -112,6 +112,117 @@ final class MacReviewModeTests: XCTestCase {
     XCTAssertTrue(reviews.isEnabled && reviews.label.contains("1 ready"))
     XCTAssertFalse(app.staticTexts["home.notice"].exists)
   }
+  func testSubjectDisplayChoicesReachSavedDetailsAndPersist() {
+    let app = launch(["--subject-display-fixture"])
+    defer { app.terminate() }
+    app.buttons["app.settings"].click()
+    app.buttons["settings.page.subjects"].click()
+    setSubjectChoice("useKatakanaForOnyomi", true, in: app)
+    setSubjectChoice("showAllReadings", true, in: app)
+    setSubjectChoice("showStatsSection", false, in: app)
+    app.buttons["Done"].click()
+    openSubject("ichi", id: 1, in: app)
+    let primary = app.staticTexts["subject.reading.0"]
+    makeVisible(primary, in: app.scrollViews.firstMatch)
+    XCTAssertEqual(primary.value as? String, "イチ · Primary")
+    XCTAssertEqual(app.staticTexts["subject.reading.1"].value as? String, "ひと")
+    XCTAssertFalse(
+      app.descendants(matching: .any).matching(identifier: "subject.statistics").firstMatch.exists)
+    app.toolbars.buttons["chevron.backward"].click()
+    app.toolbars.buttons["chevron.backward"].click()
+    app.buttons["app.settings"].click()
+    app.buttons["settings.page.subjects"].click()
+    setSubjectChoice("useKatakanaForOnyomi", true, in: app)
+    setSubjectChoice("showAllReadings", true, in: app)
+    setSubjectChoice("showStatsSection", true, in: app)
+    setSubjectChoice("showArtwork", true, in: app)
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    screenshot.name = "Shared subject display choices"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.buttons["Done"].click()
+    openSubject("ichi", id: 1, in: app)
+    let stats = app.descendants(matching: .any).matching(identifier: "subject.statistics")
+      .firstMatch
+    makeVisible(stats, in: app.scrollViews.firstMatch)
+    XCTAssertTrue(stats.exists)
+    let artwork = app.descendants(matching: .any).matching(identifier: "subject.artwork").firstMatch
+    makeVisible(artwork, in: app.scrollViews.firstMatch)
+    XCTAssertTrue(artwork.exists)
+  }
+  func testSubjectReadingPolicyAppliesToANewReview() {
+    let app = launch([])
+    defer { app.terminate() }
+    app.buttons["app.settings"].click()
+    app.buttons["settings.page.subjects"].click()
+    setSubjectChoice("skipKanjiReadings", true, in: app)
+    app.buttons["Done"].click()
+    app.buttons["home.reviews"].click()
+    let input = app.textFields["review.answer"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Meaning")
+    input.click()
+    input.typeText("one")
+    app.buttons["review.submit"].click()
+    XCTAssertTrue(
+      app.staticTexts["Review session saved"].waitForExistence(timeout: 5), app.debugDescription)
+  }
+  func testNativeContextTranslationsStartConcealedAndRespectTheSharedChoice() {
+    let app = launch([])
+    defer { app.terminate() }
+    openSubject("hitotsu", id: 3, in: app)
+    let reveal = app.buttons["subject.translation.0"]
+    makeVisible(reveal, in: app.scrollViews.firstMatch)
+    XCTAssertFalse(app.staticTexts["One, please."].firstMatch.exists)
+    reveal.click()
+    XCTAssertTrue(app.staticTexts["One, please."].firstMatch.waitForExistence(timeout: 5))
+    app.toolbars.buttons["chevron.backward"].click()
+    app.toolbars.buttons["chevron.backward"].click()
+    app.buttons["app.settings"].click()
+    app.buttons["settings.page.subjects"].click()
+    setSubjectChoice("blurContextSentences", false, in: app)
+    app.buttons["Done"].click()
+    openSubject("hitotsu", id: 3, in: app)
+    let translation = app.staticTexts["One, please."].firstMatch
+    makeVisible(translation, in: app.scrollViews.firstMatch)
+    XCTAssertTrue(translation.exists)
+    XCTAssertFalse(reveal.exists)
+  }
+  private func openSubject(_ query: String, id: Int64, in app: XCUIApplication) {
+    app.buttons["app.search"].click()
+    let search = app.searchFields.firstMatch
+    XCTAssertTrue(search.waitForExistence(timeout: 5))
+    search.click()
+    search.typeText(query)
+    let subject = app.buttons["catalog.subject.\(id)"]
+    XCTAssertTrue(subject.waitForExistence(timeout: 5), app.debugDescription)
+    subject.click()
+    XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
+  }
+  private func setSubjectChoice(_ id: String, _ value: Bool, in app: XCUIApplication) {
+    let control = app.switches["settings.\(id)"]
+    makeVisible(control, in: app.sheets.firstMatch.scrollViews.firstMatch)
+    XCTAssertTrue(control.isHittable, control.debugDescription)
+    if (control.value as? NSNumber)?.boolValue != value { control.click() }
+    XCTAssertEqual((control.value as? NSNumber)?.boolValue, value)
+  }
+  private func makeVisible(_ element: XCUIElement, in scroll: XCUIElement) {
+    for _ in 0..<10 {
+      if element.exists {
+        let viewport = scroll.frame
+        if element.frame.midY > viewport.minY + 8
+          && element.frame.midY < viewport.maxY - 8
+        {
+          return
+        }
+        scroll.scroll(byDeltaX: 0, deltaY: element.frame.midY < viewport.midY ? 180 : -180)
+      } else {
+        scroll.scroll(byDeltaX: 0, deltaY: -180)
+      }
+    }
+    XCTAssertTrue(
+      element.exists && scroll.frame.intersects(element.frame), element.debugDescription)
+  }
   func testHomeForecastAndSavedSubjectSearchOpenNativeScreens() {
     let app = launch(["--light-fixture"])
     defer { app.terminate() }

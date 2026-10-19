@@ -22,3 +22,9 @@ If changing the JLPT revision, update the generator and this attribution. Run St
 ## WaniKani display preview
 
 `free-levels-preview.json` contains 357 displayed subject references from the first three level pages, captured read-only on 2026-10-18. It includes only characters, displayed readings/meanings, level and kind, with no account progress or API identifiers. See [provenance, counts and limits](../../../../Resources/Fixtures/README.md). It is not a complete grading catalog and is not used for authenticated reviews. WaniKani content retains its separate terms; the app's Apache license does not grant a new license to that content.
+
+## Mnemonic artwork index
+
+`artwork.plist` preserves all 469 subject-to-image paths from the fork's former `App/Features/Catalog/ArtworkManager.swift`. It is a binary Apple property list, replacing the large Swift lookup table without downloading or redistributing image pixels. The images are @AmandaBear's artwork, published in [the WaniKani community thread](https://community.wanikani.com/t/wk-mnemonic-art-for-kanji-levels-1-7-radical-levels-1-10/47656); the original lookup was adapted from [WaniKani Mnemonic Artwork](https://greasyfork.org/en/scripts/418774-wanikani-mnemonic-artwork). Image rights remain with their authors. The shared view retains visible attribution and the original public image URLs.
+
+The sorted UTF-8 `subjectID:path\n` representation has SHA-256 `00d4f38cd8546f92f190bd71fd79f4d9126a799eab9150a71930f567e1758b40`; Swift Testing verifies every entry against this digest. Artwork is optional and never appears before the meaning is revealed. Cached requests use the platform URL cache; no reachability flag hides an otherwise cached image.

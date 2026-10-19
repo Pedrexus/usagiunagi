@@ -25,7 +25,8 @@ extension StudyStore {
 
   public func homeData(
     accountID: String, now: Date = .now, calendar: Calendar = .current,
-    lessonPreferences: StudyLessonPreferences = .init()
+    lessonPreferences: StudyLessonPreferences = .init(),
+    subjectPreferences: SubjectDetailsPreferences = .init()
   ) throws
     -> HomeDashboardData
   {
@@ -61,7 +62,8 @@ extension StudyStore {
     } else {
       let current = max(1, available.account.profile.level)
       let previous = current > 1 ? available.progress(level: current - 1) : []
-      if previous.contains(where: { $0.guru < $0.total }) {
+      if subjectPreferences.showPreviousLevelGraph, previous.contains(where: { $0.guru < $0.total })
+      {
         data.levels.append(.init(number: current - 1, progress: previous))
       }
       data.levels.append(.init(number: current, progress: available.progress(level: current)))

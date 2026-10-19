@@ -9,6 +9,7 @@ public struct NativeSubjectDetailsView: View {
   private let reviewQuestion: StudyQuestionKind?
   private let visibleQuestions: Set<StudyQuestionKind>
   @Environment(StudyLessonSettings.self) private var lessonSettings
+  @Environment(StudySubjectSettings.self) private var subjectSettings
   @State private var savingExclusion = false
   @Environment(StudyAudioLibrary.self) private var audio
   @StoredReviewPreferences private var preferences
@@ -46,9 +47,11 @@ public struct NativeSubjectDetailsView: View {
           VStack(alignment: .leading, spacing: 16) {
             if reviewQuestion == nil { SubjectDetailsHeader(subject: details.subject) }
             SubjectDetailsContent(
-              subject: details.subject, material: details.material,
+              subject: details.subject, material: details.material, assignment: details.assignment,
               components: details.components, combinations: details.combinations,
-              similar: details.similar,
+              similar: subjectSettings.value.visibleSimilar(
+                details.similar, currentLevel: details.currentLevel),
+              preferences: subjectSettings.value,
               visibleQuestions: visibleQuestions, reviewQuestion: reviewQuestion,
               edit: { editing = true }, openSubject: { relatedSubject = $0 },
               playAudio: details.subject.audio.isEmpty

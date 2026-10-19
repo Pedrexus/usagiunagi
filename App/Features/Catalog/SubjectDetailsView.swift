@@ -31,6 +31,7 @@ import WaniKaniAPI
   var components: [CatalogSubject] = []
   var combinations: [CatalogSubject] = []
   var similar: [CatalogSubject] = []
+  var currentLevel = 0
   var questions: Set<StudyQuestionKind> = [.meaning, .reading]
   var reviewQuestion: StudyQuestionKind?
   var presentationID = UUID()
@@ -47,12 +48,15 @@ import WaniKaniAPI
     self.account = client.getUserInfo()?.username
     self.delegate = delegate
   }
-  var preferences: SubjectDetailsPreferences {
-    var value = SubjectDetailsPreferences()
-    value.primaryKanjiReadingsOnly = !Settings.showAllReadings
-    value.useKatakanaForOnyomi = Settings.useKatakanaForOnyomi
-    value.showDeprecatedMnemonic = Settings.showOldMnemonic
-    value.blurTranslations = Settings.blurContextSentences
+  var preferences: SubjectDetailsPreferences { services.subjectSettings.value }
+  var progress: CatalogAssignment? {
+    guard let assignment, let subject else { return nil }
+    var value = CatalogAssignment(id: assignment.id, subjectID: subject.id, kind: subject.kind)
+    value.srsStage = Int(assignment.srsStageNumber)
+    value.startedAt = assignment.hasStartedAt ? Int64(exactly: assignment.startedAt) : nil
+    value.availableAt = assignment.hasAvailableAt ? Int64(exactly: assignment.availableAt) : nil
+    value.passedAt = assignment.hasPassedAt ? Int64(exactly: assignment.passedAt) : nil
+    value.burnedAt = assignment.hasBurnedAt ? Int64(exactly: assignment.burnedAt) : nil
     return value
   }
   var cachedImage: Image? {
@@ -65,10 +69,6 @@ import WaniKaniAPI
   var excluded: Bool { material?.isExcluded == true }
   var showsOptions: Bool {
     reviewQuestion == nil && subject?.kind == .vocabulary && Settings.allowExcludeItems
-  }
-  var artworkURL: URL? {
-    guard Settings.showArtwork, services.reachability.isReachable(), let subject else { return nil }
-    return ArtworkManager.artworkFullURL(subjectID: subject.id).flatMap(URL.init(string:))
   }
   private func checkAccount() throws {
     guard services.localCachingClient === client, let account, !account.isEmpty,
@@ -95,7 +95,7 @@ import WaniKaniAPI
     do {
       try checkAccount()
       var catalog = try LegacyStudyImporter.catalogSubject(subject)
-      let level = client.getUserInfo()?.currentLevel ?? 0
+      currentLevel = Int(client.getUserInfo()?.currentLevel ?? 0)
       func related(_ ids: [Int64]) -> [CatalogSubject] {
         var seen: Set<Int64> = []
         return ids.filter { seen.insert($0).inserted }.compactMap { client.getSubject(id: $0) }
@@ -109,9 +109,7 @@ import WaniKaniAPI
           similarIDs.append(other.id)
         }
       }
-      similar = related(similarIDs).filter {
-        Settings.showSimilarKanjiAboveLevel || $0.level <= level
-      }
+      similar = related(similarIDs)
       // The legacy setting applies to every similar form, including supplementary characters.
       catalog.visuallySimilarKanji = ""
       catalog.visuallySimilarKanjiIDs = similar.map(\.id)
@@ -216,8 +214,11 @@ import WaniKaniAPI
               fontSize: TKMStyle.reviewSubjectFontSize() * 0.8, image: model.cachedImage)
           }
           SubjectDetailsContent(
-            subject: subject, material: model.material, components: model.components,
-            combinations: model.combinations, similar: model.similar,
+            subject: subject, material: model.material, assignment: model.progress,
+            components: model.components,
+            combinations: model.combinations,
+            similar: model.preferences.visibleSimilar(
+              model.similar, currentLevel: model.currentLevel),
             preferences: model.preferences,
             visibleQuestions: model.questions, reviewQuestion: model.reviewQuestion,
             edit: {
@@ -267,39 +268,6 @@ import WaniKaniAPI
     }
   }
   @ViewBuilder private func extras(_ subject: CatalogSubject) -> some View {
-    if Settings.showStatsSection, let assignment = model.assignment {
-      GroupBox("Stats") {
-        VStack(spacing: 10) {
-          LabeledContent("WaniKani level", value: String(subject.level))
-          if assignment.hasStartedAt {
-            if assignment.hasSrsStageNumber {
-              LabeledContent("SRS stage", value: assignment.srsStage.description)
-            }
-            LabeledContent(
-              "Started",
-              value: assignment.startedAtDate.formatted(date: .abbreviated, time: .shortened))
-            if assignment.hasAvailableAt {
-              LabeledContent(
-                "Next review",
-                value: assignment.availableAtDate.formatted(date: .abbreviated, time: .shortened))
-            }
-            if assignment.hasPassedAt {
-              LabeledContent(
-                "Passed",
-                value: assignment.passedAtDate.formatted(date: .abbreviated, time: .shortened))
-            }
-            if assignment.hasBurnedAt {
-              LabeledContent(
-                "Burned",
-                value: assignment.burnedAtDate.formatted(date: .abbreviated, time: .shortened))
-            }
-          }
-        }
-      }
-    }
-    if let url = model.artworkURL {
-      GroupBox("Artwork by @AmandaBear") { SubjectArtwork(url: url) }
-    }
     if model.showsOptions {
       SubjectExclusionControl(excluded: Binding(get: { model.excluded }, set: model.setExcluded))
     }

@@ -3,6 +3,7 @@ import StudyPersistence
 import SwiftUI
 
 public struct NativeSubjectCatalogView: View {
+  @Environment(StudySubjectSettings.self) private var subjectSettings
   private let store: StudyStore
   private let accountID: String
   private let maximumLevel: Int
@@ -35,7 +36,7 @@ public struct NativeSubjectCatalogView: View {
       showAnswers: $showAnswers, maximumLevel: maximumLevel,
       selectedLevel: (mode == .level || mode == .remaining) ? $level : nil,
       preferences: {
-        var value = SubjectDetailsPreferences()
+        var value = subjectSettings.value
         value.primaryKanjiReadingsOnly = true
         return value
       }(), initialQuery: initialQuery, openSubject: { selectedSubject = $0 }
@@ -48,7 +49,7 @@ public struct NativeSubjectCatalogView: View {
       } else if !loaded {
         ProgressView("Loading saved catalog")
       }
-    }.task {
+    }.task(id: subjectSettings.value.showPreviousLevelGraph) {
       error = nil
       do {
         let value = try await store.subjectCatalog(accountID: accountID)
@@ -56,7 +57,10 @@ public struct NativeSubjectCatalogView: View {
         collection =
           mode == .remaining
           ? SubjectCatalogCollection(
-            items: value.items.filter { ($0.status.stage?.rawValue ?? 0) < 5 },
+            items: value.items.filter {
+              ($0.status.stage?.rawValue ?? 0) < 5
+                && (subjectSettings.value.showPreviousLevelGraph || $0.subject.kind != .vocabulary)
+            },
             pendingCount: value.pendingCount,
             requiresAssignmentRefresh: value.requiresAssignmentRefresh) : value
         loaded = true

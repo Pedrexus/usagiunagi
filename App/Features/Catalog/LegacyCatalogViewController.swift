@@ -59,9 +59,8 @@ protocol SearchResultViewControllerDelegate: NSObject {
     }
   }
   var preferences: SubjectDetailsPreferences {
-    var result = SubjectDetailsPreferences()
+    var result = services.subjectSettings.value
     result.primaryKanjiReadingsOnly = true
-    result.showDeprecatedMnemonic = Settings.showOldMnemonic
     return result
   }
   private func checkAccount() throws {

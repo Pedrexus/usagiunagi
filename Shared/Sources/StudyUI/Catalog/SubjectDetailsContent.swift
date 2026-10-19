@@ -30,6 +30,8 @@ struct MnemonicText: View {
 public struct SubjectDetailsContent: View {
   private let subject: CatalogSubject
   private let material: StudyMaterial?
+  private let assignment: CatalogAssignment?
+  private static let artwork = try? StudyArtwork.bundled()
   private let components: [CatalogSubject]
   private let combinations: [CatalogSubject]
   private let similar: [CatalogSubject]
@@ -44,7 +46,7 @@ public struct SubjectDetailsContent: View {
   private let sentenceText: ((CatalogSubject.Sentence) -> AttributedString)?
 
   public init(
-    subject: CatalogSubject, material: StudyMaterial? = nil,
+    subject: CatalogSubject, material: StudyMaterial? = nil, assignment: CatalogAssignment? = nil,
     components: [CatalogSubject] = [], combinations: [CatalogSubject] = [],
     similar: [CatalogSubject] = [],
     preferences: SubjectDetailsPreferences = .init(),
@@ -56,6 +58,7 @@ public struct SubjectDetailsContent: View {
   ) {
     self.subject = subject
     self.material = material
+    self.assignment = assignment
     self.components = components
     self.combinations = combinations
     self.similar = similar
@@ -102,6 +105,19 @@ public struct SubjectDetailsContent: View {
       if !subject.visuallySimilarKanji.isEmpty {
         section("Other similar forms") { Text(subject.visuallySimilarKanji) }
       }
+      if preferences.showStatistics, let assignment {
+        SubjectProgressView(assignment: assignment, level: subject.level)
+      }
+      if visibility.meaning, preferences.showArtwork {
+        if let artwork = Self.artwork {
+          if let url = artwork.url(subjectID: subject.id) {
+            GroupBox("Artwork by @AmandaBear") { SubjectArtwork(url: url) }.accessibilityIdentifier(
+              "subject.artwork")
+          }
+        } else {
+          Label("Artwork catalog unavailable", systemImage: "photo.badge.exclamationmark")
+        }
+      }
       if let url = StudyMarkup.webURL(subject.documentURL), url.host == "www.wanikani.com" {
         Link("Open on WaniKani", destination: url)
       }
@@ -129,10 +145,11 @@ public struct SubjectDetailsContent: View {
       let readings = subject.displayedReadings(preferences: preferences)
       if !readings.isEmpty {
         section("Reading") {
-          ForEach(Array(readings.enumerated()), id: \.offset) { _, reading in
+          ForEach(Array(readings.enumerated()), id: \.offset) { index, reading in
             LabeledContent(reading.kind.label) {
               Text(reading.text + (reading.isPrimary && readings.count > 1 ? " · Primary" : ""))
                 .fontWeight(reading.isPrimary ? .semibold : .regular)
+                .accessibilityIdentifier("subject.reading.\(index)")
             }
           }
           if let playAudio {

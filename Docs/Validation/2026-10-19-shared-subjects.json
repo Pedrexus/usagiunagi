@@ -1,0 +1,478 @@
+{
+  "recorded_at": "2026-10-19T19:12:51+09:00",
+  "branch": "codex/swiftui-27-curriculum",
+  "baseline": "9d35aff4d37c5539e31b8f56b1f63c53e265cfbe",
+  "scope": "Common subject display/settings/artwork/progress and previous-level visibility; correct skip-kanji-reading selection; no account writer handoff, real exercise, credential change, push or PR.",
+  "sources": [
+    {
+      "path": "App/AppStoreScreenshots/MacReviewModeTests.swift",
+      "sha256": "8df0549db8711d90aca6dc16f0467e11be1de8b1f90a9c82a91e7890157688cf"
+    },
+    {
+      "path": "App/AppStoreScreenshots/NativeStudyFixture.swift",
+      "sha256": "6ef38ce621af6f4ed412a3f18160948b38efe89f5bc554bff02e25cc842a4bda"
+    },
+    {
+      "path": "App/AppTests/SubjectPreferenceArchiveTests.swift",
+      "sha256": "7ff2d5ff6bc3c4be7e1b095fdb2422f6051f26ce8069b5ee7285e975353de3dc"
+    },
+    {
+      "path": "App/Application/StudyAppAssembly.swift",
+      "sha256": "172afde9106c3e26545b96f27ff08efea795a73bc80083b7c7733ef5651e66ce"
+    },
+    {
+      "path": "App/Features/Catalog/ArtworkManager.swift",
+      "deleted": true,
+      "previous_sha256": "cd6a462e25743f1761c0e35662465a5aee54397ed1f296c1c2cfd997445099c6"
+    },
+    {
+      "path": "App/Features/Catalog/LegacyCatalogViewController.swift",
+      "sha256": "77d1346312846eecd74c2b6487de258cf3a7a90aa267ae0d7153f9ec223e245c"
+    },
+    {
+      "path": "App/Features/Catalog/SubjectArtwork.swift",
+      "deleted": true,
+      "previous_sha256": "fa8b7aaa1ec7ce561752c5a806e7a99538b1ca2b5a3445699ff9ab0afed7c8f6"
+    },
+    {
+      "path": "App/Features/Catalog/SubjectDetailsView.swift",
+      "sha256": "246830aeee05c6e462750d0a83a02c3f67f23386f60aa47b6fdaae15ebc3e6d5"
+    },
+    {
+      "path": "App/Features/Settings/LegacyPreferences.swift",
+      "sha256": "6240ad0ffdbf1c3c1ef0a64454f9860a9327f7d56f4a22828bf6a1587c45f6c7"
+    },
+    {
+      "path": "App/Features/Settings/SettingsViewController.swift",
+      "sha256": "7356f2cd91c66a1a74965ff9f435e168888ed3b5ab857842a4f6a20954a87677"
+    },
+    {
+      "path": "App/Features/Settings/SubjectDisplaySettings.swift",
+      "deleted": true,
+      "previous_sha256": "51ad0c6e71056f5b82650f885b09ae6e77570792659cbceafb6654c71a61c068"
+    },
+    {
+      "path": "App/Services.swift",
+      "sha256": "0ecc8a0166645ffc0a06bc68340797557ab5aa7e97611d34c4c148e512e1f6bd"
+    },
+    {
+      "path": "App/UsagiUnagi.xcodeproj/project.pbxproj",
+      "sha256": "4ecb5b8ced012b71e6fb9eb48a3a9210690ebe51ff8a04662adcec665132118f"
+    },
+    {
+      "path": "App/UsagiUnagiApp.swift",
+      "sha256": "14fb18abf437dae2b6ad16e7d7fc9de1336b2b6c7694ec4bb14416a68e66cd30"
+    },
+    {
+      "path": "Shared/Sources/StudyCore/Resources/artwork.plist",
+      "sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711"
+    },
+    {
+      "path": "Shared/Sources/StudyCore/StudyArtwork.swift",
+      "sha256": "05a752a088ff5588415ee38de4e825190712eb889e548b5284613ba819f3353e"
+    },
+    {
+      "path": "Shared/Sources/StudyCore/StudySession.swift",
+      "sha256": "09858c8c5cdd7db734e254b72019f57eef02562a37c06e3f2695716d8c2ab5bc"
+    },
+    {
+      "path": "Shared/Sources/StudyCore/StudySubjectSettings.swift",
+      "sha256": "21f2c040983415e18ee98197bb4e3e3f0ea9b4fc34a79ebf824e610a6ab4a4a4"
+    },
+    {
+      "path": "Shared/Sources/StudyCore/SubjectDetailsPresentation.swift",
+      "sha256": "1ee769b64119fdc0435079a09212a41ea485cf22c0e9a1af2d43765378a7a8fc"
+    },
+    {
+      "path": "Shared/Sources/StudyPersistence/StudyStore+Home.swift",
+      "sha256": "4a8f69aac99072fb4c4f84ce481debd0474e18b35a6d5118e4bf1300f4b24380"
+    },
+    {
+      "path": "Shared/Sources/StudyPersistence/StudyStore+SubjectDetails.swift",
+      "sha256": "bc3f6ac29b5fe72bf98c282c4701601e1bbbecbcc721c58919d4f9098628b6c2"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+      "sha256": "47de039dfc8871a3c477d47fbaf2914ffae1e80e59d1b987e9c1f6cadd63a77e"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Catalog/NativeSubjectCatalogView.swift",
+      "sha256": "3fd55a16e9552cc2041d773d79dc2c69ef0aa45d66d9bcd9c38fb5c0c5bb9ca6"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Catalog/NativeSubjectDetailsView.swift",
+      "sha256": "102d05ecaecaca44f91ce54699b84fcfedcb1d57e712f1319e9529e9e0a96998"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Catalog/SubjectArtwork.swift",
+      "sha256": "81d20482ebdec8b8d5d79c8bbe53e8a29a791ff0f410d4d65b508343772b885c"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Catalog/SubjectDetailsContent.swift",
+      "sha256": "169bb3f54955ed429261103fd077ca97b29c88aabdc801edeaec5f88f27e8696"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Catalog/SubjectProgressView.swift",
+      "sha256": "33deeb4a6dd9b215d5098e54642b6186bad40252ef6b1a79a2e94f450c4dc96f"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift",
+      "sha256": "3607d11432bd4f34d1d64bb5f749f1ad4528a9e624a62ce92317180b80ecea9c"
+    },
+    {
+      "path": "Shared/Sources/StudyUI/Settings/SubjectSettingsView.swift",
+      "sha256": "6508f17f8072d6efabb3ee044e6b3fd5d48d4db15fd6d2912050a64bb53753a7"
+    },
+    {
+      "path": "Shared/Tests/StudyCoreTests/StudySessionTests.swift",
+      "sha256": "5ad3b016dec951db0d92b4980921b55a6e254cbad5446937686efb21b3552c15"
+    },
+    {
+      "path": "Shared/Tests/StudyCoreTests/SubjectPreferenceTests.swift",
+      "sha256": "799fd31390cf92a4d76a733f00d378e2b3cc540d9d1d4bff3db0678e570f810f"
+    },
+    {
+      "path": "Shared/Tests/StudyPersistenceTests/SubjectPresentationTests.swift",
+      "sha256": "d6e461ad94369f3d890bc0f187eb81f479f3cb3b8e9f8c324b7d49c6088637d2"
+    }
+  ],
+  "production_swift_loc": {
+    "baseline": "9d35aff4d37c5539e31b8f56b1f63c53e265cfbe",
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29397,
+    "after": 29081,
+    "changed": [
+      {
+        "path": "App/Application/StudyAppAssembly.swift",
+        "before": 50,
+        "after": 53
+      },
+      {
+        "path": "App/Features/Catalog/ArtworkManager.swift",
+        "before": 551,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Catalog/LegacyCatalogViewController.swift",
+        "before": 255,
+        "after": 254
+      },
+      {
+        "path": "App/Features/Catalog/SubjectArtwork.swift",
+        "before": 34,
+        "after": 0
+      },
+      {
+        "path": "App/Features/Catalog/SubjectDetailsView.swift",
+        "before": 310,
+        "after": 278
+      },
+      {
+        "path": "App/Features/Settings/LegacyPreferences.swift",
+        "before": 138,
+        "after": 167
+      },
+      {
+        "path": "App/Features/Settings/SettingsViewController.swift",
+        "before": 199,
+        "after": 206
+      },
+      {
+        "path": "App/Features/Settings/SubjectDisplaySettings.swift",
+        "before": 44,
+        "after": 0
+      },
+      {
+        "path": "App/Services.swift",
+        "before": 45,
+        "after": 47
+      },
+      {
+        "path": "App/UsagiUnagiApp.swift",
+        "before": 50,
+        "after": 51
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudySession.swift",
+        "before": 380,
+        "after": 382
+      },
+      {
+        "path": "Shared/Sources/StudyCore/SubjectDetailsPresentation.swift",
+        "before": 51,
+        "after": 87
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Home.swift",
+        "before": 90,
+        "after": 92
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+SubjectDetails.swift",
+        "before": 114,
+        "after": 129
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 371,
+        "after": 387
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Catalog/NativeSubjectCatalogView.swift",
+        "before": 69,
+        "after": 73
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Catalog/NativeSubjectDetailsView.swift",
+        "before": 133,
+        "after": 136
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Catalog/SubjectDetailsContent.swift",
+        "before": 276,
+        "after": 293
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift",
+        "before": 240,
+        "after": 244
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyArtwork.swift",
+        "before": 0,
+        "after": 27
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudySubjectSettings.swift",
+        "before": 0,
+        "after": 35
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Catalog/SubjectArtwork.swift",
+        "before": 0,
+        "after": 35
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Catalog/SubjectProgressView.swift",
+        "before": 0,
+        "after": 33
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/SubjectSettingsView.swift",
+        "before": 0,
+        "after": 75
+      }
+    ],
+    "artwork_bytes": 27986,
+    "artwork_sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "checks": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-subjects-final-shared-mac.log",
+      "log_sha256": "d95a2c16938af8017882b868c81f54269114957129a0bdeed5411072e5ce090b",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 331,
+        "modules": {
+          "StudyCore": 167,
+          "StudyPersistence": 143,
+          "StudySpeech": 7,
+          "StudyApplication": 14
+        }
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-subjects-final-shared-ios.log",
+      "log_sha256": "2ec6a444c4b660e7b307fcb0a0eb80409ee40be03e87ba4960446a5ae58c3212",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6c496a9222df4779bb190f07ebd67a52.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 331,
+        "passedTests": 331,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-subjects-final-hosted.log",
+      "log_sha256": "1ae026b24c70ba78551395eaa6b6a18bb0f620f687be4f1d29eea893d3e35576",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e38d06107ada4ae0bb1d7e3c2176d757.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "native_mac_ui": {
+      "log": "/private/tmp/usagi-subjects-final-native-ui.log",
+      "log_sha256": "3aef0314dea36852fc5b489e4fbe103e7c4c2a4cd6a963d9e80f728bc3c92415",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-be6c3c43457544a5aa33719cd2f93c87.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 8,
+        "passedTests": 8,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "native_mac_review_regression": {
+      "log": "/private/tmp/usagi-subjects-final-review-ui.log",
+      "log_sha256": "61063e6d326b1b5181ad0e1c7c1cc1c952376dcfbffddfc52ec7aaeae16012a3",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-f7ce598e72a74517a4d90e0dbb3e3704.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      }
+    },
+    "iphone_ui": {
+      "log": "/private/tmp/usagi-subjects-final-phone-ui.log",
+      "log_sha256": "f486fc08a79faf19dc48acb8c56c2ff3d0203a828c68f303702869bd4aec0db8",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-ba62c8e40d8d46ef8adac285193c2377.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ]
+      }
+    },
+    "ipad_ui": {
+      "log": "/private/tmp/usagi-subjects-final-pad-ui.log",
+      "log_sha256": "217b4b826edf560aa27f3b37aabe864ec1b92fb0387a53335c3b12b5bab0e22c",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-48d04928bb4b4179afb8abc65ad5e9e2.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ]
+      }
+    },
+    "mac_release": {
+      "log": "/private/tmp/usagi-subjects-final-release.log",
+      "log_sha256": "f540c9a6702f9870acce452025ad3bf4ac356bf9207bd0892e6e5ad0b1adbba7",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-84eb44bfd766498ba3c2f658e0675d85.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "formatting": {
+      "log": "/private/tmp/usagi-subjects-final-format.log",
+      "log_sha256": "6310d557891482274cb544aebab01aab4dda9059a8622b30d4ec84222fa59248"
+    },
+    "format_check": {
+      "log": "/private/tmp/usagi-subjects-final-format-check.log",
+      "log_sha256": "07ee09c03114ce03bf2cc70f607825947a09c3bb4998d07292f113b5679ff836"
+    },
+    "release_content": {
+      "artwork_resources": {
+        ".build/Xcode/UnifiedMacRelease/Build/Products/Release/Tsurukame.app/Contents/Resources/StudyKit_StudyCore.bundle/Contents/Resources/artwork.plist": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+        ".build/Xcode/UnifiedMacRelease/Build/Products/Release/StudyKit_StudyCore.bundle/Contents/Resources/artwork.plist": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711"
+      },
+      "fixture_markers_present": {
+        "Synthetic review fixture · memory only · uploads disabled": false,
+        "Server version of the note.": false,
+        "Server synonym": false
+      },
+      "executable_sha256": "3d4f07f36566c5816f15dc4259723441a0d5b7bca6f588a51d071f40e6f84b92"
+    },
+    "release_reopen": {
+      "log": "/private/tmp/usagi-subjects-final-reopen.log",
+      "log_sha256": "51f19868dcdbfaafc25fc1188b40404e3a8464361c3089edba8a997d7bae2246",
+      "launches": [
+        {
+          "visibleMainWindows": 1,
+          "cycle": 1,
+          "processID": 20317
+        },
+        {
+          "visibleMainWindows": 1,
+          "cycle": 2,
+          "processID": 20348
+        }
+      ]
+    }
+  },
+  "screenshots": [
+    {
+      "path": "/private/tmp/usagi-subjects-final-images/5C2B22A5-4D6C-4AC4-B05D-66DCB9B2E346.png",
+      "sha256": "082316bcc86cc46584534e01990a645b208b6c5f26c7661c269a4ae400f7481e",
+      "scope": "App window only; isolated synthetic account",
+      "visually_inspected": true
+    },
+    {
+      "path": "/private/tmp/usagi-subjects-final-images/1681B679-4E10-47D8-9217-2136D277C3DA.png",
+      "sha256": "58d8d643d8a152f19656af187bf5fe2ddaf693b991833c57f34ff81710b028f3",
+      "scope": "App window only; isolated synthetic account",
+      "visually_inspected": true
+    },
+    {
+      "path": "/private/tmp/usagi-subjects-final-images/0E10B287-FDC9-4A2A-AC54-996646B1AEE1.png",
+      "sha256": "3213d7ae6096740877f61888d951c9a864dbc7f103c5951d115da6103eb6d0f6",
+      "scope": "App window only; isolated synthetic account",
+      "visually_inspected": true
+    }
+  ],
+  "artwork": {
+    "entries": 469,
+    "canonical_sha256": "00d4f38cd8546f92f190bd71fd79f4d9126a799eab9150a71930f567e1758b40",
+    "image_pixels_bundled": false
+  },
+  "initial_failures": [
+    {
+      "log": "/private/tmp/usagi-subjects-native-ui.log",
+      "reason": "Native acceptance found selection ignored skip-kanji-reading policy; two other failures were duplicate text queries and requiring passive Mac text to be hittable. Shared selector and test queries were corrected. Not counted as passing."
+    },
+    {
+      "log": "/private/tmp/usagi-subjects-shared-ios.log",
+      "reason": "Initial incremental package run could not locate artwork.plist despite its build copy. A fresh full 329-function run and original-directory targeted four-function run passed without a manifest workaround; specific stale-artifact cause unproven. Final full 331-function run also passes."
+    }
+  ],
+  "remaining": [
+    "Shared native sign-in/routes, iOS single-writer cold-start import and crash/rollback ordering; retain active SQL until then",
+    "Audit/retire remaining legacy feature flags and gated login/practice paths after equivalent shared behavior is verified",
+    "Notifications/watch and physical media/speech/IME/accessibility acceptance",
+    "Full-account and access-limit acceptance, calibrated predictions and sourced KanKen intermediate subsets",
+    "Unpublished Mainboard/Actions evidence and store distribution; no push authorized",
+    "Sample-only XCUITest launch discrepancy remains separate from the passing normal OS release launch"
+  ],
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

@@ -1088,3 +1088,14 @@ The pasted crash reports process 16437 at 01:16:31, matching the earlier Home te
 | Active iOS SQL and importer | Retained after audit: they still own offline/pending work and read-only migration. Removing them before a verified writer handoff is unsafe. No new SQL or data/tool dependency is added. |
 
 The exact five-file cleanup scope is 690 → 674 physical Swift lines, including the moved native fixture; it excludes the separately added atomic-exclusion tests and is not a total-codebase reduction claim. The UI-fixture/client boundary, native account services, review grading and pending upload ownership remain explicit. The current acceptance receipt records the changed sources, failed harness experiments and final checks; the modernization task table stays open.
+
+### Shared subject display and artwork data (2026-10-19)
+
+| Audited source | Replacement and preservation |
+| --- | --- |
+| SubjectDisplaySettings / legacy settings host | One shared SwiftUI form, original nine choices and archive-compatible adapter. Skip readings remains a review-session policy; the disconnected settings host has a safe preference owner. |
+| ArtworkManager / app SubjectArtwork / duplicate stats | Remove the large Swift table and duplicate views. All 469 paths survive in a bundled Apple binary plist with a verified canonical hash; optional attributed artwork and assignment progress use common SwiftUI. |
+| Native subject projection and catalog/Home | Read assignment/current level; resolve supplementary similar glyphs to accessible kanji records; preserve order and filter by display preference. The prior-level graph choice affects presentation, without modifying catalog or work. |
+| StudySession question selection | Apply the existing skip-kanji-reading rule when selecting new questions. Completion already honored it; random/reading-first selection did not. Preserve vocabulary readings, captured questions, accepted answers and upload accounting. |
+
+The first native UI run exposed both this selector defect and two test-query problems: passive Mac text is not hittable, and sentence text can have multiple accessibility matches. Corrected tests inspect visible geometry/text and use explicit first matches; interactive switches still require hittability. An initial incremental iOS package run failed the new artwork bundle lookup despite a build copy. A fresh full run and an original-directory targeted run passed without manifest/resource workarounds; the exact stale-artifact cause is unproven. Final source evidence and remaining acceptance are recorded in the shared-subjects receipt. No real WaniKani exercises, credentials, account edits, push or PR are involved.

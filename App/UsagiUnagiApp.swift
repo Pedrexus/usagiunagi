@@ -23,6 +23,7 @@ struct UsagiUnagiApp: App {
         .environment(services.fonts).environment(services.audio).environment(
           services.lessonSettings
         )
+        .environment(services.subjectSettings)
         .defaultAppStorage(services.defaults)
         .frame(minWidth: 640, minHeight: 500)
         .task {

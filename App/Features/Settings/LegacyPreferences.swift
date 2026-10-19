@@ -136,3 +136,32 @@ enum ReviewPreferencesAdapter {
     }
   }
 }
+
+/// The same display policy, backed by the original archived iOS keys until writer handoff.
+@MainActor final class LegacySubjectPreferences: StudySubjectPreferenceStore {
+  private var fields: [(WritableKeyPath<SubjectDetailsPreferences, Bool>, Setting<Bool>)] {
+    [
+      (\.useKatakanaForOnyomi, Settings.$useKatakanaForOnyomi),
+      (\.showDeprecatedMnemonic, Settings.$showOldMnemonic),
+      (\.blurTranslations, Settings.$blurContextSentences),
+      (\.showStatistics, Settings.$showStatsSection), (\.showArtwork, Settings.$showArtwork),
+      (\.showPreviousLevelGraph, Settings.$showPreviousLevelGraph),
+      (\.showSimilarKanjiAboveCurrentLevel, Settings.$showSimilarKanjiAboveLevel),
+    ]
+  }
+  var value: SubjectDetailsPreferences {
+    get {
+      var value = SubjectDetailsPreferences()
+      value.primaryKanjiReadingsOnly = !Settings.showAllReadings
+      for (path, stored) in fields { value[keyPath: path] = stored.wrappedValue }
+      return value
+    }
+    set {
+      Settings.showAllReadings = !newValue.primaryKanjiReadingsOnly
+      for (path, stored) in fields {
+        var setting = stored
+        setting.wrappedValue = newValue[keyPath: path]
+      }
+    }
+  }
+}

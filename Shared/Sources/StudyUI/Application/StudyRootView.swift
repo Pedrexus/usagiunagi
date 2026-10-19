@@ -10,6 +10,7 @@ public struct StudyRootView: View {
   private let appearance: ColorScheme?
   private let notice: String?
   @Environment(StudyLessonSettings.self) private var lessonSettings
+  @Environment(StudySubjectSettings.self) private var subjectSettings
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
@@ -122,6 +123,8 @@ public struct StudyRootView: View {
           Form {
             Button("Lessons") { settingsPath.append(.lessonSettings) }.accessibilityIdentifier(
               "settings.page.lessons")
+            Button("Subject details") { settingsPath.append(.subjectSettings) }
+              .accessibilityIdentifier("settings.page.subjects")
             Button("Review settings") { settingsPath.append(.reviewSettings) }
             Button("Saved work") { settingsPath.append(.savedWork) }
             Button("WaniKani account") { settingsPath = [.account] }
@@ -162,6 +165,19 @@ public struct StudyRootView: View {
     switch value {
     case .account: account
     case .lessonSettings: LessonSettingsView(settings: lessonSettings)
+    case .subjectSettings:
+      SubjectSettingsView(
+        settings: subjectSettings,
+        skipKanjiReadings: Binding(
+          get: { preferences.sessionOptions.skipKanjiReadings },
+          set: { value in
+            let old = preferences
+            var new = old
+            new.sessionOptions.skipKanjiReadings = value
+            do { try $preferences.applyChanges(from: old, to: new) } catch {
+              model.error = error.localizedDescription
+            }
+          }))
     case .fonts: FontLibraryView(library: fonts)
     case .offlineAudio: AudioLibraryView(library: audio)
     case .reviewSettings:

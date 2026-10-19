@@ -124,6 +124,9 @@
         }
       }
       if subject.kind == .kanji {
+        if ProcessInfo.processInfo.arguments.contains("--subject-display-fixture") {
+          subject.readings.append(.init("ひと", isPrimary: false, kind: .kunyomi))
+        }
         subject.meaningMnemonic = "A <kanji>single line</kanji> represents <b>one</b>."
         subject.meaningHint = "Count the line: <b>one</b>."
         subject.readingMnemonic = "Read this as <reading>いち</reading>."

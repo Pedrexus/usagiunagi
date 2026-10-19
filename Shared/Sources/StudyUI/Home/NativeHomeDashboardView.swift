@@ -8,11 +8,12 @@ public enum StudyDestination: Hashable, Sendable {
   case practice(StudyPracticeScope)
   case catalog(SubjectCatalogQuery, remaining: Bool = false)
   case search, forecast
-  case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings
+  case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings, subjectSettings
 }
 
 struct NativeHomeDashboardView: View {
   @Environment(StudyLessonSettings.self) private var lessonSettings
+  @Environment(StudySubjectSettings.self) private var subjectSettings
   let model: StudyAppModel
   let active: Bool
   let route: (StudyDestination) -> Void
@@ -25,6 +26,7 @@ struct NativeHomeDashboardView: View {
     let pending: Int?
     let date: Date
     let lessonPreferences: StudyLessonPreferences
+    let showPreviousLevelGraph: Bool
   }
   var body: some View {
     TimelineView(.periodic(from: .now, by: 60)) { context in
@@ -32,7 +34,8 @@ struct NativeHomeDashboardView: View {
         id: Request(
           active: active, account: model.snapshot?.accountID,
           savedAt: model.snapshot?.savedAt, pending: model.snapshot?.pendingReviews,
-          date: context.date, lessonPreferences: lessonSettings.value)
+          date: context.date, lessonPreferences: lessonSettings.value,
+          showPreviousLevelGraph: subjectSettings.value.showPreviousLevelGraph)
       ) {
         if active { await load() }
       }
@@ -63,7 +66,8 @@ struct NativeHomeDashboardView: View {
       let value: HomeDashboardData
       if !snapshot.isSample, let accountID = snapshot.accountID, let store = model.savedWorkStore {
         value = try await store.homeData(
-          accountID: accountID, lessonPreferences: lessonSettings.value)
+          accountID: accountID, lessonPreferences: lessonSettings.value,
+          subjectPreferences: subjectSettings.value)
       } else {
         let available = Self.preview(snapshot)
         var preview = HomeDashboardData()
