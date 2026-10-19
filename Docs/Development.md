@@ -40,6 +40,12 @@ The workflow runs shared tests/restart checks, iPhone/iPad acceptance and native
 
 Mainboard is pinned to `phvv-me/mainboard@7acaf736c8bae16f8b028678384fe83bb728c51b`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** The prepared Actions workflow has passed local syntax validation; no hosted CI pass is claimed.
 
+## Notification acceptance
+
+The existing `usagi-test-settings` and `usagi-test-settings-ipad` gates now retain all three original settings cases and add `testSharedNotificationSettingsPersistWithoutSystemPrompts`. The standalone Actions workflow already selects the complete ReviewFlowTests and native Mac test classes, so it discovers the new notification cases without a separate job. Tool publication/hosted CI is still pending owner-authorized pushes.
+
+Shared Swift Testing covers exact/DST scheduling, capability and preference combinations, the shared pending-request budget, stale reads/adds, per-window notices, independent System Settings returns and later-disabled choices. Hosted tests preserve the iOS Boolean archive contract and use a nil watch session for duplicate/clock/logout packet checks. Native acceptance uses an injected client for every notification operation: no real OS permission prompt, badge change, scheduled alert, WaniKani exercise or account edit is part of this evidence. Actual signed-device notification delivery, paired watch handoff and physical permission flows remain acceptance gates. Sample-data release launch probes pass no notification service into the root.
+
 ## Source and resources
 
 `Shared/Package.swift` remains the authoritative shared dependency manifest. App package locks and `App/Podfile.lock` remain committed. FMDB, Reachability, SwiftGen and Hippolyte still serve active iOS migration callers; Mac's runtime has no CocoaPods dependency. Both app CI jobs restore the unified project's generated integration/file lists before building. `pod install` preserves a post-integration guard so iOS framework hooks do not run for the native Mac destination.

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CommonCrypto
 import Foundation
-import os
 import WatchConnectivity
+import os
+
 #if os(watchOS)
   import ClockKit
 #endif
@@ -24,13 +24,18 @@ typealias ClientDelegateCallback = ([String: Any]) -> Void
 typealias EpochTimeInt = Int64
 
 class WatchConnectionServerDelegate: NSObject, WCSessionDelegate {
-  func session(_: WCSession, activationDidCompleteWith _: WCSessionActivationState,
-               error _: Error?) {}
+  var activated: (() -> Void)?
+  func session(
+    _: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?
+  ) {
+    guard state == .activated, error == nil else { return }
+    DispatchQueue.main.async { self.activated?() }
+  }
 
   #if os(iOS)
     func sessionDidBecomeInactive(_: WCSession) {}
 
-    func sessionDidDeactivate(_: WCSession) {}
+    func sessionDidDeactivate(_ session: WCSession) { session.activate() }
   #endif
 }
 
@@ -76,14 +81,20 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
   public static let keySentAt = "sent"
 
   @objc public static let sharedInstance = WatchHelper()
-  private let session: WCSession? = WCSession.isSupported() ? WCSession.default : nil
+  private let session: WCSession?
+  private(set) var pendingPacket: [String: Any]?
   let serverDelegate = WatchConnectionServerDelegate()
   var clientDelegate: WatchConnectionClientDelegate?
   var lastPacketSignature: String?
   var lastPacketSentAt: Date?
-  let DuplicatePacketWindow = TimeInterval(30)
+  private let duplicatePacketWindow = TimeInterval(30)
 
-  override init() {
+  override convenience init() {
+    self.init(session: WCSession.isSupported() ? WCSession.default : nil)
+  }
+
+  init(session: WCSession?) {
+    self.session = session
     super.init()
     #if os(iOS)
       startServerSession()
@@ -92,15 +103,18 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
 
   #if os(iOS)
     @objc func startServerSession() {
+      serverDelegate.activated = { [weak self] in self?.sendPendingPacket() }
       if let session = session {
         session.delegate = serverDelegate
         session.activate()
       }
     }
 
-    @objc func updatedData(client: LocalCachingClient) {
+    @objc func updatedData(client: LocalCachingClient?) {
+      let onVacation = client?.getUserInfo()?.hasVacationStartedAt != false
+      let upcoming = onVacation ? [] : client?.upcomingReviews ?? []
       var halfLevel = false
-      var assignmentsAtCurrentLevel = client.getAssignmentsAtUsersCurrentLevel()
+      var assignmentsAtCurrentLevel = client?.getAssignmentsAtUsersCurrentLevel() ?? []
       var learnedCount = assignmentsAtCurrentLevel.filter { assignment -> Bool in
         assignment.srsStage >= .guru1
       }.count
@@ -108,25 +122,30 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
       // If the user is in the vocab and technically levels up but has 0
       // learned treat it as the prior level and set halfLevel=true
       if learnedCount == 0,
-         let assignment = assignmentsAtCurrentLevel.first,
-         assignment.level > 0 {
+        let assignment = assignmentsAtCurrentLevel.first,
+        assignment.level > 0
+      {
         halfLevel = true
-        assignmentsAtCurrentLevel = client.getAssignments(level: Int(assignment.level) - 1)
-        learnedCount = assignmentsAtCurrentLevel.filter { assignment -> Bool in
-          assignment.srsStage >= .guru1
-        }.count
+        assignmentsAtCurrentLevel = client?.getAssignments(level: Int(assignment.level) - 1) ?? []
+        learnedCount =
+          assignmentsAtCurrentLevel.filter { assignment -> Bool in
+            assignment.srsStage >= .guru1
+          }.count
       }
 
       let now = Int(Date().timeIntervalSince1970)
-      let nextReviewEpoch: EpochTimeInt = client.getAllAssignments()
-        .filter { a in a.isReviewStage && a.availableAt > now }
-        .map { a in EpochTimeInt(a.availableAt) }
-        .min() ?? 0
+      let nextReviewEpoch: EpochTimeInt =
+        onVacation
+        ? 0
+        : client?.getAllAssignments()
+          .filter { a in a.isReviewStage && a.availableAt > now }
+          .map { a in EpochTimeInt(a.availableAt) }
+          .min() ?? 0
 
       let packet: [String: Any] = [
-        WatchHelper.keyReviewCount: client.availableReviewCount,
-        WatchHelper.keyReviewNextHourCount: client.upcomingReviews.first ?? 0,
-        WatchHelper.keyReviewUpcomingHourlyCounts: client.upcomingReviews,
+        WatchHelper.keyReviewCount: onVacation ? 0 : client?.availableReviewCount ?? 0,
+        WatchHelper.keyReviewNextHourCount: upcoming.first ?? 0,
+        WatchHelper.keyReviewUpcomingHourlyCounts: upcoming,
         WatchHelper.keyLevelCurrent: assignmentsAtCurrentLevel.first?.level ?? 0,
         WatchHelper.keyLevelTotal: assignmentsAtCurrentLevel.count,
         WatchHelper.keyLevelLearned: learnedCount,
@@ -134,25 +153,20 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
         WatchHelper.keyNextReviewAt: nextReviewEpoch,
       ]
 
-      if !shouldSendPacket(packet: packet) {
-        NSLog("Skipping re-send of same watch data packet")
+      pendingPacket = packet
+      sendPendingPacket()
+    }
+
+    private func sendPendingPacket() {
+      guard let session, session.activationState == .activated, let packet = pendingPacket else {
         return
       }
-
-      if let session = session {
-        var deadline = 0.0
-        if session.activationState != .activated {
-          // Session still initializing
-          deadline += 0.5
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + deadline) {
-          let timestamp = [WatchHelper.keySentAt: EpochTimeInt(Date().timeIntervalSince1970)]
-          session
-            .transferCurrentComplicationUserInfo(packet
-              .merging(timestamp, uniquingKeysWith: { current, _ in current }))
-        }
-      }
+      pendingPacket = nil
+      guard shouldSendPacket(packet: packet) else { return }
+      session.transferCurrentComplicationUserInfo(
+        packet.merging(
+          [WatchHelper.keySentAt: EpochTimeInt(Date().timeIntervalSince1970)],
+          uniquingKeysWith: { current, _ in current }))
     }
   #endif
 
@@ -172,23 +186,16 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
     return signature
   }
 
-  func shouldSendPacket(packet: [String: Any]) -> Bool {
-    guard let lastSignature = lastPacketSignature,
-          let lastSent = lastPacketSentAt else {
-      // The first one's always free.
-      return true
-    }
-
+  func shouldSendPacket(packet: [String: Any], now: Date = .now) -> Bool {
     let signature = packetSignature(packet: packet)
-    let now = Date()
-    if signature == lastSignature, now < (lastSent + DuplicatePacketWindow) {
-      // Data unchanged and it has been sent within the window
+    if let lastSent = lastPacketSentAt, signature == lastPacketSignature,
+      now >= lastSent, now < lastSent.addingTimeInterval(duplicatePacketWindow)
+    {
       return false
     }
-
     lastPacketSignature = signature
     lastPacketSentAt = now
-
     return true
   }
+
 }

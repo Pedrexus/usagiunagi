@@ -15,6 +15,7 @@
 import Foundation
 import Reachability
 import StudyCore
+import StudyUI
 import WaniKaniAPI
 
 class TKMServices {
@@ -22,6 +23,7 @@ class TKMServices {
   let legacyAvatars = LegacyAvatarCache(
     directory: URL.cachesDirectory.appending(
       path: "com.hpique.haneke/shared", directoryHint: .isDirectory))
+  @MainActor let notifications: StudyNotifications
   @MainActor let lessonSettings: StudyLessonSettings
   @MainActor let subjectSettings: StudySubjectSettings
   @MainActor let fontLibrary: StudyFontLibrary
@@ -33,8 +35,12 @@ class TKMServices {
   var client: WaniKaniAPIClient!
   var localCachingClient: LocalCachingClient!
 
-  @MainActor init(fontLibrary: StudyFontLibrary? = nil, audioDownloads: StudyAudioDownloads? = nil)
-  {
+  @MainActor init(
+    fontLibrary: StudyFontLibrary? = nil, audioDownloads: StudyAudioDownloads? = nil,
+    notifications: StudyNotifications? = nil
+  ) {
+    self.notifications =
+      notifications ?? StudyNotifications(preferences: LegacyNotificationPreferences())
     lessonSettings = StudyLessonSettings(store: LegacyLessonPreferences())
     subjectSettings = StudySubjectSettings(store: LegacySubjectPreferences())
     self.fontLibrary = fontLibrary ?? StudyFontLibrary(preferences: LegacyFontPreferences())
@@ -44,4 +50,23 @@ class TKMServices {
     offlineAudio = OfflineAudio(services: self)
     radicalCharacterImages = RadicalCharacterImages(services: self)
   }
+  @MainActor func updateStudyServices() async {
+    WatchHelper.sharedInstance.updatedData(client: localCachingClient)
+    await notifications.update { [weak self] in
+      guard let client = self?.localCachingClient, let user = client.getUserInfo() else {
+        return .init()
+      }
+      let pending = Set(client.getAllPendingProgress().map { $0.assignment.subjectID })
+      let valid = Set(
+        client.getAllSubjects().filter { Int($0.level) <= client.maxLevelGrantedBySubscription }
+          .map(\.id))
+      let dates = client.getNonExcludedAssignments().filter {
+        $0.isReviewStage && $0.hasAvailableAt && !pending.contains($0.subjectID)
+          && valid.contains($0.subjectID)
+          && (Settings.showKanaOnlyVocab || !$0.isKanaOnlyVocab)
+      }.map(\.availableAtDate)
+      return StudyNotificationSnapshot(reviewDates: dates, onVacation: user.hasVacationStartedAt)
+    }
+  }
+
 }

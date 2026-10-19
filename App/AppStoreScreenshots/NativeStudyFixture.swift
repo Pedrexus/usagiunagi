@@ -39,6 +39,9 @@
           preferences: DefaultsStudyAudioPreferences(defaults: defaults),
           playback: SampleAudioPlayback()),
         defaults: defaults,
+        notifications: StudyNotifications(
+          preferences: DefaultsStudyNotificationPreferences(defaults: defaults),
+          client: NotificationFixture.client),
         appearance: arguments.contains("--light-fixture")
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
         notice: "Synthetic review fixture · memory only · uploads disabled")

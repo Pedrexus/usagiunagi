@@ -527,6 +527,38 @@
         app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "study-AppWindow-"))
           .count, 1)
     }
+    func testSharedNotificationSettingsPersistAndKeepTheCurrentWindow() {
+      let app = launch(["--light-fixture"])
+      defer { app.terminate() }
+      app.buttons["app.settings"].click()
+      app.buttons["settings.page.notifications"].click()
+      let choices = [
+        ("settings.notificationsAllReviews", true),
+        ("settings.notificationsBadging", false), ("settings.notificationSounds", true),
+      ]
+      for (id, enabled) in choices {
+        let toggle = app.switches[id]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        if (toggle.value as? NSNumber)?.boolValue != enabled { toggle.click() }
+        XCTAssertEqual((toggle.value as? NSNumber)?.boolValue, enabled)
+      }
+      let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      screenshot.name = "Shared native notification settings"
+      screenshot.lifetime = .keepAlways
+      add(screenshot)
+      app.buttons["Done"].click()
+      app.buttons["app.settings"].click()
+      app.buttons["settings.page.notifications"].click()
+      for (id, enabled) in choices {
+        let toggle = app.switches[id]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        XCTAssertEqual((toggle.value as? NSNumber)?.boolValue, enabled)
+      }
+      XCTAssertFalse(app.alerts.firstMatch.exists)
+      XCTAssertEqual(
+        app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "study-AppWindow-"))
+          .count, 1)
+    }
     func testHomeForecastAndSavedSubjectSearchOpenNativeScreens() {
       let app = launch(["--light-fixture"])
       defer { app.terminate() }

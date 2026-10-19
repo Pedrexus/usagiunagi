@@ -119,10 +119,10 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
     }
     isUpdating = true
 
-    DispatchQueue.main.async {
-      WatchHelper.sharedInstance.updatedData(client: self.services.localCachingClient)
-      self.isUpdating = false
-      self.updateHome()
+    Task {
+      isUpdating = false
+      updateHome()
+      await services.updateStudyServices()
     }
   }
 

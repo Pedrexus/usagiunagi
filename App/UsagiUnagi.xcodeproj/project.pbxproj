@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A27B00000000000000000001 /* NotificationFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27B00000000000000000002 /* NotificationFixture.swift */; };
 		031C58106BD3D94847C6423C /* Pods_AppTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BAB1A17A0A21D0379D8E1B2C /* Pods_AppTests.framework */; };
 		047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5F84B9E7F40CE19F2FDE97 /* StudyCore */; };
 		0833BA0BAAC68D162D964D99 /* StudySpeech in Frameworks */ = {isa = PBXBuildFile; productRef = 5E2663408318DBE16C356C9A /* StudySpeech */; };
@@ -241,6 +242,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A27B00000000000000000002 /* NotificationFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationFixture.swift; sourceTree = "<group>"; };
 		0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegacyStudyImporter.swift; sourceTree = "<group>"; };
 		26802F1B8F701F7DEB50B519 /* Pods-Tsurukame.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tsurukame.debug.xcconfig"; path = "Target Support Files/Pods-Tsurukame/Pods-Tsurukame.debug.xcconfig"; sourceTree = "<group>"; };
 		27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
@@ -627,6 +629,7 @@
 			isa = PBXGroup;
 			children = (
 				A27100000000000000000005 /* FontFixture.swift */,
+				A27B00000000000000000002 /* NotificationFixture.swift */,
 				A27200000000000000000002 /* AudioFixture.swift */,
 				A27300000000000000000002 /* DeveloperFixture.swift */,
 				A27500000000000000000002 /* ShellFixture.swift */,
@@ -1218,6 +1221,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A27100000000000000000004 /* FontFixture.swift in Sources */,
+				A27B00000000000000000001 /* NotificationFixture.swift in Sources */,
 				A27200000000000000000001 /* AudioFixture.swift in Sources */,
 				A27300000000000000000001 /* DeveloperFixture.swift in Sources */,
 				A27500000000000000000001 /* ShellFixture.swift in Sources */,

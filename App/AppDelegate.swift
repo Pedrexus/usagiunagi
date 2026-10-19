@@ -14,12 +14,9 @@
 
 import Foundation
 import StudyCore
+import StudyUI
 import UIKit
 import WaniKaniAPI
-
-// The maximum number of local notifications you can add to a NotificationCenter before it starts
-// removing old ones.
-private let kMaxLocalNotifications = 64
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
   // Owned here rather than by the scene delegate: these outlive any individual scene, and are used
@@ -34,6 +31,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   {
     Settings.migrate()
     Screenshotter.setUp()
+    let notifications = StudyNotifications(
+      preferences: LegacyNotificationPreferences(),
+      client: {
+        #if DEBUG
+          if Screenshotter.isActive { return NotificationFixture.client }
+        #endif
+        return .system
+      }())
 
     application.setMinimumBackgroundFetchInterval(UIApplication.backgroundFetchIntervalMinimum)
     #if DEBUG
@@ -41,12 +46,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         services = TKMServices(
           fontLibrary: StudyFontLibrary(
             catalog: loader, preferences: LegacyFontPreferences(), configuration: configuration),
-          audioDownloads: Screenshotter.audioFixture())
+          audioDownloads: Screenshotter.audioFixture(), notifications: notifications)
       } else {
-        services = TKMServices(audioDownloads: Screenshotter.audioFixture())
+        services = TKMServices(
+          audioDownloads: Screenshotter.audioFixture(), notifications: notifications)
       }
     #else
-      services = TKMServices()
+      services = TKMServices(notifications: notifications)
     #endif
 
     return true
@@ -64,92 +70,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     lcc.sync(quick: true, progress: Progress(totalUnitCount: -1)).finally {
-      self.updateAppBadgeCount()
-      completionHandler(.newData)
-    }
-  }
-
-  func updateAppBadgeCount() {
-    if !Settings.notificationsAllReviews, !Settings.notificationsBadging {
-      return
-    }
-    if services.localCachingClient == nil {
-      return
-    }
-
-    let user = services.localCachingClient.getUserInfo()
-    let reviewCount = services.localCachingClient.availableReviewCount
-    let upcomingReviews = services.localCachingClient.upcomingReviews
-
-    if user?.hasVacationStartedAt ?? false {
-      UIApplication.shared.applicationIconBadgeNumber = 0
-      return
-    }
-
-    WatchHelper.sharedInstance.updatedData(client: services.localCachingClient)
-
-    let nc = UNUserNotificationCenter.current()
-    nc.getNotificationSettings { settings in
-      // Don't do anything unless the user has granted some notification permission.
-      switch settings.authorizationStatus {
-      case .authorized, .ephemeral, .provisional:
-        break
-      default:
-        return
-      }
-
-      DispatchQueue.main.async {
-        UIApplication.shared.applicationIconBadgeNumber = reviewCount
-        nc.removeAllPendingNotificationRequests()
-
-        let startDate = NSCalendar.current.nextDate(
-          after: Date(),
-          matching: DateComponents(minute: 0, second: 0),
-          matchingPolicy: .nextTime)!
-        let startInterval = startDate.timeIntervalSinceNow
-        var cumulativeReviews = reviewCount
-        var notificationsAdded = 0
-        for hour in 0..<upcomingReviews.count {
-          let reviews = upcomingReviews[hour]
-          if reviews == 0 {
-            continue
-          }
-          cumulativeReviews += reviews
-
-          let triggerTimeInterval = startInterval + (Double(hour) * 60 * 60)
-          if triggerTimeInterval <= 0 {
-            // UNTimeIntervalNotificationTrigger sometimes crashes with a negative
-            // triggerTimeInterval.
-            continue
-          }
-          let identifier = "badge-\(hour)"
-          let content = UNMutableNotificationContent()
-          if settings.alertSetting == .enabled, Settings.notificationsAllReviews {
-            content.body =
-              "\(cumulativeReviews) review\(cumulativeReviews == 1 ? "" : "s") "
-              + "available (\(upcomingReviews[hour]) new)"
-          }
-          if settings.badgeSetting == .enabled, Settings.notificationsBadging {
-            content.badge = NSNumber(value: cumulativeReviews)
-          }
-          if settings.soundSetting == .enabled, Settings.notificationSounds {
-            content.sound = UNNotificationSound.default
-          }
-
-          let trigger = UNTimeIntervalNotificationTrigger(
-            timeInterval: triggerTimeInterval,
-            repeats: false)
-          let request = UNNotificationRequest(
-            identifier: identifier, content: content,
-            trigger: trigger)
-
-          nc.add(request, withCompletionHandler: nil)
-          notificationsAdded += 1
-          if notificationsAdded >= kMaxLocalNotifications {
-            break
-          }
-        }
+      Task { @MainActor in
+        await self.services.updateStudyServices()
+        completionHandler(.newData)
       }
     }
   }
+
 }

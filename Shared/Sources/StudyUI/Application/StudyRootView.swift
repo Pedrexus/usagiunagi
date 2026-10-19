@@ -9,6 +9,8 @@ public struct StudyRootView: View {
   private let appName: String
   private let appearance: ColorScheme?
   private let notice: String?
+  private let notifications: StudyNotifications?
+  @Environment(\.scenePhase) private var scenePhase
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudySubjectSettings.self) private var subjectSettings
   @Environment(StudyAudioLibrary.self) private var audio
@@ -28,13 +30,20 @@ public struct StudyRootView: View {
   @Environment(\.openURL) private var openURL
   @Environment(\.appearsActive) private var appearsActive
   public init(
-    model: StudyAppModel, appName: String, appearance: ColorScheme? = nil, notice: String? = nil
+    model: StudyAppModel, appName: String, appearance: ColorScheme? = nil, notice: String? = nil,
+    notifications: StudyNotifications? = nil
   ) {
     self.model = model
     _signIn = State(initialValue: StudySignIn { try await model.connect($0) })
     self.appName = appName
     self.appearance = appearance
     self.notice = notice
+    self.notifications = notifications
+  }
+  private struct NotificationReadKey: Equatable {
+    let accountID: String?
+    let savedAt: Date?
+    let preferences: StudyLessonPreferences
   }
   private struct AudioReadKey: Equatable {
     let accountID: String?
@@ -126,6 +135,16 @@ public struct StudyRootView: View {
         await openLinkIfReady()
       }
       .onAppear { updateHeader() }
+      .task(
+        id: NotificationReadKey(
+          accountID: model.snapshot?.accountID,
+          savedAt: model.snapshot?.savedAt, preferences: lessonSettings.value)
+      ) {
+        await updateNotifications()
+      }
+      .onChange(of: scenePhase) { _, _ in
+        Task { await updateNotifications() }
+      }
       .onChange(of: path) { _, values in
         if !values.contains(where: {
           switch $0 {
@@ -178,6 +197,8 @@ public struct StudyRootView: View {
             Button("Subject details") { settingsPath.append(.subjectSettings) }
               .accessibilityIdentifier("settings.page.subjects")
             Button("Review settings") { settingsPath.append(.reviewSettings) }
+            Button("Notifications") { settingsPath.append(.notificationSettings) }
+              .accessibilityIdentifier("settings.page.notifications")
             Button("Saved work") { settingsPath.append(.savedWork) }
             Button("WaniKani account") { settingsPath = [.account] }
           }.formStyle(.grouped).navigationTitle("Settings")
@@ -217,6 +238,13 @@ public struct StudyRootView: View {
     switch value {
     case .account: account
     case .lessonSettings: LessonSettingsView(settings: lessonSettings)
+    case .notificationSettings:
+      if let notifications {
+        Form { NotificationSettingsSection(notifications: notifications) }
+          .formStyle(.grouped).navigationTitle("Notifications")
+      } else {
+        ContentUnavailableView("Connect to receive review reminders", systemImage: "bell")
+      }
     case .subjectSettings:
       SubjectSettingsView(
         settings: subjectSettings,
@@ -417,11 +445,26 @@ public struct StudyRootView: View {
       linkMessage = error.localizedDescription
     }
   }
+  private func updateNotifications() async {
+    guard let notifications, model.snapshot?.isSample != true else { return }
+    await notifications.update { [model, lessonSettings] in
+      guard let snapshot = model.snapshot, !snapshot.isSample, let accountID = snapshot.accountID,
+        let store = model.savedWorkStore
+      else { return .init() }
+      let available = try await store.availability(
+        accountID: accountID, lessonPreferences: lessonSettings.value)
+      guard model.snapshot?.accountID == accountID, model.snapshot?.isSample == false else {
+        throw CancellationError()
+      }
+      return available.notifications
+    }
+  }
   private var account: some View {
     Form {
       StudySignInFields(model: signIn, submitTitle: "Connect and sync") { _ in
         showSettings = false
         tab = .home
+        Task { await notifications?.requestAuthorizationIfNeeded() }
       }.disabled(model.isSyncing)
       Section("On this device") {
         Text("Your API token stays in this device's Keychain; saved work stays on this device.")

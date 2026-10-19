@@ -165,3 +165,14 @@ enum ReviewPreferencesAdapter {
     }
   }
 }
+
+/// Keep archived iOS notification keys until the native writer/preference handoff.
+@MainActor final class LegacyNotificationPreferences: StudyNotificationPreferences {
+  func value(for option: NotificationPreference) -> Bool {
+    Setting(option.defaultValue, option.key).wrappedValue
+  }
+  func set(_ value: Bool, for option: NotificationPreference) {
+    var setting = Setting(option.defaultValue, option.key)
+    setting.wrappedValue = value
+  }
+}

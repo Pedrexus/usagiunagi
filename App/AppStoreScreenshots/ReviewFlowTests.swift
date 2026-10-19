@@ -1763,6 +1763,26 @@ extension ReviewFlowTests {
     XCTAssertTrue(app.navigationBars["Reviews"].waitForExistence(timeout: 5))
   }
 
+  @MainActor func testSharedNotificationSettingsPersistWithoutSystemPrompts() {
+    continueAfterFailure = false
+    let app = launchSettings()
+    defer { clearFixture(app) }
+    app.buttons["settings.page.appearance"].tap()
+    let choices = [
+      ("settings.notificationsAllReviews", true),
+      ("settings.notificationsBadging", false), ("settings.notificationSounds", true),
+    ]
+    for (id, enabled) in choices { setSettingsSwitch(app.switches[id], on: enabled, in: app) }
+    XCTAssertFalse(app.alerts.firstMatch.exists)
+    app.navigationBars.buttons.firstMatch.tap()
+    app.buttons["settings.page.appearance"].tap()
+    for (id, enabled) in choices {
+      let toggle = app.switches[id]
+      scrollTo(toggle, in: app)
+      XCTAssertEqual(toggle.value as? String, enabled ? "1" : "0")
+    }
+    XCTAssertFalse(app.alerts.firstMatch.exists)
+  }
   @MainActor func testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation() {
     continueAfterFailure = false
     let app = launchSettings()

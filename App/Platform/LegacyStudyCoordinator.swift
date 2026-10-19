@@ -21,13 +21,11 @@ import WaniKaniAPI
 
   let navigationController = NavigationController()
   private let services: TKMServices
-  private let appDelegate: AppDelegate
   private var pendingLinks: [StudyLink] = []
   private var pendingActivities: [String] = []
 
-  init(services: TKMServices, appDelegate: AppDelegate) {
+  init(services: TKMServices) {
     self.services = services
-    self.appDelegate = appDelegate
     super.init()
     navigationController.view.tintColor = TKMStyle.Color.accent
     UITableView.appearance().backgroundColor = TKMStyle.Color.background
@@ -47,6 +45,7 @@ import WaniKaniAPI
   func becomeActive() {
     navigationController.view.window?.setInterfaceStyle(Settings.interfaceStyle)
     services.reachability.startNotifier()
+    Task { await services.updateStudyServices() }
     openPendingURLs()
 
     if let vc = navigationController.topViewController as? MainViewController {
@@ -56,7 +55,7 @@ import WaniKaniAPI
 
   func resignActive() {
     services.reachability.stopNotifier()
-    appDelegate.updateAppBadgeCount()
+    Task { await services.updateStudyServices() }
   }
 
   func openURL(_ url: URL) {
@@ -124,9 +123,7 @@ import WaniKaniAPI
     services.client.subjectLevelGetter = services.localCachingClient
 
     if !Screenshotter.isActive {
-      // Ask for notification permissions.
-      let unc = UNUserNotificationCenter.current()
-      unc.requestAuthorization(options: [.badge, .alert, .sound]) { _, _ in }
+      Task { await services.notifications.requestAuthorizationIfNeeded() }
     }
 
     let pushMainViewController = { () in
@@ -162,6 +159,7 @@ import WaniKaniAPI
     Settings.userEmailAddress = ""
     services.localCachingClient.clearAllDataAndClose()
     services.localCachingClient = nil
+    Task { await services.updateStudyServices() }
 
     pushLoginViewController()
   }

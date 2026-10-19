@@ -1,0 +1,369 @@
+{
+  "recorded_at": "2026-10-19T23:48:59+09:00",
+  "baseline": "2959ef9b0daf3dbdeb740eea7ef9ea3fdd53bd05",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Share notification policy, native delivery/permission ownership and SwiftUI controls between native Mac and the temporary iOS host. Preserve archived choices, original independent banner/badge/sound behavior and watch packet fields; decouple watch data from notification preferences and replace guessed activation delay. This is not the iOS writer cutover.",
+  "sources": {
+    "App/AppDelegate.swift": "7df47f5034b11b24decea11e17e14bbd3fb636029839f124e6ddb623df3bab68",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "7692db9d3483cca56c7991ae12a6d1d83c6495aca8ef9408689f78674347254f",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "e7c6b7f1e68469c002de0686da2e572d0a6f6b2963333b92d1e1ebc2abc3916a",
+    "App/AppStoreScreenshots/NotificationFixture.swift": "bda394ed684351f7f4f696eed4d4c2d18344741a541778d20a658fb033edb77b",
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "d4a8d8c150774ee3f8c54ea5234692c0cb0a6b174bfadf7c2c9a19104ace0010",
+    "App/AppTests/NotificationPreferencesTests.swift": "3b4457d2c151cfbd33d91c9f41f481155c311c57e7f31d334825c4455f3cb1b7",
+    "App/Application/StudyAppAssembly.swift": "3d4e6db7ac86654ae252f0b10d7f08d256b391404d500908624a68b5e8968ce9",
+    "App/Features/Home/MainViewController.swift": "806c0b3c7a99a0377cdd617555413e9d3a39262a4f7730c4d95a05ec9a02829d",
+    "App/Features/Settings/AppearanceSettings.swift": "3958ae7e706f021f8035ae0b970646e95f6135275ae91d800e056889dac9f8b7",
+    "App/Features/Settings/LegacyPreferences.swift": "792515dcf521c698af7f1ca8f7ac97596e584ce517e16995ea132c215805f9e1",
+    "App/Features/Settings/SettingsViewController.swift": "abdfe35b5535cb483111938235a842f064eb9a695d46b873712da667dd22199d",
+    "App/Platform/LegacyStudyCoordinator.swift": "c1ec3e946ceebee550b527711c267583794ba3371991502a9ff1369c0c898794",
+    "App/Platform/LegacyStudyWindow.swift": "851ae69561ba02e08d7cdd6ae2a37efb2f44039394e811bc2fce44cbbcda19a7",
+    "App/Services.swift": "af37139d3d4bbf4f996a2b3eeb2fa6e5a4aebbcfbd28e61f850a863f9b698c99",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "26a6426f805e4178aa4237033011ca0effbfd91c6c300127f19c881958535e78",
+    "App/UsagiUnagiApp.swift": "79b6e74be6a3a15d746951205890c53c9dd956d34ed96af26e7f9d64499f1cc1",
+    "App/WatchHelper.swift": "7f0b1d0115928240a214341e1934130e1585860dd3982d568eea9e3c7859a5db",
+    "Shared/Sources/StudyCore/StudyNotificationPlan.swift": "84ba354be0a4a2fc1340902cdcff71259d88a330c268066b94b9a832b1a95fa8",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "1c3dda77f929bbd59af5223e4a52f9ed6c91d5c1c81f65367f5cc90999ace644",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "e7ed7567fd2d95e5ff161e45e3c33bc91fd917028161d51bbcddbe90ccdf82dc",
+    "Shared/Sources/StudyUI/Settings/NotificationSettingsSection.swift": "f2799572296bdfa93a816c1f34c52cba6bb28379ae18c388059328352dfe360e",
+    "Shared/Sources/StudyUI/Settings/StudyNotifications.swift": "4df15be29b9d3e702ac7c09dadb6a69b6a9db6facb8d697fe040b0c4d8065e56",
+    "Shared/Tests/StudyCoreTests/StudyAvailabilityTests.swift": "6c770bca5d64d2f81cb8b8862ed07565816805dd0315c09936513c1bacfc49d4",
+    "Shared/Tests/StudyCoreTests/StudyNotificationPlanTests.swift": "da51eb5e26a62047e6ebd34f1f637303ea680d713bc37f267e5aba7e85621325",
+    "Shared/Tests/StudyUITests/StudyNotificationsTests.swift": "efab6b701680cef1ba6f1bcccd25f118d5aa29cd173ae7ab761b5bf1cb9727fa"
+  },
+  "checks": {
+    "shared_mac": {
+      "log": "/private/tmp/usagi-notifications-accepted-shared-mac.log",
+      "sha256": "ede06583ebd49afc88e243b8d2705c876efe4d036af2ffa287d633e687583a0f",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 377,
+        "suiteCounts": [
+          34,
+          7,
+          145,
+          191
+        ]
+      }
+    },
+    "shared_ios": {
+      "log": "/private/tmp/usagi-notifications-accepted-shared-ios.log",
+      "sha256": "bccc54ef88e81ebd56567bd5da89ee2b884a29c74644e5b30fdabecdc3baa126",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 377,
+        "passedTests": 377,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-883d301bf0fa408cbfb0a1c45b9f62bc.xcresult"
+    },
+    "hosted_ios": {
+      "log": "/private/tmp/usagi-notifications-accepted-hosted.log",
+      "sha256": "fe07fb3f8562600991996c2a025b220c08fd0bcad7081b1afbc723eb2aa3066e",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-63bc7fe0168f4332b42b95182c506e05.xcresult"
+    },
+    "native_final": {
+      "log": "/private/tmp/usagi-notifications-accepted-native-ui.log",
+      "sha256": "c2ba047c146462e5c78cb3ee2d5c3c97915dc0b021caa615f8b9d283923716f4",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-dc20537c05f642029d7037da5f46b960.xcresult"
+    },
+    "native_expanded": {
+      "log": "/private/tmp/usagi-notifications-native-ui.log",
+      "sha256": "2540090968931cf7389937e5d814d25d7adbb1116c5c6bb24ac4f1393e08d790",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6cbd46824ad141fbb81317aa876c4050.xcresult"
+    },
+    "phone_settings_gate": {
+      "log": "/private/tmp/usagi-notifications-mainboard-phone-settings.log",
+      "sha256": "53720b3b036490d41451f8cbb45135193f5dd2ce47f868b87fe5a3d4f13d9d98",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-71b072b8252b4a8baf3600bc90e99b6c.xcresult"
+    },
+    "phone_final": {
+      "log": "/private/tmp/usagi-notifications-accepted-phone-ui.log",
+      "sha256": "46597623da714fa112c2df1f3f91b8b306f4b24606316444c7a786b22e73271f",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-40d5446067ec48128cfa512a2cc3e019.xcresult"
+    },
+    "tablet_settings_gate": {
+      "log": "/private/tmp/usagi-notifications-mainboard-pad-settings.log",
+      "sha256": "d1ae1e7f1ce50bee4f1718648946b76ec2243afe1a5f36bd9d6731d24ecc5694",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a9f3231e27c8419b81c00bbb7b18178e.xcresult"
+    },
+    "phone_home_reauth": {
+      "log": "/private/tmp/usagi-notifications-phone-ui.log",
+      "sha256": "4dd294967a9af06cc2438d702da91def807b50065a033beea24d788e03e1d988",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5f480d178e5a4d9b8f2c636a4ba05c92.xcresult"
+    },
+    "tablet_home_reauth": {
+      "log": "/private/tmp/usagi-notifications-pad-ui.log",
+      "sha256": "767512ef0616594c2de4f6524a150384d9846865672a68d842b7e8f1591ebf51",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 4,
+        "passedTests": 4,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-f2bbf66ff7874a74afc997cfa30db4fb.xcresult"
+    },
+    "release_mac": {
+      "log": "/private/tmp/usagi-notifications-accepted-release-mac.log",
+      "sha256": "78da732a4674d6299e2e583495f8e7521d2afe9a401365924c93b68ba956828c",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-23b770f525c54b4d8ec3437ba5405c2d.xcresult"
+    },
+    "release_ios": {
+      "log": "/private/tmp/usagi-notifications-accepted-release-ios.log",
+      "sha256": "a897513b2dbf0108d5d14324a2d7d71af2d6944117aa24711c43f180fc972249",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 87,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-a0f832397de4465d8ebb27fc7ce4016a.xcresult"
+    }
+  },
+  "regressions": {
+    "capacity": {
+      "log": "/private/tmp/usagi-notifications-capacity-before.log",
+      "sha256": "0915bb9ee44ebdcff232bbdbf7799c64b93a0c089494bda03b54917e6f96fd9d",
+      "result": "Expected failing regression during implementation; repaired in the final 377-function suites"
+    },
+    "window_notice": {
+      "log": "/private/tmp/usagi-notifications-window-before.log",
+      "sha256": "104611aaa1496ce4c63f26de48fc06c76beae3f6a7957cb0451126bdbbd40ff6",
+      "result": "Expected failing regression during implementation; repaired in the final 377-function suites"
+    }
+  },
+  "acceptance": {
+    "scheduling": "Core tests reproduce the 10:37 now / 11:25 availability example: an old relative-bin/top-of-hour combination would fire at 11:00; the new plan fires at 12:00. Exact-hour availability stays at that hour. DST/timezone cases, cumulative counts, maximum cohorts, vacation/no delivery, foreign request ownership and capacity reservation are covered. No earlier than the supplied stored availability dates is claimed; OS delivery time and existing second-resolution storage are separate limits.",
+    "ownership": "A serialized worker fences stale reads and noncooperative additions, reserves room for unrelated pending requests, clears managed work on disconnect/vacation and exposes source/add/badge failures for retry. Permission checks reserve ownership before awaiting status. Notices are returned to the originating view, not a global presentation flag; per-option UUID intents reject stale System Settings returns and preserve independent windows.",
+    "parity": "Three existing preference keys/defaults remain archive-compatible on iOS; native defaults store Bool values under their own namespace. Banner/badge/sound choices are independent, including sound with badges when banners are off. Disabling sound preserves the current enabled badge. Background/foreground refreshes do not prompt. The previous legacy post-sign-in request remains; native sign-in and settings supply an explicit permission action.",
+    "watch": "Updates no longer depend on notification choices. Logout and vacation zero review data; level progress and existing packet keys remain. Latest data waits for actual activation, deactivated phone sessions reactivate and a first packet is deduplicated for thirty seconds. Nil-session hosted tests cover first/change/clock/logout behavior without activating WatchConnectivity.",
+    "tests": "377 shared functions per platform: Core 191, persistence 145, speech 7, app model 15 and notification owner 19. Five old app-only permission functions moved to portable coverage; four archive/watch integration functions replace them, giving 93 hosted functions. Parameter executions are not additional functions.",
+    "ui_scope": "Final typed intent/sound source is compiled and exercised by shared suites on both platforms, final native settings/sign-in (2), final tablet Mainboard settings gate (4), final phone notification persistence (1), hosted tests and both Release builds. Earlier expanded Mac and phone/tablet Home/reconnect runs cover unchanged lesson, Home, vacation and reauthentication behavior; they are checkpoint evidence, not an all-case final-source bundle. Four distinct Mac cases and six distinct UI cases per phone/tablet occur across recorded runs; overlaps are not counted twice.",
+    "isolation": "Every notification operation is injected for synthetic UI/unit accounts. These tests do not request real OS authorization, change real badges, register real alerts, access browser credentials, take real WaniKani exercises or change real accounts. Sample-mode release roots receive no notification service. Only explicit test-app windows are captured on Mac."
+  },
+  "ordinary_release_reopen": {
+    "log": "/private/tmp/usagi-notifications-release-reopen.log",
+    "sha256": "c3736d38bd5b4dc75d75dfa1254ffd844e0dcc50c348e6b46a0d081aab363859",
+    "cycles": [
+      {
+        "cycle": 1,
+        "processID": 42950,
+        "visibleMainWindows": 1
+      },
+      {
+        "cycle": 2,
+        "processID": 43207,
+        "visibleMainWindows": 1
+      }
+    ]
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-notifications-format.log",
+    "sha256": "acd686570ec78c43842708bbfd8d0eb991dd51a052bb806b03eea4643932fc84",
+    "scope": "24 changed Swift files; the two owner annotations excluded. No rule or checker disabled."
+  },
+  "release": {
+    "mac": {
+      "path": ".build/Xcode/UnifiedMacRelease/Build/Products/Release/Tsurukame.app/Contents/MacOS/Tsurukame",
+      "sha256": "ab1416765839ceb25791a16ea81266c72b8b9e991049bd73d8fb7f0fba8b0e65",
+      "retired_and_fixture_markers_present": {
+        "--review-fixture": false,
+        "other-account-token": false,
+        "fixture-fred": false,
+        "WaniKaniWebClient": false,
+        "PMKFoundation": false
+      }
+    },
+    "ios": {
+      "path": ".build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Tsurukame",
+      "sha256": "ec4d5e34f36a914cc79c14bb312ff03c1eb1e061d7e2eb3cf3ac4db2d11f93af",
+      "retired_and_fixture_markers_present": {
+        "--review-fixture": false,
+        "other-account-token": false,
+        "fixture-fred": false,
+        "WaniKaniWebClient": false,
+        "PMKFoundation": false
+      }
+    }
+  },
+  "screenshots": [
+    {
+      "path": "/private/tmp/usagi-notifications-accepted-images/65D35F9C-B0DD-4F0A-8E02-B7D9C188246F.png",
+      "sha256": "ca7ee84c9821b879ca709068488b5ee867325105f986267010bae59fc16b4c65"
+    }
+  ],
+  "mainboard": {
+    "before": "e0b6e8255016904b13f9d8d6f8f4a46db46270fb",
+    "branch": "codex/usagi-apple-workflow",
+    "path": "mainboard.toml",
+    "sha256": "7f66274b6e15648fad174386b0eab9fefbda61ab64431afd7c88892790a8cf4c",
+    "selectors_per_task": 4,
+    "commit": "add808a71c505bf4ce3b06f7f8245e32a227a34f"
+  },
+  "loc": {
+    "baseline": "2959ef9b0daf3dbdeb740eea7ef9ea3fdd53bd05",
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29031,
+    "after": 29340,
+    "changed": [
+      {
+        "path": "App/AppDelegate.swift",
+        "before": 155,
+        "after": 80
+      },
+      {
+        "path": "App/Application/StudyAppAssembly.swift",
+        "before": 53,
+        "after": 58
+      },
+      {
+        "path": "App/Features/Settings/AppearanceSettings.swift",
+        "before": 170,
+        "after": 30
+      },
+      {
+        "path": "App/Features/Settings/LegacyPreferences.swift",
+        "before": 167,
+        "after": 178
+      },
+      {
+        "path": "App/Features/Settings/SettingsViewController.swift",
+        "before": 206,
+        "after": 211
+      },
+      {
+        "path": "App/Platform/LegacyStudyCoordinator.swift",
+        "before": 204,
+        "after": 202
+      },
+      {
+        "path": "App/Platform/LegacyStudyWindow.swift",
+        "before": 70,
+        "after": 69
+      },
+      {
+        "path": "App/Services.swift",
+        "before": 47,
+        "after": 72
+      },
+      {
+        "path": "App/UsagiUnagiApp.swift",
+        "before": 51,
+        "after": 53
+      },
+      {
+        "path": "App/WatchHelper.swift",
+        "before": 194,
+        "after": 201
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 518,
+        "after": 561
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift",
+        "before": 248,
+        "after": 249
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyNotificationPlan.swift",
+        "before": 0,
+        "after": 103
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/NotificationSettingsSection.swift",
+        "before": 0,
+        "after": 87
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/StudyNotifications.swift",
+        "before": 0,
+        "after": 238
+      }
+    ],
+    "artwork_bytes": 27986,
+    "artwork_sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "limits": [
+    "Real signed-device notification authorization/delivery, multiwindow UI permission prompts, paired-watch activation/handoff and modern watch/complications remain unverified. Portable intent tests exercise multiple callers; OS permission settings are not changed by automation.",
+    "The earlier expanded Mac bundle retains an internal thread-priority warning. Final focused Mac/shared/hosted/settings result warnings are retained in each summary; a quiet subset is not a fix of the earlier warning. Compiler warning counts are incremental diagnostics, not a claimed warning reduction.",
+    "The current iOS writer is still SQLite/protobuf/Swift 5 behind SwiftUI. Keychain/archive bootstrap identity, consistent import, crash/relaunch/rollback, native background/companion ownership, remaining avatar/developer settings and normal automatic sending parity still gate native root adoption. Uncertain answers cannot replay automatically.",
+    "Physical speech/media/IME, full-account predictive validation, remaining exam-subset verification, hosted Actions, signing and publication remain open. Mainboard tool commit 7acaf73 is still unpublished; no hosted CI or store release is claimed."
+  ],
+  "delivery": "App and parent task-file commits on their existing branches only. No PR or push; no app tree/gitlink registered in the parent. Owner annotations and unrelated Mainboard source edits preserved. AIZK tools unavailable; current task/architecture/development docs and this receipt retain the development record."
+}

@@ -14,11 +14,13 @@ struct UsagiUnagiApp: App {
   var body: some Scene {
     WindowGroup(id: "study") {
       #if os(iOS)
-        LegacyStudyWindow(services: appDelegate.services, appDelegate: appDelegate)
+        LegacyStudyWindow(services: appDelegate.services)
       #else
         StudyRootView(
           model: services.model, appName: AppIdentity.name, appearance: services.appearance,
-          notice: services.notice
+          notice: services.notice,
+          notifications: ProcessInfo.processInfo.arguments.contains("--sample-data")
+            ? nil : services.notifications
         )
         .environment(services.fonts).environment(services.audio).environment(
           services.lessonSettings

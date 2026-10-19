@@ -25,6 +25,22 @@ struct StudyAvailabilityTests {
     profile.maxLevelGranted = 3
     return .init(legacy: .init(schemaVersion: 15, profile: profile))
   }
+  @Test func notificationProjectionRetainsExactDatesAndOmitsMissingContent() {
+    var item = assignment(1)
+    item.availableAt = Int64(now.timeIntervalSince1970) + 1801
+    let available = StudyAvailability(
+      account: account, subjects: [subject(1)],
+      assignments: [item, assignment(2)], now: now)
+    #expect(available.notifications.reviewDates == [now.addingTimeInterval(1801)])
+    #expect(!available.notifications.onVacation)
+    var vacation = account
+    vacation.profile.vacationStartedAt = 1
+    #expect(
+      StudyAvailability(
+        account: vacation, subjects: [subject(1)],
+        assignments: [item], now: now
+      ).notifications.onVacation)
+  }
   @Test func queuesShareVisibilityAccessExclusionAndPendingRules() {
     var subjects = (1...8).map { subject(Int64($0)) }
     subjects[2].hiddenAt = 1
@@ -43,6 +59,7 @@ struct StudyAvailabilityTests {
       account: account, subjects: subjects, assignments: assignments,
       pending: [6], excluded: [5], now: now)
     #expect(available.scheduled.map(\.subjectID) == [1])
+    #expect(available.notifications.reviewDates == [now])
     #expect(available.lessons.map(\.subjectID) == [7])
     #expect(available.practice(.recentLessons).map(\.subjectID) == [1, 5])
     #expect(available.stageCounts == [2, 0, 0, 0, 0])

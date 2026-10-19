@@ -36,6 +36,7 @@ struct ApplicationSettings: View {
   @Bindable var navigation: SettingsNavigation
   let lessons: StudyLessonSettings
   let subjects: StudySubjectSettings
+  let notificationSettings: StudyNotifications
   let back: () -> Void
   let fonts: () -> Void
   let offlineAudio: () -> Void
@@ -109,7 +110,9 @@ struct ApplicationSettings: View {
       }
       .navigationDestination(for: SettingsNavigation.Page.self) { page in
         switch page {
-        case .appearance: AppearanceSettings(appearanceChanged: appearanceChanged)
+        case .appearance:
+          AppearanceSettings(
+            appearanceChanged: appearanceChanged, notifications: notificationSettings)
         case .lessons:
           LessonSettingsView(settings: lessons)
         case .reviews:
@@ -155,6 +158,8 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
       lessons: services?.lessonSettings ?? StudyLessonSettings(store: LegacyLessonPreferences()),
       subjects: services?.subjectSettings
         ?? StudySubjectSettings(store: LegacySubjectPreferences()),
+      notificationSettings: services?.notifications
+        ?? StudyNotifications(preferences: LegacyNotificationPreferences()),
       back: { [weak self] in self?.navigationController?.popViewController(animated: true) },
       fonts: { [weak self] in
         guard let self else { return }

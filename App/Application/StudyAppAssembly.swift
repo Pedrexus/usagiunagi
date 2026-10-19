@@ -9,6 +9,7 @@ import SwiftUI
   let fonts: StudyFontLibrary
   let audio: StudyAudioLibrary
   let defaults: UserDefaults
+  let notifications: StudyNotifications
   let lessonSettings: StudyLessonSettings
   let subjectSettings: StudySubjectSettings
   let appearance: ColorScheme?
@@ -16,12 +17,16 @@ import SwiftUI
 
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
-    defaults: UserDefaults = .standard, appearance: ColorScheme? = nil, notice: String? = nil
+    defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
+    appearance: ColorScheme? = nil, notice: String? = nil
   ) {
     self.model = model
     self.fonts = fonts
     self.audio = audio
     self.defaults = defaults
+    self.notifications =
+      notifications
+      ?? StudyNotifications(preferences: DefaultsStudyNotificationPreferences(defaults: defaults))
     lessonSettings = StudyLessonSettings(store: DefaultsStudyLessonPreferences(defaults: defaults))
     subjectSettings = StudySubjectSettings(
       store: DefaultsStudySubjectPreferences(defaults: defaults))

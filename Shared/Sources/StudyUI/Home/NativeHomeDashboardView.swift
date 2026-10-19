@@ -9,7 +9,8 @@ public enum StudyDestination: Hashable, Sendable {
   case catalog(SubjectCatalogQuery, remaining: Bool = false)
   case subject(Int64)
   case search, forecast
-  case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings, subjectSettings
+  case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings, subjectSettings,
+    notificationSettings
   init(resuming session: StudySession) {
     if let scope = session.practiceScope {
       self = .practice(scope)

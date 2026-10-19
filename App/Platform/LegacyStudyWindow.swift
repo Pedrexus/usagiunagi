@@ -4,7 +4,6 @@ import UIKit
 /// Temporary presentation adapter while the existing iOS writer is replaced safely.
 struct LegacyStudyWindow: View {
   let services: TKMServices
-  let appDelegate: AppDelegate
   @Environment(\.scenePhase) private var phase
   @State private var coordinator: LegacyStudyCoordinator?
   @State private var pendingURLs: [URL] = []
@@ -22,7 +21,7 @@ struct LegacyStudyWindow: View {
     }
     .task {
       guard coordinator == nil else { return }
-      let value = LegacyStudyCoordinator(services: services, appDelegate: appDelegate)
+      let value = LegacyStudyCoordinator(services: services)
       coordinator = value
       for url in pendingURLs { value.openURL(url) }
       pendingURLs.removeAll()
