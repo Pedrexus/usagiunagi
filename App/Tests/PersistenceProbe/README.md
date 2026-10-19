@@ -21,3 +21,5 @@ With a second fresh path, `rollback-handoff` must exit 86 after a malformed pend
 For native schema upgrades, build the writer from the exact earlier committed source in a disposable package, then run the current `read-catalog` against that store. The handoff checkpoint validates `2e77f23` → current, including the optional receipt attribute. Earlier catalog upgrades are historical evidence in Docs/Validation.
 
 These checks do not activate the iOS writer cutover or prove physical/signed-device behavior, actual Keychain failures, power-loss durability or complete app parity. Actual SQLite schemas 9–15 and unchanged source bytes are covered separately by hosted Swift Testing. CloudKit remains disabled for this local store.
+
+The catalog reader also verifies old account bytes decode with no `catalogRefreshID`. Automatic-read acceptance builds the writer from exact commit `70414fb6` in a disposable archive, then reads that store with the current binary. The optional marker belongs to the existing Codable account value; no SwiftData column is added. See [current evidence](../../../Docs/Validation/2026-10-20-automatic-catalog-reads.json).

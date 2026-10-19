@@ -385,13 +385,17 @@ public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requires
         throw StudyStoreError.alreadyAttempted
       }
       row.attempted = true
+      try requireCatalogRead(accountID: review.accountID)
     }
   }
 
   /// Call only after a validated successful response for this exact attempt.
   public func acknowledgeReview(_ review: SavedReview) throws {
     try transaction {
-      if let row = try reviewRecord(review), row.attempted { modelContext.delete(row) }
+      if let row = try reviewRecord(review), row.attempted {
+        modelContext.delete(row)
+        try requireCatalogRead(accountID: review.accountID)
+      }
     }
   }
 

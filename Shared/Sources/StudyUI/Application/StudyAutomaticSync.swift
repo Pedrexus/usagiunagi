@@ -9,31 +9,42 @@ import StudyPersistence
   public private(set) var notice: String?
   private let model: StudyAppModel
   private let paths: AsyncStream<Bool>
+  private let now: @MainActor @Sendable () -> Date
   @ObservationIgnored private var accountTask: Task<Void, Never>?
   @ObservationIgnored private var networkTask: Task<Void, Never>?
   @ObservationIgnored private var changesTask: Task<Void, Never>?
   @ObservationIgnored private var pass: Task<Void, Never>?
   @ObservationIgnored private var retryTask: Task<Void, Never>?
+  @ObservationIgnored private var readTask: Task<Void, Never>?
+  private var scenes: [UUID: Bool] = [:]
+  private var lastRead: Date?
+  private var needsStudyRead = false
   private var accountID: String?
   private var online = false
   private var suspended = false
   private var requested = false
   private var retryDelay: TimeInterval = 15
 
-  public init(model: StudyAppModel, paths: AsyncStream<Bool>? = nil) {
+  public init(
+    model: StudyAppModel, paths: AsyncStream<Bool>? = nil,
+    now: @escaping @MainActor @Sendable () -> Date = { .now }
+  ) {
     self.model = model
+    self.now = now
     self.paths = paths ?? Self.networkPaths()
   }
   deinit {
     accountTask?.cancel()
     networkTask?.cancel()
     changesTask?.cancel()
+    readTask?.cancel()
     pass?.cancel()
     retryTask?.cancel()
   }
   public func start() {
     guard accountTask == nil else { return }
     let model = model
+    selectAccount(model.snapshot?.isSample == false ? model.snapshot?.accountID : nil)
     let accounts = Observations {
       model.snapshot?.isSample == false ? model.snapshot?.accountID : nil
     }
@@ -48,22 +59,64 @@ import StudyPersistence
       for await available in paths {
         guard let self, !Task.isCancelled else { return }
         self.online = available
-        self.wake()
+        self.signal()
       }
     }
   }
-  /// Foreground and connection restoration retry saved work without changing the study session.
-  public func wake() {
+  /// Await the current app-owned work without cancelling it when a waiting scene closes.
+  public func wake() async {
+    signal()
+    while let pass { await pass.value }
+  }
+  private func signal() {
     suspended = false
     retryTask?.cancel()
     retryTask = nil
     request()
+  }
+  /// A hidden/background window cannot request catalog reads; any active study defers them.
+  public func updateScene(_ id: UUID, active: Bool, studying: Bool) {
+    scenes[id] = active ? studying : nil
+    request()
+  }
+  public func removeScene(_ id: UUID) {
+    scenes[id] = nil
+    request()
+  }
+  private var canRead: Bool { !scenes.isEmpty && !scenes.values.contains(true) }
+  private var nextRead: Date? {
+    guard canRead, online, !suspended, model.snapshot?.isSample == false,
+      model.snapshot?.accountID == accountID, let saved = model.snapshot?.savedAt
+    else { return nil }
+    let current = now()
+    // Clock rollback and providers returning an older fetchedAt must not postpone reads forever
+    // or spin immediately after a successful pass.
+    let previous = max(
+      saved <= current ? saved : .distantPast,
+      lastRead.flatMap { $0 <= current ? $0 : nil } ?? .distantPast)
+    return previous.addingTimeInterval(needsStudyRead ? 60 : 1800)
+  }
+  private func scheduleRead() {
+    readTask?.cancel()
+    readTask = nil
+    guard let deadline = nextRead else { return }
+    let delay = max(1, deadline.timeIntervalSince(now()))
+    readTask = Task { [weak self] in
+      do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+      guard let self else { return }
+      self.readTask = nil
+      self.request()
+    }
   }
   private func selectAccount(_ account: String?) {
     guard accountID != account else { return }
     changesTask?.cancel()
     retryTask?.cancel()
     retryTask = nil
+    readTask?.cancel()
+    readTask = nil
+    lastRead = nil
+    needsStudyRead = false
     accountID = account
     notice = nil
     suspended = false
@@ -86,27 +139,27 @@ import StudyPersistence
       pass = nil
       if requested { request() }
     }
-    while requested, !Task.isCancelled {
-      requested = false
-      guard let account = accountID, model.snapshot?.accountID == account,
-        model.snapshot?.isSample == false, let store = model.savedWorkStore
-      else { return }
-      do {
-        await model.reloadSavedSnapshot()
-        switch try await store.automaticWorkState(accountID: account) {
-        case .none:
-          notice = nil
-          return
-        case .requiresAttention:
-          notice = "Some saved work needs attention. Open Saved work to check it."
-          return
-        case .ready: break
-        }
-        guard online else {
+    requested = false
+    guard !Task.isCancelled, let account = accountID, model.snapshot?.accountID == account,
+      model.snapshot?.isSample == false, let store = model.savedWorkStore
+    else { return }
+    var reading = false
+    do {
+      await model.reloadSavedSnapshot()
+      let work = try await store.automaticWorkState(accountID: account)
+      guard accountID == account, model.snapshot?.accountID == account else { return }
+      notice =
+        work == .requiresAttention
+        ? "Some saved work needs attention. Open Saved work to check it." : nil
+      guard online else {
+        if work == .ready {
           notice = "Offline. Completed work is saved and will sync when the connection returns."
-          return
         }
-        guard !suspended else { return }
+        scheduleRead()
+        return
+      }
+      guard !suspended else { return }
+      if work == .ready {
         let report = try await model.uploadSavedWork(accountID: account)
         guard accountID == account, model.snapshot?.accountID == account else { return }
         retryDelay = 15
@@ -117,33 +170,55 @@ import StudyPersistence
           notice = "Vacation mode pauses saved reviews and lessons."
           requested = false
           retry(after: 300)
-          return
         }
-      } catch is CancellationError { return } catch {
+      }
+      needsStudyRead =
+        try await store.accountState(accountID: account)?.catalogRefreshID != nil
+        || model.snapshot?.requiresAssignmentRefresh == true
+      if let deadline = nextRead, deadline <= now() {
+        reading = true
+        try await model.refresh(accountID: account)
         guard accountID == account, model.snapshot?.accountID == account else { return }
-        requested = false
-        await model.reloadSavedSnapshot()
-        let work = try? await store.automaticWorkState(accountID: account)
-        guard accountID == account, model.snapshot?.accountID == account else { return }
-        if work == .requiresAttention {
-          notice = "Some saved work needs attention. Open Saved work to check it."
-          return
-        }
-        if case WaniKaniClient.APIError.rateLimited(let date) = error {
-          notice = "WaniKani is limiting requests. Saved work will sync when requests can resume."
-          retry(after: max(1, date.timeIntervalSinceNow))
-        } else if case StudyUploadError.alreadyRunning = error {
-          retry(after: 1)
-        } else if isTransient(error) {
-          notice = "Couldn't sync yet. Completed work is saved on this device."
-          retry(after: retryDelay)
-          retryDelay = min(300, retryDelay * 2)
-        } else {
-          suspended = true
-          notice = error.localizedDescription
-        }
+        lastRead = now()
+        needsStudyRead =
+          try await store.accountState(accountID: account)?.catalogRefreshID != nil
+          || model.snapshot?.requiresAssignmentRefresh == true
+        retryDelay = 15
+      }
+      scheduleRead()
+    } catch is CancellationError { return } catch {
+      guard accountID == account, model.snapshot?.accountID == account else { return }
+      requested = false
+      await model.reloadSavedSnapshot()
+      let work = try? await store.automaticWorkState(accountID: account)
+      guard accountID == account, model.snapshot?.accountID == account else { return }
+      needsStudyRead =
+        (try? await store.accountState(accountID: account)?.catalogRefreshID) != nil
+        || model.snapshot?.requiresAssignmentRefresh == true
+      if !reading, work == .requiresAttention {
+        notice = "Some saved work needs attention. Open Saved work to check it."
+        scheduleRead()
         return
       }
+      if case WaniKaniClient.APIError.rateLimited(let date) = error {
+        notice = "WaniKani is limiting requests. Saved data is kept while requests pause."
+        retry(after: max(1, date.timeIntervalSinceNow))
+      } else if case StudyUploadError.alreadyRunning = error {
+        retry(after: 1)
+      } else if isTransient(error) {
+        notice =
+          reading
+          ? "Couldn't refresh yet. Your saved data is available on this device."
+          : "Couldn't sync yet. Completed work is saved on this device."
+        retry(after: retryDelay)
+        retryDelay = min(300, retryDelay * 2)
+      } else {
+        suspended = true
+        notice = error.localizedDescription
+      }
+      // Retry owns the next attempt; do not create an independent stale-read loop.
+      readTask?.cancel()
+      readTask = nil
     }
   }
   private func isTransient(_ error: any Error) -> Bool {

@@ -1,0 +1,296 @@
+{
+  "date": "2026-10-20",
+  "baseline": "70414fb6c48b81741808229cbfe20bc21a5c4261",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Use the existing shared sync owner for foreground and post-study complete catalog reads, with active-study deferral and durable account-bound refresh markers; production iOS root adoption is unchanged.",
+  "validatedFiles": {
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "115f55ca9f4007c68150a4e31baa3a4c81721bb2cff8fc22f5e5922d968bb1de",
+    "App/Tests/PersistenceProbe/README.md": "5a060f3c54f8875d2bcbca704526f1fc5533ddbc1d989134e1e2ad2b08ff6754",
+    "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/main.swift": "dc784c8fa7e2ea5d09d9fbb34fdb86e4df17f880633251a92f366f1a4b7eba36",
+    "App/UsagiUnagiApp.swift": "5e22b0fa50c54f1f2ff816e306567cebece7c476da4d96937236719ff02ba76a",
+    "Docs/Architecture.md": "aae63569356f7d784cba8031b0fd4fc6e8f560a6cf055e180a172c0871ea59f4",
+    "Docs/Development.md": "d73f76d4d1d2627df35377a4c4d5ad617b7728bd04fa4a76174648e648f240bf",
+    "Docs/History/task-checkpoints.md": "d42424875e3f71f2f9499a1b7b1bcfd1e5ee6948a5b7abfaeea932f0ef87d997",
+    "Docs/TASKS.md": "179d93d2c77da153ae969bf2c185d6cd664f75353493fcd334077e035dcccb4d",
+    "Shared/Sources/StudyCore/LegacyStudyExport.swift": "1cfdea029dd9cea18dbd8c7665de3008c9a7cd6b2eb92a2acde18c93bddbc136",
+    "Shared/Sources/StudyPersistence/StudyStore+Refresh.swift": "7346560ce1f96dd5fdd389495880fe9a7f20f59b49eb075884f15ba46ed207ca",
+    "Shared/Sources/StudyPersistence/StudyStore+Upload.swift": "bd401139726305f04ed33513f8ab30830e25d9d0c6107eb5a02a2ec6aac3b910",
+    "Shared/Sources/StudyPersistence/StudyStore.swift": "adc2be5070343152881ad27e80faec3247efb752d525e538d6e2ed01a9e2917c",
+    "Shared/Sources/StudyUI/Application/StudyAppModel.swift": "7955f9eafa0851724760687b26047e0d59f5bc4e3f76485fccc6f93917a7c6cc",
+    "Shared/Sources/StudyUI/Application/StudyAutomaticSync.swift": "bc6dd7e16ac242b00c51fb6306a30f788e53f2f20fc1d51c7e4842f01a8f744b",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "65db720338ebda78031cae153a6dece962a976c96c1a5a39393d566f848e0633",
+    "Shared/Tests/StudyPersistenceTests/CatalogFreshnessTests.swift": "a85b0654d61fda435c1fb6dcdb422d167d90e6583de5402a21a441e50eca6753",
+    "Shared/Tests/StudyUITests/AutomaticSyncTests.swift": "4659540dee95d1153a8507f4cc582158de2ba0fb1da80e920868737f31ead2e4"
+  },
+  "deletedFiles": {
+  },
+  "productionSwift": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 30753,
+    "after": 30868,
+    "changed": [
+      {
+        "path": "Shared/Sources/StudyCore/LegacyStudyExport.swift",
+        "before": 83,
+        "after": 85
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Refresh.swift",
+        "before": 232,
+        "after": 245
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Upload.swift",
+        "before": 369,
+        "after": 371
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore.swift",
+        "before": 410,
+        "after": 414
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyAppModel.swift",
+        "before": 266,
+        "after": 271
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyAutomaticSync.swift",
+        "before": 177,
+        "after": 252
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 606,
+        "after": 620
+      }
+    ]
+  },
+  "behavior": {
+    "foregroundStaleAfterSeconds": 1800,
+    "minimumAutomaticReadSpacingAfterStudySeconds": 60,
+    "activeStudyDefersReads": true,
+    "backgroundCatalogReads": false,
+    "sharedWorkerAcrossWindows": true,
+    "readCanSaveCredentials": false,
+    "readCanSendPendingWork": false,
+    "refreshMarker": "Optional UUID in the existing Codable account state; attempt/result transaction replaces it; complete read consumes only the baseline marker.",
+    "httpStrategy": "Existing full, validated downloads; no incremental watermark is inferred."
+  },
+  "sharedMac": {
+    "log": "/private/tmp/usagi-automatic-reads-shared.log",
+    "sha256": "8b0e49652a1f1da91b29a93de66c06cd1f8a7e5620e0f6f9e87ec75569a180b6",
+    "testFunctions": 456,
+    "byModule": {
+      "core": 215,
+      "persistence": 173,
+      "speech": 7,
+      "ui": 61
+    }
+  },
+  "sharedIOS": {
+    "log": "/private/tmp/usagi-automatic-reads-shared-ios.log",
+    "sha256": "80b4c806461c5b34ba992ca9a6bb9edd1dafd68a078970300d7968f9eced60aa",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0ef254bad1944654be932fee4705bbd1.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 456,
+      "passedTests": 456,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "hostedIOS": {
+    "log": "/private/tmp/usagi-automatic-reads-app.log",
+    "sha256": "9755beab04cab345396a05bb546435e072cfc0aefd45966bf3c2a0a15c969d27",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-c9e8168707804799b5e9f45259427105.xcresult",
+    "summary": {
+      "result": "Passed",
+      "totalTestCount": 99,
+      "passedTests": 99,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [
+
+      ]
+    }
+  },
+  "macBuildForTesting": {
+    "log": "/private/tmp/usagi-automatic-reads-mac-debug.log",
+    "sha256": "0cca1d85ae46ebbcb86caba3d2480eb4a81ef2681a2f9abd00767e3e0cdc2ddf",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-for-testing-1f3f091f5cbb4c41aa076fa161a11da4.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "macRelease": {
+    "log": "/private/tmp/usagi-automatic-reads-release-mac.log",
+    "sha256": "bbd81324ed80dc0687b0384227b9a2fc766de14ede683f13aaa7b0038078e0e3",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-2b10925aacb44f7ba9efa5e25cb09f49.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 0,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "iosRelease": {
+    "log": "/private/tmp/usagi-automatic-reads-release-ios.log",
+    "sha256": "42a0fb549b8638d5068e71ac57f2263d3c242bf2839a5972673e478d6ebb7a16",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-86227f351ef74784bac14acc93cd38bc.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 41,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "watchDebug": {
+    "log": "/private/tmp/usagi-automatic-reads-watch.log",
+    "sha256": "606b4b56bb9ed85273afdf548da86f83c7ccd7789ceea784b177283947d96b2d",
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-8a308653c2e54e9aad8a0be8781eab12.xcresult",
+    "summary": {
+      "status": "succeeded",
+      "errorCount": 0,
+      "warningCount": 41,
+      "analyzerWarningCount": 0,
+      "errors": [
+
+      ]
+    }
+  },
+  "persistenceRestart": {
+    "log": "/private/tmp/usagi-automatic-reads-persistence.log",
+    "sha256": "650e1ef1b54df48015eab19c371841f1bd5955e407dd9b72274b551e09a02594"
+  },
+  "committedStoreUpgrade": {
+    "baseline": "70414fb6c48b81741808229cbfe20bc21a5c4261",
+    "directory": "/private/tmp/usagi-reads-upgrade.20261020-24544-ptku78",
+    "store": "/private/tmp/usagi-reads-upgrade.20261020-24544-ptku78/catalog.store",
+    "binarySHA256": "ef624a259fcd05a0ecc74f5271fb457268d62f5618b3206a205481dc78633b30",
+    "writerLog": "/private/tmp/usagi-automatic-reads-upgrade-baseline.log",
+    "writerEvidence": {
+      "log": "/private/tmp/usagi-automatic-reads-upgrade-baseline.log",
+      "sha256": "37d1873455f4bdb75abc92b4445aea393324bc5ef33b66e1ce0f354b9e33874a"
+    },
+    "readerEvidence": {
+      "log": "/private/tmp/usagi-automatic-reads-upgrade-reader.log",
+      "sha256": "54ec2df74475671786ba3b2bc0b41e370e684e8055dcd823056139d5a18b8d62"
+    },
+    "verified": "Old account has no refresh marker and retains level/profile, catalog, assignment and pending note."
+  },
+  "handoffProcesses": {
+    "report": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm",
+    "phases": [
+      {
+        "phase": "import-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: prepared import before credential write",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm/import-handoff.log",
+        "sha256": "8226d1f89dc0f9b7692fe04fdcff3d68ecd7760ee1fc4aa4d1f4e78120f35818"
+      },
+      {
+        "phase": "save-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: saved credential before writer activation",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm/save-handoff.log",
+        "sha256": "3900df602a3a55731e898cea023a96dd95220dc2fedc610d666a50cbf1a2c7f8"
+      },
+      {
+        "phase": "activate-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: activated writer before preference hydration",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm/activate-handoff.log",
+        "sha256": "198423b500da8b0c2c4ec09a82336f59aa7a878b99740e3bcc451579968168bb"
+      },
+      {
+        "phase": "edit-handoff",
+        "status": 0,
+        "checkpoint": null,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm/edit-handoff.log",
+        "sha256": "0953d2e11387a947c549b614dae64ef3915889199dd95975f702455f146c46bb"
+      },
+      {
+        "phase": "read-handoff",
+        "status": 0,
+        "checkpoint": null,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm/read-handoff.log",
+        "sha256": "19b6c0ef68d7c8030ed6ccb9889cf9828d5a85cb2122cacb0a8448714d556ef3"
+      },
+      {
+        "phase": "rollback-handoff",
+        "status": 86,
+        "checkpoint": "CHECKPOINT: failed import rolled back before credential write",
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm/rollback-handoff.log",
+        "sha256": "5421a30864ed675c9f169118e7346fed34a20391e51c3579f02b28baf0e5e2c1"
+      },
+      {
+        "phase": "verify-rollback-handoff",
+        "status": 0,
+        "checkpoint": null,
+        "log": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/ReadHandoff.20261020-27644-1wwg7bm/verify-rollback-handoff.log",
+        "sha256": "e93ede57a7aeaf96b124855cacc007d7c711c12bf6e28e66d92bddf36317c3d3"
+      }
+    ]
+  },
+  "nativeMac": {
+    "environment": "DEBUG-only in-memory synthetic account and simulated service",
+    "syntheticCompletedReviews": 1,
+    "manualRefreshPressed": false,
+    "initialTimestamp": "Oct 20, 2026 at 6:11",
+    "automaticTimestamp": "Oct 20, 2026 at 6:12",
+    "states": [
+      {
+        "log": "/private/tmp/usagi-automatic-read-before.txt",
+        "sha256": "ea3666af390f52218466127489ad09fc49b0ccd782a557c59465468bde3c85bd"
+      },
+      {
+        "log": "/private/tmp/usagi-automatic-read-after.txt",
+        "sha256": "0898e3d95df89d4470c65b8c89c475eaf03ce62be0ee17487ae34bf23d91fa87"
+      },
+      {
+        "log": "/private/tmp/usagi-automatic-read-final.txt",
+        "sha256": "67fdc6f0c8bfb43c4ff93f48e3cbb5be763df863b5f144edc86cab504e146f1f"
+      }
+    ],
+    "screenshot": {
+      "log": "/private/tmp/usagi-automatic-read-mac.png",
+      "sha256": "421042604f65895f3dc44c9ba29de0befd42836adae8b9301e7ca88620523874"
+    },
+    "scope": "Real timer integration observation; not an exact latency measurement or an XCUITest pass.",
+    "liveAccountAccess": false,
+    "closedAfterwards": true
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-automatic-reads-format.log",
+    "sha256": "28374f7a7a7ccbdb0fcb15cbbeefc75d182ee80264bbeec58bbec67d09b04f3f"
+  },
+  "limits": [
+    "Production iOS still uses the legacy coordinator/writer; shared-root/bootstrap, companion/background and remaining settings/input parity must be composed before retirement.",
+    "This foreground service does not claim OS background-task, actual Keychain/signed-device upgrade, physical speech/input/notifications or paired-watch acceptance.",
+    "The full-download client is reused. Incremental HTTP reads and full-account bandwidth/forecast acceptance remain open.",
+    "Nine new worker scenarios and two persistence tests extend the old suites; no grading/offline checks are removed.",
+    "The marker uses the existing Codable account value; no SwiftData column/schema version is added. The old-commit writer/current-reader probe is actual local upgrade evidence.",
+    "The checkpoint adds 115 production Swift lines for required functionality; it is not a net LOC reduction.",
+    "Mac automated runner and hosted Actions remain open; no live exercise, credential extraction, security setting, push or PR occurred."
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ]
+}

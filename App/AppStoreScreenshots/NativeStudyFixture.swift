@@ -79,7 +79,14 @@
           onVacation: data.profile.vacationStartedAt != nil, startedAt: data.profile.startedAt,
           profile: data.profile)
       }
-      func download(token: String) async throws -> StudyDownload { try await value(token) }
+      func download(token: String) async throws -> StudyDownload {
+        let data = try await value(token)
+        return StudyDownload(
+          accountID: data.accountID, profile: data.profile,
+          subjects: data.subjects, assignments: data.assignments, materials: data.materials,
+          levels: data.levels, statistics: data.statistics, voices: data.voices,
+          systems: data.systems)
+      }
       func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment? {
         try await value(token).assignments.first { $0.subjectID == subjectID }
       }

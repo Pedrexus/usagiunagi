@@ -20,6 +20,7 @@ public struct StudyRootView: View {
   @AppStorage("native.gravatarCustomEmail") private var avatarEmail = ""
   @AppStorage("native.avatarFallbacks") private var avatarFallbacks = Data()
   @Environment(\.displayScale) private var displayScale
+  @State private var sceneID = UUID()
   @State private var shell = StudyShellState()
   @State private var tab = StudyTab.home
   @State private var path: [StudyDestination] = []
@@ -43,7 +44,7 @@ public struct StudyRootView: View {
     _signIn = State(
       initialValue: StudySignIn {
         try await model.connect($0)
-        automaticSync.wake()
+        await automaticSync.wake()
       })
     self.appName = appName
     self.appearance = appearance
@@ -152,7 +153,9 @@ public struct StudyRootView: View {
       .onAppear {
         updateHeader()
         automaticSync.start()
+        updateSyncActivity()
       }
+      .onDisappear { automaticSync.removeScene(sceneID) }
       .task(
         id: NotificationReadKey(
           accountID: model.snapshot?.accountID,
@@ -161,10 +164,12 @@ public struct StudyRootView: View {
         await updateNotifications()
       }
       .onChange(of: scenePhase) { _, phase in
-        if phase == .active { automaticSync.wake() }
+        updateSyncActivity()
+        if phase == .active { Task { await automaticSync.wake() } }
         Task { await updateNotifications() }
       }
       .onChange(of: path) { _, values in
+        updateSyncActivity()
         if !values.contains(where: {
           switch $0 {
           case .reviews, .practice: true
@@ -256,6 +261,15 @@ public struct StudyRootView: View {
       }
       .tint(StudyPalette.radical)
   }
+  private func updateSyncActivity() {
+    let studying = path.contains {
+      switch $0 {
+      case .reviews, .lessons, .practice: true
+      default: false
+      }
+    }
+    automaticSync.updateScene(sceneID, active: scenePhase == .active, studying: studying)
+  }
   private func settingsDestination(_ page: StudySettingsPage) -> StudyDestination {
     switch page {
     case .appearance: .appearanceSettings
@@ -333,7 +347,7 @@ public struct StudyRootView: View {
             compareSavedWork: model.compareSavedWork
           ) {
             try await model.syncSavedWork(accountID: accountID)
-            automaticSync.wake()
+            await automaticSync.wake()
           }
           .navigationTitle("Saved work")
         case .catalog(let query, let remaining):
@@ -369,7 +383,7 @@ public struct StudyRootView: View {
     Button("Refresh", systemImage: "arrow.clockwise") {
       Task {
         await model.refresh()
-        automaticSync.wake()
+        await automaticSync.wake()
       }
     }
     .disabled(model.isSyncing || model.snapshot?.isSample != false)

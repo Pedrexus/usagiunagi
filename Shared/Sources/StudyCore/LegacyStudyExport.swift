@@ -43,6 +43,8 @@ public struct LegacyStudyExport: Codable, Sendable {
 }
 
 public struct StudyAccountState: Codable, Sendable {
+  /// A local study attempt or acknowledgement requires a later complete catalog read.
+  public var catalogRefreshID: UUID?
   public var systems: [StudySRSSystem]?
   public var profile: StudyAccountProfile
   public var progress: [SubjectProgress]

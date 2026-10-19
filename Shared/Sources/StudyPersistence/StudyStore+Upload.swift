@@ -186,6 +186,7 @@ extension StudyStore {
               modelContext.insert(AssignmentRecord(accountID: accountID, assignment: assignment))
             }
             modelContext.delete(row)
+            try requireCatalogRead(accountID: accountID)
             if review.submission.isLesson {
               report.uploadedLessons += 1
             } else {
@@ -332,6 +333,7 @@ extension StudyStore {
   {
     try transaction {
       guard let row = try reviewRecord(review) else { return }
+      try requireCatalogRead(accountID: review.accountID)
       if case WaniKaniClient.APIError.unauthorized = error {
         row.attempted = false
         return

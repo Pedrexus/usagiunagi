@@ -42,7 +42,7 @@ struct UsagiUnagiApp: App {
           Button("Refresh WaniKani") {
             Task {
               await services.model.refresh()
-              services.automaticSync.wake()
+              await services.automaticSync.wake()
             }
           }
           .keyboardShortcut("r")

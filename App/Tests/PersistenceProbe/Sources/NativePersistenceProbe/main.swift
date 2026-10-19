@@ -51,6 +51,8 @@ import StudyPersistence
           credentialID: "upgrade")
         print("PASS: wrote production catalog, assignment and pending note")
       } else {
+        let account = try await store.accountState(accountID: "upgrade")
+        precondition(account?.profile.level == 4 && account?.catalogRefreshID == nil)
         let subject = try await store.catalog(accountID: "upgrade").first!
         let assignment = try await store.assignments(accountID: "upgrade").first!
         let note = try await store.materials(accountID: "upgrade").first!

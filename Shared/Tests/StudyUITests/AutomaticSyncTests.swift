@@ -9,13 +9,35 @@ import Testing
 private actor AutomaticServer: WaniKaniService {
   enum Fault: Equatable { case none, offline, lostReply, unauthorized, throttled }
   var data: StudyDownload
+  let now: @MainActor @Sendable () -> Date
+  var readFault: Fault = .none
+  var readGate: StudyTaskGate?
   var fault: Fault = .none
   var differentAccount = false
   var gate: StudyTaskGate?
   private(set) var writes = 0
   private(set) var fullReads = 0
   private(set) var identityReads = 0
-  init(_ data: StudyDownload) { self.data = data }
+  init(_ data: StudyDownload, now: @escaping @MainActor @Sendable () -> Date) {
+    self.data = data
+    self.now = now
+  }
+  func configureReads(_ fault: Fault = .none, gate: StudyTaskGate? = nil) {
+    readFault = fault
+    readGate = gate
+  }
+  func unlockLesson() {
+    var subject = CatalogSubject(id: 900, kind: .kanji)
+    subject.level = 1
+    subject.japanese = "二"
+    subject.meanings = [.init("Two", role: .primary)]
+    subject.readings = [.init("に", isPrimary: true, kind: .onyomi)]
+    var assignment = CatalogAssignment(id: 1900, subjectID: subject.id, kind: .kanji)
+    assignment.level = 1
+    assignment.unlockedAt = 1
+    data.subjects.append(subject)
+    data.assignments.append(assignment)
+  }
   func configure(_ fault: Fault = .none, differentAccount: Bool = false, gate: StudyTaskGate? = nil)
   {
     self.fault = fault
@@ -35,9 +57,22 @@ private actor AutomaticServer: WaniKaniService {
       username: data.profile.username, level: data.profile.level,
       onVacation: data.profile.vacationStartedAt != nil, profile: data.profile)
   }
-  func download(token: String) -> StudyDownload {
+  func download(token: String) async throws -> StudyDownload {
     fullReads += 1
-    return data
+    if let gate = readGate {
+      readGate = nil
+      await gate.pause()
+    }
+    if readFault == .offline { throw URLError(.notConnectedToInternet) }
+    if readFault == .unauthorized { throw WaniKaniClient.APIError.unauthorized }
+    if readFault == .throttled {
+      throw WaniKaniClient.APIError.rateLimited(retryAt: Date().addingTimeInterval(60))
+    }
+    return StudyDownload(
+      accountID: data.accountID, profile: data.profile,
+      subjects: data.subjects, assignments: data.assignments, materials: data.materials,
+      levels: data.levels, statistics: data.statistics, voices: data.voices,
+      systems: data.systems, fetchedAt: await now())
   }
   func assignment(subjectID: Int64, token: String) -> CatalogAssignment? {
     data.assignments.first { $0.subjectID == subjectID }
@@ -81,22 +116,31 @@ private actor AutomaticServer: WaniKaniService {
   }
 }
 
+@MainActor private final class AutomaticReadClock {
+  var date = Date()
+  func advance(_ seconds: TimeInterval) { date.addTimeInterval(seconds) }
+}
+
 @MainActor @Suite(.timeLimit(.minutes(1))) struct AutomaticSyncTests {
   private let account = "fixture-user-id"
-  private func environment() async throws -> (
+  private func environment(
+    now: @escaping @MainActor @Sendable () -> Date = { .now },
+    credentials: MemoryCredentials? = nil
+  ) async throws -> (
     StudyStore, StudyAppModel, AutomaticServer, StudyAutomaticSync, AsyncStream<Bool>.Continuation
   ) {
     let data = try await WaniKaniClient(transport: DownloadFixture.response).download(
       token: "fixture")
-    let server = AutomaticServer(data)
+    let server = AutomaticServer(data, now: now)
     let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
     let credential = StudyAppModel.credentialID("fixture")
     _ = try await store.synchronize(credentialID: credential, token: "fixture", client: server)
     let model = StudyAppModel(
-      credentials: MemoryCredentials("fixture"), client: server, openStore: { store })
+      credentials: credentials ?? MemoryCredentials("fixture"), client: server, openStore: { store }
+    )
     await model.restore()
     let (paths, connection) = AsyncStream<Bool>.makeStream(bufferingPolicy: .bufferingNewest(1))
-    let sync = StudyAutomaticSync(model: model, paths: paths)
+    let sync = StudyAutomaticSync(model: model, paths: paths, now: now)
     sync.start()
     return (store, model, server, sync, connection)
   }
@@ -195,7 +239,7 @@ private actor AutomaticServer: WaniKaniService {
     await server.configure()
     connection.yield(false)
     connection.yield(true)
-    sync.wake()
+    await sync.wake()
     await notice(sync, containing: "needs attention")
     #expect(await server.writes == 1)
     #expect(try await store.pendingReviews(accountID: account).first?.issue?.reason == .uncertain)
@@ -216,7 +260,7 @@ private actor AutomaticServer: WaniKaniService {
     #expect(await server.writes == 1)
     #expect(try await store.pendingReviews(accountID: account).count == 1)
     await server.vacation(false)
-    sync.wake()
+    await sync.wake()
     try await empty(store)
     await idle(model)
     #expect(await server.writes == 2)
@@ -234,7 +278,7 @@ private actor AutomaticServer: WaniKaniService {
     await notice(sync, containing: "different WaniKani account")
     #expect(await server.writes == 0)
     await server.configure()
-    sync.wake()
+    await sync.wake()
     try await empty(store)
     #expect(await server.writes == 1)
   }
@@ -250,7 +294,7 @@ private actor AutomaticServer: WaniKaniService {
     await notice(sync, containing: "limiting requests")
     let deadline = try #require(await store.uploadRetryDate(accountID: account))
     #expect(deadline > Date())
-    sync.wake()
+    await sync.wake()
     await notice(sync, containing: "limiting requests")
     #expect(await server.writes == 1)
     #expect(try await store.automaticWorkState(accountID: account) == .ready)
@@ -271,7 +315,7 @@ private actor AutomaticServer: WaniKaniService {
     #expect(await server.writes == 1)
     #expect(try await store.automaticWorkState(accountID: account) == .ready)
     await server.configure()
-    sync.wake()
+    await sync.wake()
     try await empty(store)
     #expect(await server.writes == 2)
     #expect(await server.data.materials.first?.value.meaningNote == "new draft while paused")
@@ -298,6 +342,201 @@ private actor AutomaticServer: WaniKaniService {
     await notice(sync, containing: "needs attention")
     #expect(await server.writes == 1)
     #expect(try await store.pendingReviews(accountID: account).count == 1)
+  }
+
+  @Test func foregroundReadsStayFreshWithoutRewritingCredentialsOrUploading() async throws {
+    let clock = AutomaticReadClock()
+    let credentials = MemoryCredentials("fixture")
+    credentials.failSaves = true
+    let (_, model, server, sync, connection) = try await environment(
+      now: { clock.date }, credentials: credentials)
+    defer { connection.finish() }
+    let reads = await server.fullReads
+    sync.updateScene(UUID(), active: true, studying: false)
+    connection.yield(true)
+    await sync.wake()
+    #expect(await server.fullReads == reads)
+    clock.advance(1801)
+    await sync.wake()
+    #expect(await server.fullReads == reads + 1)
+    #expect(model.snapshot?.savedAt == clock.date)
+    await sync.wake()
+    await sync.wake()
+    #expect(await server.fullReads == reads + 1)
+    #expect(await server.writes == 0)
+    #expect(credentials.saved.isEmpty && credentials.token == "fixture")
+  }
+  @Test func completedStudyReadsNewUnlocksAfterLeavingStudyWithoutChangingTheSession() async throws
+  {
+    let clock = AutomaticReadClock()
+    let (store, model, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    let scene = UUID()
+    sync.updateScene(scene, active: true, studying: true)
+    connection.yield(true)
+    let reads = await server.fullReads
+    await server.unlockLesson()
+    try await completeReview(store)
+    let session = try #require(await store.session(accountID: account))
+    await sync.wake()
+    clock.advance(61)
+    await sync.wake()
+    #expect(await server.fullReads == reads)
+    #expect(await server.writes == 1)
+    sync.updateScene(scene, active: true, studying: false)
+    await sync.wake()
+    #expect(await server.fullReads == reads + 1)
+    #expect(model.snapshot?.subjects.contains { $0.id == 900 } == true)
+    #expect(
+      try await store.assignments(accountID: account).contains {
+        $0.subjectID == 900 && $0.srsStage == 0
+      })
+    #expect(try await store.session(accountID: account)?.revision == session.revision)
+    #expect(try await store.savedWork(accountID: account).isEmpty)
+  }
+  @Test func uncertainWorkCanRefreshButIsNeverReplayedOrAcknowledgedByARead() async throws {
+    let clock = AutomaticReadClock()
+    let (store, model, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    let scene = UUID()
+    sync.updateScene(scene, active: true, studying: true)
+    connection.yield(true)
+    await server.configure(.lostReply)
+    try await completeReview(store)
+    await sync.wake()
+    let reads = await server.fullReads
+    await server.configure()
+    await server.unlockLesson()
+    clock.advance(61)
+    sync.updateScene(scene, active: true, studying: false)
+    await sync.wake()
+    #expect(await server.fullReads == reads + 1)
+    #expect(await server.writes == 1)
+    let pending = try #require(await store.pendingReviews(accountID: account).first)
+    #expect(pending.attempted && pending.issue?.reason == .uncertain)
+    #expect(model.snapshot?.subjects.contains { $0.id == 900 } == true)
+    #expect(sync.notice?.contains("needs attention") == true)
+  }
+  @Test func scenesShareOneReadOwnerAndBackgroundWindowsDoNotRead() async throws {
+    let clock = AutomaticReadClock()
+    let (_, _, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    let study = UUID()
+    let home = UUID()
+    sync.updateScene(study, active: true, studying: true)
+    sync.updateScene(home, active: true, studying: false)
+    connection.yield(true)
+    let reads = await server.fullReads
+    clock.advance(1801)
+    await sync.wake()
+    #expect(await server.fullReads == reads)
+    sync.removeScene(study)
+    await sync.wake()
+    #expect(await server.fullReads == reads + 1)
+    sync.updateScene(home, active: false, studying: false)
+    clock.advance(1801)
+    await sync.wake()
+    #expect(await server.fullReads == reads + 1)
+    sync.updateScene(home, active: true, studying: false)
+    await sync.wake()
+    #expect(await server.fullReads == reads + 2)
+    #expect(await server.writes == 0)
+  }
+  @Test func failedAutomaticReadKeepsTheCacheAndAnExplicitWakeRecovers() async throws {
+    let clock = AutomaticReadClock()
+    let (_, model, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    let saved = try #require(model.snapshot?.savedAt)
+    let reads = await server.fullReads
+    sync.updateScene(UUID(), active: true, studying: false)
+    connection.yield(true)
+    clock.advance(1801)
+    await server.configureReads(.offline)
+    await sync.wake()
+    #expect(model.snapshot?.savedAt == saved && sync.notice?.contains("Couldn't refresh") == true)
+    #expect(await server.fullReads == reads + 1)
+    #expect(await server.writes == 0)
+    await server.configureReads()
+    await sync.wake()
+    #expect(model.snapshot?.savedAt == clock.date && sync.notice == nil)
+    #expect(await server.fullReads == reads + 2)
+    #expect(await server.writes == 0)
+  }
+  @Test func readRateLimitsKeepTheirDurableDeadlineAcrossWakes() async throws {
+    let clock = AutomaticReadClock()
+    let (store, _, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    sync.updateScene(UUID(), active: true, studying: false)
+    connection.yield(true)
+    clock.advance(1801)
+    await server.configureReads(.throttled)
+    await sync.wake()
+    let deadline = try #require(await store.uploadRetryDate(accountID: account))
+    let reads = await server.fullReads
+    await sync.wake()
+    await sync.wake()
+    #expect(try await store.uploadRetryDate(accountID: account) == deadline && deadline > Date())
+    #expect(await server.fullReads == reads)
+    #expect(await server.writes == 0)
+    #expect(sync.notice?.contains("limiting requests") == true)
+  }
+  @Test func disconnectDrainsAnAutomaticReadWithoutRestoringTheRemovedAccount() async throws {
+    let clock = AutomaticReadClock()
+    let (_, model, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    sync.updateScene(UUID(), active: true, studying: false)
+    connection.yield(true)
+    let gate = StudyTaskGate()
+    await server.configureReads(gate: gate)
+    clock.advance(1801)
+    let read = Task { await sync.wake() }
+    await gate.waitForEntry()
+    let disconnect = Task { await model.disconnect() }
+    await gate.waitForCancellation()
+    await gate.resume()
+    await disconnect.value
+    await read.value
+    #expect(model.snapshot == nil)
+    #expect(await server.writes == 0)
+  }
+  @Test func aClockRollbackTriggersOneReadWithoutAnImmediateReadLoop() async throws {
+    let clock = AutomaticReadClock()
+    let (_, model, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    sync.updateScene(UUID(), active: true, studying: false)
+    connection.yield(true)
+    let reads = await server.fullReads
+    clock.advance(-3600)
+    await sync.wake()
+    await sync.wake()
+    #expect(await server.fullReads == reads + 1)
+    #expect(await server.writes == 0)
+    #expect(model.snapshot?.savedAt == clock.date)
+  }
+
+  @Test func aNewWorkerFindsTheDurablePostStudyReadRequest() async throws {
+    let clock = AutomaticReadClock()
+    let (store, model, server, sync, connection) = try await environment(now: { clock.date })
+    defer { connection.finish() }
+    connection.yield(true)
+    try await completeReview(store)
+    await sync.wake()
+    #expect(try await store.accountState(accountID: account)?.catalogRefreshID != nil)
+    let reads = await server.fullReads
+    await server.unlockLesson()
+    clock.advance(61)
+    let paths = AsyncStream<Bool> {
+      $0.yield(true)
+      $0.finish()
+    }
+    let resumed = StudyAutomaticSync(model: model, paths: paths, now: { clock.date })
+    resumed.start()
+    resumed.updateScene(UUID(), active: true, studying: false)
+    await resumed.wake()
+    #expect(await server.fullReads == reads + 1)
+    #expect(await server.writes == 1)
+    #expect(model.snapshot?.subjects.contains { $0.id == 900 } == true)
+    #expect(try await store.accountState(accountID: account)?.catalogRefreshID == nil)
   }
 
 }

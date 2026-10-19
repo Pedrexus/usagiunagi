@@ -173,16 +173,21 @@ public final class StudyAppModel {
       try await connect(token)
     } catch { self.error = error.localizedDescription }
   }
-  /// A manual Saved work pass includes a full download; automatic passes only upload.
+  /// Read through the same fenced lane without rewriting credentials or sending pending work.
+  public func refresh(accountID: String) async throws {
+    _ = try await performSynchronization(.refresh, accountID: accountID)
+  }
+  /// Manual Saved work includes a full download; automatic sending uses upload-only passes.
   public func syncSavedWork(accountID: String) async throws {
-    _ = try await sendSavedWork(.sendSavedWork(accountID: accountID), accountID: accountID)
+    _ = try await performSynchronization(.sendSavedWork(accountID: accountID), accountID: accountID)
   }
   @discardableResult public func uploadSavedWork(accountID: String) async throws
     -> StudyUploadReport?
   {
-    try await sendSavedWork(.uploadSavedWork(accountID: accountID), accountID: accountID)
+    try await performSynchronization(.uploadSavedWork(accountID: accountID), accountID: accountID)
   }
-  private func sendSavedWork(_ operation: StudySynchronization, accountID: String) async throws
+  private func performSynchronization(_ operation: StudySynchronization, accountID: String)
+    async throws
     -> StudyUploadReport?
   {
     guard snapshot?.accountID == accountID, snapshot?.isSample == false,

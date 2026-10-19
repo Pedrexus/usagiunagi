@@ -5,6 +5,7 @@ import SwiftData
 struct RefreshBaseline {
   let assignments: [Int64: UUID]
   let materials: [Int64: UUID]
+  var catalogRefreshID: UUID? = nil
 }
 
 extension StudyStore {
@@ -52,9 +53,17 @@ extension StudyStore {
       materials: Dictionary(
         uniqueKeysWithValues: materialRecords(accountID: accountID).map {
           ($0.subjectID, $0.revision)
-        }))
+        }), catalogRefreshID: accountState(accountID: accountID)?.catalogRefreshID)
   }
 
+  /// Used inside the same transaction as the study attempt/result.
+  func requireCatalogRead(accountID: String) throws {
+    let row = try modelContext.fetch(
+      FetchDescriptor<AccountRecord>(
+        predicate: #Predicate { $0.accountID == accountID })
+    ).first
+    row?.state.catalogRefreshID = UUID()
+  }
   private func performRefresh(
     credentialID: String, token: String, client: any WaniKaniService, generation: UUID
   ) async throws -> StudySnapshot {
@@ -203,6 +212,10 @@ extension StudyStore {
       }
       var state = StudyAccountState(download: download, progress: progress)
       state.systems = download.systems ?? stateRow?.state.systems
+      // Only this read’s captured marker can be consumed. A later attempt/result wins.
+      state.catalogRefreshID =
+        stateRow?.state.catalogRefreshID == baseline.catalogRefreshID
+        ? nil : stateRow?.state.catalogRefreshID
       state.supersededAssignments = stateRow?.state.supersededAssignments ?? []
       if let stateRow {
         stateRow.state = state
