@@ -36,6 +36,7 @@ public struct NativeLessonView: View {
         LessonFlowView(
           subjects: selection.subjects,
           initialPage: selection.resumeQuiz ? selection.subjects.count : 0,
+          backTitle: "Choose lessons",
           back: {
             self.selection = nil
             Task { await load() }
@@ -88,7 +89,9 @@ public struct NativeLessonView: View {
       } else {
         ProgressView("Loading saved lessons")
       }
-    }.task(id: LessonReadKey(accountID: accountID, preferences: lessonSettings.value)) {
+    }.navigationTitle("Lessons").task(
+      id: LessonReadKey(accountID: accountID, preferences: lessonSettings.value)
+    ) {
       if selection == nil { await load() }
     }
   }

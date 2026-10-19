@@ -46,6 +46,8 @@ This is lightweight UI continuity within a scene. [Apple documents](https://deve
 
 ## Shared lesson choices
 
+Native teaching is titled **Lessons**. Its in-page **Choose lessons** action returns to the lesson-selection owner; the outer navigation back still returns Home and preserves an unfinished quiz. The temporary iOS host keeps its existing **Back** label/destination through the same shared view. The control uses native `.glass` styling without a separate material background. [Focused lesson navigation evidence](Validation/2026-10-19-lesson-navigation.json) covers picker return, teaching/quiz pause/resume and phone/tablet pages/swipes. This six-line production addition clarifies two different destinations; it is not a LOC reduction or a new dashboard layout.
+
 `StudyLessonPreferences` owns the original defaults, normalized batch sizes, subject order, current-level priority, Apprentice limit and kana-only vocabulary choice. One strict level/type/ID comparator is used by native selection and the temporary iOS adapter. `StudyLessonSettings` merges individual edits into the latest stored value; all native windows share the app-owned observable instance. `LessonSettingsView` is common SwiftUI, with native list reordering on iOS and small move buttons on Mac.
 
 Native Home, the forecast and new lesson/review/practice selection use the same preferences. The Apprentice count includes pending and excluded workload; reaching the limit disables new lessons with an explanation while preserving the available-item count. Resuming a durable quiz returns its saved queue/options before applying new selection rules. A changed preference cannot rewrite a paused quiz or bypass assignment/account validation.

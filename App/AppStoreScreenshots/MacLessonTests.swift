@@ -25,6 +25,13 @@
       subject.click()
       app.buttons["lesson.startSelection"].click()
       XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
+      let choose = app.buttons["lesson.back"]
+      XCTAssertEqual(choose.label, "Choose lessons")
+      choose.click()
+      XCTAssertTrue(subject.waitForExistence(timeout: 5))
+      subject.click()
+      app.buttons["lesson.startSelection"].click()
+      XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
       let teaching = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
       teaching.name = "Native Mac lesson teaching"
       teaching.lifetime = .keepAlways

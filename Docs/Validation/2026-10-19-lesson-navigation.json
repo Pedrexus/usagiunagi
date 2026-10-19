@@ -1,0 +1,140 @@
+{
+  "recorded_at": "2026-10-19T22:30:48+09:00",
+  "baseline": "a3797d9b4cba17632a3fd45ac7031df11c58a608",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Clarify native lesson navigation without restructuring the shared Home or teaching flow: native title Lessons, in-page Choose lessons action, native glass styling instead of a custom material background. Temporary iOS host retains its Back label and destination.",
+  "sources": {
+    "App/AppStoreScreenshots/MacLessonTests.swift": "7dcceb8e9030bdb4bf4aaef67c501fea38f769b09678565e3b3da783ffa8b8f8",
+    "Shared/Sources/StudyUI/Lessons/LessonFlowView.swift": "a1424f3ac153d1b9811e7c791149df32f5ed8ed49109559a3d04d84fdef73801",
+    "Shared/Sources/StudyUI/Lessons/NativeLessonView.swift": "24f69e4a577fc54ebfd283e4c60012348e1af5874c27bdfe46acd165b9cfd194"
+  },
+  "checks": {
+    "native_mac": {
+      "log": "/private/tmp/usagi-lesson-clarity-mac-ui.log",
+      "sha256": "ede9e5f17c07261a79ab271bed839f210330d15596c3a4fdeb556f8899c91d22",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-c5ef21b4217e44d6a5f1cba72849108c.xcresult"
+    },
+    "phone": {
+      "log": "/private/tmp/usagi-lesson-clarity-phone-ui.log",
+      "sha256": "40d06255511f79e2c6fa92f86b8dec0dfc1e36dab195dabfb629078ab7dbe421",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-52941820c3eb4680a5898c1ff84907bb.xcresult"
+    },
+    "pad": {
+      "log": "/private/tmp/usagi-lesson-clarity-pad-ui.log",
+      "sha256": "409622a708e01e5ca209f54ae7f4810cf8c71fabf7764aca8fa9470dc3d0b55a",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-4af0667dade047faa321eab69094e0e5.xcresult"
+    },
+    "release_mac": {
+      "log": "/private/tmp/usagi-lesson-clarity-release-mac.log",
+      "sha256": "0b5a065a683b085c2f317a7e08df5090d95c4994f9aaaa9e863cc3b7b0b9854d",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-1fbfbe4a3feb4bc0880f982ba0e49c47.xcresult"
+    },
+    "release_ios": {
+      "log": "/private/tmp/usagi-lesson-clarity-release-ios.log",
+      "sha256": "a9c9a7646e56912f2b1cb0cd0dca99fed1493467f1389b158fe6d194b05085ad",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 44
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-1b1f6ba2a8cc4972880c3c1993580e60.xcresult"
+    }
+  },
+  "ordinary_release_reopen": {
+    "log": "/private/tmp/usagi-lesson-clarity-release-reopen.log",
+    "sha256": "135e9d667e41a315f72f10f7a9f5647a4cb8125508694d263fb8d7d02a6a5e19",
+    "cycles": [
+      {
+        "cycle": 1,
+        "processID": 14630,
+        "visibleMainWindows": 1
+      },
+      {
+        "processID": 15026,
+        "visibleMainWindows": 1,
+        "cycle": 2
+      }
+    ]
+  },
+  "formatting": {
+    "log": "/private/tmp/usagi-lesson-clarity-format.log",
+    "sha256": "57a1bd6f3bdb6dcc0686140e2d2f6e8ae3859df4ba77975976cef48a03320d3a",
+    "scope": "Three changed Swift files; owner annotations excluded; no rules disabled."
+  },
+  "acceptance": {
+    "native": "Two passing Mac functions: primary Lessons opens teaching directly; chosen lessons return through the newly named picker action, reopen teaching, enter a quiz, save the first answer, pause/resume the typed draft and finish. Explicit app-window screenshot confirms Lessons title, Choose lessons label, original WaniKani subject header, system typography and retained controls.",
+    "ios": "One existing lesson-navigation function passes on each iPhone/iPad. All three selections remain, page buttons and swipes work, quiz can be left for teaching, and the shared Back action returns to the same three selected items.",
+    "regression_scope": "No model/store/network/grading changes in this follow-up. The 350 shared functions per platform and 94 hosted functions in the preceding source-hashed reauthentication receipt are not rerun or counted again as new passes. New UI and Release checks compile both changed shared views on both platforms.",
+    "limits": "One internal thread-priority warning remains in the Mac UI result; no app cause is established. Final Release warning counts are incremental diagnostics, not evidence that legacy warnings were removed. Native iOS writer handoff, notifications/watch, physical media/speech/IME, full-account statistics, hosted CI/signing/publication and complete platform parity remain open."
+  },
+  "screenshots": [
+    {
+      "path": "/private/tmp/usagi-lesson-clarity-images/8E9C353E-49AE-4077-B253-E03C27950252.png",
+      "sha256": "9a5a328a3a8d5312594bceb2f05d059a4d893af4444d23f1d8672f3dd04df9b4"
+    },
+    {
+      "path": "/private/tmp/usagi-lesson-clarity-images/F8248566-7FE1-4954-A513-D717CB7D35B5.png",
+      "sha256": "b0e40ffa76afbb3e171ed7291a12f1e9e970c08846ecb249b9990591c48c1f51"
+    }
+  ],
+  "loc": {
+    "baseline": "a3797d9b4cba17632a3fd45ac7031df11c58a608",
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29025,
+    "after": 29031,
+    "changed": [
+      {
+        "path": "Shared/Sources/StudyUI/Lessons/LessonFlowView.swift",
+        "before": 122,
+        "after": 125
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Lessons/NativeLessonView.swift",
+        "before": 135,
+        "after": 138
+      }
+    ],
+    "artwork_bytes": 27986,
+    "artwork_sha256": "b5b545aa650b93bc6937876ba23d7b2cad5ad8b9741c11a8a9bb10538be3c711",
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "previous_checkpoint": "2026-10-19-reauthentication.json",
+  "delivery": "Existing branch commit only; no PR or push; owner annotations preserved; no real exercises or account changes."
+}

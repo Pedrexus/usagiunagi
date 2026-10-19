@@ -8,13 +8,15 @@ public struct LessonFlowView<Page: View>: View {
   private let image: (Int64) -> Image?
   private let page: (Int) -> Page
   private let back: () -> Void
+  private let backTitle: String
   private let playAudio: (() -> Void)?
   @State private var index = 0
   @FocusState private var keyboardFocus: Bool
 
   public init(
     subjects: [StudySubject], initialPage: Int = 0, japaneseFont: String? = nil,
-    image: @escaping (Int64) -> Image? = { _ in nil }, back: @escaping () -> Void,
+    image: @escaping (Int64) -> Image? = { _ in nil }, backTitle: String = "Back",
+    back: @escaping () -> Void,
     playAudio: (() -> Void)? = nil, @ViewBuilder page: @escaping (Int) -> Page
   ) {
     self.subjects = subjects
@@ -22,6 +24,7 @@ public struct LessonFlowView<Page: View>: View {
     self.japaneseFont = japaneseFont
     self.image = image
     self.back = back
+    self.backTitle = backTitle
     self.playAudio = playAudio
     self.page = page
   }
@@ -42,8 +45,8 @@ public struct LessonFlowView<Page: View>: View {
                 index = min(subjects.count, max(0, index + (value.translation.width < 0 ? 1 : -1)))
               })
         }
-        Button("Back", systemImage: "chevron.backward", action: back).buttonStyle(.bordered)
-          .background(.regularMaterial, in: Capsule()).padding(8).accessibilityIdentifier(
+        Button(backTitle, systemImage: "chevron.backward", action: back).buttonStyle(.glass)
+          .padding(8).accessibilityIdentifier(
             "lesson.back")
       }
       if !subjects.isEmpty {
