@@ -1,8 +1,11 @@
 import Foundation
 
 /// The native repository uses typed server values; URLSession supplies the production service.
-public protocol WaniKaniService: Sendable {
+public protocol WaniKaniAccountReader: Sendable {
   func account(token: String) async throws -> WaniKaniAccount
+}
+
+public protocol WaniKaniService: WaniKaniAccountReader {
   func download(token: String) async throws -> StudyDownload
   func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment?
   func material(subjectID: Int64, token: String) async throws -> WaniKaniMaterial?

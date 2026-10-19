@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import Observation
 import StudyCore
@@ -237,7 +236,7 @@ public final class StudyAppModel {
   }
 
   nonisolated public static func credentialID(_ token: String) -> String {
-    SHA256.hash(data: Data(token.utf8)).map { String(format: "%02x", $0) }.joined()
+    StudyCredentialID.forToken(token)
   }
   public func disconnect() async {
     guard !isDisconnecting else { return }

@@ -65,6 +65,16 @@ extension StudyStore {
     }
   }
 
+  func applyVerifiedAccount(_ identity: WaniKaniAccount, accountID: String) throws {
+    guard identity.id == accountID else { throw StudyUploadError.accountMismatch }
+    if let profile = identity.profile {
+      guard profile.username == identity.username, profile.level == identity.level,
+        (profile.vacationStartedAt != nil) == identity.onVacation
+      else { throw WaniKaniClient.APIError.invalidResponse }
+      try applyVerifiedProfile(profile, accountID: accountID)
+    }
+  }
+
   /// Only a fresh, identity-checked account response may replace cached display metadata.
   private func applyVerifiedProfile(_ profile: StudyAccountProfile, accountID: String) throws {
     guard
@@ -121,15 +131,7 @@ extension StudyStore {
     do {
       let identity = try await client.account(token: token)
       try checkUpload(generation, accountID: accountID)
-      guard identity.id == accountID else { throw StudyUploadError.accountMismatch }
-      if let profile = identity.profile {
-        guard profile.username == identity.username, profile.level == identity.level,
-          (profile.vacationStartedAt != nil) == identity.onVacation
-        else {
-          throw WaniKaniClient.APIError.invalidResponse
-        }
-        try applyVerifiedProfile(profile, accountID: accountID)
-      }
+      try applyVerifiedAccount(identity, accountID: accountID)
       report.onVacation = identity.onVacation
       if !identity.onVacation {
         for key in try pendingReviews(accountID: accountID) {

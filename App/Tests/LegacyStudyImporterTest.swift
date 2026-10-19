@@ -17,44 +17,50 @@ import Foundation
 import StudyCore
 import StudyPersistence
 import SwiftProtobuf
+import Testing
 import WaniKaniAPI
-import XCTest
 
-final class LegacyStudyImporterTest: XCTestCase {
-  private func fixture(version: Int = 15, edit: (FMDatabase) throws -> Void = { _ in
-  }) throws -> URL {
-    let url = FileManager.default.temporaryDirectory
-      .appendingPathComponent(UUID().uuidString + ".sqlite")
-    addTeardownBlock { try? FileManager.default.removeItem(at: url) }
+@MainActor @Suite final class LegacyStudyImporterTests {
+  private let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+  deinit { try? FileManager.default.removeItem(at: directory) }
+  private func fixture(
+    version: Int = 15,
+    edit: (FMDatabase) throws -> Void = { _ in
+    }
+  ) throws -> URL {
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let url = directory.appending(path: UUID().uuidString + ".sqlite")
     let db = FMDatabase(url: url)
-    XCTAssertTrue(db.open())
+    #expect(db.open())
     defer { db.close() }
-    XCTAssertTrue(db.executeStatements("""
-    PRAGMA user_version = \(version);
-    CREATE TABLE user (id INTEGER PRIMARY KEY, pb BLOB);
-    CREATE TABLE subjects (id INTEGER PRIMARY KEY, japanese TEXT, level INTEGER, type INTEGER, pb BLOB);
-    CREATE TABLE assignments (id INTEGER PRIMARY KEY, subject_id INTEGER, pb BLOB);
-    CREATE TABLE pending_progress (id INTEGER PRIMARY KEY, pb BLOB);
-    CREATE TABLE study_materials (id INTEGER PRIMARY KEY, pb BLOB\(version >= 14 ?
-      ", local_revision INTEGER DEFAULT 0" : ""));
-    CREATE TABLE pending_study_materials (id INTEGER PRIMARY KEY);
-    CREATE TABLE subject_progress (id INTEGER PRIMARY KEY, level INTEGER, srs_stage INTEGER, subject_type INTEGER\(version >=
-      11 ? ", last_mistake_time TEXT" : "")\(version >= 15 ? ", local_revision INTEGER DEFAULT 0" :
-      ""));
-    CREATE TABLE level_progressions (id INTEGER PRIMARY KEY, level INTEGER, pb BLOB);
-    CREATE TABLE voice_actors (id INTEGER PRIMARY KEY, pb BLOB);
-    CREATE TABLE audio_urls (subject_id INTEGER, voice_actor_id INTEGER, level INTEGER, url TEXT);
-    CREATE TABLE sync (assignments_updated_after TEXT, study_materials_updated_after TEXT, subjects_updated_after TEXT, voice_actors_updated_after TEXT\(version >=
-      12 ? ", review_stats_updated_after TEXT" : ""));
-    INSERT INTO sync VALUES ('assignments','materials','subjects','voices'\(version >= 12 ?
-      ",'statistics'" : ""));
-    CREATE TABLE error_log (request_headers TEXT);
-    INSERT INTO error_log VALUES ('diagnostic-fixture-must-stay-in-source');
-    """))
-    if version >=
-      12 {
-      XCTAssertTrue(db
-        .executeStatements("CREATE TABLE review_stats (id INTEGER PRIMARY KEY, subject_id INTEGER, pb BLOB);"))
+    let materialRevision = version >= 14 ? ", local_revision INTEGER DEFAULT 0" : ""
+    let mistakeColumn = version >= 11 ? ", last_mistake_time TEXT" : ""
+    let progressRevision = version >= 15 ? ", local_revision INTEGER DEFAULT 0" : ""
+    let statisticsCursor = version >= 12 ? ", review_stats_updated_after TEXT" : ""
+    let statisticsValue = version >= 12 ? ",'statistics'" : ""
+    let schema = """
+      PRAGMA user_version = \(version);
+      CREATE TABLE user (id INTEGER PRIMARY KEY, pb BLOB);
+      CREATE TABLE subjects (id INTEGER PRIMARY KEY, japanese TEXT, level INTEGER, type INTEGER, pb BLOB);
+      CREATE TABLE assignments (id INTEGER PRIMARY KEY, subject_id INTEGER, pb BLOB);
+      CREATE TABLE pending_progress (id INTEGER PRIMARY KEY, pb BLOB);
+      CREATE TABLE study_materials (id INTEGER PRIMARY KEY, pb BLOB\(materialRevision));
+      CREATE TABLE pending_study_materials (id INTEGER PRIMARY KEY);
+      CREATE TABLE subject_progress (id INTEGER PRIMARY KEY, level INTEGER, srs_stage INTEGER, subject_type INTEGER\(mistakeColumn)\(progressRevision));
+      CREATE TABLE level_progressions (id INTEGER PRIMARY KEY, level INTEGER, pb BLOB);
+      CREATE TABLE voice_actors (id INTEGER PRIMARY KEY, pb BLOB);
+      CREATE TABLE audio_urls (subject_id INTEGER, voice_actor_id INTEGER, level INTEGER, url TEXT);
+      CREATE TABLE sync (assignments_updated_after TEXT, study_materials_updated_after TEXT, subjects_updated_after TEXT, voice_actors_updated_after TEXT\(statisticsCursor));
+      INSERT INTO sync VALUES ('assignments','materials','subjects','voices'\(statisticsValue));
+      CREATE TABLE error_log (request_headers TEXT);
+      INSERT INTO error_log VALUES ('diagnostic-fixture-must-stay-in-source');
+      """
+    #expect(db.executeStatements(schema))
+    if version >= 12 {
+      #expect(
+        db
+          .executeStatements(
+            "CREATE TABLE review_stats (id INTEGER PRIMARY KEY, subject_id INTEGER, pb BLOB);"))
     }
     var user = TKMUser()
     user.username = "fixture"
@@ -94,8 +100,9 @@ final class LegacyStudyImporterTest: XCTestCase {
     audio.url = "https://example.invalid/cat.mp3"
     audio.voiceActorID = 7
     subject.vocabulary.audio = [audio]
-    try db.executeUpdate("INSERT INTO subjects VALUES (42, '猫', 12, 3, ?)",
-                         values: [subject.serializedData()])
+    try db.executeUpdate(
+      "INSERT INTO subjects VALUES (42, '猫', 12, 3, ?)",
+      values: [subject.serializedData()])
     var assignment = TKMAssignment()
     assignment.id = 142
     assignment.subjectID = 42
@@ -106,32 +113,43 @@ final class LegacyStudyImporterTest: XCTestCase {
     assignment.startedAt = 10
     assignment.passedAt = 20
     assignment.burnedAt = 30
-    try db.executeUpdate("INSERT INTO assignments VALUES (142, 42, ?)",
-                         values: [assignment.serializedData()])
+    try db.executeUpdate(
+      "INSERT INTO assignments VALUES (142, 42, ?)",
+      values: [assignment.serializedData()])
     var progress = TKMProgress()
     progress.assignment = assignment
     progress.createdAt = 120
     progress.meaningWrong = true
     progress.meaningWrongCount = 2
     progress.readingWrongCount = 0
-    try db.executeUpdate("INSERT INTO pending_progress VALUES (42, ?)",
-                         values: [progress.serializedData()])
+    try db.executeUpdate(
+      "INSERT INTO pending_progress VALUES (42, ?)",
+      values: [progress.serializedData()])
     var material = TKMStudyMaterials()
     material.id = 242
     material.subjectID = 42
     material.meaningNote = "offline\u{0000}note\n猫"
     material.readingNote = "ねこ"
     material.meaningSynonyms = ["kitty", "house cat"]
-    try db.executeUpdate("INSERT INTO study_materials (id, pb) VALUES (42, ?)",
-                         values: [material.serializedData()])
-    XCTAssertTrue(db
-      .executeStatements("INSERT INTO pending_study_materials VALUES (42); INSERT INTO subject_progress (id, level, srs_stage, subject_type) VALUES (42,12,2,3);"))
-    if version >= 11 { try db.executeUpdate("UPDATE subject_progress SET last_mistake_time = ?",
-                                            values: ["2026-10-17 12:34:56"]) }
-    if version >=
-      14 { XCTAssertTrue(db.executeStatements("UPDATE study_materials SET local_revision = 9")) }
-    if version >=
-      15 { XCTAssertTrue(db.executeStatements("UPDATE subject_progress SET local_revision = 8")) }
+    try db.executeUpdate(
+      "INSERT INTO study_materials (id, pb) VALUES (42, ?)",
+      values: [material.serializedData()])
+    #expect(
+      db
+        .executeStatements(
+          "INSERT INTO pending_study_materials VALUES (42); INSERT INTO subject_progress (id, level, srs_stage, subject_type) VALUES (42,12,2,3);"
+        ))
+    if version >= 11 {
+      try db.executeUpdate(
+        "UPDATE subject_progress SET last_mistake_time = ?",
+        values: ["2026-10-17 12:34:56"])
+    }
+    if version >= 14 {
+      #expect(db.executeStatements("UPDATE study_materials SET local_revision = 9"))
+    }
+    if version >= 15 {
+      #expect(db.executeStatements("UPDATE subject_progress SET local_revision = 8"))
+    }
     var level = TKMLevel()
     level.id = 5
     level.level = 12
@@ -141,8 +159,9 @@ final class LegacyStudyImporterTest: XCTestCase {
     level.passedAt = 4
     level.completedAt = 5
     level.abandonedAt = 6
-    try db.executeUpdate("INSERT INTO level_progressions VALUES (5, 12, ?)",
-                         values: [level.serializedData()])
+    try db.executeUpdate(
+      "INSERT INTO level_progressions VALUES (5, 12, ?)",
+      values: [level.serializedData()])
     var voice = TKMVoiceActor()
     voice.id = 7
     voice.gender = .female
@@ -166,104 +185,106 @@ final class LegacyStudyImporterTest: XCTestCase {
       statistic.readingCurrentStreak = 4
       statistic.percentageCorrect = 85
       statistic.hidden = true
-      try db.executeUpdate("INSERT INTO review_stats VALUES (342, 42, ?)",
-                           values: [statistic.serializedData()])
+      try db.executeUpdate(
+        "INSERT INTO review_stats VALUES (342, 42, ?)",
+        values: [statistic.serializedData()])
     }
     try edit(db)
     return url
   }
 
-  func testFullDatabaseImportsWithoutChangingSourceAndReopensNatively() async throws {
-    let url = try fixture(), original = try Data(contentsOf: url)
+  @Test func fullDatabaseImportsWithoutChangingSourceAndReopensNatively() async throws {
+    let url = try fixture()
+    let original = try Data(contentsOf: url)
     let source = try LegacyStudyImporter.read(from: url)
-    XCTAssertEqual(try Data(contentsOf: url), original)
-    XCTAssertEqual(source.profile.maxLevelGranted, 60)
-    XCTAssertEqual(source.profile.vacationStartedAt, 50)
-    XCTAssertEqual(source.subjects.first?.meaningMnemonic, "Meaning <kanji>猫</kanji>")
-    XCTAssertEqual(source.subjects.first?.sentences.first?.japanese, "猫です。")
-    XCTAssertEqual(source.subjects.first?.partsOfSpeech, [1, 99])
-    XCTAssertEqual(source.subjects.first?.gradingSubject.primaryReadings, ["ねこ"])
-    XCTAssertEqual(source.pendingReviews.first?.submission.meaningWrongCount, 2)
-    XCTAssertEqual(source.materials.first?.legacyRevision, 9)
-    XCTAssertEqual(source.progress.first?.legacyRevision, 8)
-    XCTAssertEqual(source.progress.first?.lastMistakeLocalTime, "2026-10-17 12:34:56")
-    XCTAssertEqual(source.levels.first?.completedAt, 5)
-    XCTAssertEqual(source.statistics.first?.readingMaxStreak, 6)
-    XCTAssertEqual(source.voices.first?.description, "Fixture voice")
-    XCTAssertEqual(source.audio.first?.voiceActorID, 7)
-    XCTAssertEqual(source.cursors["review_stats_updated_after"], "statistics")
+    #expect(try Data(contentsOf: url) == original)
+    #expect(source.profile.maxLevelGranted == 60)
+    #expect(source.profile.vacationStartedAt == 50)
+    #expect(source.subjects.first?.meaningMnemonic == "Meaning <kanji>猫</kanji>")
+    #expect(source.subjects.first?.sentences.first?.japanese == "猫です。")
+    #expect(source.subjects.first?.partsOfSpeech == [1, 99])
+    #expect(source.subjects.first?.gradingSubject.primaryReadings == ["ねこ"])
+    #expect(source.pendingReviews.first?.submission.meaningWrongCount == 2)
+    #expect(source.materials.first?.legacyRevision == 9)
+    #expect(source.progress.first?.legacyRevision == 8)
+    #expect(source.progress.first?.lastMistakeLocalTime == "2026-10-17 12:34:56")
+    #expect(source.levels.first?.completedAt == 5)
+    #expect(source.statistics.first?.readingMaxStreak == 6)
+    #expect(source.voices.first?.description == "Fixture voice")
+    #expect(source.audio.first?.voiceActorID == 7)
+    #expect(source.cursors["review_stats_updated_after"] == "statistics")
     let native = url.deletingPathExtension().appendingPathExtension("store")
-    addTeardownBlock {
-      for suffix in ["", "-wal", "-shm"] {
-        try? FileManager.default.removeItem(atPath: native.path + suffix)
-      }
-    }
     do {
       let store = try await StudyStore.open(at: native)
-      try await store.importLegacyAccount(source, sourceID: url.path,
-                                          verifiedAccountID: "account-fixture",
-                                          verifiedUsername: "fixture",
-                                          credentialID: "credential-fixture")
+      try await store.importLegacyAccount(
+        source, sourceID: url.path,
+        verifiedAccountID: "account-fixture",
+        verifiedUsername: "fixture",
+        credentialID: "credential-fixture")
     }
     let store = try await StudyStore.open(at: native)
     let materials = try await store.materials(accountID: "account-fixture")
     let reviews = try await store.pendingReviews(accountID: "account-fixture")
     let available = try await store.assignments(accountID: "account-fixture")
-    XCTAssertEqual(materials.first?.material.meaningNote, "offline\u{0000}note\n猫")
-    XCTAssertEqual(materials.first?.material.meaningSynonyms, ["kitty", "house cat"])
-    XCTAssertTrue(materials.first?.pending == true)
-    XCTAssertEqual(reviews.first?.submission, source.pendingReviews.first?.submission)
-    XCTAssertTrue(reviews.first?.attempted == true)
-    XCTAssertTrue(available.isEmpty)
-    XCTAssertEqual(try Data(contentsOf: url), original)
+    #expect(materials.first?.material.meaningNote == "offline\u{0000}note\n猫")
+    #expect(materials.first?.material.meaningSynonyms == ["kitty", "house cat"])
+    #expect(materials.first?.pending == true)
+    #expect(reviews.first?.submission == source.pendingReviews.first?.submission)
+    #expect(reviews.first?.attempted == true)
+    #expect(available.isEmpty)
+    #expect(try Data(contentsOf: url) == original)
   }
 
-  func testEverySupportedSchemaAndDuplicateAssignmentMigration() throws {
-    for version in 9 ... 15 {
+  @Test func everySupportedSchemaAndDuplicateAssignmentMigration() throws {
+    for version in 9...15 {
       let url = try fixture(version: version) { db in
         var old = TKMAssignment()
         old.id = 141
         old.subjectID = 42
         old.subjectType = .vocabulary
-        try db.executeUpdate("INSERT INTO assignments VALUES (141, 42, ?)",
-                             values: [old.serializedData()])
+        try db.executeUpdate(
+          "INSERT INTO assignments VALUES (141, 42, ?)",
+          values: [old.serializedData()])
       }
       let source = try LegacyStudyImporter.read(from: url)
-      XCTAssertEqual(source.assignments.map(\.id), [142])
-      XCTAssertEqual(source.supersededAssignments.map(\.id), [141])
-      XCTAssertEqual(source.progress.first?.lastMistakeLocalTime,
-                     version >= 11 ? "2026-10-17 12:34:56" : nil)
-      XCTAssertEqual(source.statistics.count, version >= 12 ? 1 : 0)
-      XCTAssertEqual(source.materials.first?.legacyRevision, version >= 14 ? 9 : 0)
-      XCTAssertEqual(source.progress.first?.legacyRevision, version >= 15 ? 8 : 0)
+      #expect(source.assignments.map(\.id) == [142])
+      #expect(source.supersededAssignments.map(\.id) == [141])
+      #expect(
+        source.progress.first?.lastMistakeLocalTime == (version >= 11 ? "2026-10-17 12:34:56" : nil)
+      )
+      #expect(source.statistics.count == (version >= 12 ? 1 : 0))
+      #expect(source.materials.first?.legacyRevision == (version >= 14 ? 9 : 0))
+      #expect(source.progress.first?.legacyRevision == (version >= 15 ? 8 : 0))
     }
   }
 
-  func testVersionNineInfersKanaVocabularyForAssignmentsAndPendingLessons() throws {
+  @Test func versionNineInfersKanaVocabularyForAssignmentsAndPendingLessons() throws {
     let url = try fixture(version: 9) { db in
       var subject = TKMSubject()
       subject.id = 42
       subject.level = 12
       subject.japanese = "猫"
       subject.vocabulary = TKMVocabulary()
-      try db.executeUpdate("UPDATE subjects SET pb = ? WHERE id = 42",
-                           values: [subject.serializedData()])
+      try db.executeUpdate(
+        "UPDATE subjects SET pb = ? WHERE id = 42",
+        values: [subject.serializedData()])
       var progress = TKMProgress()
       progress.assignment.id = 142
       progress.assignment.subjectID = 42
       progress.assignment.subjectType = .vocabulary
       progress.isLesson = true
-      try db.executeUpdate("UPDATE pending_progress SET pb = ? WHERE id = 42",
-                           values: [progress.serializedData()])
+      try db.executeUpdate(
+        "UPDATE pending_progress SET pb = ? WHERE id = 42",
+        values: [progress.serializedData()])
     }
     let source = try LegacyStudyImporter.read(from: url)
-    XCTAssertTrue(source.assignments.first?.isKanaOnlyVocabulary == true)
-    XCTAssertTrue(source.pendingReviews.first?.assignment.isKanaOnlyVocabulary == true)
-    XCTAssertTrue(source.pendingReviews.first?.submission.isLesson == true)
-    XCTAssertNil(source.pendingReviews.first?.submission.createdAt)
+    #expect(source.assignments.first?.isKanaOnlyVocabulary == true)
+    #expect(source.pendingReviews.first?.assignment.isKanaOnlyVocabulary == true)
+    #expect(source.pendingReviews.first?.submission.isLesson == true)
+    #expect(source.pendingReviews.first?.submission.createdAt == nil)
   }
 
-  func testMalformedMismatchedOrOrphanedDataFailsWithoutModifyingSource() throws {
+  @Test func malformedMismatchedOrOrphanedDataFailsWithoutModifyingSource() throws {
     for mutation in [
       "UPDATE pending_progress SET pb = X'FF'",
       "UPDATE subjects SET id = 999",
@@ -274,14 +295,16 @@ final class LegacyStudyImporterTest: XCTestCase {
       "PRAGMA user_version = 16",
       "PRAGMA user_version = 8",
     ] {
-      let url = try fixture { XCTAssertTrue($0.executeStatements(mutation)) }
+      let url = try fixture { #expect($0.executeStatements(mutation)) }
       let original = try Data(contentsOf: url)
-      XCTAssertThrowsError(try LegacyStudyImporter.read(from: url), mutation)
-      XCTAssertEqual(try Data(contentsOf: url), original)
+      #expect(throws: LegacyImportError.self, Comment(rawValue: mutation)) {
+        _ = try LegacyStudyImporter.read(from: url)
+      }
+      #expect(try Data(contentsOf: url) == original)
     }
   }
 
-  func testUnknownNestedFieldsAreRejectedInsteadOfLost() throws {
+  @Test func unknownNestedFieldsAreRejectedInsteadOfLost() throws {
     let url = try fixture { db in
       var subject = TKMSubject()
       subject.id = 42
@@ -289,20 +312,21 @@ final class LegacyStudyImporterTest: XCTestCase {
       subject.japanese = "猫"
       // Field 99, varint 1: valid protobuf wire data unknown to the installed schema.
       subject.vocabulary = try TKMVocabulary(serializedData: Data([0x98, 0x06, 0x01]))
-      try db.executeUpdate("UPDATE subjects SET pb = ? WHERE id = 42",
-                           values: [subject.serializedData()])
+      try db.executeUpdate(
+        "UPDATE subjects SET pb = ? WHERE id = 42",
+        values: [subject.serializedData()])
     }
-    XCTAssertThrowsError(try LegacyStudyImporter.read(from: url))
+    #expect(throws: LegacyImportError.self) { _ = try LegacyStudyImporter.read(from: url) }
   }
 
-  func testMissingDatabaseIsNotCreated() {
+  @Test func missingDatabaseIsNotCreated() {
     let url = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString + ".sqlite")
-    XCTAssertThrowsError(try LegacyStudyImporter.read(from: url))
-    XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    #expect(throws: LegacyImportError.self) { _ = try LegacyStudyImporter.read(from: url) }
+    #expect(!(FileManager.default.fileExists(atPath: url.path)))
   }
 
-  func testRadicalKanjiDetailsAndGradingInputsMatchLegacy() throws {
+  @Test func radicalKanjiDetailsAndGradingInputsMatchLegacy() throws {
     var radical = TKMSubject()
     radical.id = 1
     radical.level = 1
@@ -343,45 +367,113 @@ final class LegacyStudyImporterTest: XCTestCase {
     }
     let url = try fixture { db in
       for value in [radical, kanji] {
-        try db.executeUpdate("INSERT INTO subjects VALUES (?, ?, ?, ?, ?)",
-                             values: [value.id, value.japanese,
-                                      value.level, value.hasRadical ? 1 : 2,
-                                      value.serializedData()])
+        try db.executeUpdate(
+          "INSERT INTO subjects VALUES (?, ?, ?, ?, ?)",
+          values: [
+            value.id, value.japanese,
+            value.level, value.hasRadical ? 1 : 2,
+            value.serializedData(),
+          ])
       }
     }
     let source = try LegacyStudyImporter.read(from: url)
-    let importedRadical = try XCTUnwrap(source.subjects.first { $0.id == 1 })
-    let importedKanji = try XCTUnwrap(source.subjects.first { $0.id == 2 })
-    XCTAssertTrue(importedRadical.hasCharacterImageFile)
-    XCTAssertEqual(importedRadical.characterImageURL, radical.radical.characterImage)
-    XCTAssertEqual(importedRadical.deprecatedMnemonic, radical.radical.deprecatedMnemonic)
-    XCTAssertEqual(importedKanji.meaningHint, kanji.kanji.meaningHint)
-    XCTAssertEqual(importedKanji.readingHint, kanji.kanji.readingHint)
-    XCTAssertEqual(importedKanji.visuallySimilarKanjiIDs, [3])
+    let importedRadical = try #require(source.subjects.first { $0.id == 1 })
+    let importedKanji = try #require(source.subjects.first { $0.id == 2 })
+    #expect(importedRadical.hasCharacterImageFile)
+    #expect(importedRadical.characterImageURL == radical.radical.characterImage)
+    #expect(importedRadical.deprecatedMnemonic == radical.radical.deprecatedMnemonic)
+    #expect(importedKanji.meaningHint == kanji.kanji.meaningHint)
+    #expect(importedKanji.readingHint == kanji.kanji.readingHint)
+    #expect(importedKanji.visuallySimilarKanjiIDs == [3])
     let encoder = JSONEncoder()
     encoder.outputFormatting = .sortedKeys
-    XCTAssertEqual(try encoder.encode(importedKanji.gradingSubject),
-                   try encoder.encode(kanji.gradingSubject))
-    XCTAssertEqual(try encoder.encode(importedRadical.gradingSubject),
-                   try encoder.encode(radical.gradingSubject))
+    #expect(
+      try encoder.encode(importedKanji.gradingSubject) == encoder.encode(kanji.gradingSubject))
+    #expect(
+      try encoder.encode(importedRadical.gradingSubject)
+        == encoder.encode(
+          radical.gradingSubject))
   }
 
-  func testWALImportSeesCommittedDataAndLeavesPendingWriterAlone() throws {
+  @Test func wALImportSeesCommittedDataAndLeavesPendingWriterAlone() throws {
     let url = try fixture()
     let db = FMDatabase(url: url)
-    XCTAssertTrue(db.open())
+    #expect(db.open())
     defer { db.close() }
-    XCTAssertTrue(db
-      .executeStatements("PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0; UPDATE sync SET subjects_updated_after='committed';"))
-    XCTAssertTrue(db.beginTransaction())
-    defer { XCTAssertTrue(db.rollback()) }
-    XCTAssertTrue(db.executeStatements("UPDATE sync SET subjects_updated_after='not committed'"))
+    #expect(
+      db
+        .executeStatements(
+          "PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0; UPDATE sync SET subjects_updated_after='committed';"
+        ))
+    #expect(db.beginTransaction())
+    defer { #expect(db.rollback()) }
+    #expect(db.executeStatements("UPDATE sync SET subjects_updated_after='not committed'"))
     let wal = URL(fileURLWithPath: url.path + "-wal")
-    let before = try Data(contentsOf: url), beforeWAL = try Data(contentsOf: wal)
+    let before = try Data(contentsOf: url)
+    let beforeWAL = try Data(contentsOf: wal)
     let source = try LegacyStudyImporter.read(from: url)
-    XCTAssertEqual(source.cursors["subjects_updated_after"], "committed")
-    XCTAssertEqual(try Data(contentsOf: url), before)
-    XCTAssertEqual(try Data(contentsOf: wal), beforeWAL)
-    XCTAssertTrue(db.isInTransaction)
+    #expect(source.cursors["subjects_updated_after"] == "committed")
+    #expect(try Data(contentsOf: url) == before)
+    #expect(try Data(contentsOf: wal) == beforeWAL)
+    #expect(db.isInTransaction)
   }
+  @Test(arguments: Array(9...15))
+  func bootstrapVerifiesEveryActualSchemaWithoutChangingItsSource(version: Int) async throws {
+    let url = try fixture(version: version)
+    let original = try Data(contentsOf: url)
+    let source = try LegacyStudyImporter.read(from: url)
+    let credentials = ImporterBootstrapCredentials()
+    let native = url.appendingPathExtension("store")
+    let verifier = ImporterBootstrapVerifier(profile: source.profile)
+    let handoff: StudyLegacyHandoff
+    do {
+      let store = try await StudyStore.open(at: native)
+      let bootstrap = StudyLegacyBootstrap(
+        store: store, sourceID: "ios-main", credentials: credentials, client: verifier
+      ) {
+        .init(token: "synthetic-import-token", account: try LegacyStudyImporter.read(from: url))
+      }
+      handoff = try await bootstrap.activate()
+      #expect(handoff.activated)
+      let answers = try await store.pendingReviews(accountID: handoff.accountID)
+      let notes = try await store.materials(accountID: handoff.accountID)
+      #expect(
+        answers.first?.attempted == true
+          && answers.first?.submission == source.pendingReviews.first?.submission)
+      #expect(notes.first?.pending == true && notes.first?.issue?.reason == .uncertain)
+      #expect(notes.first?.material == source.materials.first?.value)
+      #expect(try await store.snapshot(credentialID: handoff.credentialID)?.currentLevel == 13)
+    }
+    #expect(try Data(contentsOf: url) == original)
+    let reopened = try await StudyStore.open(at: native)
+    let resumed = StudyLegacyBootstrap(
+      store: reopened, sourceID: "ios-main", credentials: credentials, client: verifier
+    ) {
+      throw CocoaError(.fileReadNoSuchFile)  // The activated writer never reads the retired source.
+    }
+    #expect(try await resumed.activate() == handoff)
+    #expect(
+      try await reopened.pendingReviews(accountID: handoff.accountID).first?.submission
+        == source.pendingReviews.first?.submission)
+    #expect(try Data(contentsOf: url) == original)
+  }
+
+}
+
+private struct ImporterBootstrapVerifier: WaniKaniAccountReader {
+  let profile: StudyAccountProfile
+  func account(token: String) -> WaniKaniAccount {
+    var fresh = profile
+    fresh.level = 13
+    fresh.vacationStartedAt = nil
+    return .init(
+      id: "import-fixture", username: fresh.username, level: fresh.level,
+      onVacation: false, startedAt: fresh.startedAt, profile: fresh)
+  }
+}
+@MainActor private final class ImporterBootstrapCredentials: StudyCredentialStore {
+  var token: String?
+  func load() -> String? { token }
+  func save(_ token: String) { self.token = token }
+  func remove() { token = nil }
 }

@@ -1,0 +1,258 @@
+{
+  "date": "2026-10-20",
+  "baseline": "2e77f23b76d4732d3f4a5558f122187896413d5d",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Recoverable legacy import/credential handoff, one-way native writer binding, read-only account capability, shared fingerprint/profile helpers, Swift Testing importer migration and Mainboard crash/rollback CI. Production iOS scene/root/writer selection is not activated by this checkpoint.",
+  "sourceHashes": {
+    "App/Tests/LegacyStudyImporterTest.swift": "be7e32729ca95f6e73a4daa0f2ee7b29539c805dd979420313bf1332a46c6442",
+    "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/main.swift": "7aa0e4f811259042cea1f21eafe29a2c0edd0fecfab4c1830c94fa50099e07a1",
+    "Shared/Sources/StudyCore/WaniKaniClient.swift": "5d7d8c22e05b75aeec192ebfbaaedae17ba5a8c0167fd0b01f979d2c9d78c67b",
+    "Shared/Sources/StudyPersistence/StudyCredentialStore.swift": "f570aaa256554fb42b076ed92fe89b593f992539a0fe46f4240cf8ee4b59d2de",
+    "Shared/Sources/StudyPersistence/StudyStore+Legacy.swift": "18cffd2a2a2ae6c52ba8b90e62fa99078d6e668a8aacb14de678b7f1ef5af536",
+    "Shared/Sources/StudyPersistence/StudyStore+Upload.swift": "ac642ae09324a2d1a38037613860204b37c34619f558c4051eb0332f08f01737",
+    "Shared/Sources/StudyPersistence/StudyStore.swift": "ad00cf9d9de541346fbba1b61bc4a7d30de57bf102b87d1c182e1c661085e8fa",
+    "Shared/Sources/StudyUI/Application/StudyAppModel.swift": "b5a5d2d21d0aa70353d2bf03ba64d7e93af92a6c629008ea724ea8f0c0f8a01f",
+    "Shared/Sources/StudyPersistence/StudyLegacyBootstrap.swift": "fb58f48548bc8e64b3620cd8026a50a8458cc7e5da5272d634770ffc11ef6c7a",
+    "Shared/Tests/StudyPersistenceTests/LegacyBootstrapTests.swift": "a123386fc2673005618ab03acecb34b13f6ddc262ea8404ca456d58a44fc71b0"
+  },
+  "workflowHashes": {
+    ".github/workflows/apple.yml": "25f0de439d036a6218988ad55f395e5ffb8c3eda071152aadecca1148d9233a5"
+  },
+  "productionLines": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29847,
+    "after": 30119,
+    "changed": [
+      {
+        "path": "Shared/Sources/StudyCore/WaniKaniClient.swift",
+        "before": 241,
+        "after": 244
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyCredentialStore.swift",
+        "before": 57,
+        "after": 65
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Legacy.swift",
+        "before": 154,
+        "after": 211
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Upload.swift",
+        "before": 367,
+        "after": 369
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore.swift",
+        "before": 409,
+        "after": 410
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyAppModel.swift",
+        "before": 267,
+        "after": 266
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyLegacyBootstrap.swift",
+        "before": 0,
+        "after": 202
+      }
+    ]
+  },
+  "lineCountMeaning": "Physical production Swift grows by 272 lines (29,847 to 30,119), including formatting existing importer code. Test, executable-probe and documentation lines are excluded from this production scope. No net LOC reduction or legacy retirement is claimed.",
+  "checks": {
+    "sharedMac": {
+      "log": "/private/tmp/usagi-bootstrap-shared-mac-final.log",
+      "sha256": "9f79013a04a01df862ee6b6180045d83c8e88beec2418886a87155a283ea0756",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 404,
+        "suiteCounts": [
+          43,
+          7,
+          162,
+          192
+        ]
+      }
+    },
+    "sharedIOS": {
+      "log": "/private/tmp/usagi-bootstrap-shared-ios-final.log",
+      "sha256": "d9081bd07776044a097cdf7a48c41fd963bcf80cc6967f863d32e2b3b8a8e607",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 404,
+        "passedTests": 404,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e651a9ecc67a4012aac0beb1bdf142a7.xcresult"
+    },
+    "hostedIOS": {
+      "log": "/private/tmp/usagi-bootstrap-hosted-final.log",
+      "sha256": "2f62caec4f20bdc81e4fc363364a65757978a12a456131a561d6b91521a8eba7",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 94,
+        "passedTests": 94,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-33320ec1e36e49909c6a01edc3ae6dad.xcresult"
+    },
+    "releaseMac": {
+      "log": "/private/tmp/usagi-bootstrap-release-mac.log",
+      "sha256": "3102fa3c4a07a11abba21c05ab16cdc8c46fc7e307b259d36f66eaf06248307a",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-1c9aa7b1bc514688a889c720f50d2861.xcresult"
+    },
+    "releaseIOS": {
+      "log": "/private/tmp/usagi-bootstrap-release-ios.log",
+      "sha256": "f702cd7619624633ca606a9ac19a8dfa35cccb3c424b68deb93c964666765b17",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 42,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-523974c735e940e9a5279cec6bcc9506.xcresult"
+    },
+    "originalRestarts": {
+      "log": "/private/tmp/usagi-bootstrap-restarts-accepted.log",
+      "sha256": "7c364599d4e8e5a398954a21fd2cb52d210f343e182c65e9ea530a8c3d3dc2aa",
+      "passed": 4
+    },
+    "crashAndRollback": {
+      "date": "2026-10-20T02:04:33+09:00",
+      "binary": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Probe/debug/NativePersistenceProbe",
+      "binarySHA256": "c6dd74c2222db2d2d2c88083f977dac5daae77fa24d2d90ad875ae9540e44096",
+      "directory": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f",
+      "scope": "Production SwiftData import/receipt/binding and app-owned bootstrap. Four distinct processes terminate with _exit(86), before credential write, after synthetic credential persistence, after writer activation, and after a malformed import rolled back. Fresh processes resume offline, verify no partial failed import and never resurrect consumed work after simulated logout.",
+      "credentialBoundary": "File-backed synthetic credential implementation; no system Keychain, defaults or live account is accessed.",
+      "checks": [
+        {
+          "mode": "import-handoff",
+          "expectedExit": 86,
+          "exit": 86,
+          "marker": "CHECKPOINT: prepared import before credential write",
+          "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f/import-handoff.log",
+          "sha256": "8226d1f89dc0f9b7692fe04fdcff3d68ecd7760ee1fc4aa4d1f4e78120f35818"
+        },
+        {
+          "mode": "save-handoff",
+          "expectedExit": 86,
+          "exit": 86,
+          "marker": "CHECKPOINT: saved credential before writer activation",
+          "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f/save-handoff.log",
+          "sha256": "3900df602a3a55731e898cea023a96dd95220dc2fedc610d666a50cbf1a2c7f8"
+        },
+        {
+          "mode": "activate-handoff",
+          "expectedExit": 86,
+          "exit": 86,
+          "marker": "CHECKPOINT: native writer selected before process exit",
+          "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f/activate-handoff.log",
+          "sha256": "3a25fbdf29ae3d504ede1a585972d75e5145f4742c29db10d825dc4dffc68f7c"
+        },
+        {
+          "mode": "edit-handoff",
+          "expectedExit": 0,
+          "exit": 0,
+          "marker": "PASS: native work changed after activation",
+          "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f/edit-handoff.log",
+          "sha256": "0953d2e11387a947c549b614dae64ef3915889199dd95975f702455f146c46bb"
+        },
+        {
+          "mode": "read-handoff",
+          "expectedExit": 0,
+          "exit": 0,
+          "marker": "PASS: restarted offline after logout",
+          "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f/read-handoff.log",
+          "sha256": "19b6c0ef68d7c8030ed6ccb9889cf9828d5a85cb2122cacb0a8448714d556ef3"
+        },
+        {
+          "mode": "rollback-handoff",
+          "expectedExit": 86,
+          "exit": 86,
+          "marker": "CHECKPOINT: failed import rolled back before credential write",
+          "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f/rollback-handoff.log",
+          "sha256": "5421a30864ed675c9f169118e7346fed34a20391e51c3579f02b28baf0e5e2c1"
+        },
+        {
+          "mode": "verify-rollback-handoff",
+          "expectedExit": 0,
+          "exit": 0,
+          "marker": "PASS: fresh process found no partial import",
+          "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/Bootstrap-20261020-8094-hr120f/verify-rollback-handoff.log",
+          "sha256": "e93ede57a7aeaf96b124855cacc007d7c711c12bf6e28e66d92bddf36317c3d3"
+        }
+      ]
+    },
+    "previousSchemaUpgrade": {
+      "baseline": "2e77f23b76d4732d3f4a5558f122187896413d5d",
+      "directory": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/HandoffUpgrade-20261020-3312-xut96s",
+      "store": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/HandoffUpgrade-20261020-3312-xut96s/study.store",
+      "checkout": "/private/tmp/usagi-handoff-baseline-20261020-3312-r6bm5q",
+      "build": {
+        "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/HandoffUpgrade-20261020-3312-xut96s/baseline-build.log",
+        "sha256": "01bb4d511b9835afc758132cd49cdad2285609a4f3edd27a3736013b08347911",
+        "exit": 0
+      },
+      "write": {
+        "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/HandoffUpgrade-20261020-3312-xut96s/baseline-write.log",
+        "sha256": "ce91898b4ced80f31cc747222ebf6c6dca49ca7fde5e7bb44fe8c9ae83e9c668",
+        "exit": 0
+      },
+      "baselineBinary": "/private/tmp/usagi-handoff-baseline-20261020-3312-r6bm5q/.build/debug/NativePersistenceProbe",
+      "baselineBinarySHA256": "ab8539bb2e3f5bf4e99bea5bf3daffcfc5f26351403bfceeb7c8a07e5d1dca99",
+      "read": {
+        "log": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/HandoffUpgrade-20261020-3312-xut96s/current-reader.log",
+        "sha256": "54ec2df74475671786ba3b2bc0b41e370e684e8055dcd823056139d5a18b8d62",
+        "exit": 0
+      },
+      "currentBinary": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Probe/debug/NativePersistenceProbe",
+      "currentBinarySHA256": "c6dd74c2222db2d2d2c88083f977dac5daae77fa24d2d90ad875ae9540e44096",
+      "scope": "Exact 2e77f23 catalog writer reopened by current production SwiftData schema with optional receipt binding; catalog, assignments, pending note and unactivated old receipt survive."
+    },
+    "localCIPhaseReplay": {
+      "workflow": "/Users/pedro/Developer/Projects/apps/usagiunagi/.github/workflows/apple.yml",
+      "sha256": "25f0de439d036a6218988ad55f395e5ffb8c3eda071152aadecca1148d9233a5",
+      "segmentSHA256": "c44f210964ab09672be5469b231b9b151f46a7c2e43da23346083c654ba1cc73",
+      "log": "/private/tmp/usagi-bootstrap-ci-replay.log",
+      "logSHA256": "f66cfb4daceeddad75e4cdde0232968997b4254a7181d9e96e7863c0f61d388d",
+      "exit": 0,
+      "scope": "Executed the exact new handoff/rollback shell segment with set -euo pipefail, replacing only the unpublished pinned uv/Mainboard prefix with the local Mainboard installation. This is local acceptance, not a hosted Actions or tool-publication pass."
+    }
+  },
+  "invariants": [
+    "First handoff validates the legacy username and retained signup time through an account-only API capability, checks source/token stability and binds the exact import digest, verified UUID and token fingerprint.",
+    "The import receipt commits before credential saving; saving is followed by read-back before activation. Another credential is never overwritten. Prepared exact-source recovery works offline.",
+    "Once activated, writer selection never consults retired data, credentials or the network. Later logout/token replacement does not restore old queues; receipt account identity is historical, not the currently signed-in account.",
+    "An import committed before its binding requires fresh identity verification, but its existing receipt prevents resurrection. Missing prepared snapshots, changed sources and identity/credential conflicts fail closed.",
+    "Imported pending reviews and notes remain conservatively uncertain with exact payloads; no live exercise or account write is part of acceptance.",
+    "Real disposable SQLite schemas 9–15 retain byte-identical sources, grading inputs, WAL behavior and pending payloads. Eight existing importer functions use Swift Testing; the new parameterized bootstrap/reopen function covers all seven schemas.",
+    "Four separate processes use _exit(86), skipping teardown after preparation, synthetic credential saving, activation and failed-import rollback. Fresh processes resume offline, preserve changed native work and verify no partial failed import.",
+    "An exact 2e77f23 writer and current reader verify optional handoff metadata upgrades without catalog, assignment or pending-note loss. Unbound old receipts cannot select a writer."
+  ],
+  "correctionsDuringValidation": "Initial hosted compilation identified multiline fixture indentation and assertion-expression grouping issues in the Swift Testing conversion; these were corrected before the final 94-test acceptance. The rollback scenario was moved into the async probe flow before final process acceptance. No failing bundle is counted as passing.",
+  "limits": [
+    "Production iOS still creates its existing coordinator/writer. Remaining account/main-settings/avatar/developer, native routes/input/media and shared-store companion/background parity precedes scene integration and final SQL/legacy retirement.",
+    "The bootstrap is for an existing legacy source. The production scene must also handle fresh installs, recovery presentation and durable one-writer ownership before constructing either account writer/background service.",
+    "Credential failure injection uses in-memory/file-backed synthetic stores. Actual Keychain failures/accessibility, signed-device upgrades, physical speech/IME/notifications/companion behavior and power-loss durability remain unverified.",
+    "No presentation changes or new UI acceptance are claimed here; the previously validated WaniKani Home/study design is retained.",
+    "Mac Release reports zero warnings; iOS retains legacy warnings. These are incremental diagnostics, not a complete warning-elimination claim.",
+    "The CI phase segment passes locally with the local Mainboard prefix. No hosted Actions pass, signing/store publication, PR or push is claimed; the pinned Mainboard commit remains unpublished."
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "rootAndMainboard": "No parent manifest, Mainboard implementation or unrelated owner files were edited or staged."
+}

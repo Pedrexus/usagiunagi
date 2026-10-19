@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Security
 
@@ -53,5 +54,12 @@ public struct KeychainStudyCredentialStore: StudyCredentialStore {
   public func remove() throws {
     let status = SecItemDelete(query as CFDictionary)
     if status != errSecItemNotFound { try check(status) }
+  }
+}
+
+public enum StudyCredentialID {
+  public nonisolated static func forToken(_ token: String) -> String { forData(Data(token.utf8)) }
+  nonisolated static func forData(_ data: Data) -> String {
+    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
   }
 }

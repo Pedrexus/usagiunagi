@@ -52,6 +52,7 @@ import SwiftData
 @Model final class ImportReceipt {
   @Attribute(.unique) var sourceID: String
   var digest: String
+  @Attribute(.codable) var handoff: StudyLegacyHandoff? = nil
   init(sourceID: String, digest: String) {
     self.sourceID = sourceID
     self.digest = digest
