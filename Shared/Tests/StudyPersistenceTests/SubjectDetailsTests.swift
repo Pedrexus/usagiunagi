@@ -11,7 +11,7 @@ struct SubjectDetailsTests {
     let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
     _ = try await store.refresh(
       credentialID: "credential", token: "fixture",
-      client: .init(transport: DownloadFixture.response))
+      client: WaniKaniClient(transport: DownloadFixture.response))
     return store
   }
   @Test func fullDetailsIncludeLocalUnsentNotesAndAccessibleRelations() async throws {

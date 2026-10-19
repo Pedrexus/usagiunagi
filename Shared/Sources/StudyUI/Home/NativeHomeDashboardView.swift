@@ -1,3 +1,4 @@
+import Foundation
 import StudyCore
 import StudyPersistence
 import SwiftUI
@@ -33,7 +34,7 @@ struct NativeHomeDashboardView: View {
   private struct Request: Hashable {
     let active: Bool
     let account: String?
-    let savedAt: Date?
+    let revision: UUID
     let pending: Int?
     let date: Date
     let lessonPreferences: StudyLessonPreferences
@@ -44,7 +45,7 @@ struct NativeHomeDashboardView: View {
       content.task(
         id: Request(
           active: active, account: model.snapshot?.accountID,
-          savedAt: model.snapshot?.savedAt, pending: model.snapshot?.pendingReviews,
+          revision: model.dataRevision, pending: model.snapshot?.pendingReviews,
           date: context.date, lessonPreferences: lessonSettings.value,
           showPreviousLevelGraph: subjectSettings.value.showPreviousLevelGraph)
       ) {

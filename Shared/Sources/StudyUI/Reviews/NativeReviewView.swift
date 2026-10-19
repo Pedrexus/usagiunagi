@@ -81,11 +81,11 @@ public struct NativeReviewView: View {
             systemImage: "checkmark.circle",
             description: Text(
               review.saved.session.completedIDs.isEmpty
-                ? "No subjects completed. Saved notes and exclusions stay on this device until you sync Saved work."
+                ? "No subjects completed. Saved notes and exclusions sync automatically when online."
                 : "\(review.saved.session.completedIDs.count) completed · \(review.saved.session.successRate)% accuracy. "
                   + (isPractice
                     ? "Practice answers do not change WaniKani progress or create review uploads."
-                    : "Completed answers stay on this device until you sync Saved work.")
+                    : "Completed answers are saved on this device and sync automatically when online.")
             ))
           Button("Finish session") {
             run {
@@ -148,7 +148,7 @@ public struct NativeReviewView: View {
             isPractice
               ? "Practice answers use your saved subjects without changing WaniKani progress or creating review uploads."
               : isLesson
-                ? "Quiz the lessons you selected. Each completed lesson stays saved on this device until you sync."
+                ? "Quiz the lessons you selected. Completed lessons are saved here and sync automatically when online."
                 : "Start with the reviews due in your saved account, or resume the session already saved on this device."
           ))
         Button(

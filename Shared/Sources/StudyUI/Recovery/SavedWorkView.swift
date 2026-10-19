@@ -37,13 +37,9 @@ public struct SavedWorkView: View {
           .foregroundStyle(.secondary)
         if let work {
           detailField("Answers waiting", value: String(work.reviews.count))
-            .accessibilityElement(children: .ignore).accessibilityLabel("Answers waiting")
-            .accessibilityValue(String(work.reviews.count)).accessibilityIdentifier(
-              "savedWork.answerCount")
+            .accessibilityIdentifier("savedWork.answerCount")
           detailField("Note edits waiting", value: String(work.materials.count))
-            .accessibilityElement(children: .ignore).accessibilityLabel("Note edits waiting")
-            .accessibilityValue(String(work.materials.count)).accessibilityIdentifier(
-              "savedWork.materialCount")
+            .accessibilityIdentifier("savedWork.materialCount")
           if work.requiresAssignmentRefresh {
             Label(
               "Refresh WaniKani to reload progress for archived answers.",
@@ -195,8 +191,8 @@ public struct SavedWorkView: View {
   }
   private func detailField(_ name: String, value: String) -> some View {
     let text = value.isEmpty ? "None" : value
-    return LabeledContent(name, value: text).textSelection(.enabled)
-      .accessibilityElement(children: .ignore).accessibilityLabel(name).accessibilityValue(text)
+    return LabeledContent(name, value: text)
+      .accessibilityIdentifier("savedWork.field.\(name)")
   }
   @ViewBuilder private func issue(_ issue: StudyUploadIssue?, attempted: Bool) -> some View {
     let message: String =
@@ -204,7 +200,7 @@ public struct SavedWorkView: View {
       case .uncertain:
         "WaniKani may have received this. Sending it again could repeat an answer or overwrite a newer note. It remains saved here."
       case .rejected:
-        "WaniKani rejected this request. After checking the cause, you can queue it again and choose Sync saved work."
+        "WaniKani rejected this request. After checking the cause, you can queue it again. It will sync automatically when online."
       case .assignmentChanged:
         "This assignment changed on WaniKani. The saved answer has not been applied to the new assignment."
       case .assignmentMissing:
@@ -355,7 +351,7 @@ public struct SavedWorkView: View {
         } message: {
           Text(
             resolution == .keepLocal
-              ? "Keep this device's current edit queued against the WaniKani version shown. Choose Sync saved work later to send it."
+              ? "Keep this device's current edit queued against the WaniKani version shown. It will sync automatically when online."
               : "Replace this device's pending note and synonyms with the WaniKani version shown here. This removes this pending edit."
           )
         }

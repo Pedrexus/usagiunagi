@@ -11,7 +11,7 @@ struct SubjectMaterialEditingTests {
     let store = try await StudyStore.open(at: url, inMemory: url.path == "/unused")
     _ = try await store.refresh(
       credentialID: "credential", token: "fixture",
-      client: .init(transport: DownloadFixture.response))
+      client: WaniKaniClient(transport: DownloadFixture.response))
     return store
   }
 

@@ -40,6 +40,12 @@ The workflow runs shared tests/restart checks, iPhone/iPad acceptance and native
 
 Mainboard is pinned to `phvv-me/mainboard@7acaf736c8bae16f8b028678384fe83bb728c51b`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** The prepared Actions workflow has passed local syntax validation; no hosted CI pass is claimed.
 
+## Automatic native sync acceptance
+
+Shared Swift Testing now exercises automatic review/note sending, offline restoration, a newer edit arriving during an in-flight write, lost replies, fresh vacation/access metadata, throttling, authorization pauses and disconnect/reconnect draining. The upload-only lane is checked separately from a queued full read. Existing import tests continue to require newer verified snapshot metadata and legacy references to survive. Native Mac acceptance completes a review and verifies an empty Home queue/Saved work without pressing Sync; separate recovery acceptance keeps an uncertain answer pending and performs only comparison. All network operations in this UI fixture are typed in-memory simulations. Core transport tests continue to validate real HTTP response shapes.
+
+Use the existing Mainboard shared/hosted tasks and native test classes. Actions already selects the full classes, so the new functions need no app-local driver, new task alias or separate CI job. The [validation receipt](Validation/2026-10-20-automatic-native-sync.json) records the exact source/test/build scope and remaining read/physical-device gates. This feature addition grows production code before legacy-writer retirement; it is not a LOC reduction or a complete iOS migration.
+
 ## Notification acceptance
 
 The existing `usagi-test-settings` and `usagi-test-settings-ipad` gates now retain all three original settings cases and add `testSharedNotificationSettingsPersistWithoutSystemPrompts`. The standalone Actions workflow already selects the complete ReviewFlowTests and native Mac test classes, so it discovers the new notification cases without a separate job. Tool publication/hosted CI is still pending owner-authorized pushes.
@@ -75,3 +81,5 @@ Hosted iOS tests verify the existing archived audio preferences. Native Mac fixt
 The [audio validation receipt](Validation/2026-10-19-shared-audio.json) records exact counts, sources and native bundles. The checkpoint does not publish Mainboard/app commits, run hosted Actions or adopt the native writer on iOS.
 
 The audio acceptance pass corrected a fixture inconsistency: Settings fixtures use a level-1 account, while the old audio stub returned level-24 recordings regardless of the query. The shared filter correctly excluded those future levels. The stub now uses its account's current level. Retry/deletion checks were rerun against clean source; temporary catalog/option tracing was removed. This did not relax subscription or level filtering.
+
+The obsolete developer/TestFlight/store configuration enum and its custom compilation macros are removed. Standard `DEBUG` keeps the existing optional practice entry points out of Release builds. Saved-work fields use default SwiftUI labeled-content accessibility; custom child-hiding and whole-row selection suppressed their values on native Mac. Native acceptance verifies the exact current stage and preserves the uncertain answer after closing comparison.

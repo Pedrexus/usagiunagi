@@ -17,7 +17,8 @@ struct UsagiUnagiApp: App {
         LegacyStudyWindow(services: appDelegate.services)
       #else
         StudyRootView(
-          model: services.model, appName: AppIdentity.name, appearance: services.appearance,
+          model: services.model, automaticSync: services.automaticSync, appName: AppIdentity.name,
+          appearance: services.appearance,
           notice: services.notice,
           notifications: ProcessInfo.processInfo.arguments.contains("--sample-data")
             ? nil : services.notifications
@@ -43,7 +44,12 @@ struct UsagiUnagiApp: App {
       .restorationBehavior(StudyAppAssembly.isReviewFixture ? .disabled : .automatic)
       .commands {
         CommandGroup(after: .newItem) {
-          Button("Refresh WaniKani") { Task { await services.model.refresh() } }
+          Button("Refresh WaniKani") {
+            Task {
+              await services.model.refresh()
+              services.automaticSync.wake()
+            }
+          }
           .keyboardShortcut("r")
           .disabled(services.model.isSyncing || services.model.snapshot?.isSample != false)
         }

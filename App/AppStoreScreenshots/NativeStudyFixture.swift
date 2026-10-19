@@ -9,6 +9,7 @@
   @MainActor enum NativeStudyFixture {
     static func make() -> StudyAppAssembly {
       let arguments = ProcessInfo.processInfo.arguments
+      let environment = Task { try await reviewFixtureStore() }
       let suite = "dev.usagiunagi.mac-review-fixture"
       let defaults = UserDefaults(suiteName: suite)!
       defaults.removePersistentDomain(forName: suite)
@@ -26,8 +27,8 @@
       audioConfiguration.protocolClasses = [AudioFixtureProtocol.self]
       return StudyAppAssembly(
         model: StudyAppModel(
-          credentials: FixtureCredentials(), client: fixtureClient,
-          openStore: { try await reviewFixtureStore() }),
+          credentials: FixtureCredentials(), client: FixtureServer(environment: environment),
+          openStore: { try await environment.value.0 }),
         fonts: StudyFontLibrary(
           catalog: catalog,
           preferences: DefaultsStudyFontPreferences(defaults: defaults),
@@ -44,7 +45,11 @@
           client: NotificationFixture.client),
         appearance: arguments.contains("--light-fixture")
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
-        notice: "Synthetic review fixture · memory only · uploads disabled")
+        notice: "Synthetic review fixture · memory only · simulated sync",
+        paths: AsyncStream {
+          $0.yield(true)
+          $0.finish()
+        })
     }
     private final class FixtureCredentials: StudyCredentialStore {
       private var token: String? = "fixture"
@@ -52,63 +57,65 @@
       func save(_ token: String) { self.token = token }
       func remove() { token = nil }
     }
-    private static var fixtureClient: WaniKaniClient {
-      WaniKaniClient { request in
-        guard request.httpMethod == "GET" else { throw StudyStoreError.sampleData }
-        if let token = request.value(forHTTPHeaderField: "Authorization"),
-          token == "Bearer rejected" || token == "Bearer hibernating"
-        {
-          let hibernating = token == "Bearer hibernating"
-          return (
-            try JSONSerialization.data(withJSONObject: [
-              "error": hibernating ? "Account is hibernating" : "Unauthorized"
-            ]),
-            HTTPURLResponse(
-              url: request.url!, statusCode: hibernating ? 403 : 401, httpVersion: nil,
-              headerFields: nil)!
-          )
-        }
-        let json: String
-        switch request.url?.lastPathComponent {
-        case "user":
-          json =
-            #"{"object":"user","data":{"id":"review-fixture","username":"Synthetic review fixture","level":1,"current_vacation_started_at":null,"profile_url":"https://www.wanikani.com/users/fixture","started_at":"2020-01-01T00:00:00Z","subscription":{"active":true,"max_level_granted":60,"period_ends_at":null}}}"#
-        case "study_materials":
-          json =
-            #"{"object":"collection","total_count":1,"pages":{"next_url":null},"data":[{"id":201,"object":"study_material","data":{"subject_id":1,"meaning_note":"Server version of the note.","reading_note":"いち","meaning_synonyms":["Server synonym"]}}]}"#
-        case "assignments":
-          json =
-            #"{"object":"collection","total_count":1,"pages":{"next_url":null},"data":[{"id":101,"object":"assignment","data":{"subject_id":1,"subject_type":"kanji","srs_stage":4,"available_at":"2099-01-01T00:00:00Z","started_at":"2020-01-01T00:00:00Z","unlocked_at":"2020-01-01T00:00:00Z","hidden":false}}]}"#
-        case "subjects":
-          let subject: [String: Any] = [
-            "id": 1, "object": "kanji",
-            "data": [
-              "characters": "一", "level": 1, "slug": "一",
-              "document_url": "https://www.wanikani.com/kanji/一",
-              "lesson_position": 0, "spaced_repetition_system_id": 1, "meaning_mnemonic": "One.",
-              "meanings": [["meaning": "One", "primary": true, "accepted_answer": true]],
-              "auxiliary_meanings": [],
-              "readings": [
-                ["reading": "いち", "primary": true, "accepted_answer": true, "type": "onyomi"]
-              ],
-            ],
-          ]
-          json = String(
-            decoding: try JSONSerialization.data(withJSONObject: [
-              "object": "collection", "total_count": 1,
-              "pages": ["next_url": NSNull()], "data": [subject],
-            ]), as: UTF8.self)
-        case "review_statistics", "level_progressions", "voice_actors":
-          json = #"{"object":"collection","total_count":0,"pages":{"next_url":null},"data":[]}"#
-        default: throw StudyStoreError.sampleData
-        }
-        return (
-          Data(json.utf8),
-          HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
-        )
+    /// Typed in-memory server; production HTTP validation remains covered by StudyCore tests.
+    private actor FixtureServer: WaniKaniService {
+      let environment: Task<(StudyStore, StudyDownload), any Error>
+      private var state: StudyDownload?
+      init(environment: Task<(StudyStore, StudyDownload), any Error>) {
+        self.environment = environment
+      }
+      private func value(_ token: String) async throws -> StudyDownload {
+        if token == "rejected" { throw WaniKaniClient.APIError.unauthorized }
+        if token == "hibernating" { throw StudySignInError.hibernating }
+        if let state { return state }
+        let value = try await environment.value.1
+        state = value
+        return value
+      }
+      func account(token: String) async throws -> WaniKaniAccount {
+        let data = try await value(token)
+        return .init(
+          id: data.accountID, username: data.profile.username, level: data.profile.level,
+          onVacation: data.profile.vacationStartedAt != nil, startedAt: data.profile.startedAt,
+          profile: data.profile)
+      }
+      func download(token: String) async throws -> StudyDownload { try await value(token) }
+      func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment? {
+        try await value(token).assignments.first { $0.subjectID == subjectID }
+      }
+      func material(subjectID: Int64, token: String) async throws -> WaniKaniMaterial? {
+        try await value(token).materials.first { $0.value.subjectID == subjectID }
+      }
+      func submit(_ answer: StudyReviewSubmission, token: String, now: Date) async throws
+        -> CatalogAssignment
+      {
+        var data = try await value(token)
+        guard
+          let index = data.assignments.firstIndex(where: {
+            $0.subjectID == answer.subjectID && $0.id == answer.assignmentID
+          })
+        else { throw WaniKaniClient.APIError.invalidPayload }
+        var assignment = data.assignments[index]
+        assignment.srsStage = answer.isLesson ? 1 : min(9, assignment.srsStage + 1)
+        assignment.startedAt = assignment.startedAt ?? Int64(now.timeIntervalSince1970)
+        assignment.availableAt =
+          assignment.srsStage == 9 ? nil : Int64(now.timeIntervalSince1970) + 3600
+        data.assignments[index] = assignment
+        state = data
+        return assignment
+      }
+      func writeMaterial(_ material: StudyMaterial, serverID: Int64?, token: String) async throws
+        -> WaniKaniMaterial
+      {
+        var data = try await value(token)
+        let value = WaniKaniMaterial(id: serverID ?? 200 + material.subjectID, value: material)
+        data.materials.removeAll { $0.value.subjectID == material.subjectID }
+        data.materials.append(value)
+        state = data
+        return value
       }
     }
-    private static func reviewFixtureStore() async throws -> StudyStore {
+    private static func reviewFixtureStore() async throws -> (StudyStore, StudyDownload) {
       let cache = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
       var profile = StudyAccountProfile(username: "Synthetic review fixture")
       profile.level = 1
@@ -261,7 +268,27 @@
       _ = try await cache.importLegacyAccount(
         fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",
         verifiedUsername: profile.username, credentialID: StudyAppModel.credentialID("fixture"))
-      return cache
+      var remote = StudyDownload(
+        accountID: "review-fixture", profile: fixture.profile,
+        subjects: fixture.subjects, assignments: fixture.assignments,
+        materials: fixture.materials.map { .init(id: max(201, $0.serverID), value: $0.value) },
+        levels: fixture.levels, statistics: fixture.statistics, voices: fixture.voices)
+      if ProcessInfo.processInfo.arguments.contains("--material-recovery-fixture") {
+        remote.materials = [
+          .init(
+            id: 201,
+            value: .init(
+              subjectID: 1,
+              meaningNote: "Server version of the note.", readingNote: "いち",
+              meaningSynonyms: ["Server synonym"]))
+        ]
+      }
+      if ProcessInfo.processInfo.arguments.contains("--review-recovery-fixture") {
+        remote.assignments[0].srsStage = 4
+        remote.assignments[0].startedAt = 1
+        remote.assignments[0].availableAt = 4_070_908_800
+      }
+      return (cache, remote)
     }
   }
 #endif

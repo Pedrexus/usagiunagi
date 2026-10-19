@@ -39,6 +39,56 @@
       XCTAssertTrue(
         app.staticTexts["Review session saved"].waitForExistence(timeout: 5), app.debugDescription)
     }
+    func testCompletedReviewsUploadAutomaticallyAndLeaveTheHomeQueue() {
+      let app = launch(["--anki-fixture", "--combined-anki-fixture"])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      showAnswer(in: app)
+      app.buttons["review.correct"].click()
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+      app.buttons["Finish session"].click()
+      let reviews = app.buttons["home.reviews"]
+      XCTAssertTrue(reviews.waitForExistence(timeout: 5))
+      let caughtUp = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "enabled == false AND label CONTAINS %@", "0 ready"),
+        object: reviews)
+      XCTAssertEqual(XCTWaiter.wait(for: [caughtUp], timeout: 10), .completed)
+      app.buttons["home.savedWork"].click()
+      XCTAssertTrue(
+        app.staticTexts["No saved work waiting"].waitForExistence(timeout: 5), app.debugDescription)
+    }
+    func testUncertainReviewStaysPendingAndHasReadOnlyRecovery() {
+      let app = launch(["--review-recovery-fixture"])
+      defer { app.terminate() }
+      app.buttons["home.savedWork"].click()
+      let list = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      list.name = "Native uncertain-work list before expanding"
+      list.lifetime = .keepAlways
+      add(list)
+      let answer = app.disclosureTriangles.firstMatch
+      XCTAssertTrue(answer.waitForExistence(timeout: 5))
+      // Grouped forms include leading space in the disclosure accessibility frame.
+      answer.coordinate(withNormalizedOffset: CGVector(dx: 0.33, dy: 0.5)).click()
+      let compare = app.buttons["savedWork.compareAnswer.1"]
+      XCTAssertTrue(compare.waitForExistence(timeout: 5), app.debugDescription)
+      if !compare.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: 500) }
+      compare.click()
+      let archive = app.buttons["savedWork.archiveAnswer"]
+      XCTAssertTrue(archive.waitForExistence(timeout: 5), app.debugDescription)
+      let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      image.name = "Native uncertain review recovery remains explicit"
+      image.lifetime = .keepAlways
+      add(image)
+      let stage = app.descendants(matching: .any).matching(
+        identifier: "savedWork.field.Current stage"
+      ).firstMatch
+      XCTAssertTrue(stage.waitForExistence(timeout: 5))
+      XCTAssertTrue(app.staticTexts["Current stage"].exists)
+      XCTAssertEqual(stage.value as? String, "4", stage.debugDescription)
+      app.sheets.firstMatch.buttons["Keep pending"].click()
+      XCTAssertTrue(compare.waitForExistence(timeout: 5))
+      XCTAssertFalse(app.staticTexts["No saved work waiting"].exists)
+    }
     func testReadingOnlyAnkiLeavesMeaningTyped() {
       let app = launch(["--anki-fixture", "--reading-anki-fixture"])
       defer { app.terminate() }

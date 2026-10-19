@@ -4,6 +4,17 @@ import StudyCore
 public enum StudySynchronization: Equatable, Sendable {
   case refresh
   case sendSavedWork(accountID: String)
+  case uploadSavedWork(accountID: String)
+
+  var downloadsCatalog: Bool {
+    if case .uploadSavedWork = self { false } else { true }
+  }
+  var accountID: String? {
+    switch self {
+    case .refresh: nil
+    case .sendSavedWork(let id), .uploadSavedWork(let id): id
+    }
+  }
 }
 
 public struct StudySynchronizationResult: Sendable {
@@ -34,7 +45,7 @@ extension StudyStore {
   /// Account transitions explicitly call cancelSynchronization and await its drain.
   public func synchronize(
     _ operation: StudySynchronization = .refresh, credentialID: String,
-    token: String, client: WaniKaniClient = .init()
+    token: String, client: any WaniKaniService = WaniKaniClient()
   ) async throws -> StudySynchronizationResult {
     try Task.checkCancellation()
     guard synchronizationCancellations == 0 else { throw StudyUploadError.alreadyRunning }
@@ -52,10 +63,10 @@ extension StudyStore {
   // queued behind a read. This makes concurrent scene requests one ordered operation.
   func synchronizationTask(
     _ operation: StudySynchronization, credentialID: String,
-    token: String, client: WaniKaniClient
+    token: String, client: any WaniKaniService
   ) throws -> Task<StudySynchronizationResult, any Error> {
     guard synchronizationCancellations == 0 else { throw StudyUploadError.alreadyRunning }
-    if case .sendSavedWork(let accountID) = operation {
+    if let accountID = operation.accountID {
       guard try snapshot(credentialID: credentialID)?.accountID == accountID else {
         throw StudyUploadError.accountMismatch
       }
@@ -65,26 +76,40 @@ extension StudyStore {
       guard previous.credentialID == credentialID, previous.token == token else {
         throw StudyUploadError.alreadyRunning
       }
-      if operation == .refresh || operation == previous.operation { return previous.task }
+      if operation == previous.operation
+        || (operation == .refresh && previous.operation.downloadsCatalog)
+        || (!operation.downloadsCatalog && previous.operation.accountID == operation.accountID)
+      {
+        return previous.task
+      }
     } else {
-      guard refreshRun == nil, uploadRun == nil, recoveryRun == nil else { throw StudyUploadError.alreadyRunning }
+      guard refreshRun == nil, uploadRun == nil, recoveryRun == nil else {
+        throw StudyUploadError.alreadyRunning
+      }
     }
     let id = UUID()
     let generation = uploadGeneration
     let task = Task {
       defer { if synchronizationRun?.id == id { synchronizationRun = nil } }
-      // Only an explicit send request creates this second pass.
+      // Serialize uploads and downloads across scenes; a catalogue read never becomes an upload-only pass.
       _ = try await previous?.task.value
       try Task.checkCancellation()
       guard generation == uploadGeneration else { throw CancellationError() }
       var upload: StudyUploadReport?
-      if case .sendSavedWork(let accountID) = operation {
+      if let accountID = operation.accountID {
         upload = try await uploadPending(accountID: accountID, token: token, client: client)
       }
       try Task.checkCancellation()
       let snapshot: StudySnapshot
       do {
-        snapshot = try await refresh(credentialID: credentialID, token: token, client: client)
+        if case .uploadSavedWork = operation {
+          guard let saved = try self.snapshot(credentialID: credentialID) else {
+            throw StudyStoreError.invalidIdentity
+          }
+          snapshot = saved
+        } else {
+          snapshot = try await refresh(credentialID: credentialID, token: token, client: client)
+        }
       } catch {
         if let upload, !(error is CancellationError) {
           throw StudySynchronizationFailure(upload: upload, cause: error)

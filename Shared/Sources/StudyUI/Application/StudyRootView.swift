@@ -7,6 +7,7 @@ import SwiftUI
 public struct StudyRootView: View {
   @Bindable private var model: StudyAppModel
   private let appName: String
+  private let automaticSync: StudyAutomaticSync
   private let appearance: ColorScheme?
   private let notice: String?
   private let notifications: StudyNotifications?
@@ -30,11 +31,17 @@ public struct StudyRootView: View {
   @Environment(\.openURL) private var openURL
   @Environment(\.appearsActive) private var appearsActive
   public init(
-    model: StudyAppModel, appName: String, appearance: ColorScheme? = nil, notice: String? = nil,
+    model: StudyAppModel, automaticSync: StudyAutomaticSync, appName: String,
+    appearance: ColorScheme? = nil, notice: String? = nil,
     notifications: StudyNotifications? = nil
   ) {
     self.model = model
-    _signIn = State(initialValue: StudySignIn { try await model.connect($0) })
+    self.automaticSync = automaticSync
+    _signIn = State(
+      initialValue: StudySignIn {
+        try await model.connect($0)
+        automaticSync.wake()
+      })
     self.appName = appName
     self.appearance = appearance
     self.notice = notice
@@ -42,12 +49,13 @@ public struct StudyRootView: View {
   }
   private struct NotificationReadKey: Equatable {
     let accountID: String?
-    let savedAt: Date?
+    let revision: UUID
     let preferences: StudyLessonPreferences
   }
   private struct AudioReadKey: Equatable {
     let accountID: String?
     let savedAt: Date?
+    let profile: StudyAccountProfile?
   }
   public var body: some View {
     NavigationStack(path: $path) {
@@ -115,6 +123,10 @@ public struct StudyRootView: View {
             Label(message, systemImage: "link").font(.callout).padding(8).accessibilityIdentifier(
               "applink.message")
           }
+          if let message = automaticSync.notice {
+            Label(message, systemImage: "arrow.triangle.2.circlepath").font(.callout).padding(8)
+              .accessibilityIdentifier("app.automaticSync")
+          }
           if let error = model.error, signIn.error == nil {
             Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding(8)
           }
@@ -134,15 +146,19 @@ public struct StudyRootView: View {
       ) {
         await openLinkIfReady()
       }
-      .onAppear { updateHeader() }
+      .onAppear {
+        updateHeader()
+        automaticSync.start()
+      }
       .task(
         id: NotificationReadKey(
           accountID: model.snapshot?.accountID,
-          savedAt: model.snapshot?.savedAt, preferences: lessonSettings.value)
+          revision: model.dataRevision, preferences: lessonSettings.value)
       ) {
         await updateNotifications()
       }
-      .onChange(of: scenePhase) { _, _ in
+      .onChange(of: scenePhase) { _, phase in
+        if phase == .active { automaticSync.wake() }
         Task { await updateNotifications() }
       }
       .onChange(of: path) { _, values in
@@ -155,8 +171,7 @@ public struct StudyRootView: View {
           wrapUpRequested = false
         }
       }
-      .onChange(of: model.snapshot?.savedAt) { _, _ in updateHeader() }
-      .onChange(of: model.snapshot?.pendingReviews) { _, _ in updateHeader() }
+      .onChange(of: model.dataRevision) { _, _ in updateHeader() }
       .onChange(of: model.isSyncing) { _, active in
         shell.progress = active ? Progress(totalUnitCount: -1) : nil
       }
@@ -175,7 +190,9 @@ public struct StudyRootView: View {
         updateHeader()
       }
       .task(
-        id: AudioReadKey(accountID: model.snapshot?.accountID, savedAt: model.snapshot?.savedAt)
+        id: AudioReadKey(
+          accountID: model.snapshot?.accountID, savedAt: model.snapshot?.savedAt,
+          profile: model.profile)
       ) {
         guard let snapshot = model.snapshot, !snapshot.isSample, let account = snapshot.accountID,
           let store = model.savedWorkStore
@@ -296,7 +313,10 @@ public struct StudyRootView: View {
           SavedWorkView(
             store: store, accountID: accountID, isSyncing: model.isSyncing,
             compareSavedWork: model.compareSavedWork
-          ) { try await model.syncSavedWork(accountID: accountID) }
+          ) {
+            try await model.syncSavedWork(accountID: accountID)
+            automaticSync.wake()
+          }
           .navigationTitle("Saved work")
         case .catalog(let query, let remaining):
           NativeSubjectCatalogView(
@@ -328,8 +348,13 @@ public struct StudyRootView: View {
     }
   }
   private var refreshButton: some View {
-    Button("Refresh", systemImage: "arrow.clockwise") { Task { await model.refresh() } }
-      .disabled(model.isSyncing || model.snapshot?.isSample != false)
+    Button("Refresh", systemImage: "arrow.clockwise") {
+      Task {
+        await model.refresh()
+        automaticSync.wake()
+      }
+    }
+    .disabled(model.isSyncing || model.snapshot?.isSample != false)
   }
   private var savedWorkButton: some View {
     Button("Saved work", systemImage: "tray.and.arrow.up") { path = [.savedWork] }

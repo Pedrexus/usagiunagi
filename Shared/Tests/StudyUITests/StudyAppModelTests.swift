@@ -5,7 +5,7 @@ import StudyTestSupport
 import StudyUI
 import Testing
 
-@MainActor private final class MemoryCredentials: StudyCredentialStore {
+@MainActor final class MemoryCredentials: StudyCredentialStore {
   var token: String?
   var failLoads = false
   var failSaves = false

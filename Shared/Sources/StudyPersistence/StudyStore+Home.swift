@@ -52,8 +52,10 @@ extension StudyStore {
     data.hourlyReviews = available.hourlyReviews
     data.stageCounts = available.stageCounts
     if !available.pending.isEmpty {
-      data.notice = "\(available.pending.count) uploads pending. Progress updates after syncing."
-      data.scheduleUnavailableMessage = "Sync saved work to update the forecast."
+      data.notice =
+        "\(available.pending.count) uploads pending. Completed work syncs automatically when online."
+      data.scheduleUnavailableMessage =
+        "The forecast updates after saved work syncs. Check Saved work for items needing attention."
     }
     if snapshot.requiresAssignmentRefresh {
       data.notice = "Refresh WaniKani to reload progress for archived answers."

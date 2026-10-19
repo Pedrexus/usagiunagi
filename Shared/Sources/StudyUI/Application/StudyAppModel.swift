@@ -6,7 +6,8 @@ import StudyPersistence
 
 @MainActor @Observable
 public final class StudyAppModel {
-  public private(set) var snapshot: StudySnapshot?
+  public private(set) var dataRevision = UUID()
+  public private(set) var snapshot: StudySnapshot? { didSet { dataRevision = UUID() } }
   public private(set) var profile: StudyAccountProfile?
   public private(set) var savedWorkStore: StudyStore?
   public private(set) var syncSummary: String?
@@ -25,10 +26,10 @@ public final class StudyAppModel {
   @ObservationIgnored private let openStore: @Sendable () async throws -> StudyStore
   @ObservationIgnored private let legacySnapshotURL: URL?
   @ObservationIgnored private var persistence: Task<StudyStore, any Error>?
-  @ObservationIgnored private let reader: WaniKaniClient
+  @ObservationIgnored private let reader: any WaniKaniService
 
   public init(
-    credentials: any StudyCredentialStore, client: WaniKaniClient = .init(),
+    credentials: any StudyCredentialStore, client: any WaniKaniService = WaniKaniClient(),
     legacySnapshotURL: URL? = nil,
     openStore: @escaping @Sendable () async throws -> StudyStore
   ) {
@@ -113,9 +114,11 @@ public final class StudyAppModel {
       let credential = try credentials.load().map(Self.credentialID)
       guard let credential else { return }
       let saved = try await cache.snapshot(credentialID: credential)
+      let savedProfile = try await cache.accountState(accountID: accountID)?.profile
       try checkRequest(epoch)
       guard saved?.accountID == accountID, snapshot?.accountID == accountID else { return }
       snapshot = saved
+      profile = savedProfile
     } catch { if generation == epoch { self.error = error.localizedDescription } }
   }
   public func loadSample(freeLevels: Bool = false) {
@@ -171,8 +174,18 @@ public final class StudyAppModel {
       try await connect(token)
     } catch { self.error = error.localizedDescription }
   }
-  /// Sending is an explicit Saved work action; ordinary refresh remains read-only.
+  /// A manual Saved work pass includes a full download; automatic passes only upload.
   public func syncSavedWork(accountID: String) async throws {
+    _ = try await sendSavedWork(.sendSavedWork(accountID: accountID), accountID: accountID)
+  }
+  @discardableResult public func uploadSavedWork(accountID: String) async throws
+    -> StudyUploadReport?
+  {
+    try await sendSavedWork(.uploadSavedWork(accountID: accountID), accountID: accountID)
+  }
+  private func sendSavedWork(_ operation: StudySynchronization, accountID: String) async throws
+    -> StudyUploadReport?
+  {
     guard snapshot?.accountID == accountID, snapshot?.isSample == false,
       let token = try credentials.load()
     else { throw StudyStoreError.invalidIdentity }
@@ -186,12 +199,13 @@ public final class StudyAppModel {
     try checkRequest(epoch)
     do {
       let result = try await cache.synchronize(
-        .sendSavedWork(accountID: accountID), credentialID: credential, token: token, client: reader
+        operation, credentialID: credential, token: token, client: reader
       )
       try checkRequest(epoch)
       snapshot = result.snapshot
       profile = result.profile
       if let report = result.upload { syncSummary = summary(report) }
+      return result.upload
     } catch let failure as StudySynchronizationFailure {
       try checkRequest(epoch)
       syncSummary = summary(failure.upload)

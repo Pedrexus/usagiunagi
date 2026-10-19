@@ -11,7 +11,8 @@ struct NativeAnkiTests {
   private func store(at url: URL = URL(filePath: "/unused")) async throws -> StudyStore {
     let store = try await StudyStore.open(at: url, inMemory: url.path == "/unused")
     _ = try await store.refresh(
-      credentialID: "fixture", token: "fixture", client: .init(transport: DownloadFixture.response))
+      credentialID: "fixture", token: "fixture",
+      client: WaniKaniClient(transport: DownloadFixture.response))
     return store
   }
   private func options(

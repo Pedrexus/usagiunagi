@@ -38,7 +38,7 @@ struct CatalogTests {
     let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
     _ = try await store.refresh(
       credentialID: "credential", token: "fixture",
-      client: .init(transport: DownloadFixture.response))
+      client: WaniKaniClient(transport: DownloadFixture.response))
     var state = try await store.openReviews(
       accountID: account, now: .init(timeIntervalSince1970: 2_000_000_000))
     for _ in 0..<2 {

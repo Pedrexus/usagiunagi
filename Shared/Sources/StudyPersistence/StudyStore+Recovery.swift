@@ -60,7 +60,7 @@ extension StudyStore {
   /// Read-only comparison. A fresh identity check and local revisions fence every suspension.
   public func compareSavedWork(
     _ request: StudyRecoveryRequest, credentialID: String, token: String,
-    client: WaniKaniClient = .init()
+    client: any WaniKaniService = WaniKaniClient()
   ) async throws -> StudyRecoveryComparison {
     try Task.checkCancellation()
     try requireRecoveryIdle(accountID: request.accountID)

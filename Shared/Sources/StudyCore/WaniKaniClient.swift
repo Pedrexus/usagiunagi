@@ -1,8 +1,27 @@
 import Foundation
 
+/// The native repository uses typed server values; URLSession supplies the production service.
+public protocol WaniKaniService: Sendable {
+  func account(token: String) async throws -> WaniKaniAccount
+  func download(token: String) async throws -> StudyDownload
+  func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment?
+  func material(subjectID: Int64, token: String) async throws -> WaniKaniMaterial?
+  func submit(_ answer: StudyReviewSubmission, token: String, now: Date) async throws
+    -> CatalogAssignment
+  func writeMaterial(_ value: StudyMaterial, serverID: Int64?, token: String) async throws
+    -> WaniKaniMaterial
+}
+extension WaniKaniService {
+  public func submit(_ answer: StudyReviewSubmission, token: String) async throws
+    -> CatalogAssignment
+  {
+    try await submit(answer, token: token, now: .now)
+  }
+}
+
 /// Shared native URLSession boundary. Writes are single attempts; the durable repository
 /// owns acknowledgement and reconciliation before another attempt can be authorized.
-public struct WaniKaniClient: Sendable {
+public struct WaniKaniClient: WaniKaniService {
   public typealias Transport = @Sendable (URLRequest) async throws -> (Data, HTTPURLResponse)
   public static let defaultBaseURL = URL(string: "https://api.wanikani.com/v2")!
   private let baseURL: URL

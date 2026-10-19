@@ -218,7 +218,7 @@ struct ReviewRecoveryTests {
     await #expect(throws: URLError.self) {
       try await store.refresh(
         credentialID: "credential", token: "fixture",
-        client: .init { _ in throw URLError(.notConnectedToInternet) })
+        client: WaniKaniClient { _ in throw URLError(.notConnectedToInternet) })
     }
     #expect(try await store.snapshot(credentialID: "credential")?.requiresAssignmentRefresh == true)
     #expect(try await store.pendingReviews(accountID: account) == [other])
@@ -240,7 +240,7 @@ struct ReviewRecoveryTests {
     try await store.endReviews(accountID: account, expectedRevision: fresh.saved.revision)
     _ = try await store.refresh(
       credentialID: "credential", token: "fixture",
-      client: .init(transport: DownloadFixture.response))
+      client: WaniKaniClient(transport: DownloadFixture.response))
     #expect(try await store.assignments(accountID: account).contains { $0.subjectID == 1 })
     #expect(try await store.archivedReviews(accountID: account).count == 1)
     #expect(

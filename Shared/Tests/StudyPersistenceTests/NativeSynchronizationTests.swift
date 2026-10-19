@@ -235,7 +235,7 @@ struct NativeSynchronizationTests {
     #expect(pending.attemptedRevision == nil && pending.pending)
     _ = try await store.synchronize(
       credentialID: "credential", token: "fixture",
-      client: .init(transport: DownloadFixture.response))
+      client: WaniKaniClient(transport: DownloadFixture.response))
   }
 
   @Test func successfulUploadIsReportedAndRetainedWhenRefreshFails() async throws {
@@ -257,7 +257,83 @@ struct NativeSynchronizationTests {
         == "new note")
     _ = try await store.synchronize(
       .sendSavedWork(accountID: "fixture-user-id"), credentialID: "credential", token: "fixture",
-      client: .init(transport: DownloadFixture.response))
+      client: WaniKaniClient(transport: DownloadFixture.response))
     #expect(await server.writes == 1)
   }
+  @Test func uploadOnlyAcknowledgesNotesWithoutDownloadingTheCatalog() async throws {
+    let store = try await store(pendingNote: true)
+    let server = SynchronizationServer(failRead: true)
+    let result = try await store.synchronize(
+      .uploadSavedWork(accountID: "fixture-user-id"), credentialID: "credential",
+      token: "fixture", client: server.client)
+    #expect(result.upload?.uploadedMaterials == 1)
+    #expect(result.snapshot.pendingReviews == 0)
+    #expect(await server.subjectReads == 0)
+    #expect(await server.writes == 1)
+    #expect(try await store.savedWork(accountID: "fixture-user-id").isEmpty)
+  }
+
+  @Test func snapshotsReadAcknowledgedAssignmentsRatherThanTheOldDownload() async throws {
+    let store = try await store()
+    let accountID = "fixture-user-id"
+    let assignment = try #require(await store.assignments(accountID: accountID).first)
+    let availableAt = try #require(assignment.availableAt)
+    var session = try StudySession(
+      items: [
+        .init(
+          id: 0, subjectID: 1, assignmentID: assignment.id, srsStage: assignment.srsStage,
+          availableAt: availableAt, hasReading: false)
+      ], seed: 1)
+    while let question = session.nextQuestion() {
+      _ = try session.mark(.correct, for: question, now: Int64(Date().timeIntervalSince1970))
+    }
+    try await store.saveSession(session, accountID: accountID, expectedRevision: nil)
+    #expect(try await store.pendingReviews(accountID: accountID).count == 1)
+    #expect(try await store.snapshot(credentialID: "credential")?.assignments.isEmpty == true)
+    let client = WaniKaniClient { request in
+      guard request.url?.lastPathComponent == "reviews" else {
+        return try DownloadFixture.response(request)
+      }
+      var assignment = DownloadFixture.assignment
+      var data = assignment["data"] as! [String: Any]
+      data["srs_stage"] = 6
+      data["available_at"] = "2033-05-18T03:33:20Z"
+      assignment["data"] = data
+      return try DownloadFixture.response(
+        request,
+        object: [
+          "object": "review", "id": 501,
+          "data": [
+            "subject_id": 1, "assignment_id": 101, "incorrect_meaning_answers": 0,
+            "incorrect_reading_answers": 0, "ending_srs_stage": 6,
+          ],
+          "resources_updated": ["assignment": assignment],
+        ])
+    }
+    _ = try await store.uploadPending(accountID: accountID, token: "fixture", client: client)
+    let saved = try #require(await store.snapshot(credentialID: "credential"))
+    #expect(saved.pendingReviews == 0)
+    #expect(saved.assignments.first?.srsStageNumber == 6)
+    #expect(saved.assignments.first?.availableAt == 2_000_000_000)
+  }
+
+  @Test func aRefreshQueuedBehindUploadOnlyStillDownloadsTheCatalog() async throws {
+    let store = try await store(pendingNote: true)
+    let gate = StudyTaskGate()
+    let server = SynchronizationServer(gate: gate, pauseWrites: true)
+    let client = await server.client
+    let send = try await store.synchronizationTask(
+      .uploadSavedWork(accountID: "fixture-user-id"), credentialID: "credential",
+      token: "fixture", client: client)
+    await gate.waitForEntry()
+    let read = try await store.synchronizationTask(
+      .refresh, credentialID: "credential", token: "fixture", client: client)
+    #expect(await server.subjectReads == 0)
+    await gate.resume()
+    #expect(try await send.value.upload?.uploadedMaterials == 1)
+    #expect(try await read.value.upload == nil)
+    #expect(await server.subjectReads == 1)
+    #expect(await server.writes == 1)
+  }
+
 }

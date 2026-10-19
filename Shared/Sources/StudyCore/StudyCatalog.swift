@@ -121,7 +121,7 @@ public struct CatalogAssignment: Codable, Equatable, Sendable, Identifiable {
   }
 }
 
-public struct StudyAccountProfile: Codable, Sendable {
+public struct StudyAccountProfile: Codable, Equatable, Sendable {
   public var username: String
   public var level = 0
   public var maxLevelGranted = 0

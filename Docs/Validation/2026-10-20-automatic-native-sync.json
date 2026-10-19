@@ -1,0 +1,308 @@
+{
+  "date": "2026-10-20",
+  "baseline": "8ba53c03c28808687a0a1480dad84f433f253734",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Native automatic confirmed-work sending, upload-only synchronization, live assignment/profile projection, typed service/fixture, native saved-work accessibility and standard Debug/Release flags. The legacy iOS writer is retained; no schema migration, live account exercise, credential reset, PR or push.",
+  "sourceHashes": {
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "09f5358f8ef6d5104f0f29c5425d583c93630f3952e76670e997074af33bc53e",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "db0bcb693801517089d00a12595249d82016a054180a1f367e45d2bd1b7dec35",
+    "App/Application/StudyAppAssembly.swift": "0a9d2513f8918eb4555c29552b178258b1067f01c6c33692c23639ef6e29c751",
+    "App/FeatureFlags.swift": "ef82f3811975e503df7c2a8e09b245d73ae0cfe8408aee6adb4c8b225ba0410c",
+    "App/UsagiUnagiApp.swift": "c97498964d542a111168361b411c8e33ae1429e7cdcd462366edfa234f6a348a",
+    "Shared/Sources/StudyCore/StudyCatalog.swift": "094e1fc2446e10eef6aae3e39158cdd5958d06e0197fd6aed99f7cee76786815",
+    "Shared/Sources/StudyCore/WaniKaniClient+Download.swift": "b26bbd994f04055ea22bc7e6ebb41e04aef210fbcd0042c1507e8dbfa9ce861a",
+    "Shared/Sources/StudyCore/WaniKaniClient+Study.swift": "bd88a4cd106b9c2593050eab508389b3f0a025b0e2f2a7195ff7885fe1956809",
+    "Shared/Sources/StudyCore/WaniKaniClient.swift": "520a2e7cf11f7e3b5037f0ba49ab35ffb4ace59deb420eb337f27e9772f7ad0e",
+    "Shared/Sources/StudyPersistence/StudyStore+Home.swift": "1050f6b5106f775bb8230146ef7c994c347b323c8f382ddc547a53db5ec665c6",
+    "Shared/Sources/StudyPersistence/StudyStore+Recovery.swift": "1bb9b349029a051e07f79d0742ec3767fb3364beac2be0815fb77d6dd1cc08a2",
+    "Shared/Sources/StudyPersistence/StudyStore+Refresh.swift": "7b3189e346c2d68afb3eb9ae2306130d7c4b2003c7988640a11afa7634febf32",
+    "Shared/Sources/StudyPersistence/StudyStore+Synchronization.swift": "3c26003f1023bc41652921a1073d1723089202193ca1c5cba8d871e2b82959d2",
+    "Shared/Sources/StudyPersistence/StudyStore+Upload.swift": "7f4c64559ff6c001eace9afd248df4444d48acc0cb0e615db57ca8be033c9f6a",
+    "Shared/Sources/StudyPersistence/StudyStore.swift": "d89eda675c5363832ba106639f559a3ca606c9331ad04302ee1f3157899a467e",
+    "Shared/Sources/StudyUI/Application/StudyAppModel.swift": "7b7aedfa898e83c79b6339f094ea54036276ca57729ce97ca3e18302970965ca",
+    "Shared/Sources/StudyUI/Application/StudyRootView.swift": "0681cfa4f7f2541991cb97d75430e08e98db7d7d1c779584cee1e199d7378248",
+    "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift": "1b1480a6e305916aa63abd0498b7bb3a65566c26f06e4b3b3c7a073fd45c09e5",
+    "Shared/Sources/StudyUI/Recovery/SavedWorkView.swift": "5d5f5f806adde4bf297b594d8dc2b3e7b2b13bcf1f25963fd10a37bfa96990d8",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "8a29f7fefb875aa45c2218dea76a4d6b4e7632a870c12e78caf4a970cdfd55e9",
+    "Shared/Tests/StudyCoreTests/DownloadTests.swift": "844a51128e5088962281fd130951dd27563b100a3baa0561e7983d7c3d4b8b5e",
+    "Shared/Tests/StudyPersistenceTests/CatalogTests.swift": "2721cd5902979d7031bd3700ff4611fe285d517a8acd489dabb22259b5736c18",
+    "Shared/Tests/StudyPersistenceTests/NativeAnkiTests.swift": "4e82ba7ba7b56187d28890c511b586281085af861521023de687056f2fb29d2d",
+    "Shared/Tests/StudyPersistenceTests/NativeRefreshTests.swift": "ffb29c4c73d510e7a8c0cf293d8dd1c723b1854c6aaf22e475770e6f6fb25747",
+    "Shared/Tests/StudyPersistenceTests/NativeReviewTests.swift": "38115a1e2c670bdeccf4ccf3a2aa780b104e83b1fa94d8b3b1bf33be2aa28f97",
+    "Shared/Tests/StudyPersistenceTests/NativeSynchronizationTests.swift": "6e9f4bbff0dda7e6883aa1c382588eb9803bbf767d56023a64e160cdd852a1ca",
+    "Shared/Tests/StudyPersistenceTests/ReviewRecoveryTests.swift": "56b3f4536b4d1dba5a4c1f1587a9042a5a17aef1346f1f45ca90b0cacafc5490",
+    "Shared/Tests/StudyPersistenceTests/SubjectDetailsTests.swift": "cb6f724991e7017c6271e1edbb259eb8d46a0c54536ec9ce30820b4c3662a2db",
+    "Shared/Tests/StudyPersistenceTests/SubjectMaterialEditingTests.swift": "cc0dceffabc7a40bccb1a9b289732dc723f6bec9c04cfc390cb91588ab75be47",
+    "Shared/Tests/StudyUITests/StudyAppModelTests.swift": "a510f6a757ab64d68881445c0e9a3f9add436386b410738ed220ac399cfa4aeb",
+    "Shared/Sources/StudyUI/Application/StudyAutomaticSync.swift": "bc76210f5a4d7fee8ef2fbda6aea9be253fafe8274f38be0e5e582b74cbe91a8",
+    "Shared/Tests/StudyUITests/AutomaticSyncTests.swift": "c0afc1bd6c94c64006f20fddeaf53b87d1e51f212b70cefb38a77732a799bf18"
+  },
+  "configurationHashes": {
+    "App/Configuration/Debug.xcconfig": "a7fdfe670317ccbdadd91b3576debbc718a19c23182844b688a58b1a1247227f",
+    "App/Configuration/Release.xcconfig": "44483c2f100d9f61f90099c0389dcc91fe765d29d918f4cf828fd891faa32142",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "2ed0dd284d453261bc907c134216808c8392c5d63833cbadea298c33eab66bd9"
+  },
+  "productionLines": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 29303,
+    "after": 29847,
+    "changed": [
+      {
+        "path": "App/Application/StudyAppAssembly.swift",
+        "before": 58,
+        "after": 60
+      },
+      {
+        "path": "App/FeatureFlags.swift",
+        "before": 41,
+        "after": 24
+      },
+      {
+        "path": "App/UsagiUnagiApp.swift",
+        "before": 53,
+        "after": 59
+      },
+      {
+        "path": "Shared/Sources/StudyCore/WaniKaniClient+Download.swift",
+        "before": 176,
+        "after": 272
+      },
+      {
+        "path": "Shared/Sources/StudyCore/WaniKaniClient+Study.swift",
+        "before": 247,
+        "after": 273
+      },
+      {
+        "path": "Shared/Sources/StudyCore/WaniKaniClient.swift",
+        "before": 222,
+        "after": 241
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Home.swift",
+        "before": 92,
+        "after": 94
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Refresh.swift",
+        "before": 220,
+        "after": 222
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Synchronization.swift",
+        "before": 125,
+        "after": 150
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Upload.swift",
+        "before": 235,
+        "after": 367
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore.swift",
+        "before": 371,
+        "after": 409
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyAppModel.swift",
+        "before": 253,
+        "after": 267
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+        "before": 561,
+        "after": 586
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Home/NativeHomeDashboardView.swift",
+        "before": 249,
+        "after": 250
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Recovery/SavedWorkView.swift",
+        "before": 379,
+        "after": 375
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Application/StudyAutomaticSync.swift",
+        "before": 0,
+        "after": 177
+      }
+    ]
+  },
+  "lineCountMeaning": "A feature/safety addition before legacy-writer retirement, not a LOC reduction. Physical counts include formatting of changed existing files and the new worker/protocol; fixtures, tests and documentation are excluded from production counts.",
+  "checks": {
+    "sharedMac": {
+      "log": "/private/tmp/usagi-auto-accepted-shared-mac.log",
+      "sha256": "d3c7638d68643712b3183e79fe796ebb74332a1beaec03355184b32bacef9e5e",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 390,
+        "suiteCounts": [
+          43,
+          7,
+          148,
+          192
+        ]
+      }
+    },
+    "sharedIOS": {
+      "log": "/private/tmp/usagi-auto-accepted-shared-ios.log",
+      "sha256": "a84f596ad5953bda8691b8f73a0c2b4c0e88a42f78884899af1da0819708a2ad",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 390,
+        "passedTests": 390,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-be1ed47426a548ddbb9d45ea811c2efc.xcresult"
+    },
+    "nativeMac": {
+      "log": "/private/tmp/usagi-auto-final-native-ui.log",
+      "sha256": "e5e053fdb4395eb2c1a48fc5688d70d3c8562885bf556807c3c4e8ffca51cd34",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+          }
+        ]
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-2ddb33808bda4d07b4816847b179a0e7.xcresult"
+    },
+    "hostedIOS": {
+      "log": "/private/tmp/usagi-auto-hosted.log",
+      "sha256": "1ee6d0fb44113552ef67523267ef09a2aa942316aa611378bbebc4ca187fb2d8",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 93,
+        "passedTests": 93,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0ab11d60998b43b9a248063ec095ae33.xcresult"
+    },
+    "phone": {
+      "log": "/private/tmp/usagi-auto-phone-ui.log",
+      "sha256": "a6d2a4d38c9ed7027150072f8ccfe273d9c49ade7de74afa2dbc578fa160a152",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5053e337531648a79cbe37a439abffde.xcresult"
+    },
+    "tablet": {
+      "log": "/private/tmp/usagi-auto-pad-ui.log",
+      "sha256": "a1261ad113fd21735b42081abd99e6510e398c549046152fc756efb2fb100bf2",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5fe6f617725042ec80ee233464474190.xcresult"
+    },
+    "releaseMac": {
+      "log": "/private/tmp/usagi-auto-release-mac.log",
+      "sha256": "060767f9c1d26320e6e8e639b66d2c4019547d9d486c8491d9950344d557efdd",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-4d6b6206851a428ebb28e78bc55dd8bd.xcresult"
+    },
+    "releaseIOS": {
+      "log": "/private/tmp/usagi-auto-release-ios.log",
+      "sha256": "e8fa92bd1ee870e8e584d5ec86bcf047d2891bc094c943908a15e91762972afe",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 14,
+        "analyzerWarningCount": 0
+      },
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-56ccc45cdd374b3cb45cdf0f8d28cba0.xcresult"
+    }
+  },
+  "regressions": {
+    "staleAcknowledgedAssignment": {
+      "log": "/private/tmp/usagi-auto-snapshot-before.log",
+      "sha256": "d7dde4ab84c61236b07ba5a9bd198d252735ca76bce6a610bd20d9590c88d6bf",
+      "result": "Before the fix, acknowledgement exposed the old stage 5 and old due date; final projection uses acknowledged stage 6 and the updated date."
+    },
+    "importGuards": "Existing completeImportSurvivesReopenAndSeparatesPendingAnswers and freshVerifiedSnapshotIsPreservedDuringImport pass unchanged after preserving legacy references and updating metadata only from a fresh identity-checked response.",
+    "UIHarness": "The recovery case initially queried a collapsed group and then missed its padded disclosure hit area. App-window inspection grounded the control. It then exposed a production accessibility defect: custom child-hiding and row-wide text selection suppressed labeled values. Default SwiftUI LabeledContent now exposes the title and exact value; the final case verifies Current stage equals 4 and Keep pending preserves the uncertain answer."
+  },
+  "invariants": [
+    "One app-owned worker is shared by native windows. Local committed changes, account observation, native path changes and explicit foreground/recovery wakes trigger it.",
+    "Upload-only passes do not download the full catalog or replace saved session/draft state. A queued explicit refresh still performs its download.",
+    "Only never-attempted work without a recovery issue is automatic. Lost replies stay uncertain across reconnect, network and foreground wakes.",
+    "Identity is checked before profile changes or writes. Fresh complete profiles update vacation/access metadata atomically across credential snapshots; older imports cannot replace newer verified snapshot metadata.",
+    "Known throttling preserves its deadline. Authorization/account errors pause instead of looping on local attempt-marker commits. Network/server retries back off from 15 to 300 seconds.",
+    "Native UI acceptance uses a typed, stateful memory service with simulated writes. Core transport tests continue to validate production response/origin/write contracts."
+  ],
+  "cleanup": "The obsolete developer/TestFlight/store enum and custom compilation macros are retired. Standard DEBUG preserves the current development-only optional practice gates. This removes 17 production Swift lines; native saved-work field modifiers are also simplified. Net production LOC still grows for missing synchronization behavior and safety.",
+  "screenshots": [
+    {
+      "name": "Native Mac lesson teaching_0_BE8E0F1E-73C9-47B4-9B44-F71752DE0F56.png",
+      "path": "/private/tmp/usagi-auto-accepted-images/1BF9DBD0-7630-4731-BC06-B5C51814169A.png",
+      "sha256": "a054618dc536cc08d4b9227a27c5b7e0e20e780c8cb0c33ae9feacb3b18cd068"
+    },
+    {
+      "name": "Native WaniKani-inspired Home_0_35E923B6-4C3B-4052-BF6A-2C39F1F1A85F.png",
+      "path": "/private/tmp/usagi-auto-accepted-images/8673A40C-E64F-4A61-BE51-2A3471072FD3.png",
+      "sha256": "0e8602bf18948c1fcc914451cad8aeaca824cdef83187fc2f445305834b31552"
+    },
+    {
+      "name": "Shared native offline audio_0_AF317C9F-6311-468C-8DDC-8AFCA3787AF6.png",
+      "path": "/private/tmp/usagi-auto-accepted-images/A0FDA6DA-24A0-40E2-98DE-344A298312F5.png",
+      "sha256": "a31d72fea003762a191774710ab7eaa93654b462abac863009e1ccf8a5d778dc"
+    },
+    {
+      "name": "Native vocabulary exclusion_0_56273376-5EE9-4DF9-B3E2-1AFD9F25F964.png",
+      "path": "/private/tmp/usagi-auto-accepted-images/97843805-A095-49A1-9A35-3A7E487BE1E3.png",
+      "sha256": "f62d6106adb4e95204e40c5d44f1cf8bc71cb2c066ddcbdb28663af9cbd8acc0"
+    },
+    {
+      "name": "Native uncertain review recovery remains explicit_0_6255FC01-DAAD-4A15-8C54-8AA4F8395D47.png",
+      "path": "/private/tmp/usagi-auto-accepted-images/22714E28-803D-497E-8403-1E17475AA80D.png",
+      "sha256": "7fd0ba1bcf7dbfc07d43461ea4ff7cf474bf506f22345a907da6dac814122616"
+    },
+    {
+      "name": "Native uncertain-work list before expanding_0_41E8FE85-D6A9-437F-9551-3CA1B021288A.png",
+      "path": "/private/tmp/usagi-auto-accepted-images/127FFD46-4C33-49EB-AF7D-2488374BA07F.png",
+      "sha256": "ae496588f064503a0dc986e5c8500099e042b65d5ad3b3e5910790077ea34001"
+    }
+  ],
+  "visualInspection": "Inspected the named app-window captures for native Home, lesson teaching and uncertain-answer comparison. WaniKani subject colors, system typography, original study sequence and native grouped/glass controls are retained. No desktop-wide capture was inspected.",
+  "officialReferences": [
+    "https://developer.apple.com/documentation/network/nwpathmonitor",
+    "https://developer.apple.com/videos/play/wwdc2025/245/"
+  ],
+  "limits": [
+    "Full goal remains active: native iOS root/writer adoption, recoverable schema 9–15 credential/import bootstrap and separate-process crash/rollback still require completion.",
+    "Automatic catalog/account read cadence and incremental reads for new unlocks and fresh historical statistics remain open. Existing full Refresh still provides these reads; automatic writes do not imply every catalog/statistics category was redownloaded.",
+    "Physical/signed-device network interruptions, speech/IME, notifications, paired companion delivery and full-account prediction acceptance are unproven by these local synthetic tests.",
+    "Native Mac UI retains an internal thread-priority warning. Release diagnostics are incremental; no whole-project warning reduction is claimed.",
+    "No hosted GitHub Actions pass or store/signing distribution is claimed. The required Mainboard tool commit remains unpublished until owner-authorized pushes."
+  ],
+  "preservedOwnerEdits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift"
+  ],
+  "rootAndMainboard": "No parent manifest/tool/source changes were made; unrelated owner changes remain untouched."
+}

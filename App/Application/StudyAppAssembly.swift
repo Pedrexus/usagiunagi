@@ -6,6 +6,7 @@ import SwiftUI
 /// App-owned services. Feature views receive these same owners on every route.
 @MainActor struct StudyAppAssembly {
   let model: StudyAppModel
+  let automaticSync: StudyAutomaticSync
   let fonts: StudyFontLibrary
   let audio: StudyAudioLibrary
   let defaults: UserDefaults
@@ -18,9 +19,10 @@ import SwiftUI
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
-    appearance: ColorScheme? = nil, notice: String? = nil
+    appearance: ColorScheme? = nil, notice: String? = nil, paths: AsyncStream<Bool>? = nil
   ) {
     self.model = model
+    automaticSync = StudyAutomaticSync(model: model, paths: paths)
     self.fonts = fonts
     self.audio = audio
     self.defaults = defaults

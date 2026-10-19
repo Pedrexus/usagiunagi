@@ -10,7 +10,9 @@ struct RefreshBaseline {
 extension StudyStore {
   /// One complete read per store. Local edits and uploads may continue while downloading;
   /// revisions prevent the response from replacing work completed during that interval.
-  public func refresh(credentialID: String, token: String, client: WaniKaniClient = .init())
+  public func refresh(
+    credentialID: String, token: String, client: any WaniKaniService = WaniKaniClient()
+  )
     async throws -> StudySnapshot
   {
     guard synchronizationCancellations == 0, refreshRun == nil, recoveryRun == nil else {
@@ -54,7 +56,7 @@ extension StudyStore {
   }
 
   private func performRefresh(
-    credentialID: String, token: String, client: WaniKaniClient, generation: UUID
+    credentialID: String, token: String, client: any WaniKaniService, generation: UUID
   ) async throws -> StudySnapshot {
     try checkRefresh(generation)
     let cachedAccount = try snapshot(credentialID: credentialID)?.accountID

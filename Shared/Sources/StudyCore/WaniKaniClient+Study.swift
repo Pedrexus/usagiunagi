@@ -6,12 +6,17 @@ public struct WaniKaniAccount: Sendable {
   public let level: Int
   public let onVacation: Bool
   public let startedAt: Int64?
-  public init(id: String, username: String, level: Int, onVacation: Bool, startedAt: Int64? = nil) {
+  public let profile: StudyAccountProfile?
+  public init(
+    id: String, username: String, level: Int, onVacation: Bool, startedAt: Int64? = nil,
+    profile: StudyAccountProfile? = nil
+  ) {
     self.id = id
     self.username = username
     self.level = level
     self.onVacation = onVacation
     self.startedAt = startedAt
+    self.profile = profile
   }
   /// Older caches have no API UUID. Match all identity metadata they actually retain.
   public func requireLegacyAccount(_ expected: StudyAccountProfile) throws(StudySignInError) {
@@ -26,6 +31,10 @@ public struct WaniKaniAccount: Sendable {
 public struct WaniKaniMaterial: Codable, Equatable, Sendable {
   public let id: Int64
   public let value: StudyMaterial
+  public init(id: Int64, value: StudyMaterial) {
+    self.id = id
+    self.value = value
+  }
 }
 
 extension WaniKaniClient {
@@ -85,8 +94,25 @@ extension WaniKaniClient {
     let user = try await accountData(token: token)
     return .init(
       id: user.id, username: user.username, level: user.level,
-      onVacation: user.currentVacationStartedAt != nil, startedAt: try user.startedAt.map(timestamp)
+      onVacation: user.currentVacationStartedAt != nil,
+      startedAt: try user.startedAt.map(timestamp), profile: try accountProfile(user)
     )
+  }
+
+  func accountProfile(_ user: AccountData) throws -> StudyAccountProfile? {
+    guard let profileURL = user.profileUrl, let startedAt = user.startedAt,
+      let subscription = user.subscription
+    else { return nil }
+    guard (0...60).contains(subscription.maxLevelGranted) else { throw APIError.invalidResponse }
+    var profile = StudyAccountProfile(username: user.username)
+    profile.level = user.level
+    profile.profileURL = profileURL
+    profile.startedAt = try timestamp(startedAt)
+    profile.subscribed = subscription.active
+    profile.maxLevelGranted = subscription.maxLevelGranted
+    profile.subscriptionEndsAt = try subscription.periodEndsAt.map(timestamp)
+    profile.vacationStartedAt = try user.currentVacationStartedAt.map(timestamp)
+    return profile
   }
 
   func accountData(token: String) async throws -> AccountData {

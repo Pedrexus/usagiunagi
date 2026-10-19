@@ -96,10 +96,13 @@ public enum StudyStoreError: Error, LocalizedError {
   }
 }
 
+public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requiresAttention }
+
 /// One actor/container per local store. Model values never escape its executor.
 /// CloudKit is deliberately disabled: WaniKani owns cross-device study progress.
 @ModelActor public actor StudyStore {
   var uploadGeneration = UUID()
+  private var changeObservers: [UUID: AsyncStream<Void>.Continuation] = [:]
   var synchronizationRun: SynchronizationRun?
   var synchronizationCancellations = 0
   var refreshRun: (id: UUID, task: Task<StudySnapshot, any Error>)?
@@ -126,12 +129,37 @@ public enum StudyStoreError: Error, LocalizedError {
       modelContainer: try ModelContainer(for: schema, configurations: configuration))
   }
 
+  /// App-owned consumers receive only committed changes; slow readers coalesce notifications.
+  public func changes() -> AsyncStream<Void> {
+    let id = UUID()
+    let (stream, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
+    changeObservers[id] = continuation
+    continuation.onTermination = { [weak self] _ in
+      Task { await self?.removeChangeObserver(id) }
+    }
+    continuation.yield()
+    return stream
+  }
+  private func removeChangeObserver(_ id: UUID) { changeObservers[id] = nil }
+
+  /// Attempt markers and issues require recovery; they can never authorize an automatic write.
+  public func automaticWorkState(accountID: String) throws -> StudyAutomaticWork {
+    try requireAccount(accountID)
+    let reviews = try pendingReviews(accountID: accountID)
+    let materials = try materials(accountID: accountID).filter(\.pending)
+    guard !reviews.isEmpty || !materials.isEmpty else { return .none }
+    return reviews.contains { !$0.attempted && $0.issue == nil }
+      || materials.contains { $0.attemptedRevision == nil && $0.issue == nil }
+      ? .ready : .requiresAttention
+  }
+
   func transaction(_ body: () throws -> Void) throws {
     modelContext.autosaveEnabled = false
     do { try modelContext.transaction(block: body) } catch {
       modelContext.rollback()
       throw error
     }
+    for observer in changeObservers.values { observer.yield() }
   }
 
   public func snapshot(credentialID: String) throws -> StudySnapshot? {
@@ -145,10 +173,20 @@ public enum StudyStoreError: Error, LocalizedError {
     guard let accountID = snapshot.accountID else { return snapshot }
     let pending = try pendingReviews(accountID: accountID)
     let ids = Set(pending.map(\.subjectID))
+    let currentAssignments: [StudyAssignment]
+    if try accountState(accountID: accountID) != nil {
+      let visible = Set(snapshot.subjects.map(\.id)).union(snapshot.assignments.map(\.subjectID))
+      currentAssignments = try assignments(accountID: accountID).filter {
+        $0.hidden != true && visible.contains($0.subjectID)
+      }.map(\.summary)
+    } else {
+      // A former JSON-only statistics cache has no authoritative assignment table yet.
+      currentAssignments = snapshot.assignments
+    }
     return StudySnapshot(
       accountID: accountID, username: snapshot.username, currentLevel: snapshot.currentLevel,
       onVacation: snapshot.onVacation,
-      assignments: snapshot.assignments.filter { !ids.contains($0.subjectID) },
+      assignments: currentAssignments.filter { !ids.contains($0.subjectID) },
       statistics: snapshot.statistics, levels: snapshot.levels, subjects: snapshot.subjects,
       savedAt: snapshot.savedAt, pendingReviews: pending.count, isSample: snapshot.isSample,
       requiresAssignmentRefresh: snapshot.requiresAssignmentRefresh)
