@@ -45,7 +45,7 @@ The warm-link test adds `--url-test App/Tests/WarmLinks.json` and selects only i
 
 The workflow runs shared tests/restart checks, iPhone/iPad acceptance and native Mac acceptance on the official [`xcode-27` image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md), selecting `/Applications/Xcode_27.app`. It uses read-only repository permissions, pinned action/tool commits, cancellation of stale branch jobs and seven-day result artifacts. Synthetic accounts require no token, signing certificate or publication secret. No release or store deployment is configured.
 
-Mainboard is pinned to `phvv-me/mainboard@9e6a5617927680a321023a2a28bd7c6528f64eb3`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** The prepared Actions workflow has passed local syntax validation; no hosted CI pass is claimed.
+Mainboard is pinned to `phvv-me/mainboard@5796a2e2b3b39e86642591eb4f8ca4e9dff36561`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** The prepared Actions workflow has passed local syntax validation; no hosted CI pass is claimed.
 
 ## Automatic native sync acceptance
 
