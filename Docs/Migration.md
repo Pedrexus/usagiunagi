@@ -408,6 +408,8 @@ After accepted P1a, the current direct imports are four runtime adapters (`Local
 
 Whole-host retirement also covers non-writer test callers. The following are migration destinations to audit assertion by assertion, not claims that the shared suites already replace every assertion. Before deleting each old test/adapter, retain its unique behavior in Swift Testing where it is pure/shared, or in hosted/physical acceptance where it exercises a required native bridge. XCTest/XCUITest remain appropriate for UI automation; changing a test framework alone is not coverage.
 
+The table below retains its historical source locators. The October 21 single-target cleanup moves the six retained `AnswerCheckerTest`, `LegacyStudyImporterTest`, `RecentMistakesTest`, `ReviewSessionTest`, `StudyStatisticsTest` and `TKMKanaInputTest` files from `App/Tests` to `App/AppTests` without changing their bytes. Earlier receipts are not rewritten. `App/Tests/PersistenceProbe` remains at its canonical location.
+
 | Current hosted test owner | Destination / behavior to preserve |
 | --- | --- |
 | `App/Tests/ReviewSessionTest.swift` | `StudySessionTests`, `NativeReviewTests` and `StudyStoreTests`: exactly-once durable completion, zero practice writes, incomplete catalog rejection, correction/reading credit, synonyms and edits during details |
@@ -669,7 +671,7 @@ Extend the existing suites rather than duplicating the architecture in mocks. Th
 
 | Gate | Required cases | Existing owner / planned extension |
 | --- | --- | --- |
-| G1 Import | All nine importer functions, including parameters for schemas 9–15; unknown nested/protobuf fields; kana/radical grading; WAL; absent/malformed/mismatched source | `App/Tests/LegacyStudyImporterTest.swift` and `Shared/Tests/StudyPersistenceTests/LegacyImportTests.swift` |
+| G1 Import | All nine importer functions, including parameters for schemas 9–15; unknown nested/protobuf fields; kana/radical grading; WAL; absent/malformed/mismatched source | `App/AppTests/LegacyStudyImporterTest.swift` and `Shared/Tests/StudyPersistenceTests/LegacyImportTests.swift` |
 | G2 Writer handoff | Clean install, every durable interruption, wrong/offline identity, changed source/preferences, Keychain failures, concurrent scenes, activated logout, separate-process reopen | `LegacyBootstrapTests.swift` and existing `App/Tests/PersistenceProbe` phases |
 | G3 Session/outbox | Both answer sides, exact errors, atomic queue advance, duplicate prevention, wrong account, revision match, rate limits, timeout/uncertainty, cancellation and late responses | `StudyStoreTests`, `NativeReviewTests`, `NativeLessonTests`, `NativeUploadTests`, `NativeSynchronizationTests` |
 | G4 Refresh/material | Stale/full replacement, changed-back edit, acknowledged assignment, no phantom review, cursor rollback, hidden-note and observed-missing conflicts | `NativeRefreshTests`, `NativeRefreshRollbackTests`, `CatalogFreshnessTests`, `SubjectMaterialEditingTests`, `MaterialRecoveryTests` |

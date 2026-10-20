@@ -42,20 +42,6 @@
             <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "A27000000000000000000004" BuildableName = "AppTests.xctest" BlueprintName = "AppTests" ReferencedContainer = "container:UsagiUnagi.xcodeproj"/>
          </TestableReference>
          <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "63E9A8E121199C8500418CE1"
-               BuildableName = "Tests.xctest"
-               BlueprintName = "Tests"
-               ReferencedContainer = "container:UsagiUnagi.xcodeproj">
-            </BuildableReference>
-            <LocationScenarioReference
-               identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
-               referenceType = "1">
-            </LocationScenarioReference>
-         </TestableReference>
-         <TestableReference
             skipped = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"

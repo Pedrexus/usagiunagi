@@ -19,8 +19,6 @@
 		3D096CD2C178F453FEF79064 /* MacReviewModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */; platformFilter = macos; };
 		A28500000000000000000005 /* LegacyPreferenceImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000001 /* LegacyPreferenceImporter.swift */; };
 		A28500000000000000000006 /* LegacyPreferenceSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000002 /* LegacyPreferenceSchema.swift */; };
-		A28500000000000000000007 /* LegacyPreferenceImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000001 /* LegacyPreferenceImporter.swift */; platformFilter = macos; };
-		A28500000000000000000008 /* LegacyPreferenceSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000002 /* LegacyPreferenceSchema.swift */; platformFilter = macos; };
 		A28900000000000000000001 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 637CA18625D7F5A10082580E /* SwiftProtobuf */; };
 		A28900000000000000000002 /* WaniKaniAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 63A702142C2920D500AB0504 /* WaniKaniAPI */; };
 		5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
@@ -93,13 +91,6 @@
 			remoteGlobalIDString = 630FD6121FC45BDF00D21C1F;
 			remoteInfo = Tsurukame;
 		};
-		63E9A8E721199C8500418CE1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 630FD60B1FC45BDF00D21C1F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 630FD6121FC45BDF00D21C1F;
-			remoteInfo = wk;
-		};
 		A27000000000000000000009 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 630FD60B1FC45BDF00D21C1F /* Project object */;
@@ -168,9 +159,9 @@
 		A28600000000000000000014 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegacyStudyImporter.swift; sourceTree = "<group>"; };
 		27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
-		28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LessonPreferenceTests.swift; path = AppTests/LessonPreferenceTests.swift; sourceTree = "<group>"; };
+		28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LessonPreferenceTests.swift; sourceTree = "<group>"; };
 		2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacReviewModeTests.swift; path = AppStoreScreenshots/MacReviewModeTests.swift; sourceTree = "<group>"; };
-		2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AudioLibraryTests.swift; path = AppTests/AudioLibraryTests.swift; sourceTree = "<group>"; };
+		2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioLibraryTests.swift; sourceTree = "<group>"; };
 		36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsagiUnagiApp.swift; sourceTree = "<group>"; };
 		3756F7F4B1B96F207317CD15 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacStatisticsTests.swift; path = AppStoreScreenshots/MacStatisticsTests.swift; sourceTree = "<group>"; };
@@ -193,24 +184,22 @@
 		63A711E32BBBF6C40047436A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		63A711E52BBBF8190047436A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		63E1386727E59F4100AC4706 /* FullRefreshOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullRefreshOverlayView.swift; sourceTree = "<group>"; };
-		63E9A8E221199C8500418CE1 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		63E9A8E621199C8500418CE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		63EEFEC21FC45CB10070C05F /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6C85812902528942C1AAB9B5 /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Localizations/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		791B8B602D659106000C8142 /* RecentMistakesTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentMistakesTest.swift; sourceTree = "<group>"; };
 		86C64C7CDF56B2A1FA20A641 /* zh-Hant */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "Localizations/zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
-		A27000000000000000000002 /* NotificationPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NotificationPreferencesTests.swift; path = AppTests/NotificationPreferencesTests.swift; sourceTree = "<group>"; };
+		A27000000000000000000002 /* NotificationPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesTests.swift; sourceTree = "<group>"; };
 		A27000000000000000000003 /* AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A27100000000000000000002 /* FontLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FontLibraryTests.swift; path = AppTests/FontLibraryTests.swift; sourceTree = "<group>"; };
+		A27100000000000000000002 /* FontLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontLibraryTests.swift; sourceTree = "<group>"; };
 		A27100000000000000000005 /* FontFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontFixture.swift; sourceTree = "<group>"; };
 		A27200000000000000000002 /* AudioFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFixture.swift; sourceTree = "<group>"; };
-		A27700000000000000000002 /* StudyShellStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyShellStateTests.swift; path = AppTests/StudyShellStateTests.swift; sourceTree = "<group>"; };
-		A27800000000000000000002 /* ReviewSessionOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewSessionOptionsTests.swift; path = AppTests/ReviewSessionOptionsTests.swift; sourceTree = "<group>"; };
-		A27900000000000000000002 /* NativeAppAssemblyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeAppAssemblyTests.swift; path = AppTests/NativeAppAssemblyTests.swift; sourceTree = "<group>"; };
-		A28700000000000000000002 /* WatchCompanionCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchCompanionCacheTests.swift; path = AppTests/WatchCompanionCacheTests.swift; sourceTree = "<group>"; };
-		A28800000000000000000002 /* FrozenNativeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FrozenNativeStoreTests.swift; path = AppTests/FrozenNativeStoreTests.swift; sourceTree = "<group>"; };
-		A28800000000000000000004 /* NativeStoreBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeStoreBaseline.swift; path = Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreBaseline.swift; sourceTree = "<group>"; };
-		A28800000000000000000006 /* native-v0-186c1cc3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-v0-186c1cc3"; path = "Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3"; sourceTree = "<group>"; };
+		A27700000000000000000002 /* StudyShellStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyShellStateTests.swift; sourceTree = "<group>"; };
+		A27800000000000000000002 /* ReviewSessionOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSessionOptionsTests.swift; sourceTree = "<group>"; };
+		A27900000000000000000002 /* NativeAppAssemblyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAppAssemblyTests.swift; sourceTree = "<group>"; };
+		A28700000000000000000002 /* WatchCompanionCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCompanionCacheTests.swift; sourceTree = "<group>"; };
+		A28800000000000000000002 /* FrozenNativeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrozenNativeStoreTests.swift; sourceTree = "<group>"; };
+		A28800000000000000000004 /* NativeStoreBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeStoreBaseline.swift; path = ../Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreBaseline.swift; sourceTree = "<group>"; };
+		A28800000000000000000006 /* native-v0-186c1cc3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-v0-186c1cc3"; path = "../Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3"; sourceTree = "<group>"; };
 		A27B00000000000000000002 /* NotificationFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationFixture.swift; sourceTree = "<group>"; };
 		A28000000000000000000002 /* StudyApplicationOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyApplicationOwner.swift; path = Application/StudyApplicationOwner.swift; sourceTree = "<group>"; };
 		A28100000000000000000002 /* NativeRootFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRootFlowTests.swift; sourceTree = "<group>"; };
@@ -227,7 +216,7 @@
 		C92AB96E237F280300F79904 /* WatchHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHelper.swift; sourceTree = "<group>"; };
 		C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCompanionCache.swift; sourceTree = "<group>"; };
 		C943D5AF2380D59A004A7969 /* WatchSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSettingsView.swift; sourceTree = "<group>"; };
-		CDCF339AD753BED5324CE83C /* SubjectPreferenceArchiveTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubjectPreferenceArchiveTests.swift; path = AppTests/SubjectPreferenceArchiveTests.swift; sourceTree = "<group>"; };
+		CDCF339AD753BED5324CE83C /* SubjectPreferenceArchiveTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SubjectPreferenceArchiveTests.swift; sourceTree = "<group>"; };
 		E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReviewSessionTest.swift; sourceTree = "<group>"; };
 		E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TKMKanaInputTest.swift; sourceTree = "<group>"; };
 		EEC184263840AFA4B962719B /* AppIdentity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
@@ -264,15 +253,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		63E9A8DF21199C8500418CE1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A28900000000000000000001 /* SwiftProtobuf in Frameworks */,
-				A28900000000000000000002 /* WaniKaniAPI in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		8F3DEAB308F195FC9FA151DD /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -284,6 +264,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A28900000000000000000001 /* SwiftProtobuf in Frameworks */,
+				A28900000000000000000002 /* WaniKaniAPI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,15 +301,6 @@
 		630FD60A1FC45BDF00D21C1F = {
 			isa = PBXGroup;
 			children = (
-				A27100000000000000000002 /* FontLibraryTests.swift */,
-				A27700000000000000000002 /* StudyShellStateTests.swift */,
-				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
-				A27900000000000000000002 /* NativeAppAssemblyTests.swift */,
-				A28700000000000000000002 /* WatchCompanionCacheTests.swift */,
-				A28800000000000000000002 /* FrozenNativeStoreTests.swift */,
-				A28800000000000000000004 /* NativeStoreBaseline.swift */,
-				A28800000000000000000006 /* native-v0-186c1cc3 */,
-				A27000000000000000000002 /* NotificationPreferencesTests.swift */,
 				A27000000000000000000003 /* AppTests.xctest */,
 				631CAD62234AD5FC008CEA73 /* AnswerChecker.swift */,
 				6335B46323CF0C820071671E /* AppStoreScreenshots */,
@@ -342,8 +315,7 @@
 				A28500000000000000000001 /* LegacyPreferenceImporter.swift */,
 				A28500000000000000000002 /* LegacyPreferenceSchema.swift */,
 				633252872727E8A700ABBA04 /* LegacyCatalogViewController.swift */,
-				63E9A8DB21199C2600418CE1 /* Tests */,
-				63E9A8E221199C8500418CE1 /* Tests.xctest */,
+				63E9A8DB21199C2600418CE1 /* AppTests */,
 				6319C9B520441DE200C31F87 /* Tsurukame.app */,
 				C90846AC237F1C770068A272 /* Tsurukame Complication.app */,
 				C90846B8237F1C790068A272 /* Tsurukame Complication Extension.appex */,
@@ -359,9 +331,6 @@
 				55D8D2CA6860CA263F708E85 /* Debug.xcconfig */,
 				B8DA01B76750F7A065DA04D3 /* Release.xcconfig */,
 				3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */,
-				2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */,
-				28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */,
-				CDCF339AD753BED5324CE83C /* SubjectPreferenceArchiveTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -389,18 +358,29 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		63E9A8DB21199C2600418CE1 /* Tests */ = {
+		63E9A8DB21199C2600418CE1 /* AppTests */ = {
 			isa = PBXGroup;
 			children = (
 				631CAD66234AF962008CEA73 /* AnswerCheckerTest.swift */,
 				791B8B602D659106000C8142 /* RecentMistakesTest.swift */,
-				63E9A8E621199C8500418CE1 /* Info.plist */,
 				46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */,
 				E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */,
 				E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */,
 				3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */,
+				A27100000000000000000002 /* FontLibraryTests.swift */,
+				A27700000000000000000002 /* StudyShellStateTests.swift */,
+				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
+				A27900000000000000000002 /* NativeAppAssemblyTests.swift */,
+				A28700000000000000000002 /* WatchCompanionCacheTests.swift */,
+				A28800000000000000000002 /* FrozenNativeStoreTests.swift */,
+				A27000000000000000000002 /* NotificationPreferencesTests.swift */,
+				28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */,
+				2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */,
+				CDCF339AD753BED5324CE83C /* SubjectPreferenceArchiveTests.swift */,
+				A28800000000000000000004 /* NativeStoreBaseline.swift */,
+				A28800000000000000000006 /* native-v0-186c1cc3 */,
 			);
-			path = Tests;
+			path = AppTests;
 			sourceTree = "<group>";
 		};
 		C90846AD237F1C770068A272 /* Complication */ = {
@@ -502,28 +482,6 @@
 			productReference = 6335B46223CF0C820071671E /* AppStoreScreenshots.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		63E9A8E121199C8500418CE1 /* Tests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 63E9A8E921199C8500418CE1 /* Build configuration list for PBXNativeTarget "Tests" */;
-			buildPhases = (
-				63E9A8DE21199C8500418CE1 /* Sources */,
-				63E9A8DF21199C8500418CE1 /* Frameworks */,
-				63E9A8E021199C8500418CE1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				63E9A8E821199C8500418CE1 /* PBXTargetDependency */,
-			);
-			name = Tests;
-			packageProductDependencies = (
-				637CA18625D7F5A10082580E /* SwiftProtobuf */,
-				63A702142C2920D500AB0504 /* WaniKaniAPI */,
-			);
-			productName = Tests;
-			productReference = 63E9A8E221199C8500418CE1 /* Tests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		A27000000000000000000004 /* AppTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A2700000000000000000000A /* Build configuration list for PBXNativeTarget "AppTests" */;
@@ -538,6 +496,10 @@
 				A27000000000000000000008 /* PBXTargetDependency */,
 			);
 			name = AppTests;
+			packageProductDependencies = (
+				637CA18625D7F5A10082580E /* SwiftProtobuf */,
+				63A702142C2920D500AB0504 /* WaniKaniAPI */,
+			);
 			productName = AppTests;
 			productReference = A27000000000000000000003 /* AppTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -605,12 +567,6 @@
 						ProvisioningStyle = Automatic;
 						TestTargetID = 630FD6121FC45BDF00D21C1F;
 					};
-					63E9A8E121199C8500418CE1 = {
-						CreatedOnToolsVersion = 9.4;
-						LastSwiftMigration = 1100;
-						ProvisioningStyle = Automatic;
-						TestTargetID = 630FD6121FC45BDF00D21C1F;
-					};
 					A27000000000000000000004 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 630FD6121FC45BDF00D21C1F;
@@ -647,7 +603,6 @@
 				A28600000000000000000001 /* WatchWidgets */,
 				A27000000000000000000004 /* AppTests */,
 				630FD6121FC45BDF00D21C1F /* Tsurukame */,
-				63E9A8E121199C8500418CE1 /* Tests */,
 				C90846AB237F1C770068A272 /* Tsurukame Complication */,
 				C90846B7237F1C790068A272 /* Tsurukame Complication Extension */,
 				6335B46123CF0C820071671E /* AppStoreScreenshots */,
@@ -674,13 +629,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		6335B46023CF0C820071671E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		63E9A8E021199C8500418CE1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -760,22 +708,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		63E9A8DE21199C8500418CE1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				791B8B612D659106000C8142 /* RecentMistakesTest.swift in Sources */,
-				631CAD67234AF962008CEA73 /* AnswerCheckerTest.swift in Sources */,
-				A28500000000000000000005 /* LegacyPreferenceImporter.swift in Sources */,
-				A28500000000000000000006 /* LegacyPreferenceSchema.swift in Sources */,
-				DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */,
-				CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */,
-				326C7AFEFEC1146179A2AFA0 /* ReviewSessionTest.swift in Sources */,
-				5B1A927DDEFE977E32C2EC84 /* LegacyStudyImporter.swift in Sources */,
-				B8046F54DB4F1D8BAF0E4C80 /* LegacyStudyImporterTest.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A27000000000000000000005 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -788,8 +720,15 @@
 				A28700000000000000000003 /* WatchCompanionCache.swift in Sources */,
 				A28800000000000000000001 /* FrozenNativeStoreTests.swift in Sources */,
 				A28800000000000000000003 /* NativeStoreBaseline.swift in Sources */,
-				A28500000000000000000007 /* LegacyPreferenceImporter.swift in Sources */,
-				A28500000000000000000008 /* LegacyPreferenceSchema.swift in Sources */,
+				A28500000000000000000005 /* LegacyPreferenceImporter.swift in Sources */,
+				A28500000000000000000006 /* LegacyPreferenceSchema.swift in Sources */,
+				791B8B612D659106000C8142 /* RecentMistakesTest.swift in Sources */,
+				631CAD67234AF962008CEA73 /* AnswerCheckerTest.swift in Sources */,
+				DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */,
+				CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */,
+				326C7AFEFEC1146179A2AFA0 /* ReviewSessionTest.swift in Sources */,
+				5B1A927DDEFE977E32C2EC84 /* LegacyStudyImporter.swift in Sources */,
+				B8046F54DB4F1D8BAF0E4C80 /* LegacyStudyImporterTest.swift in Sources */,
 				A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */,
 				F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */,
 				A7AC4D2FC92ED19AAC0BA475 /* LessonPreferenceTests.swift in Sources */,
@@ -828,11 +767,6 @@
 			isa = PBXTargetDependency;
 			target = 630FD6121FC45BDF00D21C1F /* Tsurukame */;
 			targetProxy = 6335B46723CF0C820071671E /* PBXContainerItemProxy */;
-		};
-		63E9A8E821199C8500418CE1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 630FD6121FC45BDF00D21C1F /* Tsurukame */;
-			targetProxy = 63E9A8E721199C8500418CE1 /* PBXContainerItemProxy */;
 		};
 		A27000000000000000000008 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1220,67 +1154,6 @@
 			};
 			name = Release;
 		};
-		63E9A8EA21199C8500418CE1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 7B2GP77Y4A;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				INFOPLIST_FILE = Tests/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.Tests;
-				PRODUCT_MODULE_NAME = Tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tsurukame-Swift.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tsurukame";
-			};
-			name = Debug;
-		};
-		63E9A8EB21199C8500418CE1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 7B2GP77Y4A;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				INFOPLIST_FILE = Tests/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.Tests;
-				PRODUCT_MODULE_NAME = Tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tsurukame-Swift.h";
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tsurukame";
-			};
-			name = Release;
-		};
 		A2700000000000000000000B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1485,15 +1358,6 @@
 			buildConfigurations = (
 				6335B46923CF0C820071671E /* Debug */,
 				6335B46A23CF0C820071671E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		63E9A8E921199C8500418CE1 /* Build configuration list for PBXNativeTarget "Tests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				63E9A8EA21199C8500418CE1 /* Debug */,
-				63E9A8EB21199C8500418CE1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
