@@ -64,24 +64,14 @@ extension StudyStore {
     let formIDs = forms.compactMap { form in
       related.filter { $0.kind == .kanji && $0.japanese == form }.map(\.id).min()
     }
-    let assignment = try modelContext.fetch(
-      FetchDescriptor<AssignmentRecord>(
-        predicate: #Predicate {
-          $0.accountID == accountID && $0.subjectID == subjectID
-        })
-    ).first?.assignment
+    let assignment = try assignmentRecord(accountID: accountID, subjectID: subjectID)?.assignment
     var displayedSubject = subject
     displayedSubject.visuallySimilarKanji = ""
     func ordered(_ ids: [Int64]) -> [CatalogSubject] {
       var seen = Set<Int64>()
       return ids.filter { seen.insert($0).inserted }.compactMap { byID[$0] }
     }
-    let material = try modelContext.fetch(
-      FetchDescriptor<MaterialRecord>(
-        predicate: #Predicate {
-          $0.accountID == accountID && $0.subjectID == subjectID
-        })
-    ).first?.saved
+    let material = try materialRecord(accountID: accountID, subjectID: subjectID)?.saved
     return StudySubjectDetails(
       subject: displayedSubject, currentLevel: profile.level, assignment: assignment,
       savedMaterial: material,

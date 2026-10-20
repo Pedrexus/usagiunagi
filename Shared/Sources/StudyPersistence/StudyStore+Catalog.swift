@@ -3,6 +3,47 @@ import StudyCore
 import SwiftData
 
 extension StudyStore {
+  public func catalog(accountID: String) throws -> [CatalogSubject] {
+    try modelContext.fetch(
+      FetchDescriptor<CatalogRecord>(
+        predicate: #Predicate { $0.accountID == accountID },
+        sortBy: [SortDescriptor(\.subjectID)])
+    ).map(\.subject)
+  }
+
+  func catalog(accountID: String, subjectIDs: [Int64]) throws -> [CatalogSubject] {
+    guard !subjectIDs.isEmpty else { return [] }
+    return try modelContext.fetch(
+      FetchDescriptor<CatalogRecord>(
+        predicate: #Predicate {
+          $0.accountID == accountID && subjectIDs.contains($0.subjectID)
+        })
+    ).map(\.subject)
+  }
+
+  public func assignments(accountID: String) throws -> [CatalogAssignment] {
+    try modelContext.fetch(
+      FetchDescriptor<AssignmentRecord>(
+        predicate: #Predicate { $0.accountID == accountID },
+        sortBy: [SortDescriptor(\.subjectID)])
+    ).map(\.assignment)
+  }
+
+  func assignmentRecord(accountID: String, subjectID: Int64) throws -> AssignmentRecord? {
+    try modelContext.fetch(
+      FetchDescriptor<AssignmentRecord>(
+        predicate: #Predicate {
+          $0.accountID == accountID && $0.subjectID == subjectID
+        })
+    ).first
+  }
+
+  public func accountState(accountID: String) throws -> StudyAccountState? {
+    try modelContext.fetch(
+      FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
+    ).first?.state
+  }
+
   /// One actor-bound, read-only projection. Pending answers never masquerade as synced progress.
   public func subjectCatalog(accountID: String) throws -> SubjectCatalogCollection {
     try requireAccount(accountID)

@@ -165,9 +165,9 @@ extension StudyStore {
 
   private func materialForRecovery(_ saved: SavedStudyMaterial) throws -> MaterialRecord {
     guard
-      let row = try materialRecords(accountID: saved.accountID).first(where: {
-        $0.subjectID == saved.material.subjectID && $0.revision == saved.revision && $0.pending
-      }), row.material == saved.material, row.serverID == saved.serverID,
+      let row = try materialRecord(accountID: saved.accountID, subjectID: saved.material.subjectID),
+      row.revision == saved.revision, row.pending,
+      row.material == saved.material, row.serverID == saved.serverID,
       row.attemptedRevision == saved.attemptedRevision,
       row.attemptedMaterial == saved.attemptedMaterial,
       row.issue?.reason == saved.issue?.reason, row.issue?.detectedAt == saved.issue?.detectedAt
@@ -208,9 +208,9 @@ extension StudyStore {
     try requireRecoveryIdle(accountID: saved.accountID)
     try transaction {
       guard
-        let row = try materialRecords(accountID: saved.accountID).first(where: {
-          $0.subjectID == saved.material.subjectID && $0.revision == saved.revision && $0.pending
-        })
+        let row = try materialRecord(
+          accountID: saved.accountID, subjectID: saved.material.subjectID),
+        row.revision == saved.revision, row.pending
       else { throw StudyRecoveryError.changed }
       guard row.attemptedRevision == nil, row.issue?.reason == .rejected else {
         throw StudyRecoveryError.retryUnavailable

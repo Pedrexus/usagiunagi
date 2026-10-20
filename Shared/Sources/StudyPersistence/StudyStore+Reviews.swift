@@ -458,7 +458,15 @@ extension StudyStore {
     else {
       throw StudyStoreError.invalidSession
     }
-    let subjects = try catalog(accountID: accountID)
+    let ids = Array(Set(saved.session.items.values.map(\.subjectID)))
+    let selected = try catalog(accountID: accountID, subjectIDs: ids)
+    // Single-kanji vocabulary grading also checks the component's on'yomi, outside the session.
+    let components = Set(
+      selected.filter {
+        $0.kind == .vocabulary && $0.japanese.count == 1 && $0.componentSubjectIDs.count == 1
+      }.flatMap(\.componentSubjectIDs)
+    ).subtracting(ids)
+    let subjects = try selected + catalog(accountID: accountID, subjectIDs: Array(components))
     return .init(
       saved: saved, subjects: Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) }),
       success: success)
@@ -478,11 +486,10 @@ extension StudyStore {
       let subject = state.subject,
       let profile = try accountState(accountID: accountID)?.profile
     else { throw StudyStoreError.invalidSession }
+    let current = try assignmentRecord(accountID: accountID, subjectID: item.subjectID)?.assignment
     if state.isPractice {
       guard
-        let current = try assignments(accountID: accountID).first(where: {
-          $0.subjectID == item.subjectID
-        }),
+        let current,
         current.hidden != true, subject.hiddenAt == nil, subject.level <= profile.maxLevelGranted
       else {
         throw NativeReviewError.changedAssignment(item.subjectID)
@@ -490,7 +497,6 @@ extension StudyStore {
       try requireReviewContent(subject, assignment: current)
       return
     }
-    let current = try assignments(accountID: accountID).first { $0.subjectID == item.subjectID }
     guard let current, current.id == item.assignmentID, current.srsStage == item.srsStage,
       (current.availableAt ?? 0) == item.availableAt, current.hidden != true,
       subject.hiddenAt == nil,

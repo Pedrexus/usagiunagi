@@ -176,11 +176,7 @@ extension StudyStore {
                   #Predicate { $0.accountID == accountID && $0.subjectID == subjectID })
             ).first
             assignment.level = subject?.level ?? review.originalAssignment?.level ?? 0
-            if let current = try modelContext.fetch(
-              FetchDescriptor<AssignmentRecord>(
-                predicate:
-                  #Predicate { $0.accountID == accountID && $0.subjectID == subjectID })
-            ).first {
+            if let current = try assignmentRecord(accountID: accountID, subjectID: subjectID) {
               if assignment.level == 0 { assignment.level = current.assignment.level }
               current.assignment = assignment
               current.revision = UUID()
@@ -200,9 +196,9 @@ extension StudyStore {
       for key in try materials(accountID: accountID).filter(\.pending) {
         try checkUpload(generation, accountID: accountID)
         guard
-          let material = try materials(accountID: accountID).first(where: {
-            $0.material.subjectID == key.material.subjectID && $0.pending
-          })
+          let material = try materialRecord(
+            accountID: accountID, subjectID: key.material.subjectID)?.saved,
+          material.pending
         else { continue }
         if material.issue != nil || material.attemptedRevision != nil {
           report.materialsNeedingAttention += 1
@@ -212,10 +208,9 @@ extension StudyStore {
         try checkUpload(generation, accountID: accountID)
         // An edit made during lookup wins before a request body is put on the wire.
         guard
-          let current = try materialRecords(accountID: accountID).first(where: {
-            $0.subjectID == material.material.subjectID && $0.revision == material.revision
-              && $0.pending
-          })
+          let current = try materialRecord(
+            accountID: accountID, subjectID: material.material.subjectID),
+          current.revision == material.revision, current.pending
         else { continue }
         if let baseline = current.recoveryBaseline, baseline.remote != remote {
           try transaction {
@@ -237,10 +232,10 @@ extension StudyStore {
         } catch {
           try checkUpload(generation, accountID: accountID)
           try transaction {
-            if let row = try materialRecords(accountID: accountID).first(where: {
-              $0.subjectID == material.material.subjectID
-                && $0.attemptedRevision == material.revision
-            }) {
+            if let row = try materialRecord(
+              accountID: accountID, subjectID: material.material.subjectID),
+              row.attemptedRevision == material.revision
+            {
               let failure = issue(for: error, remote: nil)
               let definitelyRejected: Bool
               switch error {
@@ -265,9 +260,10 @@ extension StudyStore {
         }
         try checkUpload(generation, accountID: accountID)
         try transaction {
-          if let row = try materialRecords(accountID: accountID).first(where: {
-            $0.subjectID == material.material.subjectID && $0.attemptedRevision == material.revision
-          }) {
+          if let row = try materialRecord(
+            accountID: accountID, subjectID: material.material.subjectID),
+            row.attemptedRevision == material.revision
+          {
             row.attemptedRevision = nil
             row.attemptedMaterial = nil
             row.serverID = result.id

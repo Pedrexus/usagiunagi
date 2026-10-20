@@ -90,13 +90,6 @@ extension StudyStore {
   }
 
   func recoveryAssignment(_ saved: SavedReview) throws -> AssignmentRecord? {
-    let accountID = saved.accountID
-    let subjectID = saved.subjectID
-    return try modelContext.fetch(
-      FetchDescriptor<AssignmentRecord>(
-        predicate: #Predicate {
-          $0.accountID == accountID && $0.subjectID == subjectID
-        })
-    ).first
+    try assignmentRecord(accountID: saved.accountID, subjectID: saved.subjectID)
   }
 }

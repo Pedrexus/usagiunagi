@@ -31,26 +31,6 @@ public struct LegacyImportResult: Sendable {
 }
 
 extension StudyStore {
-  public func catalog(accountID: String) throws -> [CatalogSubject] {
-    try modelContext.fetch(
-      FetchDescriptor<CatalogRecord>(
-        predicate: #Predicate { $0.accountID == accountID },
-        sortBy: [SortDescriptor(\.subjectID)])
-    ).map(\.subject)
-  }
-  public func assignments(accountID: String) throws -> [CatalogAssignment] {
-    try modelContext.fetch(
-      FetchDescriptor<AssignmentRecord>(
-        predicate: #Predicate { $0.accountID == accountID },
-        sortBy: [SortDescriptor(\.subjectID)])
-    ).map(\.assignment)
-  }
-  public func accountState(accountID: String) throws -> StudyAccountState? {
-    try modelContext.fetch(
-      FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
-    ).first?.state
-  }
-
   /// The caller must quiesce the old writer and verify its token against WaniKani before cutover.
   /// Everything commits together, including a receipt. Retrying never recreates consumed uploads.
   @discardableResult public func importLegacyAccount(

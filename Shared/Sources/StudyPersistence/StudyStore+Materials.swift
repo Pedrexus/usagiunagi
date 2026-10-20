@@ -24,6 +24,15 @@ extension StudyStore {
       FetchDescriptor<MaterialRecord>(predicate: #Predicate { $0.accountID == accountID }))
   }
 
+  func materialRecord(accountID: String, subjectID: Int64) throws -> MaterialRecord? {
+    try modelContext.fetch(
+      FetchDescriptor<MaterialRecord>(
+        predicate: #Predicate {
+          $0.accountID == accountID && $0.subjectID == subjectID
+        })
+    ).first
+  }
+
   public func materials(accountID: String) throws -> [SavedStudyMaterial] {
     try materialRecords(accountID: accountID).map(\.saved).sorted {
       $0.material.subjectID < $1.material.subjectID
@@ -48,9 +57,7 @@ extension StudyStore {
   {
     try requireAccount(accountID)
     guard material.subjectID > 0 else { throw StudyStoreError.invalidMaterial }
-    let existing = try materialRecords(accountID: accountID).first {
-      $0.subjectID == material.subjectID
-    }
+    let existing = try materialRecord(accountID: accountID, subjectID: material.subjectID)
     guard existing?.revision == expectedRevision else { throw StudyStoreError.staleMaterial }
     if let existing {
       existing.material = material
@@ -66,9 +73,11 @@ extension StudyStore {
 
   public func acknowledgeMaterial(_ sent: SavedStudyMaterial) throws {
     try transaction {
-      if let row = try materialRecords(accountID: sent.accountID).first(where: {
-        $0.subjectID == sent.material.subjectID && $0.revision == sent.revision
-      }), row.attemptedRevision == nil || row.attemptedRevision == sent.revision {
+      if let row = try materialRecord(
+        accountID: sent.accountID, subjectID: sent.material.subjectID),
+        row.revision == sent.revision,
+        row.attemptedRevision == nil || row.attemptedRevision == sent.revision
+      {
         row.pending = false
         row.revision = UUID()
         row.issue = nil
