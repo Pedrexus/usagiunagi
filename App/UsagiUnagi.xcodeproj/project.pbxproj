@@ -31,7 +31,6 @@
 		63A702152C2920D500AB0504 /* WaniKaniAPI in Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; productRef = 63A702142C2920D500AB0504 /* WaniKaniAPI */; };
 		63A711E42BBBF6C40047436A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 63A711E32BBBF6C40047436A /* PrivacyInfo.xcprivacy */; platformFilter = ios; };
 		63A711E72BBBF87B0047436A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 63A711E52BBBF8190047436A /* PrivacyInfo.xcprivacy */; };
-		63EEFEC11FC45C440070C05F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63EEFEBC1FC45C440070C05F /* Assets.xcassets */; platformFilter = ios; };
 		6DF440FA84D10AC573496F61 /* StudyAppAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5FAA8DC32D15C9C3AEAA7C /* StudyAppAssembly.swift */; };
 		6F5E06F1F9BD785F9E3BDC4E /* UsagiUnagiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */; };
 		791B8B612D659106000C8142 /* RecentMistakesTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 791B8B602D659106000C8142 /* RecentMistakesTest.swift */; };
@@ -61,7 +60,6 @@
 		BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 46D1D93DB77B42DE86804E5F /* InfoPlist.strings */; };
 		C87EB1EE32148A9CC8342DFB /* MacLessonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B881D213C2680BC8C542CEEE /* MacLessonTests.swift */; platformFilter = macos; };
 		C90846B0237F1C770068A272 /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C90846AE237F1C770068A272 /* Interface.storyboard */; };
-		C90846B2237F1C780068A272 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C90846B1237F1C780068A272 /* Assets.xcassets */; };
 		C90846B9237F1C790068A272 /* Tsurukame Complication Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C90846B8237F1C790068A272 /* Tsurukame Complication Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C90846C0237F1C790068A272 /* ExtensionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90846BF237F1C790068A272 /* ExtensionDelegate.swift */; };
 		C90846C2237F1C790068A272 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90846C1237F1C790068A272 /* ComplicationController.swift */; };
@@ -193,7 +191,6 @@
 		63E1386727E59F4100AC4706 /* FullRefreshOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullRefreshOverlayView.swift; sourceTree = "<group>"; };
 		63E9A8E221199C8500418CE1 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63E9A8E621199C8500418CE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		63EEFEBC1FC45C440070C05F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		63EEFEC21FC45CB10070C05F /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6C85812902528942C1AAB9B5 /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Localizations/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		791B8B602D659106000C8142 /* RecentMistakesTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentMistakesTest.swift; sourceTree = "<group>"; };
@@ -218,7 +215,6 @@
 		BB2909A5217FAF8B00B1816F /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		C90846AC237F1C770068A272 /* Tsurukame Complication.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tsurukame Complication.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C90846AF237F1C770068A272 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
-		C90846B1237F1C780068A272 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C90846B3237F1C780068A272 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C90846B8237F1C790068A272 /* Tsurukame Complication Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Tsurukame Complication Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C90846BF237F1C790068A272 /* ExtensionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionDelegate.swift; sourceTree = "<group>"; };
@@ -307,7 +303,6 @@
 		41897D922372287F00F6A0B7 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				63EEFEBC1FC45C440070C05F /* Assets.xcassets */,
 				BB2909A5217FAF8B00B1816F /* fonts */,
 				63A711E32BBBF6C40047436A /* PrivacyInfo.xcprivacy */,
 				489894D423670CB000A20AF8 /* Tsurukame.entitlements */,
@@ -407,7 +402,6 @@
 			children = (
 				63A711E52BBBF8190047436A /* PrivacyInfo.xcprivacy */,
 				C90846AE237F1C770068A272 /* Interface.storyboard */,
-				C90846B1237F1C780068A272 /* Assets.xcassets */,
 				C90846B3237F1C780068A272 /* Info.plist */,
 			);
 			path = Complication;
@@ -664,7 +658,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				63A711E42BBBF6C40047436A /* PrivacyInfo.xcprivacy in Resources */,
-				63EEFEC11FC45C440070C05F /* Assets.xcassets in Resources */,
 				BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */,
 				5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */,
 			);
@@ -697,7 +690,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C90846B2237F1C780068A272 /* Assets.xcassets in Resources */,
 				C90846B0237F1C770068A272 /* Interface.storyboard in Resources */,
 				9319FFE8FEE95DF84F5063AE /* InfoPlist.strings in Resources */,
 				137DFD51681E0F8E31C6B995 /* UsagiUnagi.icon in Resources */,

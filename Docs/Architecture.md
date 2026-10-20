@@ -15,6 +15,7 @@ Automated validation has passed within the scopes recorded in [current tasks](TA
 | `App/Application` | App composition, startup, scene/background ownership and cold archived-preference conversion |
 | `App/LegacyStudyImporter.swift`, `App/WaniKaniAPI` | Read-only schema 9–15 SQLite/protobuf conversion; no network client or normal application writer |
 | `App/Configuration` | Platform entitlements and project configuration |
+| `Resources` | One shared Icon Composer document/SVG mark, display-name localizations, listing preparation and content generators |
 | `App/ComplicationExtension`, `WatchHelper.swift` | SwiftUI watch settings, immutable cached status, native packet ownership and the transitional face provider |
 
 ## Ownership and storage
@@ -48,6 +49,8 @@ One permanent review scroll surface contains progress, the question, answers and
 Coverage's menu filters use their natural width in `ViewThatFits`, stacking when a horizontal row does not fit. Revealed Anki uses the existing menu's primary action and Return to open assessment; one shared action body keeps grading, deferring, exclusion and synonyms available without assigning default credit. The Japanese input adapter explicitly preserves locked text on Cut and routes Backspace to retry; editable deletion stays with the system field. These are local controls, not a new platform or input framework. Actual-field tests pass; rendered adaptive/menu/keyboard acceptance remains open.
 
 `StudyRootView` owns one typed navigation stack and the Home, Practice and Statistics destinations. Review, lesson, catalog and settings behavior lives in shared views. WaniKani subject colors, system text styles, SF Symbols and native glass controls remain the visual basis. Layout adapts to available space; platform conditions belong at capability boundaries.
+
+Main and watch app icons compile directly from the shared `Resources/UsagiUnagi.icon`. Both legacy app asset catalogs and their 37 unused files are retired; this also removes the old iOS-only catalog build reference. SF Symbols and Swift color definitions own the current screen styling. Font previews retain their separate shared-package resource catalog. Static default icon exports fit iPhone/watch masks, and the compiled Mac fallback stays byte-exact; on-device appearance remains a separate gate.
 
 Reviews and extra study use the same grader/session engine. Native review actions include typed/Anki grading, correction, adding a meaning synonym with the corresponding correction in one transaction, exclusion, defer, wrap-up, previous-subject details and completed-subject summaries. Continuing after an incorrect answer can advance without revealing it. Ending early retains the completed-item summary while discarding unfinished session work. Character-specific soft errors use the grader's exact normalized UTF-16 ranges in a SwiftUI attributed-text hint. Physical input and keyboard shortcuts still need final acceptance.
 
