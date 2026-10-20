@@ -1,0 +1,347 @@
+{
+  "date": "2026-10-20T10:53:15+09:00",
+  "baseline": "8b4af6e4db249ad0c28c0f9be356f27213bdbef7",
+  "branch": "codex/swiftui-27-curriculum",
+  "mainboard_commit": "5796a2e2b3b39e86642591eb4f8ca4e9dff36561",
+  "sources": {
+    ".github/workflows/apple.yml": "413771c9b05893eeeaac77ea8912e6d33caaca3c757c3694b7f6be7c2fc88b91",
+    ".gitignore": "00b175c7c2686f77f6f53e0a819a92f4878f572c3f8e5bc29544981d208ddcde",
+    ".swiftlint.yml": "ec1785c699419d14392da3f8de58a90e80030f95eadde7b0692800b5d2a22d58",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "0bd6cf1f9de309b5074638371724ea094be31e4da4a3025f76db0b4f57eb1a27",
+    "App/AppStoreScreenshots/NativeRootFlowTests.swift": "f68e00c0e287d89dee5e412aa3c7c0093a701eb36699acd25acae575a31bcb6c",
+    "App/RadicalCharacterImages.swift": "af42f2298df1d850b3d5f1e56960e30861c9c515ce23979e1caa0f0ae09c4f98",
+    "App/UsagiUnagiApp.swift": "e006777ed71f2376df73b53e6f9e309be854b70813007443ae507968a3c9e00c",
+    "App/WatchHelper.swift": "2c35b458acee29cc8c23cd33df723444e6a5b7a06bad67dd961d51fdbe9deb00",
+    "Docs/Architecture.md": "f8a7a628025c70fdbbb1fdd37d6aa03d508625846542d60425695180d42aad7f",
+    "Docs/Development.md": "70a7b3c35c7af52cc39711be0d93b5a3b4e9acaca85b317ca8c28f8899375268",
+    "Docs/History/task-checkpoints.md": "2c5b497e8f443ac221ff8f5c6d5ae865c514152425c200ebf8d54a6399ecf3ee",
+    "Docs/Migration.md": "3e74e243b2e2bcb88e7f356e6e64ec378f69a98ff13440fe28b7c8022482193d",
+    "Docs/TASKS.md": "673800fe49ba7f6bceb80d2431eff5464d76b40374f286db623b5b45e2acab61",
+    "Shared/Sources/StudyCore/AnswerDistance.swift": "bf142e97e9ce2f9b9867484ef5aa4f08f6c9ced30b48c30aeaf967c2290ba674",
+    "Shared/Sources/StudyCore/AnswerGrader.swift": "ff4700b49c1893eb587b6ef9387bc6a8c7273a0d01c06e9ea05ac367477ce83c",
+    "Shared/Sources/StudyCore/KanaConverter.swift": "4e672cba3c9267afca9742bbb5c575647cd5979300d7c2b9ec3c626b3c55cafa",
+    "Shared/Sources/StudyCore/StudyMetrics.swift": "056a981f921eec4bfeab05f260a6cd5a67a6c484cba541f27f7c2bee221b6c62",
+    "Shared/Sources/StudyCore/StudySnapshot.swift": "2b10778ed9f34ed60e71178253a1c2f0b753bd5c841135ca861de60872eb57cb",
+    "Shared/Sources/StudyCore/UploadCoordinator.swift": "41c800b6ec40dc5005d396adca8d2db4f56f543201604203fdbea31aeddf0c39",
+    "Shared/Sources/StudyCore/VoiceAnswerDraft.swift": "c54c47749a819ac05baa9740beb56fd4b22aa070c2e11554943d59697d40f906",
+    "Shared/Sources/StudySpeech/AppleVoiceCapture.swift": "019d0df43bf54c3550d3b62ed1604244fe624ea015e3dd0354b0140891784ffb",
+    "Shared/Sources/StudySpeech/VoiceCapture.swift": "35f37af4d1905bd3f2eb8c905edd50976b1aead304dcb9369cbd1ec7d69853e6",
+    "Shared/Sources/StudyUI/Practice/KatakanaPracticeView.swift": "c191a8923c415006f8c34c616b37505905ce0e453129b7383f724183fc58144c",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "2b57f03e5da900a0eede569fedcf698cbf1e11047e49c0307b0617d01132bc53",
+    "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift": "e138daefad7cce4f950ff9ff499b63782a032bf5aec094370162aa593938cd43",
+    "Shared/Sources/StudyUI/Reviews/StudyAnswerInput.swift": "c16c221243a23c78027077cd44e4aab40bc7b9db9c3fd3f5ec5b67d83a0c40a8",
+    "Shared/Sources/StudyUI/Settings/DeveloperSettingsView.swift": "d05870a0bae8b20e5f1cc0728fb71f79144753f33dc1c17850d56a892fa73cc4",
+    "Shared/Sources/StudyUI/Settings/FontLibraryView.swift": "6e9fddc06f72c85b6992cb3a31b205c7a33de1aeb9087c66b11907835b8e0285",
+    "Shared/Sources/StudyUI/Settings/LessonSettingsView.swift": "d722aa2684496838455af0a67a37b8a4da9bff08073c26415002e7c573b6a77d",
+    "Shared/Sources/StudyUI/Settings/OfflineAudioView.swift": "d556ceee09191af4b5f7be63cb7343a942f3d4da8d9b1debb49f2573e0ebc76f",
+    "Shared/Sources/StudyUI/Statistics/StudyDashboard.swift": "21a232c9b5b54b48457889dbfd83cbfc51f1a3b0c84ea880fec18c55face25f0",
+    "mainboard.toml": "ec24068b45b155fb6d07467f771dc38d8e574e7e59a20690c13b83726d02ab19"
+  },
+  "change": "Define the full migration contract, enforce native syntax-backed Swift quality, share input/form boundaries, fix observer/capture/handler lifetime and background actor isolation. FMDB removal is planned and remains open.",
+  "toolchain": {
+    "xcode": "27.0 (27A266a)",
+    "swift": "6.4",
+    "macOS": "27.0.1",
+    "mobile_runtime": "27.0"
+  },
+  "tooling": {
+    "swiftlint": "0.65.1",
+    "swiftlint_rules": 15,
+    "native_parser_files": 302,
+    "native_parser_shared_files": 120,
+    "parser_diagnostics": 0,
+    "review_findings": 204,
+    "findings_by_rule": {
+      "SW-MIG0001": 25,
+      "SW-MIG0002": 8,
+      "SW-MIG0003": 51,
+      "SW-MIG0004": 11,
+      "SW-MIG0005": 109
+    },
+    "compiler_symbol_resolution": false,
+    "migration_autofix": false,
+    "formatter": "selected Xcode swift-format",
+    "binary_regression_cases": 120,
+    "native_rule_regression_cases": 89,
+    "mac_native_skips": 0,
+    "portable_test_matrix": "Native source/helper cases are explicitly macOS/Xcode; portable catalog/config/normalized SQL and missing-toolchain diagnostics remain. No Linux execution claimed.",
+    "helper_sha256": "ed962363c7f2fdf8265fd78b55bce0dc24e0eab0e0a0d35a031a09de87e0ee3b",
+    "wheel_helper_matches": true
+  },
+  "quality": {
+    "parent": {
+      "log": "/private/tmp/usagi-swift-quality-native-parser.log",
+      "selected_inventory_files": 149,
+      "passed": true
+    },
+    "standalone": {
+      "log": "/private/tmp/usagi-standalone-final-quality.log",
+      "selected_inventory_files": 149,
+      "passed": true
+    },
+    "swiftlint": {
+      "log": "/private/tmp/usagi-swiftlint-full-final.log",
+      "selected_inventory_files": 439,
+      "passed": true
+    },
+    "mainboard_helper": {
+      "log": "/private/tmp/mainboard-native-helper-quality.log",
+      "passed": true
+    }
+  },
+  "phases": [
+    {
+      "log": "/private/tmp/usagi-mac-unlocked-retry.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d52f1b42fb864ea3a16270b7e1caf9db.xcresult",
+      "result": "Passed",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "build_warnings": null,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "log": "/private/tmp/usagi-platform-unified-mac-tests.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e6a73aeb3e724e4faba71644638806ef.xcresult",
+      "result": "Passed",
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "build_warnings": null,
+      "runtime_warnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+        }
+      ]
+    },
+    {
+      "log": "/private/tmp/usagi-platform-unified-phone-tests.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-526b5270498f43d29cdf1863c0fae5f9.xcresult",
+      "result": "Passed",
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "build_warnings": null,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "log": "/private/tmp/usagi-platform-unified-ipad-tests.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-ee08b7ff73254eefbe6af0ad917bb95a.xcresult",
+      "result": "Passed",
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "build_warnings": null,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "log": "/private/tmp/usagi-platform-shared-ios-final.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-cb787771f2924a1aa298b75aa5ca3e3b.xcresult",
+      "result": "Passed",
+      "tests": 479,
+      "passed": 479,
+      "failed": 0,
+      "skipped": 0,
+      "build_warnings": null,
+      "runtime_warnings": [
+
+      ]
+    },
+    {
+      "log": "/private/tmp/usagi-swift-quality-mac-release.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-5ebe26e423274c42bce13905160c97c0.xcresult",
+      "result": "succeeded",
+      "tests": null,
+      "passed": null,
+      "failed": 0,
+      "skipped": null,
+      "build_warnings": 0,
+      "runtime_warnings": null
+    },
+    {
+      "log": "/private/tmp/usagi-swift-quality-ios-release.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-2779616ef4c34f60ad2d8a99edac0533.xcresult",
+      "result": "succeeded",
+      "tests": null,
+      "passed": null,
+      "failed": 0,
+      "skipped": null,
+      "build_warnings": 86,
+      "runtime_warnings": null
+    },
+    {
+      "log": "/private/tmp/usagi-platform-watch-handlers-build.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-37aefa4802f7430594c53e3be3641538.xcresult",
+      "result": "succeeded",
+      "tests": null,
+      "passed": null,
+      "failed": 0,
+      "skipped": null,
+      "build_warnings": 58,
+      "runtime_warnings": null
+    }
+  ],
+  "shared_mac": {
+    "functions": 479,
+    "suites": {
+      "core": 222,
+      "persistence": 179,
+      "speech": 7,
+      "ui_model": 71
+    },
+    "passed": true,
+    "log": "/private/tmp/usagi-platform-shared-final.log"
+  },
+  "loc": {
+    "baseline": "8b4af6e4db249ad0c28c0f9be356f27213bdbef7",
+    "scope": "Physical lines in tracked App/**/*.swift and Shared/Sources/**/*.swift, excluding Pods, Tests, AppTests, AppStoreScreenshots and the three owner-edited files listed below. Includes generated production Swift; tests, documents, tooling and resources are separate. Formatter wrapping is included in totals.",
+    "before": 30974,
+    "after": 31197,
+    "net": 223,
+    "changed": [
+      {
+        "path": "App/RadicalCharacterImages.swift",
+        "before": 138,
+        "after": 149
+      },
+      {
+        "path": "App/WatchHelper.swift",
+        "before": 145,
+        "after": 146
+      },
+      {
+        "path": "Shared/Sources/StudyCore/AnswerDistance.swift",
+        "before": 39,
+        "after": 40
+      },
+      {
+        "path": "Shared/Sources/StudyCore/AnswerGrader.swift",
+        "before": 276,
+        "after": 303
+      },
+      {
+        "path": "Shared/Sources/StudyCore/KanaConverter.swift",
+        "before": 353,
+        "after": 363
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudyMetrics.swift",
+        "before": 172,
+        "after": 189
+      },
+      {
+        "path": "Shared/Sources/StudyCore/StudySnapshot.swift",
+        "before": 111,
+        "after": 143
+      },
+      {
+        "path": "Shared/Sources/StudyCore/UploadCoordinator.swift",
+        "before": 70,
+        "after": 82
+      },
+      {
+        "path": "Shared/Sources/StudyCore/VoiceAnswerDraft.swift",
+        "before": 65,
+        "after": 72
+      },
+      {
+        "path": "Shared/Sources/StudySpeech/AppleVoiceCapture.swift",
+        "before": 160,
+        "after": 180
+      },
+      {
+        "path": "Shared/Sources/StudySpeech/VoiceCapture.swift",
+        "before": 31,
+        "after": 34
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Practice/KatakanaPracticeView.swift",
+        "before": 219,
+        "after": 202
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift",
+        "before": 521,
+        "after": 510
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/ReviewSettingsPanel.swift",
+        "before": 114,
+        "after": 112
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/StudyAnswerInput.swift",
+        "before": 151,
+        "after": 173
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/DeveloperSettingsView.swift",
+        "before": 119,
+        "after": 117
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/FontLibraryView.swift",
+        "before": 92,
+        "after": 90
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/LessonSettingsView.swift",
+        "before": 97,
+        "after": 95
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Settings/OfflineAudioView.swift",
+        "before": 131,
+        "after": 129
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Statistics/StudyDashboard.swift",
+        "before": 206,
+        "after": 304
+      }
+    ],
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift",
+      "App/Features/Catalog/LegacyCatalogViewController.swift"
+    ]
+  },
+  "crash_report": {
+    "process": "SpringBoard",
+    "timestamp": "2026-10-19T19:49:16+09:00",
+    "context": "Simulator wallpaper/poster snapshot, Apple RunningBoardServices/PosterUIFoundation/PaperBoardUI frames",
+    "conclusion": "This report does not establish an usagiunagi crash; focused unlocked native Mac retry passed."
+  },
+  "failed_candidates": [
+    "Initial generic Swift grammar exposed 15 incomplete files; replaced with native SwiftParser and verified zero gaps.",
+    "Initial binary installer import used undeclared httpx; replaced with existing native/stdlib tooling before accepted runs.",
+    "Standalone outer mainboard run --as-is required an application lock; accepted standalone checks invoke Mainboard lint directly, matching uv-based CI.",
+    "First wheel build without isolation lacked hatchling; accepted isolated offline wheel uses declared cached build requirements."
+  ],
+  "limitations": [
+    "FMDB remains in the legacy DEBUG host/build graph until required replacements pass.",
+    "Read-only SQLite3 importer and direct SQLite diagnostics remain separate retirement boundaries.",
+    "Physical IME/speech/notifications/background/watch, signed upgrades, broader legacy acceptance, statistics calibration and publication remain open.",
+    "No PR, push, hosted Actions pass, real-account exercise or OS permission change."
+  ],
+  "preserved_owner_edits": [
+    "App/AnswerChecker.swift",
+    "App/FullRefreshOverlayView.swift",
+    "App/Features/Catalog/LegacyCatalogViewController.swift"
+  ]
+}

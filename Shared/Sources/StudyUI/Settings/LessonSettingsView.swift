@@ -76,9 +76,7 @@ public struct LessonSettingsView: View {
           .font(.caption).foregroundStyle(.secondary)
       }
     }
-    #if os(macOS)
-      .formStyle(.grouped)
-    #endif
+    .formStyle(.grouped)
     .navigationTitle("Lessons").task { settings.reload() }
   }
   private func move(_ source: IndexSet, _ destination: Int) {

@@ -1,0 +1,33 @@
+# swift-format owns whitespace and layout; SwiftLint enforces supported SwiftUI rules.
+# SwiftLint adds syntax-backed correctness checks. No automatic correction or baseline.
+only_rules:
+  - compiler_protocol_init
+  - deployment_target
+  - discarded_notification_center_observer
+  - duplicate_conditions
+  - duplicate_enum_cases
+  - duplicated_key_in_dictionary_literal
+  - dynamic_inline
+  - identical_operands
+  - invalid_swiftlint_command
+  - notification_center_detachment
+  - nsobject_prefer_isequal
+  - private_swiftui_state
+  - redundant_sendable
+  - unowned_variable_capture
+  - weak_delegate
+excluded:
+  - App/Pods
+  - App/Generated
+  - .build
+  - Shared/.build
+  - Vendor
+allow_zero_lintable_files: false
+check_for_updates: false
+reporter: xcode
+
+# Match the shipping Xcode/SwiftPM deployment floors; watch remains on its existing target.
+deployment_target:
+  iOS_deployment_target: 27.0
+  macOS_deployment_target: 27.0
+  watchOS_deployment_target: 9.0

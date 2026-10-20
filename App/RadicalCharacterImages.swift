@@ -34,6 +34,7 @@ class RadicalCharacterImages {
   }
 
   private let services: TKMServices
+  private var subjectsObserver: NSObjectProtocol?
 
   // Whether downloadAll() has anything new to look at: true at launch and after a sync brings in
   // new or changed subjects. Checking every radical on every sync held the database long enough
@@ -43,19 +44,27 @@ class RadicalCharacterImages {
 
   init(services: TKMServices) {
     self.services = services
-    NotificationCenter.default.addObserver(forName: .lccSubjectsChanged, object: nil,
-                                           queue: nil) { [weak self] _ in
+    subjectsObserver = NotificationCenter.default.addObserver(
+      forName: .lccSubjectsChanged, object: nil,
+      queue: nil
+    ) { [weak self] _ in
       self?.setNeedsDownload(true)
     }
 
     do {
       try FileManager.default
-        .createDirectory(at: URL(fileURLWithPath: RadicalCharacterImages.cacheDirectoryPath,
-                                 isDirectory: true),
-                         withIntermediateDirectories: true)
+        .createDirectory(
+          at: URL(
+            fileURLWithPath: RadicalCharacterImages.cacheDirectoryPath,
+            isDirectory: true),
+          withIntermediateDirectories: true)
     } catch {
       NSLog("Failed to create cache directory: \(error)")
     }
+  }
+
+  deinit {
+    if let subjectsObserver { NotificationCenter.default.removeObserver(subjectsObserver) }
   }
 
   private func setNeedsDownload(_ value: Bool) {
@@ -75,13 +84,13 @@ class RadicalCharacterImages {
       return
     }
 
-    Task.detached(priority: .background) { [unowned self] in
-      self.services.localCachingClient.getRadicalsWithCharacterImages().forEach { subject in
+    Task.detached(priority: .background) { [services] in
+      for subject in services.localCachingClient.getRadicalsWithCharacterImages() {
         let id = subject.id
 
         // Don't do anything if we've got this image already.
         if RadicalCharacterImages.hasCachedImageForSubjectId(id) {
-          return
+          continue
         }
 
         let url = URL(string: subject.radical.characterImage)!
@@ -97,8 +106,9 @@ class RadicalCharacterImages {
             }
 
             // Scale down the image before rasterising it.
-            svgImage.size = CGSize(width: RadicalCharacterImages.imageSizePx,
-                                   height: RadicalCharacterImages.imageSizePx)
+            svgImage.size = CGSize(
+              width: RadicalCharacterImages.imageSizePx,
+              height: RadicalCharacterImages.imageSizePx)
 
             guard let image = svgImage.uiImage, let pngData = image.pngData() else {
               NSLog("Failed to convert SVG to PNG \(url)")
@@ -118,8 +128,9 @@ class RadicalCharacterImages {
 }
 
 func japaneseText(_ subject: TKMSubject, imageSize: CGFloat = 0.0) -> NSAttributedString {
-  if !subject.hasRadical || !subject.radical.hasCharacterImageFile_p ||
-    !RadicalCharacterImages.hasCachedImageForSubjectId(subject.id) {
+  if !subject.hasRadical || !subject.radical.hasCharacterImageFile_p
+    || !RadicalCharacterImages.hasCachedImageForSubjectId(subject.id)
+  {
     return NSAttributedString(string: subject.japanese)
   }
 

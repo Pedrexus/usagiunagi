@@ -15,25 +15,26 @@
 /// Existing answer-typo distance, preserved over UTF-16 code units.
 /// Uses adjacent transpositions (optimal string alignment), not unrestricted Damerau distance.
 public enum AnswerDistance {
-    public static func between(_ first: String, _ second: String) -> Int {
-        var a = Array(first.utf16), b = Array(second.utf16)
-        if a.count < b.count { swap(&a, &b) }
-        guard !b.isEmpty else { return a.count }
-        var older = Array(repeating: 0, count: b.count + 1)
-        var previous = Array(0...b.count)
-        var current = older
-        for i in 1...a.count {
-            current[0] = i
-            for j in 1...b.count {
-                let cost = a[i - 1] == b[j - 1] ? 0 : 1
-                current[j] = min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost)
-                if i > 1, j > 1, a[i - 1] == b[j - 2], a[i - 2] == b[j - 1] {
-                    current[j] = min(current[j], older[j - 2] + cost)
-                }
-            }
-            swap(&older, &previous)
-            swap(&previous, &current)
+  public static func between(_ first: String, _ second: String) -> Int {
+    var a = Array(first.utf16)
+    var b = Array(second.utf16)
+    if a.count < b.count { swap(&a, &b) }
+    guard !b.isEmpty else { return a.count }
+    var older = Array(repeating: 0, count: b.count + 1)
+    var previous = Array(0...b.count)
+    var current = older
+    for i in 1...a.count {
+      current[0] = i
+      for j in 1...b.count {
+        let cost = a[i - 1] == b[j - 1] ? 0 : 1
+        current[j] = min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost)
+        if i > 1, j > 1, a[i - 1] == b[j - 2], a[i - 2] == b[j - 1] {
+          current[j] = min(current[j], older[j - 2] + cost)
         }
-        return previous[b.count]
+      }
+      swap(&older, &previous)
+      swap(&previous, &current)
     }
+    return previous[b.count]
+  }
 }

@@ -32,12 +32,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 9e6a5617927680a321023a2a28bd7c6528f64eb3
+          ref: 5796a2e2b3b39e86642591eb4f8ca4e9dff36561
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
       - name: Restore Mainboard's locked environment
         run: uv sync --project .build/Mainboard --locked --no-dev --python 3.14
+      - name: Restore pinned Swift correctness tools
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard binary sync
+      - name: Swift format and correctness
+        run: |
+          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App/Application App/UsagiUnagiApp.swift App/RadicalCharacterImages.swift App/WatchHelper.swift
+          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swiftlint App Shared/Sources
+      - name: SwiftUI and storage migration inventory
+        run: |
+          mkdir -p .build/Results
+          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 180 mainboard analyze check . --rule SW-PARSE0001 --rule SW-MIG0001 --rule SW-MIG0002 --rule SW-MIG0003 --rule SW-MIG0004 --rule SW-MIG0005 --rule ALL-MIG0001 | tee .build/Results/SwiftMigration.log
       - name: Native font preview exports
         run: |
           mkdir -p .build/Results
@@ -100,7 +110,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 9e6a5617927680a321023a2a28bd7c6528f64eb3
+          ref: 5796a2e2b3b39e86642591eb4f8ca4e9dff36561
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -163,7 +173,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 9e6a5617927680a321023a2a28bd7c6528f64eb3
+          ref: 5796a2e2b3b39e86642591eb4f8ca4e9dff36561
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7

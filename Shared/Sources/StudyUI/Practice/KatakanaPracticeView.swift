@@ -40,11 +40,7 @@ private struct KatakanaPracticeSessionView: View {
   @State private var error: String?
   @State private var confirmEnd = false
   @State private var voiceRequest: VoiceAnswerRequest?
-  #if os(iOS)
-    @State private var focused = false
-  #else
-    @FocusState private var focused: Bool
-  #endif
+  @State private var focused = false
 
   var body: some View {
     VStack {
@@ -52,12 +48,6 @@ private struct KatakanaPracticeSessionView: View {
         Text("Practice only · WaniKani progress is unchanged").font(.caption)
           .foregroundStyle(.secondary)
         Spacer()
-        #if os(macOS)
-          if practice?.question != nil && screen.phase == .answering {
-            Button("Voice answer", systemImage: "mic") { act(.voice) }
-              .labelStyle(.iconOnly).accessibilityIdentifier("practice.voice")
-          }
-        #endif
         Button("End practice", systemImage: "xmark") {
           if practice?.question == nil { dismiss() } else { confirmEnd = true }
         }.accessibilityIdentifier("practice.end")
@@ -72,19 +62,12 @@ private struct KatakanaPracticeSessionView: View {
         Button("Done") { dismiss() }
       } else if practice != nil {
         ReviewScreen(state: screen, action: act) {
-          #if os(iOS)
-            StudyAnswerInput(
-              prompt: "Reading", text: $screen.answer,
-              focused: Binding(get: { focused }, set: { focused = $0 }), reading: true,
-              automaticJapanese: automaticJapanese, alphabet: .hiragana,
-              submitted: { act(.submit) }
-            ).frame(minHeight: 44)
-          #else
-            TextField("Reading", text: $screen.answer)
-              .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
-              .focused($focused).onSubmit { act(.submit) }
-              .accessibilityIdentifier("review.answer")
-          #endif
+          StudyAnswerInput(
+            prompt: "Reading", text: $screen.answer,
+            focused: $focused, reading: true,
+            automaticJapanese: automaticJapanese, alphabet: .hiragana,
+            submitted: { act(.submit) }
+          ).frame(minHeight: 44)
         } details: {
           VStack {
             Text("Reading").font(.headline).accessibilityAddTraits(.isHeader)

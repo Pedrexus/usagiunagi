@@ -1,0 +1,29 @@
+# Standalone Apple lint setup. The parent workspace owns its own multi-language pipeline.
+# CI and local checks use the same read-only commands; only swift-format may rewrite Swift.
+[workspace]
+name = "usagiunagi"
+platforms = ["osx-arm64"]
+
+# Official release asset coordinates; explicit setup: `mainboard binary sync`.
+[on.osx.binary.dev]
+swiftlint = { version = "0.65.1", url = "https://github.com/realm/SwiftLint/releases/download/0.65.1/portable_swiftlint.zip", sha256 = "c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0", member = "swiftlint" }
+
+[lint]
+exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/.mainboard/**", "**/Vendor/**"]
+
+[lint.tools.swift-ui]
+check = "mainboard analyze gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
+files = ["*.swift"]
+exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/Vendor/**"]
+serial = true
+timeout = 600
+
+[lint.tools.swift-format]
+check = "/usr/bin/xcrun swift format lint --strict {files}"
+fix = "/usr/bin/xcrun swift format format --in-place {files}"
+files = ["*.swift"]
+
+[lint.tools.swiftlint]
+check = "{root}/.mainboard/envs/default/binary/bin/swiftlint lint --strict --quiet --no-cache --force-exclude -- {files}"
+files = ["*.swift"]
+timeout = 120

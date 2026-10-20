@@ -39,11 +39,7 @@ public struct NativeReviewView: View {
   @SceneStorage("review.draft.answer") private var draftAnswer = ""
   @SceneStorage("review.draft.feedback") private var draftFeedback = ""
   @SceneStorage("review.draft.phase") private var draftPhase = ReviewScreenState.Phase.answering
-  #if os(iOS)
-    @State private var answerFocused = false
-  #else
-    @FocusState private var answerFocused: Bool
-  #endif
+  @State private var answerFocused = false
 
   public init(
     store: StudyStore, accountID: String, mode: NativeStudyMode = .reviews,
@@ -115,22 +111,15 @@ public struct NativeReviewView: View {
               }
             }
           ) {
-            #if os(iOS)
-              StudyAnswerInput(
-                prompt: screen.prompt, text: $screen.answer,
-                focused: Binding(get: { answerFocused }, set: { answerFocused = $0 }),
-                reading: screen.questionKind == .reading, automaticJapanese: automaticJapanese,
-                alphabet: subjectSettings.value.useKatakanaForOnyomi
-                  && subject.readings.first(where: \.isPrimary)?.kind == .onyomi
-                  ? .katakana : .hiragana,
-                submitted: { act(.submit) }
-              ).frame(minHeight: 44)
-            #else
-              TextField(screen.prompt, text: $screen.answer)
-                .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
-                .focused($answerFocused).onSubmit { act(.submit) }
-                .accessibilityIdentifier("review.answer")
-            #endif
+            StudyAnswerInput(
+              prompt: screen.prompt, text: $screen.answer,
+              focused: $answerFocused,
+              reading: screen.questionKind == .reading, automaticJapanese: automaticJapanese,
+              alphabet: subjectSettings.value.useKatakanaForOnyomi
+                && subject.readings.first(where: \.isPrimary)?.kind == .onyomi
+                ? .katakana : .hiragana,
+              submitted: { act(.submit) }
+            ).frame(minHeight: 44)
           } details: {
             NativeSubjectDetailsView(
               store: store, accountID: accountID, subjectID: subject.id,

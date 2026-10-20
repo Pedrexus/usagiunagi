@@ -84,9 +84,7 @@ public struct FontLibraryView: View {
       }
       if let deletionError = library.deletionError { Text(deletionError).foregroundStyle(.red) }
     }
-    #if os(macOS)
-      .formStyle(.grouped)
-    #endif
+    .formStyle(.grouped)
     .navigationTitle("Select Fonts").task { library.reloadSelection() }
   }
 }

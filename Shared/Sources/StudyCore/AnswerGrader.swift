@@ -29,9 +29,11 @@ public struct GradingSubject: Codable, Sendable {
   public let alternateReadings: [String]
   public let componentSubjectIds: [Int64]
 
-  public init(japanese: String, kind: SubjectKind, meanings: [String],
-              blacklistedMeanings: [String] = [], primaryReadings: [String] = [],
-              alternateReadings: [String] = [], componentSubjectIds: [Int64] = []) {
+  public init(
+    japanese: String, kind: SubjectKind, meanings: [String],
+    blacklistedMeanings: [String] = [], primaryReadings: [String] = [],
+    alternateReadings: [String] = [], componentSubjectIds: [Int64] = []
+  ) {
     self.japanese = japanese
     self.kind = kind
     self.meanings = meanings
@@ -53,19 +55,27 @@ public enum AnswerGrade: Equatable, Sendable {
 }
 
 public enum AnswerGrader {
-  static let kHiraganaCharacterSet = CharacterSet(charactersIn: Unicode
-    .Scalar(UInt32(0x3040))! ..< Unicode.Scalar(UInt32(0x309D))!)
-  static let kAllKanaCharacterSet = CharacterSet(charactersIn: Unicode
-    .Scalar(UInt32(0x3040))! ..< Unicode.Scalar(UInt32(0x3100))!)
-  static let kJapaneseCharacterSet = kAllKanaCharacterSet
-    .union(CharacterSet(charactersIn: Unicode.Scalar(UInt32(0x3400))! ..<
-        Unicode.Scalar(UInt32(0x4DC0))!))
-    .union(CharacterSet(charactersIn: Unicode.Scalar(UInt32(0x4E00))! ..<
-        Unicode.Scalar(UInt32(0xA000))!))
-    .union(CharacterSet(charactersIn: Unicode.Scalar(UInt32(0xF900))! ..<
-        Unicode.Scalar(UInt32(0xFB00))!))
-    .union(CharacterSet(charactersIn: Unicode.Scalar(UInt32(0xFF66))! ..<
-        Unicode.Scalar(UInt32(0xFFA0))!))
+  static let kHiraganaCharacterSet = CharacterSet(
+    charactersIn:
+      Unicode
+      .Scalar(UInt32(0x3040))!..<Unicode.Scalar(UInt32(0x309D))!)
+  static let kAllKanaCharacterSet = CharacterSet(
+    charactersIn:
+      Unicode
+      .Scalar(UInt32(0x3040))!..<Unicode.Scalar(UInt32(0x3100))!)
+  static let kJapaneseCharacterSet =
+    kAllKanaCharacterSet
+    .union(
+      CharacterSet(charactersIn: Unicode.Scalar(UInt32(0x3400))!..<Unicode.Scalar(UInt32(0x4DC0))!)
+    )
+    .union(
+      CharacterSet(charactersIn: Unicode.Scalar(UInt32(0x4E00))!..<Unicode.Scalar(UInt32(0xA000))!)
+    )
+    .union(
+      CharacterSet(charactersIn: Unicode.Scalar(UInt32(0xF900))!..<Unicode.Scalar(UInt32(0xFB00))!)
+    )
+    .union(
+      CharacterSet(charactersIn: Unicode.Scalar(UInt32(0xFF66))!..<Unicode.Scalar(UInt32(0xFFA0))!))
 
   private static func findNonKanaRanges(_ s: String) -> [NSRange] {
     findCharacterRanges(in: s, from: kAllKanaCharacterSet.inverted)
@@ -113,23 +123,31 @@ public enum AnswerGrader {
 
     var ret = [NSRange]()
 
-    if let prefixRange = mismatchingOkurigana(answer: answer.unicodeScalars,
-                                              japanese: japanese.unicodeScalars) {
+    if let prefixRange = mismatchingOkurigana(
+      answer: answer.unicodeScalars,
+      japanese: japanese.unicodeScalars)
+    {
       ret.append(prefixRange)
     }
 
-    if let suffixRange = mismatchingOkurigana(answer: answer.unicodeScalars.reversed(),
-                                              japanese: japanese.unicodeScalars.reversed()) {
+    if let suffixRange = mismatchingOkurigana(
+      answer: answer.unicodeScalars.reversed(),
+      japanese: japanese.unicodeScalars.reversed())
+    {
       // Reverse the range again to match the original string.
-      ret.append(NSMakeRange(answer.utf16.count - suffixRange.lowerBound - suffixRange.length,
-                             suffixRange.length))
+      ret.append(
+        NSMakeRange(
+          answer.utf16.count - suffixRange.lowerBound - suffixRange.length,
+          suffixRange.length))
     }
 
     return ret
   }
 
-  private static func mismatchingOkurigana<T: Collection<Unicode.Scalar>>(answer: T,
-                                                                         japanese: T) -> NSRange? {
+  private static func mismatchingOkurigana<T: Collection<Unicode.Scalar>>(
+    answer: T,
+    japanese: T
+  ) -> NSRange? {
     var mismatchingRangeBegin: Int?
     var mismatchingRangeEnd: Int?
 
@@ -156,15 +174,17 @@ public enum AnswerGrader {
       .joined(separator: "ー")
   }
 
-  public static func normalizedString(_ text: String, taskType: StudyQuestionKind,
-                              alphabet: KanaAlphabet = KanaAlphabet.hiragana) -> String {
+  public static func normalizedString(
+    _ text: String, taskType: StudyQuestionKind,
+    alphabet: KanaAlphabet = KanaAlphabet.hiragana
+  ) -> String {
     var s =
       text.trimmingCharacters(in: CharacterSet.whitespaces)
-        .lowercased()
-        .replacingOccurrences(of: "-", with: " ")
-        .replacingOccurrences(of: ".", with: "")
-        .replacingOccurrences(of: "'", with: "")
-        .replacingOccurrences(of: "/", with: "")
+      .lowercased()
+      .replacingOccurrences(of: "-", with: " ")
+      .replacingOccurrences(of: ".", with: "")
+      .replacingOccurrences(of: "'", with: "")
+      .replacingOccurrences(of: "/", with: "")
     if taskType == .reading {
       s = s.replacingOccurrences(of: "n", with: alphabet == KanaAlphabet.hiragana ? "ん" : "ン")
 
@@ -178,11 +198,13 @@ public enum AnswerGrader {
 
   /// The caller supplies the normalized answer so feedback highlights refer to displayed text.
   /// Voice and typed input must use the same normalization and grading path.
-  public static func checkNormalizedAnswer(_ answer: String,
-                                           subject: GradingSubject,
-                                           synonyms: [String] = [],
-                                           taskType: StudyQuestionKind,
-                                           subjectLookup: (Int64) -> GradingSubject? = { _ in nil }) -> AnswerGrade {
+  public static func checkNormalizedAnswer(
+    _ answer: String,
+    subject: GradingSubject,
+    synonyms: [String] = [],
+    taskType: StudyQuestionKind,
+    subjectLookup: (Int64) -> GradingSubject? = { _ in nil }
+  ) -> AnswerGrade {
     switch taskType {
     case .reading:
       let hiraganaText = convertKatakanaToHiragana(answer)
@@ -209,20 +231,23 @@ public enum AnswerGrader {
         }
       }
       if subject.kind == .vocabulary, subject.japanese.count == 1,
-         subject.componentSubjectIds.count == 1 {
+        subject.componentSubjectIds.count == 1
+      {
         // If the vocabulary is made up of only one Kanji, check whether the user wrote the Kanji
         // reading instead of the vocabulary reading.
         if let kanji = subjectLookup(subject.componentSubjectIds[0]), kanji.kind == .kanji {
-          let result = checkNormalizedAnswer(answer, subject: kanji, taskType: taskType,
-                                   subjectLookup: subjectLookup)
+          let result = checkNormalizedAnswer(
+            answer, subject: kanji, taskType: taskType,
+            subjectLookup: subjectLookup)
           if result == .precise {
             return .otherKanjiReading
           }
         }
       }
       if subject.kind == .vocabulary {
-        let ranges = mismatchingOkurigana(answer: answer,
-                                          japanese: subject.japanese)
+        let ranges = mismatchingOkurigana(
+          answer: answer,
+          japanese: subject.japanese)
         if !ranges.isEmpty {
           return .mismatchingOkurigana(ranges)
         }
@@ -260,8 +285,10 @@ public enum AnswerGrader {
 
       // Check if the answer would match one of the readings if converted to hiragana.
       let kanaText = KanaConverter.convert(answer).text
-      switch checkNormalizedAnswer(kanaText, subject: subject, synonyms: synonyms,
-                         taskType: .reading, subjectLookup: subjectLookup) {
+      switch checkNormalizedAnswer(
+        kanaText, subject: subject, synonyms: synonyms,
+        taskType: .reading, subjectLookup: subjectLookup)
+      {
       case .precise, .imprecise:
         return .isReadingButWantMeaning
       case .otherKanjiReading:

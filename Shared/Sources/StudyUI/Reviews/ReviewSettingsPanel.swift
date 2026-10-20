@@ -48,9 +48,7 @@ public struct ReviewSettingsPanel: View {
           }
         })
     }
-    #if os(macOS)
-      .formStyle(.grouped)
-    #endif
+    .formStyle(.grouped)
     .navigationTitle("Quick settings")
     .onChange(of: sourcePreferences) { _, value in preferences = value }
     #if os(iOS)

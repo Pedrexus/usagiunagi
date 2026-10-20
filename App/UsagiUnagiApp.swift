@@ -28,7 +28,7 @@ import SwiftUI
       .backgroundTask(.appRefresh(StudyApplicationOwner.refreshIdentifier)) {
         [owner, backgroundPermitted] in
         guard backgroundPermitted else { return }
-        StudyApplicationOwner.scheduleBackgroundRefresh()
+        await StudyApplicationOwner.scheduleBackgroundRefresh()
         _ = await owner.refreshInBackground()
       }
       .onChange(of: scenePhase) { _, phase in

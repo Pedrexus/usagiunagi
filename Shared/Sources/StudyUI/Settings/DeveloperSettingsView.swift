@@ -67,9 +67,7 @@ public struct DeveloperSettingsView: View {
         Text("Share a copy of the local study database for diagnostics.")
       }
     }
-    #if os(macOS)
-      .formStyle(.grouped)
-    #endif
+    .formStyle(.grouped)
     .navigationTitle("Developer options")
     .alert("API base URL", isPresented: $editingEndpoint) {
       TextField("API base URL", text: $draft)

@@ -1,6 +1,20 @@
+import StudyCore
+import SwiftUI
+
+struct StudyAnswerInput {
+  let prompt: String
+  @Binding var text: String
+  @Binding var focused: Bool
+  let reading: Bool
+  let automaticJapanese: Bool
+  let alphabet: KanaAlphabet
+  let submitted: () -> Void
+  #if os(macOS)
+    @FocusState private var inputFocused: Bool
+  #endif
+}
+
 #if os(iOS)
-  import StudyCore
-  import SwiftUI
   import UIKit
 
   /// The one UIKit boundary for Japanese input language and marked-text/caret handling.
@@ -28,14 +42,7 @@
     }
   }
 
-  struct StudyAnswerInput: UIViewRepresentable {
-    let prompt: String
-    @Binding var text: String
-    @Binding var focused: Bool
-    let reading: Bool
-    let automaticJapanese: Bool
-    let alphabet: KanaAlphabet
-    let submitted: () -> Void
+  extension StudyAnswerInput: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> StudyJapaneseTextField {
       let field = StudyJapaneseTextField(frame: .zero)
@@ -146,6 +153,21 @@
           "Add a Japanese keyboard in Settings → General → Keyboard → Keyboards → Add New Keyboard."
         )
       }
+    }
+  }
+#else
+  extension StudyAnswerInput: View {
+    var body: some View {
+      TextField(prompt, text: $text)
+        .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
+        .focused($inputFocused).onSubmit(submitted)
+        .accessibilityIdentifier("review.answer")
+        .onChange(of: focused, initial: true) { _, value in
+          if inputFocused != value { inputFocused = value }
+        }
+        .onChange(of: inputFocused) { _, value in
+          if focused != value { focused = value }
+        }
     }
   }
 #endif

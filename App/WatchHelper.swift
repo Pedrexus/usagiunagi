@@ -108,8 +108,9 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
       ]
     }
   #endif
-  let serverDelegate = WatchConnectionServerDelegate()
-  var clientDelegate: WatchConnectionClientDelegate?
+  // WCSession.delegate is weak; own both handlers so their callbacks remain available.
+  private let serverHandler = WatchConnectionServerDelegate()
+  private var clientHandler: WatchConnectionClientDelegate?
 
   override convenience init() {
     self.init(session: WCSession.isSupported() ? WCSession.default : nil)
@@ -125,9 +126,9 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
 
   #if os(iOS)
     @objc func startServerSession() {
-      serverDelegate.activated = { [weak self] in self?.companion.flush() }
+      serverHandler.activated = { [weak self] in self?.companion.flush() }
       if let session = session {
-        session.delegate = serverDelegate
+        session.delegate = serverHandler
         session.activate()
       }
     }
@@ -135,9 +136,9 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
   #endif
 
   func awaitMessages(callback: @escaping ClientDelegateCallback) {
-    clientDelegate = WatchConnectionClientDelegate(callback)
+    clientHandler = WatchConnectionClientDelegate(callback)
     if let session = session {
-      session.delegate = clientDelegate
+      session.delegate = clientHandler
       session.activate()
     }
   }

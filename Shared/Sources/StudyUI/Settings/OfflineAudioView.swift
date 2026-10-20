@@ -115,9 +115,7 @@ public struct OfflineAudioView: View {
         )
       }
     }.disabled(downloads.isDeleting)
-      #if os(macOS)
-        .formStyle(.grouped)
-      #endif
+      .formStyle(.grouped)
       .navigationTitle("Offline Audio")
       .alert("Delete offline audio?", isPresented: $confirmingDeletion) {
         Button("Keep", role: .cancel) {}

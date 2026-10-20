@@ -75,20 +75,25 @@ public struct StudyMetrics: Sendable {
   public let focus: [FocusItem]
   public let pace: Pace?
 
-  public init(assignments: [StudyAssignment], statistics: [StudyAnswerStatistics], levels: [StudyLevel],
-       currentLevel: Int, onVacation: Bool, now: Date = Date(), calendar: Calendar = .current) {
+  public init(
+    assignments: [StudyAssignment], statistics: [StudyAnswerStatistics], levels: [StudyLevel],
+    currentLevel: Int, onVacation: Bool, now: Date = Date(), calendar: Calendar = .current
+  ) {
     let visible = statistics.filter { !$0.hidden }
-    meaning = Accuracy(correct: visible.reduce(0) { $0 + Int($1.meaningCorrect) },
-                       incorrect: visible.reduce(0) { $0 + Int($1.meaningIncorrect) })
-    reading = Accuracy(correct: visible.reduce(0) { $0 + Int($1.readingCorrect) },
-                       incorrect: visible.reduce(0) { $0 + Int($1.readingIncorrect) })
+    meaning = Accuracy(
+      correct: visible.reduce(0) { $0 + Int($1.meaningCorrect) },
+      incorrect: visible.reduce(0) { $0 + Int($1.meaningIncorrect) })
+    reading = Accuracy(
+      correct: visible.reduce(0) { $0 + Int($1.readingCorrect) },
+      incorrect: visible.reduce(0) { $0 + Int($1.readingIncorrect) })
     // Deduplicate defensively, including old sample-data fixtures.
-    let active = Dictionary(assignments.filter { $0.srsStageNumber > 0 && $0.srsStageNumber < 9 }
-      .map { ($0.subjectID, $0) }, uniquingKeysWith: { first, _ in first })
+    let active = Dictionary(
+      assignments.filter { $0.srsStageNumber > 0 && $0.srsStageNumber < 9 }
+        .map { ($0.subjectID, $0) }, uniquingKeysWith: { first, _ in first })
     let dates = active.values.filter { $0.hasAvailableAt && $0.availableAt > 0 }
       .map { Date(timeIntervalSince1970: Double($0.availableAt)) }
     dueNow = dates.filter { $0 <= now }.count
-    scheduledDays = (0 ..< 7).map { offset in
+    scheduledDays = (0..<7).map { offset in
       let start = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))!
       let end = calendar.date(byAdding: .day, value: 1, to: start)!
       return (start, dates.filter { $0 > now && $0 >= start && $0 < end }.count)
@@ -110,41 +115,52 @@ public struct StudyMetrics: Sendable {
     // Smoothed error rate discounted by recovery streak. A prioritization heuristic, not a
     // probability.
     let score = (Double(incorrect) + 1) / (Double(total) + 2) / sqrt(Double(streak) + 1)
-    return FocusItem(subjectID: stat.subjectID, reading: reading, incorrect: incorrect,
-                     attempts: total, streak: streak, score: score)
+    return FocusItem(
+      subjectID: stat.subjectID, reading: reading, incorrect: incorrect,
+      attempts: total, streak: streak, score: score)
   }
 
-  private static func calculatePace(_ levels: [StudyLevel], currentLevel: Int,
-                                    onVacation: Bool, now: Date) -> Pace? {
+  private static func calculatePace(
+    _ levels: [StudyLevel], currentLevel: Int,
+    onVacation: Bool, now: Date
+  ) -> Pace? {
     let reset = levels.map { $0.abandonedAt }.max() ?? 0
     // Keep only the latest attempt at each level; do not carry pre-reset pace into a new run.
-    let latest = Dictionary(levels.map { ($0.level, $0) }, uniquingKeysWith: {
-      $0.unlockedAt > $1.unlockedAt ? $0 : $1
-    })
+    let latest = Dictionary(
+      levels.map { ($0.level, $0) },
+      uniquingKeysWith: {
+        $0.unlockedAt > $1.unlockedAt ? $0 : $1
+      })
     let eligible = latest.values.filter {
-      $0.level >= 3 && $0.level < currentLevel && !$0.hasAbandonedAt &&
-        $0.hasUnlockedAt && $0.unlockedAt >= reset && $0.passedAt > $0.unlockedAt &&
-        Double($0.passedAt) <= now.timeIntervalSince1970
+      $0.level >= 3 && $0.level < currentLevel && !$0.hasAbandonedAt && $0.hasUnlockedAt
+        && $0.unlockedAt >= reset && $0.passedAt > $0.unlockedAt
+        && Double($0.passedAt) <= now.timeIntervalSince1970
     }.sorted { $0.passedAt > $1.passedAt }
     let completed = eligible.prefix(8)
     guard completed.count >= 3 else { return nil }
     let durations = completed.map { (Double($0.passedAt) - Double($0.unlockedAt)) / 86400 }.sorted()
-    let low = quantile(durations, 0.25), median = quantile(durations, 0.5),
-        high = quantile(durations,
-                        0.75)
+    let low = quantile(durations, 0.25)
+    let median = quantile(durations, 0.5)
+    let high = quantile(
+      durations,
+      0.75)
     var range: ClosedRange<Date>?
     if !onVacation, currentLevel < 60, let current = latest[Int32(currentLevel)],
-       !current.hasPassedAt, !current.hasAbandonedAt, current.hasUnlockedAt,
-       current.unlockedAt >= reset, current.unlockedAt > 0 {
+      !current.hasPassedAt, !current.hasAbandonedAt, current.hasUnlockedAt,
+      current.unlockedAt >= reset, current.unlockedAt > 0
+    {
       let start = Date(timeIntervalSince1970: Double(current.unlockedAt))
       let elapsed = now.timeIntervalSince(start) / 86400
       // Avoid rolling an overdue prediction forward every day or presenting a past date.
       if elapsed >= 0, elapsed < low {
-        range = start.addingTimeInterval(low * 86400) ... start.addingTimeInterval(high * 86400)
+        range = start.addingTimeInterval(low * 86400)...start.addingTimeInterval(high * 86400)
       }
     }
-    return Pace(history: completed.sorted { $0.level < $1.level }.map { LevelDuration(level: Int($0.level), days: Double($0.passedAt - $0.unlockedAt) / 86400) }, sampleCount: completed.count, lowerDays: low, medianDays: median, upperDays: high,
-                nextLevelRange: range, validation: validatePace(eligible))
+    return Pace(
+      history: completed.sorted { $0.level < $1.level }.map {
+        LevelDuration(level: Int($0.level), days: Double($0.passedAt - $0.unlockedAt) / 86400)
+      }, sampleCount: completed.count, lowerDays: low, medianDays: median, upperDays: high,
+      nextLevelRange: range, validation: validatePace(eligible))
   }
 
   /// Reconstruct each estimate at that level's unlock time; later completions cannot train it.
@@ -166,7 +182,8 @@ public struct StudyMetrics: Sendable {
 
   private static func quantile(_ sorted: [Double], _ p: Double) -> Double {
     let position = Double(sorted.count - 1) * p
-    let lower = Int(position), upper = min(lower + 1, sorted.count - 1)
+    let lower = Int(position)
+    let upper = min(lower + 1, sorted.count - 1)
     return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - Double(lower))
   }
 }
