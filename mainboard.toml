@@ -10,15 +10,25 @@ test-app-mac = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcwork
 native-store-restart = '''mainboard proc timeout 2500 sh -eu -c '
 restart_fixture_id=$(/usr/bin/uuidgen)
 mkdir -p .build/Results
-for phase in seed reopen seedAbrupt reopenAbrupt; do
+for phase in seed reopen seedAbrupt reopenAbrupt seedVerification reopenVerification seedCandidate reopenCandidate; do
   phase_log=$(mktemp ".build/Results/NativeRestart.$restart_fixture_id.$phase.XXXXXX")
   printf "Native restart phase %s: %s\\n" "$phase" "$phase_log"
+  test_scope=AppTests/FrozenNativeStoreTests
+  case "$phase" in
+    seedVerification|reopenVerification|seedCandidate|reopenCandidate)
+      test_scope="$test_scope/persistedStoreReopensInAnotherTestHost()" ;;
+  esac
   phase_status=0
-  env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 600 --only-testing AppTests/FrozenNativeStoreTests --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$phase" --setting "USAGI_NATIVE_RESTART_ID=$restart_fixture_id" > "$phase_log" 2>&1 || phase_status=$?
+  env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 600 --only-testing "$test_scope" --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$phase" --setting "USAGI_NATIVE_RESTART_ID=$restart_fixture_id" > "$phase_log" 2>&1 || phase_status=$?
   cat "$phase_log"
-  if [ "$phase" = seedAbrupt ]; then
+  if [ "$phase" = seedAbrupt ] || [ "$phase" = seedVerification ] || [ "$phase" = seedCandidate ]; then
     test "$phase_status" -eq 65
-    /usr/bin/grep -Fq "NATIVE WAL READY FOR ABRUPT EXIT: $restart_fixture_id, PID " "$phase_log"
+    case "$phase" in
+      seedAbrupt) marker="NATIVE WAL READY FOR ABRUPT EXIT: $restart_fixture_id, PID " ;;
+      seedVerification) marker="NATIVE OPENING READY FOR ABRUPT EXIT: $restart_fixture_id, verification, PID " ;;
+      seedCandidate) marker="NATIVE OPENING READY FOR ABRUPT EXIT: $restart_fixture_id, candidate, PID " ;;
+    esac
+    /usr/bin/grep -Fq "$marker" "$phase_log"
     /usr/bin/grep -Fq "\"failedTests\": 1, \"skippedTests\": 0, \"expectedFailures\": 0" "$phase_log"
     /usr/bin/grep -Fq "\"testFailures\": [{\"failureText\": \"The test runner exited with code 86 before finishing running tests." "$phase_log"
   else

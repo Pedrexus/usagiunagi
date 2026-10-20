@@ -27,7 +27,23 @@ private final class FrozenStoreBundle {}
 
   private enum RestartPhase: String {
     case seed, reopen, seedAbrupt, reopenAbrupt
+    case seedVerification, reopenVerification, seedCandidate, reopenCandidate
     var abrupt: Bool { self == .seedAbrupt || self == .reopenAbrupt }
+    var seeds: Bool { [.seed, .seedAbrupt, .seedVerification, .seedCandidate].contains(self) }
+    var opening: OpeningPoint? {
+      switch self {
+      case .seedVerification, .reopenVerification: .verification
+      case .seedCandidate, .reopenCandidate: .candidate
+      default: nil
+      }
+    }
+  }
+  private enum OpeningPoint: String, Codable { case verification, candidate }
+  private struct OpeningRestartReceipt: Codable {
+    let id: UUID
+    let producerPID: Int32
+    let point: OpeningPoint
+    let files: [String: Data]
   }
   private struct RestartReceipt: Codable {
     let version: Int
@@ -60,7 +76,7 @@ private final class FrozenStoreBundle {}
       process.environment["USAGI_NATIVE_RESTART_ID"].flatMap(UUID.init(uuidString:)))
     let manager = FileManager.default
     let root = URL.applicationSupportDirectory.appending(path: "NativeStoreRestartFixtures")
-    if phase == .seed || phase == .seedAbrupt {
+    if phase.seeds {
       try manager.createDirectory(
         at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
     }
@@ -71,6 +87,13 @@ private final class FrozenStoreBundle {}
     let frozen = try frozenURL()
     let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
     let original = try family(in: frozen.deletingLastPathComponent())
+    if let point = phase.opening {
+      try await interruptedOpening(
+        point, seeds: phase.seeds, id: id, directory: directory, receiptURL: receiptURL,
+        original: original, expected: manifest.expected)
+      try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+      return
+    }
     let marker = "\nFresh iPhone test host \(id) \u{0}🐰"
     let accountID = NativeStoreBaseline.accounts[0]
     let now = Date(timeIntervalSince1970: Double(restartTimestamp))
@@ -216,8 +239,114 @@ private final class FrozenStoreBundle {}
       remove(directory)
       try #require(!manager.fileExists(atPath: directory.path))
       try manager.removeItem(at: receiptURL)
+    case .seedVerification, .reopenVerification, .seedCandidate, .reopenCandidate:
+      Issue.record("Opening interruption phase did not use its dedicated path")
     }
     try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+  }
+
+  private func interruptedOpening(
+    _ point: OpeningPoint, seeds: Bool, id: UUID, directory: URL, receiptURL: URL,
+    original: [String: Data], expected: NativeStoreBaseline.State
+  ) async throws {
+    let manager = FileManager.default
+    let process = ProcessInfo.processInfo
+    let selectorURL = directory.appending(path: "store-selection.plist")
+    if seeds {
+      try #require(
+        !manager.fileExists(atPath: directory.path) && !manager.fileExists(atPath: receiptURL.path))
+      try manager.createDirectory(at: directory, withIntermediateDirectories: false)
+      for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+      let prefix = directory.resolvingSymlinksInPath().path + "/"
+      let center = NotificationCenter.default
+      let observer = center.addObserver(
+        forName: .NSPersistentStoreCoordinatorStoresDidChange, object: nil, queue: nil
+      ) { notification in
+        let added = notification.userInfo?[NSAddedPersistentStoresKey] as? [NSPersistentStore] ?? []
+        let paths = added.compactMap { $0.url?.resolvingSymlinksInPath().path }
+        guard
+          paths.contains(where: {
+            $0.hasPrefix(prefix + (point == .verification ? "preparations/" : "generations/"))
+              && $0.hasSuffix(point == .verification ? "/verification/study.store" : "/study.store")
+          })
+        else { return }
+        do {
+          let files = try artifacts(in: directory)
+          let selector = try #require(files["store-selection.plist"])
+          let selection = try PropertyListDecoder().decode(AdoptionSelection.self, from: selector)
+          try #require(selection.phase == "preparing" && selection.validation == nil)
+          let path =
+            point == .verification
+            ? "preparations/\(selection.candidate)/verification/study.store"
+            : "generations/\(selection.candidate)/study.store"
+          try #require(paths.contains(prefix + path))
+          try #require(selection.source == original.mapValues(digest))
+          try #require(try family(in: directory) == original)
+          try #require(
+            try family(in: directory.appending(path: "generations/\(selection.retained)"))
+              == original)
+          let receipt = OpeningRestartReceipt(
+            id: id, producerPID: process.processIdentifier, point: point, files: files)
+          try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
+          let message =
+            "NATIVE OPENING READY FOR ABRUPT EXIT: \(id), \(point.rawValue), PID \(process.processIdentifier)\n"
+          try FileHandle.standardError.write(contentsOf: Data(message.utf8))
+          _exit(86)
+        } catch {
+          let message = "NATIVE OPENING CHECKPOINT FAILED: \(error)\n"
+          try? FileHandle.standardError.write(contentsOf: Data(message.utf8))
+          _exit(87)
+        }
+      }
+      defer { center.removeObserver(observer) }
+      _ = try await StudyStore.openApplication(in: directory)
+      Issue.record("The \(point.rawValue) store opened without the required process interruption")
+      return
+    }
+    let info = try receiptURL.resourceValues(
+      forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+    try #require(info.isRegularFile == true && info.isSymbolicLink == false)
+    try #require((info.fileSize ?? 0) > 0 && (info.fileSize ?? 0) <= 64 * 1024 * 1024)
+    let receipt = try PropertyListDecoder().decode(
+      OpeningRestartReceipt.self, from: Data(contentsOf: receiptURL))
+    try #require(receipt.id == id && receipt.point == point)
+    try #require(receipt.producerPID > 0 && receipt.producerPID != process.processIdentifier)
+    try #require(try artifacts(in: directory) == receipt.files)
+    let selector = try #require(receipt.files["store-selection.plist"])
+    let previous = try PropertyListDecoder().decode(AdoptionSelection.self, from: selector)
+    try #require(previous.phase == "preparing" && previous.validation == nil)
+    try #require(previous.source == original.mapValues(digest))
+    let abandoned = "generations/\(previous.candidate)/study.store"
+    try #require(
+      point == .candidate
+        ? receipt.files[abandoned]?.isEmpty == false : receipt.files[abandoned] == nil)
+    do {
+      let reopened = try await StudyStore.openApplication(in: directory)
+      try #require(try await reopened.nativeBaselineState() == expected)
+    }
+    let selectedBytes = try Data(contentsOf: selectorURL)
+    let selected = try PropertyListDecoder().decode(AdoptionSelection.self, from: selectedBytes)
+    try #require(selected.phase == "selected" && selected.validation?.count == 64)
+    try #require(selected.retained == previous.retained && selected.candidate != previous.candidate)
+    try #require(selected.source == previous.source)
+    do {
+      let reopened = try await StudyStore.openApplication(in: directory)
+      try #require(try await reopened.nativeBaselineState() == expected)
+    }
+    try #require(try Data(contentsOf: selectorURL) == selectedBytes)
+    let after = try artifacts(in: directory)
+    for (path, bytes) in receipt.files where path != "store-selection.plist" {
+      try #require(after[path] == bytes)
+    }
+    try #require(try family(in: directory) == original)
+    try #require(
+      try family(in: directory.appending(path: "generations/\(selected.retained)")) == original)
+    print(
+      "NATIVE OPENING REOPENED: \(id), \(point.rawValue), PID \(receipt.producerPID) → \(process.processIdentifier), 38 exact records, abandoned files unchanged"
+    )
+    remove(directory)
+    try #require(!manager.fileExists(atPath: directory.path))
+    try manager.removeItem(at: receiptURL)
   }
 
   @Test(arguments: AdoptionCase.allCases)

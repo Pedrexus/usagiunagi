@@ -186,7 +186,7 @@ jobs:
       - name: Hosted iOS tests
         if: matrix.device == 'iPhone 18 Pro'
         run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked test-app-ios
-      - name: Frozen store reopened after graceful and abrupt exits
+      - name: Frozen store reopened after saved work and interrupted adoption
         if: matrix.device == 'iPhone 18 Pro'
         run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-restart
       - name: Review, lesson, settings and dashboard acceptance
