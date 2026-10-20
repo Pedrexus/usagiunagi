@@ -82,10 +82,8 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testAccountExpiryUsesNativeReauthenticationAndPreservesForcedEmail() {
     continueAfterFailure = false
-    guard
-      let app = unavailableNativeFixture(
-        "Expired credentials with a saved account, wrong-account rejection and reconnection")
-    else { return }
+    let app = fixtureApplication(["--expired-account-fixture", "--light-fixture"])
+    launchFixture(app)
     let warning = app.alerts["Logged out"]
     XCTAssertTrue(warning.waitForExistence(timeout: 10))
     XCTAssertTrue(warning.buttons["Manage tokens on WaniKani"].exists)
@@ -121,9 +119,8 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testHibernationWarningStaysDismissedAcrossNativeTabChanges() {
     continueAfterFailure = false
-    guard
-      let app = unavailableNativeFixture("Dismissible hibernation warning on a connected account")
-    else { return }
+    let app = fixtureApplication(["--hibernating-account-fixture", "--light-fixture"])
+    launchFixture(app)
     let warning = app.alerts["Account is Hibernating"]
     XCTAssertTrue(warning.waitForExistence(timeout: 10))
     XCTAssertTrue(warning.buttons["Open WaniKani Website"].exists)
@@ -140,8 +137,9 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testAccountWarningWaitsForReviewCloseAndKeepsTheAnswerDraft() {
     continueAfterFailure = false
-    guard let app = unavailableNativeFixture("Credential expiry while a typed review draft is open")
-    else { return }
+    let app = launchNativeHome([
+      "--deferred-account-fixture", "--manual-review-fixture", "--light-fixture",
+    ])
     let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
       .firstMatch
     XCTAssertTrue(start.waitForExistence(timeout: 5))
@@ -166,11 +164,7 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testNativeLoginTokenFailuresHibernationAndHomeNavigation() {
     continueAfterFailure = false
-    guard
-      let app = unavailableNativeFixture(
-        "Disconnected credentials with rejected, hibernating and valid token responses, then disconnect"
-      )
-    else { return }
+    let app = fixtureApplication(["--disconnected-fixture", "--light-fixture"])
     defer { clearFixture(app) }
     for token in ["rejected", "hibernating", "fixture-token"] {
       app.terminate()
@@ -214,9 +208,7 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testNativeLoginUsesOnlyTheTokenAndSubmitsFromKeyboard() {
     continueAfterFailure = false
-    guard
-      let app = unavailableNativeFixture("Disconnected credentials for keyboard token submission")
-    else { return }
+    let app = fixtureApplication(["--disconnected-fixture", "--light-fixture"])
     launchFixture(app)
     defer { clearFixture(app) }
     let token = app.secureTextFields["login.token"]
@@ -317,8 +309,9 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testColdStudyLinkWaitsForSignInBeforeOpeningTheReview() {
     continueAfterFailure = false
-    guard let app = unavailableNativeFixture("Cold review link while credentials are disconnected")
-    else { return }
+    let app = fixtureApplication([
+      "--disconnected-fixture", "--manual-review-fixture", "--light-fixture",
+    ])
     defer { clearFixture(app) }
     openFixture(URL(string: "usagiunagi:///reviews")!, in: app)
     let token = app.secureTextFields["login.token"]
@@ -363,13 +356,12 @@ final class ReviewFlowTests: XCTestCase {
     }
   }
 
-  @MainActor func testShellFullRefreshUpdatesProgressAndKeepsBlockingAfterForeground() {
+  @MainActor func testShellFullRefreshKeepsCachedStudyAvailableAfterForeground() throws {
     continueAfterFailure = false
-    guard
-      let app = unavailableNativeFixture(
-        "Held full refresh with deterministic progress and foreground blocking on the level-24 account"
-      )
-    else { return }
+    let token = "00000000-0000-4000-8000-000000000005"
+    let app = fixtureApplication([
+      "--home-fixture", "--held-refresh-fixture", "--fixture-event-token", token, "--light-fixture",
+    ])
     launchFixture(app)
     defer { clearFixture(app) }
     let home = app.collectionViews["home.dashboard"]
@@ -385,16 +377,38 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(indicator.waitForExistence(timeout: 5))
     XCTAssertEqual(indicator.label, "WaniKani sync")
     attachHomeScreenshot("Native full refresh progress")
-    XCTAssertFalse(app.buttons["app.settings"].isEnabled)
+    let refresh = app.buttons["Refresh"]
+    XCTAssertTrue(refresh.exists)
+    XCTAssertFalse(refresh.isEnabled)
+    XCTAssertTrue(app.buttons["app.settings"].isEnabled)
+    XCTAssertTrue(app.staticTexts["app.level"].label.contains("864"))
     XCUIDevice.shared.press(.home)
     activateFixture(app)
     XCTAssertTrue(indicator.waitForExistence(timeout: 5))
-    XCTAssertFalse(app.buttons["app.settings"].isEnabled)
+    XCTAssertFalse(refresh.isEnabled)
+    XCTAssertTrue(app.buttons["app.settings"].isEnabled)
+    XCTAssertTrue(app.staticTexts["app.level"].label.contains("864"))
+    app.buttons["app.settings"].tap()
+    XCTAssertTrue(app.buttons["settings.page.lessons"].waitForExistence(timeout: 5))
+    app.buttons["Done"].firstMatch.tap()
+    XCTAssertTrue(home.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["app.level"].label.contains("864"))
+    try requestNativeURL(URL(string: "usagiunagi:///fixture/release-refresh/\(token)")!)
+    let event = app.descendants(matching: .any).matching(identifier: "fixture.eventStatus")
+      .firstMatch
+    let released = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label == %@", "Isolated refresh released"), object: event)
+    XCTAssertEqual(XCTWaiter.wait(for: [released], timeout: 10), .completed)
     let completed = XCTNSPredicateExpectation(
       predicate: NSPredicate(format: "exists == false"), object: indicator)
     XCTAssertEqual(XCTWaiter.wait(for: [completed], timeout: 20), .completed)
+    XCTAssertTrue(refresh.isEnabled)
     XCTAssertTrue(app.buttons["app.settings"].isEnabled)
     XCTAssertEqual(app.staticTexts["app.username"].label, "Fred")
+    let updated = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label CONTAINS %@", "865"),
+      object: app.staticTexts["app.level"])
+    XCTAssertEqual(XCTWaiter.wait(for: [updated], timeout: 5), .completed)
     app.buttons["app.settings"].tap()
     XCTAssertTrue(app.buttons["settings.page.lessons"].waitForExistence(timeout: 5))
     app.buttons["Done"].firstMatch.tap()
@@ -411,11 +425,7 @@ final class ReviewFlowTests: XCTestCase {
     continueAfterFailure = false
     XCUIDevice.shared.orientation = .portrait
     addTeardownBlock { await MainActor.run { XCUIDevice.shared.orientation = .portrait } }
-    guard
-      let app = unavailableNativeFixture(
-        "Level-24 Home distribution: 1 Guru, 12 Apprentice, 4 lessons, 8 locked kanji and 2,056 burned"
-      )
-    else { return }
+    let app = fixtureApplication(["--home-fixture", "--home-progress-fixture", "--light-fixture"])
     launchFixture(app)
     defer { clearFixture(app) }
     let home = app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
@@ -458,11 +468,8 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testHomeDisablesEmptyStudyQueuesAndHidesVacationActions() {
     continueAfterFailure = false
-    for fixture in ["HomeEmptyFixture", "HomeLimitFixture", "HomeVacationFixture"] {
-      guard
-        let app = unavailableNativeFixture(
-          "\(fixture): original empty queues, apprentice limit or vacation Home state")
-      else { return }
+    for fixture in ["--home-empty-fixture", "--home-limit-fixture", "--home-vacation-fixture"] {
+      let app = fixtureApplication(["--home-fixture", fixture, "--light-fixture"])
       launchFixture(app)
       defer { clearFixture(app) }
       XCTAssertTrue(
@@ -474,7 +481,7 @@ final class ReviewFlowTests: XCTestCase {
       let lessons = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Lessons"))
         .firstMatch
       let choose = app.buttons["Choose lessons"]
-      if fixture == "HomeVacationFixture" {
+      if fixture == "--home-vacation-fixture" {
         XCTAssertTrue(
           app.descendants(matching: .any).matching(identifier: "app.vacation").firstMatch.exists)
         XCTAssertFalse(reviews.exists)
@@ -489,8 +496,8 @@ final class ReviewFlowTests: XCTestCase {
       } else {
         XCTAssertFalse(lessons.isEnabled)
         XCTAssertFalse(choose.isEnabled)
-        XCTAssertEqual(reviews.isEnabled, fixture != "HomeEmptyFixture")
-        if fixture == "HomeLimitFixture" {
+        XCTAssertEqual(reviews.isEnabled, fixture != "--home-empty-fixture")
+        if fixture == "--home-limit-fixture" {
           XCTAssertTrue(lessons.label.contains("Apprentice limit reached"))
         }
       }
@@ -827,7 +834,7 @@ final class ReviewFlowTests: XCTestCase {
     continueAfterFailure = false
     guard
       let app = unavailableNativeFixture(
-        "Combined-Anki review feedback with an injected Reduce Motion environment, without changing system preferences"
+        "A device with system Reduce Motion already enabled; the public SwiftUI environment value is read-only and this test never changes system preferences"
       )
     else { return }
     defer { clearFixture(app) }
@@ -1064,10 +1071,9 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testCompleteSampleReviewsThroughTypedAnswers() {
     continueAfterFailure = false
-    guard
-      let app = unavailableNativeFixture(
-        "Original four-subject typed review queue (私自身, 私, 自, 身), completing all five questions")
-    else { return }
+    let app = fixtureApplication([
+      "--sample-review-fixture", "--manual-review-fixture", "--light-fixture",
+    ])
     launchFixture(app)
     defer { clearFixture(app) }
     startReviews(in: app)

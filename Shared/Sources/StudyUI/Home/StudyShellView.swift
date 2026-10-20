@@ -21,7 +21,6 @@ import SwiftUI
   public var avatarRevision = 0
   public var onVacation = false
   public var progress: Progress?
-  public var blockingProgress: Progress?
   public init() {}
 }
 
@@ -92,7 +91,6 @@ public struct StudyShellView<Content: View>: View {
       }
       content.ignoresSafeArea(.container, edges: .bottom)
     }.background(.background).tint(StudyPalette.radical)
-      .disabled(state.blockingProgress != nil)
       .onAppear { isVisible = true }
       .onDisappear { isVisible = false }
       .alert(

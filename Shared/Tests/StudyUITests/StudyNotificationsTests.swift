@@ -147,7 +147,7 @@ import UserNotifications
     await model.change(.badge, enabled: true)
     #expect(probe.requests == 1 && !model.enabled(.badge) && model.busy)
     await gate.resume()
-    await first.value
+    #expect(await first.value == nil)
     #expect(!model.busy && model.enabled(.reviews))
   }
   @Test func anAwaitedPermissionStatusCannotStartTwoDefaultRequests() async {
@@ -161,7 +161,7 @@ import UserNotifications
     await model.requestAuthorizationIfNeeded()
     #expect(model.busy && probe.requests == 0)
     await gate.resume()
-    await first.value
+    #expect(await first.value == nil)
     #expect(!model.busy && probe.requests == 1)
   }
   @Test func backgroundUpdatesNeverRequestPermissionButExplicitSignInCan() async {
@@ -212,7 +212,7 @@ import UserNotifications
     #expect(model.enabled(.badge))
     await gate.resume()
     await first.value
-    await second.value
+    #expect(await second.value == nil)
     if case .systemSettings? = firstNotice {
     } else {
       Issue.record("Another window overwrote the first permission notice")

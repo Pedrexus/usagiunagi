@@ -53,6 +53,55 @@ After production changes and original-app usability comparison, update/run tests
 
 The retained settings host/single-target lifecycle conversion remains separate. The blocked main-app P0c store-opening draft was not applied or changed by this watch-local cache work. Tests remain deferred under the owner's implementation-first order.
 
+## Watch lifecycle audit, October 21
+
+This is source, installed-SDK and official-documentation review at `25e68d3e`, not an implemented conversion or an upgrade receipt. It does not revise the earlier compiler evidence or the historical main-app P0c status above. No watch source, bundle identifier, provisioning setting or installed data changed during this audit.
+
+Apple's [TN3157](https://developer.apple.com/documentation/technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit) identifies a SwiftUI lifecycle in a single-target watch app as the destination. The widget remains a separate WidgetKit extension. The current content is already `WatchSettingsView`; `SettingsController` only wraps it in `WKHostingController`, and `App/Complication/Base.lproj/Interface.storyboard` contains an empty host scene. Removing that wrapper alone does not consolidate the executable targets or prove data continuity.
+
+### Installed SDK constraints
+
+The selected Xcode 27 WatchOS SDK's `SwiftUI.swiftmodule/arm64_32-apple-watchos.swiftinterface` declares `WKExtensionDelegateAdaptor` for an `NSObject` conforming to `WKExtensionDelegate`, introduced in watchOS 7 and deprecated in 9.2. `WKApplicationDelegateAdaptor` instead requires `WKApplicationDelegate` and is available from watchOS 7. Apple's [extension adaptor documentation](https://developer.apple.com/documentation/swiftui/wkextensiondelegateadaptor) explicitly describes an extension using the SwiftUI lifecycle and one adaptor declared in its `App`; the [application delegate documentation](https://developer.apple.com/documentation/watchkit/wkapplicationdelegate) describes the single-target app. These are different lifecycle owners, not interchangeable annotations selected only by availability.
+
+The installed `XCBuild.framework/.../XCBSpecifications.ideplugin/Contents/Resources/watchOSShared.xcspec` marks `com.apple.product-type.watchkit2-extension` as an error when the deployment target is watchOS/watchSimulator 9.2 or later. Its inherited linker entry is `_WKExtensionMain`. The existing watch targets deploy to 9.0. Raising the old extension's deployment target to 27 is not a migration and encounters this product constraint. Neither the API signatures nor a successful compile establish that changing the current executable entry/launch path is safe; a lifecycle change needs actual cold-launch evidence.
+
+### Optional deprecated dual-target stage
+
+A narrowly scoped intermediate change could put an `@main App` in the existing `.watchapp.c` extension's Sources, use exactly one `@WKExtensionDelegateAdaptor(ExtensionDelegate.self)`, and host `WatchSettingsView` in its `WindowGroup`. It would remove `SettingsController`, the empty storyboard/resource reference and obsolete `IBSC_MODULE`. The legacy `WKExtensionDelegateClassName` registration would need removal so the adaptor is the sole intended delegate owner. Keep the existing extension point and watch-app relationship, ClockKit principal class, custom group/widget metadata, entitlements, widget embedding and all current bundle identifiers unchanged. Do not add the widget's separate `@main` source to this target or invent a linker-entry override.
+
+This stage keeps the `.watchapp.c` executable and private-defaults identity structurally intact; it therefore avoids introducing the final collapse's cross-domain transfer. It still needs a compile, cold launch, proof that `Bundle.main` is the expected extension, preserved defaults and exactly one lifecycle/transport owner. It retains a deprecated adaptor, delegate and extension product, cannot support a 9.2+ deployment target in that graph, and does not complete the requested single-target modernization. It is an optional reversible stage, not the final answer.
+
+### Final single-target destination and identity boundary
+
+The smallest final conversion would convert the existing watch-app target in place into a normal watch application, move the extension's sources/privacy resource and required configuration into it, use an `@main App` with [`WKApplicationDelegateAdaptor`](https://developer.apple.com/documentation/swiftui/wkapplicationdelegateadaptor) and `WKApplicationDelegate`, and remove the old extension target and storyboard host. Move the widget dependency/embedding from the extension to the watch app. Move the ClockKit principal-class and custom group/widget identifiers to the application configuration, retain its migration-only implementation, and apply the authorized App Group entitlement to the actual writer and widget reader. The iOS embed and existing watch-app scheme can continue to reference the retained watch-app target; their built products and launch behavior still require verification.
+
+Keep the iOS `com.davidsansome.wanikani`, watch app `com.davidsansome.wanikani.watchapp`, and widget `com.davidsansome.wanikani.watchapp.c.widgets` identities unless the owner approves a separate change. The `.watchapp.c` extension necessarily ceases to be an active executable if that target is removed. Preserving its historical data is therefore a separate requirement; retaining every old executable bundle identity and removing that executable are not the same operation. Changing the surviving watch app's identifier to `.watchapp.c` must not be used as a shortcut without explicit approval and installed-upgrade proof.
+
+Retain the existing one-time startup guard, WatchConnectivity receiver and background-task completion semantics during the lifecycle conversion. A separate adoption of SwiftUI's newer background-task modifiers is unnecessary for the minimal migration and must not create a second completion owner. Keep the wire keys, packet validation, projections, WidgetKit kind and migration widget identifier stable.
+
+### Concrete private-defaults and mirror overwrite hazard
+
+`WatchCompanionCache.state` currently reads `DataSource` and `LastKnownData` only from `UserDefaults.standard` (`App/ComplicationExtension/WatchCompanionCache.swift:107`). `ExtensionDelegate.applicationDidFinishLaunching` immediately calls `WatchHelper.reloadComplications` before a phone packet arrives (`ExtensionDelegate.swift:24`); that path atomically publishes the current standard-default state. The ClockKit migrator also publishes before returning a widget configuration (`ComplicationController.swift:38`), so it can reach publication independently of the settings UI.
+
+If a collapsed app starts in a new private domain without those values, the current integer lookup returns Reviews (`0`) and the snapshot is nil. Unchanged startup would replace a valid shared `study-complication.plist` with that empty state. An atomic write does not prevent this logical data loss. A migration must restore or verify the authoritative prior state before **any** first publication, including a migration callback, rather than wait for the settings view or the next phone message. It must distinguish an absent key from an explicitly saved Reviews value.
+
+The App Group mirror can help only when a prior installed version actually wrote it and the new signed app has access. An upgrade that skips this WidgetKit checkpoint may have only `.watchapp.c` private defaults. The retrieved Apple conversion/delegate documentation does not establish that removing this project's extension transfers its private defaults into the new app, or that opening `UserDefaults(suiteName: oldBundleIdentifier)` grants access to the removed extension's container. Do not assume either. Prove a supported transfer/retention path with the actual converted and signed product before shipping the collapse; an unavailable path remains a blocker, not permission to silently reset or delete settings.
+
+Preserve the exact raw `DataSource`, including historical `2` and unknown values, and the complete valid `LastKnownData` packet. An old packet may correctly produce stale/unavailable rendering while still retaining the original Last Updated information. The incoming-message two-hour cutoff is not a reason to discard historical saved state during upgrade. No automatic legacy-default deletion is proposed.
+
+### Required acceptance before final retirement
+
+| Gate | Required evidence |
+| --- | --- |
+| Signed identity and access | Actual team/profile authorization for the surviving app/widget identifiers and App Group; verify the installed executable and reader/writer entitlements. Checked-in upstream profiles and unsigned builds do not grant those rights. |
+| Skip-version state continuity | Upgrade a same-identity signed original private-defaults-only installation directly to the candidate, and also upgrade through the mirror-writing version, with no new phone packet. Verify exact source values (`0`, `1`, legacy `2`, unknown), valid zero counts, complete/stale saved packets and Last Updated. Verify first startup and direct migrator publication cannot replace preserved state with empty defaults. |
+| Lifecycle and settings | Cold launch, repeated launch, settings navigation/picker/reopen, VoiceOver and accessibility; demonstrate one delegate and one receiver owner and the expected executable/defaults identity. |
+| Installed faces | Exercise all historically advertised ClockKit families through the installed migration, including the default descriptor case; verify the principal-class lookup, unchanged kind/widget identifier, gallery availability and the actual resulting face layouts. Four new accessory families alone are insufficient evidence. |
+| Background transport | Paired real-device delivery, activation failure/retry, pending-content/KVO drain and queued main-actor packet publication before completion; retain snapshot-task completion behavior and verify rejected packets do not erase saved data. |
+| Packaging and deployment | Verify final target/product membership, one app entry per executable, widget embedding, configuration/entitlements and supported deployment target; compile and cold-launch the actual final graph. |
+
+These are pending acceptance requirements, not results. A compiler pass can establish source/package compatibility, but cannot establish private-data continuity, installed-face replacement or paired/background delivery. No final single-target conversion is accepted by this document.
+
 ## Primary references
 
 - [Apple: Migrating ClockKit complications to WidgetKit](https://developer.apple.com/documentation/widgetkit/converting-a-clockkit-app)

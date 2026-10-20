@@ -1,8 +1,12 @@
 # Swift and SwiftData migration specification
 
-Updated October 20, 2026. Status: specified for staged implementation; acceptance gates remain open. This is the execution specification for the remaining modernization. [TASKS.md](TASKS.md) tracks current status; historical validation receipts remain evidence for their stated source and scope. A plan item is complete only after its acceptance gate passes. Current source/dependency retirement is untested; actual product linkage and complete feature parity remain open.
+Updated October 21, 2026. Implementation is applied and scoped local validation passes; final acceptance remains open. [TASKS.md](TASKS.md) tracks current work. The [current validation checkpoint](Implementation/2026-10-20-original-flow.md#native-navigation-and-final-test-ports) records 544 shared functions on Mac/iPhone, 73 hosted iPhone functions, 22 protobuf cases, Debug/Release builds and Release main-executable linkage inspection. These do not establish rendered usability or signed-device acceptance.
 
-## Current implementation order — October 20
+The actual production opener passes disposable frozen base/WAL adoption, exact 38-record preservation, lease refusal, writes and exact 39-record abrupt-process reopens, fresh installs and failed-preparation retry on Mac. Shared refusal/rollback-image tests pass on Mac/iOS. No normal account/store was migrated. Wider G7 interruption/cancellation, disk-full/file-protection/power-loss failures, frozen-store iOS adoption and independent historical decoder freezing remain open; V1 is unchanged. See the [opening evidence](Implementation/2026-10-20-native-store-opening.md).
+
+The owner’s production-first, original-source-comparison-second, tests-last order has reached final test ports. All UI launch/open/activation helpers require the explicit DEBUG fixture marker; cleanup only terminates. Supported UI fixtures are ported at source level, with rendered acceptance pending and Reduce Motion requiring a preconfigured device. Earlier planning/status statements below are preserved as an October 20 checkpoint and are superseded by this introduction and TASKS for current execution evidence.
+
+## Historical implementation checkpoint — October 20
 
 The owner now requests **all production changes first, original-app usability comparison second, tests last**. That supersedes older tests-before-deletion sequencing below. Acceptance contracts, data preservation, exact writer assertion mappings and physical/signed gates remain required; source deletion is not acceptance. Old tests remain unmodified while production retirement proceeds and are not currently expected to compile. Do not run the legacy UI harness before its fixture launches/cleanup are ported: its retired flags must never fall through to a real production account.
 

@@ -10,19 +10,30 @@
   @MainActor enum NativeStudyFixture {
     private static var materialEvent:
       (token: String, environment: Task<(StudyStore, StudyDownload), any Error>)?
+    private static var accountTask: Task<Void, Never>?
+    private static var refreshEvent: (token: String, server: FixtureServer)?
 
     /// Only an explicitly armed synthetic account can accept this one-shot acceptance event.
     /// The owner must publish the returned task's result after it completes, including failures.
     static func receive(_ url: URL) -> Task<String, Never>? {
       let arguments = ProcessInfo.processInfo.arguments
       guard arguments.contains("--review-fixture"),
-        arguments.contains("--material-conflict-fixture"),
-        let event = materialEvent,
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
         components.scheme == "usagiunagi", components.host?.isEmpty != false,
-        components.percentEncodedPath == "/fixture/material-conflict/\(event.token)",
         components.user == nil, components.password == nil, components.port == nil,
         components.fragment == nil, components.query == nil
+      else { return nil }
+      if arguments.contains("--held-refresh-fixture"), let event = refreshEvent,
+        components.percentEncodedPath == "/fixture/release-refresh/\(event.token)"
+      {
+        refreshEvent = nil
+        return Task {
+          await event.server.releaseRefresh()
+            ? "Isolated refresh released" : "No isolated refresh was waiting"
+        }
+      }
+      guard arguments.contains("--material-conflict-fixture"), let event = materialEvent,
+        components.percentEncodedPath == "/fixture/material-conflict/\(event.token)"
       else { return nil }
       materialEvent = nil
       let reject = arguments.contains("--material-conflict-failure-fixture")
@@ -44,13 +55,60 @@
     }
     static func make() -> StudyAppAssembly {
       let arguments = ProcessInfo.processInfo.arguments
+      precondition(
+        arguments.contains("--review-fixture"), "Native fixtures require explicit opt-in")
       let environment = Task { try await reviewFixtureStore() }
+      let deferredAccount = arguments.contains("--deferred-account-fixture")
+      let expiredAccount = arguments.contains("--expired-account-fixture") || deferredAccount
+      let hibernatingAccount = arguments.contains("--hibernating-account-fixture")
+      let server = FixtureServer(
+        environment: environment, expiredAccount: expiredAccount,
+        hibernatingAccount: hibernatingAccount,
+        heldRefresh: arguments.contains("--held-refresh-fixture"))
+      let model = StudyAppModel(
+        credentials: FixtureCredentials(
+          arguments.contains("--disconnected-fixture") ? nil : "fixture"),
+        client: server, openStore: { try await environment.value.0 })
+      accountTask?.cancel()
+      accountTask = nil
+      if expiredAccount || hibernatingAccount {
+        accountTask = Task {
+          await model.restore()
+          guard model.restorationComplete else { return }
+          do {
+            if deferredAccount {
+              let cache = try await environment.value.0
+              for await _ in await cache.changes() {
+                try Task.checkCancellation()
+                if let saved = try await cache.session(accountID: "review-fixture"),
+                  !saved.session.isPractice,
+                  saved.session.items.values.first?.isLesson == false
+                {
+                  break
+                }
+              }
+            }
+            try Task.checkCancellation()
+            await model.refresh()
+          } catch is CancellationError {
+            return
+          } catch {
+            model.error =
+              "Could not prepare the isolated account fixture: \(error.localizedDescription)"
+          }
+        }
+      }
       materialEvent = nil
-      if arguments.contains("--review-fixture"), arguments.contains("--material-conflict-fixture"),
-        let index = arguments.firstIndex(of: "--fixture-event-token"),
+      refreshEvent = nil
+      if let index = arguments.firstIndex(of: "--fixture-event-token"),
         arguments.indices.contains(index + 1), UUID(uuidString: arguments[index + 1]) != nil
       {
-        materialEvent = (arguments[index + 1], environment)
+        if arguments.contains("--material-conflict-fixture") {
+          materialEvent = (arguments[index + 1], environment)
+        }
+        if arguments.contains("--held-refresh-fixture") {
+          refreshEvent = (arguments[index + 1], server)
+        }
       }
       let suite = "dev.usagiunagi.mac-review-fixture"
       let defaults = UserDefaults(suiteName: suite)!
@@ -69,6 +127,9 @@
         preferences.sessionOptions.groupMeaningReading = true
         preferences.sessionOptions.incorrectAnswerDelay = 0
       }
+      if arguments.contains("--sample-review-fixture") {
+        preferences.sessionOptions.skipKanjiReadings = true
+      }
       defaults.set(try? JSONEncoder().encode(preferences), forKey: "native.reviewPreferences")
       if arguments.contains("--catalog-fixture") {
         let lessons = DefaultsStudyLessonPreferences(defaults: defaults)
@@ -80,13 +141,23 @@
         subjectPreferences.showPreviousLevelGraph = true
         subjects.value = subjectPreferences
       }
+      if arguments.contains("--home-fixture") {
+        let subjects = DefaultsStudySubjectPreferences(defaults: defaults)
+        var value = subjects.value
+        value.showPreviousLevelGraph = false
+        subjects.value = value
+        if arguments.contains("--home-limit-fixture") {
+          let lessons = DefaultsStudyLessonPreferences(defaults: defaults)
+          var value = lessons.value
+          value.apprenticeLimit = 12
+          lessons.value = value
+        }
+      }
       let (catalog, fontConfiguration) = StudyFontFixture.make()
       let audioConfiguration = URLSessionConfiguration.ephemeral
       audioConfiguration.protocolClasses = [AudioFixtureProtocol.self]
       return StudyAppAssembly(
-        model: StudyAppModel(
-          credentials: FixtureCredentials(), client: FixtureServer(environment: environment),
-          openStore: { try await environment.value.0 }),
+        model: model,
         fonts: StudyFontLibrary(
           catalog: catalog,
           preferences: DefaultsStudyFontPreferences(defaults: defaults),
@@ -108,7 +179,7 @@
             guard let url = request.url,
               let bytes = Data(
                 base64Encoded:
-                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO9WlVQAAAAASUVORK5CYII="
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII="
               ),
               let response = HTTPURLResponse(
                 url: url, statusCode: 200, httpVersion: nil,
@@ -165,7 +236,8 @@
       }
     }
     private final class FixtureCredentials: StudyCredentialStore {
-      private var token: String? = "fixture"
+      private var token: String?
+      init(_ token: String?) { self.token = token }
       func load() -> String? { token }
       func save(_ token: String) { self.token = token }
       func remove() { token = nil }
@@ -173,14 +245,27 @@
     /// Typed in-memory server; production HTTP validation remains covered by StudyCore tests.
     private actor FixtureServer: WaniKaniService {
       let environment: Task<(StudyStore, StudyDownload), any Error>
+      private let expiredAccount: Bool
+      private let hibernatingAccount: Bool
+      private let heldRefresh: Bool
+      private var refreshReleased = false
+      private var refreshWaiter: (id: UUID, continuation: CheckedContinuation<Void, any Error>)?
       private var state: StudyDownload?
       nonisolated func reconfigured(baseURL: URL) throws -> any WaniKaniService { self }
-      init(environment: Task<(StudyStore, StudyDownload), any Error>) {
+      init(
+        environment: Task<(StudyStore, StudyDownload), any Error>,
+        expiredAccount: Bool, hibernatingAccount: Bool, heldRefresh: Bool
+      ) {
         self.environment = environment
+        self.expiredAccount = expiredAccount
+        self.hibernatingAccount = hibernatingAccount
+        self.heldRefresh = heldRefresh
       }
       private func value(_ token: String) async throws -> StudyDownload {
         if token == "rejected" { throw WaniKaniClient.APIError.unauthorized }
         if token == "hibernating" { throw StudySignInError.hibernating }
+        if token == "fixture", expiredAccount { throw WaniKaniClient.APIError.unauthorized }
+        if token == "fixture", hibernatingAccount { throw StudySignInError.hibernating }
         if let state { return state }
         let value = try await environment.value.1
         state = value
@@ -188,18 +273,58 @@
       }
       func account(token: String) async throws -> WaniKaniAccount {
         let data = try await value(token)
+        if token == "other-account-token" {
+          return .init(
+            id: "other-review-fixture", username: "Another synthetic account", level: 1,
+            onVacation: false)
+        }
         return .init(
           id: data.accountID, username: data.profile.username, level: data.profile.level,
           onVacation: data.profile.vacationStartedAt != nil, startedAt: data.profile.startedAt,
           profile: data.profile)
       }
       func download(token: String) async throws -> StudyDownload {
-        let data = try await value(token)
+        var data = try await value(token)
+        if heldRefresh, !refreshReleased {
+          let id = UUID()
+          try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation {
+              (continuation: CheckedContinuation<Void, any Error>) in
+              if Task.isCancelled {
+                continuation.resume(throwing: CancellationError())
+              } else if refreshWaiter != nil {
+                continuation.resume(throwing: StudyUploadError.alreadyRunning)
+              } else {
+                refreshWaiter = (id, continuation)
+              }
+            }
+          } onCancel: {
+            Task { await self.cancelRefresh(id) }
+          }
+        }
+        try Task.checkCancellation()
+        if heldRefresh, let index = data.assignments.firstIndex(where: { $0.subjectID == 50_001 }) {
+          data.assignments[index].srsStage = 5
+          data.assignments[index].passedAt = 42
+          state = data
+        }
         return StudyDownload(
           accountID: data.accountID, profile: data.profile,
           subjects: data.subjects, assignments: data.assignments, materials: data.materials,
           levels: data.levels, statistics: data.statistics, voices: data.voices,
           systems: data.systems)
+      }
+      func releaseRefresh() -> Bool {
+        guard let waiter = refreshWaiter else { return false }
+        refreshWaiter = nil
+        refreshReleased = true
+        waiter.continuation.resume()
+        return true
+      }
+      private func cancelRefresh(_ id: UUID) {
+        guard let waiter = refreshWaiter, waiter.id == id else { return }
+        refreshWaiter = nil
+        waiter.continuation.resume(throwing: CancellationError())
       }
       func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment? {
         try await value(token).assignments.first { $0.subjectID == subjectID }
@@ -571,7 +696,14 @@
     }
     private static func reviewFixtureStore() async throws -> (StudyStore, StudyDownload) {
       let cache = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
+      let arguments = ProcessInfo.processInfo.arguments
       var profile = StudyAccountProfile(username: "Synthetic review fixture")
+      if ProcessInfo.processInfo.arguments.contains("--expired-account-fixture")
+        || ProcessInfo.processInfo.arguments.contains("--hibernating-account-fixture")
+        || ProcessInfo.processInfo.arguments.contains("--deferred-account-fixture")
+      {
+        profile.username = "dummy"
+      }
       let statistics = ProcessInfo.processInfo.arguments.contains("--statistics-fixture")
       profile.level = statistics ? 24 : 1
       profile.maxLevelGranted = 60
@@ -780,6 +912,73 @@
             serverID: 0, value: .init(subjectID: 3864, meaningNote: StudyMaterial.exclusionMarker),
             pending: false, legacyRevision: 0)
         ]
+      }
+      if arguments.contains("--sample-review-fixture") {
+        profile.level = 8
+        fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+        let readings: [Int64: String] = [923: "し", 578: "じ", 689: "しん"]
+        fixture.subjects = catalogFixtureSubjects().filter {
+          [3864, 923, 578, 689].contains($0.id)
+        }
+        .map { source in
+          var value = source
+          if let reading = readings[value.id] {
+            value.readings = [.init(reading, isPrimary: true, kind: .onyomi)]
+          }
+          return value
+        }
+        fixture.assignments = fixture.subjects.map { subject in
+          var value = CatalogAssignment(
+            id: 100_000 + subject.id, subjectID: subject.id, kind: subject.kind)
+          value.level = subject.level
+          value.srsStage = 2
+          value.startedAt = 42
+          value.availableAt = 42
+          return value
+        }
+      }
+      if arguments.contains("--home-fixture") {
+        profile.username = "Fred"
+        profile.level = 24
+        if arguments.contains("--home-vacation-fixture") { profile.vacationStartedAt = 42 }
+        fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+        func appendSubject(id: Int64, kind: SubjectKind, level: Int, stage: Int?) {
+          var value = CatalogSubject(id: id, kind: kind)
+          value.level = level
+          value.japanese = kind == .kanji ? "一" : "一つ"
+          value.meanings = [.init("Saved item \(id)", role: .primary)]
+          value.readings = [
+            .init(kind == .kanji ? "いち" : "ひとつ", isPrimary: true, kind: .unknown)
+          ]
+          fixture.subjects.append(value)
+          guard let stage else { return }
+          var assignment = CatalogAssignment(id: 100_000 + id, subjectID: id, kind: kind)
+          assignment.level = level
+          assignment.srsStage = stage
+          assignment.unlockedAt = 42
+          if stage > 0 {
+            assignment.startedAt = 42
+            assignment.availableAt = stage == 9 ? nil : stage >= 5 ? 4_070_908_800 : 42
+          }
+          if stage >= 5 { assignment.passedAt = 42 }
+          if stage == 9 { assignment.burnedAt = 42 }
+          fixture.assignments.append(assignment)
+        }
+        let empty = arguments.contains("--home-empty-fixture")
+        for index in 0..<25 {
+          let stage: Int? = empty || index >= 17 ? nil : index == 0 ? 5 : index < 13 ? 2 : 0
+          appendSubject(id: 50_000 + Int64(index), kind: .kanji, level: 24, stage: stage)
+        }
+        if arguments.contains("--home-progress-fixture")
+          || arguments.contains("--held-refresh-fixture")
+        {
+          // 863 burned kanji plus the current Guru kanji preserve the original header count of 864.
+          for index in 0..<2056 {
+            appendSubject(
+              id: 60_000 + Int64(index), kind: index < 863 ? .kanji : .vocabulary,
+              level: 23, stage: 9)
+          }
+        }
       }
       _ = try await cache.importLegacyAccount(
         fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",

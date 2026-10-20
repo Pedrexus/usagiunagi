@@ -65,7 +65,7 @@ private actor AvatarTransport {
 struct StudyAvatarLoadingTests {
   private let png = Data(
     base64Encoded:
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO9WlVQAAAAASUVORK5CYII="
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII="
   )!
 
   @Test(arguments: ["", "custom@example.invalid"])

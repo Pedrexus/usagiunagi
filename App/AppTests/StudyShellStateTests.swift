@@ -28,13 +28,10 @@ import Testing
     let progress = Progress(totalUnitCount: 4)
     progress.completedUnitCount = 1
     state.progress = progress
-    state.blockingProgress = progress
     state.reportAccountIssue(.hibernating)
     state.accountIssue = nil
     state.reportAccountIssue(.hibernating)
-    #expect(
-      state.accountIssue == nil && state.progress === progress
-        && state.blockingProgress === progress)
+    #expect(state.accountIssue == nil && state.progress === progress)
     #expect(progress.completedUnitCount == 1)
   }
 }

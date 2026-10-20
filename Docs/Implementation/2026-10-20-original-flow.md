@@ -169,3 +169,36 @@ The final iOS/Mac Release main executables were inspected with the selected tool
 | `ApplicationOpeningProbe.log` | `f6636f1f0d8b63acd9420e7571c0baab3f385f5a28b3fff5da9da0294de64e88` |
 
 Fresh builds retain the six previously recorded shared-test warnings; incremental zero-warning summaries do not erase them. Fixture image CRC diagnostics, the empty watch-host lifecycle warning and AppIntents metadata-extraction notes remain scoped. No real account, exercises, cloud writes, microphone, signed service, GUI automation, PR, push or distribution was used in these gates. Remaining acceptance includes rendered keyboard/IME/draft and lesson/review flows, largest text/short windows, eleven UI fixtures, wider G7 failures/decoder compatibility, watch lifecycle and physical/signed services.
+
+## Compact native scene and fixture follow-up — October 21
+
+Following `25e68d3e`, the Mac-only 640×500 minimum frame and one-use window wrapper retire. The shared iPhone-first screens now receive compact Mac space directly; default Mac launch size/restoration remain native scene policies. The remaining presentation checks cover genuinely unavailable keyboard/IME, audio, prediction and notification APIs. No device-identity branch or generic platform utility is introduced. Apple's [sidebar-adaptable style](https://developer.apple.com/documentation/swiftui/tabviewstyle/sidebaradaptable) documents the shared phone/tab/sidebar behavior already adopted.
+
+The never-populated `blockingProgress` property and its global disabling modifier also retire. Native refresh already commits atomically while cached content stays usable. Its ported acceptance contract keeps Settings enabled and duplicate Refresh disabled, checks 864 learned kanji across foreground/settings changes, then 865 only after completion. The renamed test uses the existing one-shot URL driver with `App/Tests/HeldRefresh.json`; CI gives it a dedicated lane and both root shell tasks supply that configuration. This intentionally replaces the old reset-era global-blocking assertion rather than fabricating blocking behavior.
+
+Supported missing fixtures now use explicit typed in-memory account responses, durable session events, exact Home distributions/empty/limit/vacation variants and the original four-subject/five-question review. No synthetic alert, real credential or timer triggers account expiry. Reduce Motion remains a prelaunch failure until a device has the real setting; the public environment value is read-only. These UI source ports compile but have no new rendered execution claim.
+
+Three unused notification-task results now assert nil; companion delivery tests use a concrete MainActor probe instead of mutated captured variables. Three identical 68-byte PNG fixtures change only offsets 53–55 in the IDAT checksum: compressed pixels remain identical and all chunk CRCs validate. Frozen import/store fixtures and V1 remain unchanged.
+
+| New local evidence | Scope/result |
+| --- | --- |
+| `SharedWarningFixiOS.log`, `test-640e7439a9124ee59fcf42621ebc8e87.xcresult` | Fresh iPhone shared suite: 544 functions/805 executions, zero failures/skips; six warnings and image CRC diagnostic absent. Precedes the two-line dead shell-flag removal |
+| `AdaptiveFixtureBuild.log` | iPhone build-for-testing passes, explicitly compiles ported `ReviewFlowTests.swift` |
+| `AdaptiveCompactiOSBuild.log`, root Results `build-for-testing-c6370a54f8a7451c8e976cbbb16f2a48.xcresult` | Final iPhone source builds for testing, native-summary zero errors/warnings |
+| `AdaptiveCompactMacBuild.log`, root Results `build-ac9f86b610b0419abc20b1ad18f44c17.xcresult` | Final Mac build passes; two stale deleted generated-file cache warnings, with no current project references |
+| `AdaptiveNativeHostedTestsFinal.log`, `test-a89b71fc38ba44b69efcb7fd9bb9e65f.xcresult` | Final 73 hosted functions/15 suites/102 executions pass, zero failures/skips. Both generated host argument arrays verified `--review-fixture` before execution |
+| Scoped Mainboard lint | Nine changed Swift files pass formatter, SwiftLint and UI/parser rules; zero rewrites |
+
+The first hosted invocation requested unsupported executor action `test-without-building` and exited 2 before native execution. The documented `test` action then produced the successful receipt above; the failed invocation is not a test result. TOML/YAML/JSON validation confirms both root tasks and CI select the exact renamed test/one-shot route. Build logs live in app Results; the two compact build bundles above are in `/Users/pedro/Developer/projects/.build/Results` because those invocations ran from the parent workspace. AppIntents metadata notes remain separate.
+
+Mainboard `b9cc330` retains the earlier 228 Apple/Swift regression scope. Its broader suite recorded 1060 passed, one legacy-import isolation failure and eleven skips. After repairing editable-path leakage, both focused isolation witnesses pass; the full suite was not rerun. Managed-interpreter pyrefly preserves exit 1 with four unchanged dependency-editor TOML errors and 45 warnings. These broader failures are not suppressed or relabeled. The workflow now pins that unpublished local commit; no hosted Actions run is claimed.
+
+The final inventory parses 257/257 files with zero gaps/context issues. Production falls 21,379 → 21,371 physical lines; tests grow 22,461 → 22,660 for the fixture ports; tooling stays 281. Categories include protected off-target owner files and do not establish compiled membership or logical LOC. V1 SHA-256 remains `538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `AdaptiveCompactInventory.json` | `9f05a7e964c62a88c4ab9eef8c90ee42236c92297e0632030006b348567c854e` |
+| `AdaptiveCompactComparison.json` | `6f3a02372abe82b289afad09e73152f90bd555d1c9bafd025216ac247fb9d4c5` |
+| Final hosted `.tests.json` | `0c12c5f6006d5287ba4111666400a30e591e8c32271b6d21046474a1d62cd39a` |
+
+No GUI automation, Device Hub retry, browser workaround, live exercise, real recognition/cloud write, PR, push or distribution ran. Rendered compact/wide/keyboard/Dynamic Type acceptance, the held-refresh lifecycle publication question, wider G7 failures, watch single-target/private-default continuity and signed services remain open. The [watch audit](2026-10-20-widgetkit.md#watch-lifecycle-audit-october-21) records the concrete mirror-overwrite hazard; collapsing its old extension cannot be justified by compilation alone.

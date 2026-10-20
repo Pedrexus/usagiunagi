@@ -7,7 +7,7 @@ import SwiftUI
   @State private var owner = StudyApplicationOwner()
   var body: some Scene {
     WindowGroup(id: "study") {
-      nativeWindow
+      StudyApplicationWindow(owner: owner)
     }
     #if os(iOS)
       .backgroundTask(.appRefresh(StudyApplicationOwner.refreshIdentifier)) {
@@ -48,11 +48,5 @@ import SwiftUI
     #else
       true
     #endif
-  }
-  private var nativeWindow: some View {
-    StudyApplicationWindow(owner: owner)
-      #if os(macOS)
-        .frame(minWidth: 640, minHeight: 500)
-      #endif
   }
 }
