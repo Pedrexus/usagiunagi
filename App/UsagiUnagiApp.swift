@@ -9,6 +9,7 @@ import SwiftUI
     WindowGroup(id: "study") {
       StudyApplicationWindow(owner: owner)
     }
+    .defaultSize(width: 1120, height: 800)
     #if os(iOS)
       .backgroundTask(.appRefresh(StudyApplicationOwner.refreshIdentifier)) {
         [owner, backgroundPermitted] in
@@ -23,7 +24,6 @@ import SwiftUI
       }
     #endif
     #if os(macOS)
-      .defaultSize(width: 1120, height: 800)
       .defaultLaunchBehavior(.presented)
       .restorationBehavior(StudyAppAssembly.isReviewFixture ? .disabled : .automatic)
     #endif

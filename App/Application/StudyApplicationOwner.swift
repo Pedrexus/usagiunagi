@@ -41,9 +41,6 @@ import SwiftUI
         }
         services = value
         value.mistakeSync?.start()
-        #if os(macOS)
-          value.automaticSync.start()
-        #endif
       } catch { failure = error.localizedDescription }
     }
     preparation = task
@@ -133,6 +130,10 @@ struct StudyApplicationWindow: View {
   let owner: StudyApplicationOwner
   @State private var links = StudyLinkInbox()
   @Environment(\.scenePhase) private var scenePhase
+  private struct Activity: Equatable {
+    let phase: ScenePhase
+    let prepared: Bool
+  }
   var body: some View {
     Group {
       if let services = owner.services {
@@ -160,7 +161,7 @@ struct StudyApplicationWindow: View {
         ProgressView("Opening saved study data").accessibilityIdentifier("startup.loading")
       }
     }
-    .task(id: scenePhase) {
+    .task(id: Activity(phase: scenePhase, prepared: owner.services != nil)) {
       await owner.prepare()
       if !Task.isCancelled && scenePhase == .active {
         owner.services?.automaticSync.start()
