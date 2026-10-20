@@ -39,6 +39,13 @@ private final class FrozenStoreBundle {}
     let main: Data?
     let wal: Data?
   }
+  private let restartTimestamp: Int64 = 2_000_000_000
+  private var restartSubmission: StudyReviewSubmission {
+    .init(
+      itemID: 0, subjectID: 42, assignmentID: 142, isLesson: false,
+      meaningWrong: true, readingWrong: false, meaningWrongCount: 1, readingWrongCount: 0,
+      createdAt: restartTimestamp)
+  }
 
   @Test(
     .enabled(
@@ -65,6 +72,8 @@ private final class FrozenStoreBundle {}
     let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
     let original = try family(in: frozen.deletingLastPathComponent())
     let marker = "\nFresh iPhone test host \(id) \u{0}🐰"
+    let accountID = NativeStoreBaseline.accounts[0]
+    let now = Date(timeIntervalSince1970: Double(restartTimestamp))
     switch phase {
     case .seed, .seedAbrupt:
       try #require(
@@ -79,23 +88,61 @@ private final class FrozenStoreBundle {}
       let mainBefore = phase.abrupt ? try Data(contentsOf: mainURL) : nil
       let walBefore =
         phase.abrupt && manager.fileExists(atPath: walURL.path) ? try Data(contentsOf: walURL) : nil
+      var expectedAccount = try #require(try await opened.accountState(accountID: accountID))
+      let progress = try #require(expectedAccount.progress.firstIndex { $0.subjectID == 42 })
+      expectedAccount.progress[progress].lastMistakeAt = restartTimestamp
       let saved = try #require(
-        try await opened.materials(accountID: NativeStoreBaseline.accounts[0]).first {
+        try await opened.materials(accountID: accountID).first {
           $0.material.subjectID == 42
         })
       var material = saved.material
       material.meaningNote += marker
       _ = try await opened.saveMaterial(
-        material, accountID: NativeStoreBaseline.accounts[0], expectedRevision: saved.revision)
+        material, accountID: accountID, expectedRevision: saved.revision)
+      var review = try await opened.openReviews(accountID: accountID, now: now)
+      try #require(review.subject?.id == 42 && review.saved.session.currentDecision == .incorrect)
+      let originalSession = review.saved.session
+      review = try await opened.changeReview(
+        .advance, accountID: accountID, expectedRevision: review.saved.revision, now: now)
+      for kind in [StudyQuestionKind.meaning, .reading] {
+        let question = try #require(review.question)
+        try #require(question.kind == kind)
+        let answered = try await opened.answerReview(
+          kind == .meaning ? "Cat 0" : "ねこ", question: question, accountID: accountID,
+          expectedRevision: review.saved.revision, now: now)
+        try #require(answered.grade == .precise)
+        review = answered.state
+      }
+      try #require(review.question == nil && review.success?.subjectFinished == true)
+      try #require(review.saved.session.completedSubmissions == [restartSubmission])
+      try #require(review.saved.session.options == originalSession.options)
+      try #require(review.saved.session.queuedIDs == originalSession.queuedIDs)
+      try #require(review.saved.session.wrappingUp == originalSession.wrappingUp)
+      try #require(Set(review.saved.session.items.keys) == Set(originalSession.items.keys))
+      for (key, item) in originalSession.items where key != restartSubmission.itemID {
+        let retainedItem = try #require(review.saved.session.items[key])
+        try #require(
+          try NativeStoreBaseline.encoded(item) == NativeStoreBaseline.encoded(retainedItem))
+      }
+      try #require(
+        review.saved.session.tasksAnswered == 3 && review.saved.session.tasksAnsweredCorrectly == 2)
+      let actualAccount = try #require(try await opened.accountState(accountID: accountID))
+      try #require(
+        try NativeStoreBaseline.encoded(actualAccount)
+          == NativeStoreBaseline.encoded(expectedAccount))
       let expected = try await opened.nativeBaselineState()
-      try #require(expected != manifest.expected && expected.records.count == 38)
+      try #require(expected.records.count == manifest.expected.records.count + 1)
       try #require(expected.schema == manifest.expected.schema)
       try #require(expected.schemaVersion == manifest.expected.schemaVersion)
-      for (before, after) in zip(manifest.expected.records, expected.records)
-      where before.model != "MaterialRecord"
-        || before.identity != "\(NativeStoreBaseline.accounts[0])/42"
+      for before in manifest.expected.records
+      where
+        !(before.accountID == accountID
+        && (before.model == "AccountRecord" || before.model == "SessionRecord"
+          || (before.model == "MaterialRecord" && before.identity == "\(accountID)/42")))
       {
-        try #require(before == after)
+        try #require(
+          expected.records.first { $0.model == before.model && $0.identity == before.identity }
+            == before)
       }
       try #require(
         try family(in: directory) == original && family(in: locations.retained) == original)
@@ -106,7 +153,7 @@ private final class FrozenStoreBundle {}
         try #require(wal?.isEmpty == false && wal != walBefore)
       }
       let receipt = RestartReceipt(
-        version: 2, id: id, producerPID: process.processIdentifier, abrupt: phase.abrupt,
+        version: 3, id: id, producerPID: process.processIdentifier, abrupt: phase.abrupt,
         expected: expected, selection: locations.selector, main: main, wal: wal)
       try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
       if phase.abrupt {
@@ -122,7 +169,7 @@ private final class FrozenStoreBundle {}
       try #require((info.fileSize ?? 0) > 0 && (info.fileSize ?? 0) <= 16 * 1024 * 1024)
       let receipt = try PropertyListDecoder().decode(
         RestartReceipt.self, from: Data(contentsOf: receiptURL))
-      try #require(receipt.version == 2 && receipt.id == id && receipt.abrupt == phase.abrupt)
+      try #require(receipt.version == 3 && receipt.id == id && receipt.abrupt == phase.abrupt)
       try #require(receipt.producerPID > 0 && receipt.producerPID != process.processIdentifier)
       let directoryInfo = try directory.resourceValues(forKeys: [
         .isDirectoryKey, .isSymbolicLinkKey,
@@ -145,16 +192,26 @@ private final class FrozenStoreBundle {}
         let opened = try await StudyStore.openApplication(in: directory)
         try #require(try await opened.nativeBaselineState() == receipt.expected)
         let saved = try #require(
-          try await opened.materials(accountID: NativeStoreBaseline.accounts[0]).first {
+          try await opened.materials(accountID: accountID).first {
             $0.material.subjectID == 42
           })
         try #require(saved.material.meaningNote.hasSuffix(marker))
+        for _ in 0..<2 {
+          let resumed = try await opened.openReviews(accountID: accountID, now: now)
+          try #require(resumed.question == nil && resumed.success == nil)
+          try #require(resumed.saved.session.completedSubmissions == [restartSubmission])
+          let pending = try #require(
+            try await opened.pendingReviews(accountID: accountID).first { $0.subjectID == 42 })
+          try #require(pending.submission == restartSubmission && !pending.attempted)
+          try #require(pending.issue == nil)
+          try #require(try await opened.nativeBaselineState() == receipt.expected)
+        }
       }
       try #require(try selectedURLs(in: directory).selector == receipt.selection)
       try #require(
         try family(in: directory) == original && family(in: locations.retained) == original)
       print(
-        "NATIVE RESTART REOPENED: \(id), PID \(receipt.producerPID) → \(process.processIdentifier), abrupt \(phase.abrupt), 38 exact records"
+        "NATIVE RESTART REOPENED: \(id), PID \(receipt.producerPID) → \(process.processIdentifier), abrupt \(phase.abrupt), 39 exact records including completed answer"
       )
       remove(directory)
       try #require(!manager.fileExists(atPath: directory.path))
