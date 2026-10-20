@@ -1,6 +1,6 @@
 # One shared codebase
 
-The [migration specification](Migration.md) owns the current target, phase dependencies and acceptance contracts; [TASKS](TASKS.md) separates accepted checkpoints from uncommitted prototypes. Later sections here retain historical decisions and their original evidence, not a claim that every draft or platform gate is complete.
+The [migration specification](Migration.md) owns the current target, phase dependencies and acceptance contracts; [TASKS](TASKS.md) separates accepted checkpoints from tested prototypes with open adoption gates. Later sections here retain historical decisions and their original evidence, not a claim that every draft or platform gate is complete.
 
 `Shared/Package.swift` is the common implementation for iPhone, iPad and Mac. Its package name remains StudyKit; the public modules are StudyCore, StudyPersistence, StudySpeech and StudyUI. Swift 6.4, Swift 6 language mode, Sendable domain values, actor-owned persistence and MainActor SwiftUI are already enabled there. One multiplatform target in `App/UsagiUnagi.xcodeproj` consumes that exact package. `App/UsagiUnagiApp.swift` is the common SwiftUI entry point, with native Mac and iOS/iPadOS destinations.
 

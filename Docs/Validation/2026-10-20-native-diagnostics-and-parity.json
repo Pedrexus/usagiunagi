@@ -1,0 +1,788 @@
+{
+  "generatedAt": "2026-10-20T03:49:56Z",
+  "checkpoint": "Native diagnostics, persistence parity, mobile audio and input-caret validation",
+  "scope": "P1b typed diagnostics and selected P3 parity; P2 remains tested but unwired. FMDB removal and complete modernization are not accepted.",
+  "publication": {
+    "branch": "codex/swiftui-27-curriculum",
+    "appCheckpointCommit": "01be7a3836226330e480690e653b60f946d4ab97",
+    "mainboardCommit": "41c27749cddc49ff0d07085db92037b5ae940d70",
+    "pushed": false,
+    "pullRequest": false,
+    "hostedActionsVerified": false,
+    "parentWorkflowCommit": "7599fac8c"
+  },
+  "sourceProvenance": {
+    "finalAppSourceHashes": {
+      ".github/workflows/apple.yml": "112cecc7ab110461821a08f51e9632af0fb2630e344d311d968bf722778a5850",
+      "App/AppStoreScreenshots/MacReviewModeTests.swift": "a5976ec897c88e7ae4f2f7c9b4fb01480ae1f0640763706a46c78bd5c07ba096",
+      "App/AppStoreScreenshots/NativeRootFlowTests.swift": "7df99dd8d9934b489fa7e1e82ccc732535821de7c26e79df4f7885a8aa44aafa",
+      "App/AppStoreScreenshots/NativeStudyFixture.swift": "640e32ac7e7cb57af7fcabbc794b8cff6142e3ac0e2213e9a887d80b3118485c",
+      "App/AppStoreScreenshots/ReviewFlowTests.swift": "05f7978938c255ef91e347c97243ced2830312bd844e2cad20fad94c7a027013",
+      "App/Application/StudyAppAssembly.swift": "c1065c2f181d4eb69bf43c2a1d2421285bd8bf078b2a32c25b8d5f860477b7ce",
+      "App/Application/StudyApplicationOwner.swift": "3cefe5955e449fb21409a036487826105146369e941d616c8e92a9ae94eb60de",
+      "App/Tests/MaterialConflictEvents.json": "9aa413d5311c6d78600a2f71e1b3d2c10fd0964ccb21cab5cddad787b807d0bd",
+      "App/UsagiUnagi.xcodeproj/project.pbxproj": "a176d7227a098b976f6744019e77d9e826ee51c4fcc6d1e946ab9289427c8156",
+      "Shared/Sources/StudyPersistence/StudyDiagnosticArchive.swift": "3444d305b4eca97b6aed536257d1821c7e4f192cbcef15de5d6c1568650ca12f",
+      "Shared/Sources/StudyUI/Application/StudyRootView.swift": "0659b71a6ed874c459c69e42af8c8a5ddf4342889a276220368d336a9c7877a7",
+      "Shared/Sources/StudyUI/Catalog/NativeSubjectDetailsView.swift": "0e9d2078f8ae0af2f64ee587279b79bf2790dbf886248cec1d6838e4d0808706",
+      "Shared/Sources/StudyUI/Settings/DeveloperSettingsView.swift": "a7979be3409e1d2cd3211cca87b6509f7dd846a9ae0d6babb23ce6456e9616f0",
+      "Shared/Tests/StudyPersistenceTests/NativeRefreshRollbackTests.swift": "b89fde6291be1bd1f04b2d65c84fbd6095eb0c66ae1b64c313d4d0df3531be01",
+      "Shared/Tests/StudyPersistenceTests/NativeRefreshTests.swift": "e4819972ab30ea8adc27804482d1e940e8bb79093a294d615b1ab21556f8b971",
+      "Shared/Tests/StudyPersistenceTests/NativeSynchronizationTests.swift": "d440c1168d94c96caa2a6ca2e4bcb88d7c8fcbbf5f8316d3b1433177008a913a",
+      "Shared/Tests/StudyPersistenceTests/StudyDiagnosticArchiveTests.swift": "ec95bc1e516743b171d3b43e56638b230da1d58d2f1bfa3d03687af3c4a8a1b2",
+      "Shared/Tests/StudyPersistenceTests/StudyStoreTests.swift": "dd53ed1c58ca9720e337f7709d7170bf4e7e094d1e35ef8a041a1119edffe144",
+      "Shared/Tests/StudyPersistenceTests/SubjectMaterialEditingTests.swift": "4e4894bd66b136a40b84814d9e44461ffbf585e5a030143d22f5b2f79b42fae5"
+    },
+    "acceptedSharedManifests": [
+      {
+        "path": "/private/tmp/usagi-native-shared-accepted-before.sha256",
+        "files": 226,
+        "sha256": "c2345b6512dc092923b454f8277056e59d14ff4ee04a965ddb8dce8890e1efc3"
+      },
+      {
+        "path": "/private/tmp/usagi-native-shared-accepted-after.sha256",
+        "files": 226,
+        "sha256": "c2345b6512dc092923b454f8277056e59d14ff4ee04a965ddb8dce8890e1efc3"
+      }
+    ],
+    "acceptedSharedSourceManifestSHA256": "c2345b6512dc092923b454f8277056e59d14ff4ee04a965ddb8dce8890e1efc3",
+    "acceptedSharedFiles": 226,
+    "sourceFiles": 305,
+    "sourceManifestSHA256": "d86b0e41887ffadeb53b00e8d6ca570f0137f479d22d81231e6d4000c4b655f9",
+    "removedFiles": [
+      "App/Tests/main.swift"
+    ],
+    "productionPhysicalLines": {
+      "baseline": "d1311630",
+      "scope": "Physical lines in App/**/*.swift and Shared/Sources/**/*.swift, excluding Pods, Tests, AppTests, AppStoreScreenshots and the three owner-edited files. Includes generated production Swift and formatter wrapping. Includes new/untracked production files; no line savings inferred from moves or test deletion.",
+      "production": {
+        "before": 31828,
+        "after": 31993,
+        "changed": [
+          {
+            "path": "App/Application/StudyAppAssembly.swift",
+            "before": 79,
+            "after": 76
+          },
+          {
+            "path": "App/Application/StudyApplicationOwner.swift",
+            "before": 150,
+            "after": 170
+          },
+          {
+            "path": "Shared/Sources/StudyPersistence/StudyDiagnosticArchive.swift",
+            "before": 0,
+            "after": 128
+          },
+          {
+            "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+            "before": 624,
+            "after": 629
+          },
+          {
+            "path": "Shared/Sources/StudyUI/Settings/DeveloperSettingsView.swift",
+            "before": 117,
+            "after": 132
+          }
+        ],
+        "net": 165
+      },
+      "excluded_owner_edits": [
+        "App/AnswerChecker.swift",
+        "App/FullRefreshOverlayView.swift",
+        "App/Features/Catalog/LegacyCatalogViewController.swift"
+      ]
+    },
+    "formatOnlyAfterPhoneDetails": "swift-format wrapped one coordinate expression in ReviewFlowTests; iPad details rebuilt and tested the final formatting. No production behavior changed.",
+    "sharedStillMatches": "All 226 source/test/manifest hashes rechecked after final test formatting: exact match to both accepted 508-test shared runs."
+  },
+  "sharedValidation": {
+    "macOS": {
+      "status": "passed",
+      "log": "/private/tmp/usagi-native-shared-accepted.log",
+      "reportedTests": 508,
+      "reportedSuites": 69,
+      "processSummaries": [
+        {
+          "reportedTests": 78,
+          "reportedSuites": 6,
+          "result": "passed",
+          "seconds": 0.369
+        },
+        {
+          "reportedTests": 7,
+          "reportedSuites": 1,
+          "result": "passed",
+          "seconds": 0.07
+        },
+        {
+          "reportedTests": 196,
+          "reportedSuites": 25,
+          "result": "passed",
+          "seconds": 0.766
+        },
+        {
+          "reportedTests": 227,
+          "reportedSuites": 37,
+          "result": "passed",
+          "seconds": 1.118
+        }
+      ]
+    },
+    "iOSSimulator": {
+      "status": "passed",
+      "summaryFile": "/private/tmp/usagi-native-shared-ios-summary.json",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-951ac65765694e54ae57542f567de04c.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 508,
+        "passedTests": 508,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "reportedSuites": 69,
+      "suiteCountSource": "Matching accepted Shared manifest and parent-confirmed suite count"
+    },
+    "countSemantics": "Test-runner reports; no additional parameterized invocation count inferred"
+  },
+  "persistenceValidation": {
+    "log": "/private/tmp/usagi-native-persistence-current.log",
+    "phases": [
+      {
+        "phase": "write",
+        "status": "passed",
+        "selectedRecord": "PASS: production store saved session, uncertain review and exact attempted note revision"
+      },
+      {
+        "phase": "read-attempts",
+        "status": "passed",
+        "selectedRecord": "PASS: fresh process restored production models, pending work and account isolation"
+      },
+      {
+        "phase": "write-catalog",
+        "status": "passed",
+        "selectedRecord": "PASS: wrote production catalog, assignment and pending note"
+      },
+      {
+        "phase": "read-catalog",
+        "status": "passed",
+        "selectedRecord": "PASS: fresh process reopened catalog, assignment and pending note; old receipt cannot select a writer"
+      },
+      {
+        "phase": "read-native-baseline",
+        "status": "passed",
+        "selectedRecord": "PASS: fresh process restored exact baseline fields, revisions, ownership and schema twice"
+      }
+    ],
+    "frozenBaseline": {
+      "fixture": "App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3",
+      "writerCommit": "186c1cc350f03d69c11e85bcb6f4d4084bece9b1",
+      "writerSourceSHA256": "6b23acc31dae349bb5c128ecb47c4c892908821c2c057fe7303a62cc84f23eff",
+      "records": 38,
+      "modelTypes": 10,
+      "accounts": 2,
+      "fixtureFiles": [
+        {
+          "file": "study.store",
+          "bytes": 180224,
+          "sha256": "f82be6077bbe12593c95c3ef27b7df576e65dde06965b0a297dbd12be3a3bf94"
+        },
+        {
+          "file": "study.store.baseline.plist",
+          "bytes": 38261,
+          "sha256": "bf3c676dd2ca92219fd1eea95e492c6a1e90aa43f2f0201db16a0f177c7e968b"
+        }
+      ],
+      "status": "Current separate-process reader preserved exact fields and metadata",
+      "limitation": "macOS reopen evidence only; no versioned conversion or iOS frozen-store upgrade claimed"
+    },
+    "realRollback": {
+      "test": "readOnlyDefaultStoreRejectsRefreshAfterDirtyMutationsAndRollsBackAcrossReopen",
+      "log": "/private/tmp/usagi-native-refresh-rollback.log",
+      "reportedTests": 1,
+      "status": "passed",
+      "proof": "Actual read-only default-store save rejection after dirty mutations and rollback across reopen; not a simulated callback failure",
+      "destinations": [
+        "macOS",
+        "iOS Simulator"
+      ],
+      "currentEvidence": "Included in the unchanged 226-file shared source manifest and both passing 508-test suites."
+    }
+  },
+  "nativeAcceptance": {
+    "macDiagnostics": {
+      "status": "passed",
+      "summaryFile": "/private/tmp/usagi-native-diagnostic-mac-summary.json",
+      "run": {
+        "log": "/private/tmp/usagi-native-diagnostic-mac-ui.log",
+        "cases": [
+          {
+            "suite": "AppStoreScreenshots.MacReviewModeTests",
+            "test": "testNativeStudyDiagnosticsUsesAccountScopedSharingAndReturnsToSettings",
+            "result": "passed"
+          }
+        ],
+        "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-c824f821107d47a59df5ba416d93f641.xcresult",
+        "summary": {
+          "result": "Passed",
+          "totalTestCount": 1,
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "expectedFailures": 0
+        },
+        "runtimeWarningCount": 0,
+        "observedCaseCounts": {
+          "passed": 1,
+          "failed": 0
+        }
+      }
+    },
+    "ipadInitialMixedRun": {
+      "log": "/private/tmp/usagi-native-diagnostics-audio-ipad.log",
+      "cases": [
+        {
+          "suite": "AppStoreScreenshots.NativeRootFlowTests",
+          "test": "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testOfflineAudioDownloadsKeepAndExplicitDeletion",
+          "result": "failed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testOfflineAudioFailuresRemainVisibleAndCanRetry",
+          "result": "failed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testOfflineAudioVoiceChoicesAndCellularSettingPersist",
+          "result": "failed"
+        }
+      ],
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-cf4251e34faf4a018d09266e9526030f.xcresult",
+      "observedCaseCounts": {
+        "passed": 1,
+        "failed": 3
+      },
+      "status": "mixed: diagnostic passed, three audio cases failed before entering Offline Audio; superseded for audio by focused foreground-scroll run"
+    },
+    "ipadAudioAccepted": {
+      "status": "passed",
+      "run": {
+        "log": "/private/tmp/usagi-native-audio-ipad-foreground.log",
+        "cases": [
+          {
+            "suite": "AppStoreScreenshots.ReviewFlowTests",
+            "test": "testOfflineAudioDownloadsKeepAndExplicitDeletion",
+            "result": "passed"
+          },
+          {
+            "suite": "AppStoreScreenshots.ReviewFlowTests",
+            "test": "testOfflineAudioFailuresRemainVisibleAndCanRetry",
+            "result": "passed"
+          },
+          {
+            "suite": "AppStoreScreenshots.ReviewFlowTests",
+            "test": "testOfflineAudioVoiceChoicesAndCellularSettingPersist",
+            "result": "passed"
+          }
+        ],
+        "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d82129bc5eb8446392f94169eed7bb2b.xcresult",
+        "summary": {
+          "result": "Passed",
+          "totalTestCount": 3,
+          "passedTests": 3,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "expectedFailures": 0
+        },
+        "runtimeWarningCount": 0,
+        "observedCaseCounts": {
+          "passed": 3,
+          "failed": 0
+        }
+      },
+      "harnessCorrection": "Hittable foreground collection/form scrolling replaced dragging covered Home behind Settings"
+    },
+    "iphoneMixedRun": {
+      "log": "/private/tmp/usagi-native-diagnostics-audio-phone.log",
+      "cases": [
+        {
+          "suite": "AppStoreScreenshots.NativeRootFlowTests",
+          "test": "testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testOfflineAudioDownloadsKeepAndExplicitDeletion",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testOfflineAudioFailuresRemainVisibleAndCanRetry",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testOfflineAudioVoiceChoicesAndCellularSettingPersist",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft",
+          "result": "failed"
+        }
+      ],
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-64712cbed31b4b52a4d075774c62a028.xcresult",
+      "observedCaseCounts": {
+        "passed": 5,
+        "failed": 1
+      },
+      "status": "mixed: diagnostic, three audio and milestone cases passed; feedback draft/caret case failed, then passed in focused phone and iPad runs"
+    },
+    "iphoneAudioAccepted": {
+      "status": "Three audio cases passed within the mixed six-case run",
+      "log": "/private/tmp/usagi-native-diagnostics-audio-phone.log",
+      "testIDs": [
+        "testOfflineAudioDownloadsKeepAndExplicitDeletion",
+        "testOfflineAudioFailuresRemainVisibleAndCanRetry",
+        "testOfflineAudioVoiceChoicesAndCellularSettingPersist"
+      ]
+    },
+    "caretCorrection": {
+      "scope": "Programmatic text updates preserve current selection while continued typing; physical Japanese IME remains open",
+      "iphone": {
+        "log": "/private/tmp/usagi-native-feedback-caret-phone.log",
+        "cases": [
+          {
+            "suite": "AppStoreScreenshots.ReviewFlowTests",
+            "test": "testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft",
+            "result": "passed"
+          }
+        ],
+        "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d371a81bde1244978055772c72df810f.xcresult",
+        "summary": {
+          "result": "Passed",
+          "totalTestCount": 1,
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "expectedFailures": 0
+        },
+        "runtimeWarningCount": 0,
+        "observedCaseCounts": {
+          "passed": 1,
+          "failed": 0
+        }
+      },
+      "ipad": {
+        "log": "/private/tmp/usagi-native-feedback-caret-ipad.log",
+        "cases": [
+          {
+            "suite": "AppStoreScreenshots.ReviewFlowTests",
+            "test": "testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft",
+            "result": "passed"
+          }
+        ],
+        "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8f43ae14fb1c4daea6f73b08718af1c3.xcresult",
+        "summary": {
+          "result": "Passed",
+          "totalTestCount": 1,
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "expectedFailures": 0
+        },
+        "runtimeWarningCount": 0,
+        "observedCaseCounts": {
+          "passed": 1,
+          "failed": 0
+        }
+      }
+    },
+    "priorDetails": {
+      "log": "/private/tmp/usagi-native-details-current-phone.log",
+      "cases": [
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents",
+          "result": "passed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement",
+          "result": "failed"
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testReviewDetailsConcealUnansweredReadingAndBlurTranslations",
+          "result": "passed"
+        }
+      ],
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-da4e349ee978468b93056cffaf23b3fd.xcresult",
+      "observedCaseCounts": {
+        "passed": 4,
+        "failed": 1
+      },
+      "status": "mixed: four passed, one material-conflict case failed on scroll reachability; superseded by bounded-drag five-case phone run"
+    },
+    "phoneDetailsAccepted": {
+      "log": "/private/tmp/usagi-native-details-bounded-phone.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-b1555b73a68746b8856f276cc910b221.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarningCount": 4,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        }
+      ],
+      "cases": [
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+          "result": "passed",
+          "seconds": 27.815
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit",
+          "result": "passed",
+          "seconds": 28.58
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents",
+          "result": "passed",
+          "seconds": 111.943
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement",
+          "result": "passed",
+          "seconds": 34.414
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testReviewDetailsConcealUnansweredReadingAndBlurTranslations",
+          "result": "passed",
+          "seconds": 21.278
+        }
+      ],
+      "status": "Passed five-case declared Mainboard task; exit 0"
+    },
+    "ipadDetails": {
+      "log": "/private/tmp/usagi-native-details-bounded-ipad.log",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-85318ce7969d4c598ac63f8cd542c5cb.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarningCount": 4,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        },
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        }
+      ],
+      "cases": [
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+          "result": "passed",
+          "seconds": 30.502
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit",
+          "result": "passed",
+          "seconds": 28.533
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents",
+          "result": "passed",
+          "seconds": 115.35
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement",
+          "result": "passed",
+          "seconds": 34.418
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "test": "testReviewDetailsConcealUnansweredReadingAndBlurTranslations",
+          "result": "passed",
+          "seconds": 18.644
+        }
+      ],
+      "status": "Passed five-case declared Mainboard task; exit 0"
+    }
+  },
+  "releaseValidation": {
+    "builds": [
+      {
+        "platform": "iOS Simulator",
+        "summaryFile": "/private/tmp/usagi-native-current-ios-build-summary.json",
+        "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-ad7b53355b414cbb99c245f2895069fb.xcresult",
+        "buildSuccessful": true,
+        "summary": {
+          "status": "succeeded",
+          "errorCount": 0,
+          "warningCount": 41,
+          "analyzerWarningCount": 0
+        },
+        "releaseFixtureScan": {
+          "platform": "iOS",
+          "executable": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Tsurukame",
+          "sha256": "75a715c46ea56c06112b10346379d939dc676dc411335017b1a7bc6fc3f32e91",
+          "modified_at": "2026-10-20T03:12:35Z",
+          "forbidden_strings": [
+            "--material-conflict-fixture",
+            "--material-conflict-failure-fixture",
+            "fixture.eventStatus",
+            "Concurrent material change committed",
+            "fixture/material-conflict/"
+          ],
+          "forbidden_string_matches": [
+
+          ],
+          "unexpected_fixture_resources": [
+
+          ]
+        }
+      },
+      {
+        "platform": "macOS",
+        "summaryFile": "/private/tmp/usagi-native-current-mac-build-summary.json",
+        "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-ec3ee5f2b2684225a8610427ae26cd1b.xcresult",
+        "buildSuccessful": true,
+        "summary": {
+          "status": "succeeded",
+          "errorCount": 0,
+          "warningCount": 0,
+          "analyzerWarningCount": 0
+        },
+        "releaseFixtureScan": {
+          "platform": "macOS",
+          "executable": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Xcode/UnifiedMac/Build/Products/Release/Tsurukame.app/Contents/MacOS/Tsurukame",
+          "sha256": "be5d2dba69b8ef98b8fd6abc0e21b2320f013699d19bdaafd6a5a82b36c13cc5",
+          "modified_at": "2026-10-20T03:19:05Z",
+          "forbidden_strings": [
+            "--material-conflict-fixture",
+            "--material-conflict-failure-fixture",
+            "fixture.eventStatus",
+            "Concurrent material change committed",
+            "fixture/material-conflict/"
+          ],
+          "forbidden_string_matches": [
+
+          ],
+          "unexpected_fixture_resources": [
+
+          ]
+        }
+      }
+    ],
+    "scanSource": "/private/tmp/usagi-release-fixture-check-current.json",
+    "scanProof": "Parent reran fail-closed read-only scan: explicit forbidden-string matches and unexpected fixture resources empty for both unchanged executable hashes; exit 0",
+    "scope": "iOS Simulator and native macOS Release builds; signed device upgrade not claimed",
+    "finalSourceMatch": "Both retained Release builds predate final test-only gesture/caret formatting and removal of an unbuilt Tests/main.swift file/reference. Binary hashes bind those actual products; current iPhone/iPad acceptance rebuilt the final project. No claim of a clean all-target rebuild, signed upgrade or warning reduction."
+  },
+  "mainboardValidation": {
+    "commit": "41c27749cddc49ff0d07085db92037b5ae940d70",
+    "change": "Unconditional -hideShellScriptEnvironment for build, test, build-for-testing, resolve and URL-test child xcodebuild commands",
+    "isolatedTests": {
+      "source": "integration/test_apple.py",
+      "passed": 80,
+      "failed": 0,
+      "seconds": 0.23,
+      "report": "/private/tmp/mainboard-apple-hidden-env-gate/target.json"
+    },
+    "scopedQuality": "ruff-format, ruff and diff checks passed",
+    "syntheticPreactionProbe": {
+      "source": "/private/tmp/mainboard-xcode-preaction-counts.json",
+      "runs": [
+        {
+          "hide": false,
+          "returncode": 0,
+          "truncated": false,
+          "preaction_ran": true,
+          "export_lines": 1617,
+          "canary_export_lines": 1,
+          "canary_visible": true
+        },
+        {
+          "hide": true,
+          "returncode": 0,
+          "truncated": false,
+          "preaction_ran": true,
+          "export_lines": 0,
+          "canary_export_lines": 0,
+          "canary_visible": false
+        }
+      ],
+      "scope": "Disposable aggregate project in an empty synthetic environment, without app/GUI/account/network. Suppresses Xcode automatic exports including pre-actions; preserves inherited build context."
+    },
+    "liveFlagRuns": [
+      {
+        "log": "/private/tmp/usagi-native-shared-ios-current.log",
+        "hideShellScriptEnvironmentPresent": true,
+        "environmentExportLines": 0
+      },
+      {
+        "log": "/private/tmp/usagi-native-p1b-current-mac-release.log",
+        "hideShellScriptEnvironmentPresent": true,
+        "environmentExportLines": 0
+      },
+      {
+        "log": "/private/tmp/usagi-native-feedback-caret-phone.log",
+        "hideShellScriptEnvironmentPresent": true,
+        "environmentExportLines": 0
+      },
+      {
+        "log": "/private/tmp/usagi-native-feedback-caret-ipad.log",
+        "hideShellScriptEnvironmentPresent": true,
+        "environmentExportLines": 0
+      },
+      {
+        "log": "/private/tmp/usagi-native-details-bounded-phone.log",
+        "hideShellScriptEnvironmentPresent": true,
+        "environmentExportLines": 0
+      },
+      {
+        "log": "/private/tmp/usagi-native-details-bounded-ipad.log",
+        "hideShellScriptEnvironmentPresent": true,
+        "environmentExportLines": 0
+      }
+    ],
+    "published": false
+  },
+  "P2": {
+    "status": "Tested prototype; production wiring and signed namespace delivery not accepted",
+    "functions": 16,
+    "suiteBreakdown": {
+      "StudyMistakeArchiveTests": 5,
+      "StudyMistakeStoreTests": 4,
+      "StudyMistakeSyncTests": 7
+    },
+    "evidence": "Included in matching accepted Mac/iOS Shared runs",
+    "remaining": [
+      "Fence Apple account changes before asynchronous notification delivery.",
+      "Persist verified original legacy binding/calendar/time-zone metadata and durable revocation, including rename-back.",
+      "Prove convergence under disconnected concurrent whole-key writes or specify a different native transport.",
+      "Integrate one production lifecycle owner after those decisions/tests pass.",
+      "Verify the shared signed namespace and synthetic cross-device delivery without changing the person's real cloud data."
+    ]
+  },
+  "openGates": [
+    "25 ReviewFlowTests still use FASTLANE/TKMServices host after three audio ports; controller/resource/writer/FMDB retirement incomplete.",
+    "Invalid frame dimension (negative or non-finite): four runtime warning records in passing current phone details run and a prior passing conflict case (91b8adfa); no stack cause established. Warning remains open.",
+    "Physical Japanese IME/caret, microphone/speech interruption and latency, audio routes, notification/background expiration and paired watch delivery unverified.",
+    "Signed Keychain/account upgrades and signed iCloud namespace delivery unverified.",
+    "G7 versioned native-schema migration and iOS frozen-store upgrade remain open; baseline reopen does not close them.",
+    "Full-account statistics calibration, remaining verified coverage subsets, hosted Actions and distribution remain open.",
+    "Hosted NotificationPreferencesTests late-account/disconnected storyboard invariant must be ported in addition to the 25 old-host UI cases."
+  ],
+  "warningEvidence": {
+    "priorConflictSummary": "/private/tmp/usagi-frame-testsummary-91b8adfa.json",
+    "priorTestStatus": "Success with runtime warning",
+    "currentPhoneDetailsWarningRecords": 4,
+    "cause": "Not established; do not claim fixed",
+    "currentIpadDetailsWarningRecords": 4
+  },
+  "evidencePolicy": {
+    "realAccountExercised": false,
+    "rawEnvironmentOrDiagnosticAttachmentsIncluded": false,
+    "containsRawLogs": false,
+    "buildLogSafety": "Mainboard suppresses automatic shell environment dumps. Existing completed local text logs were redacted after an earlier exposure; raw private result bundles were not exported or rewritten. This suppresses logging, not inherited environment."
+  },
+  "environment": {
+    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
+    "xcode": "27.0",
+    "xcodeBuild": "27A266a",
+    "swift": "6.4",
+    "swiftCompiler": "swiftlang-6.4.0.34.1",
+    "macOS": "27.0.1",
+    "mobileSimulatorOS": "27.0",
+    "devices": [
+      "Mac mini arm64",
+      "iPhone 18 Pro",
+      "iPad Pro 11-inch (M5)"
+    ],
+    "policy": "Explicit DEVELOPER_DIR; global Xcode selection unchanged; GUI tests serialized."
+  },
+  "staticValidation": {
+    "swift": {
+      "log": "/private/tmp/usagi-native-final-swift-lint.log",
+      "files": 16,
+      "rewrote": 0,
+      "failed": 0,
+      "tools": [
+        "swift-format",
+        "native Swift parser/SwiftUI rules",
+        "SwiftLint correctness"
+      ]
+    },
+    "projectPlist": "plutil -lint passed",
+    "workflow": "YAML parsed; three exact Mainboard pins and five exact allowlisted fixture routes validated",
+    "parentTasks": "Five recipe changes only; separate-process task plus full five-case declared details tasks pass on both mobile simulators",
+    "documentation": "Local links, 19 exact legacy-to-native mappings, 25 old-host UI cases, 8 requirements and 12 gates checked before documentation commit",
+    "diff": "git diff --check passed; three owner-edited files excluded from staging"
+  }
+}
