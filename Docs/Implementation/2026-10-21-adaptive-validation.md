@@ -22,7 +22,7 @@ After the production edit, scoped Mainboard parsing/UI rules, strict swift-forma
 | iOS log SHA-256 | `82e628d6a00a87dfcbfaa8d6c17a742c4c8c32058797ec042e03ebdf6a6f8cbd` |
 | Mac log SHA-256 | `7261b23b0fa20382fd010595f4f6f9402639f7049a461a780b02cd286aa8b94e` |
 
-Logs are `.build/Results/AdaptiveLessonFooterIOS.log` and `AdaptiveLessonFooterMac.log`. No new tests were added for this presentation-only edit. No runtime UI or real account was opened. The independent unfinished abrupt-store-exit test prototype in the working tree was not executed or included in this follow-up; the committed graceful-reopen evidence retains its previous scope. Historical watch warnings and outstanding rendered/device gates remain open. In particular, verify footer reachability, one lesson-start operation, selection/error retention and the surrounding toolbar on iPhone portrait/landscape and large text, then iPad multitasking and resized Mac windows once fixture UI access is available.
+Logs are `.build/Results/AdaptiveLessonFooterIOS.log` and `AdaptiveLessonFooterMac.log`. No new tests were added for this presentation-only edit. No runtime UI or real account was opened. The abrupt-store-exit prototype was not included in this UI checkpoint; its subsequent acceptance is recorded in the [durability follow-up](2026-10-21-frozen-ios-and-review-focus.md#abrupt-iphone-wal-reopening). Historical watch warnings and outstanding rendered/device gates remain open. In particular, verify footer reachability, one lesson-start operation, selection/error retention and the surrounding toolbar on iPhone portrait/landscape and large text, then iPad multitasking and resized Mac windows once fixture UI access is available.
 
 ## Clean source restoration
 

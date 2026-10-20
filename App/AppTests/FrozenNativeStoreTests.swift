@@ -1,5 +1,6 @@
 import CoreData
 import CryptoKit
+import Darwin
 import Foundation
 import SQLite3
 import StudyCore
@@ -24,13 +25,19 @@ private final class FrozenStoreBundle {}
     let validation: String?
   }
 
-  private enum RestartPhase: String { case seed, reopen }
+  private enum RestartPhase: String {
+    case seed, reopen, seedAbrupt, reopenAbrupt
+    var abrupt: Bool { self == .seedAbrupt || self == .reopenAbrupt }
+  }
   private struct RestartReceipt: Codable {
     let version: Int
     let id: UUID
     let producerPID: Int32
+    let abrupt: Bool
     let expected: NativeStoreBaseline.State
     let selection: Data
+    let main: Data?
+    let wal: Data?
   }
 
   @Test(
@@ -46,7 +53,7 @@ private final class FrozenStoreBundle {}
       process.environment["USAGI_NATIVE_RESTART_ID"].flatMap(UUID.init(uuidString:)))
     let manager = FileManager.default
     let root = URL.applicationSupportDirectory.appending(path: "NativeStoreRestartFixtures")
-    if phase == .seed {
+    if phase == .seed || phase == .seedAbrupt {
       try manager.createDirectory(
         at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
     }
@@ -59,13 +66,19 @@ private final class FrozenStoreBundle {}
     let original = try family(in: frozen.deletingLastPathComponent())
     let marker = "\nFresh iPhone test host \(id) \u{0}🐰"
     switch phase {
-    case .seed:
+    case .seed, .seedAbrupt:
       try #require(
         !manager.fileExists(atPath: directory.path) && !manager.fileExists(atPath: receiptURL.path))
       try manager.createDirectory(at: directory, withIntermediateDirectories: false)
       for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
       let opened = try await StudyStore.openApplication(in: directory)
       try #require(try await opened.nativeBaselineState() == manifest.expected)
+      let locations = try selectedURLs(in: directory)
+      let mainURL = locations.selected.appending(path: "study.store")
+      let walURL = locations.selected.appending(path: "study.store-wal")
+      let mainBefore = phase.abrupt ? try Data(contentsOf: mainURL) : nil
+      let walBefore =
+        phase.abrupt && manager.fileExists(atPath: walURL.path) ? try Data(contentsOf: walURL) : nil
       let saved = try #require(
         try await opened.materials(accountID: NativeStoreBaseline.accounts[0]).first {
           $0.material.subjectID == 42
@@ -84,22 +97,32 @@ private final class FrozenStoreBundle {}
       {
         try #require(before == after)
       }
-      let locations = try selectedURLs(in: directory)
       try #require(
         try family(in: directory) == original && family(in: locations.retained) == original)
+      let main = phase.abrupt ? try Data(contentsOf: mainURL) : nil
+      let wal = phase.abrupt ? try Data(contentsOf: walURL) : nil
+      if phase.abrupt {
+        try #require(main == mainBefore)
+        try #require(wal?.isEmpty == false && wal != walBefore)
+      }
       let receipt = RestartReceipt(
-        version: 1, id: id, producerPID: process.processIdentifier,
-        expected: expected, selection: locations.selector)
+        version: 2, id: id, producerPID: process.processIdentifier, abrupt: phase.abrupt,
+        expected: expected, selection: locations.selector, main: main, wal: wal)
       try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
+      if phase.abrupt {
+        let message = "NATIVE WAL READY FOR ABRUPT EXIT: \(id), PID \(process.processIdentifier)\n"
+        try FileHandle.standardError.write(contentsOf: Data(message.utf8))
+        withExtendedLifetime(opened) { _exit(86) }
+      }
       print("NATIVE RESTART SEEDED: \(id), PID \(process.processIdentifier)")
-    case .reopen:
+    case .reopen, .reopenAbrupt:
       let info = try receiptURL.resourceValues(
         forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
       try #require(info.isRegularFile == true && info.isSymbolicLink == false)
       try #require((info.fileSize ?? 0) > 0 && (info.fileSize ?? 0) <= 16 * 1024 * 1024)
       let receipt = try PropertyListDecoder().decode(
         RestartReceipt.self, from: Data(contentsOf: receiptURL))
-      try #require(receipt.version == 1 && receipt.id == id)
+      try #require(receipt.version == 2 && receipt.id == id && receipt.abrupt == phase.abrupt)
       try #require(receipt.producerPID > 0 && receipt.producerPID != process.processIdentifier)
       let directoryInfo = try directory.resourceValues(forKeys: [
         .isDirectoryKey, .isSymbolicLinkKey,
@@ -109,6 +132,15 @@ private final class FrozenStoreBundle {}
       try #require(locations.selector == receipt.selection)
       try #require(
         try family(in: directory) == original && family(in: locations.retained) == original)
+      if phase.abrupt {
+        let main = try #require(receipt.main)
+        let wal = try #require(receipt.wal)
+        try #require(!main.isEmpty && !wal.isEmpty)
+        try #require(
+          try Data(contentsOf: locations.selected.appending(path: "study.store")) == main)
+        try #require(
+          try Data(contentsOf: locations.selected.appending(path: "study.store-wal")) == wal)
+      }
       do {
         let opened = try await StudyStore.openApplication(in: directory)
         try #require(try await opened.nativeBaselineState() == receipt.expected)
@@ -122,7 +154,7 @@ private final class FrozenStoreBundle {}
       try #require(
         try family(in: directory) == original && family(in: locations.retained) == original)
       print(
-        "NATIVE RESTART REOPENED: \(id), PID \(receipt.producerPID) → \(process.processIdentifier), 38 exact records"
+        "NATIVE RESTART REOPENED: \(id), PID \(receipt.producerPID) → \(process.processIdentifier), abrupt \(phase.abrupt), 38 exact records"
       )
       remove(directory)
       try #require(!manager.fileExists(atPath: directory.path))

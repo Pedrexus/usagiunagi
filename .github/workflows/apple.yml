@@ -190,7 +190,7 @@ jobs:
           --destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE,OS=27.0"
           --derived-data .build/Xcode/iOS --only-testing Tests --only-testing AppTests
           --setting CODE_SIGNING_ALLOWED=NO --timeout 900
-      - name: Frozen store reopened by a separate test host
+      - name: Frozen store reopened after graceful and abrupt exits
         if: matrix.device == 'iPhone 18 Pro'
         run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-restart
       - name: Review, lesson, settings and dashboard acceptance
