@@ -1,3 +1,4 @@
+import CoreData
 import CryptoKit
 import Foundation
 import SQLite3
@@ -9,6 +10,72 @@ import Testing
 private final class FrozenStoreBundle {}
 
 @Suite(.timeLimit(.minutes(1))) struct FrozenNativeStoreTests {
+  enum MetadataCase: String, CaseIterable, Sendable {
+    case control, metadataMissing, metadataMalformed, metadataMissingHashes
+    case cacheMissing, cacheMalformed
+    var table: String {
+      self == .cacheMissing || self == .cacheMalformed ? "Z_MODELCACHE" : "Z_METADATA"
+    }
+    var column: String { table == "Z_METADATA" ? "Z_PLIST" : "Z_CONTENT" }
+    var removesRow: Bool { self == .metadataMissing || self == .cacheMissing }
+  }
+  private struct MetadataRow: Equatable {
+    let id: Int64
+    let uuid: String?
+    let data: Data
+  }
+
+  @Test(arguments: MetadataCase.allCases)
+  func selectedMetadataDamageNeverRepairsOrReplacesSavedData(_ test: MetadataCase) async throws {
+    let manager = FileManager.default
+    let frozen = try frozenURL()
+    let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+    let frozenFamily = try family(in: frozen.deletingLastPathComponent())
+    let baseline = try Data(contentsOf: frozen.appendingPathExtension("baseline.plist"))
+    let directory = manager.temporaryDirectory.appending(path: "frozen-native-\(UUID())")
+    try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { remove(directory) }
+    for (name, bytes) in frozenFamily { try bytes.write(to: directory.appending(path: name)) }
+    do {
+      let intact = try await StudyStore.openApplication(in: directory)
+      #expect(try await intact.nativeBaselineState() == manifest.expected)
+    }
+    let (selector, selected, retained) = try selectedURLs(in: directory)
+    let original = try family(in: directory)
+    let retainedFamily = try family(in: retained)
+    let generations = directory.appending(path: "generations")
+    let generationNames = try manager.contentsOfDirectory(atPath: generations.path).sorted()
+    if test != .control {
+      try mutateMetadata(test, store: selected.appending(path: "study.store"))
+    }
+    let damagedFamily = try family(in: selected).filter { $0.key != "study.store-shm" }
+    for _ in 0..<2 {
+      if test == .control {
+        let opened = try await StudyStore.openApplication(in: directory)
+        #expect(try await opened.nativeBaselineState() == manifest.expected)
+      } else {
+        do {
+          _ = try await StudyStore.openApplication(in: directory)
+          Issue.record("Damaged metadata opened: \(test.rawValue)")
+        } catch is CancellationError {
+          throw CancellationError()
+        } catch StudyStoreOpeningError.alreadyOpen {
+          throw StudyStoreOpeningError.alreadyOpen
+        } catch {
+          let failure = error as NSError
+          print("METADATA REFUSED: \(test.rawValue), \(failure.domain)/\(failure.code)")
+        }
+      }
+      #expect(try family(in: directory) == original)
+      #expect(try family(in: retained) == retainedFamily)
+      #expect(try Data(contentsOf: directory.appending(path: "store-selection.plist")) == selector)
+      #expect(try manager.contentsOfDirectory(atPath: generations.path).sorted() == generationNames)
+      #expect(try family(in: selected).filter { $0.key != "study.store-shm" } == damagedFamily)
+    }
+    #expect(try family(in: frozen.deletingLastPathComponent()) == frozenFamily)
+    #expect(try Data(contentsOf: frozen.appendingPathExtension("baseline.plist")) == baseline)
+  }
+
   struct PayloadCase: Sendable, CustomStringConvertible {
     enum Damage: String, Sendable { case mistyped, truncated, null, valid }
     let field: String
@@ -66,17 +133,9 @@ private final class FrozenStoreBundle {}
       let intact = try await StudyStore.openApplication(in: directory)
       #expect(try await intact.nativeBaselineState() == manifest.expected)
     }
+    let (selector, selected, retained) = try selectedURLs(in: directory)
     let selectorURL = directory.appending(path: "store-selection.plist")
-    let selector = try Data(contentsOf: selectorURL)
-    let selection = try #require(
-      PropertyListSerialization.propertyList(from: selector, format: nil) as? [String: Any])
-    try #require(selection["phase"] as? String == "selected")
-    let candidate = try #require(selection["candidate"] as? String)
-    let retainedID = try #require(selection["retained"] as? String)
-    try #require(UUID(uuidString: candidate) != nil && UUID(uuidString: retainedID) != nil)
     let generations = directory.appending(path: "generations")
-    let selected = generations.appending(path: candidate)
-    let retained = generations.appending(path: retainedID)
     let original = try family(in: directory)
     let retainedFamily = try family(in: retained)
     let generationNames = try manager.contentsOfDirectory(atPath: generations.path).sorted()
@@ -245,73 +304,156 @@ private final class FrozenStoreBundle {}
     return url
   }
 
-  private func mutate(_ test: PayloadCase, store: URL, issue: Data) throws {
+  private func selectedURLs(in directory: URL) throws -> (Data, URL, URL) {
+    let selector = try Data(contentsOf: directory.appending(path: "store-selection.plist"))
+    let fields = try #require(
+      PropertyListSerialization.propertyList(from: selector, format: nil) as? [String: Any])
+    try #require(fields["phase"] as? String == "selected")
+    let candidate = try #require(fields["candidate"] as? String)
+    let retained = try #require(fields["retained"] as? String)
+    try #require(UUID(uuidString: candidate) != nil && UUID(uuidString: retained) != nil)
+    try #require(candidate != retained)
+    let generations = directory.appending(path: "generations")
+    return (selector, generations.appending(path: candidate), generations.appending(path: retained))
+  }
+
+  private func withSelectedDatabase(at store: URL, _ body: (OpaquePointer) throws -> Void) throws {
     // Corruption is confined to a selected store inside this test's unique temporary image.
     let root =
       FileManager.default.temporaryDirectory.resolvingSymlinksInPath().path + "/frozen-native-"
     try #require(store.resolvingSymlinksInPath().path.hasPrefix(root))
+    try #require(
+      store.lastPathComponent == "study.store"
+        && store.deletingLastPathComponent().deletingLastPathComponent().lastPathComponent
+          == "generations"
+        && UUID(uuidString: store.deletingLastPathComponent().lastPathComponent) != nil)
     var pointer: OpaquePointer?
     let status = sqlite3_open_v2(store.path, &pointer, SQLITE_OPEN_READWRITE, nil)
     defer { if let pointer { sqlite3_close(pointer) } }
     try #require(status == SQLITE_OK)
     let database = try #require(pointer)
-    let predicate = test.field == "ReviewRecord.issue" ? "1" : "\(test.column) IS NOT NULL"
+    try body(database)
+  }
+
+  private func metadataRow(_ test: MetadataCase, database: OpaquePointer) throws -> MetadataRow? {
     var query: OpaquePointer?
+    let uuid = test.table == "Z_METADATA" ? "Z_UUID" : "NULL"
     try #require(
       sqlite3_prepare_v2(
-        database,
-        "SELECT Z_PK, \(test.column) FROM \(test.table) WHERE \(predicate) ORDER BY Z_PK LIMIT 1",
-        -1, &query, nil) == SQLITE_OK)
+        database, "SELECT rowid, \(uuid), \(test.column) FROM \(test.table)", -1,
+        &query, nil) == SQLITE_OK)
     let row = try #require(query)
     defer { sqlite3_finalize(row) }
-    try #require(sqlite3_step(row) == SQLITE_ROW)
-    let rowID = sqlite3_column_int64(row, 0)
-    let original: Data
-    if sqlite3_column_type(row, 1) == SQLITE_NULL {
-      try #require(test.field == "ReviewRecord.issue")
-      original = issue
-    } else {
-      try #require(sqlite3_column_type(row, 1) == SQLITE_BLOB)
-      original = Data(
-        bytes: try #require(sqlite3_column_blob(row, 1)), count: Int(sqlite3_column_bytes(row, 1)))
-    }
+    let status = sqlite3_step(row)
+    if status == SQLITE_DONE { return nil }
+    try #require(status == SQLITE_ROW && sqlite3_column_type(row, 2) == SQLITE_BLOB)
+    let count = Int(sqlite3_column_bytes(row, 2))
+    try #require(count > 0 && count <= 16 * 1024 * 1024)
+    let value = MetadataRow(
+      id: sqlite3_column_int64(row, 0),
+      uuid: sqlite3_column_text(row, 1).map { String(cString: $0) },
+      data: Data(bytes: try #require(sqlite3_column_blob(row, 2)), count: count))
     try #require(sqlite3_step(row) == SQLITE_DONE)
-    let replacement: Data?
-    switch test.damage {
-    case .valid: replacement = original
-    case .truncated: replacement = Data("{".utf8)
-    case .null: replacement = nil
-    case .mistyped:
-      var object = try #require(JSONSerialization.jsonObject(with: original) as? [String: Any])
-      try #require(object[test.key] != nil && !(object[test.key] is [Any]))
-      object[test.key] = [String]()
-      replacement = try JSONSerialization.data(withJSONObject: object, options: .sortedKeys)
+    return value
+  }
+
+  private func mutateMetadata(_ test: MetadataCase, store: URL) throws {
+    try withSelectedDatabase(at: store) { database in
+      let before = try #require(try metadataRow(test, database: database))
+      let other: MetadataCase = test.table == "Z_METADATA" ? .cacheMalformed : .metadataMalformed
+      let unrelated = try metadataRow(other, database: database)
+      var data = Data([0x7b])
+      if test == .metadataMissingHashes {
+        let original = try #require(
+          PropertyListSerialization.propertyList(from: before.data, format: nil) as? [String: Any])
+        try #require(original[NSStoreModelVersionHashesKey] != nil)
+        var changed = original
+        changed.removeValue(forKey: NSStoreModelVersionHashesKey)
+        data = try PropertyListSerialization.data(
+          fromPropertyList: changed, format: .binary, options: 0)
+        let restored = try #require(
+          PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+        try #require(
+          NSDictionary(dictionary: restored).isEqual(
+            to: original.filter { $0.key != NSStoreModelVersionHashesKey }))
+      }
+      let literal = "x'" + data.map { String(format: "%02x", $0) }.joined() + "'"
+      let sql =
+        test.removesRow
+        ? "DELETE FROM \(test.table) WHERE rowid = \(before.id)"
+        : "UPDATE \(test.table) SET \(test.column) = \(literal) WHERE rowid = \(before.id)"
+      try #require(sqlite3_exec(database, sql, nil, nil, nil) == SQLITE_OK)
+      try #require(sqlite3_changes(database) == 1 && sqlite3_total_changes(database) == 1)
+      let after = try metadataRow(test, database: database)
+      try #require(
+        test.removesRow
+          ? after == nil : after == MetadataRow(id: before.id, uuid: before.uuid, data: data))
+      try #require(try metadataRow(other, database: database) == unrelated)
     }
-    let literal =
-      replacement.map { "x'" + $0.map { String(format: "%02x", $0) }.joined() + "'" } ?? "NULL"
-    try #require(
-      sqlite3_exec(
-        database, "UPDATE \(test.table) SET \(test.column) = \(literal) WHERE Z_PK = \(rowID)", nil,
-        nil, nil) == SQLITE_OK)
-    try #require(sqlite3_changes(database) == 1)
-    var readback: OpaquePointer?
-    try #require(
-      sqlite3_prepare_v2(
-        database, "SELECT \(test.column) FROM \(test.table) WHERE Z_PK = \(rowID)", -1,
-        &readback, nil) == SQLITE_OK)
-    let check = try #require(readback)
-    defer { sqlite3_finalize(check) }
-    try #require(sqlite3_step(check) == SQLITE_ROW)
-    if let replacement {
-      try #require(sqlite3_column_type(check, 0) == SQLITE_BLOB)
-      let actual = Data(
-        bytes: try #require(sqlite3_column_blob(check, 0)),
-        count: Int(sqlite3_column_bytes(check, 0)))
-      try #require(actual == replacement)
-    } else {
-      try #require(sqlite3_column_type(check, 0) == SQLITE_NULL)
+  }
+
+  private func mutate(_ test: PayloadCase, store: URL, issue: Data) throws {
+    try withSelectedDatabase(at: store) { database in
+      let predicate = test.field == "ReviewRecord.issue" ? "1" : "\(test.column) IS NOT NULL"
+      var query: OpaquePointer?
+      try #require(
+        sqlite3_prepare_v2(
+          database,
+          "SELECT Z_PK, \(test.column) FROM \(test.table) WHERE \(predicate) ORDER BY Z_PK LIMIT 1",
+          -1, &query, nil) == SQLITE_OK)
+      let row = try #require(query)
+      defer { sqlite3_finalize(row) }
+      try #require(sqlite3_step(row) == SQLITE_ROW)
+      let rowID = sqlite3_column_int64(row, 0)
+      let original: Data
+      if sqlite3_column_type(row, 1) == SQLITE_NULL {
+        try #require(test.field == "ReviewRecord.issue")
+        original = issue
+      } else {
+        try #require(sqlite3_column_type(row, 1) == SQLITE_BLOB)
+        original = Data(
+          bytes: try #require(sqlite3_column_blob(row, 1)), count: Int(sqlite3_column_bytes(row, 1))
+        )
+      }
+      try #require(sqlite3_step(row) == SQLITE_DONE)
+      let replacement: Data?
+      switch test.damage {
+      case .valid: replacement = original
+      case .truncated: replacement = Data("{".utf8)
+      case .null: replacement = nil
+      case .mistyped:
+        var object = try #require(JSONSerialization.jsonObject(with: original) as? [String: Any])
+        try #require(object[test.key] != nil && !(object[test.key] is [Any]))
+        object[test.key] = [String]()
+        replacement = try JSONSerialization.data(withJSONObject: object, options: .sortedKeys)
+      }
+      let literal =
+        replacement.map { "x'" + $0.map { String(format: "%02x", $0) }.joined() + "'" } ?? "NULL"
+      try #require(
+        sqlite3_exec(
+          database, "UPDATE \(test.table) SET \(test.column) = \(literal) WHERE Z_PK = \(rowID)",
+          nil,
+          nil, nil) == SQLITE_OK)
+      try #require(sqlite3_changes(database) == 1)
+      var readback: OpaquePointer?
+      try #require(
+        sqlite3_prepare_v2(
+          database, "SELECT \(test.column) FROM \(test.table) WHERE Z_PK = \(rowID)", -1,
+          &readback, nil) == SQLITE_OK)
+      let check = try #require(readback)
+      defer { sqlite3_finalize(check) }
+      try #require(sqlite3_step(check) == SQLITE_ROW)
+      if let replacement {
+        try #require(sqlite3_column_type(check, 0) == SQLITE_BLOB)
+        let actual = Data(
+          bytes: try #require(sqlite3_column_blob(check, 0)),
+          count: Int(sqlite3_column_bytes(check, 0)))
+        try #require(actual == replacement)
+      } else {
+        try #require(sqlite3_column_type(check, 0) == SQLITE_NULL)
+      }
+      try #require(sqlite3_step(check) == SQLITE_DONE)
     }
-    try #require(sqlite3_step(check) == SQLITE_DONE)
   }
 
   private func family(in directory: URL) throws -> [String: Data] {
