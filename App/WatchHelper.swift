@@ -78,29 +78,23 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
           return
         }
         callback(userInfo)
-        let server = CLKComplicationServer.sharedInstance()
-        for complication in server.activeComplications ?? [] {
-          server.reloadTimeline(for: complication)
-        }
+        WatchHelper.reloadComplications()
       }
     }
   }
 
 #endif
 
-#if os(iOS)
-  @MainActor
-#endif
-final class WatchHelper {
-  public static let keyReviewCount = "reviewCount"
-  public static let keyReviewNextHourCount = "reviewHrCount"
-  public static let keyReviewUpcomingHourlyCounts = "reviewHourly"
-  public static let keyLevelCurrent = "level"
-  public static let keyLevelLearned = "levelLearn"
-  public static let keyLevelTotal = "levelTotal"
-  public static let keyLevelHalf = "levelHalf"
-  public static let keyNextReviewAt = "nextReview"
-  public static let keySentAt = "sent"
+@MainActor final class WatchHelper {
+  nonisolated public static let keyReviewCount = "reviewCount"
+  nonisolated public static let keyReviewNextHourCount = "reviewHrCount"
+  nonisolated public static let keyReviewUpcomingHourlyCounts = "reviewHourly"
+  nonisolated public static let keyLevelCurrent = "level"
+  nonisolated public static let keyLevelLearned = "levelLearn"
+  nonisolated public static let keyLevelTotal = "levelTotal"
+  nonisolated public static let keyLevelHalf = "levelHalf"
+  nonisolated public static let keyNextReviewAt = "nextReview"
+  nonisolated public static let keySentAt = "sent"
 
   static let sharedInstance = WatchHelper(
     session: WCSession.isSupported() ? WCSession.default : nil)
@@ -153,6 +147,13 @@ final class WatchHelper {
   #endif
 
   #if os(watchOS)
+    static func reloadComplications() {
+      let server = CLKComplicationServer.sharedInstance()
+      for complication in server.activeComplications ?? [] {
+        server.reloadTimeline(for: complication)
+      }
+    }
+
     func awaitMessages(callback: @escaping ClientDelegateCallback) {
       clientHandler = WatchConnectionClientDelegate(callback)
       if let session = session {

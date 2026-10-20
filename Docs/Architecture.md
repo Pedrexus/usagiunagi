@@ -1,6 +1,6 @@
 # One shared codebase
 
-The current implementation uses one SwiftUI app, `App/UsagiUnagiApp.swift`, for iPhone, iPad and native Mac. `App/UsagiUnagi.xcodeproj` has one multiplatform app scheme. Catalyst and the iPad compatibility destination are disabled. The main app and shared package use Swift 6 language mode with the Xcode 27 / Swift 6.4 toolchain.
+The current implementation uses one SwiftUI app, `App/UsagiUnagiApp.swift`, for iPhone, iPad and native Mac. `App/UsagiUnagi.xcodeproj` has one multiplatform app scheme. Catalyst and the iPad compatibility destination are disabled. The main app, shared package and retained watch targets use Swift 6 language mode with the Xcode 27 / Swift 6.4 toolchain.
 
 The latest implementation is **not yet validated**. The owner requested production changes first, then comparison with the original Tsurukame, then tests. Historical receipts apply only to their recorded commits. [Current tasks](TASKS.md) track unfinished acceptance; [the migration specification](Migration.md) defines storage and account-safety contracts.
 
@@ -13,7 +13,7 @@ The latest implementation is **not yet validated**. The owner requested producti
 | `App/Application` | App composition, startup, scene/background ownership and cold archived-preference conversion |
 | `App/LegacyStudyImporter.swift`, `App/WaniKaniAPI` | Read-only schema 9–15 SQLite/protobuf conversion; no network client or normal application writer |
 | `App/Configuration` | Platform entitlements and project configuration |
-| Watch target and `WatchHelper.swift` | Retained watch UI/complication packaging and packet delivery |
+| `App/ComplicationExtension`, `WatchHelper.swift` | SwiftUI watch settings, immutable cached status, native packet ownership and the transitional face provider |
 
 ## Ownership and storage
 
@@ -45,12 +45,16 @@ Recent mistakes remain durable locally. One optional app-owned `StudyMistakeSync
 
 `StudyNotifications` and `StudyCompanionDelivery` read one typed account projection. Notification preference/permission intent is separate from delivery. The watch adapter retains the original packet keys, activation retry, latest pending absolute schedule and duplicate window. iOS background refresh uses Apple's asynchronous task-request API; a background or fixture launch does not request permission.
 
+The watch uses a native SwiftUI form, picker, relative update time and stale-data status. `WatchCompanionCache` reads fresh Foundation value copies from the same `LastKnownData`/`DataSource` keys; only MainActor startup receives/persists packets. There is no delegate array or shared mutable dictionary. Reviews/Level remain selectable; the unavailable random-kanji prototype and UIKit text drawing are removed without rewriting historical selection 2. Watch count projections accumulate completed hourly buckets, retain the current due queue and stop at the existing expiry. They are coarse schedule hints assuming no subsequent reviews, not live account truth.
+
+The watch retains Apple's documented incremental `WKHostingController` path. The existing WatchKit extension product inherits `_WKExtensionMain`; availability of SwiftUI `App` and `WKApplicationDelegateAdaptor` alone does not establish its launch handoff. The current Apple workout sample has already converted its active target to an application, so it is not proof for changing this extension's linker settings. No speculative entry-point, bundle-identity or container migration is applied. The [watch checkpoint](Implementation/2026-10-20-watch-swiftui.json) records the source and SDK evidence.
+
 ## Remaining non-SwiftUI boundaries
 
 - The iOS Japanese answer field is a narrow UIKit adapter for keyboard-language selection, marked text, selection and caret behavior. It is not a second study screen. Removal requires equivalent native SwiftUI input behavior on physical devices.
 - Image decoding, AVAudioSession, Keychain, notifications, background scheduling and WatchConnectivity are platform service APIs used by SwiftUI. Their platform-specific setup remains necessary.
 - Radical SVG display uses Apple's SwiftUI WebView and the shared cached source. The SVGKit dependency is removed.
-- The retained watch/ClockKit interface is a separate modernization item. Its resources and delivery are preserved; the main iPhone/iPad/Mac app has no storyboard/controller host.
+- The watch screen is SwiftUI, hosted by a three-line `WKHostingController` adapter and an empty 18-line scene that preserve the installed extension/defaults identity. ClockKit still serves existing faces. Full SwiftUI lifecycle/WidgetKit conversion needs a verified shared-data and signed-upgrade path; it is not complete. The main iPhone/iPad/Mac app has no storyboard/controller host.
 - Historical account conversion still needs SQLite3 and generated Swift protobuf messages. These decode old files; SwiftData cannot directly interpret the original custom schema.
 
 The old DEBUG UIKit host, duplicate controllers, fifteen iOS storyboards, generated navigation/assets wrappers, FMDB and associated dependency integration are being retired together. Three preexisting owner-edited legacy files remain untouched on disk and are excluded from targets. Old test sources still need their final-stage ports. No pass or final LOC/dependency acceptance follows from source deletion alone.

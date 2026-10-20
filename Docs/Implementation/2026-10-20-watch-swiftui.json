@@ -1,0 +1,217 @@
+{
+  "status": "production source and Debug compilation only; functional acceptance deferred",
+  "base_commit": "6d8b45f67a65e05c7fee77610b3b7595dea4c76e",
+  "mainboard_commit": "a2e0e20933b5fda48e4b7402b4f1e6d88d8872b3",
+  "source_changes": [
+    {
+      "before": "App/ComplicationExtension/DataManager.swift",
+      "after": "App/ComplicationExtension/WatchCompanionCache.swift",
+      "physical_lines": [
+        103,
+        80
+      ],
+      "sha256": "5ed396b8db46163465542615899c9cd909b9ace00b72971309967f43c04dce49"
+    },
+    {
+      "before": "App/ComplicationExtension/SettingsController.swift",
+      "after": "App/ComplicationExtension/WatchSettingsView.swift",
+      "physical_lines": [
+        104,
+        87
+      ],
+      "sha256": "08c5c4b758e2631764f21220174434e9e4283648634c67e04f90cd02035d8f5b"
+    },
+    {
+      "before": "App/ComplicationExtension/ExtensionDelegate.swift",
+      "after": "App/ComplicationExtension/ExtensionDelegate.swift",
+      "physical_lines": [
+        72,
+        34
+      ],
+      "sha256": "041ba40bc8f63bd4b623feb14435d4e56ba7fded1c9f7f70908673d202a4e3da"
+    },
+    {
+      "before": "App/ComplicationExtension/ComplicationController.swift",
+      "after": "App/ComplicationExtension/ComplicationController.swift",
+      "physical_lines": [
+        641,
+        574
+      ],
+      "sha256": "9d9dd2500b644e005d3bbc14d830688f92e63b9a9661fa4d825609e434bd3dc2"
+    },
+    {
+      "before": "App/WatchHelper.swift",
+      "after": "App/WatchHelper.swift",
+      "physical_lines": [
+        165,
+        166
+      ],
+      "sha256": "6cfcfc3ff9603a2a815f2a513ef38dbb3d6cd6faa4688ae039f1bd95f0d784d9"
+    }
+  ],
+  "deployment": "watchOS9 retained; four watch Debug/Release configurations now Swift6",
+  "unchanged_storage": {
+    "bundle": "com.davidsansome.wanikani.watchapp.c",
+    "keys": [
+      "LastKnownData",
+      "DataSource"
+    ],
+    "source_raw_values": {
+      "reviews": 0,
+      "level": 1,
+      "legacyCharacter": 2
+    },
+    "packet_keys": [
+      "reviewCount",
+      "reviewHrCount",
+      "reviewHourly",
+      "level",
+      "levelLearn",
+      "levelTotal",
+      "levelHalf",
+      "nextReview",
+      "sent"
+    ],
+    "incoming_max_age_seconds": 7200,
+    "display_expiry": "max(sent +7200, nextReview)",
+    "no_new_group_or_entitlements": true
+  },
+  "retained_bridge": {
+    "controller": "SettingsController",
+    "superclass": "WKHostingController<WatchSettingsView>",
+    "storyboard_lines": [
+      57,
+      18
+    ],
+    "empty_scene": true,
+    "clockkit_principal_class_unchanged": true,
+    "launch_decision": {
+      "supported_incremental_path": "Apple TN3157 explicitly supports WKHostingController during incremental migration.",
+      "existing_product_type": "com.apple.product-type.watchkit2-extension",
+      "existing_entry_point": "_WKExtensionMain",
+      "sdk_specification": "/Applications/Xcode.app/Contents/SharedFrameworks/XCBuild.framework/Versions/A/PlugIns/XCBBuildService.bundle/Contents/PlugIns/XCBSpecifications.ideplugin/Contents/Resources/watchOSShared.xcspec",
+      "conclusion": "SwiftUI App and WKApplicationDelegateAdaptor API availability alone does not establish launch handoff in this legacy extension product. No linker or target-identity change is applied.",
+      "sample_limit": "The current Apple workout sample archive has already migrated to an application product despite older extension setup prose; it does not prove legacy-extension launch."
+    }
+  },
+  "intentional_behavior_changes": [
+    "immediate face reload after selection change",
+    "minute reevaluation of stale label while visible",
+    "unavailable raw2 uses placeholder instead of random examples",
+    "three discarded template results returned",
+    "known unadvertised family explicitly unsupported",
+    "accumulated full-hour queue projection and consistent current refresh",
+    "entry-relative countdown cutoff",
+    "expiry marker/strict date/native limit including vacation",
+    "missing packet is unknown, not zero"
+  ],
+  "producer_evidence": {
+    "original_commit": "d20defc38db78a844d49130031e54969d1907331",
+    "original": "ios/LocalCachingClient.swift:185 and :1581",
+    "current": "Shared/Sources/StudyCore/StudyServiceSnapshot.swift:28",
+    "current_sha256": "7daedf22c673ccf1f87aabb588f76de382841d616f3113cdbb080ec8e1d55dd0",
+    "conclusion": "Both producers count independent hourly buckets; projections assume no subsequent reviews and do not infer exact within-hour due counts."
+  },
+  "compile": {
+    "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-5711cd04d8c24cc69f3c8c88d6622ed3.xcresult",
+    "status": "succeeded",
+    "errors": 0,
+    "warnings": 40,
+    "warning_groups": {
+      "'init()' was deprecated in watchOS 7.0: Initializing a template without parameters is deprecated in watchOS 7.0. Use an init with parameters instead.": 39,
+      "'CLKComplicationSupportedFamilies' has been deprecated starting in watchOS 7.0, use the ClockKit complications API instead.": 1
+    },
+    "diagnostics_sha256": "dc9c1f42a7d9d8eaa9aa9fadfb80b73ad1617b67476d1d44276540bd746b314b",
+    "note": "Incremental generic iOS Simulator Debug including embedded watch; no launch/test. Earlier scene compilation adds one retained empty-storyboard warning.",
+    "initial_scene_bundle": "build-812d50994b904c11bc1028581f378849.xcresult",
+    "initial_scene_warning_count": 41
+  },
+  "inventory": {
+    "artifact": ".build/Reports/WatchSwiftUIInventory.json",
+    "sha256": "c2cfe2aa98b7ef736f1849e391a09fd0d766c4473e03007108976f2b8e209cd9",
+    "files": 262,
+    "totals": [
+      {
+        "language": "swift",
+        "kind": "production",
+        "files": 141,
+        "physical_lines": 20760,
+        "nonblank_lines": 20002,
+        "lint_files": 141,
+        "parsed_files": 141
+      },
+      {
+        "language": "swift",
+        "kind": "test",
+        "files": 116,
+        "physical_lines": 23717,
+        "nonblank_lines": 22909,
+        "lint_files": 116,
+        "parsed_files": 116
+      },
+      {
+        "language": "swift",
+        "kind": "tooling",
+        "files": 5,
+        "physical_lines": 282,
+        "nonblank_lines": 267,
+        "lint_files": 5,
+        "parsed_files": 5
+      }
+    ],
+    "rules": 14,
+    "parser_gaps": 0,
+    "context_gaps": 0,
+    "mainboard_toolchain": {
+      "compiler": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend",
+      "compiler_version": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0",
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "host_libraries": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host",
+      "helper_identity": "2754b76c792d3b7b3b5953c4",
+      "helper_source_sha256": "76ddf1ce1871229230a85d4f5473096336f2520774bb3076eb3f0ed0bb970a81"
+    },
+    "handwritten_production_physical_lines": [
+      20904,
+      20760
+    ],
+    "tests_physical_lines": [
+      23717,
+      23717
+    ],
+    "note": "Classification is not target membership; counts include three unchanged off-target owner files."
+  },
+  "deferred_assertions": [
+    "archive/raw selection continuity",
+    "SwiftUI picker navigation and reopen",
+    "defaults-notification UI update",
+    "startup idempotence and callback-before-reload",
+    "two-hour exact cutoff and max(nextReview) deadline",
+    "missing/fresh/stale and verified zero distinction",
+    "h0/h1/final/beyond horizon and refreshed current count",
+    "strict after/limit0/limitN/expiry collisions",
+    "vacation/empty buckets and expiry after24h",
+    "missing-expiry fallback",
+    "entry-relative expired/countdown cap",
+    "all11 advertised families and three restored results",
+    "no random prototype or textToImage",
+    "paired background/upgrade/accessibility behavior"
+  ],
+  "remaining_production": [
+    "owner-controlled shared widget cache and signed source continuity",
+    "functional StaticConfiguration and all4 accessory layouts",
+    "ClockKit widget migrator and old face selection continuity",
+    "single-target SwiftUI watch lifecycle and final hosting/ClockKit plumbing deletion"
+  ],
+  "tests_run": 0,
+  "app_launches": 0,
+  "live_exercises": 0,
+  "usability_comparison": "deferred until production changes complete",
+  "p0c": "unapplied after automatic approval review rejection; pending explicit approval",
+  "no_pr_push_or_distribution": true,
+  "references": [
+    "https://developer.apple.com/documentation/technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit",
+    "https://developer.apple.com/documentation/widgetkit/converting-a-clockkit-app",
+    "https://developer.apple.com/documentation/swiftui/wkapplicationdelegateadaptor",
+    "https://developer.apple.com/documentation/healthkit/build-a-workout-app-for-apple-watch"
+  ]
+}

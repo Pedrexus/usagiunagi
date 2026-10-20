@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import ClockKit
-import os
 
-class ComplicationController: NSObject, CLKComplicationDataSource {
+final class ComplicationController: NSObject, CLKComplicationDataSource {
   let tsurukameHighlightColor = UIColor.red
   // Ignore next review dates father in the future. We show the durations in
   // hours and these large values look incorrect.
@@ -40,16 +39,15 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
   }
 
   func getTimelineEndDate(for _: CLKComplication, withHandler handler: @escaping (Date?) -> Void) {
-    if let data = DataManager.sharedInstance.latestData,
-      let dataSentAt = data[WatchHelper.keySentAt] as? EpochTimeInt,
-      let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int]
+    let data = WatchCompanionCache.sharedInstance.latestData
+    if let expiry = WatchCompanionCache.status(for: data).staleAfter {
+      handler(expiry)
+    } else if let sent = data?[WatchHelper.keySentAt] as? EpochTimeInt,
+      let hours = data?[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int]
     {
-      let endInterval = TimeInterval(60 * 60 * min(24, hourlyCounts.count))
-      let endDate = Date(timeIntervalSince1970: TimeInterval(dataSentAt))
-        .addingTimeInterval(endInterval)
-      handler(endDate)
+      handler(Date(timeIntervalSince1970: TimeInterval(sent) + Double(min(24, hours.count)) * 3600))
     } else {
-      handler(DataManager.sharedInstance.dataStaleAfter())
+      handler(nil)
     }
   }
 
@@ -68,15 +66,20 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       @escaping (CLKComplicationTimelineEntry?)
       -> Void
   ) {
-    if DataManager.sharedInstance.dataIsStale() {
-      handler(staleTimelineEntry(complication: complication))
+    guard let data = WatchCompanionCache.sharedInstance.latestData else {
+      handler(staleTimelineEntry(complication: complication, at: Date()))
+      return
+    }
+    let status = WatchCompanionCache.status(for: data)
+    if status.isStale(at: Date()), let expiry = status.staleAfter {
+      handler(staleTimelineEntry(complication: complication, at: expiry))
       return
     }
 
     if let template = templateFor(
       complication,
-      userData: DataManager.sharedInstance.latestData,
-      dataSource: DataManager.sharedInstance.dataSource)
+      userData: data,
+      dataSource: WatchCompanionCache.sharedInstance.dataSource)
     {
       let date = Date()
       let entry = CLKComplicationTimelineEntry(date: date, complicationTemplate: template)
@@ -97,55 +100,44 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
   }
 
   func getTimelineEntries(
-    for complication: CLKComplication, after: Date, limit _: Int,
-    withHandler handler:
-      @escaping ([CLKComplicationTimelineEntry]?)
-      -> Void
+    for complication: CLKComplication, after: Date, limit: Int,
+    withHandler handler: @escaping ([CLKComplicationTimelineEntry]?) -> Void
   ) {
-    if DataManager.sharedInstance.dataSource == .ReviewCounts,
-      let data = DataManager.sharedInstance.latestData,
-      let dataSentAt = data[WatchHelper.keySentAt] as? EpochTimeInt,
-      let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int]
-    {
-      var entries: [CLKComplicationTimelineEntry] = []
-      for (idx, _) in hourlyCounts.enumerated() {
-        if idx > 23 {
-          break
-        }
-        let entryInterval = TimeInterval((60 * 60) * idx)
-        let entryDate = Date(timeIntervalSince1970: TimeInterval(dataSentAt))
-          .addingTimeInterval(entryInterval)
-        if entryDate > after,
-          let entryTemplate = templateForReviewCount(
-            complication,
-            userData: data,
-            offset: idx)
-        {
-          entries
-            .append(
-              CLKComplicationTimelineEntry(
-                date: entryDate,
-                complicationTemplate: entryTemplate))
-        }
-      }
-      handler(entries)
-    } else if let staleDate = DataManager.sharedInstance.dataStaleAfter(),
-      after.distance(to: staleDate) >= 0,
-      let staleEntry = staleTimelineEntry(complication: complication)
-    {
-      handler([staleEntry])
-    } else {
-      handler(nil)
+    guard limit > 0 else {
+      handler([])
+      return
     }
+    let data = WatchCompanionCache.sharedInstance.latestData
+    let expiry = WatchCompanionCache.status(for: data).staleAfter
+    var entries: [CLKComplicationTimelineEntry] = []
+    if WatchCompanionCache.sharedInstance.dataSource == .reviews,
+      let data, let sent = data[WatchHelper.keySentAt] as? EpochTimeInt,
+      let hours = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int], !hours.isEmpty
+    {
+      for offset in 0...min(24, hours.count) {
+        let date = Date(timeIntervalSince1970: TimeInterval(sent) + Double(offset) * 3600)
+        guard date > after else { continue }
+        if let expiry, date >= expiry { break }
+        if let template = templateForReviewCount(complication, userData: data, offset: offset) {
+          entries.append(CLKComplicationTimelineEntry(date: date, complicationTemplate: template))
+        }
+        if entries.count == limit { break }
+      }
+    }
+    if entries.count < limit, let expiry, expiry > after,
+      let stale = staleTimelineEntry(complication: complication, at: expiry)
+    {
+      entries.append(stale)
+    }
+    handler(entries)
   }
 
-  func staleTimelineEntry(complication: CLKComplication) -> CLKComplicationTimelineEntry? {
-    if let staleDate = DataManager.sharedInstance.dataStaleAfter(),
-      let template = templateForStaleData(complication)
-    {
-      return CLKComplicationTimelineEntry(date: staleDate, complicationTemplate: template)
+  func staleTimelineEntry(complication: CLKComplication, at expiry: Date)
+    -> CLKComplicationTimelineEntry?
+  {
+    templateForStaleData(complication).map {
+      CLKComplicationTimelineEntry(date: expiry, complicationTemplate: $0)
     }
-    return nil
   }
 
   // MARK: - Placeholder Templates
@@ -159,7 +151,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     // This method will be called once per supported complication, and the results will be cached
     let template = templateFor(
       complication,
-      userData: DataManager.sharedInstance.latestData ?? [
+      userData: WatchCompanionCache.sharedInstance.latestData ?? [
         WatchHelper.keyReviewCount: 8,
         WatchHelper.keyReviewNextHourCount: 3,
         WatchHelper.keyReviewUpcomingHourlyCounts: [
@@ -175,7 +167,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         WatchHelper.keyNextReviewAt: Date()
           .addingTimeInterval(TimeInterval(300)).timeIntervalSince1970,
       ],
-      dataSource: DataManager.sharedInstance.dataSource)
+      dataSource: WatchCompanionCache.sharedInstance.dataSource)
     handler(template)
   }
 
@@ -186,12 +178,12 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     dataSource: ComplicationDataSource
   ) -> CLKComplicationTemplate? {
     switch dataSource {
-    case .ReviewCounts:
+    case .reviews:
       return templateForReviewCount(complication, userData: userData)
-    case .Level:
+    case .level:
       return templateForLevel(complication, userData: userData)
-    case .Character:
-      return templateForCharacter(complication, userData: userData)
+    case .legacyCharacter:
+      return templateForStaleData(complication)
     }
   }
 
@@ -199,6 +191,12 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     _ complication: CLKComplication, userData: UserData?,
     offset: Int? = nil
   ) -> CLKComplicationTemplate? {
+    let referenceDate: Date
+    if let offset, let sent = userData?[WatchHelper.keySentAt] as? EpochTimeInt {
+      referenceDate = Date(timeIntervalSince1970: TimeInterval(sent) + Double(offset) * 3600)
+    } else {
+      referenceDate = Date()
+    }
     var reviewsPending = 0
     var nextHour = 0
     var nextReview: Date?
@@ -211,18 +209,23 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       }
       if let nextReviewAt = data[WatchHelper.keyNextReviewAt] as? EpochTimeInt, nextReviewAt > 0 {
         nextReview = Date(timeIntervalSince1970: TimeInterval(nextReviewAt))
-        if let nr = nextReview, nr > Date().addingTimeInterval(farFutureReviewDate) {
+        if let nr = nextReview,
+          nr <= referenceDate || nr > referenceDate.addingTimeInterval(farFutureReviewDate)
+        {
           nextReview = nil
         }
       }
 
-      if let offsetIdx = offset,
-        let hourlyCounts = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int],
-        hourlyCounts.count >= offsetIdx + 2
-      {
-        reviewsPending = hourlyCounts[offsetIdx]
-        nextHour = hourlyCounts[offsetIdx + 1]
-        nextReview = nil
+      if let hours = data[WatchHelper.keyReviewUpcomingHourlyCounts] as? [Int] {
+        let elapsed =
+          (data[WatchHelper.keySentAt] as? EpochTimeInt).map {
+            max(0, referenceDate.timeIntervalSince1970 - TimeInterval($0)) / 3600
+          } ?? 0
+        let horizon = min(24, hours.count)
+        let hour = min(max(0, offset ?? Int(min(elapsed, Double(horizon)))), horizon)
+        // Buckets are independent: retain current due work and accumulate completed hours.
+        reviewsPending += hours.prefix(hour).reduce(0, +)
+        nextHour = hour < horizon ? hours[hour] : 0
       }
     }
 
@@ -235,6 +238,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       let template = CLKComplicationTemplateExtraLargeStackText()
       template.line1TextProvider = CLKTextProvider(format: "REVIEWS")
       template.line2TextProvider = CLKTextProvider(format: "%d", reviewsPending)
+      return template
     case .modularSmall:
       if reviewsPending > 0 {
         let template = CLKComplicationTemplateModularSmallStackText()
@@ -350,10 +354,11 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         template.headerImageProvider = CLKFullColorImageProvider(fullColorImage: img)
       }
       return template
+    case .graphicExtraLarge:
+      return nil
     @unknown default:
       return nil
     }
-    return nil
   }
 
   func templateForLevel(
@@ -491,6 +496,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       let template = CLKComplicationTemplateExtraLargeStackText()
       template.line1TextProvider = CLKTextProvider(format: "REVIEWS")
       template.line2TextProvider = CLKSimpleTextProvider(text: "unknown")
+      return template
     case .modularSmall:
       let template = CLKComplicationTemplateModularSmallStackText()
       template.line1TextProvider = CLKSimpleTextProvider(text: "now")
@@ -527,6 +533,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
       let template = CLKComplicationTemplateGraphicCircularStackText()
       template.line1TextProvider = CLKSimpleTextProvider(text: "next")
       template.line2TextProvider = dashTextProvider
+      return template
     case .graphicBezel:
       let template = CLKComplicationTemplateGraphicBezelCircularText()
       if let img = UIImage(named: "miniCrab") {
@@ -551,52 +558,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         template.headerImageProvider = CLKFullColorImageProvider(fullColorImage: img)
       }
       return template
-    @unknown default:
+    case .graphicExtraLarge:
       return nil
-    }
-    return nil
-  }
-
-  /// Currently in testing: Is it useful to see a random character?
-  func templateForCharacter(
-    _ complication: CLKComplication,
-    userData _: UserData?
-  ) -> CLKComplicationTemplate? {
-    // TODO: Get the list of characters to pick from
-    let character: String = ["森", "後"].randomElement()!
-    let vocab: String = ["落とす"].randomElement()!
-    let px = 70
-    let size = CGSize(width: px, height: px)
-
-    switch complication.family {
-    case .graphicBezel:
-      let template = CLKComplicationTemplateGraphicBezelCircularText()
-      template.textProvider = CLKSimpleTextProvider(text: vocab)
-      let circ = CLKComplicationTemplateGraphicCircularClosedGaugeText()
-      circ.centerTextProvider = CLKSimpleTextProvider(text: "30")
-      circ
-        .gaugeProvider = CLKSimpleGaugeProvider(
-          style: .fill, gaugeColor: tsurukameHighlightColor,
-          fillFraction: 3 / 10)
-      template.circularTemplate = circ
-      return template
-    case .graphicCircular:
-      // Attempt to use an image so we can have a larger text item
-      if let img = textToImage(drawText: character, size: size) {
-        let template = CLKComplicationTemplateGraphicCircularClosedGaugeImage()
-        template.imageProvider = CLKFullColorImageProvider(fullColorImage: img)
-        template
-          .gaugeProvider = CLKSimpleGaugeProvider(
-            style: .fill, gaugeColor: tsurukameHighlightColor,
-            fillFraction: 3 / 10)
-        return template
-      } else {
-        let template = CLKComplicationTemplateGraphicCircularStackText()
-        template.line1TextProvider = CLKSimpleTextProvider(text: "")
-        template.line2TextProvider = CLKSimpleTextProvider(text: character)
-        return template
-      }
-    default:
+    @unknown default:
       return nil
     }
   }
@@ -607,35 +571,4 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     CLKRelativeDateTextProvider(date: date, style: .offsetShort, units: .hour)
   }
 
-  /// Create a UIImage with a kanji character centered in it. Used to display larger text.
-  func textToImage(drawText text: String, size: CGSize) -> UIImage? {
-    let textColor = UIColor.white
-    let textFont = UIFont.systemFont(ofSize: 26)
-
-    let scale: CGFloat = 2.0
-    UIGraphicsBeginImageContextWithOptions(size, false, scale)
-
-    let textStyle = NSMutableParagraphStyle()
-    textStyle.alignment = .center
-
-    let textFontAttributes =
-      [
-        NSAttributedString.Key.font: textFont,
-        NSAttributedString.Key.foregroundColor: textColor,
-        NSAttributedString.Key.paragraphStyle: textStyle,
-      ] as [NSAttributedString.Key: Any]
-
-    let textHeight = textFont.lineHeight
-    let textY = (size.height - textHeight) / 2
-    let textRect = CGRect(
-      x: 0, y: textY,
-      width: size.width, height: textHeight)
-
-    text.draw(in: textRect, withAttributes: textFontAttributes)
-
-    let newImage = UIGraphicsGetImageFromCurrentImageContext()
-    UIGraphicsEndImageContext()
-
-    return newImage
-  }
 }
