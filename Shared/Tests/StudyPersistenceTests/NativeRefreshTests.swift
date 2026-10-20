@@ -386,6 +386,21 @@ extension NativeRefreshTests {
     #expect(
       restored.serverID == expectedServerID && restored.attemptedRevision == nil
         && restored.issue == nil)
+    try await reopened.acknowledgeMaterial(restored)
+    let acknowledged = try #require(await reopened.materials(accountID: "fixture-user-id").first)
+    #expect(!acknowledged.pending && acknowledged.material == edited)
+    #expect(acknowledged.revision != restored.revision)
+    let authoritative = StudyMaterial(
+      subjectID: 1, meaningNote: "Server edit after acknowledgement",
+      readingNote: "Fresh いち", meaningSynonyms: ["Fresh server synonym"])
+    var fresh = try await download()
+    fresh.materials = [.init(id: 991, value: authoritative)]
+    let freshBaseline = try await reopened.refreshBaseline(accountID: "fixture-user-id")
+    _ = try await reopened.applyDownload(
+      fresh, credentialID: "credential", baseline: freshBaseline)
+    let accepted = try #require(await reopened.materials(accountID: "fixture-user-id").first)
+    #expect(accepted.material == authoritative && !accepted.pending && accepted.serverID == 991)
+    #expect(accepted.revision != acknowledged.revision)
   }
 
   @Test func replacementAssignmentIDsCannotDuplicateOrResurrectPendingReviews() async throws {

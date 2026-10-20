@@ -129,3 +129,43 @@ Remaining acceptance includes the newly unified revealed-details scroll, actual 
 | `.build/Reports/AccessibleStudyInventory.json` | `66367a6846e0b86380f2dc7251f70e8424210b996ae3a744c87dce332fc4929a` |
 | `.build/Reports/AccessibleStudyComparison.json` | `0778bad2942bb3c89be8664c05db9a5e4bba04d3849808fff2a0c07ba77ac56f` |
 | `.build/Reports/AccessibleStudyAssets.json` | `8a87a2ac72aa8acfbf51cb14c447814935ad1ad5354298b25382faf8922bfea7` |
+
+## Native navigation and final test ports
+
+Commit `95b0207d` applies the iPhone-first follow-up in five existing UI/app files, with no new platform utility framework. `StudyTabs` now uses `.sidebarAdaptable`, preserving phone tabs while allowing the system's larger-window navigation. The Refresh command is shared with hardware-keyboard iPad instead of being compiled only for Mac. Lesson Back uses the semantic `.navigation` toolbar placement rather than an overlay above page content; its action and accessibility identifier remain unchanged. The unused `supportsAudio` flag is removed from both review settings owners: every caller already supported audio. The real iOS audio-session interruption option remains conditional.
+
+The installed Xcode 27 interfaces confirm sidebar adaptation, `Scene.commands` and navigation toolbar placement are available on both deployment targets. No `UIDevice`/idiom or size-class platform fork remains in the inspected active shared UI/app scene files. Remaining branches cover unavailable keyboard/IME hints, audio/activity/notification/background services and scene lifecycle/window policy. The Mac minimum window size remains a scene policy awaiting small-window acceptance. Native sidebar presentation, toolbar placement and keyboard command delivery still need rendered iPhone/iPad/Mac checks; no new screenshot or GUI interaction is claimed.
+
+Test-stage review found and fixed two production regressions. The generation opener tried to publish an already read-only capture; its fix and separate-process evidence are recorded in the [opening checkpoint](2026-10-20-native-store-opening.md). Expired connected accounts now produce typed, model-owned incidents, acknowledged once and deferred during study. A constrained reconnect verifies the saved stable account ID before downloading or committing credentials; a normal connection still permits deliberate account switching. Tests cover mismatches, stale prompts, late responses/cancellation, overlapping operations and preservation of sessions, notes and pending reviews. This uses the existing model, sync lane and shell, without another platform flow.
+
+The original API corpus exposed two rejected compact date spellings. The reader now uses immutable native `Date.ISO8601FormatStyle` for dashed and compact dates. Apple's [format-style documentation](https://developer.apple.com/documentation/foundation/date/iso8601formatstyle) specifies optional fractional seconds with Swift 6.2 onward; the installed compiler is Swift 6.4. All sixteen original spellings, exact profile/subscription/progression values and nanori readings pass. The obsolete PromiseKit/Hippolyte API test helpers retire only after that port. The remaining protobuf package test covers all 22 historical part-of-speech codes/descriptions; SwiftProtobuf 1.39.0 and its revision/plugin are unchanged.
+
+| Local evidence | Accepted scope |
+| --- | --- |
+| `SharedFinalMac4.log` | 544 shared functions/72 suites pass on Mac; later test-only path normalization is covered by `NativeOpeningMacFinal2.log` (four opening functions, including parameter cases) |
+| `test-a99d330695b94f53b0171c09142bd0eb.xcresult` | iPhone simulator: 544 functions, 805 parameterized executions, zero failures/skips; source includes the never-opened damaged-store fixture, before the Mac alias normalization |
+| `NativeHostedTests.log` and its result sidecars | iPhone simulator: 73 hosted functions/15 suites, 102 executions, zero failures/skips. Generated `.xctestrun` arguments for both hosts explicitly contain `--review-fixture` before execution |
+| `NativeProtobufTests.log` | One Swift Testing function with 22 historical raw-code/description cases passes |
+| `build-55da59163c6043619e2aa413ef88d03f.xcresult` | Native Mac Debug app builds with the final native navigation changes |
+| `build-for-testing-05ea20be47fc42e08b60f411cf3ae9ff.xcresult` | iOS app and both hosted test targets compile; native input Coordinator visibility remains internal |
+| `build-af6d23a9b2b043b7a4631051399fcd56.xcresult` | iOS/watch/widget Release builds; one existing empty WatchKit-host storyboard warning remains |
+| `build-f43810af8baa4779b93ac4a2a5357580.xcresult` | Mac Release builds; native summary has zero errors/warnings |
+| Mainboard `1d6b2d7` targeted gate | All 228 Apple/Swift regressions pass; see [tooling evidence](2026-10-20-mainboard-reports.md) |
+
+Development failures were retained and corrected rather than skipped. Shared fakes initially referenced retired methods and had two throwing-macro errors. The cloud test incorrectly treated `Task.yield()` as an AsyncStream drain; bounded waits now observe the actual account/loading/quota transition before continuing, preserving exact writes/history checks. The first iOS run passed 543/544 functions: a newly damaged-store test released its setup container while checking bytes. It now damages a never-opened coherent copy while retaining its idle source, preserving every byte comparison. A focused Mac rerun then exposed the helper's `/var` versus `/private/var` relative-path key bug; canonical root/entry paths fix that comparison without excluding WAL/SHM. Hosted compilation also caught a throwing `#require` expression and two retired grading adapter references; explicit independent grading expectations preserve the original role/reading corpus. The successful results above follow those scoped fixes.
+
+The nineteen old writer assertion mappings were audited before deleting their superseded suites. Native stale-note tests now include ACK followed by fresh authoritative replacement. Archive/preference and review integration assertions remain, and the empty UIKit test delegate is removed. All ReviewFlow launch/open/activation helpers require the DEBUG fixture marker; cleanup terminates without a production relaunch. Eleven missing UI fixture scenarios remain explicit failures before app creation, not skips or claimed passes. They and rendered original-app comparison remain open.
+
+Whole production formatting/UI-rule checks pass for 158 files, and broad SwiftLint passes for 277 discovered files. The final inventory parses 257/257 classified first-party sources with zero parser gaps/context issues. Versus the preceding checkpoint, production remains 145 files and grows 21,241 → 21,379 physical lines (+138 for correctness); tests shrink 116 → 107 files and 23,745 → 22,461 lines; tooling changes 282 → 281. This is 1,147 fewer physical lines overall, not a production LOC reduction. Counts include the three protected, off-target owner files; source inventories do not prove target membership or behavior. V1 declarations and frozen store fixtures remain unchanged.
+
+The final iOS/Mac Release main executables were inspected with the selected toolchain's `nm` and `otool`, each exiting 0. Their retained `Release{iOS,Mac}{Symbols,Linkage}.txt` files contain no `FMDatabase`, `FMResultSet`, `Hippolyte` or `PromiseKit` match. This is scoped main-executable symbol/linkage evidence, not a full nested-product or clean dependency-restoration attestation.
+
+| Retained artifact | SHA-256 |
+| --- | --- |
+| `AdaptiveValidationInventory.json` | `8d4b3730b657201af758eae92e390c9a4d4902cc3836bcf2bf19c483778ee7e2` |
+| `AdaptiveValidationComparison.json` | `4ea4d61378f45d7e33a612a09a9dba4cfb6d935dd9426ad99b5ad6eeb232a4c6` |
+| iPhone shared `.tests.json` | `c88bc1512a7c74097e883fbc826bdf1aa1a9ffeb459f7a03d66d73d23a87c3dd` |
+| `NativeHostedTests.log` | `4ac73245f70aab6a73c89fcb111f3d5b3033e093d72a21020d3976e300466648` |
+| `ApplicationOpeningProbe.log` | `f6636f1f0d8b63acd9420e7571c0baab3f385f5a28b3fff5da9da0294de64e88` |
+
+Fresh builds retain the six previously recorded shared-test warnings; incremental zero-warning summaries do not erase them. Fixture image CRC diagnostics, the empty watch-host lifecycle warning and AppIntents metadata-extraction notes remain scoped. No real account, exercises, cloud writes, microphone, signed service, GUI automation, PR, push or distribution was used in these gates. Remaining acceptance includes rendered keyboard/IME/draft and lesson/review flows, largest text/short windows, eleven UI fixtures, wider G7 failures/decoder compatibility, watch lifecycle and physical/signed services.

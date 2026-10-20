@@ -1,176 +1,110 @@
 // Copyright David Sansome
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Licensed under the Apache License, Version 2.0. See LICENSE for terms.
 
+import Foundation
 import StudyCore
-import WaniKaniAPI
-import XCTest
+import StudyPersistence
+import Testing
 
-final class ReviewSessionTest: XCTestCase {
-  private func subject(reading: Bool = true) -> TKMSubject {
-    var value = TKMSubject()
-    value.id = 42
-    value.japanese = "一"
-    value.kanji = .init()
-    var meaning = TKMMeaning()
-    meaning.meaning = "One"
-    value.meanings = [meaning]
-    if reading {
-      var reading = TKMReading()
-      reading.reading = "いち"
-      reading.isPrimary = true
-      value.readings = [reading]
-    }
-    return value
-  }
-
-  private func item(subject: TKMSubject? = nil) -> ReviewItem {
-    var assignment = TKMAssignment()
-    assignment.id = 100
-    assignment.subjectID = 42
-    assignment.srsStageNumber = 4
-    assignment.subjectType = .kanji
-    assignment.availableAt = 10
-    return ReviewItem(assignment: assignment, subject: subject)
-  }
-
-  private func options() -> StudySessionOptions {
+struct ReviewSessionTest {
+  private let account = "native-review-adapter-fixture"
+  private let now = Date(timeIntervalSince1970: 100)
+  private var options: StudySessionOptions {
     var value = StudySessionOptions()
     value.groupMeaningReading = true
     value.meaningFirst = true
     return value
   }
-
-  func testCompletedSubjectUsesExistingDurableWriteBoundaryExactlyOnce() {
-    var sent = [TKMProgress]()
-    let subject = subject()
-    let session = ReviewSession(
-      repository: ReviewRepository(
-        subject: { _ in
-          subject
-        }, saveProgress: { sent.append($0) }),
-      items: [item()], options: options, now: { 100 }, seed: 1)
-    session.nextTask()
-    XCTAssertEqual(session.activeTaskType, .meaning)
-    XCTAssertEqual(session.markAnswer(.correct)?.subjectFinished, false)
-    XCTAssertTrue(sent.isEmpty)
-    session.nextTask()
-    XCTAssertEqual(session.activeTaskType, .reading)
-    XCTAssertEqual(session.markAnswer(.correct)?.subjectFinished, true)
-    XCTAssertEqual(sent.count, 1)
-    XCTAssertEqual(sent[0].assignment.id, 100)
-    XCTAssertEqual(sent[0].assignment.subjectID, 42)
-    XCTAssertEqual(sent[0].createdAt, 100)
-    XCTAssertFalse(sent[0].meaningWrong || sent[0].readingWrong)
-    XCTAssertNil(session.markAnswer(.correct))
-    XCTAssertEqual(sent.count, 1)
-    XCTAssertEqual(session.completedReviews.count, 1)
+  private func store() async throws -> StudyStore {
+    let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
+    var profile = StudyAccountProfile(username: "Review adapter fixture")
+    profile.level = 1
+    profile.maxLevelGranted = 3
+    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var subject = CatalogSubject(id: 42, kind: .kanji)
+    subject.level = 1
+    subject.japanese = "一"
+    subject.meanings = [.init("One", role: .primary)]
+    subject.readings = [.init("いち", isPrimary: true, kind: .onyomi)]
+    var assignment = CatalogAssignment(id: 100, subjectID: 42, kind: .kanji)
+    assignment.level = 1
+    assignment.srsStage = 4
+    assignment.unlockedAt = 1
+    assignment.startedAt = 1
+    assignment.availableAt = 10
+    source.subjects = [subject]
+    source.assignments = [assignment]
+    source.materials = [
+      .init(
+        serverID: 99,
+        value: .init(
+          subjectID: 42, meaningNote: "Before review",
+          readingNote: "Hidden reading note", meaningSynonyms: ["Single"]),
+        pending: false, legacyRevision: 7)
+    ]
+    _ = try await store.importLegacyAccount(
+      source, sourceID: "native-review-adapter", verifiedAccountID: account,
+      verifiedUsername: profile.username, credentialID: "native-review-adapter")
+    return store
   }
-
-  func testPracticeNeverWritesProgressEvenWhenCallerJustMarksCorrect() {
-    var writes = 0
-    let session = ReviewSession(
-      repository: ReviewRepository(
-        subject: { _ in
-          nil
-        }, saveProgress: { _ in writes += 1 }),
-      items: [item(subject: subject(reading: false))],
-      isPracticeSession: true,
-      options: options, seed: 1)
-    session.nextTask()
-    XCTAssertEqual(session.markAnswer(.correct)?.subjectFinished, true)
-    XCTAssertEqual(writes, 0)
-    XCTAssertEqual(session.completedReviews.count, 1)
+  @Test func testOverrideAndReadingCreditReachTheDurableSubmission() async throws {
+    let store = try await store()
+    let opened = try await store.openReviews(accountID: account, options: options, now: now)
+    let question = try #require(opened.question)
+    #expect(question.kind == .meaning)
+    let credited = try await store.answerReview(
+      "ichi", question: question, accountID: account, expectedRevision: opened.saved.revision,
+      now: now)
+    #expect(credited.grade == .isReadingButWantMeaning)
+    #expect(credited.state.saved.session.tasksAnswered == 0)
+    let wrong = try await store.answerReview(
+      "not an answer", question: #require(credited.state.question), accountID: account,
+      expectedRevision: credited.state.saved.revision, now: now)
+    #expect(wrong.grade == .incorrect)
+    let corrected = try await store.changeReview(
+      .overrideCorrect, accountID: account, expectedRevision: wrong.state.saved.revision, now: now)
+    #expect(corrected.success?.subjectFinished == true && corrected.question == nil)
+    #expect(
+      corrected.saved.session.tasksAnswered == 1
+        && corrected.saved.session.tasksAnsweredCorrectly == 1)
+    let pending = try await store.pendingReviews(accountID: account)
+    #expect(pending.count == 1)
+    let review = try #require(pending.first)
+    #expect(review.submission.assignmentID == 100 && review.subjectID == 42)
+    #expect(review.submission.createdAt == 100 && !review.submission.isLesson)
+    #expect(!review.submission.meaningWrong && !review.submission.readingWrong)
+    #expect(review.submission.meaningWrongCount == 0 && review.submission.readingWrongCount == 0)
+    let item = try #require(corrected.saved.session.items[question.itemID])
+    #expect(item.reading.answered && corrected.saved.session.completedIDs == [question.itemID])
+    await #expect(throws: StudySessionError.self) {
+      try await store.changeReview(
+        .overrideCorrect, accountID: account,
+        expectedRevision: corrected.saved.revision, now: now)
+    }
+    #expect(try await store.pendingReviews(accountID: account) == pending)
   }
-
-  func testIncompleteCatalogDoesNotSilentlySkipOrUpload() {
-    var writes = 0
-    let session = ReviewSession(
-      repository: ReviewRepository(
-        subject: { _ in
-          nil
-        }, saveProgress: { _ in writes += 1 }),
-      items: [item()], options: options, seed: 1)
-    XCTAssertNotNil(session.initializationError)
-    XCTAssertEqual(session.activeQueueLength, 0)
-    session.nextTask()
-    XCTAssertNil(session.markAnswer(.correct))
-    XCTAssertEqual(writes, 0)
-  }
-
-  func testOverrideAndReadingCreditReachTheProtobufPayload() {
-    var sent = [TKMProgress]()
-    let subject = subject()
-    let session = ReviewSession(
-      repository: ReviewRepository(
-        subject: { _ in
-          subject
-        }, saveProgress: { sent.append($0) }),
-      items: [item()], options: options, now: { 100 }, seed: 1)
-    session.nextTask()
-    XCTAssertNotNil(session.markAnswer(.incorrect))
-    session.creditReading()
-    XCTAssertEqual(session.markAnswer(.overrideCorrect)?.subjectFinished, true)
-    XCTAssertEqual(sent.count, 1)
-    XCTAssertFalse(sent[0].meaningWrong || sent[0].readingWrong)
-    XCTAssertEqual(sent[0].meaningWrongCount, 0)
-    XCTAssertEqual(session.tasksAnswered, 1)
-    XCTAssertEqual(session.tasksAnsweredCorrectly, 1)
-    XCTAssertTrue(session.completedReviews[0].answeredReading)
-  }
-
-  func testSynonymsAndExclusionKeepExistingMaterialFields() {
-    let subject = subject()
-    var materials = TKMStudyMaterials()
-    materials.subjectID = 42
-    materials.meaningNote = "Keep this note"
-    materials.meaningSynonyms = ["Single"]
-    var saved: TKMStudyMaterials?
-    var exclusion: Bool?
-    let repository = ReviewRepository(
-      subject: { _ in subject }, materials: { _ in materials },
-      saveProgress: { _ in },
-      saveMaterials: { saved = $0 },
-      setExcluded: { material, excluded in
-        exclusion = excluded
-        material.readingNote = "Excluded marker"
-      })
-    let session = ReviewSession(repository: repository, items: [item()], options: options, seed: 1)
-    session.nextTask()
-    session.addSynonym("Unity")
-    XCTAssertEqual(saved?.meaningSynonyms, ["Single", "Unity"])
-    XCTAssertEqual(saved?.meaningNote, "Keep this note")
-    session.setExclude(true)
-    XCTAssertEqual(exclusion, true)
-    XCTAssertEqual(session.activeStudyMaterials?.meaningNote, "Keep this note")
-    XCTAssertEqual(session.activeStudyMaterials?.readingNote, "Excluded marker")
-  }
-
-  func testRefreshingMaterialsPreservesEditsMadeInAnswerDetails() {
-    let subject = subject()
-    var stored = TKMStudyMaterials()
-    stored.subjectID = 42
-    stored.meaningNote = "Before review"
-    let repository = ReviewRepository(
-      subject: { _ in subject }, materials: { _ in stored },
-      saveProgress: { _ in }, saveMaterials: { stored = $0 })
-    let session = ReviewSession(repository: repository, items: [item()], options: options, seed: 1)
-    session.nextTask()
-    stored.meaningNote = "Edited while viewing the answer"
-    stored.meaningSynonyms = ["Single"]
-    session.refreshStudyMaterials()
-    session.addSynonym("Unity")
-    XCTAssertEqual(stored.meaningNote, "Edited while viewing the answer")
-    XCTAssertEqual(stored.meaningSynonyms, ["Single", "Unity"])
+  @Test func testRefreshingMaterialsPreservesEditsMadeInAnswerDetails() async throws {
+    let store = try await store()
+    let opened = try await store.openReviews(accountID: account, options: options, now: now)
+    let before = try await store.subjectDetails(subjectID: 42, accountID: account)
+    let edited = StudyMaterial(
+      subjectID: 42, meaningNote: "Edited while viewing the answer\n  🐰",
+      readingNote: "Hidden latest reading\nいち", meaningSynonyms: ["Single", "Solitary"])
+    try await store.saveSubjectMaterial(
+      edited, accountID: account, expectedRevision: before.savedMaterial?.revision)
+    let wrong = try await store.answerReview(
+      "not an answer", question: #require(opened.question),
+      accountID: account, expectedRevision: opened.saved.revision, now: now)
+    let updated = try await store.changeReview(
+      .addSynonym("Unity"), accountID: account,
+      expectedRevision: wrong.state.saved.revision, now: now)
+    let current = try await store.subjectDetails(subjectID: 42, accountID: account)
+    #expect(current.material?.meaningNote == edited.meaningNote)
+    #expect(current.material?.readingNote == edited.readingNote)
+    #expect(current.material?.meaningSynonyms == ["Single", "Solitary", "Unity"])
+    #expect(current.savedMaterial?.serverID == 99 && current.savedMaterial?.pending == true)
+    #expect(updated.saved.session.items[0]?.meaning.wrongCount == 0)
+    #expect(updated.saved.session.items[0]?.meaning.answered == true)
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
   }
 }

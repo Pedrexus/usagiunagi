@@ -7,6 +7,8 @@ import Testing
 
 private actor SynchronizationServer {
   let gate: StudyTaskGate?
+  let identityGate: StudyTaskGate?
+  private(set) var identityReads = 0
   let failAfterWrite: Bool
   let pauseWrites: Bool
   let failRead: Bool
@@ -16,9 +18,10 @@ private actor SynchronizationServer {
   private var material: [String: Any] = DownloadFixture.rows["study_materials"]!.first!
   init(
     gate: StudyTaskGate? = nil, failAfterWrite: Bool = false, pauseWrites: Bool = false,
-    failRead: Bool = false
+    failRead: Bool = false, identityGate: StudyTaskGate? = nil
   ) {
     self.gate = gate
+    self.identityGate = identityGate
     self.failAfterWrite = failAfterWrite
     self.pauseWrites = pauseWrites
     self.failRead = failRead
@@ -26,6 +29,10 @@ private actor SynchronizationServer {
   var client: WaniKaniClient { .init { try await self.respond($0) } }
   func respond(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
     let path = request.url!.lastPathComponent
+    if path == "user" {
+      identityReads += 1
+      if identityReads == 1, let identityGate { await identityGate.pause() }
+    }
     if path == "subjects" {
       subjectReads += 1
       if subjectReads == 1, !pauseWrites, let gate { await gate.pause() }
@@ -65,6 +72,87 @@ struct NativeSynchronizationTests {
     return store
   }
 
+  @Test func emptyReauthenticationIdentityIsRejectedBeforeAnyNetworkRead() async throws {
+    let store = try await store(pendingNote: true)
+    let before = try await store.generationSnapshot()
+    let server = SynchronizationServer()
+    await #expect(throws: StudyStoreError.self) {
+      try await store.synchronize(
+        .reauthenticate(accountID: ""), credentialID: "replacement", token: "fixture",
+        client: await server.client)
+    }
+    #expect(await server.identityReads == 0)
+    #expect(await server.subjectReads == 0)
+    #expect(await server.writes == 0)
+    #expect(try await store.generationSnapshot() == before)
+  }
+  @Test(arguments: [false, true])
+  func directRefreshAndConstrainedReauthenticationCannotShareAnUnscopedRead(_ directFirst: Bool)
+    async throws
+  {
+    let store = try await store(pendingNote: true)
+    let note = try #require(await store.materials(accountID: "fixture-user-id").first)
+    let gate = StudyTaskGate()
+    let server = SynchronizationServer(gate: gate)
+    let client = await server.client
+    let active = Task {
+      if directFirst {
+        return try await store.refresh(
+          credentialID: "replacement", token: "fixture", client: client)
+      }
+      return try await store.synchronize(
+        .reauthenticate(accountID: "fixture-user-id"), credentialID: "replacement",
+        token: "fixture", client: client
+      ).snapshot
+    }
+    await gate.waitForEntry()
+    let reads = await server.identityReads
+    if directFirst {
+      await #expect(throws: StudyUploadError.self) {
+        try await store.synchronize(
+          .reauthenticate(accountID: "wrong-account"), credentialID: "replacement",
+          token: "fixture", client: client)
+      }
+    } else {
+      await #expect(throws: StudyUploadError.self) {
+        try await store.refresh(credentialID: "replacement", token: "fixture", client: client)
+      }
+    }
+    #expect(await server.identityReads == reads)
+    #expect(await server.subjectReads == 1)
+    #expect(await server.writes == 0)
+    #expect(try await store.snapshot(credentialID: "replacement") == nil)
+    await gate.resume()
+    #expect(try await active.value.accountID == "fixture-user-id")
+    let retained = try #require(await store.materials(accountID: "fixture-user-id").first)
+    #expect(
+      retained.material == note.material && retained.revision == note.revision && retained.pending)
+  }
+  @Test func unlikeReauthenticationIdentitiesDoNotShareAFailedOrUnverifiedResult() async throws {
+    let store = try await store(pendingNote: true)
+    let gate = StudyTaskGate()
+    let server = SynchronizationServer(identityGate: gate)
+    let client = await server.client
+    let rejected = try await store.synchronizationTask(
+      .reauthenticate(accountID: "wrong-account"), credentialID: "replacement", token: "fixture",
+      client: client)
+    await gate.waitForEntry()
+    let first = await store.synchronizationRun?.id
+    let verified = try await store.synchronizationTask(
+      .reauthenticate(accountID: "fixture-user-id"), credentialID: "replacement", token: "fixture",
+      client: client)
+    #expect(await store.synchronizationRun?.id != first)
+    #expect(await server.identityReads == 1)
+    #expect(await server.subjectReads == 0)
+    await gate.resume()
+    await #expect(throws: StudySignInError.accountMismatch) { try await rejected.value }
+    let result = try await verified.value
+    #expect(result.snapshot.accountID == "fixture-user-id" && result.upload == nil)
+    #expect(await server.identityReads == 3)
+    #expect(await server.subjectReads == 1)
+    #expect(await server.writes == 0)
+    #expect(try await store.savedWork(accountID: "fixture-user-id").materials.count == 1)
+  }
   @Test func overlappingRefreshesShareOneReadWithoutSendingPendingWork() async throws {
     let store = try await store(pendingNote: true)
     let gate = StudyTaskGate()

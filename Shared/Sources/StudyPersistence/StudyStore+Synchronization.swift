@@ -3,6 +3,7 @@ import StudyCore
 
 public enum StudySynchronization: Equatable, Sendable {
   case refresh
+  case reauthenticate(accountID: String)
   case sendSavedWork(accountID: String)
   case uploadSavedWork(accountID: String)
 
@@ -11,9 +12,12 @@ public enum StudySynchronization: Equatable, Sendable {
   }
   var accountID: String? {
     switch self {
-    case .refresh: nil
+    case .refresh, .reauthenticate: nil
     case .sendSavedWork(let id), .uploadSavedWork(let id): id
     }
+  }
+  var expectedAccountID: String? {
+    if case .reauthenticate(let id) = self { id } else { nil }
   }
 }
 
@@ -49,7 +53,9 @@ extension StudyStore {
   ) async throws -> StudySynchronizationResult {
     try Task.checkCancellation()
     guard synchronizationCancellations == 0 else { throw StudyUploadError.alreadyRunning }
-    guard !credentialID.isEmpty, !token.isEmpty else { throw StudyStoreError.invalidIdentity }
+    guard !credentialID.isEmpty, !token.isEmpty, operation.expectedAccountID?.isEmpty != true else {
+      throw StudyStoreError.invalidIdentity
+    }
     let generation = uploadGeneration
     let task = try synchronizationTask(
       operation, credentialID: credentialID, token: token, client: client)
@@ -76,9 +82,10 @@ extension StudyStore {
       guard previous.credentialID == credentialID, previous.token == token else {
         throw StudyUploadError.alreadyRunning
       }
-      if operation == previous.operation
-        || (operation == .refresh && previous.operation.downloadsCatalog)
-        || (!operation.downloadsCatalog && previous.operation.accountID == operation.accountID)
+      if operation.expectedAccountID == previous.operation.expectedAccountID,
+        operation == previous.operation
+          || (operation == .refresh && previous.operation.downloadsCatalog)
+          || (!operation.downloadsCatalog && previous.operation.accountID == operation.accountID)
       {
         return previous.task
       }
@@ -92,7 +99,11 @@ extension StudyStore {
     let task = Task {
       defer { if synchronizationRun?.id == id { synchronizationRun = nil } }
       // Serialize uploads and downloads across scenes; a catalogue read never becomes an upload-only pass.
-      _ = try await previous?.task.value
+      if let previous, previous.operation.expectedAccountID != operation.expectedAccountID {
+        _ = await previous.task.result
+      } else {
+        _ = try await previous?.task.value
+      }
       try Task.checkCancellation()
       guard generation == uploadGeneration else { throw CancellationError() }
       var upload: StudyUploadReport?
@@ -108,7 +119,9 @@ extension StudyStore {
           }
           snapshot = saved
         } else {
-          snapshot = try await refresh(credentialID: credentialID, token: token, client: client)
+          snapshot = try await refresh(
+            credentialID: credentialID, token: token, client: client,
+            expectedAccountID: operation.expectedAccountID)
         }
       } catch {
         if let upload, !(error is CancellationError) {

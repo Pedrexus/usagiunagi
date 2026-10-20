@@ -310,7 +310,7 @@ import WaniKaniAPI
       subject.level = 12
       subject.japanese = "猫"
       // Field 99, varint 1: valid protobuf wire data unknown to the installed schema.
-      subject.vocabulary = try TKMVocabulary(serializedData: Data([0x98, 0x06, 0x01]))
+      subject.vocabulary = try TKMVocabulary(serializedBytes: Data([0x98, 0x06, 0x01]))
       try db.executeUpdate(
         "UPDATE subjects SET pb = ? WHERE id = 42",
         values: [.blob(subject.serializedData())])
@@ -387,14 +387,26 @@ import WaniKaniAPI
     #expect(importedKanji.meaningHint == kanji.kanji.meaningHint)
     #expect(importedKanji.readingHint == kanji.kanji.readingHint)
     #expect(importedKanji.visuallySimilarKanjiIDs == [3])
+    #expect(
+      importedKanji.meanings.map(\.role) == [
+        .primary, .secondary, .auxiliaryWhitelist, .blacklist, .unknown,
+      ])
+    #expect(importedKanji.readings.map(\.kind) == [.onyomi, .kunyomi])
+    let expectedKanji = GradingSubject(
+      japanese: "猫", kind: .kanji,
+      meanings: ["meaning-1", "meaning-2", "meaning-3", "meaning-0"],
+      blacklistedMeanings: ["meaning-4"], primaryReadings: ["びょう"],
+      alternateReadings: ["ねこ"], componentSubjectIds: [1])
+    let expectedRadical = GradingSubject(
+      japanese: "", kind: .radical, meanings: [], blacklistedMeanings: [],
+      primaryReadings: [], alternateReadings: [], componentSubjectIds: [])
     let encoder = JSONEncoder()
     encoder.outputFormatting = .sortedKeys
     #expect(
-      try encoder.encode(importedKanji.gradingSubject) == encoder.encode(kanji.gradingSubject))
+      try encoder.encode(importedKanji.gradingSubject) == encoder.encode(expectedKanji))
     #expect(
       try encoder.encode(importedRadical.gradingSubject)
-        == encoder.encode(
-          radical.gradingSubject))
+        == encoder.encode(expectedRadical))
   }
 
   @Test func wALImportSeesCommittedDataAndLeavesPendingWriterAlone() throws {

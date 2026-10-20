@@ -7,6 +7,8 @@ import Testing
 @testable import StudyUI
 
 @MainActor private final class MistakeCloud: StudyMistakeCloudStore {
+  var observedEpoch = UUID()
+  var synchronizations = 0
   var available = true
   var canSynchronize = true
   var failWrites = false
@@ -22,6 +24,7 @@ import Testing
   }
   func synchronize() -> Bool {
     #expect(continuation != nil)
+    synchronizations += 1
     return canSynchronize
   }
   func data(forKey key: String) -> Data? {
@@ -30,14 +33,19 @@ import Testing
     onRead?(key)
     return value
   }
-  func set(_ data: Data, forKey key: String) throws {
+  func set(_ data: Data, forKey key: String, observedEpoch: UUID) throws {
+    guard self.observedEpoch == observedEpoch else { throw CancellationError() }
     if failWrites { throw StudyMistakeError.quotaExceeded }
     writes.append(key)
     values[key] = data
     emit(.server, keys: [key])
   }
   func emit(_ reason: StudyMistakeCloudEvent.Reason, keys: Set<String>? = nil) {
+    observe(reason)
     continuation?.yield(.init(reason: reason, keys: keys))
+  }
+  func observe(_ reason: StudyMistakeCloudEvent.Reason) {
+    if reason != .server { observedEpoch = UUID() }
   }
 }
 
@@ -52,7 +60,8 @@ import Testing
     cloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 90, 999: 500])
       .encoded()
     cloud.values["testtsurukame-mistakes"] = Data("unattributed source".utf8)
-    let sync = StudyMistakeSync(model: model, cloud: cloud)
+    let sync = StudyMistakeSync(
+      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
     await Task.yield()
@@ -61,7 +70,7 @@ import Testing
     #expect(merged.values == [1: 100, 999: 500])
     #expect(cloud.writes == [try key] && cloud.reads.count < 30)
     #expect(!cloud.reads.contains("testtsurukame-mistakes"))
-    #expect(sync.notice?.contains("verified import") == true)
+    #expect(sync.notice == nil)
     #expect(try await store.mistakeState(accountID: account).values == [1: 100])
     #expect(try await store.pendingReviews(accountID: account).isEmpty)
     #expect(try await store.session(accountID: account) == nil)
@@ -87,7 +96,8 @@ import Testing
       let (model, store) = try await fixture()
       let cloud = MistakeCloud()
       cloud.values[try key] = data
-      let sync = StudyMistakeSync(model: model, cloud: cloud)
+      let sync = StudyMistakeSync(
+        model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
       await sync.wake()
       let retained = cloud.values[try key]
       #expect(cloud.writes.isEmpty && retained == data && sync.notice != nil)
@@ -100,7 +110,8 @@ import Testing
     try await store.mergeMistakes([1: 100], accountID: account)
     let cloud = MistakeCloud()
     cloud.canSynchronize = false
-    let sync = StudyMistakeSync(model: model, cloud: cloud)
+    let sync = StudyMistakeSync(
+      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
     #expect(cloud.reads.isEmpty && cloud.writes.isEmpty && sync.notice != nil)
@@ -111,16 +122,17 @@ import Testing
     cloud.failWrites = false
     cloud.available = false
     cloud.emit(.account)
-    await Task.yield()
+    try await requireNotice(sync, containing: "Apple account changed")
     await sync.wake()
     #expect(cloud.writes.isEmpty)
     cloud.available = true
     cloud.emit(.initial, keys: [])
-    await Task.yield()
+    try await requireNotice(sync, containing: "loading")
     await sync.wake()
-    #expect(cloud.writes == [try key])
+    let cloudKey = try key
+    #expect(cloud.writes == [cloudKey])
     cloud.emit(.quota)
-    await Task.yield()
+    try await requireNotice(sync, containing: "full")
     #expect(try await store.mistakeState(accountID: account).values == [1: 100])
     #expect(sync.notice != nil)
   }
@@ -129,7 +141,8 @@ import Testing
     let cloud = MistakeCloud()
     cloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 999]).encoded()
     cloud.onRead = { _ in model.loadPreview() }
-    let sync = StudyMistakeSync(model: model, cloud: cloud)
+    let sync = StudyMistakeSync(
+      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
     #expect(cloud.writes.isEmpty)
@@ -154,7 +167,8 @@ import Testing
         cloud?.values[key] = changed
       }
     }
-    let sync = StudyMistakeSync(model: model, cloud: cloud)
+    let sync = StudyMistakeSync(
+      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     async let local = store.mergeMistakes([1: 150], accountID: account)
     await sync.wake()
@@ -177,26 +191,26 @@ import Testing
         subjectID: 1, level: 1, srsStage: 3, kind: .kanji,
         lastMistakeLocalTime: "2026-10-20 12:00:00", legacyRevision: 0)
     ]
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    let context = StudyLegacyMistakeContext(
+      locale: Locale(identifier: "en_US_POSIX"), calendar: calendar)
     let handoff = try await store.prepareLegacyHandoff(
       source, sourceID: "verified-source", accountID: account,
       credentialID: StudyAppModel.credentialID("fixture"),
       identity: .init(
         id: account, username: "original",
-        level: 1, onVacation: false, profile: source.profile), preferences: .init())
+        level: 1, onVacation: false, profile: source.profile), preferences: .init(),
+      mistakeContext: context)
     _ = try await store.activateLegacyHandoff(handoff)
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-    let context = StudyLegacyMistakeContext(
-      locale: Locale(identifier: "en_US_POSIX"), calendar: calendar)
-    let binding = StudyLegacyMistakeBinding(
-      accountID: account, sourceID: "verified-source",
-      sourceDigest: try source.importDigest, username: "original", context: context)
+    let binding = try #require(try await store.mistakeState(accountID: account).legacyBinding)
     let model = StudyAppModel(credentials: MemoryCredentials("fixture"), openStore: { store })
     await model.restore()
     let cloud = MistakeCloud()
     let raw = ["1": "2026-10-20 12:00:00", "unresolved-kind": "kept verbatim"]
     cloud.values[binding.key] = try JSONEncoder().encode(raw)
-    let sync = StudyMistakeSync(model: model, cloud: cloud, legacyBinding: { _ in binding })
+    let sync = StudyMistakeSync(
+      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_792_497_602) })
     await sync.wake()
     #expect(cloud.reads.contains(binding.key))
     #expect(sync.notice?.contains("kept unchanged") == true)
@@ -228,7 +242,8 @@ import Testing
       verifiedUsername: "original", credentialID: StudyAppModel.credentialID("other"))
     let other = StudyAppModel(credentials: MemoryCredentials("other"), openStore: { store })
     await other.restore()
-    let reused = StudyMistakeSync(model: other, cloud: cloud, legacyBinding: { _ in binding })
+    let reused = StudyMistakeSync(
+      model: other, cloud: cloud, now: { Date(timeIntervalSince1970: 1_792_497_602) })
     defer { reused.stop() }
     await reused.wake()
     #expect(cloud.reads.filter { $0 == binding.key }.count == legacyReads)
@@ -253,6 +268,105 @@ import Testing
           ]))
       #expect(event.reason == expected && event.keys == ["key"])
     }
+  }
+  @Test func anObservedAccountChangeFencesAReadBeforeItsEventIsConsumed() async throws {
+    let (model, store) = try await fixture()
+    let cloud = MistakeCloud()
+    let remote = try StudyMistakeArchive(accountID: account, values: [1: 999]).encoded()
+    cloud.values[try key] = remote
+    // Deliberately withhold the AsyncStream event: the synchronous observation is the fence.
+    cloud.onRead = { [weak cloud] _ in cloud?.observe(.account) }
+    let sync = StudyMistakeSync(
+      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+    defer { sync.stop() }
+    await sync.wake()
+    let cloudKey = try key
+    #expect(cloud.writes.isEmpty && cloud.values[cloudKey] == remote)
+    #expect(try await store.mistakeState(accountID: account).values.isEmpty)
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+    #expect(try await store.session(accountID: account) == nil)
+    cloud.onRead = nil
+    cloud.emit(.initial)
+    try await requireNotice(sync, containing: "loading")
+    await sync.wake()
+    #expect(try await store.mistakeState(accountID: account).values == [1: 999])
+  }
+  @Test func notificationCallbackAdvancesEpochSynchronouslyAndCancellationRemovesIt() async {
+    let center = NotificationCenter()
+    let object = NSObject()
+    let (stream, continuation) = AsyncStream<StudyMistakeCloudEvent>.makeStream()
+    let observer = StudyMistakeCloudObserver(
+      notifications: center, object: object, continuation: continuation)
+    let initial = observer.epoch
+    center.post(
+      name: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: object,
+      userInfo: [NSUbiquitousKeyValueStoreChangeReasonKey: NSUbiquitousKeyValueStoreServerChange])
+    #expect(observer.epoch == initial)
+    center.post(
+      name: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: object,
+      userInfo: [NSUbiquitousKeyValueStoreChangeReasonKey: NSUbiquitousKeyValueStoreAccountChange])
+    #expect(observer.epoch != initial)
+    let observed = observer.epoch
+    observer.cancel(in: center)
+    center.post(
+      name: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: object,
+      userInfo: [
+        NSUbiquitousKeyValueStoreChangeReasonKey: NSUbiquitousKeyValueStoreInitialSyncChange
+      ])
+    #expect(observer.epoch == observed)
+    continuation.finish()
+    var reasons: [StudyMistakeCloudEvent.Reason] = []
+    for await event in stream { reasons.append(event.reason) }
+    #expect(reasons == [.server, .account])
+  }
+  @Test func unavailableCacheRetriesOnceThenForegroundCanRecoverWithoutAnInitialEvent() async throws
+  {
+    let (model, store) = try await fixture()
+    try await store.mergeMistakes([1: 100], accountID: account)
+    let cloud = MistakeCloud()
+    cloud.canSynchronize = false
+    let sync = StudyMistakeSync(
+      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+    defer { sync.stop() }
+    await sync.wake()
+    #expect(cloud.synchronizations == 1 && cloud.reads.isEmpty)
+    let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+    while cloud.synchronizations < 2 && ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(20))
+    }
+    #expect(cloud.synchronizations == 2)
+    try await Task.sleep(for: .milliseconds(2_200))
+    #expect(cloud.synchronizations == 2 && cloud.reads.isEmpty && cloud.writes.isEmpty)
+    cloud.canSynchronize = true
+    await sync.wake()
+    let cloudKey = try key
+    #expect(cloud.synchronizations == 3 && cloud.writes == [cloudKey])
+    #expect(try await store.mistakeState(accountID: account).values == [1: 100])
+  }
+  @Test func wireExpiryKeepsDurableHistoryAndUnknownRecentHints() async throws {
+    let (model, store) = try await fixture()
+    let now = Date(timeIntervalSince1970: 200_000)
+    try await store.mergeMistakes([1: 100], accountID: account)
+    let cloud = MistakeCloud()
+    cloud.values[try key] = try StudyMistakeArchive(
+      accountID: account, values: [1: 100, 888: 113_599, 999: 113_600, 777: Int64.max]
+    ).encoded()
+    let sync = StudyMistakeSync(model: model, cloud: cloud, now: { now })
+    defer { sync.stop() }
+    await sync.wake()
+    let wire = try StudyMistakeArchive(data: #require(cloud.values[try key]), accountID: account)
+    #expect(wire.values == [999: 113_600, 777: Int64.max])
+    #expect(try await store.mistakeState(accountID: account).values == [1: 100])
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+    #expect(try await store.session(accountID: account) == nil)
+  }
+  private func requireNotice(_ sync: StudyMistakeSync, containing text: String) async throws {
+    // Yielding does not drain AsyncStream: wait for the event's observable state transition.
+    let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+    while sync.notice?.contains(text) != true && ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+    try #require(sync.notice?.contains(text) == true)
   }
   private func fixture() async throws -> (StudyAppModel, StudyStore) {
     let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)

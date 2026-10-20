@@ -354,7 +354,7 @@
               })
           ]
           account.state.catalogRefreshID = UUID()
-          for row in try materialRecords(accountID: accountID) {
+          for row in try MaterialRecord.fetch(in: modelContext, accountID: accountID) {
             if row.subjectID == 42 {
               let original = row.material
               row.attemptedRevision = row.revision

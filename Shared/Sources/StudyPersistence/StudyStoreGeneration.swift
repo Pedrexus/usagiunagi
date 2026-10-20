@@ -174,13 +174,15 @@ private struct StudyStoreGeneration: Sendable {
           throw StudyStoreOpeningError.sourceChanged
         }
         try synchronize(capture)
-        for file in try entries(in: capture) {
-          try manager.setAttributes([.posixPermissions: 0o400], ofItemAtPath: file.path)
-        }
-        try manager.setAttributes([.posixPermissions: 0o500], ofItemAtPath: capture.path)
         try manager.moveItem(at: capture, to: retained)
         try synchronizeDirectory(retained.deletingLastPathComponent())
       }
+      // FileManager cannot publish a read-only directory. Protect the retained image after its
+      // move, including when a previous process stopped between publication and protection.
+      for file in try entries(in: retained) {
+        try manager.setAttributes([.posixPermissions: 0o400], ofItemAtPath: file.path)
+      }
+      try manager.setAttributes([.posixPermissions: 0o500], ofItemAtPath: retained.path)
       let verification = work.appending(path: "verification")
       try clone(from: retained, to: verification, expected: source)
       // Inspect the stored model before any SwiftData container can adopt or migrate this clone.

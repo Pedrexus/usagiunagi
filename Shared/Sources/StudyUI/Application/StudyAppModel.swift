@@ -5,11 +5,25 @@ import StudyPersistence
 
 @MainActor @Observable
 public final class StudyAppModel {
+  public struct ReauthenticationContext: Equatable, Sendable {
+    public let accountID: String
+    public let username: String
+    fileprivate let credentialID: String?
+    fileprivate let generation: UUID
+  }
+  public struct AccountIssue: Equatable, Sendable {
+    public enum Reason: Equatable, Sendable { case unauthorized, hibernating }
+    public let reason: Reason
+    public let context: ReauthenticationContext
+    public fileprivate(set) var acknowledged = false
+  }
   public private(set) var dataRevision = UUID()
   public private(set) var snapshot: StudySnapshot? { didSet { dataRevision = UUID() } }
   public private(set) var profile: StudyAccountProfile?
   public private(set) var savedWorkStore: StudyStore?
   public private(set) var syncSummary: String?
+  public private(set) var accountIssue: AccountIssue?
+  public var reauthenticationContext: ReauthenticationContext? { accountIssue?.context }
   public var maximumContentLevel: Int {
     snapshot?.isSample == true ? 60 : profile?.maxLevelGranted ?? 3
   }
@@ -70,6 +84,36 @@ public final class StudyAppModel {
   private func checkRequest(_ epoch: UUID) throws {
     try Task.checkCancellation()
     guard generation == epoch else { throw CancellationError() }
+  }
+  public func acknowledgeAccountIssue(_ context: ReauthenticationContext) {
+    guard accountIssue?.context == context else { return }
+    accountIssue?.acknowledged = true
+  }
+  private func reportAccountIssue(
+    _ error: any Error, accountID: String?, credentialID: String?, epoch: UUID
+  ) {
+    guard generation == epoch, accountIssue == nil, let saved = snapshot, !saved.isSample,
+      let accountID, saved.accountID == accountID
+    else { return }
+    let cause = (error as? StudySynchronizationFailure)?.cause ?? error
+    let reason: AccountIssue.Reason
+    switch cause {
+    case WaniKaniClient.APIError.unauthorized: reason = .unauthorized
+    case StudySignInError.hibernating: reason = .hibernating
+    default: return
+    }
+    accountIssue = AccountIssue(
+      reason: reason,
+      context: ReauthenticationContext(
+        accountID: accountID, username: saved.username, credentialID: credentialID,
+        generation: epoch))
+  }
+  private func checkReauthentication(_ context: ReauthenticationContext) throws {
+    try Task.checkCancellation()
+    guard generation == context.generation, snapshot?.isSample == false,
+      snapshot?.accountID == context.accountID,
+      try credentials.load().map(Self.credentialID) == context.credentialID
+    else { throw StudySignInError.accountChanged }
   }
   public func restore() async {
     if let restoration {
@@ -160,9 +204,19 @@ public final class StudyAppModel {
       profile = nil
       error = nil
       syncSummary = nil
+      accountIssue = nil
     } catch { self.error = error.localizedDescription }
   }
   public func connect(_ token: String) async throws {
+    try await connect(token, reauthenticating: nil)
+  }
+  public func reauthenticate(_ token: String, context: ReauthenticationContext) async throws {
+    try checkReauthentication(context)
+    try await connect(token, reauthenticating: context)
+  }
+  private func connect(_ token: String, reauthenticating context: ReauthenticationContext?)
+    async throws
+  {
     let token = token.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !token.isEmpty else {
       error = "Enter your WaniKani API token."
@@ -178,14 +232,19 @@ public final class StudyAppModel {
       let previous = try credentials.load().map(Self.credentialID)
       let cache = try await repository()
       try checkRequest(epoch)
+      if let context { try checkReauthentication(context) }
+      let operation: StudySynchronization =
+        context.map { .reauthenticate(accountID: $0.accountID) } ?? .refresh
       let result = try await cache.synchronize(
-        credentialID: credential, token: token, client: reader)
+        operation, credentialID: credential, token: token, client: reader)
       try checkRequest(epoch)
+      if let context { try checkReauthentication(context) }
       try credentials.save(token)
       restored = true
       error = nil
       profile = result.profile
       snapshot = result.snapshot
+      accountIssue = nil
       if let previous, previous != credential {
         try await cache.removeSnapshot(credentialID: previous)
       }
@@ -198,9 +257,14 @@ public final class StudyAppModel {
     }
   }
   public func refresh() async {
+    let epoch = generation
     do {
       _ = try await performSynchronization(.refresh, accountID: snapshot?.accountID)
-    } catch { self.error = error.localizedDescription }
+    } catch {
+      if generation == epoch, !(error is CancellationError) {
+        self.error = error.localizedDescription
+      }
+    }
   }
   public func setAPIEndpoint(_ url: URL) throws {
     guard !isSyncing else { throw StudyUploadError.alreadyRunning }
@@ -231,10 +295,12 @@ public final class StudyAppModel {
     guard snapshot?.isSample != true,
       accountID == nil ? operation == .refresh : snapshot?.accountID == accountID
     else { throw StudyStoreError.invalidIdentity }
+    let epoch = generation
     guard let token = try credentials.load() else {
+      reportAccountIssue(
+        WaniKaniClient.APIError.unauthorized, accountID: accountID, credentialID: nil, epoch: epoch)
       throw StudySignInError.message("Connect a WaniKani account first.")
     }
-    let epoch = generation
     let credential = Self.credentialID(token)
     try beginRequest(credential: credential)
     defer { finishRequest(epoch) }
@@ -250,12 +316,16 @@ public final class StudyAppModel {
       snapshot = result.snapshot
       profile = result.profile
       restored = true
+      accountIssue = nil
       if let report = result.upload { syncSummary = summary(report) }
       return result.upload
-    } catch let failure as StudySynchronizationFailure {
+    } catch {
       try checkRequest(epoch)
-      syncSummary = summary(failure.upload)
-      throw failure
+      if let failure = error as? StudySynchronizationFailure {
+        syncSummary = summary(failure.upload)
+      }
+      reportAccountIssue(error, accountID: accountID, credentialID: credential, epoch: epoch)
+      throw error
     }
   }
   private func summary(_ report: StudyUploadReport) -> String {
@@ -276,10 +346,17 @@ public final class StudyAppModel {
     defer { finishRequest(epoch) }
     let cache = try await repository()
     try checkRequest(epoch)
-    let comparison = try await cache.compareSavedWork(
-      request, credentialID: credential, token: token, client: reader)
-    try checkRequest(epoch)
-    return comparison
+    do {
+      let comparison = try await cache.compareSavedWork(
+        request, credentialID: credential, token: token, client: reader)
+      try checkRequest(epoch)
+      return comparison
+    } catch {
+      try checkRequest(epoch)
+      reportAccountIssue(
+        error, accountID: request.accountID, credentialID: credential, epoch: epoch)
+      throw error
+    }
   }
 
   nonisolated public static func credentialID(_ token: String) -> String {
@@ -304,6 +381,7 @@ public final class StudyAppModel {
       profile = nil
       error = nil
       syncSummary = nil
+      accountIssue = nil
       for credential in Set([connectingCredential, savedCredential].compactMap({ $0 })) {
         try await cache.removeSnapshot(credentialID: credential)
       }

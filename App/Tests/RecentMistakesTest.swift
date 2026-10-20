@@ -1,216 +1,80 @@
 // Copyright David Sansome
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Licensed under the Apache License, Version 2.0. See LICENSE for terms.
 
 import Foundation
+import StudyCore
 import Testing
 
 struct RecentMistakesTest {
-  @Test func testEmptyMergeGivesNothing() {
-    let output = RecentMistakeHandler.mergeMistakes(
-      original: [Int32: Date](),
-      other: [Int32: Date]())
-    #expect(0 == output.count)
+  struct MergeCase: Sendable {
+    let name: String
+    let original: [Int64: Int]
+    let other: [Int64: Int]
+    let expected: [Int64: Int]
   }
-
-  @Test func testMergeMistakesOneArrayOnly() {
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -10, to: now)!
-    let secondDate = Calendar.current.date(byAdding: .hour, value: -4, to: now)!
-    let mistakes = [Int32(42): firstDate, Int32(44): secondDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: [Int32: Date]())
-    #expect(2 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: [Int32: Date](), other: mistakes)
-    #expect(2 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
+  private let now = Date(timeIntervalSince1970: 1_792_195_200)
+  private var context: StudyLegacyMistakeContext {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    return .init(locale: Locale(identifier: "en_US_POSIX"), calendar: calendar)
   }
-
-  @Test func testOldDatesRemoved() {
-    // dates older than 24 hrs should be removed
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -42, to: now)!
-    let secondDate = Calendar.current.date(byAdding: .hour, value: -88, to: now)!
-    let thirdDate = Calendar.current.date(byAdding: .hour, value: -33, to: now)!
-    let mistakes = [Int32(42): firstDate, Int32(44): secondDate]
-    let otherMistakes = [Int32(41): thirdDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: otherMistakes)
-    #expect(0 == output.count)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: otherMistakes, other: mistakes)
-    #expect(0 == output.count)
+  private func dates(_ hours: [Int64: Int]) -> [Int64: Int64] {
+    hours.mapValues { Int64(now.timeIntervalSince1970) + Int64($0) * 3600 }
   }
-
-  @Test func testSimpleMergeTwoDiffDatasets() {
-    // simple merge of two sets with two different pieces of data
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -10, to: now)!
-    let secondDate = Calendar.current.date(byAdding: .hour, value: -4, to: now)!
-    let mistakes = [Int32(42): firstDate]
-    let otherMistakes = [Int32(44): secondDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: otherMistakes)
-    #expect(2 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: otherMistakes, other: mistakes)
-    #expect(2 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
-  }
-
-  @Test func testSimpleMergeSameDataDatasets() {
-    // simple merge of two sets with same pieces of data
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -10, to: now)!
-    let mistakes = [Int32(42): firstDate]
-    let otherMistakes = [Int32(42): firstDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: otherMistakes)
-    #expect(1 == output.count)
-    #expect(output[42] == firstDate)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: otherMistakes, other: mistakes)
-    #expect(1 == output.count)
-    #expect(output[42] == firstDate)
-  }
-
-  @Test func testSimpleMergeSameDatasetsMultipleSubjects() {
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -10, to: now)!
-    let secondDate = Calendar.current.date(byAdding: .hour, value: -4, to: now)!
-    let mistakes = [Int32(42): firstDate, Int32(44): secondDate]
-    let otherMistakes = [Int32(42): firstDate, Int32(44): secondDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: otherMistakes)
-    #expect(2 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: otherMistakes, other: mistakes)
-    #expect(2 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
-  }
-
-  @Test func testSubjectIdConflictMerge() {
-    // we expect to get the newer date when there is a date conflict
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -10, to: now)!
-    let secondDate = Calendar.current.date(byAdding: .hour, value: -4, to: now)!
-    let mistakes = [Int32(42): firstDate]
-    let otherMistakes = [Int32(42): secondDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: otherMistakes)
-    #expect(1 == output.count)
-    #expect(output[42] == secondDate)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: otherMistakes, other: mistakes)
-    #expect(1 == output.count)
-    #expect(output[42] == secondDate)
-  }
-
-  @Test func testSubjectIdConflictMergeMultipleSubjects() {
-    // we expect to get the newer date when there is a date conflict
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -10, to: now)!
-    let secondDate = Calendar.current.date(byAdding: .hour, value: -4, to: now)!
-    let thirdDate = Calendar.current.date(byAdding: .hour, value: -1, to: now)!
-    let mistakes = [Int32(42): firstDate, Int32(44): firstDate, Int32(46): thirdDate]
-    let otherMistakes = [Int32(42): secondDate, Int32(46): firstDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: otherMistakes)
-    #expect(3 == output.count)
-    #expect(output[42] == secondDate)
-    #expect(output[44] == firstDate)
-    #expect(output[46] == thirdDate)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: otherMistakes, other: mistakes)
-    #expect(3 == output.count)
-    #expect(output[42] == secondDate)
-    #expect(output[44] == firstDate)
-    #expect(output[46] == thirdDate)
-  }
-
-  @Test func testSameDateDifferentSubjectsMerge() {
-    // we expect to get the newer date when there is a date conflict
-    let now = Date()
-    let firstDate = Calendar.current.date(byAdding: .hour, value: -4, to: now)!
-    let secondDate = Calendar.current.date(byAdding: .hour, value: -4, to: now)!
-    let mistakes = [Int32(42): firstDate]
-    let otherMistakes = [Int32(44): secondDate, Int32(46): secondDate]
-    var output = RecentMistakeHandler.mergeMistakes(original: mistakes, other: otherMistakes)
-    #expect(3 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
-    #expect(output[46] == secondDate)
-    // ensure that flopping the dictionaries gets same output
-    output = RecentMistakeHandler.mergeMistakes(original: otherMistakes, other: mistakes)
-    #expect(3 == output.count)
-    #expect(output[42] == firstDate)
-    #expect(output[44] == secondDate)
-    #expect(output[46] == secondDate)
+  @Test(arguments: [
+    MergeCase(name: "empty", original: [:], other: [:], expected: [:]),
+    MergeCase(
+      name: "one array", original: [42: -10, 44: -4], other: [:], expected: [42: -10, 44: -4]),
+    MergeCase(name: "old dates", original: [42: -42, 44: -88], other: [41: -33], expected: [:]),
+    MergeCase(
+      name: "different sets", original: [42: -10], other: [44: -4], expected: [42: -10, 44: -4]),
+    MergeCase(name: "same data", original: [42: -10], other: [42: -10], expected: [42: -10]),
+    MergeCase(
+      name: "same subjects", original: [42: -10, 44: -4], other: [42: -10, 44: -4],
+      expected: [42: -10, 44: -4]),
+    MergeCase(name: "newest wins", original: [42: -10], other: [42: -4], expected: [42: -4]),
+    MergeCase(
+      name: "mixed conflicts", original: [42: -10, 44: -10, 46: -1], other: [42: -4, 46: -10],
+      expected: [42: -4, 44: -10, 46: -1]),
+    MergeCase(
+      name: "same date", original: [42: -4], other: [44: -4, 46: -4],
+      expected: [42: -4, 44: -4, 46: -4]),
+  ])
+  func originalMergeCorpusUsesNativeMaximumsAndWireAging(_ value: MergeCase) {
+    for (lhs, rhs) in [(value.original, value.other), (value.other, value.original)] {
+      let merged = StudyMistakeArchive.merge(dates(lhs), dates(rhs))
+      #expect(
+        StudyMistakeArchive.recentValues(merged, now: now) == dates(value.expected), "\(value.name)"
+      )
+    }
   }
   @Test func oldCloudArchiveSkipsOnlyInvalidEntries() throws {
-    let store = MemoryMistakeStore()
-    let handler = RecentMistakeHandler()
-    handler.setup(keyStore: store, storageFileNamePrefix: "fixture-")
-    let date = "2026-10-17 12:34:56"
-    store.values[handler.getCloudStorageKey()] = try JSONSerialization.data(withJSONObject: [
-      "42": date, "bad-id": date, "2147483648": date, "43": "invalid date",
-    ])
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-    #expect(handler.getCloudMistakes() == [42: try #require(formatter.date(from: date))])
-    #expect(store.values.keys.sorted() == ["fixture-tsurukame-mistakes"])
+    let originals = [
+      "42": "2026-10-17 12:34:56", "bad-id": "2026-10-17 12:34:56",
+      "2147483648": "2026-10-17 12:34:56", "43": "invalid date",
+    ]
+    let bytes = try JSONEncoder().encode(originals)
+    let source = try StudyLegacyMistakes(data: bytes, context: context)
+    #expect(source.values == [42: 1_792_240_496])
+    #expect(source.originals == originals)
+    #expect(source.unresolvedKeys == ["bad-id", "2147483648", "43"])
+    #expect(try JSONDecoder().decode([String: String].self, from: bytes) == originals)
   }
   @Test func newCloudArchiveRemainsReadableByTheOriginalJSONFormat() throws {
-    let store = MemoryMistakeStore()
-    let handler = RecentMistakeHandler()
-    handler.setup(keyStore: store, storageFileNamePrefix: "fixture-")
-    let date = Date(timeIntervalSince1970: 1_792_195_200)
-    handler.uploadMistakesToCloud(mistakes: [42: date])
-    let data = try #require(store.values[handler.getCloudStorageKey()])
-    let oldReader = try #require(JSONSerialization.jsonObject(with: data) as? [String: String])
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-    #expect(oldReader == ["42": formatter.string(from: date)])
-    #expect(handler.getCloudMistakes() == [42: date])
-    #expect(store.lastSyncCall != nil)
-    handler.uploadMistakesToCloud(mistakes: [:])
-    #expect(handler.getCloudMistakes().isEmpty)
+    let source = StudyLegacyMistakes(originals: [:], context: context)
+    let updated = try source.updatedData(merging: [42: Int64(now.timeIntervalSince1970)], now: now)
+    let bytes = try #require(updated)
+    #expect(
+      try JSONDecoder().decode([String: String].self, from: bytes) == ["42": "2026-10-17 00:00:00"])
+    let reopened = try StudyLegacyMistakes(data: bytes, context: context)
+    #expect(reopened.values == [42: Int64(now.timeIntervalSince1970)])
+    #expect(try reopened.updatedData(merging: reopened.values, now: now) == nil)
+    #expect(try reopened.updatedData(merging: [:], now: now) == nil)
   }
   @Test(arguments: ["not JSON", "[]", "{\"42\":123}"])
   func unreadableCloudArchiveDoesNotInventOrRewriteMistakes(json: String) {
-    let store = MemoryMistakeStore()
-    let handler = RecentMistakeHandler()
-    handler.setup(keyStore: store, storageFileNamePrefix: "fixture-")
-    let data = Data(json.utf8)
-    store.values[handler.getCloudStorageKey()] = data
-    #expect(handler.getCloudMistakes().isEmpty)
-    #expect(store.values[handler.getCloudStorageKey()] == data && store.lastSyncCall == nil)
+    let bytes = Data(json.utf8)
+    #expect(throws: (any Error).self) { try StudyLegacyMistakes(data: bytes, context: context) }
+    #expect(bytes == Data(json.utf8))
   }
-
-}
-
-/// No reads, writes or synchronization reach the system iCloud store.
-private final class MemoryMistakeStore: NSUbiquitousKeyValueStore {
-  var values: [String: Data] = [:]
-  var lastSyncCall: Date?
-  override func data(forKey key: String) -> Data? { values[key] }
-  override func set(_ data: Data?, forKey key: String) { values[key] = data }
-  override func set(_ value: Any?, forKey key: String) {
-    #expect(key == "lastSyncCall")
-    lastSyncCall = value as? Date
-  }
-  override func synchronize() -> Bool { true }
 }

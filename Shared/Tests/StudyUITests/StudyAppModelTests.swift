@@ -1,9 +1,10 @@
 import Foundation
 import StudyCore
-import StudyPersistence
 import StudyTestSupport
 import StudyUI
 import Testing
+
+@testable import StudyPersistence
 
 @MainActor final class MemoryCredentials: StudyCredentialStore {
   var token: String?
@@ -28,6 +29,21 @@ import Testing
 }
 
 private actor ModelServer {
+  enum AuthenticationFault: CaseIterable, Equatable, Sendable {
+    case unauthorized, hibernating
+    var error: any Error {
+      switch self {
+      case .unauthorized: WaniKaniClient.APIError.unauthorized
+      case .hibernating: StudySignInError.hibernating
+      }
+    }
+  }
+  private var authenticationFault: AuthenticationFault?
+  private var authenticationFailsAfterWrite = false
+  func expire(_ fault: AuthenticationFault?, afterWrite: Bool = false) {
+    authenticationFault = fault
+    authenticationFailsAfterWrite = afterWrite
+  }
   let gate: StudyTaskGate?
   var failAfterWrite: Bool
   private(set) var reads = 0
@@ -43,6 +59,13 @@ private actor ModelServer {
   private func respond(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
     let path = request.url!.lastPathComponent
     let other = request.value(forHTTPHeaderField: "Authorization") == "Bearer other"
+    if let authenticationFault, request.httpMethod == "GET",
+      request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture",
+      !authenticationFailsAfterWrite || (writes > 0 && path == "subjects")
+    {
+      reads += 1
+      throw authenticationFault.error
+    }
     if request.value(forHTTPHeaderField: "Authorization") == "Bearer rejected" {
       return try DownloadFixture.response(
         request, object: ["error": "Rejected fixture"], status: 401)
@@ -169,6 +192,7 @@ private actor ModelRepository {
     #expect(model.snapshot?.accountID == account && model.profile?.username == "test")
     #expect(credentials.token == "fixture" && credentials.saved.isEmpty)
     #expect(model.error != nil && !model.isSyncing)
+    #expect(model.accountIssue == nil && model.reauthenticationContext == nil)
     #expect(try await cache.savedWork(accountID: account).materials.count == 1)
     #expect(await server.writes == 0)
   }
@@ -346,6 +370,188 @@ private actor ModelRepository {
     await model.refresh()
     #expect(model.error == nil && model.snapshot?.accountID == account)
     #expect(await server.writes == 1)
+  }
+  @Test func reauthenticationRejectsAnotherAccountBeforeDownloadingOrMutatingAnySavedWork()
+    async throws
+  {
+    let (cache, model, server, credentials) = try await expiredEnvironment()
+    let context = try #require(model.reauthenticationContext)
+    let before = try await cache.generationSnapshot()
+    let profile = model.profile
+    let savedAt = model.snapshot?.savedAt
+    let reads = await server.reads
+    await #expect(throws: StudySignInError.accountMismatch) {
+      try await model.reauthenticate("other", context: context)
+    }
+    #expect(await server.reads == reads + 1)
+    #expect(await server.subjectReads == 0)
+    #expect(await server.writes == 0)
+    #expect(try await cache.generationSnapshot() == before)
+    #expect(model.snapshot?.accountID == account && model.snapshot?.savedAt == savedAt)
+    #expect(model.profile == profile && model.reauthenticationContext == context)
+    #expect(credentials.token == "fixture" && credentials.saved.isEmpty && !model.isSyncing)
+    #expect(try await cache.snapshot(credentialID: StudyAppModel.credentialID("other")) == nil)
+  }
+  @Test func sameAccountReauthenticationReplacesOnlyCredentialsAndKeepsSessionOutboxAndNotes()
+    async throws
+  {
+    let (cache, model, server, credentials) = try await expiredEnvironment()
+    let context = try #require(model.reauthenticationContext)
+    let before = try #require(await cache.session(accountID: account))
+    let reviews = try await cache.pendingReviews(accountID: account)
+    let note = try #require(await cache.materials(accountID: account).first)
+    #expect(reviews.count == 1 && note.pending)
+    try await model.reauthenticate("  replacement\n", context: context)
+    #expect(credentials.token == "replacement" && credentials.saved == ["replacement"])
+    #expect(model.snapshot?.accountID == account && model.profile?.username == "test")
+    #expect(model.accountIssue == nil && model.reauthenticationContext == nil && model.error == nil)
+    #expect(try await cache.snapshot(credentialID: credential) == nil)
+    #expect(
+      try await cache.snapshot(credentialID: StudyAppModel.credentialID("replacement"))?.accountID
+        == account)
+    let after = try #require(await cache.session(accountID: account))
+    #expect(after.revision == before.revision && after.session.items == before.session.items)
+    #expect(after.session.completedIDs == before.session.completedIDs)
+    #expect(try await cache.pendingReviews(accountID: account) == reviews)
+    let retained = try #require(await cache.materials(accountID: account).first)
+    #expect(
+      retained.material == note.material && retained.revision == note.revision && retained.pending)
+    #expect(
+      retained.attemptedRevision == note.attemptedRevision
+        && retained.issue?.reason == note.issue?.reason)
+    #expect(await server.writes == 0)
+    #expect(!model.isSyncing)
+  }
+  @Test func staleReauthenticationCannotReplaceADeliberatelySwitchedAccount() async throws {
+    let (cache, model, server, credentials) = try await expiredEnvironment()
+    let context = try #require(model.reauthenticationContext)
+    try await model.connect("other")
+    let before = try await cache.generationSnapshot()
+    let reads = await server.reads
+    await #expect(throws: StudySignInError.accountChanged) {
+      try await model.reauthenticate("replacement", context: context)
+    }
+    model.acknowledgeAccountIssue(context)
+    #expect(model.snapshot?.accountID == "other-account" && model.profile?.username == "other")
+    #expect(credentials.token == "other" && credentials.saved == ["other"])
+    #expect(model.accountIssue == nil && !model.isSyncing)
+    #expect(await server.reads == reads)
+    #expect(await server.writes == 0)
+    #expect(try await cache.generationSnapshot() == before)
+    #expect(try await cache.pendingReviews(accountID: account).count == 1)
+    #expect(try await cache.materials(accountID: account).first?.pending == true)
+  }
+  @Test func disconnectFencesALateReauthenticationWithoutResurrectingCredentialsOrAccount()
+    async throws
+  {
+    let gate = StudyTaskGate()
+    let (cache, model, server, credentials) = try await expiredEnvironment(gate: gate)
+    let context = try #require(model.reauthenticationContext)
+    let reviews = try await cache.pendingReviews(accountID: account)
+    let note = try #require(await cache.materials(accountID: account).first)
+    let attempt = Task { try await model.reauthenticate("replacement", context: context) }
+    await gate.waitForEntry()
+    let disconnect = Task { await model.disconnect() }
+    await gate.waitForCancellation()
+    await gate.resume()
+    await disconnect.value
+    await #expect(throws: CancellationError.self) { try await attempt.value }
+    #expect(model.snapshot == nil && model.profile == nil && model.accountIssue == nil)
+    #expect(credentials.token == nil && credentials.saved.isEmpty && !model.isSyncing)
+    #expect(
+      try await cache.snapshot(credentialID: StudyAppModel.credentialID("replacement")) == nil)
+    #expect(try await cache.pendingReviews(accountID: account) == reviews)
+    let retained = try #require(await cache.materials(accountID: account).first)
+    #expect(
+      retained.material == note.material && retained.revision == note.revision && retained.pending)
+    let reads = await server.reads
+    await #expect(throws: StudySignInError.accountChanged) {
+      try await model.reauthenticate("replacement", context: context)
+    }
+    #expect(await server.reads == reads)
+    #expect(await server.writes == 0)
+  }
+  @Test func closingReauthenticationCannotSaveANewTokenEvenWhenTheSharedReadReturnsLate()
+    async throws
+  {
+    let gate = StudyTaskGate()
+    let (cache, model, server, credentials) = try await expiredEnvironment(gate: gate)
+    let context = try #require(model.reauthenticationContext)
+    let reviews = try await cache.pendingReviews(accountID: account)
+    let signIn = StudySignIn { try await model.reauthenticate($0, context: context) }
+    signIn.token = "replacement"
+    let attempt = Task { await signIn.submit() }
+    await gate.waitForEntry()
+    signIn.cancel()
+    await gate.resume()
+    #expect(await attempt.value == nil)
+    #expect(credentials.token == "fixture" && credentials.saved.isEmpty)
+    #expect(model.snapshot?.accountID == account && model.reauthenticationContext == context)
+    #expect(model.accountIssue?.acknowledged == false && !model.isSyncing)
+    #expect(try await cache.pendingReviews(accountID: account) == reviews)
+    #expect(try await cache.materials(accountID: account).first?.pending == true)
+    #expect(await server.writes == 0)
+  }
+  @Test(arguments: ModelServer.AuthenticationFault.allCases, [false, true])
+  private func connectedAuthenticationIncidentsKeepStateAndAcknowledgementForTypedAndWrappedErrors(
+    _ fault: ModelServer.AuthenticationFault, _ wrapped: Bool
+  ) async throws {
+    let cache = try await store(pendingNote: true)
+    let credentials = MemoryCredentials("fixture")
+    let server = ModelServer()
+    let model = StudyAppModel(
+      credentials: credentials, client: await server.client, openStore: { cache })
+    await model.restore()
+    let before = try await cache.generationSnapshot()
+    let profile = model.profile
+    let savedAt = model.snapshot?.savedAt
+    await server.expire(fault, afterWrite: wrapped)
+    if wrapped {
+      await #expect(throws: StudySynchronizationFailure.self) {
+        try await model.syncSavedWork(accountID: account)
+      }
+      #expect(model.syncSummary?.contains("1 note edits") == true)
+      #expect(try await cache.savedWork(accountID: account).isEmpty)
+      #expect(await server.writes == 1)
+    } else {
+      await #expect(throws: (any Error).self) { try await model.refresh(accountID: account) }
+      #expect(try await cache.generationSnapshot() == before)
+      #expect(await server.writes == 0)
+    }
+    let issue = try #require(model.accountIssue)
+    #expect(issue.reason == (fault == .unauthorized ? .unauthorized : .hibernating))
+    #expect(
+      issue.context.accountID == account && issue.context.username == "test" && !issue.acknowledged)
+    #expect(model.profile == profile && model.snapshot?.savedAt == savedAt)
+    #expect(credentials.token == "fixture" && credentials.saved.isEmpty && !model.isSyncing)
+    model.acknowledgeAccountIssue(issue.context)
+    #expect(
+      model.accountIssue?.acknowledged == true && model.reauthenticationContext == issue.context)
+    await server.expire(fault)
+    await #expect(throws: (any Error).self) { try await model.refresh(accountID: account) }
+    #expect(
+      model.accountIssue?.acknowledged == true && model.reauthenticationContext == issue.context)
+    #expect(await server.writes == (wrapped ? 1 : 0))
+  }
+  private func expiredEnvironment(gate: StudyTaskGate? = nil) async throws -> (
+    StudyStore, StudyAppModel, ModelServer, MemoryCredentials
+  ) {
+    let cache = try await store(pendingNote: true)
+    let assignment = try #require(await cache.assignments(accountID: account).first)
+    var session = try StudySession(items: [assignment.sessionItem(id: 0, isLesson: false)], seed: 1)
+    while let question = session.nextQuestion() {
+      _ = try session.mark(.correct, for: question, now: 100)
+    }
+    try await cache.saveSession(session, accountID: account, expectedRevision: nil)
+    let credentials = MemoryCredentials("fixture")
+    let server = ModelServer(gate: gate)
+    let model = StudyAppModel(
+      credentials: credentials, client: await server.client, openStore: { cache })
+    await model.restore()
+    await server.expire(.unauthorized)
+    await model.refresh()
+    #expect(model.accountIssue?.reason == .unauthorized)
+    return (cache, model, server, credentials)
   }
   @Test func oldJSONStatisticsRestoreOfflineWithoutChangingTheSource() async throws {
     let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)

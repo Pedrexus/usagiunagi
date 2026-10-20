@@ -1,51 +1,56 @@
 import Foundation
 import StudyCore
 import Testing
-import UIKit
 
 @testable import Tsurukame
 
-@Suite(.serialized) @MainActor
+@Suite(.serialized, .timeLimit(.minutes(1))) @MainActor
 struct NotificationPreferencesTests {
-  @Test func disconnectedSettingsHostIgnoresLateAccountNotifications() async {
-    let controller = StoryboardScene.Settings.initialScene.instantiate()
-    controller.loadViewIfNeeded()
-    controller.rootView?.navigation.account.username = "Waiting for an account update"
-    NotificationCenter.default.post(name: .lccPendingItemsChanged, object: nil)
-    for _ in 0..<100 where controller.rootView?.navigation.account.username != "" {
-      await Task.yield()
-    }
-    #expect(controller.rootView?.navigation.account.username == "")
-    #expect(controller.rootView?.navigation.account.level == 0)
-    #expect(controller.rootView?.navigation.account.avatar == nil)
-    #expect(controller.rootView?.navigation.pendingReviews == 0)
+  @Test func disconnectedSettingsHostIgnoresLateAccountNotifications() async throws {
+    let fixture = NativeAppAssemblyTests()
+    let (assembly, store, server, spy, domain, directory) = try await fixture.environment(
+      pending: true)
+    defer { fixture.cleanup(domain, directory) }
+    await assembly.model.restore()
+    #expect(assembly.model.snapshot?.username == "Assembly fixture")
+    #expect(assembly.model.profile?.level == 1)
+    let gate = AssemblyGate()
+    await server.pauseDownloads(using: gate)
+    let refresh = Task { try await assembly.model.refresh(accountID: "assembly-fixture") }
+    await gate.waitForEntry()
+    let disconnect = Task { await assembly.model.disconnect() }
+    await gate.waitForCancellation()
+    #expect(assembly.model.isDisconnecting)
+    gate.resume()
+    await disconnect.value
+    await #expect(throws: CancellationError.self) { try await refresh.value }
+    await assembly.notifications.refresh()
+    #expect(assembly.model.snapshot == nil && assembly.model.profile == nil)
+    #expect(assembly.model.error == nil && !assembly.model.isSyncing)
+    #expect(spy.packets.last?.level == 0 && spy.packets.last?.reviews == 0)
+    #expect(try await store.pendingReviews(accountID: "assembly-fixture").count == 1)
+    #expect(await server.writes == 0 && spy.requests == 0)
   }
 
-  @Test func commonNotificationChoicesPreserveTheOriginalArchivedSettings() {
-    let options = NotificationPreference.allCases
-    let defaults = UserDefaults.standard
-    let saved = Dictionary(
-      uniqueKeysWithValues: options.map { ($0.key, defaults.object(forKey: $0.key)) })
-    defer {
+  @Test func commonNotificationChoicesPreserveTheOriginalArchivedSettings() throws {
+    try PreferenceTestValues.withDefaults { defaults in
+      let options = NotificationPreference.allCases
       for option in options {
-        if let value = saved[option.key] ?? nil {
-          defaults.set(value, forKey: option.key)
-        } else {
-          defaults.removeObject(forKey: option.key)
-        }
+        try PreferenceTestValues.archive(true, key: option.key, in: defaults)
       }
+      let originals = options.map { defaults.data(forKey: $0.key) }
+      let source = try LegacyPreferenceImporter.read(defaults: defaults)
+      try StudyPreferenceImport(defaults: defaults).apply(source, accountID: "fixture")
+      let preferences = DefaultsStudyNotificationPreferences(defaults: defaults)
+      for option in options {
+        #expect(preferences.value(for: option))
+        preferences.set(false, for: option)
+        #expect(!preferences.value(for: option))
+        #expect(defaults.object(forKey: "native.\(option.key)") is Bool)
+      }
+      #expect(options.map { defaults.data(forKey: $0.key) } == originals)
+      #expect(originals.allSatisfy { $0 != nil })
     }
-    let preferences = LegacyNotificationPreferences()
-    for option in options {
-      preferences.set(true, for: option)
-      #expect(preferences.value(for: option))
-      #expect(defaults.object(forKey: option.key) is Data)
-      preferences.set(false, for: option)
-      #expect(!preferences.value(for: option))
-    }
-    #expect(
-      !Settings.notificationsAllReviews && !Settings.notificationsBadging
-        && !Settings.notificationSounds)
   }
   @Test func logoutQueuesAnEmptyWatchPacketWithoutActivatingARealSession() throws {
     let helper = WatchHelper(session: nil)
@@ -75,5 +80,4 @@ struct NotificationPreferencesTests {
         && packet["levelLearn"] as? Int == 1)
     #expect(packet["levelHalf"] as? Bool == false && packet["nextReview"] as? Int64 == 13_600)
   }
-
 }

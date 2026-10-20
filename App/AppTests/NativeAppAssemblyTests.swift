@@ -13,10 +13,11 @@ import Testing
   func save(_ token: String) { self.token = token }
   func remove() { token = nil }
 }
-private actor AssemblyServer: WaniKaniService {
+actor AssemblyServer: WaniKaniService {
   var offline = false
   private(set) var writes = 0
   private var data: StudyDownload
+  private var downloadGate: AssemblyGate?
   init() {
     var profile = StudyAccountProfile(username: "Assembly fixture")
     profile.level = 1
@@ -36,14 +37,16 @@ private actor AssemblyServer: WaniKaniService {
       assignments: [assignment])
   }
   func setOffline() { offline = true }
+  func pauseDownloads(using gate: AssemblyGate) { downloadGate = gate }
   func account(token: String) throws -> WaniKaniAccount {
     if offline { throw URLError(.notConnectedToInternet) }
     return .init(
       id: data.accountID, username: data.profile.username, level: data.profile.level,
       onVacation: false, profile: data.profile)
   }
-  func download(token: String) throws -> StudyDownload {
+  func download(token: String) async throws -> StudyDownload {
     if offline { throw URLError(.notConnectedToInternet) }
+    if let downloadGate { await downloadGate.pause() }
     return data
   }
   func assignment(subjectID: Int64, token: String) -> CatalogAssignment? {
@@ -62,7 +65,7 @@ private actor AssemblyServer: WaniKaniService {
     throw WaniKaniClient.APIError.invalidPayload
   }
 }
-@MainActor private final class AssemblyNoticeSpy {
+@MainActor final class AssemblyNoticeSpy {
   var requests = 0
   var packets: [StudyCompanionSnapshot] = []
   var client: StudyNotificationClient {
@@ -71,28 +74,38 @@ private actor AssemblyServer: WaniKaniService {
       remove: { _ in }, badge: { _ in }, add: { _ in })
   }
 }
-@MainActor private final class AssemblyGate {
+@MainActor final class AssemblyGate {
   private var continuation: CheckedContinuation<Void, Never>?
   private let entered = AsyncStream<Void>.makeStream()
+  private let cancelled = AsyncStream<Void>.makeStream()
   func pause() async {
-    await withCheckedContinuation { continuation in
-      self.continuation = continuation
-      entered.continuation.yield(())
+    await withTaskCancellationHandler {
+      await withCheckedContinuation { continuation in
+        self.continuation = continuation
+        entered.continuation.yield(())
+      }
+    } onCancel: {
+      Task { @MainActor in self.cancelled.continuation.yield(()) }
     }
   }
   func waitForEntry() async {
     var iterator = entered.stream.makeAsyncIterator()
     _ = await iterator.next()
   }
+  func waitForCancellation() async {
+    var iterator = cancelled.stream.makeAsyncIterator()
+    _ = await iterator.next()
+  }
   func resume() {
     continuation?.resume()
     continuation = nil
     entered.continuation.finish()
+    cancelled.continuation.finish()
   }
 }
 @MainActor @Suite(.timeLimit(.minutes(1))) struct NativeAppAssemblyTests {
   private let account = "assembly-fixture"
-  private func environment(connected: Bool = true, pending: Bool = false, persistent: Bool = false)
+  func environment(connected: Bool = true, pending: Bool = false, persistent: Bool = false)
     async throws -> (
       StudyAppAssembly, StudyStore, AssemblyServer, AssemblyNoticeSpy, String, URL
     )
@@ -139,7 +152,7 @@ private actor AssemblyServer: WaniKaniService {
       })
     return (assembly, store, server, spy, domain, directory)
   }
-  private func cleanup(_ domain: String, _ directory: URL) {
+  func cleanup(_ domain: String, _ directory: URL) {
     UserDefaults(suiteName: domain)?.removePersistentDomain(forName: domain)
     try? FileManager.default.removeItem(at: directory)
   }
@@ -242,22 +255,22 @@ private actor AssemblyServer: WaniKaniService {
     #expect(await server.writes == 1)
   }
 
-  @Test func nativeDiagnosticExportReopensTheLiveCatalogAndProtectedOutbox() async throws {
+  @Test func nativeDiagnosticExportPreservesTheLiveCatalogAndProtectedOutbox() async throws {
     let (assembly, store, server, _, domain, directory) = try await environment(
       pending: true, persistent: true)
     defer { cleanup(domain, directory) }
     await assembly.model.restore()
     let source = directory.appending(path: "study.store")
     let before = try Data(contentsOf: source)
-    let copy = try await SQLiteDiagnosticArchive.copy(from: source, directory: directory)
+    let pending = try await store.pendingReviews(accountID: account)
+    let bytes = try await StudyDiagnosticArchive(store: store, accountID: account).data()
+    let exported = try PropertyListDecoder().decode(StudyDiagnosticDocument.self, from: bytes)
     #expect(try Data(contentsOf: source) == before)
-    let exported = try await StudyStore.open(at: copy)
-    #expect(
-      try await exported.snapshot(credentialID: StudyCredentialID.forToken("assembly"))?.accountID
-        == account)
-    #expect(try await exported.catalog(accountID: account).first?.japanese == "一")
-    #expect(try await exported.pendingReviews(accountID: account).count == 1)
-    #expect(try await store.pendingReviews(accountID: account).count == 1)
+    #expect(exported.accountID == account && exported.snapshots.first?.accountID == account)
+    #expect(exported.catalog.first?.japanese == "一")
+    #expect(exported.reviews == pending && exported.reviews.count == 1)
+    #expect(exported.receiptScope == .verifiedAccountHandoffsOnly)
+    #expect(try await store.pendingReviews(accountID: account) == pending)
     #expect(await server.writes == 0)
   }
 

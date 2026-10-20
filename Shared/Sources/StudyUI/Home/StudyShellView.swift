@@ -31,6 +31,7 @@ public struct StudyShellView<Content: View>: View {
   let settings: () -> Void
   let signIn: () -> Void
   let manageToken: (() -> Void)?
+  let acknowledgeAccountIssue: () -> Void
   @State private var isVisible = false
   @Environment(\.openURL) private var openURL
   let content: Content
@@ -38,6 +39,7 @@ public struct StudyShellView<Content: View>: View {
   public init(
     state: StudyShellState, search: @escaping () -> Void, settings: @escaping () -> Void,
     signIn: @escaping () -> Void, manageToken: (() -> Void)?,
+    acknowledgeAccountIssue: @escaping () -> Void,
     @ViewBuilder content: () -> Content
   ) {
     self.state = state
@@ -45,6 +47,7 @@ public struct StudyShellView<Content: View>: View {
     self.settings = settings
     self.signIn = signIn
     self.manageToken = manageToken
+    self.acknowledgeAccountIssue = acknowledgeAccountIssue
     self.content = content()
   }
 
@@ -104,19 +107,25 @@ public struct StudyShellView<Content: View>: View {
           if let manageToken {
             Button("Manage tokens on WaniKani") {
               state.accountIssue = nil
+              acknowledgeAccountIssue()
               manageToken()
             }
           }
           Button("OK") {
             state.accountIssue = nil
+            acknowledgeAccountIssue()
             signIn()
           }
         case .hibernating:
           Button("Open WaniKani Website") {
             state.accountIssue = nil
+            acknowledgeAccountIssue()
             openURL(URL(string: "https://www.wanikani.com")!)
           }
-          Button("OK", role: .cancel) { state.accountIssue = nil }
+          Button("OK", role: .cancel) {
+            state.accountIssue = nil
+            acknowledgeAccountIssue()
+          }
         }
       } message: { issue in
         Text(

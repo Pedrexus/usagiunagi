@@ -257,7 +257,7 @@ struct ReviewExclusionTests {
     try session.excludeQuestion(try #require(missed.question))
     session.nextQuestion()
     await #expect(throws: StudyStoreError.self) {
-      try await store.commitReviewExclusion(
+      try await store.commitReviewMaterial(
         session, material: .init(material: material, version: before.savedMaterial?.revision),
         accountID: account, expectedRevision: UUID(), now: now)
     }

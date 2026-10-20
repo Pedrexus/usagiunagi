@@ -7,8 +7,7 @@ let package = Package(
   platforms: [.iOS("27.0"), .macOS("27.0")],
   products: [.library(name: "WaniKaniAPI", targets: ["WaniKaniAPI"])],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-protobuf", exact: "1.39.0"),
-    .package(url: "https://github.com/JanGorman/Hippolyte", from: "1.3.0"),
+    .package(url: "https://github.com/apple/swift-protobuf", exact: "1.39.0")
   ],
   targets: [
     .target(
@@ -17,5 +16,5 @@ let package = Package(
         .product(name: "SwiftProtobuf", package: "swift-protobuf")
       ],
       plugins: [.plugin(name: "SwiftProtobufPlugin", package: "swift-protobuf")]),
-    .testTarget(name: "WaniKaniAPITests", dependencies: ["Hippolyte", "WaniKaniAPI"]),
+    .testTarget(name: "WaniKaniAPITests", dependencies: ["WaniKaniAPI"]),
   ])

@@ -5,6 +5,90 @@ import Testing
 @testable import StudyCore
 
 struct DownloadTests {
+  @Test(arguments: [
+    ("2018-08-05T11:08:39.431000Z", Int64(1_533_467_319)),
+    ("2018-08-05T11:08:39.431Z", 1_533_467_319),
+    ("2018-08-05T11:08:39.000000Z", 1_533_467_319),
+    ("2018-08-05T11:08:39.000Z", 1_533_467_319),
+    ("20180805T11:08:39.431000Z", 1_533_467_319),
+    ("2018-08-05T11:08:39Z", 1_533_467_319),
+    ("20180805T11:08:39Z", 1_533_467_319),
+    ("2018-08-05T11:08:39.431000+03:00", 1_533_456_519),
+    ("2018-08-05T11:08:39.431000+0300", 1_533_456_519),
+    ("2018-08-05T11:08:39.431000+03", 1_533_456_519),
+    ("2018-08-05T11:08:39.431+03:00", 1_533_456_519),
+    ("2018-08-05T11:08:39.431+0300", 1_533_456_519),
+    ("2018-08-05T11:08:39.431+03", 1_533_456_519),
+    ("2018-08-05T11:08:39+03:00", 1_533_456_519),
+    ("2018-08-05T11:08:39+0300", 1_533_456_519),
+    ("2018-08-05T11:08:39+03", 1_533_456_519),
+  ])
+  func historicalTimestampSpellingsKeepTheirWholeSecondValue(text: String, expected: Int64) throws {
+    #expect(try WaniKaniClient().timestamp(text) == expected)
+  }
+  @Test func historicalProfileSubscriptionAndLevelDatesKeepTheirExactValues() async throws {
+    let client = WaniKaniClient { request in
+      if request.url?.lastPathComponent == "user" {
+        var user = DownloadFixture.user
+        var data = user["data"] as! [String: Any]
+        data["username"] = "example_user"
+        data["level"] = 5
+        data["profile_url"] = "https://www.wanikani.com/users/example_user"
+        data["started_at"] = "2012-05-11T00:52:18.958466Z"
+        data["subscription"] = [
+          "active": true, "max_level_granted": 60,
+          "period_ends_at": "2018-12-11T13:32:19.485748Z",
+        ]
+        user["data"] = data
+        return try DownloadFixture.response(request, object: user)
+      }
+      if request.url?.lastPathComponent == "level_progressions" {
+        let row = DownloadFixture.resource(
+          49392, "level_progression",
+          [
+            "level": 42, "created_at": "2017-03-30T08:21:51.439918Z",
+            "unlocked_at": "2017-03-30T08:21:51.439918Z",
+            "started_at": "2017-03-30T11:31:20.438432Z",
+            "passed_at": NSNull(), "completed_at": NSNull(), "abandoned_at": NSNull(),
+          ])
+        return try DownloadFixture.response(request, object: DownloadFixture.collection([row]))
+      }
+      return try DownloadFixture.response(request)
+    }
+    let result = try await client.download(token: "fixture")
+    #expect(result.profile.username == "example_user" && result.profile.level == 5)
+    #expect(result.profile.profileURL == "https://www.wanikani.com/users/example_user")
+    #expect(result.profile.subscribed && result.profile.maxLevelGranted == 60)
+    #expect(
+      result.profile.startedAt == 1_336_697_538
+        && result.profile.subscriptionEndsAt == 1_544_535_139)
+    let level = try #require(result.levels.first)
+    #expect(result.levels.count == 1 && level.id == 49392 && level.level == 42)
+    #expect(level.createdAt == 1_490_862_111 && level.unlockedAt == 1_490_862_111)
+    #expect(level.startedAt == 1_490_873_480)
+    #expect(level.passedAt == nil && level.completedAt == nil && level.abandonedAt == nil)
+  }
+  @Test func nanoriReadingsRetainTheirTextPrimaryFlagAndKind() async throws {
+    let client = WaniKaniClient { request in
+      guard request.url?.lastPathComponent == "subjects" else {
+        return try DownloadFixture.response(request)
+      }
+      var rows = DownloadFixture.rows["subjects"]!
+      var data = rows[0]["data"] as! [String: Any]
+      var readings = data["readings"] as! [[String: Any]]
+      readings.append([
+        "reading": "かず", "primary": false, "accepted_answer": false, "type": "nanori",
+      ])
+      data["readings"] = readings
+      rows[0]["data"] = data
+      return try DownloadFixture.response(request, object: DownloadFixture.collection(rows))
+    }
+    let result = try await client.download(token: "fixture")
+    let kanji = try #require(result.subjects.first { $0.id == 1 })
+    #expect(kanji.readings.map(\.text) == ["いち", "ひと", "かず"])
+    #expect(kanji.readings.map(\.kind) == [.onyomi, .kunyomi, .nanori])
+    #expect(kanji.readings.map(\.isPrimary) == [true, false, false])
+  }
   @Test func completeStudyContentIncludesHiddenResourcesAndSubscription() async throws {
     let result = try await WaniKaniClient(transport: DownloadFixture.response).download(
       token: "fixture")

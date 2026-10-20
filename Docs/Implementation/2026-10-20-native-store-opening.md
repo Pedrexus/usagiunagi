@@ -1,6 +1,21 @@
 # Native store generation opening
 
-The owner explicitly approved applying the reviewed proposal on October 20, 2026. Production startup now uses `StudyStore.openApplication(in:)`. This is implemented and compiler-checked, not runtime-accepted: no app, database, simulator session or real account was opened, and tests remain deferred under the implementation → original-app comparison → tests order.
+The owner explicitly approved applying the reviewed proposal on October 20, 2026. Production startup uses `StudyStore.openApplication(in:)`. The original implementation checkpoint below was compiler-only; the deferred test stage now includes the scoped, separate-process Mac evidence below. G7 remains open. No real account or production store was opened.
+
+## Production opener: separate-process Mac checks
+
+The existing DEBUG persistence probe now calls the actual application opener against disposable copies of the frozen `native-v0-186c1cc3` store. Its first run exposed a real publication defect: `capture` was made read-only before `FileManager.moveItem` published it as the retained generation. macOS refused that move with Cocoa error 513/POSIX 13 (probe exit 251). Publication now moves the coherent capture first, then applies read-only protection. Protection is reapplied on retry when the retained directory already exists. The original database family and model/encoded payload declarations are unchanged.
+
+After the fix, `probe-application-opening` exits 0 and verifies:
+
+- Both the frozen base and a separately stopped WAL-only writer preserve all 38 exact records across ten model types/two accounts when adopted and reopened in fresh processes.
+- A second process is refused while the returned application actor owns its lease.
+- An answer and note saved through the selected store survive `_exit(86)` and two fresh process reopens, with 39 exact records. Original/retained database-family bytes and the selection receipt remain unchanged by those writes.
+- A fresh installation selects one empty named generation, reopens it twice and refuses a second owner. Frozen fixture filenames and SHA-256 values remain unchanged.
+
+The corrected binary also opens the actual disposable preparation left by the initial failed run, preserving all 38 records. Logs are `.build/Results/ApplicationOpeningProbe.log` and `ApplicationOpeningInterruptedRetry.log`. The successful disposable root is `native-upgrade-6C5C4F95-00D8-4719-9E5D-E0D513EAFBDB` under the system temporary directory; the earlier interrupted root ends in `BA06423C-5DA8-4051-819C-6FEB791BC6F9`. The first failure was observed in command output; no separate frozen failure log is claimed. The workflow runs this existing probe command after the schema-copy experiment.
+
+These are Mac process/restart checks of the production opener, not a V2 migration, mid-copy kill, disk-full, file-protection, power-loss or frozen-store iOS/iPad result. The remaining failure and compatibility gates below still apply. Shared `StudyStoreOpeningTests` add malformed/foreign/empty/sidecar and rollback-image cases. They pass in the iPhone shared suite and in the final focused Mac rerun; the never-opened-copy setup and canonical path-key fixes, their failures and exact scope are recorded in the [test checkpoint](2026-10-20-original-flow.md#native-navigation-and-final-test-ports).
 
 ## Implementation and ownership
 

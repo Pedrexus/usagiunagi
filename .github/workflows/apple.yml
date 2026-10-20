@@ -70,6 +70,7 @@ jobs:
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe read-native-baseline App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store
           # Disposable unchanged-schema experiment; not production G7/cutover acceptance.
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe probe-native-upgrade App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store 2>&1 | tee "$report/native-upgrade.log"
+          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe probe-application-opening App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store 2>&1 | tee "$report/application-opening.log"
           set -o pipefail
           for phase in import-handoff save-handoff activate-handoff; do
             case "$phase" in

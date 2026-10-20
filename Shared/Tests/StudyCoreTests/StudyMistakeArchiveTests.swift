@@ -3,6 +3,27 @@ import StudyCore
 import Testing
 
 struct StudyMistakeArchiveTests {
+  @Test func cloudWindowExpiresOnlyInterpretableOldHintsAtTheExactBoundary() throws {
+    let context = context(zone: "UTC")
+    let now = Date(timeIntervalSince1970: 1_792_497_600)
+    let original = [
+      "1": "2026-10-19 11:59:59", "2": "2026-10-19 12:00:00",
+      "3": "2026-10-20 12:00:01", "unresolved": "kept verbatim",
+    ]
+    let legacy = StudyLegacyMistakes(originals: original, context: context)
+    let values = legacy.values.merging([4: Int64.max], uniquingKeysWith: max)
+    #expect(
+      StudyMistakeArchive.recentValues(values, now: now) == [
+        2: 1_792_411_200, 3: 1_792_497_601, 4: Int64.max,
+      ])
+    let encoded = try #require(try legacy.updatedData(merging: values, now: now))
+    let published = try JSONDecoder().decode([String: String].self, from: encoded)
+    #expect(published == ["2": original["2"]!, "3": original["3"]!, "unresolved": "kept verbatim"])
+    #expect(legacy.originals == original && legacy.values[1] == 1_792_411_199)
+    #expect(
+      try StudyLegacyMistakes(data: encoded, context: context).updatedData(
+        merging: values, now: now) == nil)
+  }
   @Test func nativeRoundTripUsesStableIdentityAndCanonicalMaximums() throws {
     let values: [Int64: Int64] = [2: 2_000_000_000, 1: 1_999_999_999, 999_999: Int64.max]
     let archive = try StudyMistakeArchive(accountID: "verified-account", values: values)
@@ -93,7 +114,9 @@ struct StudyMistakeArchiveTests {
     let unresolved = StudyLegacyMistakes(originals: raw, context: utc)
     #expect(unresolved.originals == raw && unresolved.unresolvedKeys.count == 3)
     let updated = try #require(
-      try unresolved.updatedData(merging: [1: 2_000_000_000, 2: 2_000_000_000]))
+      try unresolved.updatedData(
+        merging: [1: 2_000_000_000, 2: 2_000_000_000],
+        now: Date(timeIntervalSince1970: 2_000_000_001)))
     let restored = try StudyLegacyMistakes(data: updated, context: utc)
     #expect(restored.originals["1"] == "not a date" && restored.originals["future-kind"] == text)
     #expect(restored.originals["2147483648"] == text && restored.values[2] == 2_000_000_000)
@@ -104,8 +127,14 @@ struct StudyMistakeArchiveTests {
   @Test func sameSecondTiesDSTAndFutureHintsDoNotBecomeFreshMistakes() throws {
     let utc = context(zone: "UTC")
     let legacy = StudyLegacyMistakes(originals: ["1": "2026-10-20 12:00:00"], context: utc)
-    #expect(try legacy.updatedData(merging: legacy.values) == nil)
-    #expect(try legacy.updatedData(merging: [1: Int64.max]) == nil)
+    #expect(
+      try legacy.updatedData(
+        merging: legacy.values,
+        now: Date(timeIntervalSince1970: Double(try #require(legacy.values[1])))) == nil)
+    #expect(
+      try legacy.updatedData(
+        merging: [1: Int64.max],
+        now: Date(timeIntervalSince1970: Double(try #require(legacy.values[1])))) == nil)
     let gap = StudyLegacyMistakes(
       originals: ["1": "2026-03-08 02:30:00"], context: context(zone: "America/New_York"))
     #expect(gap.unresolvedKeys == ["1"])

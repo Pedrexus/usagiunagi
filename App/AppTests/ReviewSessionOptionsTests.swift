@@ -4,28 +4,45 @@ import Testing
 
 @testable import Tsurukame
 
+@MainActor enum PreferenceTestValues {
+  static func withDefaults(_ test: (UserDefaults) throws -> Void) throws {
+    let domain = "usagi-legacy-preferences-" + UUID().uuidString
+    let defaults = try #require(UserDefaults(suiteName: domain))
+    defer { defaults.removePersistentDomain(forName: domain) }
+    try test(defaults)
+  }
+  static func archive(_ value: Any, key: String, in defaults: UserDefaults) throws {
+    defaults.set(
+      try NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true),
+      forKey: key)
+  }
+}
+
 @Suite(.serialized) @MainActor
 struct ReviewSessionOptionsTests {
-  @Test func legacySettingsProducePortableAnkiModes() {
-    let previous = (
-      Settings.ankiMode, Settings.ankiModeTaskType, Settings.ankiModeCombineReadingMeaning
-    )
-    defer {
-      Settings.ankiMode = previous.0
-      Settings.ankiModeTaskType = previous.1
-      Settings.ankiModeCombineReadingMeaning = previous.2
-    }
+  @Test func legacySettingsProducePortableAnkiModes() throws {
     let modes: [(AnkiModeTaskType, StudySessionOptions.AnkiMode)] = [
       (.both, .both), (.meaningOnly, .meaning), (.readingOnly, .reading),
     ]
     for enabled in [true, false] {
       for (legacy, portable) in modes {
-        Settings.ankiMode = enabled
-        Settings.ankiModeTaskType = legacy
-        Settings.ankiModeCombineReadingMeaning = true
-        let options = ReviewSession.currentOptions()
-        #expect(options.ankiMode == (enabled ? portable : .off))
-        #expect(options.combinedAnki == (enabled && legacy == .both))
+        try PreferenceTestValues.withDefaults { defaults in
+          try PreferenceTestValues.archive(enabled, key: "ankiMode", in: defaults)
+          try PreferenceTestValues.archive(legacy.rawValue, key: "ankiModeTaskType", in: defaults)
+          try PreferenceTestValues.archive(true, key: "ankiModeCombineReadingMeaning", in: defaults)
+          let keys = ["ankiMode", "ankiModeTaskType", "ankiModeCombineReadingMeaning"]
+          let before = keys.map { defaults.data(forKey: $0) }
+          let source = try LegacyPreferenceImporter.read(defaults: defaults)
+          try StudyPreferenceImport(defaults: defaults).apply(source, accountID: "fixture")
+          let options = try JSONDecoder().decode(
+            ReviewPreferences.self,
+            from: #require(defaults.data(forKey: "native.reviewPreferences"))
+          )
+          .sessionOptions
+          #expect(options.ankiMode == (enabled ? portable : .off))
+          #expect(options.combinedAnki == (enabled && legacy == .both))
+          #expect(keys.map { defaults.data(forKey: $0) } == before)
+        }
       }
     }
   }
@@ -33,15 +50,10 @@ struct ReviewSessionOptionsTests {
 
 @Suite(.serialized) @MainActor struct LegacyPreferenceImportTests {
   private func withDefaults(_ test: (UserDefaults) throws -> Void) throws {
-    let domain = "usagi-legacy-preferences-" + UUID().uuidString
-    let defaults = try #require(UserDefaults(suiteName: domain))
-    defer { defaults.removePersistentDomain(forName: domain) }
-    try test(defaults)
+    try PreferenceTestValues.withDefaults(test)
   }
   private func archive(_ value: Any, key: String, in defaults: UserDefaults) throws {
-    defaults.set(
-      try NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true),
-      forKey: key)
+    try PreferenceTestValues.archive(value, key: key, in: defaults)
   }
   @Test func missingSourceValuesUseOriginalDefaultsWithoutWritingArchives() throws {
     try withDefaults { defaults in
@@ -50,6 +62,48 @@ struct ReviewSessionOptionsTests {
       #expect(value == LegacyStudyPreferences())
       #expect(value.review.stageIndicator == .none && value.review.sessionOptions.minimizePenalty)
       #expect(defaults.dictionaryRepresentation() as NSDictionary == before)
+    }
+  }
+  @Test(arguments: StudyReviewOrder.allCases)
+  func originalOrderingCodesSurviveReadOnlyImportAndNativeRoundTrip(order: StudyReviewOrder) throws
+  {
+    try withDefaults { defaults in
+      try archive(order.rawValue, key: "reviewOrder", in: defaults)
+      let original = defaults.data(forKey: "reviewOrder")
+      let source = try LegacyPreferenceImporter.read(defaults: defaults)
+      #expect(source.review.policy.order == order)
+      #expect(ReviewOrder(rawValue: order.rawValue)?.description == order.description)
+      try StudyPreferenceImport(defaults: defaults).apply(source, accountID: "fixture")
+      let restored = try JSONDecoder().decode(
+        ReviewPreferences.self, from: #require(defaults.data(forKey: "native.reviewPreferences")))
+      #expect(restored.policy.order == order)
+      #expect(defaults.data(forKey: "reviewOrder") == original)
+    }
+  }
+  @Test func everyOriginalReviewBooleanReachesItsNativePropertyWithoutRewritingTheArchive() throws {
+    let fields: [(String, WritableKeyPath<ReviewPreferences, Bool>)] = [
+      ("showAnswerImmediately", \.revealAnswers), ("showFullAnswer", \.revealFullAnswer),
+      ("exactMatch", \.exactMatch), ("enableCheats", \.allowCorrections),
+      ("allowSkippingReviews", \.allowSkipping), ("playAudioAutomatically", \.autoplayAudio),
+      ("interruptBackgroundAudio", \.interruptBackgroundAudio),
+      ("animateParticleExplosion", \.correctAnswerFeedback),
+      ("animatePlusOne", \.completedItemFeedback), ("animateLevelUpPopup", \.srsMilestoneFeedback),
+    ]
+    for (key, property) in fields {
+      for enabled in [false, true] {
+        try withDefaults { defaults in
+          try archive(enabled, key: key, in: defaults)
+          let original = try #require(defaults.data(forKey: key))
+          let source = try LegacyPreferenceImporter.read(defaults: defaults)
+          #expect(source.review[keyPath: property] == enabled, "\(key)")
+          try StudyPreferenceImport(defaults: defaults).apply(source, accountID: "fixture")
+          let restored = try JSONDecoder().decode(
+            ReviewPreferences.self,
+            from: #require(defaults.data(forKey: "native.reviewPreferences")))
+          #expect(restored[keyPath: property] == enabled, "\(key)")
+          #expect(defaults.data(forKey: key) == original, "\(key)")
+        }
+      }
     }
   }
   @Test func actualKeyedArchivesMapEveryPreferenceGroupWithoutCopyingTheToken() throws {
@@ -77,7 +131,8 @@ struct ReviewSessionOptionsTests {
         "lessonBatchSize": 9, "apprenticeLessonsLimit": 120,
       ] { try archive(value, key: key, in: defaults) }
       try archive(
-        Array(Settings.$lessonOrder.defaultValue.reversed()), key: "lessonOrder", in: defaults)
+        Array(LegacyPreferenceSchema.lessonOrder.defaultValue.reversed()), key: "lessonOrder",
+        in: defaults)
       try archive(Set(["saved-font.ttf"]), key: "selectedFonts", in: defaults)
       try archive(Set<Int64>([1, 2]), key: "offlineAudioVoiceActors", in: defaults)
       try archive("custom@example.invalid", key: "gravatarCustomEmail", in: defaults)

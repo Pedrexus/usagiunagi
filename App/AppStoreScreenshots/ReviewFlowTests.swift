@@ -25,16 +25,67 @@ final class ReviewFlowTests: XCTestCase {
     try await super.tearDown()
   }
 
-  @MainActor private func launchAccountFixture(_ extra: [String]) -> XCUIApplication {
+  @MainActor private func fixtureApplication(_ arguments: [String] = []) -> XCUIApplication {
     let app = XCUIApplication()
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ReauthFlowFixture"] + extra
+    app.launchArguments = ["--review-fixture"] + arguments
     addTeardownBlock { await MainActor.run { self.clearFixture(app) } }
-    app.launch()
     return app
   }
+
+  @MainActor private func unavailableNativeFixture(
+    _ scenario: String, file: StaticString = #filePath, line: UInt = #line
+  ) -> XCUIApplication? {
+    XCTFail(
+      "Missing isolated native fixture: \(scenario). No app was launched.", file: file, line: line)
+    return nil
+  }
+
+  @MainActor private func launchFixture(
+    _ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line
+  ) {
+    #if DEBUG
+      guard app.launchArguments.contains("--review-fixture") else {
+        XCTFail("Refusing to launch without the isolated native fixture.", file: file, line: line)
+        return
+      }
+      app.launch()
+    #else
+      XCTFail("Native UI fixtures require the Debug app and test runner.", file: file, line: line)
+    #endif
+  }
+
+  @MainActor private func openFixture(
+    _ url: URL, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line
+  ) {
+    #if DEBUG
+      guard app.launchArguments.contains("--review-fixture") else {
+        XCTFail("Refusing a cold link without the isolated native fixture.", file: file, line: line)
+        return
+      }
+      app.open(url)
+    #else
+      XCTFail("Native UI fixtures require the Debug app and test runner.", file: file, line: line)
+    #endif
+  }
+
+  @MainActor private func activateFixture(_ app: XCUIApplication) {
+    #if DEBUG
+      guard app.launchArguments.contains("--review-fixture") else {
+        XCTFail("Refusing to activate without the isolated native fixture.")
+        return
+      }
+      app.activate()
+    #else
+      XCTFail("Native UI fixtures require the Debug app and test runner.")
+    #endif
+  }
+
   @MainActor func testAccountExpiryUsesNativeReauthenticationAndPreservesForcedEmail() {
     continueAfterFailure = false
-    let app = launchAccountFixture([])
+    guard
+      let app = unavailableNativeFixture(
+        "Expired credentials with a saved account, wrong-account rejection and reconnection")
+    else { return }
     let warning = app.alerts["Logged out"]
     XCTAssertTrue(warning.waitForExistence(timeout: 10))
     XCTAssertTrue(warning.buttons["Manage tokens on WaniKani"].exists)
@@ -57,20 +108,22 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
     XCTAssertFalse(app.alerts.firstMatch.exists)
     XCUIDevice.shared.press(.home)
-    app.activate()
+    activateFixture(app)
     let settings = app.buttons["app.settings"]
     let foregroundReady = expectation(
       for: NSPredicate(format: "hittable == true"), evaluatedWith: settings)
     wait(for: [foregroundReady], timeout: 5)
     settings.tap()
-    XCTAssertTrue(app.buttons["settings.back"].waitForExistence(timeout: 5))
-    app.buttons["settings.back"].tap()
+    XCTAssertTrue(app.buttons["settings.page.lessons"].waitForExistence(timeout: 5))
+    app.buttons["Done"].firstMatch.tap()
     XCTAssertFalse(app.alerts.firstMatch.exists)
   }
 
   @MainActor func testHibernationWarningStaysDismissedAcrossNativeTabChanges() {
     continueAfterFailure = false
-    let app = launchAccountFixture(["HibernationFixture"])
+    guard
+      let app = unavailableNativeFixture("Dismissible hibernation warning on a connected account")
+    else { return }
     let warning = app.alerts["Account is Hibernating"]
     XCTAssertTrue(warning.waitForExistence(timeout: 10))
     XCTAssertTrue(warning.buttons["Open WaniKani Website"].exists)
@@ -87,9 +140,8 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testAccountWarningWaitsForReviewCloseAndKeepsTheAnswerDraft() {
     continueAfterFailure = false
-    let app = launchAccountFixture([
-      "DeferredAccountIssue", "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
-    ])
+    guard let app = unavailableNativeFixture("Credential expiry while a typed review draft is open")
+    else { return }
     let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
       .firstMatch
     XCTAssertTrue(start.waitForExistence(timeout: 5))
@@ -114,12 +166,15 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testNativeLoginTokenFailuresHibernationAndHomeNavigation() {
     continueAfterFailure = false
-    let app = XCUIApplication()
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "LoginFlowFixture"]
+    guard
+      let app = unavailableNativeFixture(
+        "Disconnected credentials with rejected, hibernating and valid token responses, then disconnect"
+      )
+    else { return }
     defer { clearFixture(app) }
-    for token in ["invalid", "hibernating", "fixture-token"] {
+    for token in ["rejected", "hibernating", "fixture-token"] {
       app.terminate()
-      app.launch()
+      launchFixture(app)
       let field = app.secureTextFields["login.token"]
       XCTAssertTrue(field.waitForExistence(timeout: 10))
       XCTAssertFalse(app.buttons["login.submit"].isEnabled)
@@ -134,11 +189,15 @@ final class ReviewFlowTests: XCTestCase {
         XCTAssertTrue(app.buttons["app.settings"].isHittable)
         XCTAssertFalse(app.secureTextFields["login.token"].exists)
         app.buttons["app.settings"].tap()
-        let logout = app.buttons["settings.logout"]
+        let account = app.buttons["WaniKani account"]
+        scrollTo(account, in: app)
+        account.tap()
+        let logout = app.buttons["Disconnect and remove local snapshot"]
         scrollTo(logout, in: app)
         logout.tap()
-        XCTAssertTrue(app.alerts["Log out?"].waitForExistence(timeout: 5))
-        app.alerts["Log out?"].buttons["Log out"].tap()
+        let disconnect = app.buttons["Disconnect"]
+        XCTAssertTrue(disconnect.waitForExistence(timeout: 5))
+        disconnect.tap()
         XCTAssertTrue(app.secureTextFields["login.token"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["login.submit"].isEnabled)
         XCTAssertFalse(app.collectionViews["home.dashboard"].exists)
@@ -155,9 +214,10 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testNativeLoginUsesOnlyTheTokenAndSubmitsFromKeyboard() {
     continueAfterFailure = false
-    let app = XCUIApplication()
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "LoginFlowFixture"]
-    app.launch()
+    guard
+      let app = unavailableNativeFixture("Disconnected credentials for keyboard token submission")
+    else { return }
+    launchFixture(app)
     defer { clearFixture(app) }
     let token = app.secureTextFields["login.token"]
     XCTAssertTrue(token.waitForExistence(timeout: 10))
@@ -170,9 +230,8 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor private func launchNativeHome(_ arguments: [String] = []) -> XCUIApplication {
-    let app = XCUIApplication()
-    app.launchArguments = ["--review-fixture"] + arguments
-    app.launch()
+    let app = fixtureApplication(arguments)
+    launchFixture(app)
     XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 15), app.debugDescription)
     XCTAssertTrue(
       app.collectionViews["home.dashboard"].waitForExistence(timeout: 15), app.debugDescription)
@@ -206,14 +265,14 @@ final class ReviewFlowTests: XCTestCase {
   }
   @MainActor func testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics() throws {
     continueAfterFailure = false
-    let app = XCUIApplication()
+    let app = fixtureApplication()
     defer { app.terminate() }
     for route in ["reviews", "lessons", "subject/1"] {
       app.terminate()
       app.launchArguments =
         ["--review-fixture", "--light-fixture"]
         + (route == "lessons" ? ["--lesson-fixture"] : [])
-      app.launch()
+      launchFixture(app)
       let stats = app.buttons["Stats"].firstMatch
       XCTAssertTrue(stats.waitForExistence(timeout: 10))
       stats.tap()
@@ -258,13 +317,10 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testColdStudyLinkWaitsForSignInBeforeOpeningTheReview() {
     continueAfterFailure = false
-    let app = XCUIApplication()
-    app.launchArguments = [
-      "-FASTLANE_SNAPSHOT", "YES", "LoginFlowFixture", "SingleReviewFixture",
-      "-playAudioAutomatically", "NO", "-autoSwitchKeyboard", "NO",
-    ]
+    guard let app = unavailableNativeFixture("Cold review link while credentials are disconnected")
+    else { return }
     defer { clearFixture(app) }
-    app.open(URL(string: "usagiunagi:///reviews")!)
+    openFixture(URL(string: "usagiunagi:///reviews")!, in: app)
     let token = app.secureTextFields["login.token"]
     XCTAssertTrue(token.waitForExistence(timeout: 10), app.debugDescription)
     XCTAssertFalse(app.textFields["review.answer"].exists)
@@ -278,7 +334,7 @@ final class ReviewFlowTests: XCTestCase {
   }
   @MainActor func testShellColdReviewLessonAndSubjectLinksReturnToHome() {
     continueAfterFailure = false
-    let app = XCUIApplication()
+    let app = fixtureApplication()
     defer { app.terminate() }
     for scheme in ["usagiunagi", "tsurukame"] {
       for route in ["reviews", "lessons", "subject/1"] {
@@ -286,7 +342,7 @@ final class ReviewFlowTests: XCTestCase {
         app.launchArguments =
           ["--review-fixture", "--light-fixture"]
           + (route == "lessons" ? ["--lesson-fixture"] : [])
-        app.open(URL(string: scheme + ":///" + route)!)
+        openFixture(URL(string: scheme + ":///" + route)!, in: app)
         switch route {
         case "reviews":
           XCTAssertTrue(
@@ -309,9 +365,12 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testShellFullRefreshUpdatesProgressAndKeepsBlockingAfterForeground() {
     continueAfterFailure = false
-    let app = XCUIApplication()
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ShellFlowFixture"]
-    app.launch()
+    guard
+      let app = unavailableNativeFixture(
+        "Held full refresh with deterministic progress and foreground blocking on the level-24 account"
+      )
+    else { return }
+    launchFixture(app)
     defer { clearFixture(app) }
     let home = app.collectionViews["home.dashboard"]
     XCTAssertTrue(home.waitForExistence(timeout: 10))
@@ -322,28 +381,23 @@ final class ReviewFlowTests: XCTestCase {
     let pullEnd = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.85))
     pullStart.press(forDuration: 0.05, thenDragTo: pullEnd)
     attachHomeScreenshot("Home after pull to refresh")
-    let overlay = app.descendants(matching: .any).matching(identifier: "app.fullRefresh").firstMatch
-    XCTAssertTrue(overlay.waitForExistence(timeout: 5))
-    let indicator = app.progressIndicators["app.refreshProgress"]
+    let indicator = app.progressIndicators["app.syncProgress"]
     XCTAssertTrue(indicator.waitForExistence(timeout: 5))
-    let advancing = XCTNSPredicateExpectation(
-      predicate: NSPredicate { _, _ in (indicator.value as? String)?.contains("25") == true },
-      object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 7), .completed)
+    XCTAssertEqual(indicator.label, "WaniKani sync")
     attachHomeScreenshot("Native full refresh progress")
     XCTAssertFalse(app.buttons["app.settings"].isEnabled)
     XCUIDevice.shared.press(.home)
-    app.activate()
-    XCTAssertTrue(overlay.waitForExistence(timeout: 5))
+    activateFixture(app)
+    XCTAssertTrue(indicator.waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["app.settings"].isEnabled)
     let completed = XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "exists == false"), object: overlay)
+      predicate: NSPredicate(format: "exists == false"), object: indicator)
     XCTAssertEqual(XCTWaiter.wait(for: [completed], timeout: 20), .completed)
     XCTAssertTrue(app.buttons["app.settings"].isEnabled)
     XCTAssertEqual(app.staticTexts["app.username"].label, "Fred")
     app.buttons["app.settings"].tap()
-    XCTAssertTrue(app.buttons["settings.back"].waitForExistence(timeout: 5))
-    app.buttons["settings.back"].tap()
+    XCTAssertTrue(app.buttons["settings.page.lessons"].waitForExistence(timeout: 5))
+    app.buttons["Done"].firstMatch.tap()
     XCTAssertTrue(home.waitForExistence(timeout: 5))
   }
 
@@ -357,9 +411,12 @@ final class ReviewFlowTests: XCTestCase {
     continueAfterFailure = false
     XCUIDevice.shared.orientation = .portrait
     addTeardownBlock { await MainActor.run { XCUIDevice.shared.orientation = .portrait } }
-    let app = XCUIApplication()
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "-showPreviousLevelGraph", "NO"]
-    app.launch()
+    guard
+      let app = unavailableNativeFixture(
+        "Level-24 Home distribution: 1 Guru, 12 Apprentice, 4 lessons, 8 locked kanji and 2,056 burned"
+      )
+    else { return }
+    launchFixture(app)
     defer { clearFixture(app) }
     let home = app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
     XCTAssertTrue(home.waitForExistence(timeout: 10))
@@ -402,9 +459,11 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testHomeDisablesEmptyStudyQueuesAndHidesVacationActions() {
     continueAfterFailure = false
     for fixture in ["HomeEmptyFixture", "HomeLimitFixture", "HomeVacationFixture"] {
-      let app = XCUIApplication()
-      app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", fixture]
-      app.launch()
+      guard
+        let app = unavailableNativeFixture(
+          "\(fixture): original empty queues, apprentice limit or vacation Home state")
+      else { return }
+      launchFixture(app)
       defer { clearFixture(app) }
       XCTAssertTrue(
         app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
@@ -530,9 +589,8 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor private func launchOfflineAudio(extra: [String] = []) -> XCUIApplication {
-    let app = XCUIApplication()
-    app.launchArguments = ["--review-fixture", "--audio-fixture", "--light-fixture"] + extra
-    app.launch()
+    let app = fixtureApplication(["--audio-fixture", "--light-fixture"] + extra)
+    launchFixture(app)
     XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 10), app.debugDescription)
     app.buttons["app.settings"].tap()
     XCTAssertTrue(app.buttons["settings.page.reviews"].waitForExistence(timeout: 5))
@@ -767,10 +825,11 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion() {
     continueAfterFailure = false
-    changeReduceMotion(to: true, restoreAfterTest: true)
-    let app = launchNativeReview(extra: [
-      "--review-feedback-fixture", "--anki-fixture", "--combined-anki-fixture",
-    ])
+    guard
+      let app = unavailableNativeFixture(
+        "Combined-Anki review feedback with an injected Reduce Motion environment, without changing system preferences"
+      )
+    else { return }
     defer { clearFixture(app) }
     app.buttons["review.submit"].tap()
     app.buttons["review.correct"].tap()
@@ -801,47 +860,6 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.submit"].tap()
     app.buttons["review.correct"].tap()
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
-  }
-
-  @MainActor private func changeReduceMotion(to enabled: Bool, restoreAfterTest: Bool = false) {
-    let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
-    settings.launch()
-    defer { settings.terminate() }
-    let control = settings.switches["Reduce Motion"]
-    if !control.exists {
-      for title in ["Accessibility", "Settings"] {
-        let back = settings.navigationBars.buttons[title].firstMatch
-        if back.exists { back.tap() }
-      }
-      let sidebar = settings.collectionViews["com.apple.settings.sidebar.collectionView"]
-      let navigation = sidebar.exists ? sidebar : settings
-      navigation.swipeDown(velocity: .fast)
-      navigation.swipeDown(velocity: .fast)
-      let accessibility = settings.buttons["Accessibility"]
-      for _ in 0..<8 {
-        if accessibility.exists && accessibility.isHittable { break }
-        navigation.swipeUp()
-      }
-      XCTAssertTrue(accessibility.waitForExistence(timeout: 5))
-      accessibility.tap()
-      let motion = settings.descendants(matching: .any).matching(
-        NSPredicate(format: "label == %@", "Motion")
-      ).firstMatch
-      for _ in 0..<8 {
-        if motion.exists && motion.isHittable { break }
-        settings.swipeUp()
-      }
-      XCTAssertTrue(motion.waitForExistence(timeout: 5))
-      motion.tap()
-    }
-    XCTAssertTrue(control.waitForExistence(timeout: 5))
-    let previous = control.value as? String == "1"
-    if restoreAfterTest {
-      addTeardownBlock { [self] in
-        await MainActor.run { changeReduceMotion(to: previous) }
-      }
-    }
-    setSettingsSwitch(control, on: enabled, in: settings)
   }
 
   @MainActor
@@ -1018,7 +1036,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertEqual(field.value as? String, draft)
     app.buttons["review.close"].tap()
     XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
-    app.navigationBars["Review Summary"].buttons["Done"].tap()
+    app.buttons["review.finish"].tap()
     XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
   }
 
@@ -1039,41 +1057,19 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
     app.buttons["review.close"].tap()
     XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
-    app.navigationBars["Review Summary"].buttons["Done"].tap()
+    app.buttons["review.finish"].tap()
     XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
   }
 
   @MainActor
   func testCompleteSampleReviewsThroughTypedAnswers() {
     continueAfterFailure = false
-    let app = XCUIApplication()
-    app.launchArguments = [
-      "-FASTLANE_SNAPSHOT",
-      "YES",
-      "-groupMeaningReading",
-      "YES",
-      "-meaningFirst",
-      "YES",
-      "-ankiMode",
-      "NO",
-      "-autoSwitchKeyboard",
-      "NO",
-      "-playAudioAutomatically",
-      "NO",
-      "-reviewItemsLimitEnabled",
-      "NO",
-      "-skipKanjiReadings",
-      "NO",
-      "-allowSkippingReviews",
-      "NO",
-    ]
-    app.launch()
-    defer {
-      app.terminate()
-      app.launchArguments.append("ResetUserDefaults")
-      app.launch()
-      app.terminate()
-    }
+    guard
+      let app = unavailableNativeFixture(
+        "Original four-subject typed review queue (私自身, 私, 自, 身), completing all five questions")
+    else { return }
+    launchFixture(app)
+    defer { clearFixture(app) }
     startReviews(in: app)
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 10))
@@ -1083,13 +1079,18 @@ final class ReviewFlowTests: XCTestCase {
     initial.name = "SwiftUI review question"
     initial.lifetime = .keepAlways
     add(initial)
-    let summary = app.staticTexts["Session complete"]
+    let summary = app.staticTexts["Review session saved"]
     let meanings = ["私自身": "personally", "私": "i", "自": "self", "身": "somebody"]
+    var answeredSubjects = Set<String>()
+    var answeredQuestions = 0
+    var answeredReading = false
     for _ in 0..<5 {
       let previousQuestion = question.value as? String ?? ""
       let previousPrompt = prompt.label
       let answer = previousPrompt.contains("Reading") ? "watashijishin" : meanings[previousQuestion]
       XCTAssertNotNil(answer, "Unexpected sample question: \(previousQuestion), \(previousPrompt)")
+      answeredSubjects.insert(previousQuestion)
+      answeredReading = answeredReading || previousPrompt.contains("Reading")
       field.tap()
       field.typeText(answer!)
       app.buttons["review.submit"].tap()
@@ -1100,8 +1101,12 @@ final class ReviewFlowTests: XCTestCase {
               .label != previousPrompt
         }, object: nil)
       XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 10), .completed)
+      answeredQuestions += 1
       if summary.exists { break }
     }
+    XCTAssertEqual(answeredQuestions, 5)
+    XCTAssertEqual(answeredSubjects, Set(meanings.keys))
+    XCTAssertTrue(answeredReading)
     XCTAssertTrue(summary.waitForExistence(timeout: 10))
     let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = "Completed sample review session"
@@ -1112,39 +1117,20 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testVoiceTranscriptUsesNormalGradingAndKanaFallback() {
     continueAfterFailure = false
-    let app = XCUIApplication()
-    app.launchArguments = [
-      "-FASTLANE_SNAPSHOT",
-      "YES",
-      "VoiceReviewFixture",
-      "-groupMeaningReading",
-      "YES",
-      "-meaningFirst",
-      "YES",
-      "-ankiMode",
-      "NO",
-      "-autoSwitchKeyboard",
-      "NO",
-      "-playAudioAutomatically",
-      "NO",
-      "-allowSkippingReviews",
-      "NO",
-    ]
-    app.launch()
-    defer {
-      app.terminate()
-      app.launchArguments.append("ResetUserDefaults")
-      app.launch()
-      app.terminate()
-    }
+    let app = launchNativeHome(["--manual-review-fixture", "--light-fixture"])
+    defer { clearFixture(app) }
     startReviews(in: app)
+    XCTAssertEqual(app.staticTexts["review.question"].value as? String, "一")
+    XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Meaning"))
     XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 10))
     app.buttons["review.voice"].tap()
-    XCTAssertTrue(app.buttons["voice.start"].waitForExistence(timeout: 5))
-    app.buttons["voice.start"].tap()
     XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.descendants(matching: .any)["voice.listening"].exists)
     app.buttons["voice.stop"].tap()
     XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
+    let transcript = app.descendants(matching: .any).matching(identifier: "voice.transcript")
+      .firstMatch
+    XCTAssertEqual(transcript.value as? String, "one")
     XCTAssertTrue(app.buttons["voice.submit"].isEnabled)
     app.buttons["voice.submit"].tap()
     let prompt = app.staticTexts["review.prompt"]
@@ -1154,14 +1140,17 @@ final class ReviewFlowTests: XCTestCase {
       }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
     app.buttons["review.voice"].tap()
-    XCTAssertTrue(app.buttons["voice.start"].waitForExistence(timeout: 5))
-    app.buttons["voice.start"].tap()
     XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
     app.buttons["voice.stop"].tap()
     XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
+    XCTAssertEqual(transcript.value as? String, "一")
     XCTAssertFalse(
       app.buttons["voice.submit"]
         .isEnabled)  // Kanji transcription is not a reading answer.
+    XCTAssertTrue(
+      app.staticTexts[
+        "Speech recognition returned characters other than kana. Edit the reading into kana before submitting."
+      ].exists)
     let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = "Voice reading correction"
     attachment.lifetime = .keepAlways
@@ -1170,16 +1159,15 @@ final class ReviewFlowTests: XCTestCase {
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
-    field.typeText("watashijishin")
+    field.typeText("ichi")
     app.buttons["review.submit"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor private func launchNativeReview(extra: [String] = []) -> XCUIApplication {
-    let app = XCUIApplication()
-    app.launchArguments =
-      ["--review-fixture", "--manual-review-fixture", "--audio-fixture", "--light-fixture"] + extra
-    app.launch()
+    let app = fixtureApplication(
+      ["--manual-review-fixture", "--audio-fixture", "--light-fixture"] + extra)
+    launchFixture(app)
     XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 10), app.debugDescription)
     app.buttons["home.reviews"].tap()
     XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10), app.debugDescription)
@@ -1205,10 +1193,6 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor
   private func clearFixture(_ app: XCUIApplication) {
-    app.terminate()
-    guard !app.launchArguments.contains("--review-fixture") else { return }
-    app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ResetUserDefaults"]
-    app.launch()
     app.terminate()
   }
 
@@ -1291,7 +1275,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testQuickSettingsPreservesDraftAndAppliesExactMatch() {
     continueAfterFailure = false
-    let app = launchNativeReview(extra: ["-exactMatch", "NO"])
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
@@ -1402,11 +1386,10 @@ final class ReviewFlowTests: XCTestCase {
 extension ReviewFlowTests {
   @MainActor
   private func launchLessonPicker() -> XCUIApplication {
-    let app = XCUIApplication()
-    app.launchArguments = [
-      "--review-fixture", "--lesson-fixture", "--lesson-settings-fixture", "--light-fixture",
-    ]
-    app.launch()
+    let app = fixtureApplication([
+      "--lesson-fixture", "--lesson-settings-fixture", "--light-fixture",
+    ])
+    launchFixture(app)
     let choose = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose lessons"))
       .firstMatch
     XCTAssertTrue(choose.waitForExistence(timeout: 10))
@@ -1839,17 +1822,36 @@ extension ReviewFlowTests {
     app.buttons["settings.apprenticeLessonsLimit"].tap()
     app.buttons["50"].tap()
     app.buttons["settings.lessonOrderLink"].tap()
-    let handles = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Reorder'"))
-    XCTAssertEqual(handles.count, 3)
-    let nextFirst = handles.element(boundBy: 1).label
-    handles.element(boundBy: 0).press(forDuration: 1, thenDragTo: handles.element(boundBy: 2))
+    let order = app.descendants(matching: .any).matching(identifier: "settings.lessonOrder")
+      .firstMatch
+    XCTAssertTrue(order.waitForExistence(timeout: 5))
+    let radicals = order.staticTexts["Radicals"]
+    let kanji = order.staticTexts["Kanji"]
+    let vocabulary = order.staticTexts["Vocabulary"]
+    XCTAssertEqual(
+      order.staticTexts.matching(
+        NSPredicate(format: "label IN %@", ["Radicals", "Kanji", "Vocabulary"])
+      )
+      .count, 3)
+    XCTAssertLessThan(radicals.frame.minY, kanji.frame.minY)
+    XCTAssertLessThan(kanji.frame.minY, vocabulary.frame.minY)
+    let destination = vocabulary.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 1))
+      .withOffset(CGVector(dx: 0, dy: 8))
+    radicals.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(
+      forDuration: 1, thenDragTo: destination, withVelocity: .slow, thenHoldForDuration: 0.2)
     let reordered = XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "label == %@", nextFirst), object: handles.firstMatch)
+      predicate: NSPredicate { _, _ in
+        kanji.frame.minY < vocabulary.frame.minY && vocabulary.frame.minY < radicals.frame.minY
+      }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [reordered], timeout: 5), .completed)
-    XCTAssertEqual(handles.firstMatch.label, nextFirst)
     app.navigationBars.buttons["BackButton"].tap()
+    XCTAssertTrue(
+      settingsPickerText(app.buttons["settings.lessonOrderLink"]).contains(
+        "Kanji, Vocabulary, Radicals"))
     app.buttons["settings.lessonOrderLink"].tap()
-    XCTAssertEqual(handles.firstMatch.label, nextFirst)
+    XCTAssertTrue(order.waitForExistence(timeout: 5))
+    XCTAssertLessThan(kanji.frame.minY, vocabulary.frame.minY)
+    XCTAssertLessThan(vocabulary.frame.minY, radicals.frame.minY)
     app.navigationBars.buttons["BackButton"].tap()
     app.navigationBars.buttons["BackButton"].tap()
     app.buttons["settings.page.lessons"].tap()

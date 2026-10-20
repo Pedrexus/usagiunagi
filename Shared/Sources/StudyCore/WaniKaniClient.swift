@@ -112,15 +112,10 @@ public struct WaniKaniClient: WaniKaniService {
   }
   func timestamp(_ string: String?) throws(APIError) -> Int64 {
     guard let string else { return 0 }
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    var date = formatter.date(from: string)
-    if date == nil {
-      formatter.formatOptions = [.withInternetDateTime]
-      date = formatter.date(from: string)
+    for style in [Date.ISO8601FormatStyle(), .init(dateSeparator: .omitted)] {
+      if let date = try? style.parse(string) { return Int64(date.timeIntervalSince1970) }
     }
-    guard let date else { throw APIError.invalidResponse }
-    return Int64(date.timeIntervalSince1970)
+    throw APIError.invalidResponse
   }
   func pages<T: Decodable & Sendable>(_ endpoint: String, token: String) async throws -> [Resource<
     T

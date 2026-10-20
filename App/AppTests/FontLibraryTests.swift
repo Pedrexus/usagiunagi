@@ -21,21 +21,22 @@ struct FontLibraryTests {
     #expect(noto.canRender("𠮟"))
     #expect(!noto.canRender("\u{10FFFF}"))
   }
-  @Test func sharedSelectionKeepsTheExistingArchivedPreferenceFormat() {
-    let previous = UserDefaults.standard.object(forKey: "selectedFonts")
-    defer {
-      if let previous {
-        UserDefaults.standard.set(previous, forKey: "selectedFonts")
-      } else {
-        UserDefaults.standard.removeObject(forKey: "selectedFonts")
-      }
+  @Test func sharedSelectionKeepsTheExistingArchivedPreferenceFormat() throws {
+    try PreferenceTestValues.withDefaults { defaults in
+      try PreferenceTestValues.archive(Set(["old.ttf"]), key: "selectedFonts", in: defaults)
+      let original = try #require(defaults.data(forKey: "selectedFonts"))
+      let source = try LegacyPreferenceImporter.read(defaults: defaults)
+      try StudyPreferenceImport(defaults: defaults).apply(source, accountID: "fixture")
+      let preferences = DefaultsStudyFontPreferences(defaults: defaults)
+      #expect(preferences.selectedFiles == ["old.ttf"])
+      preferences.selectedFiles = ["new.ttf", "another.ttf"]
+      #expect(
+        DefaultsStudyFontPreferences(defaults: defaults).selectedFiles == [
+          "new.ttf", "another.ttf",
+        ])
+      #expect(defaults.stringArray(forKey: "native.selectedFonts") == ["another.ttf", "new.ttf"])
+      #expect(defaults.data(forKey: "selectedFonts") == original)
     }
-    Settings.selectedFonts = ["old.ttf"]
-    let preferences = LegacyFontPreferences()
-    #expect(preferences.selectedFiles == ["old.ttf"])
-    preferences.selectedFiles = ["new.ttf", "another.ttf"]
-    #expect(Settings.selectedFonts == ["new.ttf", "another.ttf"])
-    #expect(UserDefaults.standard.data(forKey: "selectedFonts") != nil)
   }
 
 }

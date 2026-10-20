@@ -12,7 +12,8 @@ extension StudyStore {
   /// One complete read per store. Local edits and uploads may continue while downloading;
   /// revisions prevent the response from replacing work completed during that interval.
   public func refresh(
-    credentialID: String, token: String, client: any WaniKaniService = WaniKaniClient()
+    credentialID: String, token: String, client: any WaniKaniService = WaniKaniClient(),
+    expectedAccountID: String? = nil
   )
     async throws -> StudySnapshot
   {
@@ -24,7 +25,8 @@ extension StudyStore {
     let generation = uploadGeneration
     let task = Task {
       try await self.performRefresh(
-        credentialID: credentialID, token: token, client: client, generation: generation)
+        credentialID: credentialID, token: token, client: client, generation: generation,
+        expectedAccountID: expectedAccountID)
     }
     refreshRun = (id, task)
     defer { if refreshRun?.id == id { refreshRun = nil } }
@@ -62,7 +64,8 @@ extension StudyStore {
     row?.state.catalogRefreshID = UUID()
   }
   private func performRefresh(
-    credentialID: String, token: String, client: any WaniKaniService, generation: UUID
+    credentialID: String, token: String, client: any WaniKaniService, generation: UUID,
+    expectedAccountID: String?
   ) async throws -> StudySnapshot {
     try checkRefresh(generation)
     let cachedAccount = try snapshot(credentialID: credentialID)?.accountID
@@ -78,6 +81,9 @@ extension StudyStore {
       throw error
     }
     try checkRefresh(generation)
+    if let expectedAccountID, identity.id != expectedAccountID {
+      throw StudySignInError.accountMismatch
+    }
     if let previous = try snapshot(credentialID: credentialID)?.accountID, previous != identity.id {
       throw StudyUploadError.accountMismatch
     }

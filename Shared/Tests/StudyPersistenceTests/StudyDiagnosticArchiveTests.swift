@@ -243,7 +243,7 @@ extension StudyStore {
           ])
       ]
       account.state = state
-      let materials = try materialRecords(accountID: accountID)
+      let materials = try MaterialRecord.fetch(in: modelContext, accountID: accountID)
       let second = try #require(materials.first { $0.subjectID == 2 })
       second.attemptedRevision = UUID()
       second.attemptedMaterial = .init(subjectID: 2, meaningNote: "Earlier pending note")
@@ -296,7 +296,7 @@ extension StudyStore {
         ).first)
       account.state.progress[0].legacyRevision = Int64(value)
       let material = try #require(
-        try materialRecords(accountID: accountID).first {
+        try MaterialRecord.fetch(in: modelContext, accountID: accountID).first {
           $0.subjectID == 1
         })
       material.material.meaningNote = String(value)

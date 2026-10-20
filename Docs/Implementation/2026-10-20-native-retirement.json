@@ -1,4 +1,28 @@
 {
+  "test_port_checkpoint": {
+    "stage": "source-audited test ports with scoped native execution; full usability/migration acceptance remains open",
+    "historical_manifest": "Acceptance booleans and audit-pending statuses below preserve the original implementation-only snapshot. This checkpoint and the linked current TASKS/original-flow evidence record subsequent ports and execution; they do not retroactively claim acceptance for the earlier source graph.",
+    "removed_after_assertion_mapping": [
+      "App/Tests/PendingUploadAcknowledgementTest.swift",
+      "App/Tests/SyncStoreTest.swift",
+      "App/Tests/ReviewPreferencesAdapterTest.swift",
+      "App/Tests/TestingAppDelegate.swift",
+      "Shared/Tests/StudyPersistenceTests/SQLiteDiagnosticArchiveTests.swift",
+      "App/WaniKaniAPI/Tests/LinuxMain.swift",
+      "App/WaniKaniAPI/Tests/WaniKaniAPITests/APIClientTest.swift",
+      "App/WaniKaniAPI/Tests/WaniKaniAPITests/FakeSubjectLevelGetter.swift",
+      "App/WaniKaniAPI/Tests/WaniKaniAPITests/MarkupFormatterTest.swift",
+      "App/WaniKaniAPI/Tests/WaniKaniAPITests/TestUtils.swift",
+      "App/WaniKaniAPI/Tests/WaniKaniAPITests/XCTestManifests.swift"
+    ],
+    "writer_assertions": "The nineteen mappings retained below were audited against exact native assertions. NativeRefreshTests.pendingMaterialKeepsExactContentAndRevisionAfterStaleFullRefreshAndReopen now also checks ACK followed by fresh authoritative note replacement. The SQL ALTER mechanism retires; read-only importer atomicity, exact payload/revision and source immutability remain required.",
+    "preference_assertions": "ReviewSessionOptionsTests covers ten original booleans in both states, nine order codes and disabled/enabled Anki across all three scopes; ReviewPreferencesTests and StudyReviewPolicyTests retain changed-field merge/reset/default semantics.",
+    "diagnostic_copy_mapping": "StudyStoreOpeningTests maps coherent WAL/schema/identity/binary-text preservation to native generation adoption, independent-copy immutability to retained rollback bytes through new writes, and corrupt/missing/foreign source refusal to no empty replacement. A genuinely fresh install may create one empty generation. StudyDiagnosticArchiveTests retains account-scoped typed export; SQL diagnostic-copy mechanics retire.",
+    "hosted_ports": "Native grader, metrics, nine mistake-merge fixtures and legacy interpretation, eight Japanese input Coordinator cases, two native review combinations and archive/preferences/assembly invariants remain compiled targets. No frozen fixture, serializer or digest changed. TestingAppDelegate was an unreferenced empty UIKit helper; the real SwiftUI test host uses an explicit DEBUG review-fixture argument.",
+    "launchers": "ReviewFlowTests launches/open/activates only through explicit DEBUG fixture helpers and cleanup terminates without a production relaunch. Eleven missing fixture scenarios remain explicit failures before app creation, never skips or claimed passes. Generated xctestrun inspection verified the DEBUG review-fixture argument on both hosted targets before their successful execution.",
+    "api_package": "The retained native timestamp/profile/progression/nanori corpus passes, including all sixteen original timestamp spellings. The 22-case protobuf description corpus also passes; obsolete API helpers and Hippolyte are removed. Whole-second native timestamps and typed API errors are intentional representations, not claims of old wrapper identity. SwiftProtobuf pin/revision/plugin remain unchanged.",
+    "execution": "544 shared functions/72 suites pass on Mac and iPhone (later test-helper normalization covered by the focused four-function Mac opening suite); 73 hosted functions/15 suites pass on iPhone; one protobuf function runs 22 cases. Nineteen writer replacements execute within these scopes. Full GUI, broader failure/decoder, signed/device and hosted Actions acceptance remains open."
+  },
   "delete_sources": [
     "App/AnswerTextField.swift",
     "App/AppDelegate.swift",

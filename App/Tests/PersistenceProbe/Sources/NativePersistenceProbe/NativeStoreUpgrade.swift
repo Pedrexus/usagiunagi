@@ -24,11 +24,14 @@
     static var stages: [MigrationStage] { [] }
   }
 
-  /// Disposable public-API evidence, not a production backup, upgrade or activation implementation.
+  /// Disposable checks of schema-copy APIs and the production opener, never real app stores.
   enum NativeStoreUpgrade {
     static let commands = [
       "probe-native-upgrade", "verify-native-upgrade", "seed-native-upgrade-wal",
       "write-native-upgrade",
+      "probe-application-opening", "initialize-application-opening",
+      "verify-application-opening", "write-application-opening", "lease-application-opening",
+      "refuse-application-opening",
     ]
     private static let marker = Data("usagi-native-upgrade-disposable-v1".utf8)
 
@@ -37,7 +40,15 @@
         try experiment(frozen: url)
         return
       }
+      if command == "probe-application-opening" {
+        try applicationExperiment(frozen: url)
+        return
+      }
       try requireDisposable(url)
+      if command.hasSuffix("application-opening") {
+        try await applicationCommand(command, url: url)
+        return
+      }
       let expected = try PropertyListDecoder().decode(
         NativeStoreBaseline.State.self, from: Data(contentsOf: expectedURL(url)))
       let store: StudyStore
@@ -142,6 +153,141 @@
       log("PASS: \(walBytes)-byte WAL-only commit copied with exact durable fields")
       log("PASS: original frozen fixture filenames and SHA-256 hashes unchanged")
       log("SCOPED EXPERIMENT: no production activation, failure matrix, external-data or iOS proof")
+    }
+
+    private static func applicationCommand(_ command: String, url: URL) async throws {
+      let directory = url.deletingLastPathComponent()
+      if command == "refuse-application-opening" {
+        do {
+          _ = try await StudyStore.openApplication(in: directory)
+          throw NativeStoreBaseline.Failure(description: "A second process acquired the writer")
+        } catch StudyStoreOpeningError.alreadyOpen {
+          log("PASS: second process refused while the application actor owns its lease")
+        }
+        return
+      }
+      let store = try await StudyStore.openApplication(in: directory)
+      defer { withExtendedLifetime(store) {} }
+      let actual = try await store.nativeBaselineState()
+      let expectedFile = directory.appendingPathExtension("expected.plist")
+      if command == "initialize-application-opening" {
+        try NativeStoreBaseline.require(
+          actual.records.isEmpty && actual.schema.map(\.name) == NativeStoreBaseline.models,
+          "Fresh application generation is not empty or has a different model set")
+        try encode(actual, to: expectedFile)
+        log("PASS: fresh installation selects one empty named application generation")
+        return
+      }
+      let expected = try PropertyListDecoder().decode(
+        NativeStoreBaseline.State.self, from: Data(contentsOf: expectedFile))
+      try NativeStoreBaseline.require(
+        actual == expected, "Application opening changed exact schema, records or stored fields")
+      if command == "lease-application-opening" {
+        try child("refuse-application-opening", store: url)
+        return
+      }
+      if command == "verify-application-opening" {
+        log("PASS: production application opener restored \(actual.records.count) exact records")
+        return
+      }
+      try NativeStoreBaseline.require(command == "write-application-opening", "Unknown command")
+      let accountID = NativeStoreBaseline.accounts[0]
+      guard let saved = try await store.session(accountID: accountID),
+        let material = try await store.materials(accountID: accountID).first(where: {
+          $0.material.subjectID == 42
+        })
+      else { throw NativeStoreBaseline.Failure(description: "Missing baseline session or note") }
+      var session = saved.session
+      var revision = saved.revision
+      let completed = session.completedIDs.count
+      for tick in 0..<4 {
+        guard let question = session.nextQuestion(continuingCurrentItem: true) else { break }
+        _ = try session.mark(.correct, for: question, now: 1_700_001_000 + Int64(tick))
+        revision = try await store.saveSession(
+          session, accountID: accountID, expectedRevision: revision)
+        if session.completedIDs.count > completed { break }
+      }
+      try NativeStoreBaseline.require(
+        session.completedIDs.count > completed,
+        "The post-activation answer did not complete an item")
+      var note = material.material
+      note.meaningNote += "\napplication generation edit \u{0000}🐰"
+      try await store.saveMaterial(note, accountID: accountID, expectedRevision: material.revision)
+      try encode(try await store.nativeBaselineState(), to: expectedFile)
+      log("CHECKPOINT: application answer/outbox and note committed before abrupt process exit")
+      _exit(86)
+    }
+
+    private static func applicationExperiment(frozen: URL) throws {
+      let manager = FileManager.default
+      let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+      let source = frozen.deletingLastPathComponent()
+      let pristine = try hashes(in: source)
+      let root = URL.temporaryDirectory.appending(path: "native-upgrade-\(UUID())")
+      try manager.createDirectory(at: root, withIntermediateDirectories: true)
+      try marker.write(to: root.appending(path: ".disposable"), options: .atomic)
+      log("DISPOSABLE APPLICATION PROBE: \(root.path)")
+
+      let walSource = root.appending(path: "wal-source")
+      try manager.copyItem(at: source, to: walSource)
+      let walStore = walSource.appending(path: frozen.lastPathComponent)
+      try encode(manifest.expected, to: expectedURL(walStore))
+      let beforeWAL = try applicationSource(in: walSource)
+      try child("seed-native-upgrade-wal", store: walStore, status: 86)
+      let committedWAL = try applicationSource(in: walSource)
+      try NativeStoreBaseline.require(
+        committedWAL["study.store"] == beforeWAL["study.store"]
+          && committedWAL["study.store-wal"]?.isEmpty == false,
+        "The source transaction was not committed exclusively in a populated WAL")
+      let walExpected = try PropertyListDecoder().decode(
+        NativeStoreBaseline.State.self, from: Data(contentsOf: expectedURL(walStore)))
+
+      for (name, origin, expected) in [
+        ("base-application", source, manifest.expected),
+        ("wal-application", walSource, walExpected),
+      ] {
+        let directory = root.appending(path: name)
+        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+        let bytes = try applicationSource(in: origin)
+        for (name, data) in bytes { try data.write(to: directory.appending(path: name)) }
+        try encode(expected, to: directory.appendingPathExtension("expected.plist"))
+        let url = directory.appending(path: "study.store")
+        try child("verify-application-opening", store: url)
+        let selection = try Data(contentsOf: directory.appending(path: "store-selection.plist"))
+        try child("verify-application-opening", store: url)
+        try child("lease-application-opening", store: url)
+        try child("write-application-opening", store: url, status: 86)
+        for _ in 0..<2 { try child("verify-application-opening", store: url) }
+        try NativeStoreBaseline.require(
+          try applicationSource(in: directory) == bytes
+            && Data(contentsOf: directory.appending(path: "store-selection.plist")) == selection,
+          "Reopen/write changed the original source image or selected a different generation")
+        log("PASS: \(name) exact adoption, lease, committed answer/note and two fresh reopens")
+      }
+
+      let fresh = root.appending(path: "fresh-application/study.store")
+      try child("initialize-application-opening", store: fresh)
+      let selector = fresh.deletingLastPathComponent().appending(path: "store-selection.plist")
+      let selected = try Data(contentsOf: selector)
+      for _ in 0..<2 { try child("verify-application-opening", store: fresh) }
+      try child("lease-application-opening", store: fresh)
+      try NativeStoreBaseline.require(
+        try applicationSource(in: fresh.deletingLastPathComponent()).isEmpty
+          && Data(contentsOf: selector) == selected && hashes(in: source) == pristine,
+        "Fresh reopen created an unselected store, or the pinned fixture changed")
+      log("PASS: original frozen filenames/SHA-256 unchanged; no real account or network")
+      log("SCOPE: production Mac opener/restarts, not mid-copy interruption, disk-full, V2 or iOS")
+    }
+
+    private static func applicationSource(in directory: URL) throws -> [String: Data] {
+      var result: [String: Data] = [:]
+      for name in ["study.store", "study.store-wal", "study.store-shm"] {
+        let url = directory.appending(path: name)
+        if FileManager.default.fileExists(atPath: url.path) {
+          result[name] = try Data(contentsOf: url)
+        }
+      }
+      return result
     }
 
     private static func copyStore(from source: URL, to destination: URL) throws {

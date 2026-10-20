@@ -1,5 +1,13 @@
 # Mainboard Apple reporting checkpoint
 
+## Deferred Apple and Swift regression gate
+
+The final test stage ran the six existing Apple/Swift rule modules through Mainboard's isolated gate: `test_swift_analysis`, `test_swift_style`, `test_swift_platform`, `test_swift_persistence`, `test_apple` and `test_apple_fonts`. All 228 cases pass (82.91 seconds); the native isolation canary passes. Two existing Pathspec deprecation warnings remain. Evidence is `/private/tmp/usagi-mainboard-apple-gate-final/{target.json,target.xml,target.log}`.
+
+The initial run passed 225 cases and failed three because the Apple result fake handled only test results, while execution now also retains build diagnostics. The fake now models both read commands. The existing three native/test-verdict combinations retain their exit assertions and also verify both report files refer to the same bundle and preserve the original build summary/test verdict. A new assertion initially compared the different `.build`/`.tests` filename stems; it was corrected to compare the reported bundle identities before the passing rerun. Production executor behavior was not weakened. Mainboard commit `1d6b2d7` contains only this test update and formatter ordering; its production sources remain at `ce366957`.
+
+This targeted gate does not establish the whole Mainboard suite, full typing/lint, hosted Actions or app usability. The older production checkpoint below remains historical; its statement that P0c was unapplied has been superseded by the owner's approval and the [generation opener](2026-10-20-native-store-opening.md).
+
 Mainboard commit: `ce36695787001398c206b5f7e0250447e3d13ee7`, branch `codex/apple-development`, based on `a2e0e20933b5fda48e4b7402b4f1e6d88d8872b3`. App source remains at `ebd706a9` plus the three untouched, off-target owner edits. This checkpoint changes app workflow/docs only. No tests, GUI launches, real exercises, PR, push or distribution occurred.
 
 ## Reusable production work

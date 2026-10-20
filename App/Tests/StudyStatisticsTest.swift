@@ -13,59 +13,48 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import Testing
-import WaniKaniAPI
 
 struct StudyStatisticsTest {
   private let now = Date(timeIntervalSince1970: 1_780_000_000)
 
-  private func assignment(_ id: Int64, due: Date, stage: Int32 = 2) -> TKMAssignment {
-    var a = TKMAssignment()
-    a.subjectID = id
-    a.srsStageNumber = stage
-    a.availableAt = Int32(due.timeIntervalSince1970)
-    return a
+  private func assignment(_ id: Int64, due: Date, stage: Int = 2) -> StudyAssignment {
+    .init(subjectID: id, srsStageNumber: stage, availableAt: Int64(due.timeIntervalSince1970))
   }
 
   private func statistic(
-    _ id: Int64, correct: Int32, incorrect: Int32,
-    streak: Int32 = 0, hidden: Bool = false
-  ) -> TKMReviewStatistic {
-    var s = TKMReviewStatistic()
-    s.subjectID = id
-    s.type = .kanji
-    s.meaningCorrect = correct
-    s.meaningIncorrect = incorrect
-    s.meaningCurrentStreak = streak
-    s.hidden = hidden
-    return s
+    _ id: Int64, correct: Int, incorrect: Int,
+    streak: Int = 0, hidden: Bool = false
+  ) -> StudyAnswerStatistics {
+    .init(
+      subjectID: id, meaningCorrect: correct, meaningIncorrect: incorrect,
+      meaningCurrentStreak: streak, hidden: hidden)
   }
 
-  private func levels() -> [TKMLevel] {
-    var result = [TKMLevel]()
+  private func levels() -> [StudyLevel] {
+    var result = [StudyLevel]()
     var start = now.addingTimeInterval(-100 * 86400)
     for (index, days) in [8, 10, 12, 14].enumerated() {
-      var l = TKMLevel()
-      l.level = Int32(index + 3)
-      l.unlockedAt = Int32(start.timeIntervalSince1970)
+      let unlocked = Int64(start.timeIntervalSince1970)
       start = start.addingTimeInterval(Double(days) * 86400)
-      l.passedAt = Int32(start.timeIntervalSince1970)
-      result.append(l)
+      result.append(
+        .init(
+          level: Int32(index + 3), unlockedAt: unlocked,
+          passedAt: Int64(start.timeIntervalSince1970)))
     }
-    var current = TKMLevel()
-    current.level = 7
-    current.unlockedAt = Int32(now.addingTimeInterval(-86400).timeIntervalSince1970)
-    result.append(current)
+    result.append(
+      .init(level: 7, unlockedAt: Int64(now.addingTimeInterval(-86400).timeIntervalSince1970)))
     return result
   }
 
   private func calculate(
-    assignments: [TKMAssignment] = [], statistics: [TKMReviewStatistic] = [],
-    history: [TKMLevel] = [], vacation: Bool = false
-  ) -> StudyStatistics {
+    assignments: [StudyAssignment] = [], statistics: [StudyAnswerStatistics] = [],
+    history: [StudyLevel] = [], vacation: Bool = false
+  ) -> StudyMetrics {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = TimeZone(identifier: "America/New_York")!
-    return StudyStatistics(
+    return StudyMetrics(
       assignments: assignments, statistics: statistics, levels: history,
       currentLevel: 7, onVacation: vacation, now: now, calendar: calendar)
   }
@@ -105,8 +94,7 @@ struct StudyStatisticsTest {
   }
 
   @Test func testMissingAvailableDateIsNotOverdue() {
-    var a = assignment(1, due: now)
-    a.clearAvailableAt()
+    let a = StudyAssignment(subjectID: 1, srsStageNumber: 2)
     #expect(calculate(assignments: [a]).dueNow == 0)
   }
 
@@ -145,16 +133,17 @@ struct StudyStatisticsTest {
   @Test func testVacationAndElapsedPaceSuppressDates() {
     #expect(calculate(history: levels(), vacation: true).pace?.nextLevelRange == nil)
     var history = levels()
-    history[4].unlockedAt = Int32(now.addingTimeInterval(-20 * 86400).timeIntervalSince1970)
+    history[4] = .init(
+      level: 7, unlockedAt: Int64(now.addingTimeInterval(-20 * 86400).timeIntervalSince1970))
     #expect(calculate(history: history).pace?.nextLevelRange == nil)
   }
 
   @Test func testResetAndSmallSampleSuppressPace() {
     #expect(calculate(history: Array(levels().prefix(2))).pace == nil)
     var history = levels()
-    var abandoned = TKMLevel()
-    abandoned.level = 8
-    abandoned.abandonedAt = Int32(now.addingTimeInterval(-2 * 86400).timeIntervalSince1970)
+    let abandoned = StudyLevel(
+      level: 8, unlockedAt: 0,
+      abandonedAt: Int64(now.addingTimeInterval(-2 * 86400).timeIntervalSince1970))
     history.append(abandoned)
     #expect(calculate(history: history).pace == nil)
   }

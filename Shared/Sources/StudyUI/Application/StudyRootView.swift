@@ -82,11 +82,14 @@ public struct StudyRootView: View {
           showSettings = true
         },
         signIn: {
-          settingsPath = [.account]
-          showSettings = true
+          if model.reauthenticationContext != nil { presentAccount() }
         },
         manageToken: {
+          if model.reauthenticationContext != nil { presentAccount() }
           openURL(URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
+        },
+        acknowledgeAccountIssue: {
+          if let context = model.reauthenticationContext { model.acknowledgeAccountIssue(context) }
         }
       ) {
         StudyTabs(selection: $tab) {
@@ -161,14 +164,17 @@ public struct StudyRootView: View {
       .onAppear {
         updateHeader()
         updateSyncActivity()
+        updateAccountIssue()
       }
       .onDisappear { automaticSync.removeScene(sceneID) }
       .onChange(of: scenePhase) { _, phase in
         updateSyncActivity()
+        updateAccountIssue()
         if phase == .active { Task { await automaticSync.wake() } }
       }
       .onChange(of: path) { _, values in
         updateSyncActivity()
+        updateAccountIssue()
         if !values.contains(where: {
           switch $0 {
           case .reviews, .practice: true
@@ -179,7 +185,13 @@ public struct StudyRootView: View {
         }
       }
       .onChange(of: model.dataRevision) { _, _ in updateHeader() }
-      .onChange(of: showSettings) { _, visible in if !visible { updateHeader() } }
+      .onChange(of: model.accountIssue) { _, _ in updateAccountIssue() }
+      .onChange(of: appearsActive) { _, _ in updateAccountIssue() }
+      .onChange(of: subject?.id) { _, _ in updateAccountIssue() }
+      .onChange(of: showSettings) { _, visible in
+        if !visible { updateHeader() }
+        updateAccountIssue()
+      }
       .onChange(of: avatarCacheRevision) { _, _ in
         shell.avatarRevision += 1
       }
@@ -229,7 +241,7 @@ public struct StudyRootView: View {
               .accessibilityIdentifier("settings.developer")
           } accountActions: {
             Button("Saved work") { settingsPath.append(.savedWork) }
-            Button("WaniKani account") { settingsPath = [.account] }
+            Button("WaniKani account", action: presentAccount)
           }
           .navigationDestination(for: StudyDestination.self) { value in
             destination(value).toolbar {
@@ -400,8 +412,7 @@ public struct StudyRootView: View {
             "Connect and refresh your WaniKani account to study with its saved catalog. Previews do not change your account."
           ))
         Button("Connect account") {
-          settingsPath = [.account]
-          showSettings = true
+          presentAccount()
         }
       }
     }
@@ -422,6 +433,34 @@ public struct StudyRootView: View {
   private func finished() {
     path = []
     Task { await model.reloadSavedSnapshot() }
+  }
+  private func presentAccount() {
+    let context = model.reauthenticationContext
+    signIn.cancel()
+    signIn = StudySignIn(forcedEmail: context?.username) { token in
+      if let context {
+        try await model.reauthenticate(token, context: context)
+      } else {
+        try await model.connect(token)
+      }
+      await automaticSync.wake()
+    }
+    settingsPath = [.account]
+    showSettings = true
+  }
+  private func updateAccountIssue() {
+    guard let issue = model.accountIssue else {
+      shell.accountRestored()
+      return
+    }
+    guard !issue.acknowledged else {
+      shell.accountIssue = nil
+      return
+    }
+    guard scenePhase == .active, appearsActive, path.isEmpty, !showSettings, subject == nil else {
+      return
+    }
+    shell.reportAccountIssue(issue.reason == .unauthorized ? .unauthorized : .hibernating)
   }
   private func updateHeader() {
     shell.username = model.snapshot?.username ?? appName

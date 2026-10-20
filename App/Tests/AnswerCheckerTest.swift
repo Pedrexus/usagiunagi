@@ -13,86 +13,56 @@
 // limitations under the License.
 
 import Foundation
+import StudyCore
 import Testing
-import WaniKaniAPI
 
 struct AnswerCheckerTest {
   @Test func testKatakanaToHiragana() {
-    #expect(AnswerChecker.convertKatakanaToHiragana("ヒラガナ") == "ひらがな")
-    #expect(AnswerChecker.convertKatakanaToHiragana("ビール") == "びーる")
-    #expect(AnswerChecker.convertKatakanaToHiragana("ビー") == "びー")
-    #expect(AnswerChecker.convertKatakanaToHiragana("ール") == "ーる")
+    #expect(AnswerGrader.convertKatakanaToHiragana("ヒラガナ") == "ひらがな")
+    #expect(AnswerGrader.convertKatakanaToHiragana("ビール") == "びーる")
+    #expect(AnswerGrader.convertKatakanaToHiragana("ビー") == "びー")
+    #expect(AnswerGrader.convertKatakanaToHiragana("ール") == "ーる")
   }
 
   @Test func testNormalizedString() {
     #expect(
-      AnswerChecker
-        .normalizedString(" Foo-B.a'/r nn ", taskType: TaskType.meaning) == "foo bar nn")
+      AnswerGrader
+        .normalizedString(" Foo-B.a'/r nn ", taskType: .meaning) == "foo bar nn")
     #expect(
-      AnswerChecker
-        .normalizedString(" Foo-B.a'/r nn ", taskType: TaskType.reading) == "foobarんん")
+      AnswerGrader
+        .normalizedString(" Foo-B.a'/r nn ", taskType: .reading) == "foobarんん")
   }
 
   private func subject(
     _ japanese: String = "一", meanings: [String] = ["One"],
     primary: [String] = ["いち"], alternate: [String] = ["ひと"],
-    vocabulary: Bool = false
-  ) -> TKMSubject {
-    var subject = TKMSubject()
-    subject.id = 1
-    subject.japanese = japanese
-    if vocabulary { subject.vocabulary = .init() } else { subject.kanji = .init() }
-    subject.meanings = meanings.map { text in
-      var meaning = TKMMeaning()
-      meaning.meaning = text
-      meaning.type = .primary
-      return meaning
-    }
-    subject.readings = (primary.map { ($0, true) } + alternate.map { ($0, false) })
-      .map { text, primary in
-        var reading = TKMReading()
-        reading.reading = text
-        reading.isPrimary = primary
-        return reading
-      }
-    return subject
+    vocabulary: Bool = false, blacklist: [String] = [], components: [Int64] = []
+  ) -> GradingSubject {
+    GradingSubject(
+      japanese: japanese, kind: vocabulary ? .vocabulary : .kanji,
+      meanings: meanings, blacklistedMeanings: blacklist, primaryReadings: primary,
+      alternateReadings: alternate, componentSubjectIds: components)
   }
 
   private func check(
-    _ answer: String, subject: TKMSubject? = nil, type: TaskType = .meaning,
-    materials: TKMStudyMaterials? = nil,
-    lookup: (Int64) -> TKMSubject? = { _ in nil }
-  )
-    -> AnswerChecker
-    .AnswerCheckerResult
-  {
-    AnswerChecker.checkAnswer(
-      answer, subject: subject ?? self.subject(), studyMaterials: materials,
+    _ answer: String, subject: GradingSubject? = nil, type: StudyQuestionKind = .meaning,
+    synonyms: [String] = [], lookup: (Int64) -> GradingSubject? = { _ in nil }
+  ) -> AnswerGrade {
+    AnswerGrader.checkNormalizedAnswer(
+      answer, subject: subject ?? self.subject(), synonyms: synonyms,
       taskType: type, subjectLookup: lookup)
   }
 
   @Test func testMeaningSynonymsAndAuxiliaryWhitelist() {
-    var item = subject()
-    var whitelist = TKMMeaning()
-    whitelist.meaning = "Single"
-    whitelist.type = .auxiliaryWhitelist
-    item.meanings.append(whitelist)
-    var materials = TKMStudyMaterials()
-    materials.meaningSynonyms = ["Unity"]
+    let item = subject(meanings: ["One", "Single"])
     #expect(check("one", subject: item) == .precise)
     #expect(check("single", subject: item) == .precise)
-    #expect(check("unity", subject: item, materials: materials) == .precise)
+    #expect(check("unity", subject: item, synonyms: ["Unity"]) == .precise)
   }
 
   @Test func testBlacklistWinsEvenOverExactSynonym() {
-    var item = subject()
-    var blacklist = TKMMeaning()
-    blacklist.meaning = "Won"
-    blacklist.type = .blacklist
-    item.meanings.append(blacklist)
-    var materials = TKMStudyMaterials()
-    materials.meaningSynonyms = ["Won"]
-    #expect(check("won", subject: item, materials: materials) == .incorrect)
+    let item = subject(blacklist: ["Won"])
+    #expect(check("won", subject: item, synonyms: ["Won"]) == .incorrect)
   }
 
   @Test func testMeaningTypoToleranceAndTransposition() {
@@ -117,8 +87,7 @@ struct AnswerCheckerTest {
   }
 
   @Test func testSingleKanjiVocabularyConsultsItsComponent() {
-    var item = subject("一", primary: ["ひとつ"], alternate: [], vocabulary: true)
-    item.componentSubjectIds = [99]
+    let item = subject("一", primary: ["ひとつ"], alternate: [], vocabulary: true, components: [99])
     var lookedUp: [Int64] = []
     let result = check(
       "いち", subject: item, type: .reading,

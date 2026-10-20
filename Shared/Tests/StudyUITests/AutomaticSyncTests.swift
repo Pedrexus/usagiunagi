@@ -309,6 +309,11 @@ private actor AutomaticServer: WaniKaniService {
     connection.yield(true)
     try await edit("first draft", store: store)
     await notice(sync, containing: "rejected this token")
+    let context = try #require(model.reauthenticationContext)
+    #expect(context.accountID == account && context.username == "test")
+    #expect(
+      model.accountIssue?.reason == .unauthorized && model.accountIssue?.acknowledged == false)
+    model.acknowledgeAccountIssue(context)
     let revision = model.dataRevision
     try await edit("new draft while paused", store: store)
     for await changed in Observations({ model.dataRevision }) { if changed != revision { break } }
@@ -319,6 +324,7 @@ private actor AutomaticServer: WaniKaniService {
     try await empty(store)
     #expect(await server.writes == 2)
     #expect(await server.data.materials.first?.value.meaningNote == "new draft while paused")
+    #expect(model.accountIssue == nil && model.reauthenticationContext == nil)
   }
 
   @Test func disconnectDrainsAnInFlightWriteAndReconnectionKeepsItUncertain() async throws {
