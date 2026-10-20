@@ -234,10 +234,7 @@ class LocalCachingClient: NSObject, SubjectLevelGetter {
     return (lessonCount, reviewComposition)
   }
 
-  class func databaseUrl() -> URL {
-    let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-    return URL(fileURLWithPath: "\(paths[0])/local-cache.db")
-  }
+  class func databaseUrl() -> URL { LegacyStudyImporter.databaseURL }
 
   private let schemas = [
     // Version 9.

@@ -22,6 +22,12 @@ import WaniKaniAPI
 /// One-time compatibility boundary. Opens a consistent read-only transaction and never changes
 /// the legacy database. The caller must stop legacy writers and verify the account before cutover.
 enum LegacyStudyImporter {
+  /// The original source path; resolving it never opens or creates a database.
+  static var databaseURL: URL {
+    let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+    return URL(fileURLWithPath: "\(paths[0])/local-cache.db")
+  }
+
   @MainActor static func source(database: URL, defaults: UserDefaults) throws -> StudyLegacySource {
     let values = try LegacyPreferenceImporter.sourceValues(defaults: defaults)
     return try .init(

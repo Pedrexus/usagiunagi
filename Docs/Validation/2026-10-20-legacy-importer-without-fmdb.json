@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-20T02:19:29Z",
+  "baseCommit": "186c1cc3",
+  "phase": "P1a",
+  "scope": "Legacy source locator isolation and FMDB-free disposable importer fixtures",
+  "sources": {
+    "App/LegacyStudyImporter.swift": "6bd359c4a0e22687e3d5dd0d44a15fba3627422bccd86be2f341315458a6923d",
+    "App/LocalCachingClient.swift": "7a0c307d0c336292755faeca4d16d737636792d67f8c3aef91cc465433ac375a",
+    "App/Application/StudyApplicationOwner.swift": "c56779068eae4e90beaf8a87c42b234c79bb39da49aba41d2f19950e399703dd",
+    "App/Tests/LegacyStudyImporterTest.swift": "151155c616019ae67d26c586baa41ded493581d9a9ab0ce4f5eccbe011fa6930"
+  },
+  "changes": [
+    "Production bootstrap uses the importer-owned original Documents/local-cache.db locator",
+    "Legacy cache delegates its path method without changing source discovery",
+    "All nine historical importer functions use typed system-SQLite3 disposable writers instead of FMDB"
+  ],
+  "checks": [
+    {
+      "kind": "hosted iOS Swift Testing",
+      "destination": "iPhone 18 Pro / iOS 27.0",
+      "suite": "LegacyStudyImporterTests",
+      "functions": 9,
+      "parameterizedInvocations": 15,
+      "schemas": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "passed": true,
+      "result": ".build/Results/test-877305b8f30e4e1fa38a44888fb2d1ad.xcresult",
+      "log": "/private/tmp/usagi-importer-p1a.log",
+      "coverage": [
+        "exact source locator",
+        "missing file not created",
+        "full import and native reopen",
+        "schema 9–15/protobuf/grading",
+        "malformed/mismatched/orphaned source",
+        "WAL committed/uncommitted source preservation"
+      ]
+    },
+    {
+      "kind": "shared macOS Swift Testing",
+      "suite": "LegacyBootstrapTests",
+      "functions": 24,
+      "passed": true,
+      "log": "/private/tmp/usagi-p1a-bootstrap.log",
+      "coverage": [
+        "fresh native selection",
+        "activated logout/reopen",
+        "interrupted credential/activation/preferences",
+        "identity/source changes",
+        "concurrent scenes",
+        "rollback and uncertain-work preservation"
+      ]
+    }
+  ],
+  "limitations": [
+    "FMDB remains in four runtime adapters and two other hosted-test files",
+    "No signing, real Keychain, real cloud account or physical device claim",
+    "No feature deletion or native model-schema change in this checkpoint"
+  ]
+}

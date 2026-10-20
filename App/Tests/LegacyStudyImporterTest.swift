@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import FMDB
 import Foundation
+import SQLite3
 import StudyCore
 import StudyPersistence
 import SwiftProtobuf
@@ -25,14 +25,12 @@ import WaniKaniAPI
   deinit { try? FileManager.default.removeItem(at: directory) }
   private func fixture(
     version: Int = 15,
-    edit: (FMDatabase) throws -> Void = { _ in
+    edit: (LegacyFixtureDatabase) throws -> Void = { _ in
     }
   ) throws -> URL {
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     let url = directory.appending(path: UUID().uuidString + ".sqlite")
-    let db = FMDatabase(url: url)
-    #expect(db.open())
-    defer { db.close() }
+    let db = try LegacyFixtureDatabase(url)
     let materialRevision = version >= 14 ? ", local_revision INTEGER DEFAULT 0" : ""
     let mistakeColumn = version >= 11 ? ", last_mistake_time TEXT" : ""
     let progressRevision = version >= 15 ? ", local_revision INTEGER DEFAULT 0" : ""
@@ -71,7 +69,7 @@ import WaniKaniAPI
     user.subscriptionEndsAt = 100
     user.vacationStartedAt = 50
     user.profileURL = "https://example.invalid/fixture"
-    try db.executeUpdate("INSERT INTO user VALUES (0, ?)", values: [user.serializedData()])
+    try db.executeUpdate("INSERT INTO user VALUES (0, ?)", values: [.blob(user.serializedData())])
     var meaning = TKMMeaning()
     meaning.meaning = "cat"
     meaning.type = .primary
@@ -102,7 +100,7 @@ import WaniKaniAPI
     subject.vocabulary.audio = [audio]
     try db.executeUpdate(
       "INSERT INTO subjects VALUES (42, '猫', 12, 3, ?)",
-      values: [subject.serializedData()])
+      values: [.blob(subject.serializedData())])
     var assignment = TKMAssignment()
     assignment.id = 142
     assignment.subjectID = 42
@@ -115,7 +113,7 @@ import WaniKaniAPI
     assignment.burnedAt = 30
     try db.executeUpdate(
       "INSERT INTO assignments VALUES (142, 42, ?)",
-      values: [assignment.serializedData()])
+      values: [.blob(assignment.serializedData())])
     var progress = TKMProgress()
     progress.assignment = assignment
     progress.createdAt = 120
@@ -124,7 +122,7 @@ import WaniKaniAPI
     progress.readingWrongCount = 0
     try db.executeUpdate(
       "INSERT INTO pending_progress VALUES (42, ?)",
-      values: [progress.serializedData()])
+      values: [.blob(progress.serializedData())])
     var material = TKMStudyMaterials()
     material.id = 242
     material.subjectID = 42
@@ -133,7 +131,7 @@ import WaniKaniAPI
     material.meaningSynonyms = ["kitty", "house cat"]
     try db.executeUpdate(
       "INSERT INTO study_materials (id, pb) VALUES (42, ?)",
-      values: [material.serializedData()])
+      values: [.blob(material.serializedData())])
     #expect(
       db
         .executeStatements(
@@ -142,7 +140,7 @@ import WaniKaniAPI
     if version >= 11 {
       try db.executeUpdate(
         "UPDATE subject_progress SET last_mistake_time = ?",
-        values: ["2026-10-17 12:34:56"])
+        values: [.text("2026-10-17 12:34:56")])
     }
     if version >= 14 {
       #expect(db.executeStatements("UPDATE study_materials SET local_revision = 9"))
@@ -161,14 +159,15 @@ import WaniKaniAPI
     level.abandonedAt = 6
     try db.executeUpdate(
       "INSERT INTO level_progressions VALUES (5, 12, ?)",
-      values: [level.serializedData()])
+      values: [.blob(level.serializedData())])
     var voice = TKMVoiceActor()
     voice.id = 7
     voice.gender = .female
     voice.name = "Voice"
     voice.description_p = "Fixture voice"
-    try db.executeUpdate("INSERT INTO voice_actors VALUES (7, ?)", values: [voice.serializedData()])
-    try db.executeUpdate("INSERT INTO audio_urls VALUES (42, 7, 12, ?)", values: [audio.url])
+    try db.executeUpdate(
+      "INSERT INTO voice_actors VALUES (7, ?)", values: [.blob(voice.serializedData())])
+    try db.executeUpdate("INSERT INTO audio_urls VALUES (42, 7, 12, ?)", values: [.text(audio.url)])
     if version >= 12 {
       var statistic = TKMReviewStatistic()
       statistic.id = 342
@@ -187,7 +186,7 @@ import WaniKaniAPI
       statistic.hidden = true
       try db.executeUpdate(
         "INSERT INTO review_stats VALUES (342, 42, ?)",
-        values: [statistic.serializedData()])
+        values: [.blob(statistic.serializedData())])
     }
     try edit(db)
     return url
@@ -244,7 +243,7 @@ import WaniKaniAPI
         old.subjectType = .vocabulary
         try db.executeUpdate(
           "INSERT INTO assignments VALUES (141, 42, ?)",
-          values: [old.serializedData()])
+          values: [.blob(old.serializedData())])
       }
       let source = try LegacyStudyImporter.read(from: url)
       #expect(source.assignments.map(\.id) == [142])
@@ -267,7 +266,7 @@ import WaniKaniAPI
       subject.vocabulary = TKMVocabulary()
       try db.executeUpdate(
         "UPDATE subjects SET pb = ? WHERE id = 42",
-        values: [subject.serializedData()])
+        values: [.blob(subject.serializedData())])
       var progress = TKMProgress()
       progress.assignment.id = 142
       progress.assignment.subjectID = 42
@@ -275,7 +274,7 @@ import WaniKaniAPI
       progress.isLesson = true
       try db.executeUpdate(
         "UPDATE pending_progress SET pb = ? WHERE id = 42",
-        values: [progress.serializedData()])
+        values: [.blob(progress.serializedData())])
     }
     let source = try LegacyStudyImporter.read(from: url)
     #expect(source.assignments.first?.isKanaOnlyVocabulary == true)
@@ -314,12 +313,15 @@ import WaniKaniAPI
       subject.vocabulary = try TKMVocabulary(serializedData: Data([0x98, 0x06, 0x01]))
       try db.executeUpdate(
         "UPDATE subjects SET pb = ? WHERE id = 42",
-        values: [subject.serializedData()])
+        values: [.blob(subject.serializedData())])
     }
     #expect(throws: LegacyImportError.self) { _ = try LegacyStudyImporter.read(from: url) }
   }
 
   @Test func missingDatabaseIsNotCreated() {
+    let documents = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+    #expect(
+      LegacyStudyImporter.databaseURL == URL(fileURLWithPath: "\(documents[0])/local-cache.db"))
     let url = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString + ".sqlite")
     #expect(throws: LegacyImportError.self) { _ = try LegacyStudyImporter.read(from: url) }
@@ -370,9 +372,9 @@ import WaniKaniAPI
         try db.executeUpdate(
           "INSERT INTO subjects VALUES (?, ?, ?, ?, ?)",
           values: [
-            value.id, value.japanese,
-            value.level, value.hasRadical ? 1 : 2,
-            value.serializedData(),
+            .integer(value.id), .text(value.japanese),
+            .integer(Int64(value.level)), .integer(value.hasRadical ? 1 : 2),
+            .blob(value.serializedData()),
           ])
       }
     }
@@ -397,16 +399,14 @@ import WaniKaniAPI
 
   @Test func wALImportSeesCommittedDataAndLeavesPendingWriterAlone() throws {
     let url = try fixture()
-    let db = FMDatabase(url: url)
-    #expect(db.open())
-    defer { db.close() }
+    let db = try LegacyFixtureDatabase(url)
     #expect(
       db
         .executeStatements(
           "PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0; UPDATE sync SET subjects_updated_after='committed';"
         ))
-    #expect(db.beginTransaction())
-    defer { #expect(db.rollback()) }
+    #expect(db.executeStatements("BEGIN EXCLUSIVE TRANSACTION"))
+    defer { #expect(db.executeStatements("ROLLBACK TRANSACTION")) }
     #expect(db.executeStatements("UPDATE sync SET subjects_updated_after='not committed'"))
     let wal = URL(fileURLWithPath: url.path + "-wal")
     let before = try Data(contentsOf: url)
@@ -487,4 +487,65 @@ private struct ImporterBootstrapVerifier: WaniKaniAccountReader {
   func load() -> String? { token }
   func save(_ token: String) { self.token = token }
   func remove() { token = nil }
+}
+
+/// A disposable fixture writer only; production legacy imports remain read-only.
+private final class LegacyFixtureDatabase {
+  enum Value {
+    case integer(Int64)
+    case text(String)
+    case blob(Data)
+  }
+  private let database: OpaquePointer
+  init(_ url: URL) throws {
+    var handle: OpaquePointer?
+    let status = sqlite3_open_v2(
+      url.path, &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil)
+    guard status == SQLITE_OK, let handle else {
+      if let handle { sqlite3_close(handle) }
+      throw CocoaError(.fileWriteUnknown)
+    }
+    database = handle
+  }
+  deinit { sqlite3_close(database) }
+  var isInTransaction: Bool { sqlite3_get_autocommit(database) == 0 }
+  func executeStatements(_ sql: String) -> Bool {
+    sqlite3_exec(database, sql, nil, nil, nil) == SQLITE_OK
+  }
+  func executeUpdate(_ sql: String, values: [Value]) throws {
+    var statement: OpaquePointer?
+    defer { if let statement { sqlite3_finalize(statement) } }
+    try check(sqlite3_prepare_v2(database, sql, -1, &statement, nil))
+    guard let statement, Int(sqlite3_bind_parameter_count(statement)) == values.count else {
+      throw CocoaError(.fileWriteUnknown)
+    }
+    let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+    for (offset, value) in values.enumerated() {
+      let index = Int32(offset + 1)
+      let status: Int32
+      switch value {
+      case .integer(let integer): status = sqlite3_bind_int64(statement, index, integer)
+      case .text(let text):
+        status = text.withCString {
+          sqlite3_bind_text(statement, index, $0, Int32(text.utf8.count), transient)
+        }
+      case .blob(let data):
+        status =
+          data.isEmpty
+          ? sqlite3_bind_zeroblob(statement, index, 0)
+          : data.withUnsafeBytes {
+            sqlite3_bind_blob(statement, index, $0.baseAddress, Int32($0.count), transient)
+          }
+      }
+      try check(status)
+    }
+    try check(sqlite3_step(statement), expected: SQLITE_DONE)
+  }
+  private func check(_ status: Int32, expected: Int32 = SQLITE_OK) throws {
+    guard status == expected else {
+      throw NSError(
+        domain: "LegacyFixtureSQLite", code: Int(status),
+        userInfo: [NSLocalizedDescriptionKey: String(cString: sqlite3_errmsg(database))])
+    }
+  }
 }

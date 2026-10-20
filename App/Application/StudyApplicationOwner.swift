@@ -89,7 +89,7 @@ import SwiftUI
         preferences: .init(defaults: .standard),
         readLegacy: {
           try LegacyStudyImporter.source(
-            database: LocalCachingClient.databaseUrl(), defaults: .standard)
+            database: LegacyStudyImporter.databaseURL, defaults: .standard)
         })
       media = try await bootstrap.prepareApplication(legacyToken: {
         try LegacyPreferenceImporter.token(defaults: .standard)

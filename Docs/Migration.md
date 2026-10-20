@@ -14,7 +14,7 @@ Durable domain data belongs in SwiftData. Credentials stay in Keychain, ordinary
 
 ## Current implementation
 
-The production scene already uses `UsagiUnagiApp` → `StudyApplicationOwner` → `StudyAppAssembly` → shared `StudyRootView` on all three platforms. `StudyStore` is an `@ModelActor`, uses SwiftData transactions and returns Sendable values. Shared modules use Swift 6.4 tools and Swift 6 language mode. Normal iOS bootstrap reads old installations through `LegacyStudyImporter`, which already uses system SQLite3 read-only; its remaining `LocalCachingClient.databaseUrl()` reference is a path lookup, not the native writer.
+The production scene already uses `UsagiUnagiApp` → `StudyApplicationOwner` → `StudyAppAssembly` → shared `StudyRootView` on all three platforms. `StudyStore` is an `@ModelActor`, uses SwiftData transactions and returns Sendable values. Shared modules use Swift 6.4 tools and Swift 6 language mode. Normal iOS bootstrap reads old installations through `LegacyStudyImporter`, which already uses system SQLite3 read-only; its source URL now comes directly from the importer-owned locator without referencing the native-retired writer. The old cache temporarily delegates its compatibility path method.
 
 The remaining DEBUG acceptance host constructs `TKMServices` and the old cache/writer. Old controllers are also still compiled for iOS. Removing only their launch route would leave source and dependency debt. Native recent-mistake practice reads local account progress, but the original cross-device timestamp service still belongs to `LocalCachingClient`. Native diagnostics also directly uses SQLite3 to back up the SwiftData store. These are concrete deletion prerequisites.
 
@@ -22,7 +22,7 @@ Shared grading, kana conversion, session policy, sync/recovery, lessons, reviews
 
 ## Evidence and decision baseline
 
-The implementation baseline is app commit `fa3c3ddf265b9ce1acd78ef74a0d59eb2f20ccc8` and Mainboard `5796a2e2b3b39e86642591eb4f8ca4e9dff36561`. Counts below describe that committed source, not a promised final shape. A subsequent uncommitted P1a draft isolates the source locator and rewrites importer test fixtures; it has formatting/lint evidence only. It is not an accepted migration checkpoint. This specification revision does not authorize a data reset or declare those draft changes tested.
+The implementation baseline is app commit `fa3c3ddf265b9ce1acd78ef74a0d59eb2f20ccc8` and Mainboard `5796a2e2b3b39e86642591eb4f8ca4e9dff36561`. Counts below describe that committed source, not a promised final shape. P1a subsequently isolates the source locator and removes FMDB from importer fixtures; [its receipt](Validation/2026-10-20-legacy-importer-without-fmdb.json) records nine hosted importer and 24 shared bootstrap functions passing. Later phases remain open; this evidence does not authorize a data reset or establish full FMDB removal.
 
 Source inspection found ten native model types and fifteen `.codable` attributes. In particular, `AccountRecord` contains the progress/statistics collections, `AssignmentRecord` wraps an assignment, and `SnapshotRecord` is keyed by a credential fingerprint. These are the starting points for modeling work, not a reason to create a second database abstraction. Reuse the existing `StudyStore` actor and four shared modules.
 
@@ -385,7 +385,7 @@ The committed Actions workflow already has shared/restart, mobile and native Mac
 
 ### Execution checklist and stop conditions
 
-1. Review this specification against TASKS, freeze P0b native-store fixtures, and validate the uncommitted P1a draft before accepting it. Do not include unrelated owner annotations in that checkpoint.
+1. Review this specification against TASKS, freeze P0b native-store fixtures, and retain the accepted P1a importer/bootstrap regression gates. Do not include unrelated owner annotations in that checkpoint.
 2. Implement P2 codec/store/owner tests and P1b diagnostics independently without changing the schema. Keep signed cloud-namespace acceptance visibly open.
 3. Port P3 cases and audit every remaining old-host route. Map all nineteen writer-test invariants, then remove each legacy caller/resource with its verified replacement.
 4. Remove FMDB declaration, lock/integration/source/linkage together in P4. Run G1–G4, G9 and G11; no hidden DEBUG writer may remain. Removing feature SQL additionally requires P1b and retirement of its last old diagnostic caller.
