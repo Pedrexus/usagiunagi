@@ -9,6 +9,37 @@ import Testing
 @testable import StudyPersistence
 
 struct StudyStoreOpeningTests {
+  @Test(arguments: [false, true])
+  func firstApplicationOpeningAcceptsDirectoryURLForms(directoryHint: Bool) async throws {
+    let folder = temporaryFolder()
+    let seed = temporaryFolder()
+    defer {
+      removeFolder(folder)
+      removeFolder(seed)
+    }
+    let url = URL(
+      filePath: folder.path, directoryHint: directoryHint ? .isDirectory : .notDirectory)
+    let writer = try await StudyStore.open(at: seed.appending(path: "study.store"))
+    defer { withExtendedLifetime(writer) {} }
+    for account in ["first", "second"] {
+      _ = try await writer.importLegacyAccount(
+        source(username: account), sourceID: "source-\(account)", verifiedAccountID: account,
+        verifiedUsername: account, credentialID: "credential-\(account)")
+    }
+    let expected = try await writer.generationSnapshot()
+    let original = try family(in: seed)
+    try write(original, in: url)
+    do {
+      let opened = try await StudyStore.openApplication(in: url)
+      #expect(try await opened.generationSnapshot() == expected)
+    }
+    let reopened = try await StudyStore.openApplication(in: url)
+    #expect(try await reopened.generationSnapshot() == expected)
+    #expect(try family(in: url) == original)
+    let retained = try #require(try selection(in: url)["retained"] as? String)
+    #expect(try family(in: url.appending(path: "generations/\(retained)")) == original)
+  }
+
   enum OpeningCancellation: CaseIterable, Sendable { case preparation, candidate, selected }
 
   @Test(.timeLimit(.minutes(1)), arguments: OpeningCancellation.allCases)

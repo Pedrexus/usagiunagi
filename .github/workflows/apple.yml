@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: db0700424e9434d70321d3888e64482c6b808b46
+          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: db0700424e9434d70321d3888e64482c6b808b46
+          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -162,7 +162,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: db0700424e9434d70321d3888e64482c6b808b46
+          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -190,6 +190,9 @@ jobs:
           --destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE,OS=27.0"
           --derived-data .build/Xcode/iOS --only-testing Tests --only-testing AppTests
           --setting CODE_SIGNING_ALLOWED=NO --timeout 900
+      - name: Frozen store reopened by a separate test host
+        if: matrix.device == 'iPhone 18 Pro'
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-restart
       - name: Review, lesson, settings and dashboard acceptance
         run: >-
           env -u PROTOC_PATH uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --setting=-skipPackagePluginValidation --scheme UsagiUnagi --action test
@@ -244,7 +247,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: db0700424e9434d70321d3888e64482c6b808b46
+          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7

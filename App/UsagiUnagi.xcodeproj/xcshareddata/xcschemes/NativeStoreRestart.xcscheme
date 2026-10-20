@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion="2700" version="1.3">
+  <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
+    <BuildActionEntries>
+      <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="NO">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="630FD6121FC45BDF00D21C1F" BuildableName="Tsurukame.app" BlueprintName="Tsurukame" ReferencedContainer="container:UsagiUnagi.xcodeproj"/>
+      </BuildActionEntry>
+    </BuildActionEntries>
+  </BuildAction>
+  <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="NO">
+    <CommandLineArguments>
+      <CommandLineArgument argument="--review-fixture" isEnabled="YES"/>
+    </CommandLineArguments>
+    <EnvironmentVariables>
+      <EnvironmentVariable key="SWIFT_TESTING_XCTEST_INTEROP_MODE" value="complete" isEnabled="YES"/>
+      <EnvironmentVariable key="USAGI_NATIVE_RESTART_PHASE" value="$(USAGI_NATIVE_RESTART_PHASE)" isEnabled="YES"/>
+      <EnvironmentVariable key="USAGI_NATIVE_RESTART_ID" value="$(USAGI_NATIVE_RESTART_ID)" isEnabled="YES"/>
+    </EnvironmentVariables>
+    <MacroExpansion>
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="630FD6121FC45BDF00D21C1F" BuildableName="Tsurukame.app" BlueprintName="Tsurukame" ReferencedContainer="container:UsagiUnagi.xcodeproj"/>
+    </MacroExpansion>
+    <Testables>
+      <TestableReference skipped="NO">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A27000000000000000000004" BuildableName="AppTests.xctest" BlueprintName="AppTests" ReferencedContainer="container:UsagiUnagi.xcodeproj"/>
+      </TestableReference>
+    </Testables>
+  </TestAction>
+</Scheme>

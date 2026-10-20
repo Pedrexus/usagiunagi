@@ -457,7 +457,7 @@ private struct StudyStoreGeneration: Sendable {
     return try manager.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
   }
   private func makeDirectory(_ url: URL) throws {
-    guard url == directory || url.path.hasPrefix(directory.path + "/") else {
+    guard url.path == directory.path || url.path.hasPrefix(directory.path + "/") else {
       throw StudyStoreOpeningError.unsupportedLayout
     }
     if manager.fileExists(atPath: url.path) {

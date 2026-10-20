@@ -24,6 +24,113 @@ private final class FrozenStoreBundle {}
     let validation: String?
   }
 
+  private enum RestartPhase: String { case seed, reopen }
+  private struct RestartReceipt: Codable {
+    let version: Int
+    let id: UUID
+    let producerPID: Int32
+    let expected: NativeStoreBaseline.State
+    let selection: Data
+  }
+
+  @Test(
+    .enabled(
+      if: ProcessInfo.processInfo.environment["USAGI_NATIVE_RESTART_PHASE"] != nil,
+      "Requires Mainboard's two-process native-store-restart task"))
+  func persistedStoreReopensInAnotherTestHost() async throws {
+    let process = ProcessInfo.processInfo
+    try #require(process.arguments.contains("--review-fixture"))
+    let phase = try #require(
+      process.environment["USAGI_NATIVE_RESTART_PHASE"].flatMap(RestartPhase.init(rawValue:)))
+    let id = try #require(
+      process.environment["USAGI_NATIVE_RESTART_ID"].flatMap(UUID.init(uuidString:)))
+    let manager = FileManager.default
+    let root = URL.applicationSupportDirectory.appending(path: "NativeStoreRestartFixtures")
+    if phase == .seed {
+      try manager.createDirectory(
+        at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+    }
+    let rootInfo = try root.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+    try #require(rootInfo.isDirectory == true && rootInfo.isSymbolicLink == false)
+    let directory = root.appending(path: "frozen-native-\(id)")
+    let receiptURL = root.appending(path: "\(id).plist")
+    let frozen = try frozenURL()
+    let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+    let original = try family(in: frozen.deletingLastPathComponent())
+    let marker = "\nFresh iPhone test host \(id) \u{0}🐰"
+    switch phase {
+    case .seed:
+      try #require(
+        !manager.fileExists(atPath: directory.path) && !manager.fileExists(atPath: receiptURL.path))
+      try manager.createDirectory(at: directory, withIntermediateDirectories: false)
+      for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+      let opened = try await StudyStore.openApplication(in: directory)
+      try #require(try await opened.nativeBaselineState() == manifest.expected)
+      let saved = try #require(
+        try await opened.materials(accountID: NativeStoreBaseline.accounts[0]).first {
+          $0.material.subjectID == 42
+        })
+      var material = saved.material
+      material.meaningNote += marker
+      _ = try await opened.saveMaterial(
+        material, accountID: NativeStoreBaseline.accounts[0], expectedRevision: saved.revision)
+      let expected = try await opened.nativeBaselineState()
+      try #require(expected != manifest.expected && expected.records.count == 38)
+      try #require(expected.schema == manifest.expected.schema)
+      try #require(expected.schemaVersion == manifest.expected.schemaVersion)
+      for (before, after) in zip(manifest.expected.records, expected.records)
+      where before.model != "MaterialRecord"
+        || before.identity != "\(NativeStoreBaseline.accounts[0])/42"
+      {
+        try #require(before == after)
+      }
+      let locations = try selectedURLs(in: directory)
+      try #require(
+        try family(in: directory) == original && family(in: locations.retained) == original)
+      let receipt = RestartReceipt(
+        version: 1, id: id, producerPID: process.processIdentifier,
+        expected: expected, selection: locations.selector)
+      try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
+      print("NATIVE RESTART SEEDED: \(id), PID \(process.processIdentifier)")
+    case .reopen:
+      let info = try receiptURL.resourceValues(
+        forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+      try #require(info.isRegularFile == true && info.isSymbolicLink == false)
+      try #require((info.fileSize ?? 0) > 0 && (info.fileSize ?? 0) <= 16 * 1024 * 1024)
+      let receipt = try PropertyListDecoder().decode(
+        RestartReceipt.self, from: Data(contentsOf: receiptURL))
+      try #require(receipt.version == 1 && receipt.id == id)
+      try #require(receipt.producerPID > 0 && receipt.producerPID != process.processIdentifier)
+      let directoryInfo = try directory.resourceValues(forKeys: [
+        .isDirectoryKey, .isSymbolicLinkKey,
+      ])
+      try #require(directoryInfo.isDirectory == true && directoryInfo.isSymbolicLink == false)
+      let locations = try selectedURLs(in: directory)
+      try #require(locations.selector == receipt.selection)
+      try #require(
+        try family(in: directory) == original && family(in: locations.retained) == original)
+      do {
+        let opened = try await StudyStore.openApplication(in: directory)
+        try #require(try await opened.nativeBaselineState() == receipt.expected)
+        let saved = try #require(
+          try await opened.materials(accountID: NativeStoreBaseline.accounts[0]).first {
+            $0.material.subjectID == 42
+          })
+        try #require(saved.material.meaningNote.hasSuffix(marker))
+      }
+      try #require(try selectedURLs(in: directory).selector == receipt.selection)
+      try #require(
+        try family(in: directory) == original && family(in: locations.retained) == original)
+      print(
+        "NATIVE RESTART REOPENED: \(id), PID \(receipt.producerPID) → \(process.processIdentifier), 38 exact records"
+      )
+      remove(directory)
+      try #require(!manager.fileExists(atPath: directory.path))
+      try manager.removeItem(at: receiptURL)
+    }
+    try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+  }
+
   @Test(arguments: AdoptionCase.allCases)
   func firstAdoptionDamageKeepsEveryImageAcrossRetriesAndRefusesSourceChanges(
     _ test: AdoptionCase
@@ -524,7 +631,9 @@ private final class FrozenStoreBundle {}
     return url
   }
 
-  private func selectedURLs(in directory: URL) throws -> (Data, URL, URL) {
+  private func selectedURLs(in directory: URL) throws -> (
+    selector: Data, selected: URL, retained: URL
+  ) {
     let selector = try Data(contentsOf: directory.appending(path: "store-selection.plist"))
     let fields = try #require(
       PropertyListSerialization.propertyList(from: selector, format: nil) as? [String: Any])
