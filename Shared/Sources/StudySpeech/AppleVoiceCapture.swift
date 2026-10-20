@@ -34,17 +34,17 @@ public actor AppleVoiceCapture: VoiceCapture {
       let status = await AssetInventory.status(forModules: [transcriber])
       try check(id)
       guard status != .unsupported else { throw VoiceCaptureError.languageUnavailable }
-      if status != .installed {
+      let installation = try await AssetInventory.assetInstallationRequest(
+        supporting: [transcriber])
+      try check(id)
+      if let installation {
         guard downloadModel else {
           await report(.needsModel)
           return
         }
         await report(.downloading)
-        if let installation = try await AssetInventory.assetInstallationRequest(supporting: [
-          transcriber
-        ]) {
-          try await installation.downloadAndInstall()
-        }
+        try check(id)
+        try await installation.downloadAndInstall()
         try check(id)
       }
       guard await AVCaptureDevice.requestAccess(for: .audio) else {

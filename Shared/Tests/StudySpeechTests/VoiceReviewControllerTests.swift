@@ -134,17 +134,21 @@ private actor FakeCapture: VoiceCapture {
     model.cancel()
   }
 
-  @Test func kanjiTranscriptRequiresAnExplicitKanaCorrection() async throws {
+  @Test(arguments: [("一。", "いち"), ("1つ", "ひとつ")])
+  func nonKanaTranscriptRequiresAnExplicitKanaCorrection(
+    transcript: String, correction: String
+  ) async throws {
     let question = try question(reading: true)
-    let model = VoiceReviewController(question: question, capture: FakeCapture(transcript: "一。"))
+    let model = VoiceReviewController(
+      question: question, capture: FakeCapture(transcript: transcript))
     model.start()
     try await waitFor { model.phase == .listening }
     model.stop()
     try await waitFor { model.phase == .reviewing }
     #expect(model.needsKanaCorrection && !model.canSubmit)
     #expect(model.answer(for: question) == nil)
-    model.text = "いち"
-    #expect(model.answer(for: question) == "いち")
+    model.text = correction
+    #expect(model.answer(for: question) == correction)
     model.cancel()
   }
 

@@ -168,6 +168,44 @@ import UIKit
     #expect(retries == 1)
   }
 
+  @Test func testExplicitVoiceTranscriptEditsConvertKanaThroughTheActualBinding() throws {
+    var transcript = "1つ"
+    var focused = false
+    let coordinator = StudyAnswerInput(
+      prompt: "Your answer", text: Binding(get: { transcript }, set: { transcript = $0 }),
+      focused: Binding(get: { focused }, set: { focused = $0 }),
+      reading: true, automaticJapanese: false, editable: true, alphabet: .hiragana,
+      submitted: {}, retried: {}, accessibilityIdentifier: "voice.transcript"
+    ).makeCoordinator()
+    let field = StudyJapaneseTextField()
+    field.delegate = coordinator
+    field.text = transcript
+    field.selectedTextRange = field.textRange(
+      from: field.beginningOfDocument, to: field.endOfDocument)
+    #expect(transcript == "1つ" && field.text == "1つ")
+    #expect(VoiceAnswerDraft.needsKanaCorrection(transcript))
+    #expect(coordinator.parent.accessibilityIdentifier == "voice.transcript")
+    #expect(input().parent.accessibilityIdentifier == "review.answer")
+    for (index, character) in "hitotsu".enumerated() {
+      let count = (field.text ?? "").utf16.count
+      let range = NSRange(location: index == 0 ? 0 : count, length: index == 0 ? count : 0)
+      let replacement = String(character)
+      if coordinator.textField(
+        field, shouldChangeCharactersIn: range, replacementString: replacement)
+      {
+        // UIKit applies accepted edits and then reports editingChanged.
+        field.text = ((field.text ?? "") as NSString).replacingCharacters(
+          in: range, with: replacement)
+        coordinator.changed(field)
+      }
+      if index == 1 { #expect(transcript == "ひ") }
+    }
+    #expect(transcript == "ひとつ" && field.text == "ひとつ")
+    #expect(try cursor(field) == 3)
+    #expect(!VoiceAnswerDraft.needsKanaCorrection(transcript))
+    #expect(!focused)
+  }
+
   @Test func testMarkedTextIsLeftToTheInputMethod() {
     var submissions = 0
     let coordinator = input(submitted: { submissions += 1 })

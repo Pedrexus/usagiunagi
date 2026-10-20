@@ -36,6 +36,7 @@
       "probe-application-payload-corruption", "inspect-application-payload",
       "probe-application-payload-validation", "inspect-application-raw-payload",
       "probe-application-metadata-corruption", "inspect-application-metadata",
+      "probe-application-adoption-corruption",
     ]
     private static let marker = Data("usagi-native-upgrade-disposable-v1".utf8)
 
@@ -58,6 +59,10 @@
       }
       if command == "probe-application-metadata-corruption" {
         try metadataExperiment(frozen: url)
+        return
+      }
+      if command == "probe-application-adoption-corruption" {
+        try adoptionExperiment(frozen: url)
         return
       }
       try requireDisposable(url)
@@ -488,7 +493,7 @@
           }
         }
         let beforeMutation = try hashes(in: candidateURL.deletingLastPathComponent())
-        let constraint = try corruptPayload(test, application: url, selected: candidateURL)
+        let constraint = try corruptPayload(test, application: url, target: .selected(candidateURL))
         let corrupted = try hashes(in: candidateURL.deletingLastPathComponent())
         let output = root.appending(path: test.id + ".child.log")
         let result: (reason: Process.TerminationReason, status: Int32)
@@ -543,6 +548,207 @@
           "EXPERIMENT ONLY: raw projections; production-opener acceptance is a separate command")
       }
       log("SCOPE: disposable selected-store payloads on Mac, not corruption recovery or iOS proof")
+    }
+
+    private enum AdoptionCase: String, CaseIterable {
+      case control, payloadMalformed, cacheMissing, metadataMalformed
+    }
+    private struct AdoptionSelection: Codable, Equatable {
+      let formatVersion: Int
+      let schema: String
+      let phase: String
+      let candidate: UUID
+      let retained: UUID
+      let source: [String: String]
+      let validation: String?
+    }
+    private struct AdoptionAttempt: Codable {
+      let scenario: String
+      let attempt: Int
+      let expectedStatus: Int32
+      let termination: String
+      let status: Int32
+      let selection: AdoptionSelection?
+      let selectionValid: Bool
+      let selectionContinuity: Bool
+      let sourceUnchanged: Bool
+      let retainedMatchesSource: Bool
+      let changedPriorPaths: [String]
+      let unexpectedChangedPriorPaths: [String]
+      let addedPaths: [String]
+      let output: String
+      var accepted: Bool {
+        termination == "exit" && status == expectedStatus && selectionValid
+          && selectionContinuity && sourceUnchanged && retainedMatchesSource
+          && unexpectedChangedPriorPaths.isEmpty
+      }
+    }
+    private static func adoptionExperiment(frozen: URL) throws {
+      let manager = FileManager.default
+      try requirePayloadCapacity()
+      let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+      let source = frozen.deletingLastPathComponent()
+      let pristine = try hashes(in: source)
+      let originalSource = try applicationSource(in: source)
+      try NativeStoreBaseline.require(
+        AdoptionCase.allCases.count == 4
+          && originalSource.values.reduce(0) { $0 + $1.count } <= 16 * 1024 * 1024,
+        "Adoption matrix or source exceeds its reviewed bound")
+      let root = URL.temporaryDirectory.appending(path: "native-upgrade-\(UUID())")
+      try manager.createDirectory(at: root, withIntermediateDirectories: true)
+      try marker.write(to: root.appending(path: ".disposable"), options: .atomic)
+      log("DISPOSABLE ADOPTION PROBE: \(root.path)")
+      var outcomes: [AdoptionAttempt] = []
+      for test in AdoptionCase.allCases {
+        try requirePayloadCapacity()
+        let directory = root.appending(path: test.rawValue)
+        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (name, bytes) in originalSource {
+          try bytes.write(to: directory.appending(path: name))
+        }
+        let url = directory.appending(path: "study.store")
+        try encode(manifest.expected, to: directory.appendingPathExtension("expected.plist"))
+        switch test {
+        case .control: break
+        case .payloadMalformed:
+          try NativeStoreBaseline.require(
+            corruptPayload(
+              .init(field: .account, damage: .truncated), application: url, target: .unselected)
+              == nil,
+            "Required malformed adoption payload was not changed")
+        case .cacheMissing:
+          _ = try corruptMetadata(.cacheMissing, application: url, target: .unselected)
+        case .metadataMalformed:
+          _ = try corruptMetadata(.metadataMalformed, application: url, target: .unselected)
+        }
+        let mutatedSource = try applicationSource(in: directory)
+        let sourceHashes = mutatedSource.mapValues {
+          SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined()
+        }
+        let selector = directory.appending(path: "store-selection.plist")
+        var previousSelection: AdoptionSelection?
+        var previousSelector: Data?
+        for attempt in 1...2 {
+          let before = try adoptionArtifacts(in: directory)
+          let output = root.appending(path: "\(test.rawValue).\(attempt).child.log")
+          let result = try child(
+            test == .control ? "verify-application-opening" : "inspect-application-metadata",
+            store: url, status: nil, output: output)
+          let after = try adoptionArtifacts(in: directory)
+          let selectionData = try? Data(contentsOf: selector)
+          let selection = selectionData.flatMap {
+            try? PropertyListDecoder().decode(AdoptionSelection.self, from: $0)
+          }
+          var retainedMatchesSource = false
+          var selectionValid = false
+          var selectionContinuity = false
+          if let selection {
+            let retained = directory.appending(path: "generations/\(selection.retained)")
+            retainedMatchesSource = (try? hashes(in: retained)) == sourceHashes
+            selectionValid =
+              selection.formatVersion == 1
+              && selection.schema == StudySchemaV1.versionIdentifier.description
+              && selection.phase == (test == .control ? "selected" : "preparing")
+              && selection.source == sourceHashes && selection.candidate != selection.retained
+              && (test == .control
+                ? selection.validation?.count == 64 : selection.validation == nil)
+            if let previousSelection {
+              selectionContinuity =
+                selection.retained == previousSelection.retained
+                && (test == .control
+                  ? selection == previousSelection && selectionData == previousSelector
+                  : selection.candidate != previousSelection.candidate)
+            } else {
+              selectionContinuity = attempt == 1
+            }
+          }
+          let changed = before.keys.filter { before[$0] != after[$0] }.sorted()
+          let allowed =
+            test == .control
+            ? previousSelection.map { ["generations/\($0.candidate)/study.store-shm"] } ?? []
+            : ["store-selection.plist"]
+          let added = after.keys.filter { before[$0] == nil }.sorted()
+          let unexpected =
+            changed.filter { !allowed.contains($0) }
+            + (test == .control && attempt == 2 ? added.filter { !allowed.contains($0) } : [])
+          let recorded = AdoptionAttempt(
+            scenario: test.rawValue, attempt: attempt, expectedStatus: test == .control ? 0 : 74,
+            termination: result.reason == .exit ? "exit" : "uncaughtSignal", status: result.status,
+            selection: selection, selectionValid: selectionValid,
+            selectionContinuity: selectionContinuity,
+            sourceUnchanged: try applicationSource(in: directory) == mutatedSource,
+            retainedMatchesSource: retainedMatchesSource, changedPriorPaths: changed,
+            unexpectedChangedPriorPaths: unexpected, addedPaths: added, output: output.path)
+          outcomes.append(recorded)
+          try encode(outcomes, to: root.appending(path: "adoption-outcomes.plist"))
+          try NativeStoreBaseline.require(
+            try hashes(in: source) == pristine, "Frozen fixture changed")
+          log(
+            "ADOPTION RESULT: \(test.rawValue)/\(attempt), \(recorded.termination)/\(recorded.status)"
+          )
+          guard recorded.accepted else {
+            log("FAIL: adoption did not safely refuse/preserve; stopped, all images retained")
+            _exit(1)
+          }
+          previousSelection = selection
+          previousSelector = selectionData
+        }
+      }
+      try NativeStoreBaseline.require(
+        outcomes.count == 8 && outcomes.allSatisfy(\.accepted), "Incomplete adoption matrix")
+      // Only successful marked images are removed, after the entire retry matrix has passed.
+      for test in AdoptionCase.allCases {
+        let directory = root.appending(path: test.rawValue)
+        try requireDisposable(directory.appending(path: "study.store"))
+        guard
+          let retained = outcomes.first(where: { $0.scenario == test.rawValue })?.selection?
+            .retained
+        else { throw NativeStoreBaseline.Failure(description: "Missing passed retained image") }
+        try manager.setAttributes(
+          [.posixPermissions: 0o700],
+          ofItemAtPath: directory.appending(path: "generations/\(retained)").path)
+        try manager.removeItem(at: directory)
+        try manager.removeItem(at: directory.appendingPathExtension("expected.plist"))
+      }
+      log(
+        "PASS: 4 adoption scenarios / 8 fresh opener attempts, including unchanged failed retries")
+      log(
+        "PASS: original/retained bytes and all abandoned artifacts preserved; no failed selection")
+      log(
+        "SCOPE: disposable Mac first adoption only; no interruption, iOS corruption or full G7 proof"
+      )
+    }
+    private static func adoptionArtifacts(in directory: URL) throws -> [String: String] {
+      let canonical = directory.resolvingSymlinksInPath().path
+      guard
+        let files = FileManager.default.enumerator(
+          at: directory,
+          includingPropertiesForKeys: [
+            .isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey,
+          ])
+      else { throw NativeStoreBaseline.Failure(description: "Cannot enumerate adoption artifacts") }
+      var result: [String: String] = [:]
+      var bytes = 0
+      for case let file as URL in files {
+        let path = file.resolvingSymlinksInPath().path
+        let values = try file.resourceValues(
+          forKeys: [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        try NativeStoreBaseline.require(
+          values.isSymbolicLink == false && path.hasPrefix(canonical + "/")
+            && result.count < 512, "Unsupported or oversized disposable adoption image")
+        let relative = String(path.dropFirst(canonical.count + 1))
+        if values.isDirectory == true {
+          result[relative + "/"] = "directory"
+        } else {
+          bytes += values.fileSize ?? 32 * 1024 * 1024 + 1
+          try NativeStoreBaseline.require(
+            values.isRegularFile == true && bytes <= 32 * 1024 * 1024,
+            "Disposable adoption artifacts exceed their 32 MiB bound")
+          result[relative] = SHA256.hash(data: try Data(contentsOf: file))
+            .map { String(format: "%02x", $0) }.joined()
+        }
+      }
+      return result
     }
 
     private enum MetadataCase: String, CaseIterable {
@@ -619,7 +825,7 @@
         let retainedURL = generations.appending(path: retained)
         let retainedBytes = try applicationSource(in: retainedURL)
         let selected = generations.appending(path: candidate).appending(path: "study.store")
-        let mutation = try corruptMetadata(test, application: url, selected: selected)
+        let mutation = try corruptMetadata(test, application: url, target: .selected(selected))
         let before = try hashes(in: selected.deletingLastPathComponent())
         let output = root.appending(path: test.rawValue + ".child.log")
         let result = try child(
@@ -688,10 +894,10 @@
       return row
     }
     private static func corruptMetadata(
-      _ test: MetadataCase, application: URL, selected: URL
+      _ test: MetadataCase, application: URL, target: CorruptionTarget
     ) throws -> MetadataChange? {
       if test == .control { return nil }
-      return try payloadDatabase(application: application, selected: selected) { database in
+      return try payloadDatabase(application: application, target: target) { database in
         guard let row = try metadataRow(test, database: database) else {
           throw NativeStoreBaseline.Failure(description: "No populated metadata/cache row")
         }
@@ -872,18 +1078,40 @@
       }
     }
 
+    private enum CorruptionTarget {
+      case selected(URL)
+      case unselected
+    }
     private static func payloadDatabase<Value>(
-      application: URL, selected: URL, _ body: (OpaquePointer) throws -> Value
+      application: URL, target: CorruptionTarget, _ body: (OpaquePointer) throws -> Value
     ) throws -> Value {
       try requireDisposable(application)
       let directory = application.deletingLastPathComponent().resolvingSymlinksInPath()
-      let candidate = selected.resolvingSymlinksInPath()
-      try NativeStoreBaseline.require(
-        candidate.deletingLastPathComponent().deletingLastPathComponent().path
-          == directory.appending(path: "generations").path
-          && UUID(uuidString: candidate.deletingLastPathComponent().lastPathComponent) != nil
-          && candidate.lastPathComponent == "study.store",
-        "SQL corruption requires an existing selected store in the marked disposable image")
+      let candidate: URL
+      switch target {
+      case .selected(let selected):
+        candidate = selected.resolvingSymlinksInPath()
+        try NativeStoreBaseline.require(
+          candidate.deletingLastPathComponent().deletingLastPathComponent().path
+            == directory.appending(path: "generations").path
+            && UUID(uuidString: candidate.deletingLastPathComponent().lastPathComponent) != nil
+            && candidate.lastPathComponent == "study.store",
+          "SQL corruption requires an existing selected store in the marked disposable image")
+      case .unselected:
+        candidate = application.resolvingSymlinksInPath()
+        let manager = FileManager.default
+        let folder = try application.deletingLastPathComponent().resourceValues(
+          forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        let file = try application.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        let names = Set(try manager.contentsOfDirectory(atPath: directory.path))
+        try NativeStoreBaseline.require(
+          candidate.path == directory.appending(path: "study.store").path
+            && folder.isDirectory == true && folder.isSymbolicLink == false
+            && file.isRegularFile == true && file.isSymbolicLink == false
+            && names.contains("study.store")
+            && names.isSubset(of: ["study.store", "study.store-wal", "study.store-shm"]),
+          "Unselected corruption requires only original files before any disposable app open")
+      }
       var database: OpaquePointer?
       let opened = sqlite3_open_v2(candidate.path, &database, SQLITE_OPEN_READWRITE, nil)
       guard opened == SQLITE_OK, let database else {
@@ -974,7 +1202,7 @@
       }
       _ = try JSONDecoder().decode(StudyUploadIssue.self, from: issue)
       let subjectID = try JSONDecoder().decode(Int64.self, from: subjectData)
-      try payloadDatabase(application: application, selected: selected) { database in
+      try payloadDatabase(application: application, target: .selected(selected)) { database in
         var statement: OpaquePointer?
         try NativeStoreBaseline.require(
           sqlite3_prepare_v2(
@@ -1013,9 +1241,9 @@
     }
 
     private static func corruptPayload(
-      _ test: PayloadCase, application: URL, selected: URL
+      _ test: PayloadCase, application: URL, target: CorruptionTarget
     ) throws -> Int32? {
-      try payloadDatabase(application: application, selected: selected) { database in
+      try payloadDatabase(application: application, target: target) { database in
         let row = try payloadRow(test.field, database: database)
         guard let original = row.data else {
           throw NativeStoreBaseline.Failure(description: "No populated payload to corrupt")

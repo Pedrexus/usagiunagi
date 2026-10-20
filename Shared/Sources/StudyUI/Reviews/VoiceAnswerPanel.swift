@@ -29,6 +29,8 @@ struct VoiceAnswerRequest: Identifiable {
 public struct VoiceAnswerPanel: View {
   @State private var model: VoiceReviewController
   @Environment(\.scenePhase) private var scenePhase
+  @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
+  @State private var transcriptFocused = false
   private let audio: StudyAudioLibrary?
   @State private var audioLease: UUID?
   private let submit: (String) -> Void
@@ -75,10 +77,20 @@ public struct VoiceAnswerPanel: View {
           case .finishing:
             ProgressView("Finishing transcription…")
           case .reviewing:
-            TextField("Your answer", text: $model.text, axis: .vertical)
-              .lineLimit(1...4)
-              .autocorrectionDisabled()
-              .accessibilityIdentifier("voice.transcript")
+            if model.question.kind == .reading {
+              StudyAnswerInput(
+                prompt: "Your answer", text: $model.text, focused: $transcriptFocused,
+                reading: true, automaticJapanese: automaticJapanese, editable: true,
+                alphabet: .hiragana,
+                submitted: { transcriptFocused = false }, retried: {},
+                accessibilityIdentifier: "voice.transcript"
+              ).frame(minHeight: 44)
+            } else {
+              TextField("Your answer", text: $model.text, axis: .vertical)
+                .lineLimit(1...4)
+                .autocorrectionDisabled()
+                .accessibilityIdentifier("voice.transcript")
+            }
             if model.needsKanaCorrection {
               Text(
                 "Speech recognition returned characters other than kana. Edit the reading into kana before submitting."
@@ -128,6 +140,9 @@ public struct VoiceAnswerPanel: View {
       }
     }
     .onChange(of: scenePhase) { _, phase in if phase == .background { model.cancel() } }
+    .onChange(of: model.phase) { _, phase in
+      if phase != .reviewing { transcriptFocused = false }
+    }
     .onAppear {
       if audioLease == nil { audioLease = audio?.beginVoiceInput() }
       if model.phase == .idle { model.start() }

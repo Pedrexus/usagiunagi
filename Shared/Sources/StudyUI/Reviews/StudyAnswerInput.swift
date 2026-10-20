@@ -11,6 +11,7 @@ struct StudyAnswerInput {
   let alphabet: KanaAlphabet
   let submitted: () -> Void
   let retried: () -> Void
+  var accessibilityIdentifier = "review.answer"
   #if os(macOS)
     @Environment(\.isEnabled) private var isEnabled
     @FocusState private var inputFocused: Bool
@@ -73,7 +74,7 @@ struct StudyAnswerInput {
       field.autocorrectionType = .no
       field.spellCheckingType = .no
       field.returnKeyType = .done
-      field.accessibilityIdentifier = "review.answer"
+      field.accessibilityIdentifier = accessibilityIdentifier
       field.setContentHuggingPriority(.defaultLow, for: .horizontal)
       return field
     }
@@ -185,7 +186,7 @@ struct StudyAnswerInput {
         .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
         .disabled(!editable)
         .focused($inputFocused).onSubmit(submitted)
-        .accessibilityIdentifier("review.answer")
+        .accessibilityIdentifier(accessibilityIdentifier)
         .onChange(of: focused && editable && isEnabled, initial: true) { _, value in
           if inputFocused != value { inputFocused = value }
         }
