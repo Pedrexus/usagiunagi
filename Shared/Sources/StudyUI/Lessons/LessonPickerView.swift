@@ -66,28 +66,35 @@ public struct LessonPickerView: View {
       }.padding(16)
     }.disabled(busy)
       .safeAreaInset(edge: .bottom) {
-        let layout =
-          typeSize.isAccessibilitySize
-          ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-          : AnyLayout(HStackLayout())
-        layout {
-          Text("\(selected.count) selected").monospacedDigit().accessibilityIdentifier(
-            "lesson.selectionCount"
-          )
-          .frame(maxWidth: .infinity, alignment: .leading)
-          Button("Start lessons", systemImage: "arrow.right") {
-            let ids = groups.flatMap(\.items).map(\.id).filter { selected.contains($0) }
-            busy = true
-            error = nil
-            Task {
-              defer { busy = false }
-              do { try await start(ids) } catch { self.error = error.localizedDescription }
-            }
-          }.buttonStyle(.borderedProminent).disabled(selected.isEmpty || busy)
-            .accessibilityIdentifier("lesson.startSelection")
+        ViewThatFits(in: .horizontal) {
+          HStack {
+            selectionCount.fixedSize(horizontal: true, vertical: false)
+            Spacer(minLength: 12)
+            startButton.fixedSize(horizontal: true, vertical: false)
+          }
+          VStack(alignment: .leading, spacing: 12) {
+            selectionCount
+            startButton
+          }.frame(maxWidth: .infinity, alignment: .leading)
         }.padding().background(.bar)
       }
       .onChange(of: items.map(\.id)) { _, ids in selected.formIntersection(ids) }
+  }
+  private var selectionCount: some View {
+    Text("\(selected.count) selected").monospacedDigit()
+      .accessibilityIdentifier("lesson.selectionCount")
+  }
+  private var startButton: some View {
+    Button("Start lessons", systemImage: "arrow.right") {
+      let ids = groups.flatMap(\.items).map(\.id).filter { selected.contains($0) }
+      busy = true
+      error = nil
+      Task {
+        defer { busy = false }
+        do { try await start(ids) } catch { self.error = error.localizedDescription }
+      }
+    }.buttonStyle(.borderedProminent).disabled(selected.isEmpty || busy)
+      .accessibilityIdentifier("lesson.startSelection")
   }
   private func tile(_ item: CatalogSubject) -> some View {
     Button {

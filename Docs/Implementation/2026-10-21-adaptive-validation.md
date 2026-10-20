@@ -6,6 +6,24 @@ The shared-UI audit at `1e0b3e10` found eleven OS-conditional starting points. T
 
 Rendered acceptance is still required for iPhone portrait/landscape, keyboard presentation, larger text, iPad multitasking and compact/resized Mac windows. Device Hub access was denied; no alternate GUI capture or automation was used. Source and compiler evidence do not establish those interactions.
 
+## Content-fit lesson selection
+
+The renewed priority remains iPhone first, with automatic adaptations of the same feature flow. Existing `StudyTabs` uses Apple's [sidebar-adaptable style](https://developer.apple.com/documentation/swiftui/tabviewstyle/sidebaradaptable): iPhone tabs, adaptable iPad navigation and the native Mac sidebar. Root/review actions already use semantic toolbar placements. The remaining eleven shared-UI OS-conditional starting points still configure keyboard/input, audio, notifications/system Settings and activity APIs; none chooses a separate screen layout. No platform capability wrapper was added.
+
+`LessonPickerView` now uses [ViewThatFits](https://developer.apple.com/documentation/swiftui/viewthatfits) for the selection footer. The row requires the count and Start button to fit at their natural widths; its flexible spacer preserves the original leading count and trailing action. The fallback allows both controls to grow in a vertical stack. This replaces the footer's text-category-only `AnyLayout` choice and handles narrow space or wider text without another breakpoint. The existing tile accessibility sizing stays intact. Only stateless presentation appears in the alternatives; selected IDs, busy/error state and the asynchronous start operation retain their picker owner. This adds seven physical Swift lines for the explicit fitting alternatives; it is not a LOC reduction.
+
+After the production edit, scoped Mainboard parsing/UI rules, strict swift-format and SwiftLint all exit 0. Existing root Mainboard Release tasks also exit 0:
+
+| Check | Receipt |
+| --- | --- |
+| iOS simulator Release | `build-8e19fe8bd2b54da99b9d6bc69d317ef3.xcresult`; zero compiler errors/warnings in this incremental build |
+| Native Mac Release | `build-15031790aec241a08d16c7082d0d8776.xcresult`; zero compiler errors/warnings in this incremental build |
+| Source SHA-256 | `a53172db85d733e9ae4924241c7b59e0a03fd3e083f86116cec1e10812f28d57` |
+| iOS log SHA-256 | `82e628d6a00a87dfcbfaa8d6c17a742c4c8c32058797ec042e03ebdf6a6f8cbd` |
+| Mac log SHA-256 | `7261b23b0fa20382fd010595f4f6f9402639f7049a461a780b02cd286aa8b94e` |
+
+Logs are `.build/Results/AdaptiveLessonFooterIOS.log` and `AdaptiveLessonFooterMac.log`. No new tests were added for this presentation-only edit. No runtime UI or real account was opened. The independent unfinished abrupt-store-exit test prototype in the working tree was not executed or included in this follow-up; the committed graceful-reopen evidence retains its previous scope. Historical watch warnings and outstanding rendered/device gates remain open. In particular, verify footer reachability, one lesson-start operation, selection/error retention and the surrounding toolbar on iPhone portrait/landscape and large text, then iPad multitasking and resized Mac windows once fixture UI access is available.
+
 ## Clean source restoration
 
 A fresh `git archive` of app commit `1e0b3e10d1e41531132b7b2ddc93125a98a0f63d` was unpacked into `/private/tmp/usagi-clean-source.ypceQO`. It excludes all working edits, including the three protected owner files. Xcode resolved the committed package pin and built Release iOS and macOS into separate initially empty derived-data folders through root Mainboard.
