@@ -1,0 +1,576 @@
+{
+  "format_version": 1,
+  "recorded_at": "2026-10-20T04:47:20Z",
+  "status": "Partial native acceptance; migration specification complete; FMDB deletion, schema evolution and overall P3 remain open",
+  "source": {
+    "app_commit": "39f9ef9c4eaec8c20af6f9f066e109e06c9d6c2c",
+    "app_branch": "codex/swiftui-27-curriculum",
+    "baseline_commit": "88400b7d",
+    "mainboard_commit": "87461e5eb71623f213f439c06a569bfad6c7bc84",
+    "workspace_task_commit": "ab97dafe511df9ef859af1833f5c63360f572e7a",
+    "source_files": 307,
+    "source_manifest_sha256": "14d318af39a779b5097eb2349d815872e350b714135f43b597465755d051ebed",
+    "shared_files": 228,
+    "shared_manifest_sha256": "5f44968971fdc9211b7d36fbf152d918ea8e825e821f4d079493de49db656909",
+    "shared_before_after_manifests": [
+      "/private/tmp/usagi-native-catalog-shared-final-before.sha256",
+      "/private/tmp/usagi-native-catalog-shared-final-after.sha256"
+    ],
+    "excluded_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift",
+      "App/Features/Catalog/LegacyCatalogViewController.swift"
+    ],
+    "owner_edit_scope": "Three preexisting comment/whitespace edits were compiled but excluded from staging and source inventory.",
+    "phone_and_mac_ui_source_scope": "Behavioral source immediately before the formatter-only wrap of the remaining-catalog filter predicate in NativeSubjectCatalogView.swift. No semantic edit followed those test builds. Final iPad, Shared suites and Release builds use final formatted source."
+  },
+  "environment": {
+    "xcode": "27.0 (27A266a)",
+    "swift": "6.4 (swiftlang-6.4.0.34.1)",
+    "macos": "27.0.1",
+    "mobile_simulators": "27.0",
+    "xcode_selection": "/Applications/Xcode.app/Contents/Developer",
+    "global_selection_changed": false
+  },
+  "shared": {
+    "count_basis": "Reported Swift Testing tests/functions, with parameter invocations distinct; five new endpoint functions include one two-case parameterized function.",
+    "total_tests": 513,
+    "suites": 71,
+    "core": 229,
+    "persistence": 196,
+    "speech": 7,
+    "ui_model": 81,
+    "mac": {
+      "log": "/private/tmp/usagi-native-catalog-shared-formatted-mac.log",
+      "summary": null,
+      "bundle": null,
+      "test_cases": [
+
+      ],
+      "automatic_environment_exports": 0,
+      "module_totals": [
+        {
+          "tests": 81,
+          "suites": 7
+        },
+        {
+          "tests": 7,
+          "suites": 1
+        },
+        {
+          "tests": 196,
+          "suites": 25
+        },
+        {
+          "tests": 229,
+          "suites": 38
+        }
+      ],
+      "exit_code": 0
+    },
+    "ios": {
+      "log": "/private/tmp/usagi-native-catalog-shared-final-ios.log",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 513,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": ".build/Results/test-9c362879d9d54b7ca7fe0466bce64f23.xcresult",
+      "test_cases": [
+
+      ],
+      "automatic_environment_exports": 0
+    }
+  },
+  "native_ui": {
+    "execution": "GUI/simulator runs serialized; only app-window screenshots; fake services and disposable data; no real WaniKani exercises or account changes.",
+    "phone": {
+      "log": "/private/tmp/usagi-native-catalog-statistics-phone-current.log",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": ".build/Results/test-efb2658f5f2d47aa8149b8c2dbf45b06.xcresult",
+      "test_cases": [
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogExclusionUpdatesAfterReturningFromDetails",
+          "result": "passed",
+          "seconds": 35.438
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogLevelPagingHidesAnswersAndStageNavigation",
+          "result": "passed",
+          "seconds": 41.634
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogRemainingExplainsReadinessAndKeepsDueItemsFirst",
+          "result": "passed",
+          "seconds": 17.276
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogSearchClearsKanaQueryAndOpensDetails",
+          "result": "passed",
+          "seconds": 28.632
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges",
+          "result": "passed",
+          "seconds": 45.16
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testUpcomingReviewsShowsStageAndSubjectCountsAndReturns",
+          "result": "passed",
+          "seconds": 15.767
+        }
+      ],
+      "automatic_environment_exports": 0
+    },
+    "ipad": {
+      "log": "/private/tmp/usagi-native-catalog-statistics-ipad-final.log",
+      "summary": {
+        "result": "Passed",
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": ".build/Results/test-425cd99414294815ac39140692dea97b.xcresult",
+      "test_cases": [
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogExclusionUpdatesAfterReturningFromDetails",
+          "result": "passed",
+          "seconds": 29.659
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogLevelPagingHidesAnswersAndStageNavigation",
+          "result": "passed",
+          "seconds": 25.296
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogRemainingExplainsReadinessAndKeepsDueItemsFirst",
+          "result": "passed",
+          "seconds": 13.575
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCatalogSearchClearsKanaQueryAndOpensDetails",
+          "result": "passed",
+          "seconds": 28.253
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges",
+          "result": "passed",
+          "seconds": 37.231
+        },
+        {
+          "suite": "AppStoreScreenshots.ReviewFlowTests",
+          "method": "testUpcomingReviewsShowsStageAndSubjectCountsAndReturns",
+          "result": "passed",
+          "seconds": 15.763
+        }
+      ],
+      "automatic_environment_exports": 0
+    },
+    "mac": {
+      "log": "/private/tmp/usagi-native-catalog-statistics-mac-current.log",
+      "summary": {
+        "result": "Failed",
+        "passedTests": 3,
+        "failedTests": 3,
+        "runtimeWarnings": [
+
+        ]
+      },
+      "bundle": ".build/Results/test-badd0a1cf6d6402e9cad38b69fd6231b.xcresult",
+      "test_cases": [
+        {
+          "suite": "AppStoreScreenshots.MacCatalogTests",
+          "method": "testCatalogExclusionUpdatesAfterReturningFromDetails",
+          "result": "passed",
+          "seconds": 22.484
+        },
+        {
+          "suite": "AppStoreScreenshots.MacCatalogTests",
+          "method": "testCatalogLevelPagingHidesAnswersAndStageNavigation",
+          "result": "passed",
+          "seconds": 37.852
+        },
+        {
+          "suite": "AppStoreScreenshots.MacCatalogTests",
+          "method": "testCatalogRemainingExplainsReadinessAndKeepsDueItemsFirst",
+          "result": "passed",
+          "seconds": 20.564
+        },
+        {
+          "suite": "AppStoreScreenshots.MacCatalogTests",
+          "method": "testCatalogSearchClearsKanaQueryAndOpensDetails",
+          "result": "failed",
+          "seconds": 48.828
+        },
+        {
+          "suite": "AppStoreScreenshots.MacCatalogTests",
+          "method": "testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges",
+          "result": "failed",
+          "seconds": 32.246
+        },
+        {
+          "suite": "AppStoreScreenshots.MacCatalogTests",
+          "method": "testUpcomingReviewsShowsStageAndSubjectCountsAndReturns",
+          "result": "failed",
+          "seconds": 12.118
+        }
+      ],
+      "automatic_environment_exports": 0,
+      "failures": [
+        {
+          "method": "MacCatalogTests/testCatalogSearchClearsKanaQueryAndOpensDetails()",
+          "observation": "failed - Could not reveal native Mac control: Query chain:"
+        },
+        {
+          "method": "MacCatalogTests/testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges()",
+          "observation": "XCTAssertTrue failed"
+        },
+        {
+          "method": "MacCatalogTests/testUpcomingReviewsShowsStageAndSubjectCountsAndReturns()",
+          "observation": "XCTAssertTrue failed"
+        }
+      ],
+      "exit_code": 65,
+      "acceptance": "Open. Diagnose actual scene/accessibility behavior, retain assertions, and require a fresh complete six-case pass. Causes of these three failures are not established."
+    },
+    "prior_runs": [
+      {
+        "bundle": "test-4e51dee8db6644be90ef04274d5dd8a7",
+        "result": "Phone 4 pass/2 lazy-row reach failures"
+      },
+      {
+        "bundle": "test-47d1a61f447b40eba8df36314d77d103",
+        "result": "Phone 5 pass/1 paging assertion order failure"
+      },
+      {
+        "bundle": "test-d1976112703446ac9d9f2baf105eac18",
+        "result": "Phone focused paging failed: right swipe triggered system Back"
+      },
+      {
+        "bundle": "test-fe0e256b1c9045c1908d3ecdc6ec5cb8",
+        "result": "Phone focused paging passed after shared explicit Back action"
+      },
+      {
+        "bundle": "test-bbbcaa10c5e64c0a9e4808251b522712",
+        "result": "Earlier iPad 6/6, zero runtime warnings; before catalog store-change listener"
+      },
+      {
+        "bundle": "test-57d7273f35104a12acd638085c15d433",
+        "result": "Initial Mac 1 pass/5 failures; zero runtime warnings. Exclusion staleness fixed; paging disabled-control reach fixed. Three later Mac failures remain."
+      }
+    ]
+  },
+  "fixture": {
+    "originalExamples": 60,
+    "nativeExamples": 60,
+    "ids": [
+      743,
+      3163,
+      3164,
+      355,
+      1600,
+      8911,
+      8918,
+      1787,
+      1803,
+      6556,
+      1892,
+      3516,
+      3515,
+      5907,
+      6163,
+      6812,
+      6960,
+      6961,
+      3864,
+      923,
+      578,
+      689,
+      293,
+      294,
+      295,
+      296,
+      297,
+      298,
+      1217,
+      1218,
+      1219,
+      1220,
+      1221,
+      1222,
+      1223,
+      1224,
+      1225,
+      1226,
+      1227,
+      1228,
+      1229,
+      1230,
+      1231,
+      1232,
+      1233,
+      1234,
+      1235,
+      1236,
+      1237,
+      1238,
+      1239,
+      1240,
+      1241,
+      1242,
+      1243,
+      1244,
+      1245,
+      1246,
+      1247,
+      8790
+    ],
+    "literalCount": 237,
+    "allOriginalTextLiteralsPreserved": true,
+    "partsOfSpeech": {
+      "raw": [
+        19
+      ],
+      "names": [
+        "Pronoun"
+      ]
+    },
+    "readiness": "Six unlocked assignments, two locked subjects with no assignment, excluded3864; all eight original readiness roles. 40kanji/12vocabulary/8radicals; no protobuf or old writer.",
+    "radical_image": "Existing cache is injected through SwiftUI EnvironmentValues; tests use a disposable cache with a local SVG transport, retaining original metadata URL.",
+    "release": "DEBUG-only fixture; forbidden strings/resources absent from both Release products."
+  },
+  "production_changes": [
+    "WaniKaniService reconfiguration preserves injected transport; unsupported fake services refuse rather than acquiring production networking.",
+    "Shared catalog distinguishes stage/excluded routes, retains paged swipe navigation with existing explicit SwiftUI Back, and observes committed store changes so exclusions update after details.",
+    "No stored model declarations, migration fixtures, outbox policy or runtime dependencies changed."
+  ],
+  "mainboard": {
+    "rule_ids": [
+      "SW-MIG0006",
+      "SW-MIG0007",
+      "SW-MIG0008"
+    ],
+    "selected_tests": 130,
+    "new_persistence_cases": 52,
+    "native_new_cases": 48,
+    "portable_new_cases": 4,
+    "test_scope": [
+      "test_swift_persistence.py",
+      "test_swift_analysis.py",
+      "test_swift_style.py",
+      "test_swift_platform.py",
+      "test_analysis_explain.py"
+    ],
+    "target_receipt": "/private/tmp/mainboard-swift-persistence-accepted/target.json",
+    "full_regression_claimed": false,
+    "inventory": {
+      "scope": "Shared/Sources only",
+      "codable_properties": 15,
+      "direct_container_construction": 1,
+      "retained_sqlite_diagnostic_call": 1,
+      "total_review_findings": 17,
+      "parser_gaps": 0
+    },
+    "swift_helper_sha256": "b1eb0ffc6eac857b5419f8a85a25976c61110257b4b315709b9a487f7a69d1ae",
+    "limitations": "Finite direct syntax, matching framework imports and known-shadow filters only. No ownership/query/SQL-mode/type resolution, aliases, factories, external macros or inferred init tracing. Review guidance with official links; no persistence autofix.",
+    "warnings": "Two preexisting pathspec deprecation warnings in selected integration run.",
+    "workflow": "All three tool checkouts pin87461e5; inventory selects new rules. Local actionlint passes; commit not pushed and no hosted Actions pass claimed.",
+    "task": "usagi-test-mac-catalog ran the complete six-case class and correctly returned65 on the three open failures."
+  },
+  "quality": {
+    "swift_files": 13,
+    "checks": "Read-only swift-format, pinned SwiftLint, native SwiftUI/parser; actionlint and scoped whitespace pass.",
+    "rewritten_in_final_readonly_check": 0,
+    "source_manifest_sha256": "c62e34fc17561f79d18b1759bb4cb52203a964eef7996c4a00e12376b175014c",
+    "text": "Migration/TASKS/Development codespell passed before final result wording; final docs rechecked before commit."
+  },
+  "release_builds": [
+    {
+      "log": "/private/tmp/usagi-native-catalog-release-final-ios.log",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 41,
+        "analyzerWarningCount": 0
+      },
+      "bundle": ".build/Results/build-588acc2cd15245c59817bee0f2766351.xcresult",
+      "test_cases": [
+
+      ],
+      "automatic_environment_exports": 0,
+      "platform": "ios",
+      "exit_code": 0
+    },
+    {
+      "log": "/private/tmp/usagi-native-catalog-release-final-mac.log",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0
+      },
+      "bundle": ".build/Results/build-da27c4077e8e4531a75839f9921c2f5a.xcresult",
+      "test_cases": [
+
+      ],
+      "automatic_environment_exports": 0,
+      "platform": "mac",
+      "exit_code": 0
+    }
+  ],
+  "release_fixture_absence": [
+    {
+      "platform": "iOS",
+      "executable": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Tsurukame",
+      "sha256": "3f67dfc375fcdbe0d1377bae950b37668818c41689862ca00993a3e1a2acbbaf",
+      "modified_at": "2026-10-20T04:41:58Z",
+      "forbidden_strings": [
+        "--material-conflict-fixture",
+        "--material-conflict-failure-fixture",
+        "fixture.eventStatus",
+        "Concurrent material change committed",
+        "fixture/material-conflict/",
+        "--catalog-fixture",
+        "--review-fixture",
+        "viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\""
+      ],
+      "forbidden_string_matches": [
+
+      ],
+      "unexpected_fixture_resources": [
+
+      ]
+    },
+    {
+      "platform": "macOS",
+      "executable": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Xcode/UnifiedMac/Build/Products/Release/Tsurukame.app/Contents/MacOS/Tsurukame",
+      "sha256": "f341b5cfdfd2715c4a4588994ceac6c3c702589fcb249fbc0ff5c0e995a75393",
+      "modified_at": "2026-10-20T04:41:51Z",
+      "forbidden_strings": [
+        "--material-conflict-fixture",
+        "--material-conflict-failure-fixture",
+        "fixture.eventStatus",
+        "Concurrent material change committed",
+        "fixture/material-conflict/",
+        "--catalog-fixture",
+        "--review-fixture",
+        "viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\""
+      ],
+      "forbidden_string_matches": [
+
+      ],
+      "unexpected_fixture_resources": [
+
+      ]
+    }
+  ],
+  "warnings": {
+    "release_ios": "41 reported warnings in the final local Release build, including retained watch/legacy-generated/protobuf code. No global warning cleanup claimed.",
+    "release_mac": "0 reported warnings",
+    "prior_details_runtime": "The earlier five-case details gates recorded four invalid-frame warnings each on iPhone/iPad. New catalog zero-warning runs do not resolve them.",
+    "privacy": "New checked runs print0 automatic environment-export lines. The executor flag does not isolate inherited environment. No new credential exposure or raw-log publication claimed."
+  },
+  "loc": {
+    "scope": "Physical lines in App/**/*.swift and Shared/Sources/**/*.swift, excluding Pods, Tests, AppTests, AppStoreScreenshots and the three owner-edited files. Includes generated production Swift and formatter wrapping. Includes new/untracked production files; no line savings inferred from moves or test deletion.",
+    "production": {
+      "before": 31993,
+      "after": 32049,
+      "changed": [
+        {
+          "path": "App/Application/StudyAppAssembly.swift",
+          "before": 76,
+          "after": 79
+        },
+        {
+          "path": "App/Application/StudyApplicationOwner.swift",
+          "before": 170,
+          "after": 171
+        },
+        {
+          "path": "Shared/Sources/StudyCore/WaniKaniClient.swift",
+          "before": 244,
+          "after": 268
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Application/StudyAppModel.swift",
+          "before": 310,
+          "after": 315
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+          "before": 629,
+          "after": 637
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Catalog/NativeSubjectCatalogView.swift",
+          "before": 73,
+          "after": 83
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Catalog/RadicalImageView.swift",
+          "before": 71,
+          "after": 74
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Catalog/SubjectCatalogView.swift",
+          "before": 352,
+          "after": 354
+        }
+      ],
+      "net": 56
+    },
+    "note": "31993→32049 physical production Swift lines (+56). DEBUG fixture/test/docs growth reported separately in Git; no LOC reduction or dependency removal claimed."
+  },
+  "plan": {
+    "requirements": 8,
+    "acceptance_gates": 12,
+    "encoded_properties": 15,
+    "old_writer_cases": 19,
+    "native_candidate_methods": 25,
+    "remaining_host_groups": 10,
+    "remaining_host_ui_cases": 19,
+    "additional_hosted_notification_invariant": true,
+    "p0c": "Minimal first-version/coherent-native-generation recovery before any stored-schema mutation; conditional prerequisite before P2, separate from broad P5 modeling.",
+    "status": "Specification reviewed structurally against actual declarations and test methods; this does not establish a migration execution or close G7."
+  },
+  "open_work": [
+    "Current three Mac catalog/statistics failures; fresh complete six-case Mac pass required.",
+    "Nineteen old-host UI cases plus notification/storyboard invariant. Avatar loading must be injected before strict offline custom-email tests; Katakana needs Anki/settings/end-summary parity.",
+    "P2 prototype remains unwired: Apple account fencing, durable verified legacy binding/revocation, KVS convergence and signed common namespace are unresolved.",
+    "P0c/G7 real versioned-native upgrade, consistent recovery capture/activation and iOS frozen-store proof; accepted baseline/dirty-transaction rollback does not establish these.",
+    "FMDB/old host/controllers/storyboards and dependencies still retained. No removal authorized by these scoped passes alone.",
+    "Physical IME, voice/model/permission/latency, audio routes, notifications/background expiration, paired watch, signed Keychain/cloud upgrade; full-account statistics calibration and KanKen subsets.",
+    "Earlier invalid-frame warnings, app-owned Swift6 completion and Release warnings; hosted CI/publication not verified. iPhone Duo remains deferred."
+  ],
+  "publication": {
+    "pull_requests": false,
+    "pushed": false,
+    "released": false
+  }
+}
