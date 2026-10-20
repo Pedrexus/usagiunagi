@@ -19,6 +19,10 @@
 		3D096CD2C178F453FEF79064 /* MacReviewModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */; platformFilter = macos; };
 		A28500000000000000000005 /* LegacyPreferenceImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000001 /* LegacyPreferenceImporter.swift */; };
 		A28500000000000000000006 /* LegacyPreferenceSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000002 /* LegacyPreferenceSchema.swift */; };
+		A28500000000000000000007 /* LegacyPreferenceImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000001 /* LegacyPreferenceImporter.swift */; platformFilter = macos; };
+		A28500000000000000000008 /* LegacyPreferenceSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000002 /* LegacyPreferenceSchema.swift */; platformFilter = macos; };
+		A28900000000000000000001 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 637CA18625D7F5A10082580E /* SwiftProtobuf */; };
+		A28900000000000000000002 /* WaniKaniAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 63A702142C2920D500AB0504 /* WaniKaniAPI */; };
 		5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
 		5B1A927DDEFE977E32C2EC84 /* LegacyStudyImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */; };
 		5E08C809E1400FA7702A85B4 /* NativeStudyFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42EAD31B1612979F2E9C72DB /* NativeStudyFixture.swift */; };
@@ -68,7 +72,7 @@
 		C92AB970237F2DB600F79904 /* WatchHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB96E237F280300F79904 /* WatchHelper.swift */; };
 		C92AB972237F2E8200F79904 /* WatchCompanionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */; };
 		C943D5B02380D59B004A7969 /* WatchSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C943D5AF2380D59A004A7969 /* WatchSettingsView.swift */; };
-		CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */; };
+		CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */; platformFilter = ios; };
 		DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */; };
 		F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */; };
 		FFDC4714E0B50FC1EF60E822 /* LegacyStudyImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */; platformFilter = ios; };
@@ -264,6 +268,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A28900000000000000000001 /* SwiftProtobuf in Frameworks */,
+				A28900000000000000000002 /* WaniKaniAPI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -510,6 +516,10 @@
 				63E9A8E821199C8500418CE1 /* PBXTargetDependency */,
 			);
 			name = Tests;
+			packageProductDependencies = (
+				637CA18625D7F5A10082580E /* SwiftProtobuf */,
+				63A702142C2920D500AB0504 /* WaniKaniAPI */,
+			);
 			productName = Tests;
 			productReference = 63E9A8E221199C8500418CE1 /* Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -778,6 +788,8 @@
 				A28700000000000000000003 /* WatchCompanionCache.swift in Sources */,
 				A28800000000000000000001 /* FrozenNativeStoreTests.swift in Sources */,
 				A28800000000000000000003 /* NativeStoreBaseline.swift in Sources */,
+				A28500000000000000000007 /* LegacyPreferenceImporter.swift in Sources */,
+				A28500000000000000000008 /* LegacyPreferenceSchema.swift in Sources */,
 				A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */,
 				F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */,
 				A7AC4D2FC92ED19AAC0BA475 /* LessonPreferenceTests.swift in Sources */,
@@ -1220,6 +1232,7 @@
 				DEVELOPMENT_TEAM = 7B2GP77Y4A;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = Tests/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1228,11 +1241,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.Tests;
 				PRODUCT_MODULE_NAME = Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tsurukame-Swift.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/Tsurukame";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tsurukame";
 			};
 			name = Debug;
 		};
@@ -1248,6 +1263,7 @@
 				DEVELOPMENT_TEAM = 7B2GP77Y4A;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = Tests/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1256,10 +1272,12 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.Tests;
 				PRODUCT_MODULE_NAME = Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tsurukame-Swift.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/Tsurukame";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tsurukame";
 			};
 			name = Release;
 		};
@@ -1273,6 +1291,7 @@
 				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1280,9 +1299,11 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.pedrexus.usagiunagi.AppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/Tsurukame";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tsurukame";
 			};
 			name = Debug;
 		};
@@ -1295,6 +1316,7 @@
 				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1302,9 +1324,11 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.pedrexus.usagiunagi.AppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/Tsurukame";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tsurukame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tsurukame";
 			};
 			name = Release;
 		};

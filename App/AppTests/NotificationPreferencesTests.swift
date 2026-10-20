@@ -52,32 +52,34 @@ struct NotificationPreferencesTests {
       #expect(originals.allSatisfy { $0 != nil })
     }
   }
-  @Test func logoutQueuesAnEmptyWatchPacketWithoutActivatingARealSession() throws {
-    let helper = WatchHelper(session: nil)
-    helper.companion.update(.init())
-    let packet = try #require(helper.pendingPacket)
-    #expect(packet["reviewCount"] as? Int == 0 && packet["reviewHrCount"] as? Int == 0)
-    #expect(packet["reviewHourly"] as? [Int] == [] && packet["nextReview"] as? Int64 == 0)
-    #expect(packet["levelTotal"] as? Int == 0 && packet["levelLearn"] as? Int == 0)
-    #expect(helper.companion.lastSentAt == nil)
-  }
-  @Test func companionWirePacketRetainsEveryExistingKeyAndValueType() {
-    let now = Date(timeIntervalSince1970: 10_000)
-    let source = StudyServiceSnapshot(
-      reviewDates: [now, now.addingTimeInterval(3600)], onVacation: false,
-      currentLevel: .init(
-        number: 4, progress: [.init(kind: .kanji, stages: [(5, true), (1, true), (nil, false)])]))
-    let packet = WatchHelper.packet(StudyCompanionSnapshot(source, now: now))
-    #expect(
-      Set(packet.keys) == [
-        "reviewCount", "reviewHrCount", "reviewHourly", "level", "levelTotal", "levelLearn",
-        "levelHalf", "nextReview",
-      ])
-    #expect(packet["reviewCount"] as? Int == 1 && packet["reviewHrCount"] as? Int == 1)
-    #expect((packet["reviewHourly"] as? [Int])?.count == 24)
-    #expect(
-      packet["level"] as? Int == 4 && packet["levelTotal"] as? Int == 3
-        && packet["levelLearn"] as? Int == 1)
-    #expect(packet["levelHalf"] as? Bool == false && packet["nextReview"] as? Int64 == 13_600)
-  }
+  #if os(iOS)
+    @Test func logoutQueuesAnEmptyWatchPacketWithoutActivatingARealSession() throws {
+      let helper = WatchHelper(session: nil)
+      helper.companion.update(.init())
+      let packet = try #require(helper.pendingPacket)
+      #expect(packet["reviewCount"] as? Int == 0 && packet["reviewHrCount"] as? Int == 0)
+      #expect(packet["reviewHourly"] as? [Int] == [] && packet["nextReview"] as? Int64 == 0)
+      #expect(packet["levelTotal"] as? Int == 0 && packet["levelLearn"] as? Int == 0)
+      #expect(helper.companion.lastSentAt == nil)
+    }
+    @Test func companionWirePacketRetainsEveryExistingKeyAndValueType() {
+      let now = Date(timeIntervalSince1970: 10_000)
+      let source = StudyServiceSnapshot(
+        reviewDates: [now, now.addingTimeInterval(3600)], onVacation: false,
+        currentLevel: .init(
+          number: 4, progress: [.init(kind: .kanji, stages: [(5, true), (1, true), (nil, false)])]))
+      let packet = WatchHelper.packet(StudyCompanionSnapshot(source, now: now))
+      #expect(
+        Set(packet.keys) == [
+          "reviewCount", "reviewHrCount", "reviewHourly", "level", "levelTotal", "levelLearn",
+          "levelHalf", "nextReview",
+        ])
+      #expect(packet["reviewCount"] as? Int == 1 && packet["reviewHrCount"] as? Int == 1)
+      #expect((packet["reviewHourly"] as? [Int])?.count == 24)
+      #expect(
+        packet["level"] as? Int == 4 && packet["levelTotal"] as? Int == 3
+          && packet["levelLearn"] as? Int == 1)
+      #expect(packet["levelHalf"] as? Bool == false && packet["nextReview"] as? Int64 == 13_600)
+    }
+  #endif
 }

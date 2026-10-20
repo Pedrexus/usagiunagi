@@ -185,11 +185,7 @@ jobs:
           --derived-data .build/Xcode/watchOS --setting CODE_SIGNING_ALLOWED=NO --timeout 900
       - name: Hosted iOS tests
         if: matrix.device == 'iPhone 18 Pro'
-        run: >-
-          env -u PROTOC_PATH uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --setting=-skipPackagePluginValidation --scheme Tsurukame --action test
-          --destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE,OS=27.0"
-          --derived-data .build/Xcode/iOS --only-testing Tests --only-testing AppTests
-          --setting CODE_SIGNING_ALLOWED=NO --timeout 900
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked test-app-ios
       - name: Frozen store reopened after graceful and abrupt exits
         if: matrix.device == 'iPhone 18 Pro'
         run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-restart
@@ -239,7 +235,7 @@ jobs:
   mac:
     name: Native Mac acceptance
     runs-on: xcode-27
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -254,11 +250,13 @@ jobs:
       - name: Restore Mainboard's locked environment
         run: uv sync --project .build/Mainboard --locked --no-dev --python 3.14
       - name: Restore committed app dependencies
-        run: uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action resolve --derived-data .build/Xcode/macOS --timeout 600
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action resolve --derived-data .build/Xcode/UnifiedMac --timeout 600
+      - name: Hosted native Mac unit tests
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked test-app-mac
       - name: Native Mac app and UI tests
         run: >-
           env -u PROTOC_PATH uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --setting=-skipPackagePluginValidation --scheme UsagiUnagi --action test
-          --destination platform=macOS --derived-data .build/Xcode/macOS
+          --destination platform=macOS --derived-data .build/Xcode/UnifiedMac
           --setting CODE_SIGN_IDENTITY=- --timeout 900
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
