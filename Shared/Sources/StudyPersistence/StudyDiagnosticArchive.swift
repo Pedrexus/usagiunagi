@@ -97,14 +97,16 @@ extension StudyStore {
     let savedSession = try session(accountID: accountID).map {
       StudyDiagnosticDocument.Session(revision: $0.revision, value: $0.session)
     }
-    let materials = try materialRecords(accountID: accountID).sorted { $0.subjectID < $1.subjectID }
-      .map { row in
-        StudyDiagnosticDocument.Material(
-          value: row.material, revision: row.revision, pending: row.pending, serverID: row.serverID,
-          issue: row.issue, attemptedRevision: row.attemptedRevision,
-          attemptedMaterial: row.attemptedMaterial,
-          recoveryBaseline: row.recoveryBaseline.map { .init(remote: $0.remote) })
-      }
+    let materials = try MaterialRecord.fetch(in: modelContext, accountID: accountID).sorted {
+      $0.subjectID < $1.subjectID
+    }
+    .map { row in
+      StudyDiagnosticDocument.Material(
+        value: row.material, revision: row.revision, pending: row.pending, serverID: row.serverID,
+        issue: row.issue, attemptedRevision: row.attemptedRevision,
+        attemptedMaterial: row.attemptedMaterial,
+        recoveryBaseline: row.recoveryBaseline.map { .init(remote: $0.remote) })
+    }
     // A bound handoff carries verified ownership. Never infer it from a string prefix or include
     // raw receipt names, credential fingerprints, preference payloads or unbound/global counts.
     let imports = try modelContext.fetch(FetchDescriptor<ImportReceipt>()).compactMap {

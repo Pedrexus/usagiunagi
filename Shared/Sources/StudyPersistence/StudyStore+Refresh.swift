@@ -51,17 +51,14 @@ extension StudyStore {
           ($0.subjectID, $0.revision)
         }),
       materials: Dictionary(
-        uniqueKeysWithValues: materialRecords(accountID: accountID).map {
+        uniqueKeysWithValues: MaterialRecord.fetch(in: modelContext, accountID: accountID).map {
           ($0.subjectID, $0.revision)
         }), catalogRefreshID: accountState(accountID: accountID)?.catalogRefreshID)
   }
 
   /// Used inside the same transaction as the study attempt/result.
   func requireCatalogRead(accountID: String) throws {
-    let row = try modelContext.fetch(
-      FetchDescriptor<AccountRecord>(
-        predicate: #Predicate { $0.accountID == accountID })
-    ).first
+    let row = try AccountRecord.fetch(in: modelContext, accountID: accountID)
     row?.state.catalogRefreshID = UUID()
   }
   private func performRefresh(
@@ -187,9 +184,7 @@ extension StudyStore {
         serverIDs: Dictionary(
           uniqueKeysWithValues: download.materials.map { ($0.value.subjectID, $0.id) }))
       let mergedAssignments = try assignmentRecords(accountID: accountID).map(\.assignment)
-      let stateRow = try modelContext.fetch(
-        FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
-      ).first
+      let stateRow = try AccountRecord.fetch(in: modelContext, accountID: accountID)
       let previousProgress = Dictionary(
         uniqueKeysWithValues: (stateRow?.state.progress ?? []).map { ($0.subjectID, $0) })
       var progress = mergedAssignments.map { assignment in

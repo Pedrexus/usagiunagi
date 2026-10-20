@@ -274,9 +274,7 @@ public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requires
       modelContext.insert(
         ReviewRecord(accountID: accountID, submission: submission, originalItem: item))
       if submission.meaningWrong || submission.readingWrong,
-        let row = try modelContext.fetch(
-          FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
-        ).first,
+        let row = try AccountRecord.fetch(in: modelContext, accountID: accountID),
         let subject = try catalog(accountID: accountID).first(where: { $0.id == subjectID })
       {
         var state = row.state

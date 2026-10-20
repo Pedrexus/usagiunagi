@@ -142,6 +142,8 @@ Adapt layout to window size, content, accessibility and native presentation. Use
 
 Use one model-container/actor owner for a store. ModelContext and live model objects do not escape that executor. UI, intents and future model tools receive immutable Sendable values or stable identifiers. Network requests and account verification run outside save transactions. Recheck account identity, generation and expected revision after suspension before committing.
 
+The owner's query-placement direction is concrete model methods with minimal abstraction. Reusable fetches now belong to internal synchronous extensions on the existing `CatalogRecord`, `AssignmentRecord`, `AccountRecord` and `MaterialRecord`, receiving the actor-owned context explicitly. Keep predicates, sorting and empty-ID handling with those model methods; keep transactions, account/revision policy and asynchronous work on `StudyStore`. Public value-returning store entry points remain the executor boundary. Avoid generic repository/query layers when these existing types express the responsibility directly. Pure method extensions leave frozen V1 declaration bodies unchanged.
+
 A graded answer and the corresponding session advance/outbox record must commit together. A crash may leave the prior question or a fully committed new state; it must not lose an answer or duplicate an upload. Mark an attempt durably before sending. A timeout or uncertain server result stays pending for explicit reconciliation; it is never automatically replayed just because the process restarted. A successful WaniKani response and local acknowledgement remove work only for the matching revision. Material conflicts retain the local note and original revision until the person chooses a resolution.
 
 Logout, token replacement, account switching and vacation must cancel or invalidate the relevant work, preserve unresolved data for the correct account and prevent an old task publishing into the new account. Multiple windows share the same store owner and cannot create competing writers.
@@ -202,6 +204,21 @@ Mainboard `ce366957`, Xcode 27/Swift 6.4: both canonical Debug app builds pass, 
 | `.build/Reports/PersistenceQueryComparison.json` | `60b4733dbc6eba64966e24c2f57a44f36c4f6a73963ec4ed5b25c1c7f6daf922` |
 
 The unchanged V1 declaration file remains SHA-256 `538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`. Tests, benchmarks, store opening and app/UI execution remain deferred. Final regressions must cover component-reading feedback with the component outside the session (including meaning/reading policy paths), complete/previous/radical media and lesson resume, large session membership queries, account isolation, pending context changes, stale assignment rejection, late/repeated acknowledgements, newer note edits, all three baseline states and unchanged old-store bytes/values. G7, independent historical decoders and measured V2 justification remain open; neither this source audit nor the schema-free query changes complete P5.
+
+### Model-owned query placement
+
+After `814c09db`, shared fetches move onto the four existing concrete SwiftData models, in their current feature files. Eleven production files use these synchronous methods with the same actor-owned context; redundant internal forwarding helpers are removed. Public store reads still return Sendable domain values. Account/subject predicates, sorting, empty-ID handling and all transaction/revision guards are preserved. The refresh batch's existing unsorted assignment query remains separate because using the sorted model query could reorder persisted arrays. No new files, types, contexts, schema declarations or payload formats are introduced. V1's SHA-256 remains the value recorded above.
+
+Both canonical Debug builds succeed with zero native-summary errors/warnings; the separate no-AppIntents log message and earlier fresh-build watch-host warning retain their previous scope. All eleven files pass formatting/strict SwiftLint without rewrites. Mainboard parses 266/266 files without gaps/context issues. Production is now 21,173 physical Swift lines (+33); test/tooling counts are unchanged. This simplifies ownership, without claiming LOC savings or measured performance.
+
+| Frozen evidence | SHA-256 |
+| --- | --- |
+| `.build/Results/build-c624f775f587426281c035c9072fad11.build.json` (Mac) | `6825fc3bc3e07aa5b33517fd3711c446ef1836066d14e2dc9bc9c7a47c47387d` |
+| `.build/Results/build-147e5aa648a54c30a7943e9d8256e209.build.json` (iOS Simulator) | `175b1674ca90a46c888b16e9e2cf0eae95ec3e9be64533edec78f5db2a0d7608` |
+| `.build/Reports/ModelQueryInventory.json` | `4fe1d7ca24c5f5fd1d86e9b4eb0a7bd7a73e563e2d81122ba03e3cb65a42d1dc` |
+| `.build/Reports/ModelQueryComparison.json` | `b475b433aa6629eb89c4e703c0a7e1d9156510eb64d492cdbf479446b24d1671` |
+
+Tests and app/store execution remain deferred. At the final test stage, port the three old `materialRecords` references in `NativeStoreBaseline.swift` and `StudyDiagnosticArchiveTests.swift` to `MaterialRecord.fetch(in:accountID:)`, preserving assertions and frozen fixtures. All previously listed regression and migration gates remain open.
 
 ### Frozen schemas and persisted payloads
 

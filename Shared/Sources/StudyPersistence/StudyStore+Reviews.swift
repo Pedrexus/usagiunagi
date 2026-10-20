@@ -459,14 +459,20 @@ extension StudyStore {
       throw StudyStoreError.invalidSession
     }
     let ids = Array(Set(saved.session.items.values.map(\.subjectID)))
-    let selected = try catalog(accountID: accountID, subjectIDs: ids)
+    let selected = try CatalogRecord.fetch(
+      in: modelContext, accountID: accountID, subjectIDs: ids
+    ).map(\.subject)
     // Single-kanji vocabulary grading also checks the component's on'yomi, outside the session.
     let components = Set(
       selected.filter {
         $0.kind == .vocabulary && $0.japanese.count == 1 && $0.componentSubjectIDs.count == 1
       }.flatMap(\.componentSubjectIDs)
     ).subtracting(ids)
-    let subjects = try selected + catalog(accountID: accountID, subjectIDs: Array(components))
+    let subjects =
+      try selected
+      + CatalogRecord.fetch(
+        in: modelContext, accountID: accountID, subjectIDs: Array(components)
+      ).map(\.subject)
     return .init(
       saved: saved, subjects: Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) }),
       success: success)
@@ -486,7 +492,8 @@ extension StudyStore {
       let subject = state.subject,
       let profile = try accountState(accountID: accountID)?.profile
     else { throw StudyStoreError.invalidSession }
-    let current = try assignmentRecord(accountID: accountID, subjectID: item.subjectID)?.assignment
+    let current = try AssignmentRecord.fetch(
+      in: modelContext, accountID: accountID, subjectID: item.subjectID)?.assignment
     if state.isPractice {
       guard
         let current,

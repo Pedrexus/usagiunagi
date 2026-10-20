@@ -70,7 +70,8 @@ extension StudyStore {
     try checkRecoveryRequest(request, credentialID: credentialID, generation: generation)
     let assignmentRevision: UUID?
     if case .review(let saved) = request {
-      assignmentRevision = try recoveryAssignment(saved)?.revision
+      assignmentRevision = try AssignmentRecord.fetch(
+        in: modelContext, accountID: saved.accountID, subjectID: saved.subjectID)?.revision
     } else {
       assignmentRevision = nil
     }
@@ -92,7 +93,11 @@ extension StudyStore {
         case .review(let saved):
           let remote = try await client.assignment(subjectID: saved.subjectID, token: token)
           try checkRecoveryRequest(request, credentialID: credentialID, generation: generation)
-          guard try recoveryAssignment(saved)?.revision == assignmentRevision else {
+          guard
+            try AssignmentRecord.fetch(
+              in: modelContext, accountID: saved.accountID, subjectID: saved.subjectID)?.revision
+              == assignmentRevision
+          else {
             throw StudyRecoveryError.changed
           }
           return StudyRecoveryComparison.review(
@@ -165,7 +170,8 @@ extension StudyStore {
 
   private func materialForRecovery(_ saved: SavedStudyMaterial) throws -> MaterialRecord {
     guard
-      let row = try materialRecord(accountID: saved.accountID, subjectID: saved.material.subjectID),
+      let row = try MaterialRecord.fetch(
+        in: modelContext, accountID: saved.accountID, subjectID: saved.material.subjectID),
       row.revision == saved.revision, row.pending,
       row.material == saved.material, row.serverID == saved.serverID,
       row.attemptedRevision == saved.attemptedRevision,
@@ -208,8 +214,8 @@ extension StudyStore {
     try requireRecoveryIdle(accountID: saved.accountID)
     try transaction {
       guard
-        let row = try materialRecord(
-          accountID: saved.accountID, subjectID: saved.material.subjectID),
+        let row = try MaterialRecord.fetch(
+          in: modelContext, accountID: saved.accountID, subjectID: saved.material.subjectID),
         row.revision == saved.revision, row.pending
       else { throw StudyRecoveryError.changed }
       guard row.attemptedRevision == nil, row.issue?.reason == .rejected else {

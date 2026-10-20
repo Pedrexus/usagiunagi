@@ -44,13 +44,10 @@ extension StudyStore {
     else { throw StudyRecoveryError.changed }
     let accountID = comparison.saved.accountID
     let subjectID = comparison.saved.subjectID
-    let subject = try modelContext.fetch(
-      FetchDescriptor<CatalogRecord>(
-        predicate: #Predicate {
-          $0.accountID == accountID && $0.subjectID == subjectID
-        })
-    ).first?.subject.summary
-    let cachedAssignment = try recoveryAssignment(comparison.saved)?.assignment
+    let subject = try CatalogRecord.fetch(
+      in: modelContext, accountID: accountID, subjectID: subjectID)?.subject.summary
+    let cachedAssignment = try AssignmentRecord.fetch(
+      in: modelContext, accountID: accountID, subjectID: subjectID)?.assignment
     let cachedProgress = try accountState(accountID: accountID)?.progress.first {
       $0.subjectID == subjectID
     }
@@ -60,7 +57,8 @@ extension StudyStore {
       observedAssignment: comparison.remote, checkedAt: comparison.checkedAt, archivedAt: Date())
     try transaction {
       let row = try reviewForRecovery(comparison.saved)
-      let assignment = try recoveryAssignment(comparison.saved)
+      let assignment = try AssignmentRecord.fetch(
+        in: modelContext, accountID: accountID, subjectID: subjectID)
       guard assignment?.revision == comparison.assignmentRevision else {
         throw StudyRecoveryError.changed
       }
@@ -89,7 +87,4 @@ extension StudyStore {
     return row
   }
 
-  func recoveryAssignment(_ saved: SavedReview) throws -> AssignmentRecord? {
-    try assignmentRecord(accountID: saved.accountID, subjectID: saved.subjectID)
-  }
 }

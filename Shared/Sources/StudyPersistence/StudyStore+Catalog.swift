@@ -2,46 +2,79 @@ import Foundation
 import StudyCore
 import SwiftData
 
-extension StudyStore {
-  public func catalog(accountID: String) throws -> [CatalogSubject] {
-    try modelContext.fetch(
+extension CatalogRecord {
+  static func fetch(in context: ModelContext, accountID: String, subjectID: Int64) throws
+    -> CatalogRecord?
+  {
+    try context.fetch(
       FetchDescriptor<CatalogRecord>(
-        predicate: #Predicate { $0.accountID == accountID },
-        sortBy: [SortDescriptor(\.subjectID)])
-    ).map(\.subject)
-  }
-
-  func catalog(accountID: String, subjectIDs: [Int64]) throws -> [CatalogSubject] {
-    guard !subjectIDs.isEmpty else { return [] }
-    return try modelContext.fetch(
-      FetchDescriptor<CatalogRecord>(
-        predicate: #Predicate {
-          $0.accountID == accountID && subjectIDs.contains($0.subjectID)
-        })
-    ).map(\.subject)
-  }
-
-  public func assignments(accountID: String) throws -> [CatalogAssignment] {
-    try modelContext.fetch(
-      FetchDescriptor<AssignmentRecord>(
-        predicate: #Predicate { $0.accountID == accountID },
-        sortBy: [SortDescriptor(\.subjectID)])
-    ).map(\.assignment)
-  }
-
-  func assignmentRecord(accountID: String, subjectID: Int64) throws -> AssignmentRecord? {
-    try modelContext.fetch(
-      FetchDescriptor<AssignmentRecord>(
         predicate: #Predicate {
           $0.accountID == accountID && $0.subjectID == subjectID
         })
     ).first
   }
 
-  public func accountState(accountID: String) throws -> StudyAccountState? {
-    try modelContext.fetch(
+  static func fetch(in context: ModelContext, accountID: String) throws -> [CatalogRecord] {
+    try context.fetch(
+      FetchDescriptor<CatalogRecord>(
+        predicate: #Predicate { $0.accountID == accountID },
+        sortBy: [SortDescriptor(\.subjectID)])
+    )
+  }
+
+  static func fetch(in context: ModelContext, accountID: String, subjectIDs: [Int64]) throws
+    -> [CatalogRecord]
+  {
+    guard !subjectIDs.isEmpty else { return [] }
+    return try context.fetch(
+      FetchDescriptor<CatalogRecord>(
+        predicate: #Predicate {
+          $0.accountID == accountID && subjectIDs.contains($0.subjectID)
+        })
+    )
+  }
+}
+
+extension AssignmentRecord {
+  static func fetch(in context: ModelContext, accountID: String) throws -> [AssignmentRecord] {
+    try context.fetch(
+      FetchDescriptor<AssignmentRecord>(
+        predicate: #Predicate { $0.accountID == accountID },
+        sortBy: [SortDescriptor(\.subjectID)])
+    )
+  }
+
+  static func fetch(in context: ModelContext, accountID: String, subjectID: Int64) throws
+    -> AssignmentRecord?
+  {
+    try context.fetch(
+      FetchDescriptor<AssignmentRecord>(
+        predicate: #Predicate {
+          $0.accountID == accountID && $0.subjectID == subjectID
+        })
+    ).first
+  }
+}
+
+extension AccountRecord {
+  static func fetch(in context: ModelContext, accountID: String) throws -> AccountRecord? {
+    try context.fetch(
       FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
-    ).first?.state
+    ).first
+  }
+}
+
+extension StudyStore {
+  public func catalog(accountID: String) throws -> [CatalogSubject] {
+    try CatalogRecord.fetch(in: modelContext, accountID: accountID).map(\.subject)
+  }
+
+  public func assignments(accountID: String) throws -> [CatalogAssignment] {
+    try AssignmentRecord.fetch(in: modelContext, accountID: accountID).map(\.assignment)
+  }
+
+  public func accountState(accountID: String) throws -> StudyAccountState? {
+    try AccountRecord.fetch(in: modelContext, accountID: accountID)?.state
   }
 
   /// One actor-bound, read-only projection. Pending answers never masquerade as synced progress.

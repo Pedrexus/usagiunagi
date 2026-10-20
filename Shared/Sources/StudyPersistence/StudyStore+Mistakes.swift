@@ -76,9 +76,7 @@ extension StudyStore {
       throw StudyMistakeError.invalidArchive
     }
     guard
-      let row = try modelContext.fetch(
-        FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
-      ).first
+      let row = try AccountRecord.fetch(in: modelContext, accountID: accountID)
     else { throw StudyStoreError.invalidIdentity }
     let ids = Set(try catalog(accountID: accountID).map(\.id))
     var state = row.state

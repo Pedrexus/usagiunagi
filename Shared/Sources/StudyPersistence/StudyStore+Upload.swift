@@ -78,11 +78,7 @@ extension StudyStore {
   /// Only a fresh, identity-checked account response may replace cached display metadata.
   private func applyVerifiedProfile(_ profile: StudyAccountProfile, accountID: String) throws {
     guard
-      let row = try modelContext.fetch(
-        FetchDescriptor<AccountRecord>(
-          predicate:
-            #Predicate { $0.accountID == accountID })
-      ).first
+      let row = try AccountRecord.fetch(in: modelContext, accountID: accountID)
     else { return }
     let snapshots = try modelContext.fetch(FetchDescriptor<SnapshotRecord>()).filter {
       $0.snapshot.accountID == accountID
@@ -170,13 +166,12 @@ extension StudyStore {
             guard let row = try reviewRecord(review), row.attempted else { return }
             let subjectID = assignment.subjectID
             var assignment = assignment
-            let subject = try modelContext.fetch(
-              FetchDescriptor<CatalogRecord>(
-                predicate:
-                  #Predicate { $0.accountID == accountID && $0.subjectID == subjectID })
-            ).first
+            let subject = try CatalogRecord.fetch(
+              in: modelContext, accountID: accountID, subjectID: subjectID)
             assignment.level = subject?.level ?? review.originalAssignment?.level ?? 0
-            if let current = try assignmentRecord(accountID: accountID, subjectID: subjectID) {
+            if let current = try AssignmentRecord.fetch(
+              in: modelContext, accountID: accountID, subjectID: subjectID)
+            {
               if assignment.level == 0 { assignment.level = current.assignment.level }
               current.assignment = assignment
               current.revision = UUID()
@@ -196,8 +191,8 @@ extension StudyStore {
       for key in try materials(accountID: accountID).filter(\.pending) {
         try checkUpload(generation, accountID: accountID)
         guard
-          let material = try materialRecord(
-            accountID: accountID, subjectID: key.material.subjectID)?.saved,
+          let material = try MaterialRecord.fetch(
+            in: modelContext, accountID: accountID, subjectID: key.material.subjectID)?.saved,
           material.pending
         else { continue }
         if material.issue != nil || material.attemptedRevision != nil {
@@ -208,8 +203,8 @@ extension StudyStore {
         try checkUpload(generation, accountID: accountID)
         // An edit made during lookup wins before a request body is put on the wire.
         guard
-          let current = try materialRecord(
-            accountID: accountID, subjectID: material.material.subjectID),
+          let current = try MaterialRecord.fetch(
+            in: modelContext, accountID: accountID, subjectID: material.material.subjectID),
           current.revision == material.revision, current.pending
         else { continue }
         if let baseline = current.recoveryBaseline, baseline.remote != remote {
@@ -232,8 +227,8 @@ extension StudyStore {
         } catch {
           try checkUpload(generation, accountID: accountID)
           try transaction {
-            if let row = try materialRecord(
-              accountID: accountID, subjectID: material.material.subjectID),
+            if let row = try MaterialRecord.fetch(
+              in: modelContext, accountID: accountID, subjectID: material.material.subjectID),
               row.attemptedRevision == material.revision
             {
               let failure = issue(for: error, remote: nil)
@@ -260,8 +255,8 @@ extension StudyStore {
         }
         try checkUpload(generation, accountID: accountID)
         try transaction {
-          if let row = try materialRecord(
-            accountID: accountID, subjectID: material.material.subjectID),
+          if let row = try MaterialRecord.fetch(
+            in: modelContext, accountID: accountID, subjectID: material.material.subjectID),
             row.attemptedRevision == material.revision
           {
             row.attemptedRevision = nil

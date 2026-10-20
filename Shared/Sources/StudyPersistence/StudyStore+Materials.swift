@@ -18,23 +18,27 @@ public struct SavedStudyMaterial: Sendable {
   public let material: StudyMaterial
 }
 
-extension StudyStore {
-  func materialRecords(accountID: String) throws -> [MaterialRecord] {
-    try modelContext.fetch(
+extension MaterialRecord {
+  static func fetch(in context: ModelContext, accountID: String) throws -> [MaterialRecord] {
+    try context.fetch(
       FetchDescriptor<MaterialRecord>(predicate: #Predicate { $0.accountID == accountID }))
   }
 
-  func materialRecord(accountID: String, subjectID: Int64) throws -> MaterialRecord? {
-    try modelContext.fetch(
+  static func fetch(in context: ModelContext, accountID: String, subjectID: Int64) throws
+    -> MaterialRecord?
+  {
+    try context.fetch(
       FetchDescriptor<MaterialRecord>(
         predicate: #Predicate {
           $0.accountID == accountID && $0.subjectID == subjectID
         })
     ).first
   }
+}
 
+extension StudyStore {
   public func materials(accountID: String) throws -> [SavedStudyMaterial] {
-    try materialRecords(accountID: accountID).map(\.saved).sorted {
+    try MaterialRecord.fetch(in: modelContext, accountID: accountID).map(\.saved).sorted {
       $0.material.subjectID < $1.material.subjectID
     }
   }
@@ -57,7 +61,8 @@ extension StudyStore {
   {
     try requireAccount(accountID)
     guard material.subjectID > 0 else { throw StudyStoreError.invalidMaterial }
-    let existing = try materialRecord(accountID: accountID, subjectID: material.subjectID)
+    let existing = try MaterialRecord.fetch(
+      in: modelContext, accountID: accountID, subjectID: material.subjectID)
     guard existing?.revision == expectedRevision else { throw StudyStoreError.staleMaterial }
     if let existing {
       existing.material = material
@@ -73,8 +78,8 @@ extension StudyStore {
 
   public func acknowledgeMaterial(_ sent: SavedStudyMaterial) throws {
     try transaction {
-      if let row = try materialRecord(
-        accountID: sent.accountID, subjectID: sent.material.subjectID),
+      if let row = try MaterialRecord.fetch(
+        in: modelContext, accountID: sent.accountID, subjectID: sent.material.subjectID),
         row.revision == sent.revision,
         row.attemptedRevision == nil || row.attemptedRevision == sent.revision
       {
@@ -109,7 +114,7 @@ extension StudyStore {
     _ incoming: [StudyMaterial], accountID: String, baseline: [Int64: UUID],
     replacingAll: Bool, serverIDs: [Int64: Int64] = [:]
   ) throws {
-    let rows = try materialRecords(accountID: accountID)
+    let rows = try MaterialRecord.fetch(in: modelContext, accountID: accountID)
     let current = Dictionary(uniqueKeysWithValues: rows.map { ($0.subjectID, $0) })
     let ids = Set(incoming.map(\.subjectID))
     if replacingAll {
