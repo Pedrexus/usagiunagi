@@ -9,8 +9,13 @@ import Testing
 @testable import StudyPersistence
 
 struct StudyStoreOpeningTests {
-  @Test(.timeLimit(.minutes(1)), arguments: [false, true])
-  func cancellationDuringOpeningPreservesDataAndAllowsRetry(selected: Bool) async throws {
+  enum OpeningCancellation: CaseIterable, Sendable { case preparation, candidate, selected }
+
+  @Test(.timeLimit(.minutes(1)), arguments: OpeningCancellation.allCases)
+  func cancellationDuringOpeningPreservesDataAndAllowsRetry(
+    phase: OpeningCancellation
+  ) async throws {
+    let selected = phase == .selected
     let folder = temporaryFolder()
     let seedFolder = temporaryFolder()
     defer {
@@ -54,7 +59,8 @@ struct StudyStoreOpeningTests {
           let path = added.compactMap({ $0.url?.resolvingSymlinksInPath().path }).first(where: {
             path in
             if let target { return path == target }
-            return path.hasPrefix(prefix + "preparations/") && path.hasSuffix("/study.store")
+            return path.hasPrefix(prefix + (phase == .candidate ? "generations/" : "preparations/"))
+              && path.hasSuffix("/study.store")
           })
         else { return }
         cancellation.withLock {
@@ -88,6 +94,15 @@ struct StudyStoreOpeningTests {
     let retained = folder.appending(path: "generations/\(retainedID)")
     #expect(try family(in: retained) == original)
     let abandoned = try #require(interrupted["candidate"] as? String)
+    let abandonedFolder = folder.appending(path: "generations/\(abandoned)")
+    let abandonedFamily = try family(in: abandonedFolder)
+    if phase == .candidate {
+      #expect(try #require(abandonedFamily["study.store"]).count > 0)
+      #expect(
+        cancellation.withLock { $0.paths }.allSatisfy {
+          $0 == prefix + "generations/\(abandoned)/study.store"
+        })
+    }
     let work = folder.appending(path: "preparations/\(abandoned)/preparation.plist")
     let preparation = selected ? nil : try Data(contentsOf: work)
     let reopened = try await StudyStore.openApplication(in: folder)
@@ -98,6 +113,7 @@ struct StudyStoreOpeningTests {
       #expect(try Data(contentsOf: selectionURL) == previousSelection)
     } else {
       #expect(try selection(in: folder)["candidate"] as? String != abandoned)
+      #expect(try family(in: abandonedFolder) == abandonedFamily)
       #expect(try Data(contentsOf: work) == preparation)
       #expect(
         try folder.appending(path: "generations/\(abandoned)")

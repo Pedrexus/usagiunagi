@@ -280,3 +280,23 @@ The existing `Tsurukame` TestAction passes `--review-fixture`, disables inherite
 The new test source SHA is `4881735f726c1d53183d176a8d33dace088fd47c1936424c15c91d8bd09abe5c`. The full retained log is `.build/Results/iPhonePayloadMatrix.log`, SHA `bdcc38b1c64f09a1d56ad30abfa3b0a3fdb8f2d18a633b312c4e6e98dc83a043`. Production remains 145 files / 21,592 physical lines after the prior toolbar simplification; this gate adds 192 test lines, reaching 109 test files / 24,987 physical lines, with tooling unchanged at five files / 281 lines. V1/opener/frozen-writer/store/manifest hashes remain exactly those recorded above. Mainboard, dependencies, schemes and the protected owner edits are unchanged.
 
 This proves same-process selected-payload refusal and retry on the tested iPhone simulator, not first-adoption/metadata corruption, iOS fresh-process or abrupt WAL reopening, mid-copy cancellation, file protection, disk-full/power loss, physical devices or real-catalog performance. Full shared/hosted-suite counts remain historical; there is no whole-suite, new Release, rendered or signed-service claim. Those wider gates and the active modernization objective remain in TASKS.
+
+## Cancellation after candidate copying, before selection
+
+The existing observed-cancellation test now distinguishes preparation, prepared-candidate storage opening and an already selected store. The added case listens only for a public Core Data store-added event in the unique test image's `generations` directory. It cancels the actual Swift task and requires the observed path to equal the candidate recorded by the still-`preparing` selector. The candidate database must exist and be nonempty. This reaches a later phase than the prior preparation-directory event without introducing a production fault hook, sleep or second owner.
+
+All three cases require `CancellationError`, byte-exact original/seed/retained images and a successful complete two-account retry. The new caller must acquire the released lease. Unselected retries choose a fresh candidate and preserve the old preparation manifest and every abandoned candidate family byte; an existing selection stays byte-exact. The production opener remains unchanged and needed no fix.
+
+The focused Mac run passes first. Both complete shared suites then pass, including the new three-argument cancellation function and the current toolbar/voice source compilation:
+
+| Validation | Result / receipt |
+| --- | --- |
+| Shared Mac | 555 functions / 72 suites; `CandidateCancellationSharedMac.log` SHA `45e09c3edb012e12fd9c095a3ed83e3664059265e1534a64aa28edafa12c3f53` |
+| Shared iPhone | 555 functions / 837 executions, zero failures/skips/compiler or reported runtime warnings; `test-3ea9ebbe958d40b68cd0d94fc7f6273b.xcresult` |
+| Exact iPhone reports | Tests SHA `b558a83fd3b053199099809b7395223caa31e2765426f98be6b9fa66ffbbe49a`; build SHA `01c7f3d3343d2f98d460641362d5a1120712e43afe8c7ab101ad608fdcce2d59` |
+| Mainboard rules/SwiftLint/strict formatting | One file, zero rewrites/failures; `CandidateCancellationLint.log` SHA `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| Per-file inventory | 259 parsed files, zero gaps/context issues; `CandidateCancellationInventory.json` SHA `709bdce5fa403c147bd71a36cb64e542441a318747ba914b3c75fb8197fc001b` |
+
+The test source SHA is `ad30bc4dbbba0d8f2d7ddfd394b5572d49a75bda8a1b0fe32eaf65edb7e71b9a`; shared iPhone log SHA is `53cdbb7eaa30348a7410bb993ddaefc0e2944be2c1bda5675297e17c6c0ca84c`. The deliberate read-only save error in the full logs belongs to `readOnlyDefaultStoreRejectsRefreshAfterDirtyMutationsAndRollsBackAcrossReopen`, whose rollback assertions pass; it is not a new candidate-opening failure. All validation jobs exit zero. This adds sixteen test physical lines, reaching 109 test files / 25,003 lines; production stays 145 files / 21,592 lines and tooling stays five files / 281 lines. Opener SHA remains `8aa5358e3fc021452a1d0bed017b1418012e0fba0946c56964da0af0e8d95b1f`.
+
+The event proves cancellation during candidate storage opening, before final validation/selection. It does not prove interruption during copying, the final synchronization/publication window, abrupt process termination or power loss. There is no app GUI, normal-account, new hosted/Release, physical capture, signed-service or dependency change. Protected owner edits remain untouched. Those remaining gates keep the full modernization goal active.
