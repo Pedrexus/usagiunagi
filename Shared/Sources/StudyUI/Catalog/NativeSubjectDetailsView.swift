@@ -43,57 +43,11 @@ public struct NativeSubjectDetailsView: View {
   public var body: some View {
     Group {
       if let details {
-        ScrollView {
-          VStack(alignment: .leading, spacing: 16) {
-            if reviewQuestion == nil {
-              SubjectDetailsHeader(
-                subject: details.subject, fontSize: 72 * min(2.5, max(1, preferences.fontScale)))
-            }
-            SubjectDetailsContent(
-              subject: details.subject, material: details.material, assignment: details.assignment,
-              components: details.components, combinations: details.combinations,
-              similar: subjectSettings.value.visibleSimilar(
-                details.similar, currentLevel: details.currentLevel),
-              preferences: subjectSettings.value,
-              visibleQuestions: visibleQuestions, reviewQuestion: reviewQuestion,
-              edit: { editing = true }, openSubject: { relatedSubject = $0 },
-              playAudio: details.subject.audio.isEmpty
-                ? nil
-                : {
-                  audio.toggle(
-                    subject: details.subject,
-                    interruptBackgroundAudio: preferences.interruptBackgroundAudio)
-                },
-              audioState: audio.state(for: subjectID), audioError: audio.error(for: subjectID)
-            ).padding(.horizontal)
-            if reviewQuestion == nil, details.subject.kind == .vocabulary,
-              lessonSettings.value.allowVocabularyExclusion
-            {
-              SubjectExclusionControl(
-                excluded: Binding(
-                  get: { details.material?.isExcluded == true },
-                  set: { value in Task { await setExcluded(value) } })
-              )
-              .disabled(savingExclusion).padding(.horizontal)
-              if let error {
-                Label(error, systemImage: "exclamationmark.triangle")
-                  .font(.callout).padding(.horizontal).accessibilityIdentifier(
-                    "subject.exclusionError")
-              }
-            }
-            if details.savedMaterial?.pending == true {
-              Text("Changes saved on this device. They sync automatically when online.").font(
-                .caption
-              )
-              .foregroundStyle(.secondary).padding(.horizontal)
-            }
-            if details.unavailableRelatedCount > 0 {
-              Text("Some related subjects are outside your saved catalog or content access.").font(
-                .caption
-              ).foregroundStyle(.secondary).padding(.horizontal)
-            }
-          }.padding(.bottom)
-        }.accessibilityIdentifier("subject.scroll")
+        if reviewQuestion == nil {
+          ScrollView { content(details) }.accessibilityIdentifier("subject.scroll")
+        } else {
+          content(details)
+        }
       } else if let error {
         ContentUnavailableView(
           "Subject unavailable", systemImage: "book.closed", description: Text(error))
@@ -137,5 +91,56 @@ public struct NativeSubjectDetailsView: View {
       NativeSubjectDetailsView(store: store, accountID: accountID, subjectID: id).navigationTitle(
         "Related subject")
     }
+  }
+
+  private func content(_ details: StudySubjectDetails) -> some View {
+    VStack(alignment: .leading, spacing: 16) {
+      if reviewQuestion == nil {
+        SubjectDetailsHeader(
+          subject: details.subject, fontSize: 72 * min(2.5, max(1, preferences.fontScale)))
+      }
+      SubjectDetailsContent(
+        subject: details.subject, material: details.material, assignment: details.assignment,
+        components: details.components, combinations: details.combinations,
+        similar: subjectSettings.value.visibleSimilar(
+          details.similar, currentLevel: details.currentLevel),
+        preferences: subjectSettings.value,
+        visibleQuestions: visibleQuestions, reviewQuestion: reviewQuestion,
+        edit: { editing = true }, openSubject: { relatedSubject = $0 },
+        playAudio: details.subject.audio.isEmpty
+          ? nil
+          : {
+            audio.toggle(
+              subject: details.subject,
+              interruptBackgroundAudio: preferences.interruptBackgroundAudio)
+          },
+        audioState: audio.state(for: subjectID), audioError: audio.error(for: subjectID)
+      ).padding(.horizontal)
+      if reviewQuestion == nil, details.subject.kind == .vocabulary,
+        lessonSettings.value.allowVocabularyExclusion
+      {
+        SubjectExclusionControl(
+          excluded: Binding(
+            get: { details.material?.isExcluded == true },
+            set: { value in Task { await setExcluded(value) } })
+        )
+        .disabled(savingExclusion).padding(.horizontal)
+        if let error {
+          Label(error, systemImage: "exclamationmark.triangle")
+            .font(.callout).padding(.horizontal).accessibilityIdentifier(
+              "subject.exclusionError")
+        }
+      }
+      if details.savedMaterial?.pending == true {
+        Text("Changes saved on this device. They sync automatically when online.").font(.caption)
+          .foregroundStyle(.secondary).padding(.horizontal)
+      }
+      if details.unavailableRelatedCount > 0 {
+        Text("Some related subjects are outside your saved catalog or content access.").font(
+          .caption
+        )
+        .foregroundStyle(.secondary).padding(.horizontal)
+      }
+    }.padding(.bottom)
   }
 }

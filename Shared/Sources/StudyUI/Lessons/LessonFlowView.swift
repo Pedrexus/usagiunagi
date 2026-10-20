@@ -3,9 +3,7 @@ import SwiftUI
 
 /// Direct subject/quiz navigation keeps the original study flow without a page-controller layout.
 public struct LessonFlowView<Page: View>: View {
-  private let subjects: [StudySubject]
-  private let japaneseFont: String?
-  private let image: (Int64) -> Image?
+  private let subjects: [CatalogSubject]
   private let page: (Int) -> Page
   private let back: () -> Void
   private let backTitle: String
@@ -14,15 +12,13 @@ public struct LessonFlowView<Page: View>: View {
   @FocusState private var keyboardFocus: Bool
 
   public init(
-    subjects: [StudySubject], initialPage: Int = 0, japaneseFont: String? = nil,
-    image: @escaping (Int64) -> Image? = { _ in nil }, backTitle: String = "Back",
+    subjects: [CatalogSubject], initialPage: Int = 0,
+    backTitle: String = "Back",
     back: @escaping () -> Void,
     playAudio: @escaping (Int) -> Void, @ViewBuilder page: @escaping (Int) -> Page
   ) {
     self.subjects = subjects
     self._index = State(initialValue: min(subjects.count, max(0, initialPage)))
-    self.japaneseFont = japaneseFont
-    self.image = image
     self.back = back
     self.backTitle = backTitle
     self.playAudio = playAudio
@@ -61,14 +57,18 @@ public struct LessonFlowView<Page: View>: View {
                     index = position
                   } label: {
                     Group {
-                      if let image = image(subjects[position].id) {
-                        image.resizable().scaledToFit().frame(width: 24, height: 24)
+                      if subjects[position].japanese.isEmpty,
+                        !subjects[position].characterImageURL.isEmpty,
+                        let url = URL(string: subjects[position].characterImageURL)
+                      {
+                        RadicalImageView(url: url).environment(\.colorScheme, .dark)
+                          .frame(width: 24, height: 24)
                       } else {
                         Text(
-                          subjects[position].characters.isEmpty
-                            ? subjects[position].meaning : subjects[position].characters
+                          subjects[position].japanese.isEmpty
+                            ? subjects[position].summary.meaning : subjects[position].japanese
                         )
-                        .font(japaneseFont.map { .custom($0, size: 20) } ?? .title3)
+                        .font(.title3)
                       }
                     }.padding(.horizontal, 12).frame(minWidth: 44, minHeight: 36).foregroundStyle(
                       .white
@@ -78,7 +78,7 @@ public struct LessonFlowView<Page: View>: View {
                       in: RoundedRectangle(cornerRadius: 10))
                   }.buttonStyle(.plain).id(position)
                     .accessibilityLabel(
-                      [subjects[position].characters, subjects[position].meaning].filter {
+                      [subjects[position].japanese, subjects[position].summary.meaning].filter {
                         !$0.isEmpty
                       }.joined(separator: ", ")
                     )
@@ -109,7 +109,7 @@ public struct LessonFlowView<Page: View>: View {
       .onAppear { keyboardFocus = index < subjects.count }
       .onChange(of: index) { _, page in keyboardFocus = page < subjects.count }
       .onKeyPress(keys: [.leftArrow, .rightArrow, .return, .space, "a", "d", "q", "j"]) { press in
-        guard index < subjects.count else { return .ignored }
+        guard index < subjects.count, press.modifiers.isEmpty else { return .ignored }
         switch press.key {
         case .leftArrow, "a": index = max(0, index - 1)
         case .rightArrow, .return, "d": index += 1

@@ -12,7 +12,7 @@ public struct NativeLessonView: View {
   private let automaticBatchSize: Int?
   private let finished: () -> Void
   @State private var initialBatchOpened = false
-  @State private var items: [StudySubject] = []
+  @State private var items: [CatalogSubject] = []
   @State private var selectedIDs: Set<Int64> = []
   @State private var selection: Selection?
   @State private var pausedReview = false
@@ -37,7 +37,7 @@ public struct NativeLessonView: View {
     Group {
       if let selection {
         LessonFlowView(
-          subjects: selection.subjects.map(\.summary),
+          subjects: selection.subjects,
           initialPage: selection.resumeQuiz ? selection.subjects.count : 0,
           backTitle: automaticBatchSize == nil ? "Choose lessons" : "Back",
           back: {
@@ -73,7 +73,7 @@ public struct NativeLessonView: View {
         VStack {
           Text("Finish or end your paused quiz before choosing different lessons.")
             .font(.callout).foregroundStyle(.secondary).padding()
-          picker(pausedLesson.subjects.map(\.summary), paused: pausedLesson)
+          picker(pausedLesson.subjects, paused: pausedLesson)
         }
       } else if pausedReview {
         ContentUnavailableView(
@@ -99,7 +99,7 @@ public struct NativeLessonView: View {
         if selection == nil { await load() }
       }
   }
-  private func picker(_ items: [StudySubject], paused: Selection? = nil) -> some View {
+  private func picker(_ items: [CatalogSubject], paused: Selection? = nil) -> some View {
     LessonPickerView(items: items, selection: $selectedIDs) { ids in
       if let paused {
         guard Set(ids) == Set(paused.subjects.map(\.id)) else {
@@ -150,7 +150,7 @@ public struct NativeLessonView: View {
         let available = try await store.availableLessons(
           accountID: accountID, lessonPreferences: lessonSettings.value)
         try Task.checkCancellation()
-        items = available.map(\.summary)
+        items = available
         selectedIDs.formIntersection(items.map(\.id))
         loaded = true
         if let automaticBatchSize, !initialBatchOpened, !items.isEmpty {

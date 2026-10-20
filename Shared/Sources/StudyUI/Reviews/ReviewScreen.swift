@@ -128,22 +128,28 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   }
 
   public var body: some View {
-    VStack(spacing: 12) {
-      progress
-      if let audio { AudioPlaybackNotice(library: audio) }
-      GeometryReader { viewport in
-        let horizontal =
-          viewport.size.width >= 560 && viewport.size.height < 360
-          && !typeSize.isAccessibilitySize
-        let layout =
-          horizontal
-          ? AnyLayout(HStackLayout(spacing: 16))
-          : AnyLayout(VStackLayout(spacing: 12))
-        layout {
-          question(horizontal: horizontal)
-          VStack(spacing: 12) { response }.frame(maxWidth: .infinity)
-        }
+    GeometryReader { viewport in
+      ScrollView {
+        VStack(spacing: 12) {
+          progress
+          if let audio { AudioPlaybackNotice(library: audio) }
+          let horizontal =
+            viewport.size.width >= 560 && viewport.size.height < 420
+            && !typeSize.isAccessibilitySize
+          let layout =
+            horizontal
+            ? AnyLayout(HStackLayout(spacing: 16))
+            : AnyLayout(VStackLayout(spacing: 12))
+          layout {
+            question(horizontal: horizontal)
+            VStack(spacing: 12) { response }
+              .frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: true)
+          }
+        }.frame(maxWidth: .infinity, minHeight: viewport.size.height, alignment: .top)
       }
+      .scrollBounceBehavior(.basedOnSize)
+      .scrollDismissesKeyboard(.never)
+      .accessibilityIdentifier("review.scroll")
     }
     .padding()
     .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
@@ -210,10 +216,10 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
 
   private var progress: some View {
     VStack(spacing: 6) {
-      HStack {
+      controlsLayout {
         Text("\(state.completed) completed · \(state.remaining) remaining")
+          .frame(maxWidth: .infinity, alignment: .leading)
           .accessibilityIdentifier("review.progress")
-        Spacer()
         if let accuracy = state.accuracy { Label(accuracy, systemImage: "checkmark") }
       }.font(.caption).foregroundStyle(.secondary)
       ProgressView(
@@ -264,16 +270,14 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     if state.phase == .details {
       if !state.isAnki && !state.answer.isEmpty {
         Text("Your answer: " + state.answer).font(.callout).foregroundStyle(.red)
-          .lineLimit(2).accessibilityIdentifier("review.previousAnswer")
+          .accessibilityIdentifier("review.previousAnswer")
       }
-      details()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      HStack {
+      details().frame(maxWidth: .infinity, alignment: .leading)
+      controlsLayout {
         if state.canShowAll {
           Button("All information", systemImage: "info.circle") { action(.showAll) }
             .keyboardShortcut(.space, modifiers: [])
         }
-        Spacer()
         if state.canPlayAudio {
           Button("Audio", systemImage: "speaker.wave.2") { action(.playAudio) }
             .keyboardShortcut("j", modifiers: [])
@@ -352,7 +356,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             action(.toggleFont)
           }
         }
-        .gesture(
+        .simultaneousGesture(
           DragGesture(minimumDistance: 40).onEnded { value in
             if abs(value.translation.width) > abs(value.translation.height) {
               action(value.translation.width < 0 ? .nextFont : .previousFont)
@@ -382,7 +386,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           }
         }
     }
-    .frame(maxWidth: .infinity, maxHeight: state.phase == .details ? 170 : .infinity)
+    .frame(maxWidth: .infinity, maxHeight: state.phase == .details ? nil : .infinity)
     .clipShape(RoundedRectangle(cornerRadius: 16))
   }
 

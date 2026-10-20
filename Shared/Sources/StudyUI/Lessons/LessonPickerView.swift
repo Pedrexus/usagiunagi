@@ -3,9 +3,7 @@ import SwiftUI
 
 /// The original level/type grid, with native selection and host-owned lesson validation.
 public struct LessonPickerView: View {
-  private let items: [StudySubject]
-  private let japaneseFont: String?
-  private let image: (Int64) -> Image?
+  private let items: [CatalogSubject]
   private let start: @MainActor ([Int64]) async throws -> Void
   @State private var localSelection: Set<Int64> = []
   private let selection: Binding<Set<Int64>>?
@@ -21,20 +19,17 @@ public struct LessonPickerView: View {
   @ScaledMetric(relativeTo: .title2) private var glyphSize = 28
 
   public init(
-    items: [StudySubject], selection: Binding<Set<Int64>>? = nil, japaneseFont: String? = nil,
-    image: @escaping (Int64) -> Image? = { _ in nil },
+    items: [CatalogSubject], selection: Binding<Set<Int64>>? = nil,
     start: @escaping @MainActor ([Int64]) async throws -> Void
   ) {
     self.items = items
     self.selection = selection
-    self.japaneseFont = japaneseFont
-    self.image = image
     self.start = start
   }
   private struct LessonGroup: Identifiable {
     let id: String
     let title: String
-    let items: [StudySubject]
+    let items: [CatalogSubject]
   }
   private var groups: [LessonGroup] {
     Set(items.map(\.level)).sorted().flatMap { level in
@@ -61,9 +56,9 @@ public struct LessonPickerView: View {
           Text(group.title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
             .padding(.top, 8)
           LazyVGrid(
-            columns: Array(
-              repeating: GridItem(.flexible(), spacing: 8),
-              count: typeSize.isAccessibilitySize ? 2 : 4), spacing: 12
+            columns: [
+              GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 140 : 76), spacing: 8)
+            ], spacing: 12
           ) {
             ForEach(group.items) { tile($0) }
           }
@@ -71,10 +66,15 @@ public struct LessonPickerView: View {
       }.padding(16)
     }.disabled(busy)
       .safeAreaInset(edge: .bottom) {
-        HStack {
+        let layout =
+          typeSize.isAccessibilitySize
+          ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+          : AnyLayout(HStackLayout())
+        layout {
           Text("\(selected.count) selected").monospacedDigit().accessibilityIdentifier(
-            "lesson.selectionCount")
-          Spacer()
+            "lesson.selectionCount"
+          )
+          .frame(maxWidth: .infinity, alignment: .leading)
           Button("Start lessons", systemImage: "arrow.right") {
             let ids = groups.flatMap(\.items).map(\.id).filter { selected.contains($0) }
             busy = true
@@ -89,37 +89,42 @@ public struct LessonPickerView: View {
       }
       .onChange(of: items.map(\.id)) { _, ids in selected.formIntersection(ids) }
   }
-  private func tile(_ item: StudySubject) -> some View {
+  private func tile(_ item: CatalogSubject) -> some View {
     Button {
       if selected.contains(item.id) { selected.remove(item.id) } else { selected.insert(item.id) }
     } label: {
       VStack(spacing: 4) {
-        if let image = image(item.id) {
-          image.resizable().scaledToFit().frame(width: glyphSize, height: glyphSize)
+        if item.japanese.isEmpty, !item.characterImageURL.isEmpty,
+          let url = URL(string: item.characterImageURL)
+        {
+          RadicalImageView(url: url).environment(\.colorScheme, .dark)
+            .frame(width: glyphSize, height: glyphSize)
         } else {
-          Text(item.characters.isEmpty ? "—" : item.characters)
-            .font(japaneseFont.map { .custom($0, size: glyphSize, relativeTo: .title2) } ?? .title2)
+          Text(item.japanese.isEmpty ? "—" : item.japanese)
+            .font(.title2)
             .lineLimit(1).minimumScaleFactor(0.5)
         }
-        Text(item.meaning).font(.caption).lineLimit(1)
-      }.padding(6).frame(maxWidth: .infinity).frame(height: typeSize.isAccessibilitySize ? 132 : 84)
-        .foregroundStyle(.white).background(
-          StudyPalette.color(for: item.kind), in: RoundedRectangle(cornerRadius: 16)
-        )
-        .overlay {
-          if selected.contains(item.id) {
-            RoundedRectangle(cornerRadius: 20).strokeBorder(.primary, lineWidth: 2).padding(-4)
-          }
+        Text(item.summary.meaning).font(.caption).lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+      }.padding(6).frame(maxWidth: .infinity).frame(
+        minHeight: typeSize.isAccessibilitySize ? 132 : 84
+      )
+      .foregroundStyle(.white).background(
+        StudyPalette.color(for: item.kind), in: RoundedRectangle(cornerRadius: 16)
+      )
+      .overlay {
+        if selected.contains(item.id) {
+          RoundedRectangle(cornerRadius: 20).strokeBorder(.primary, lineWidth: 2).padding(-4)
         }
-        .overlay(alignment: .topTrailing) {
-          if selected.contains(item.id) {
-            Image(systemName: "checkmark.circle.fill").symbolRenderingMode(.palette)
-              .foregroundStyle(.background, .primary).offset(x: 4, y: -4)
-          }
+      }
+      .overlay(alignment: .topTrailing) {
+        if selected.contains(item.id) {
+          Image(systemName: "checkmark.circle.fill").symbolRenderingMode(.palette)
+            .foregroundStyle(.background, .primary).offset(x: 4, y: -4)
         }
+      }
     }.buttonStyle(.plain)
       .accessibilityLabel(
-        [item.characters, item.meaning].filter { !$0.isEmpty }.joined(separator: ", ")
+        [item.japanese, item.summary.meaning].filter { !$0.isEmpty }.joined(separator: ", ")
       )
       .accessibilityValue(selected.contains(item.id) ? "Selected" : "Not selected")
       .accessibilityAddTraits(selected.contains(item.id) ? .isSelected : [])

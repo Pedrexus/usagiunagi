@@ -466,7 +466,7 @@ public struct NativeReviewView: View {
   }
 
   private func chooseFont(newSubject: Bool) {
-    let available = fonts.fontNames(for: screen.question)
+    let available = isLesson ? [] : fonts.fontNames(for: screen.question)
     if newSubject || !available.contains(customFont) {
       customFont = available.randomElement() ?? ""
     }
@@ -475,6 +475,7 @@ public struct NativeReviewView: View {
   }
   private func applyFont() { screen.questionFont = screen.phase == .details ? "" : customFont }
   private func cycleFont(_ offset: Int) {
+    guard screen.canChangeFont else { return }
     let available = fonts.fontNames(for: screen.question)
     guard !available.isEmpty else { return }
     let index = available.firstIndex(of: customFont) ?? 0
