@@ -100,7 +100,7 @@ public struct StudyRootView: View {
             }
           }
         } practice: {
-          KatakanaPracticeView()
+          KatakanaPracticeMenu { path = [.katakana] }
         } statistics: {
           if let snapshot = model.snapshot {
             StudyDashboard(snapshot: snapshot) { id in
@@ -178,9 +178,6 @@ public struct StudyRootView: View {
       }
       .onChange(of: model.dataRevision) { _, _ in updateHeader() }
       .onChange(of: showSettings) { _, visible in if !visible { updateHeader() } }
-      .task(id: shell.avatar) {
-        if let url = shell.avatar, await avatars.restore(url) { shell.avatarRevision += 1 }
-      }
       .onChange(of: avatarCacheRevision) { _, _ in
         shell.avatarRevision += 1
       }
@@ -264,11 +261,12 @@ public struct StudyRootView: View {
         .presentationSizing(.form)
       }
       .tint(StudyPalette.radical)
+      .environment(\.studyAvatars, avatars)
   }
   private func updateSyncActivity() {
     let studying = path.contains {
       switch $0 {
-      case .reviews, .lessons, .practice: true
+      case .reviews, .lessons, .practice, .katakana: true
       default: false
       }
     }
@@ -294,6 +292,7 @@ public struct StudyRootView: View {
   @ViewBuilder private func destination(_ value: StudyDestination) -> some View {
     switch value {
     case .account: account
+    case .katakana: KatakanaPracticeSessionView()
     case .developerSettings:
       DeveloperSettingsView(
         endpoint: $apiEndpoint,

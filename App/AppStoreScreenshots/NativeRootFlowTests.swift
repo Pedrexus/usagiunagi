@@ -240,13 +240,43 @@
       field.tap()
       field.typeText("a")
       XCTAssertEqual(field.value as? String, "あ")
-      app.buttons["practice.end"].tap()
-      app.sheets.buttons["End practice"].tap()
+      app.buttons["review.close"].tap()
       XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
       tab("Home", in: app)
       XCTAssertTrue(app.buttons["home.reviews"].label.contains("1 ready"))
       requireEmptyOutbox(app)
     }
+    @MainActor func testNativeKatakanaAnkiMistakesStayLocalAndOpenReadingFromSummary() {
+      let app = launch(["--anki-fixture", "--reading-anki-fixture"])
+      defer { app.terminate() }
+      tab("Practice", in: app)
+      app.buttons["practice.katakana"].tap()
+      XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
+      XCTAssertFalse(app.textFields["review.answer"].exists)
+      XCTAssertFalse(app.buttons["review.voice"].exists)
+      app.buttons["review.submit"].tap()
+      XCTAssertTrue(app.buttons["review.incorrect"].waitForExistence(timeout: 5))
+      app.buttons["review.incorrect"].tap()
+      XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 5))
+      XCTAssertEqual(app.staticTexts["review.question"].value as? String, "ア")
+      app.buttons["review.submit"].tap()
+      app.buttons["review.correct"].tap()
+      app.buttons["review.close"].tap()
+      XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
+      let missed = app.buttons["summary.subject.0"]
+      XCTAssertTrue(missed.exists && missed.label.contains("Reading missed"))
+      XCTAssertFalse(missed.label.contains("Meaning missed"))
+      missed.tap()
+      XCTAssertTrue(app.staticTexts["practice.reading"].waitForExistence(timeout: 5))
+      XCTAssertEqual(app.staticTexts["practice.reading"].label, "あ")
+      app.navigationBars.buttons.firstMatch.tap()
+      app.buttons["review.finish"].tap()
+      XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
+      tab("Home", in: app)
+      XCTAssertTrue(app.buttons["home.reviews"].label.contains("1 ready"))
+      requireEmptyOutbox(app)
+    }
+
     @MainActor func testNativeStatisticsCoverageStaysInline() {
       let app = launch(["--statistics-fixture"])
       defer { app.terminate() }

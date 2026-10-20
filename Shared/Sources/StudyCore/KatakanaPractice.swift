@@ -12,6 +12,24 @@ public struct KatakanaPractice: Sendable {
     バ ビ ブ ベ ボ ビャ ビュ ビョ パ ピ プ ペ ポ ピャ ピュ ピョ ン
     """.split(whereSeparator: \.isWhitespace).map(String.init)
   public private(set) var session: StudySession
+  public var options: StudySessionOptions {
+    get { session.options }
+    set { session.options = newValue }
+  }
+  public var isAnki: Bool { options.ankiMode.includes(.reading) }
+  public var summary: StudySessionSummary {
+    StudySessionSummary(
+      entries: session.completedIDs.map { id in
+        let subject = Self.subject(at: id)
+        return StudySessionSummary.Entry(
+          id: id,
+          subject: StudySubject(
+            id: Int64(id), characters: subject.japanese, meaning: "",
+            readings: subject.primaryReadings, kind: .vocabulary, level: 0),
+          level: 0, meaningWrong: false,
+          readingWrong: session.items[id]?.reading.firstAnswerWrong == true)
+      })
+  }
   public var question: StudyQuestion? {
     session.question.flatMap { session.activeIDs.contains($0.itemID) ? $0 : nil }
   }
@@ -24,11 +42,13 @@ public struct KatakanaPractice: Sendable {
       primaryReadings: [text.applyingTransform(.hiraganaToKatakana, reverse: true)!])
   }
 
-  public init(seed: UInt64 = .random(in: .min ... .max)) throws {
+  public init(
+    options: StudySessionOptions = .init(), seed: UInt64 = .random(in: .min ... .max)
+  ) throws {
     session = try StudySession(
       items: Self.characters.indices.map {
         StudySessionItem(id: $0, subjectID: 0, assignmentID: 0, srsStage: 0, hasMeaning: false)
-      }, isPractice: true, seed: seed)
+      }, options: options, isPractice: true, seed: seed)
     session.nextQuestion()
   }
 
@@ -49,6 +69,15 @@ public struct KatakanaPractice: Sendable {
       _ = try session.mark(.incorrect, for: token, now: 0)
     }
     return (grade, normalized, success)
+  }
+
+  /// Revealing an Anki answer is ungraded; its explicit assessment counts exactly once.
+  @discardableResult public mutating func assess(correct: Bool, for token: StudyQuestion) throws
+    -> StudyMarkResult
+  {
+    let mark = try session.mark(correct ? .correct : .incorrect, for: token, now: 0)
+    session.nextQuestion()
+    return mark
   }
 
   @discardableResult public mutating func correct(_ token: StudyQuestion) throws -> StudyMarkResult

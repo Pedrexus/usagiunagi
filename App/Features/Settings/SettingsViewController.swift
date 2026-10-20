@@ -25,6 +25,7 @@ struct ApplicationSettings: View {
   let lessons: StudyLessonSettings
   let subjects: StudySubjectSettings
   let notificationSettings: StudyNotifications
+  let avatars: LegacyAvatarCache?
   let back: () -> Void
   let fonts: StudyFontLibrary?
   let audio: StudyAudioLibrary?
@@ -102,6 +103,7 @@ struct ApplicationSettings: View {
       }
     }
     .tint(StudyPalette.radical)
+    .environment(\.studyAvatars, avatars)
   }
   private func updateAvatar() {
     navigation.account.avatar =
@@ -128,6 +130,7 @@ final class SettingsViewController: UIHostingController<ApplicationSettings?>, T
         ?? StudySubjectSettings(store: LegacySubjectPreferences()),
       notificationSettings: services?.notifications
         ?? StudyNotifications(preferences: LegacyNotificationPreferences()),
+      avatars: services?.legacyAvatars,
       back: { [weak self] in self?.navigationController?.popViewController(animated: true) },
       fonts: services?.fontLibrary, audio: services?.audio,
       developer: services.map { DeveloperSettingsContent(services: $0) },

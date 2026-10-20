@@ -975,6 +975,95 @@
         app.buttons["review.stopAudio"].waitForExistence(timeout: 5), app.debugDescription)
     }
 
+    private func launchKatakana(_ arguments: [String] = []) -> XCUIApplication {
+      let app = launch(["--light-fixture"] + arguments)
+      app.openStudyTab("Practice")
+      let practice = app.buttons["practice.katakana"]
+      XCTAssertTrue(practice.waitForExistence(timeout: 5), app.debugDescription)
+      practice.click()
+      XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 5))
+      return app
+    }
+    private func requirePracticeLeavesAccountUnchanged(in app: XCUIApplication) {
+      app.openStudyTab("Home")
+      let reviews = app.buttons["home.reviews"]
+      XCTAssertTrue(reviews.waitForExistence(timeout: 5))
+      XCTAssertTrue(
+        reviews.isEnabled && reviews.label.contains("1 ready"), reviews.debugDescription)
+      app.buttons["home.savedWork"].click()
+      XCTAssertTrue(
+        app.staticTexts["No saved work waiting"].waitForExistence(timeout: 5), app.debugDescription)
+    }
+    func testKatakanaTypedPracticePreservesDraftSettingsAndCompletedSummary() {
+      let app = launchKatakana()
+      defer { app.terminate() }
+      let input = app.textFields["review.answer"]
+      XCTAssertTrue(input.waitForExistence(timeout: 5))
+      XCTAssertEqual(app.staticTexts["review.question"].value as? String, "ア")
+      XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Reading")
+      input.click()
+      input.typeText("a")
+      XCTAssertEqual(input.value as? String, "a")
+      app.buttons["review.submit"].click()
+      let next = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value == %@", "イ"),
+        object: app.staticTexts["review.question"])
+      XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
+      input.click()
+      input.typeText("i")
+      let draft = input.value as? String
+      XCTAssertEqual(draft, "i")
+      let settings = app.buttons["review.settings"]
+      XCTAssertTrue(settings.waitForExistence(timeout: 5), app.debugDescription)
+      let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      image.name = "Native Mac typed practice in shared navigation"
+      image.lifetime = .keepAlways
+      add(image)
+      settings.click()
+      let done = app.buttons["reviewSettings.done"]
+      XCTAssertTrue(done.waitForExistence(timeout: 5))
+      done.click()
+      XCTAssertTrue(input.waitForExistence(timeout: 5))
+      XCTAssertEqual(input.value as? String, draft)
+      app.buttons["review.close"].click()
+      XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
+      app.buttons["review.finish"].click()
+      XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
+      requirePracticeLeavesAccountUnchanged(in: app)
+    }
+    func testKatakanaReadingAnkiPreservesMistakesAndOpensSummaryReading() {
+      let app = launchKatakana(["--anki-fixture", "--reading-anki-fixture"])
+      defer { app.terminate() }
+      XCTAssertFalse(app.textFields["review.answer"].exists)
+      XCTAssertFalse(app.buttons["review.voice"].exists)
+      showAnswer(in: app)
+      app.buttons["review.incorrect"].click()
+      showAnswer(in: app)
+      XCTAssertEqual(app.staticTexts["review.question"].value as? String, "ア")
+      app.buttons["review.correct"].click()
+      let next = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value == %@", "イ"),
+        object: app.staticTexts["review.question"])
+      XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
+      app.buttons["review.close"].click()
+      XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
+      let missed = app.buttons["summary.subject.0"]
+      XCTAssertTrue(missed.waitForExistence(timeout: 5))
+      XCTAssertTrue(missed.label.contains("Reading missed"))
+      XCTAssertFalse(missed.label.contains("Meaning missed"))
+      missed.click()
+      let reading = app.staticTexts["practice.reading"]
+      XCTAssertTrue(reading.waitForExistence(timeout: 5))
+      XCTAssertEqual(reading.value as? String, "あ")
+      let back = app.buttons["Back"]
+      XCTAssertTrue(back.waitForExistence(timeout: 5), app.debugDescription)
+      back.click()
+      XCTAssertTrue(missed.waitForExistence(timeout: 5))
+      app.buttons["review.finish"].click()
+      XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
+      requirePracticeLeavesAccountUnchanged(in: app)
+    }
+
   }
 
   extension XCUIApplication {

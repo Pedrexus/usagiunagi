@@ -9,7 +9,7 @@ public enum StudyDestination: Hashable, Sendable {
   case practice(StudyPracticeScope)
   case catalog(SubjectCatalogQuery, remaining: Bool = false)
   case subject(Int64)
-  case search, forecast
+  case search, forecast, katakana
   case reviewSettings, savedWork, account, fonts, offlineAudio, lessonSettings, subjectSettings,
     appearanceSettings, developerSettings
   init(resuming session: StudySession) {

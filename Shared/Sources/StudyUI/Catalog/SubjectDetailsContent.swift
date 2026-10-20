@@ -181,18 +181,17 @@ public struct SubjectDetailsContent: View {
     -> some View
   {
     GroupBox {
-      VStack(alignment: .leading, spacing: 10, content: content).frame(
-        maxWidth: .infinity, alignment: .leading)
-    } label: {
-      HStack {
-        Text(title).accessibilityAddTraits(.isHeader)
-        Spacer()
+      HStack(alignment: .top) {
+        VStack(alignment: .leading, spacing: 10, content: content).frame(
+          maxWidth: .infinity, alignment: .leading)
         if let editMaterial {
           Button("Edit notes and synonyms", systemImage: "square.and.pencil", action: editMaterial)
             .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
             .accessibilityIdentifier("subject.editMaterial")
         }
       }
+    } label: {
+      Text(title).accessibilityAddTraits(.isHeader)
     }
   }
   @ViewBuilder private func explanation(

@@ -59,7 +59,7 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
     let practice = StoryboardScene.Main.practice.instantiate()
     practice.setup(services: services)
     rootView = MainShellRoot(
-      state: shell, home: home, practice: practice,
+      state: shell, avatars: services.legacyAvatars, home: home, practice: practice,
       statistics: StatisticsViewController(services: services),
       search: { [weak self] in self?.searchButtonTapped() },
       settings: { [weak self] in self?.settingsButtonTapped() },
@@ -306,6 +306,7 @@ final class MainViewController: UIHostingController<MainShellRoot?>, LoginViewCo
 
 struct MainShellRoot: View {
   let state: StudyShellState
+  let avatars: LegacyAvatarCache
   let home: MainWaniKaniTabViewController
   let practice: MainPracticeTabViewController
   let statistics: StatisticsViewController
@@ -331,7 +332,7 @@ struct MainShellRoot: View {
       } statistics: {
         ShellDestination(controller: statistics)
       }
-    }.overlay {
+    }.environment(\.studyAvatars, avatars).overlay {
       if let progress = state.blockingProgress { FullRefreshOverlayView(progress: progress) }
     }
   }

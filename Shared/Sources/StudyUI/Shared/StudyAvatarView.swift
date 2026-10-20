@@ -1,26 +1,39 @@
+import StudyCore
 import SwiftUI
+
+extension EnvironmentValues {
+  @Entry public var studyAvatars: LegacyAvatarCache? = nil
+}
 
 public struct StudyAvatarView: View {
   let url: URL?
   let revision: Int
+  @Environment(\.studyAvatars) private var cache
+  @State private var loaded: (request: Request, image: CGImage)?
+  private struct Request: Equatable {
+    let url: URL?
+    let revision: Int
+    let cacheID: ObjectIdentifier?
+  }
   public init(url: URL?, revision: Int = 0) {
     self.url = url
     self.revision = revision
   }
   public var body: some View {
+    let request = Request(url: url, revision: revision, cacheID: cache.map(ObjectIdentifier.init))
     Group {
-      if let url {
-        AsyncImage(request: URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)) { image in
-          image.resizable().scaledToFill()
-        } placeholder: {
-          placeholder
-        }
+      if let loaded, loaded.request == request {
+        Image(decorative: loaded.image, scale: 1).resizable().scaledToFill()
       } else {
-        placeholder
+        Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.secondary)
       }
-    }.clipShape(Circle()).accessibilityHidden(true).id(url).id(revision)
-  }
-  private var placeholder: some View {
-    Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.secondary)
+    }.clipShape(Circle()).accessibilityHidden(true)
+      .task(id: request) {
+        loaded = nil
+        guard let url, let cache else { return }
+        if let image = try? await cache.image(at: url), !Task.isCancelled {
+          loaded = (request, image)
+        }
+      }
   }
 }

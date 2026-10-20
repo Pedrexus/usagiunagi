@@ -153,6 +153,12 @@
       result.click()
       reveal(app.buttons["subject.editMaterial"], in: app.scrollViews["subject.scroll"], app: app)
       XCTAssertTrue(app.buttons["subject.editMaterial"].waitForExistence(timeout: 5))
+      app.buttons["subject.editMaterial"].click()
+      XCTAssertTrue(app.buttons["material.cancel"].waitForExistence(timeout: 5))
+      XCTAssertTrue(
+        app.descendants(matching: .any).matching(identifier: "material.form").firstMatch.exists)
+      app.buttons["material.cancel"].click()
+      waitUntilAbsent(app.sheets.firstMatch, in: app)
       XCTAssertTrue(app.toolbars.buttons["chevron.backward"].isHittable)
       XCTAssertFalse(field.exists)
       navigateBack(in: app)
@@ -264,14 +270,27 @@
       XCTAssertFalse(app.buttons["Done"].exists)
       let sources = app.disclosureTriangles["statistics.sources"]
       reveal(sources, in: dashboard, app: app)
-      sources.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).click()
-      XCTAssertTrue(app.staticTexts["sources.coverage"].waitForExistence(timeout: 5))
+      let sourceHeader = sources.coordinate(withNormalizedOffset: .zero).withOffset(
+        CGVector(dx: 26, dy: sources.frame.height / 2))
+      sourceHeader.click()
+      capture("Native Mac sources disclosure after press", in: app)
+      let expandedSource = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value == 1"), object: sources)
+      XCTAssertEqual(
+        XCTWaiter.wait(for: [expandedSource], timeout: 5), .completed, app.debugDescription)
+      let sourceContent = app.staticTexts["sources.coverage"]
+      reveal(sourceContent, in: dashboard, app: app)
+      XCTAssertTrue(sourceContent.exists)
       XCTAssertFalse(app.sheets.firstMatch.exists)
       app.openStudyTab("Home")
       app.openStudyTab("Stats")
       reveal(sources, in: dashboard, app: app)
-      sources.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).click()
-      XCTAssertFalse(app.staticTexts["sources.coverage"].exists)
+      sourceHeader.click()
+      let collapsedSource = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value == 0"), object: sources)
+      XCTAssertEqual(
+        XCTWaiter.wait(for: [collapsedSource], timeout: 5), .completed, app.debugDescription)
+      XCTAssertFalse(sourceContent.exists)
       XCTAssertFalse(app.sheets.firstMatch.exists)
       XCTAssertFalse(app.buttons["Done"].exists)
     }
@@ -289,11 +308,13 @@
       let hour = app.descendants(matching: .any).matching(identifier: "schedule.hour.0").firstMatch
       XCTAssertTrue(hour.waitForExistence(timeout: 5))
       let expectedCount = "\(due) reviews · +\(due) this hour"
-      let count = app.staticTexts.matching(
-        NSPredicate(format: "label == %@ OR value == %@", expectedCount, expectedCount)
+      XCTAssertTrue(hour.label.hasSuffix(", \(expectedCount)"), hour.label)
+      let disclosure = app.disclosureTriangles.matching(
+        identifier: "NSOutlineViewDisclosureButtonKey"
       ).firstMatch
-      XCTAssertTrue(count.waitForExistence(timeout: 5))
-      hour.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).click()
+      XCTAssertEqual(disclosure.frame.midY, hour.frame.midY, accuracy: 4)
+      XCTAssertTrue(disclosure.isHittable, app.debugDescription)
+      disclosure.click()
       XCTAssertTrue(app.staticTexts["Apprentice"].waitForExistence(timeout: 5))
       XCTAssertTrue(app.staticTexts["Guru"].exists)
       XCTAssertTrue(app.staticTexts["Radicals"].exists)
@@ -362,7 +383,8 @@
       hierarchy.lifetime = .keepAlways
       add(hierarchy)
       capture("Unreachable native Mac catalog control", in: app)
-      XCTFail("Could not reveal native Mac control: \(element.debugDescription)")
+      XCTFail(
+        "Could not reveal native Mac control: \(element.debugDescription)\n\(app.debugDescription)")
     }
     private func capture(_ name: String, in app: XCUIApplication) {
       let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())

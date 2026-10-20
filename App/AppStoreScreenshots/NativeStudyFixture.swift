@@ -55,6 +55,7 @@
       let defaults = UserDefaults(suiteName: suite)!
       defaults.removePersistentDomain(forName: suite)
       var preferences = ReviewPreferences()
+      if arguments.contains("--settings-fixture") { preferences.appearance = .light }
       if arguments.contains("--lesson-fixture") || arguments.contains("--manual-review-fixture") {
         preferences.revealAnswers = false
         preferences.sessionOptions.groupMeaningReading = true
@@ -101,7 +102,19 @@
           client: NotificationFixture.client),
         avatars: LegacyAvatarCache(
           directory: URL.temporaryDirectory.appending(path: "native-avatar-fixture-\(UUID())"),
-          cache: URLCache(memoryCapacity: 1_048_576, diskCapacity: 0)),
+          cache: URLCache(memoryCapacity: 1_048_576, diskCapacity: 0),
+          transport: { request in
+            guard let url = request.url,
+              let bytes = Data(
+                base64Encoded:
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO9WlVQAAAAASUVORK5CYII="
+              ),
+              let response = HTTPURLResponse(
+                url: url, statusCode: 200, httpVersion: nil,
+                headerFields: ["Content-Type": "image/png"])
+            else { throw URLError(.badURL) }
+            return (bytes, response)
+          }),
         radicalImages: RadicalImageCache(
           directory: URL.temporaryDirectory.appending(path: "native-radical-fixture-\(UUID())"),
           transport: { request in

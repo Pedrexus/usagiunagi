@@ -439,7 +439,7 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor private func launchDeveloperOptions() -> XCUIApplication {
-    let app = launchSettings(extra: ["DeveloperFlowFixture", "AudioFlowFixture"])
+    let app = launchSettings(extra: ["--audio-fixture"])
     let developer = app.buttons["settings.developer"]
     scrollTo(developer, in: app)
     developer.tap()
@@ -464,7 +464,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testDeveloperEndpointCancelValidationPersistenceAndReset() {
     continueAfterFailure = false
     let app = launchDeveloperOptions()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let endpoint = app.buttons["developer.endpoint"]
     let standard = "https://api.wanikani.com/v2"
     XCTAssertTrue(endpoint.label.contains(standard))
@@ -491,17 +491,20 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testDeveloperCacheFeedbackAndNativeDatabaseSharing() {
     continueAfterFailure = false
     let app = launchDeveloperOptions()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     app.buttons["developer.clearAvatarCache"].tap()
     let confirmation = app.alerts["Image cache cleared"]
     XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
     confirmation.buttons["OK"].tap()
     XCTAssertFalse(confirmation.exists)
-    let screenshot = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     screenshot.name = "Native developer options and diagnostics"
     screenshot.lifetime = .keepAlways
     add(screenshot)
-    app.buttons["developer.export"].tap()
+    let export = app.buttons["developer.export"]
+    scrollTo(export, in: app)
+    XCTAssertEqual(export.label, "Export study diagnostics")
+    export.tap()
     let save = app.descendants(matching: .any).matching(
       NSPredicate(format: "label == %@", "Save to Files")
     ).firstMatch
@@ -515,12 +518,15 @@ final class ReviewFlowTests: XCTestCase {
     } else {
       let popup = app.popovers.firstMatch
       XCTAssertTrue(popup.exists)
-      app.otherElements["PopoverDismissRegion"].coordinate(
+      let regions = app.otherElements.matching(identifier: "PopoverDismissRegion")
+      XCTAssertGreaterThan(regions.count, 0)
+      regions.element(boundBy: regions.count - 1).coordinate(
         withNormalizedOffset: CGVector(dx: popup.frame.midX < app.frame.midX ? 0.95 : 0.05, dy: 0.5)
       ).tap()
     }
-    XCTAssertFalse(save.exists)
+    XCTAssertTrue(save.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.navigationBars["Developer options"].exists)
+    XCTAssertTrue(export.exists)
   }
 
   @MainActor private func launchOfflineAudio(extra: [String] = []) -> XCUIApplication {
@@ -971,13 +977,8 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor
   private func launchPractice(anki: Bool = false) -> XCUIApplication {
-    let app = XCUIApplication()
-    app.launchArguments = [
-      "-FASTLANE_SNAPSHOT", "YES", "-ankiMode", anki ? "YES" : "NO",
-      "-ankiModeTaskType", "2", "-autoSwitchKeyboard", "NO",
-      "-playAudioAutomatically", "NO", "-allowSkippingReviews", "NO",
-    ]
-    app.launch()
+    let app = launchNativeHome(
+      anki ? ["--anki-fixture", "--reading-anki-fixture", "--light-fixture"] : ["--light-fixture"])
     let tab = app.buttons["Practice"].firstMatch
     XCTAssertTrue(tab.waitForExistence(timeout: 10))
     tab.tap()
@@ -1798,17 +1799,7 @@ extension ReviewFlowTests {
 
 extension ReviewFlowTests {
   @MainActor private func launchSettings(extra: [String] = []) -> XCUIApplication {
-    let app = XCUIApplication()
-    app.launchArguments =
-      [
-        "-FASTLANE_SNAPSHOT", "YES", "CatalogFlowFixture", "SettingsFlowFixture",
-        "-reviewItemsLimitEnabled", "NO", "-groupMeaningReading", "NO", "-meaningFirst", "YES",
-        "-ankiMode", "NO", "-ankiModeCombineReadingMeaning", "NO", "-ankiModeTaskType", "1",
-        "-showAllReadings", "NO", "-skipKanjiReadings", "NO", "-showFullAnswer", "NO",
-        "-lessonBatchSize", "5", "-interfaceStyle", "1", "-gravatarCustomEmail", "",
-      ] + extra
-    app.launch()
-    XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 10))
+    let app = launchNativeHome(["--settings-fixture"] + extra)
     app.buttons["app.settings"].tap()
     XCTAssertTrue(app.buttons["settings.page.lessons"].waitForExistence(timeout: 5))
     return app
@@ -1839,7 +1830,7 @@ extension ReviewFlowTests {
   @MainActor func testSettingsLessonChoicesAndReorderingPersistWhenReopened() {
     continueAfterFailure = false
     let app = launchSettings()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     app.buttons["settings.page.lessons"].tap()
     let batch = app.buttons["settings.lessonBatchSize"]
     XCTAssertTrue(batch.waitForExistence(timeout: 5))
@@ -1856,17 +1847,17 @@ extension ReviewFlowTests {
       predicate: NSPredicate(format: "label == %@", nextFirst), object: handles.firstMatch)
     XCTAssertEqual(XCTWaiter.wait(for: [reordered], timeout: 5), .completed)
     XCTAssertEqual(handles.firstMatch.label, nextFirst)
-    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons["BackButton"].tap()
     app.buttons["settings.lessonOrderLink"].tap()
     XCTAssertEqual(handles.firstMatch.label, nextFirst)
-    app.navigationBars.buttons.firstMatch.tap()
-    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons["BackButton"].tap()
+    app.navigationBars.buttons["BackButton"].tap()
     app.buttons["settings.page.lessons"].tap()
     XCTAssertTrue(batch.waitForExistence(timeout: 5))
     XCTAssertTrue(settingsPickerText(batch).contains("2"), batch.debugDescription)
     let limit = app.buttons["settings.apprenticeLessonsLimit"]
     XCTAssertTrue(settingsPickerText(limit).contains("50"), limit.debugDescription)
-    let image = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
+    let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     image.name = "Native SwiftUI lesson settings"
     image.lifetime = .keepAlways
     add(image)
@@ -1874,8 +1865,8 @@ extension ReviewFlowTests {
 
   @MainActor func testSettingsReviewDependenciesAndDownloadNavigation() {
     continueAfterFailure = false
-    let app = launchSettings(extra: ["AudioFlowFixture"])
-    defer { clearFixture(app) }
+    let app = launchSettings(extra: ["--audio-fixture"])
+    defer { app.terminate() }
     app.buttons["settings.page.reviews"].tap()
     let limit = app.buttons["settings.reviewItemsLimit"]
     XCTAssertFalse(limit.exists)
@@ -1922,7 +1913,7 @@ extension ReviewFlowTests {
   @MainActor func testSharedNotificationSettingsPersistWithoutSystemPrompts() {
     continueAfterFailure = false
     let app = launchSettings()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     app.buttons["settings.page.appearance"].tap()
     let choices = [
       ("settings.notificationsAllReviews", true),
@@ -1930,7 +1921,7 @@ extension ReviewFlowTests {
     ]
     for (id, enabled) in choices { setSettingsSwitch(app.switches[id], on: enabled, in: app) }
     XCTAssertFalse(app.alerts.firstMatch.exists)
-    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons["BackButton"].tap()
     app.buttons["settings.page.appearance"].tap()
     for (id, enabled) in choices {
       let toggle = app.switches[id]
@@ -1942,7 +1933,7 @@ extension ReviewFlowTests {
   @MainActor func testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation() {
     continueAfterFailure = false
     let app = launchSettings()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     app.buttons["settings.page.appearance"].tap()
     let style = app.buttons["settings.interfaceStyle"]
     XCTAssertTrue(style.waitForExistence(timeout: 5))
@@ -1955,37 +1946,51 @@ extension ReviewFlowTests {
     XCTAssertTrue(app.switches["settings.notificationsAllReviews"].exists)
     XCTAssertTrue(app.switches["settings.notificationsBadging"].exists)
     XCTAssertTrue(app.switches["settings.notificationSounds"].exists)
-    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons["BackButton"].tap()
     app.buttons["settings.page.appearance"].tap()
     XCTAssertTrue(email.waitForExistence(timeout: 5))
     XCTAssertEqual(email.value as? String, "fixture@example.invalid")
     XCTAssertTrue(settingsPickerText(style).contains("Dark"), style.debugDescription)
-    let image = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
+    let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     image.name = "Native SwiftUI appearance and notification settings"
     image.lifetime = .keepAlways
     add(image)
-    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons["BackButton"].tap()
     app.buttons["settings.page.subjects"].tap()
     let readings = app.switches["settings.showAllReadings"]
     setSettingsSwitch(readings, on: true, in: app)
-    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons["BackButton"].tap()
     app.buttons["settings.page.subjects"].tap()
     XCTAssertTrue(readings.waitForExistence(timeout: 5))
     XCTAssertEqual(readings.value as? String, "1")
-    app.navigationBars.buttons.firstMatch.tap()
+    app.navigationBars.buttons["BackButton"].tap()
     let developer = app.buttons["settings.developer"]
     scrollTo(developer, in: app)
     developer.tap()
     XCTAssertTrue(app.navigationBars["Developer options"].waitForExistence(timeout: 5))
     app.navigationBars["Developer options"].buttons.firstMatch.tap()
-    let logout = app.buttons["settings.logout"]
+    let account = app.buttons["WaniKani account"]
+    scrollTo(account, in: app)
+    account.tap()
+    let logout = app.buttons["Disconnect and remove local snapshot"]
     scrollTo(logout, in: app)
     logout.tap()
-    XCTAssertTrue(app.alerts["Log out?"].waitForExistence(timeout: 5))
-    app.alerts["Log out?"].buttons["Cancel"].tap()
+    let disconnect = app.buttons["Disconnect"]
+    XCTAssertTrue(disconnect.waitForExistence(timeout: 5))
+    if app.buttons["Cancel"].exists {
+      app.buttons["Cancel"].tap()
+    } else {
+      let regions = app.otherElements.matching(identifier: "PopoverDismissRegion")
+      XCTAssertGreaterThan(regions.count, 0)
+      regions.element(boundBy: regions.count - 1).tap()
+    }
+    XCTAssertTrue(disconnect.waitForNonExistence(timeout: 5))
     XCTAssertFalse(app.alerts.firstMatch.exists)
-    app.buttons["settings.back"].tap()
+    XCTAssertTrue(logout.exists)
+    app.buttons["Done"].firstMatch.tap()
     XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["app.settings"].isHittable)
+    XCTAssertTrue(app.collectionViews["home.dashboard"].exists)
   }
 
   @MainActor private func launchCatalog() -> XCUIApplication {

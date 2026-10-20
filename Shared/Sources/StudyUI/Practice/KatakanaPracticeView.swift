@@ -1,16 +1,6 @@
 import StudyCore
 import SwiftUI
 
-/// An account-independent practice entry point shared by native hosts.
-public struct KatakanaPracticeView: View {
-  @State private var practicing = false
-  public init() {}
-  public var body: some View {
-    KatakanaPracticeMenu { practicing = true }
-      .sheet(isPresented: $practicing) { NavigationStack { KatakanaPracticeSessionView() } }
-  }
-}
-
 /// The legacy iOS host retains its study options while sharing the native practice menu.
 public struct KatakanaPracticeMenu: View {
   private let start: () -> Void
@@ -31,48 +21,47 @@ public struct KatakanaPracticeMenu: View {
   }
 }
 
-private struct KatakanaPracticeSessionView: View {
+struct KatakanaPracticeSessionView: View {
   @Environment(\.dismiss) private var dismiss
+  @Environment(StudyFontLibrary.self) private var fonts
   @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
   @StoredReviewPreferences private var preferences
   @State private var practice: KatakanaPractice?
   @State private var screen = ReviewScreenState()
   @State private var error: String?
-  @State private var confirmEnd = false
+  @State private var ended = false
+  @State private var settings = false
+  @State private var summarySubject: Int?
+  @State private var customFont = ""
   @State private var voiceRequest: VoiceAnswerRequest?
   @State private var focused = false
 
   var body: some View {
     VStack {
-      HStack {
-        Text("Practice only · WaniKani progress is unchanged").font(.caption)
-          .foregroundStyle(.secondary)
-        Spacer()
-        Button("End practice", systemImage: "xmark") {
-          if practice?.question == nil { dismiss() } else { confirmEnd = true }
-        }.accessibilityIdentifier("practice.end")
-      }.padding(.horizontal).padding(.vertical, 8)
-      if let practice, practice.question == nil {
-        ContentUnavailableView(
-          "Practice complete", systemImage: "checkmark.circle",
-          description: Text(
-            "\(practice.session.completedIDs.count) completed · \(practice.session.successRate)% accuracy"
-          ))
-        Button("Practice again") { start() }.buttonStyle(.borderedProminent)
-        Button("Done") { dismiss() }
-      } else if practice != nil {
-        ReviewScreen(state: screen, action: act) {
-          StudyAnswerInput(
-            prompt: "Reading", text: $screen.answer,
-            focused: $focused, reading: true,
-            automaticJapanese: automaticJapanese, alphabet: .hiragana,
-            submitted: { act(.submit) }
-          ).frame(minHeight: 44)
-        } details: {
-          VStack {
-            Text("Reading").font(.headline).accessibilityAddTraits(.isHeader)
-            Text(practice?.subject?.primaryReadings.joined(separator: " · ") ?? "")
-              .font(.largeTitle).textSelection(.enabled)
+      if let practice {
+        if ended || practice.question == nil {
+          SessionSummaryView(
+            summary: practice.summary,
+            message: "Practice answers do not change WaniKani progress or create review uploads."
+          ) { summarySubject = $0 }
+          .navigationTitle("Review Summary")
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Done") { dismiss() }.accessibilityIdentifier("review.finish")
+            }
+          }
+        } else {
+          Text("Practice only · WaniKani progress is unchanged").font(.caption)
+            .foregroundStyle(.secondary).padding(.top, 8)
+          ReviewScreen(state: screen, action: act) {
+            StudyAnswerInput(
+              prompt: "Reading", text: $screen.answer,
+              focused: $focused, reading: true,
+              automaticJapanese: automaticJapanese, alphabet: .hiragana,
+              submitted: { act(.submit) }
+            ).frame(minHeight: 44)
+          } details: {
+            reading(practice.subject)
           }
         }
       }
@@ -81,11 +70,21 @@ private struct KatakanaPracticeSessionView: View {
     #if os(macOS)
       .frame(minWidth: 420, minHeight: 480)
     #endif
-    .interactiveDismissDisabled(practice?.question != nil)
-    .confirmationDialog("End practice?", isPresented: $confirmEnd, titleVisibility: .visible) {
-      Button("End practice", role: .destructive) { dismiss() }
-    } message: {
-      Text("This practice session will be discarded. Your WaniKani reviews stay unchanged.")
+    .interactiveDismissDisabled(!ended && practice?.question != nil)
+    .navigationDestination(item: $summarySubject) { id in
+      VStack(spacing: 16) {
+        Text(KatakanaPractice.characters[id]).font(.largeTitle)
+        reading(KatakanaPractice.subject(at: id))
+      }
+      .padding().navigationTitle("Katakana reading")
+    }
+    .sheet(
+      isPresented: $settings,
+      onDismiss: { focused = screen.phase == .answering && !screen.isAnki }
+    ) {
+      ReviewSettingsSheet(preferences: preferences, changed: savePreferences, fonts: fonts) {
+        settings = false
+      }
     }
     .sheet(item: $voiceRequest) { request in
       VoiceAnswerPanel(question: request.question) { answer in
@@ -100,14 +99,25 @@ private struct KatakanaPracticeSessionView: View {
         .frame(minWidth: 420, minHeight: 440)
       #endif
     }
-    .task { if practice == nil { start() } }
+    .task {
+      guard practice == nil else { return }
+      perform {
+        practice = try KatakanaPractice(options: preferences.sessionOptions)
+        present()
+      }
+    }
     .onChange(of: preferences) { _, _ in applyPreferences() }
+    .onChange(of: fonts.selectedFiles) { _, _ in chooseFont() }
+    .onChange(of: screen.phase) { _, phase in
+      screen.questionFont = phase == .details ? "" : customFont
+    }
   }
 
-  private func start() {
-    perform {
-      practice = try KatakanaPractice()
-      present()
+  private func reading(_ subject: GradingSubject?) -> some View {
+    VStack {
+      Text("Reading").font(.headline).accessibilityAddTraits(.isHeader)
+      Text(subject?.primaryReadings.joined(separator: " · ") ?? "")
+        .font(.largeTitle).textSelection(.enabled).accessibilityIdentifier("practice.reading")
     }
   }
   private func perform(_ operation: () throws -> Void) {
@@ -131,15 +141,41 @@ private struct KatakanaPracticeSessionView: View {
     screen.feedback = practice.session.currentDecision == .incorrect ? "Incorrect answer" : ""
     screen.success = nil
     screen.canShowAll = false
+    screen.hasMenu = true
+    screen.endTitle = "End practice"
     applyPreferences()
-    focused = screen.phase == .answering
+    customFont = fonts.fontNames(for: screen.question).randomElement() ?? ""
+    chooseFont()
+    focused = screen.phase == .answering && !screen.isAnki
   }
   private func applyPreferences() {
+    practice?.options = preferences.sessionOptions
+    let wasAnki = screen.isAnki
+    screen.isAnki = practice?.isAnki == true
+    if wasAnki != screen.isAnki && practice?.session.currentDecision != .incorrect {
+      screen.phase = .answering
+    }
     screen.feedbackPreferences = preferences
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
     screen.canSkip = preferences.allowSkipping
     screen.canOverride =
       preferences.allowCorrections && practice?.session.currentDecision == .incorrect
+  }
+  private func savePreferences(_ old: ReviewPreferences, _ new: ReviewPreferences) {
+    perform { try $preferences.applyChanges(from: old, to: new) }
+  }
+  private func chooseFont() {
+    let available = fonts.fontNames(for: screen.question)
+    if !available.contains(customFont) { customFont = available.first ?? "" }
+    screen.canChangeFont = !available.isEmpty
+    screen.questionFont = screen.phase == .details ? "" : customFont
+  }
+  private func cycleFont(_ offset: Int) {
+    let available = fonts.fontNames(for: screen.question)
+    guard !available.isEmpty else { return }
+    let index = available.firstIndex(of: customFont) ?? 0
+    customFont = available[(index + offset + available.count) % available.count]
+    chooseFont()
   }
   private func submit(convertRomaji: Bool = true) {
     guard let question = practice?.question else { return }
@@ -165,11 +201,26 @@ private struct KatakanaPracticeSessionView: View {
     }
   }
   private func act(_ action: ReviewScreenAction) {
+    switch action {
+    case .end:
+      focused = false
+      voiceRequest = nil
+      if practice?.session.completedIDs.isEmpty == false { ended = true } else { dismiss() }
+      return
+    case .settings:
+      focused = false
+      settings = true
+      return
+    default: break
+    }
     guard let question = practice?.question else { return }
     perform {
       switch action {
       case .submit:
-        if screen.phase == .details {
+        if screen.isAnki {
+          screen.phase = .details
+          focused = false
+        } else if screen.phase == .details {
           try practice?.advance(question)
           present()
         } else if screen.phase == .incorrect {
@@ -182,19 +233,40 @@ private struct KatakanaPracticeSessionView: View {
         screen.phase = .answering
         screen.answer = ""
         screen.feedback = ""
-        focused = true
+        focused = !screen.isAnki
       case .correct:
-        if screen.canOverride {
-          let success = try practice?.correct(question)
-          present()
-          if let success { screen.recordSuccess(success) }
+        let success: StudyMarkResult?
+        if screen.canOverride || (screen.isAnki && practice?.session.currentDecision == .incorrect)
+        {
+          success = try practice?.correct(question)
+        } else if screen.isAnki && screen.phase == .details {
+          success = try practice?.assess(correct: true, for: question)
+        } else {
+          return
         }
+        present()
+        if let success { screen.recordSuccess(success) }
+      case .incorrect:
+        guard screen.isAnki && screen.phase == .details else { return }
+        if practice?.session.currentDecision == .incorrect {
+          try practice?.advance(question)
+        } else {
+          try practice?.assess(correct: false, for: question)
+        }
+        present()
       case .deferQuestion:
         try practice?.deferQuestion(question)
         present()
       case .voice:
+        guard !screen.isAnki else { return }
         voiceRequest = VoiceAnswerRequest(question: question)
-      case .focus: focused = true
+      case .focus: focused = screen.phase == .answering && !screen.isAnki
+      case .toggleFont:
+        if screen.canChangeFont {
+          screen.questionFont = screen.questionFont.isEmpty ? customFont : ""
+        }
+      case .nextFont: cycleFont(1)
+      case .previousFont: cycleFont(-1)
       default: break
       }
     }
