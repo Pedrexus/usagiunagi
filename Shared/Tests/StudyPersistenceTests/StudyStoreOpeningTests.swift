@@ -1,12 +1,110 @@
+import CoreData
 import CryptoKit
 import Foundation
 import SQLite3
 import StudyCore
+import Synchronization
 import Testing
 
 @testable import StudyPersistence
 
 struct StudyStoreOpeningTests {
+  @Test(.timeLimit(.minutes(1)), arguments: [false, true])
+  func cancellationDuringOpeningPreservesDataAndAllowsRetry(selected: Bool) async throws {
+    let folder = temporaryFolder()
+    let seedFolder = temporaryFolder()
+    defer {
+      removeFolder(folder)
+      removeFolder(seedFolder)
+    }
+    let writer = try await StudyStore.open(at: seedFolder.appending(path: "study.store"))
+    defer { withExtendedLifetime(writer) {} }
+    for account in ["first", "second"] {
+      _ = try await writer.importLegacyAccount(
+        source(username: account), sourceID: "source-\(account)", verifiedAccountID: account,
+        verifiedUsername: account, credentialID: "credential-\(account)")
+    }
+    let expected = try await writer.generationSnapshot()
+    let original = try family(in: seedFolder)
+    try write(original, in: folder)
+    if selected {
+      let first = try await StudyStore.openApplication(in: folder)
+      #expect(try await first.generationSnapshot() == expected)
+    }
+    let selectionURL = folder.appending(path: "store-selection.plist")
+    let previousSelection = selected ? try Data(contentsOf: selectionURL) : nil
+    let prefix = folder.resolvingSymlinksInPath().path + "/"
+    let target: String?
+    if selected {
+      let id = try #require(try selection(in: folder)["candidate"] as? String)
+      target = prefix + "generations/\(id)/study.store"
+    } else {
+      target = nil
+    }
+    let cancellation = Mutex<(operation: Task<StudyStore, any Error>?, paths: [String])>((nil, []))
+    do {
+      let start = AsyncStream<Void>.makeStream()
+      let center = NotificationCenter.default
+      let observer = center.addObserver(
+        forName: .NSPersistentStoreCoordinatorStoresDidChange, object: nil, queue: nil
+      ) { notification in
+        // No Core Data object escapes this callback or is mutated by the test.
+        let added = notification.userInfo?[NSAddedPersistentStoresKey] as? [NSPersistentStore] ?? []
+        guard
+          let path = added.compactMap({ $0.url?.resolvingSymlinksInPath().path }).first(where: {
+            path in
+            if let target { return path == target }
+            return path.hasPrefix(prefix + "preparations/") && path.hasSuffix("/study.store")
+          })
+        else { return }
+        cancellation.withLock {
+          $0.paths.append(path)
+          $0.operation?.cancel()
+        }
+      }
+      defer {
+        center.removeObserver(observer)
+        cancellation.withLock { $0.operation = nil }
+      }
+      let operation = Task {
+        var iterator = start.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        return try await StudyStore.openApplication(in: folder)
+      }
+      cancellation.withLock { $0.operation = operation }
+      start.continuation.yield(())
+      start.continuation.finish()
+      do {
+        _ = try await operation.value
+        Issue.record("Opening returned an owner after observed cancellation")
+      } catch is CancellationError {}
+    }
+    #expect(!cancellation.withLock { $0.paths }.isEmpty)
+    #expect(try family(in: folder) == original)
+    #expect(try family(in: seedFolder) == original)
+    let interrupted = try selection(in: folder)
+    #expect(interrupted["phase"] as? String == (selected ? "selected" : "preparing"))
+    let retainedID = try #require(interrupted["retained"] as? String)
+    let retained = folder.appending(path: "generations/\(retainedID)")
+    #expect(try family(in: retained) == original)
+    let abandoned = try #require(interrupted["candidate"] as? String)
+    let work = folder.appending(path: "preparations/\(abandoned)/preparation.plist")
+    let preparation = selected ? nil : try Data(contentsOf: work)
+    let reopened = try await StudyStore.openApplication(in: folder)
+    #expect(try await reopened.generationSnapshot() == expected)
+    #expect(try selection(in: folder)["phase"] as? String == "selected")
+    #expect(try family(in: folder) == original && family(in: retained) == original)
+    if let previousSelection {
+      #expect(try Data(contentsOf: selectionURL) == previousSelection)
+    } else {
+      #expect(try selection(in: folder)["candidate"] as? String != abandoned)
+      #expect(try Data(contentsOf: work) == preparation)
+      #expect(
+        try folder.appending(path: "generations/\(abandoned)")
+          .resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true)
+    }
+  }
+
   @Test func adoptionPreservesSourceWALSchemaIdentitiesAndExactCommittedState() async throws {
     let folder = temporaryFolder()
     defer { removeFolder(folder) }
