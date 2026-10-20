@@ -2,7 +2,8 @@ import Foundation
 
 public enum VoiceCaptureEvent: Sendable {
   case needsModel, downloading, listening
-  case segment(text: String, start: Double, end: Double, isFinal: Bool)
+  case segment(
+    text: String, start: Double, end: Double, isFinal: Bool, alternatives: [String] = [])
   case finished
   case failed(String)
 }

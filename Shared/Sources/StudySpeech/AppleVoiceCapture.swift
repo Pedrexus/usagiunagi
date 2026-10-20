@@ -30,7 +30,10 @@ public actor AppleVoiceCapture: VoiceCapture {
         throw VoiceCaptureError.languageUnavailable
       }
       try check(id)
-      let transcriber = SpeechTranscriber(locale: supported, preset: .transcription)
+      let transcriber = SpeechTranscriber(
+        locale: supported,
+        preset: supported.language.languageCode == .japanese
+          ? .transcriptionWithAlternatives : .transcription)
       let status = await AssetInventory.status(forModules: [transcriber])
       try check(id)
       guard status != .unsupported else { throw VoiceCaptureError.languageUnavailable }
@@ -78,7 +81,8 @@ public actor AppleVoiceCapture: VoiceCapture {
             await report(
               .segment(
                 text: String(result.text.characters), start: result.range.start.seconds,
-                end: result.range.end.seconds, isFinal: result.isFinal))
+                end: result.range.end.seconds, isFinal: result.isFinal,
+                alternatives: result.alternatives.map { String($0.characters) }))
           }
           if let self, await self.isActive(id) {
             await self.stopAfterResults(id: id)

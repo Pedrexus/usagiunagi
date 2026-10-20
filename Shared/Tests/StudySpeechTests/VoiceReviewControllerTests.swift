@@ -9,13 +9,15 @@ private actor FakeCapture: VoiceCapture {
   var cancelled: [UUID] = []
   let cancelDelay: Duration
   let transcript: String
+  let alternatives: [String]
   let needsModel: Bool
   let startError: VoiceCaptureError?
   init(
     transcript: String = "One.", needsModel: Bool = false, startError: VoiceCaptureError? = nil,
-    cancelDelay: Duration = .zero
+    cancelDelay: Duration = .zero, alternatives: [String] = []
   ) {
     self.transcript = transcript
+    self.alternatives = alternatives
     self.needsModel = needsModel
     self.startError = startError
     self.cancelDelay = cancelDelay
@@ -30,7 +32,8 @@ private actor FakeCapture: VoiceCapture {
   }
   func finish(id: UUID) async {
     await callbacks[id]?(.segment(text: "interim error", start: 0, end: 1, isFinal: false))
-    await callbacks[id]?(.segment(text: transcript, start: 0, end: 1, isFinal: true))
+    await callbacks[id]?(
+      .segment(text: transcript, start: 0, end: 1, isFinal: true, alternatives: alternatives))
     await callbacks[id]?(.finished)
   }
   func cancel(id: UUID) async {
@@ -39,7 +42,8 @@ private actor FakeCapture: VoiceCapture {
   }  // Keep callbacks so tests can inject a late result after cancellation.
   func fail(id: UUID) async { await callbacks[id]?(.failed("Recording interrupted")) }
   func lateResult(id: UUID) async {
-    await callbacks[id]?(.segment(text: "Late", start: 0, end: 1, isFinal: true))
+    await callbacks[id]?(
+      .segment(text: "Late", start: 0, end: 1, isFinal: true, alternatives: ["おそい"]))
     await callbacks[id]?(.finished)
   }
 }
@@ -163,6 +167,31 @@ private actor FakeCapture: VoiceCapture {
     #expect(model.phase == .idle && model.text.isEmpty)
     await cleanup?.value
     #expect(await capture.cancelled == ids)
+  }
+
+  @Test func aKanaAlternativeRequiresExplicitSelectionAndCannotSurviveRestart() async throws {
+    let question = try question(reading: true)
+    let capture = FakeCapture(transcript: "1つ", alternatives: ["1つ", "ひとつ", "一つ"])
+    let model = VoiceReviewController(question: question, capture: capture)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    let id = try #require(await capture.ids.first)
+    #expect(model.readingSuggestions.isEmpty && !model.canSubmit)
+    model.stop()
+    try await waitFor { model.phase == .reviewing }
+    #expect(model.text == "1つ" && model.readingSuggestions == ["ひとつ"])
+    #expect(model.needsKanaCorrection && model.answer(for: question) == nil)
+    model.text = try #require(model.readingSuggestions.first)
+    #expect(model.answer(for: question) == "ひとつ" && model.readingSuggestions.isEmpty)
+    await capture.lateResult(id: id)
+    #expect(model.text == "ひとつ" && model.phase == .reviewing)
+    await model.cancel()?.value
+    #expect(model.readingSuggestions.isEmpty && !model.canSubmit)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    await capture.lateResult(id: id)
+    #expect(model.readingSuggestions.isEmpty && model.text.isEmpty && model.phase == .listening)
+    await model.cancel()?.value
   }
 
 }

@@ -85,6 +85,17 @@ public struct VoiceAnswerPanel: View {
                 submitted: { transcriptFocused = false }, retried: {},
                 accessibilityIdentifier: "voice.transcript"
               ).frame(minHeight: 44)
+              if !model.readingSuggestions.isEmpty {
+                Menu("Other interpretations", systemImage: "text.bubble") {
+                  ForEach(model.readingSuggestions, id: \.self) { suggestion in
+                    Button(suggestion) {
+                      model.text = suggestion
+                      transcriptFocused = false
+                    }
+                  }
+                }
+                .accessibilityIdentifier("voice.readings")
+              }
             } else {
               TextField("Your answer", text: $model.text, axis: .vertical)
                 .lineLimit(1...4)
@@ -92,10 +103,8 @@ public struct VoiceAnswerPanel: View {
                 .accessibilityIdentifier("voice.transcript")
             }
             if model.needsKanaCorrection {
-              Text(
-                "Speech recognition returned characters other than kana. Edit the reading into kana before submitting."
-              )
-              .font(.callout).foregroundStyle(.secondary)
+              Text("Use kana for the reading before submitting.")
+                .font(.callout).foregroundStyle(.secondary)
             }
             Button("Check answer", systemImage: "checkmark") {
               if let answer = model.answer(for: model.question) {

@@ -18,6 +18,9 @@ public final class VoiceReviewController {
   public var canSubmit: Bool {
     phase == .reviewing && !VoiceAnswerDraft.cleanTranscript(text).isEmpty && !needsKanaCorrection
   }
+  public var readingSuggestions: [String] {
+    draft?.readingSuggestions.filter { $0 != VoiceAnswerDraft.cleanTranscript(text) } ?? []
+  }
   private let capture: any VoiceCapture
   @ObservationIgnored private var draft: VoiceAnswerDraft?
   @ObservationIgnored private var operation: Task<Void, Never>?
@@ -110,10 +113,10 @@ public final class VoiceReviewController {
     case .needsModel: phase = .needsModel
     case .downloading: phase = .downloading
     case .listening: phase = .listening
-    case .segment(let text, let start, let end, let isFinal):
+    case .segment(let text, let start, let end, let isFinal, let alternatives):
       if draft?.receive(
         text: text, start: start, end: end, isFinal: isFinal,
-        recordingID: id, question: question) == true
+        recordingID: id, question: question, alternatives: alternatives) == true
       {
         self.text = draft?.transcript ?? ""
       }
