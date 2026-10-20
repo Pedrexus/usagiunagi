@@ -10,6 +10,132 @@ import Testing
 private final class FrozenStoreBundle {}
 
 @Suite(.timeLimit(.minutes(1))) struct FrozenNativeStoreTests {
+  enum AdoptionCase: String, CaseIterable, Sendable {
+    case control, payloadMalformed, cacheMissing, metadataMalformed
+  }
+  private enum StoreImage { case original, selected }
+  private struct AdoptionSelection: Decodable, Equatable {
+    let formatVersion: Int
+    let schema: String
+    let phase: String
+    let candidate: UUID
+    let retained: UUID
+    let source: [String: String]
+    let validation: String?
+  }
+
+  @Test(arguments: AdoptionCase.allCases)
+  func firstAdoptionDamageKeepsEveryImageAcrossRetriesAndRefusesSourceChanges(
+    _ test: AdoptionCase
+  ) async throws {
+    let manager = FileManager.default
+    let frozen = try frozenURL()
+    let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+    let frozenFamily = try family(in: frozen.deletingLastPathComponent())
+    let baseline = try Data(contentsOf: frozen.appendingPathExtension("baseline.plist"))
+    let directory = manager.temporaryDirectory.appending(path: "frozen-native-\(UUID())")
+    try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { remove(directory) }
+    for (name, bytes) in frozenFamily { try bytes.write(to: directory.appending(path: name)) }
+    let source = directory.appending(path: "study.store")
+    switch test {
+    case .control: break
+    case .payloadMalformed:
+      try mutate(
+        .init(field: "AccountRecord.state", key: "profile", damage: .truncated),
+        store: source, issue: Data(), image: .original)
+    case .cacheMissing: try mutateMetadata(.cacheMissing, store: source, image: .original)
+    case .metadataMalformed: try mutateMetadata(.metadataMalformed, store: source, image: .original)
+    }
+    let original = try family(in: directory)
+    let hashes = original.mapValues(digest)
+    let selectorURL = directory.appending(path: "store-selection.plist")
+    var previous: AdoptionSelection?
+    var previousBytes: Data?
+    for _ in 0..<2 {
+      let before = try artifacts(in: directory)
+      if test == .control {
+        let opened = try await StudyStore.openApplication(in: directory)
+        #expect(try await opened.nativeBaselineState() == manifest.expected)
+      } else {
+        do {
+          _ = try await StudyStore.openApplication(in: directory)
+          Issue.record("Damaged first-adoption input opened: \(test.rawValue)")
+        } catch is CancellationError {
+          throw CancellationError()
+        } catch StudyStoreOpeningError.alreadyOpen {
+          throw StudyStoreOpeningError.alreadyOpen
+        } catch StudyStoreOpeningError.sourceChanged {
+          throw StudyStoreOpeningError.sourceChanged
+        } catch {
+          let failure = error as NSError
+          print("ADOPTION REFUSED: \(test.rawValue), \(failure.domain)/\(failure.code)")
+        }
+      }
+      let bytes = try Data(contentsOf: selectorURL)
+      let selected = try PropertyListDecoder().decode(AdoptionSelection.self, from: bytes)
+      #expect(selected.formatVersion == 1)
+      #expect(selected.schema == StudySchemaV1.versionIdentifier.description)
+      #expect(selected.phase == (test == .control ? "selected" : "preparing"))
+      #expect(selected.candidate != selected.retained && selected.source == hashes)
+      #expect(test == .control ? selected.validation?.count == 64 : selected.validation == nil)
+      #expect(try family(in: directory) == original)
+      #expect(
+        try family(in: directory.appending(path: "generations/\(selected.retained)")) == original)
+      if let previous {
+        #expect(selected.retained == previous.retained)
+        if test == .control {
+          #expect(selected == previous && bytes == previousBytes)
+        } else {
+          #expect(selected.candidate != previous.candidate)
+          #expect(
+            try directory.appending(path: "generations/\(previous.candidate)")
+              .resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true)
+        }
+      }
+      let after = try artifacts(in: directory)
+      let allowed =
+        test == .control
+        ? Set(previous.map { ["generations/\($0.candidate)/study.store-shm"] } ?? [])
+        : ["store-selection.plist"]
+      for (path, data) in before where !allowed.contains(path) { #expect(after[path] == data) }
+      if test == .control, previous != nil {
+        #expect(Set(after.keys).subtracting(before.keys).isSubset(of: allowed))
+      }
+      previous = selected
+      previousBytes = bytes
+    }
+    if test != .control {
+      // A repaired/replaced original is a different source, not permission to discard its capture.
+      let before = try artifacts(in: directory)
+      for name in ["study.store", "study.store-wal", "study.store-shm"] {
+        let file = directory.appending(path: name)
+        if let data = frozenFamily[name] {
+          try data.write(to: file)
+        } else if manager.fileExists(atPath: file.path) {
+          try manager.removeItem(at: file)
+        }
+      }
+      do {
+        _ = try await StudyStore.openApplication(in: directory)
+        Issue.record("Changed first-adoption source was silently accepted")
+      } catch StudyStoreOpeningError.sourceChanged {}
+      let after = try artifacts(in: directory)
+      let allowed = Set([
+        "store-selection.plist", "study.store", "study.store-wal", "study.store-shm",
+      ])
+      for (path, data) in before where !allowed.contains(path) { #expect(after[path] == data) }
+      #expect(try family(in: directory) == frozenFamily)
+      let selection = try PropertyListDecoder().decode(
+        AdoptionSelection.self, from: Data(contentsOf: selectorURL))
+      #expect(selection.phase == "preparing" && selection.source == hashes)
+      #expect(
+        selection.retained == previous?.retained && selection.candidate != previous?.candidate)
+    }
+    #expect(try family(in: frozen.deletingLastPathComponent()) == frozenFamily)
+    #expect(try Data(contentsOf: frozen.appendingPathExtension("baseline.plist")) == baseline)
+  }
+
   enum MetadataCase: String, CaseIterable, Sendable {
     case control, metadataMissing, metadataMalformed, metadataMissingHashes
     case cacheMissing, cacheMalformed
@@ -317,16 +443,28 @@ private final class FrozenStoreBundle {}
     return (selector, generations.appending(path: candidate), generations.appending(path: retained))
   }
 
-  private func withSelectedDatabase(at store: URL, _ body: (OpaquePointer) throws -> Void) throws {
-    // Corruption is confined to a selected store inside this test's unique temporary image.
+  private func withFixtureDatabase(
+    at store: URL, image: StoreImage, _ body: (OpaquePointer) throws -> Void
+  ) throws {
+    // Original mutation is permitted only before any application selection or preparation exists.
     let root =
       FileManager.default.temporaryDirectory.resolvingSymlinksInPath().path + "/frozen-native-"
     try #require(store.resolvingSymlinksInPath().path.hasPrefix(root))
-    try #require(
-      store.lastPathComponent == "study.store"
-        && store.deletingLastPathComponent().deletingLastPathComponent().lastPathComponent
-          == "generations"
-        && UUID(uuidString: store.deletingLastPathComponent().lastPathComponent) != nil)
+    try #require(store.lastPathComponent == "study.store")
+    let parent = store.deletingLastPathComponent()
+    switch image {
+    case .selected:
+      try #require(parent.deletingLastPathComponent().lastPathComponent == "generations")
+      try #require(UUID(uuidString: parent.lastPathComponent) != nil)
+    case .original:
+      try #require(
+        parent.deletingLastPathComponent().resolvingSymlinksInPath().path + "/frozen-native-"
+          == root)
+      try #require(parent.lastPathComponent.hasPrefix("frozen-native-"))
+      try #require(
+        Set(try FileManager.default.contentsOfDirectory(atPath: parent.path)).isSubset(
+          of: ["study.store", "study.store-wal", "study.store-shm"]))
+    }
     var pointer: OpaquePointer?
     let status = sqlite3_open_v2(store.path, &pointer, SQLITE_OPEN_READWRITE, nil)
     defer { if let pointer { sqlite3_close(pointer) } }
@@ -357,8 +495,10 @@ private final class FrozenStoreBundle {}
     return value
   }
 
-  private func mutateMetadata(_ test: MetadataCase, store: URL) throws {
-    try withSelectedDatabase(at: store) { database in
+  private func mutateMetadata(
+    _ test: MetadataCase, store: URL, image: StoreImage = .selected
+  ) throws {
+    try withFixtureDatabase(at: store, image: image) { database in
       let before = try #require(try metadataRow(test, database: database))
       let other: MetadataCase = test.table == "Z_METADATA" ? .cacheMalformed : .metadataMalformed
       let unrelated = try metadataRow(other, database: database)
@@ -392,8 +532,10 @@ private final class FrozenStoreBundle {}
     }
   }
 
-  private func mutate(_ test: PayloadCase, store: URL, issue: Data) throws {
-    try withSelectedDatabase(at: store) { database in
+  private func mutate(
+    _ test: PayloadCase, store: URL, issue: Data, image: StoreImage = .selected
+  ) throws {
+    try withFixtureDatabase(at: store, image: image) { database in
       let predicate = test.field == "ReviewRecord.issue" ? "1" : "\(test.column) IS NOT NULL"
       var query: OpaquePointer?
       try #require(
@@ -454,6 +596,29 @@ private final class FrozenStoreBundle {}
       }
       try #require(sqlite3_step(check) == SQLITE_DONE)
     }
+  }
+
+  private func artifacts(in directory: URL) throws -> [String: Data] {
+    let root = directory.resolvingSymlinksInPath()
+    let entries = try #require(
+      FileManager.default.enumerator(
+        at: root, includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey]))
+    var files: [String: Data] = [:]
+    var bytes = 0
+    for case let file as URL in entries {
+      let path = file.resolvingSymlinksInPath().path
+      try #require(path.hasPrefix(root.path + "/"))
+      if try file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true {
+        try #require(files.count < 512)
+        try #require(
+          try file.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0 <= 16 * 1024 * 1024)
+        let data = try Data(contentsOf: file)
+        bytes += data.count
+        try #require(bytes <= 32 * 1024 * 1024)
+        files[String(path.dropFirst(root.path.count + 1))] = data
+      }
+    }
+    return files
   }
 
   private func family(in directory: URL) throws -> [String: Data] {

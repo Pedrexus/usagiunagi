@@ -214,7 +214,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
 
   private var progress: some View {
     VStack(spacing: 6) {
-      controlsLayout {
+      adaptiveControls {
         Text("\(state.completed) completed · \(state.remaining) remaining")
           .frame(maxWidth: .infinity, alignment: .leading)
           .accessibilityIdentifier("review.progress")
@@ -228,22 +228,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   }
 
   private var successFeedback: some View {
-    ViewThatFits(in: .horizontal) {
-      feedbackLabels(horizontal: true)
-      feedbackLabels(horizontal: false)
-    }
-    .font(.caption).foregroundStyle(.secondary)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .accessibilityElement(children: .combine)
-    .accessibilityIdentifier("review.success")
-  }
-
-  private func feedbackLabels(horizontal: Bool) -> some View {
-    let layout =
-      horizontal
-      ? AnyLayout(HStackLayout(spacing: 12))
-      : AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
-    return layout {
+    adaptiveControls {
       if let success = state.success {
         if state.feedbackPreferences.correctAnswerFeedback {
           Label("Correct", systemImage: "checkmark.circle")
@@ -260,6 +245,10 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         }
       }
     }
+    .font(.caption).foregroundStyle(.secondary)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("review.success")
     .symbolEffectsRemoved(reduceMotion)
     .symbolEffect(.bounce, options: .nonRepeating, value: state.successCount)
   }
@@ -271,7 +260,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           .accessibilityIdentifier("review.previousAnswer")
       }
       details().frame(maxWidth: .infinity, alignment: .leading)
-      controlsLayout {
+      adaptiveControls {
         if state.canShowAll {
           Button("All information", systemImage: "info.circle") { action(.showAll) }
             .keyboardShortcut(.space, modifiers: [])
@@ -288,7 +277,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           .accessibilityIdentifier("review.feedback")
       }
       if state.phase == .incorrect {
-        controlsLayout {
+        adaptiveControls {
           Button("Try again", systemImage: "arrow.counterclockwise") { action(.retry) }
             .keyboardShortcut(.delete, modifiers: [])
           Button("Reveal answer", systemImage: "eye") { action(.reveal) }
@@ -388,14 +377,15 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     .clipShape(RoundedRectangle(cornerRadius: 16))
   }
 
-  private var controlsLayout: AnyLayout {
-    typeSize.isAccessibilitySize
-      ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
-      : AnyLayout(HStackLayout(spacing: 8))
+  private func adaptiveControls<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: 8, content: content).fixedSize(horizontal: true, vertical: false)
+      VStack(alignment: .leading, spacing: 8, content: content)
+    }
   }
 
   private var answerActions: some View {
-    controlsLayout {
+    adaptiveControls {
       if state.isAnki {
         Button("Incorrect", systemImage: "xmark") { action(.incorrect) }
           .accessibilityIdentifier("review.incorrect")

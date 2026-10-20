@@ -67,7 +67,7 @@ public struct LessonFlowView<Page: View>: View {
                         )
                         .font(.title3)
                       }
-                    }.padding(.horizontal, 12).frame(minWidth: 44, minHeight: 36).foregroundStyle(
+                    }.padding(.horizontal, 12).frame(minWidth: 44, minHeight: 44).foregroundStyle(
                       .white
                     )
                     .background(
