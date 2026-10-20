@@ -136,6 +136,100 @@ private final class FrozenStoreBundle {}
     #expect(try Data(contentsOf: frozen.appendingPathExtension("baseline.plist")) == baseline)
   }
 
+  enum PermissionCase: String, CaseIterable, Sendable {
+    case newLease, selection, preparations, generations
+  }
+
+  @Test(arguments: PermissionCase.allCases)
+  func unwritableAdoptionPreservesEveryAttemptAndRecoversAfterPermissionRestoration(
+    _ test: PermissionCase
+  ) async throws {
+    let manager = FileManager.default
+    let frozen = try frozenURL()
+    let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+    let frozenFamily = try family(in: frozen.deletingLastPathComponent())
+    let directory = manager.temporaryDirectory.appending(path: "frozen-native-\(UUID())")
+    try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+    let blocked: URL
+    switch test {
+    case .newLease, .selection: blocked = directory
+    case .preparations, .generations:
+      blocked = directory.appending(path: test.rawValue)
+      try manager.createDirectory(at: blocked, withIntermediateDirectories: true)
+    }
+    defer {
+      try? manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: blocked.path)
+      remove(directory)
+    }
+    for (name, bytes) in frozenFamily { try bytes.write(to: directory.appending(path: name)) }
+    if test == .selection {
+      try Data().write(to: directory.appending(path: "store-owner.lock"))
+    }
+    try manager.setAttributes([.posixPermissions: 0o500], ofItemAtPath: blocked.path)
+    let selectorURL = directory.appending(path: "store-selection.plist")
+    var previous: AdoptionSelection?
+    for _ in 0..<2 {
+      let before = try artifacts(in: directory)
+      do {
+        _ = try await StudyStore.openApplication(in: directory)
+        Issue.record("Unwritable first-adoption input opened: \(test.rawValue)")
+      } catch {
+        let error = error as NSError
+        #expect(error.domain == (test == .newLease ? NSPOSIXErrorDomain : NSCocoaErrorDomain))
+        #expect(
+          error.code
+            == (test == .newLease
+              ? Int(POSIXErrorCode.EACCES.rawValue)
+              : CocoaError.Code.fileWriteNoPermission.rawValue))
+      }
+      let attributes = try manager.attributesOfItem(atPath: blocked.path)
+      #expect((attributes[.posixPermissions] as? NSNumber)?.intValue == 0o500)
+      #expect(try family(in: directory) == frozenFamily)
+      let after = try artifacts(in: directory)
+      for (path, bytes) in before where path != "store-selection.plist" {
+        #expect(after[path] == bytes)
+      }
+      switch test {
+      case .newLease, .selection:
+        #expect(after == before)
+        #expect(!manager.fileExists(atPath: selectorURL.path))
+      case .preparations, .generations:
+        let selection = try PropertyListDecoder().decode(
+          AdoptionSelection.self, from: Data(contentsOf: selectorURL))
+        #expect(selection.phase == "preparing" && selection.validation == nil)
+        #expect(selection.source == frozenFamily.mapValues(digest))
+        #expect(selection.candidate != selection.retained)
+        if let previous {
+          #expect(selection.retained == previous.retained)
+          #expect(selection.candidate != previous.candidate)
+        }
+        previous = selection
+      }
+    }
+    let beforeRetry = try artifacts(in: directory)
+    try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: blocked.path)
+    do {
+      let opened = try await StudyStore.openApplication(in: directory)
+      #expect(try await opened.nativeBaselineState() == manifest.expected)
+    }
+    let selection = try PropertyListDecoder().decode(
+      AdoptionSelection.self, from: Data(contentsOf: selectorURL))
+    #expect(selection.phase == "selected" && selection.validation?.count == 64)
+    #expect(selection.source == frozenFamily.mapValues(digest))
+    if let previous {
+      #expect(selection.retained == previous.retained && selection.candidate != previous.candidate)
+    }
+    let afterRetry = try artifacts(in: directory)
+    for (path, bytes) in beforeRetry where path != "store-selection.plist" {
+      #expect(afterRetry[path] == bytes)
+    }
+    #expect(try family(in: directory) == frozenFamily)
+    #expect(
+      try family(in: directory.appending(path: "generations/\(selection.retained)")) == frozenFamily
+    )
+    #expect(try family(in: frozen.deletingLastPathComponent()) == frozenFamily)
+  }
+
   enum MetadataCase: String, CaseIterable, Sendable {
     case control, metadataMissing, metadataMalformed, metadataMissingHashes
     case cacheMissing, cacheMalformed
