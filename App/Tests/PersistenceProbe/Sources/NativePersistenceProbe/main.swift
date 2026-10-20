@@ -13,15 +13,19 @@ import StudyPersistence
       "verify-rollback-handoff", "write-native-selection", "read-native-selection",
     ]
     #if DEBUG
-      modes += ["write-native-baseline", "read-native-baseline"]
+      modes += ["write-native-baseline", "read-native-baseline"] + NativeStoreUpgrade.commands
     #endif
     guard args.count == 3, modes.contains(args[1]) else {
       print(
-        "Usage: NativePersistenceProbe write|read|read-attempts|write-catalog|read-catalog|import-handoff|save-handoff|activate-handoff|edit-handoff|read-handoff|rollback-handoff|verify-rollback-handoff|write-native-selection|read-native-selection|write-native-baseline|read-native-baseline /path/to/disposable/study.store"
+        "Usage: NativePersistenceProbe \(modes.joined(separator: "|")) /path/to/disposable/study.store"
       )
       exit(2)
     }
     #if DEBUG
+      if NativeStoreUpgrade.commands.contains(args[1]) {
+        try await NativeStoreUpgrade.run(args[1], url: URL(filePath: args[2]))
+        return
+      }
       if args[1].hasSuffix("native-baseline") {
         try await NativeStoreBaseline.run(args[1], url: URL(fileURLWithPath: args[2]))
         return

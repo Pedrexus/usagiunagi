@@ -93,16 +93,7 @@
         )
       } else {
         try require(command == "read-native-baseline", "Unknown baseline operation")
-        try require(
-          FileManager.default.fileExists(atPath: url.path), "The frozen baseline store is missing.")
-        let manifest = try PropertyListDecoder().decode(
-          Manifest.self, from: Data(contentsOf: sidecar))
-        try require(
-          manifest.formatVersion == 1 && manifest.writerCommit == writerCommit
-            && manifest.writerSourceHash == writerSourceHash && manifest.schemaKind == "unversioned"
-            && manifest.accountIDs == accounts && manifest.sourcePaths.count == 67,
-          "Unexpected baseline provenance or format.")
-        try validateCoverage(manifest.expected)
+        let manifest = try frozenManifest(at: url)
         // Never open the frozen source. SwiftData may migrate or maintain WAL files on open.
         let folder = URL.temporaryDirectory.appending(path: "native-baseline-\(UUID())")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -122,6 +113,19 @@
           "PASS: fresh process restored exact baseline fields, revisions, ownership and schema twice"
         )
       }
+    }
+    static func frozenManifest(at url: URL) throws -> Manifest {
+      try require(
+        FileManager.default.fileExists(atPath: url.path), "The frozen baseline store is missing.")
+      let manifest = try PropertyListDecoder().decode(
+        Manifest.self, from: Data(contentsOf: url.appendingPathExtension("baseline.plist")))
+      try require(
+        manifest.formatVersion == 1 && manifest.writerCommit == writerCommit
+          && manifest.writerSourceHash == writerSourceHash && manifest.schemaKind == "unversioned"
+          && manifest.accountIDs == accounts && manifest.sourcePaths.count == 67,
+        "Unexpected baseline provenance or format.")
+      try validateCoverage(manifest.expected)
+      return manifest
     }
     private static func verify(_ url: URL, expected: State) async throws {
       let store = try await StudyStore.open(at: url)
@@ -191,7 +195,7 @@
   }
 
   extension StudyStore {
-    fileprivate func nativeBaselineState() throws -> NativeStoreBaseline.State {
+    func nativeBaselineState() throws -> NativeStoreBaseline.State {
       let schema = modelContainer.schema
       let entities = schema.entities.map { entity in
         NativeStoreBaseline.Entity(
