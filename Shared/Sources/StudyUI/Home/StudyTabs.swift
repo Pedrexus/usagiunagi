@@ -2,7 +2,7 @@ import SwiftUI
 
 public enum StudyTab: Hashable, Sendable { case home, practice, statistics }
 
-/// Both data backends use the same native adaptive navigation.
+/// iPhone tabs adapt through the system's larger-window navigation.
 public struct StudyTabs<Home: View, Practice: View, Statistics: View>: View {
   @Binding private var selection: StudyTab
   private let home: Home
@@ -38,6 +38,6 @@ public struct StudyTabs<Home: View, Practice: View, Statistics: View>: View {
           "navigation.Statistics")
       }
     }
-    .tabViewStyle(.tabBarOnly)
+    .tabViewStyle(.sidebarAdaptable)
   }
 }

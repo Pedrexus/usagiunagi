@@ -26,7 +26,7 @@ public struct LessonFlowView<Page: View>: View {
   }
   public var body: some View {
     VStack(spacing: 0) {
-      ZStack(alignment: .topLeading) {
+      Group {
         if subjects.isEmpty {
           ContentUnavailableView(
             "No lessons available", systemImage: "books.vertical",
@@ -41,9 +41,6 @@ public struct LessonFlowView<Page: View>: View {
                 index = min(subjects.count, max(0, index + (value.translation.width < 0 ? 1 : -1)))
               })
         }
-        Button(backTitle, systemImage: "chevron.backward", action: back).buttonStyle(.glass)
-          .padding(8).accessibilityIdentifier(
-            "lesson.back")
       }
       if !subjects.isEmpty {
         VStack(spacing: 4) {
@@ -104,6 +101,11 @@ public struct LessonFlowView<Page: View>: View {
               .onChange(of: index) { _, value in proxy.scrollTo(value, anchor: .center) }
           }
         }.padding(.vertical, 8).background(.bar)
+      }
+    }.toolbar {
+      ToolbarItem(placement: .navigation) {
+        Button(backTitle, systemImage: "chevron.backward", action: back)
+          .accessibilityIdentifier("lesson.back")
       }
     }.focusable(index < subjects.count).focused($keyboardFocus)
       .onAppear { keyboardFocus = index < subjects.count }

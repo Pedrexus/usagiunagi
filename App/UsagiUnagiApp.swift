@@ -26,21 +26,21 @@ import SwiftUI
       .defaultSize(width: 1120, height: 800)
       .defaultLaunchBehavior(.presented)
       .restorationBehavior(StudyAppAssembly.isReviewFixture ? .disabled : .automatic)
-      .commands {
-        CommandGroup(after: .newItem) {
-          Button("Refresh WaniKani") {
-            Task {
-              guard let services = owner.services else { return }
-              await services.model.refresh()
-              await services.automaticSync.wake()
-            }
-          }.keyboardShortcut("r", modifiers: [.command, .shift])
+    #endif
+    .commands {
+      CommandGroup(after: .newItem) {
+        Button("Refresh WaniKani") {
+          Task {
+            guard let services = owner.services else { return }
+            await services.model.refresh()
+            await services.automaticSync.wake()
+          }
+        }.keyboardShortcut("r", modifiers: [.command, .shift])
           .disabled(
             owner.services?.model.isSyncing != false
               || owner.services?.model.snapshot?.isSample != false)
-        }
       }
-    #endif
+    }
   }
   private var backgroundPermitted: Bool {
     #if DEBUG

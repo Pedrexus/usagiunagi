@@ -1,23 +1,21 @@
 import StudyCore
 import SwiftUI
 
-/// Shared form sections; hosts can add platform-specific controls without duplicating preferences.
+/// Shared preference sections for main and in-session settings.
 public struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: View {
   @Binding private var preferences: ReviewPreferences
   private let fonts: (() -> Void)?
-  private let supportsAudio: Bool
   private let display: Display
   private let answers: Answers
   private let audio: Audio
 
   public init(
     preferences: Binding<ReviewPreferences>, fonts: (() -> Void)? = nil,
-    supportsAudio: Bool = true, @ViewBuilder display: () -> Display,
+    @ViewBuilder display: () -> Display,
     @ViewBuilder answers: () -> Answers, @ViewBuilder audio: () -> Audio
   ) {
     _preferences = preferences
     self.fonts = fonts
-    self.supportsAudio = supportsAudio
     self.display = display()
     self.answers = answers()
     self.audio = audio()
@@ -55,16 +53,14 @@ public struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: 
         .accessibilityIdentifier("reviewSettings.skipping")
       answers
     }
-    if supportsAudio {
-      Section("Audio") {
-        Toggle("Autoplay audio", isOn: $preferences.autoplayAudio)
-          .accessibilityIdentifier("reviewSettings.autoplay")
-        #if os(iOS)
-          Toggle("Interrupt background audio", isOn: $preferences.interruptBackgroundAudio)
-            .accessibilityIdentifier("reviewSettings.interruptAudio")
-        #endif
-        audio
-      }
+    Section("Audio") {
+      Toggle("Autoplay audio", isOn: $preferences.autoplayAudio)
+        .accessibilityIdentifier("reviewSettings.autoplay")
+      #if os(iOS)
+        Toggle("Interrupt background audio", isOn: $preferences.interruptBackgroundAudio)
+          .accessibilityIdentifier("reviewSettings.interruptAudio")
+      #endif
+      audio
     }
     Section {
       Toggle("Correct answer feedback", isOn: $preferences.correctAnswerFeedback)

@@ -8,13 +8,12 @@ public struct ReviewSettingsPanel: View {
   private let changed: (ReviewPreferences, ReviewPreferences) -> Void
   private let fonts: (() -> Void)?
   private let offlineAudio: (() -> Void)?
-  private let supportsAudio: Bool
   private let done: (() -> Void)?
 
   public init(
     preferences: ReviewPreferences,
     changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
-    fonts: (() -> Void)? = nil, offlineAudio: (() -> Void)? = nil, supportsAudio: Bool = true,
+    fonts: (() -> Void)? = nil, offlineAudio: (() -> Void)? = nil,
     done: (() -> Void)? = nil
   ) {
     _preferences = State(initialValue: preferences)
@@ -22,7 +21,6 @@ public struct ReviewSettingsPanel: View {
     self.changed = changed
     self.fonts = fonts
     self.offlineAudio = offlineAudio
-    self.supportsAudio = supportsAudio
     self.done = done
   }
 
@@ -39,7 +37,7 @@ public struct ReviewSettingsPanel: View {
   public var body: some View {
     Form {
       ReviewSettingsContent(
-        preferences: binding, fonts: fonts, supportsAudio: supportsAudio,
+        preferences: binding, fonts: fonts,
         display: { EmptyView() }, answers: { EmptyView() },
         audio: {
           if let offlineAudio {
