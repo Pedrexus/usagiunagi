@@ -49,6 +49,7 @@ public struct CurriculumLibrary: Decodable, Sendable {
   public let version: Int
   public let kanjidicDate: String
   public let jlptRevision: String
+  public let kankenDocumentSHA256: String
   public let entries: [String: Entry]
   public static func bundled() throws -> Self {
     try StudyResources.decode("curricula")
@@ -94,8 +95,13 @@ public struct CurriculumCoverage: Identifiable, Sendable {
     threshold: Int = 5
   ) {
     self.curriculum = curriculum
+    let threshold = min(
+      max(threshold, StudySRSStage.apprentice1.rawValue), StudySRSStage.burned.rawValue)
     let stages = Dictionary(
-      assignments.map { ($0.subjectID, $0.srsStageNumber) }, uniquingKeysWith: max)
+      assignments.compactMap { assignment -> (Int64, Int)? in
+        guard StudySRSStage(rawValue: assignment.srsStageNumber) != nil else { return nil }
+        return (assignment.subjectID, assignment.srsStageNumber)
+      }, uniquingKeysWith: max)
     var byCharacter = [String: Int]()
     for subject in subjects where subject.kind == .kanji {
       byCharacter[subject.characters] = max(

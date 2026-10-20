@@ -308,25 +308,31 @@ public final class StudyAppModel {
     syncSummary = nil
     let cache = try await repository()
     try checkRequest(epoch)
-    do {
-      let result = try await cache.synchronize(
-        operation, credentialID: credential, token: token, client: reader
-      )
-      try checkRequest(epoch)
-      snapshot = result.snapshot
-      profile = result.profile
-      restored = true
-      accountIssue = nil
-      if let report = result.upload { syncSummary = summary(report) }
-      return result.upload
-    } catch {
-      try checkRequest(epoch)
-      if let failure = error as? StudySynchronizationFailure {
-        syncSummary = summary(failure.upload)
+    // The app owns publication; closing a waiting scene only cancels that waiter.
+    let request = Task {
+      do {
+        let result = try await cache.synchronize(
+          operation, credentialID: credential, token: token, client: reader
+        )
+        try checkRequest(epoch)
+        snapshot = result.snapshot
+        profile = result.profile
+        restored = true
+        accountIssue = nil
+        if let report = result.upload { syncSummary = summary(report) }
+        return result.upload
+      } catch {
+        try checkRequest(epoch)
+        if let failure = error as? StudySynchronizationFailure {
+          syncSummary = summary(failure.upload)
+        }
+        reportAccountIssue(error, accountID: accountID, credentialID: credential, epoch: epoch)
+        throw error
       }
-      reportAccountIssue(error, accountID: accountID, credentialID: credential, epoch: epoch)
-      throw error
     }
+    let result = await request.result
+    try Task.checkCancellation()
+    return try result.get()
   }
   private func summary(_ report: StudyUploadReport) -> String {
     "Sent \(report.uploadedReviews) reviews, \(report.uploadedLessons) lessons and \(report.uploadedMaterials) note edits. \(report.reviewsNeedingAttention + report.materialsNeedingAttention) items need attention."

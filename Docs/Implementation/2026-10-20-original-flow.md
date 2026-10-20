@@ -202,3 +202,34 @@ The final inventory parses 257/257 files with zero gaps/context issues. Producti
 | Final hosted `.tests.json` | `0c12c5f6006d5287ba4111666400a30e591e8c32271b6d21046474a1d62cd39a` |
 
 No GUI automation, Device Hub retry, browser workaround, live exercise, real recognition/cloud write, PR, push or distribution ran. Rendered compact/wide/keyboard/Dynamic Type acceptance, the held-refresh lifecycle publication question, wider G7 failures, watch single-target/private-default continuity and signed services remain open. The [watch audit](2026-10-20-widgetkit.md#watch-lifecycle-audit-october-21) records the concrete mirror-overwrite hazard; collapsing its old extension cannot be justified by compilation alone.
+
+## Sync and curriculum correctness
+
+October 21, following `1db42066`. A real store-backed regression demonstrated the held-refresh ownership bug independently of UI automation. Both refresh overloads committed the downloaded profile to SwiftData while a canceled waiting task prevented the model from publishing it. The RED run built successfully and failed only six publication assertions across the two cases. The existing synchronization/publication block now runs in one local MainActor task; the waiter checks its cancellation after that owner completes. Account/credential generation fencing, disconnect draining and caller-owned sign-in/reauthentication are unchanged. Both cases then pass within all 26 model functions, preserving the exact pending note/revision, credential and single download/no writes. No service abstraction or persistent property is added.
+
+Curriculum coverage previously accepted unsupported SRS integers as reached and could count unstarted characters at threshold zero. It now filters unsupported stages before duplicate aggregation and limits thresholds to valid milestones. The read-only bundled library exposes its existing official-document hash; no resource/schema changes. An independent Swift/PDFKit extraction of the SHA-verified official PDF matches all 313/284/328 intermediate Kanken additions. Exact sorted-UTF8/newline digests, sample membership, elementary school equivalence, final Jōyō equivalence, fixed denominators across all four UI milestones and malformed stage/boundary cases now execute. Coverage remains separate from exam passing readiness and full-account calibration.
+
+G7 adds three explicit synthetic restart images: partial capture, partial candidate and complete-but-unselected candidate. The actual opener preserves the complete seeded two-account state, source/retained bytes, abandoned artifacts, review revisions/attempt markers and note pending/attempt/issue fields; selects a fresh candidate UUID; and retains a subsequent note write/selection after reopen. All three cases pass on Mac and iPhone. No production generation code changed. These tests are same-process restart-image recovery, not an actual mid-copy kill, disk-full/file-protection/power-loss or frozen-store iOS adoption proof. Existing frozen-store separate-process evidence retains its prior scope.
+
+| Final local gate | Evidence/result |
+| --- | --- |
+| Shared Mac | `StudyCorrectnessMac.log`: 551 functions/72 suites pass (92 persistence, 7 speech, 204 UI-model, 248 core). An expected read-only save fault is diagnostic output inside the passing rollback tests |
+| Shared iPhone | `test-84b9edf28ac24eb98bd279b3c14067c2.xcresult`: 551 functions/827 executions, zero failures/skips, native-summary zero compiler errors/warnings |
+| Hosted iPhone | `test-700b0b6dd8284752906deecb99d95e0d.xcresult`: 73 functions/15 suites/102 executions, zero failures/skips. Both generated host argument arrays contain `--review-fixture` |
+| Debug Mac | `build-7f2d0ec9145c4f158dbeadf40a645a72.xcresult`: pass, zero native-summary errors/warnings; hosted iPhone action also rebuilds its app |
+| Release iOS/Mac | `build-967b9df192694fcf80e5e7c7c6cd1ab0.xcresult` / `build-760a9e8110ac4a07a3c5baf7aec366a0.xcresult`: both pass. iOS retains one empty watch-host storyboard warning; Mac native summary has zero warnings |
+| Mainboard | `1159d0d`: complete isolated suite passes 1067 cases, with 11 declared environment/fixture skips and three existing warnings. Requirement-parent typing is fixed with concrete TOML narrowing; checker retains exit 1 for zero errors/45 warnings |
+| Swift quality/inventory | All five changed Swift files pass formatter/SwiftLint/UI-parser rules, no rewrites. Inventory parses 257/257 files with zero gaps/context issues; production 21,371 → 21,383 physical lines, tests 22,660 → 22,971, tooling unchanged at 281 |
+
+Release inspection discovers all six packaged Mach-O files in the iOS Simulator/Mac app bundles, including the duplicated WatchKit stub, executable extension and WidgetKit extension. All twelve `nm -arch all -u` / `otool -arch all -L` calls exit 0; the forbidden FMDatabase/FMResultSet/Hippolyte/PromiseKit scan exits 1 with no matches. `StudyCorrectnessLinkage.json` retains each input/output hash and exact scope. This is stronger than the previous main-executable-only check, but does not attest source provenance, optimized-out static code, resource rendering or clean restoration. AppIntents metadata notes and older warning scopes remain separate.
+
+| Retained artifact | SHA-256 |
+| --- | --- |
+| RED model regression log (`/private/tmp/usagi-model-waiter-red.log`) | `2f33aa231b3797e1d1459b2a811ec8fd2ebc19166c7d6f905b0bcbacb0ba436a` |
+| Shared Mac log | `c16248f27865c9c15ee9786beb01d677ec66bc024a79f871559b4c67aedfc0b3` |
+| Shared iPhone `.tests.json` | `5dec498ef6b71ede3befbf72efe1abd8b0850b1a1c6452b1bd7ec67bc101af20` |
+| Hosted iPhone `.tests.json` | `1329e697fcde92769469d3c50a8fc83c1afa1c232bc63d86709498bebdb4f49e` |
+| `StudyCorrectnessInventory.json` / `StudyCorrectnessComparison.json` | `dcc9dfe44a10a1a3a7cd988b5c0ec00a82d443bb82bd159826c2d90a3bb369f4` / `989d3b0f9bf59c6c1e53bc2dba140e48a593ca3bed03279548a386cd7d9dd041` |
+| `StudyCorrectnessLinkage.json` | `f2a4672b3c9acf4cf81e541c3ab444c56e7d79a0bc679be9a38a93f90def2251` |
+
+V1 stays SHA-256 `538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`; bundled curricula stay `37b79abe5f90fdf068c8c946d8b776cf902c2e989c0480c3a27d6d1edfe39612`, and the reviewed source PDF stays `8c7513a4ecfc7d6ca2b8f8aa71313b9097e972bac7a43f8a568fe99a9a1d7285`. No new GUI/device access, live account/exercise, microphone, cloud write, global signing/trust change, PR, push or distribution occurred. The model-level held-refresh publication defect is resolved; rendered lifecycle/keyboard/layout acceptance remains open, as do wider G7 failures, full-account calibration, watch data/lifecycle conversion, signed services, clean restoration and unpublished CI prerequisites.

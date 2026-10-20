@@ -50,6 +50,13 @@ private actor ModelServer {
   private(set) var writes = 0
   private(set) var subjectReads = 0
   private var material = DownloadFixture.rows["study_materials"]!.first!
+  private var user = DownloadFixture.user
+  func changeProfile(username: String, level: Int) {
+    var data = user["data"] as! [String: Any]
+    data["username"] = username
+    data["level"] = level
+    user["data"] = data
+  }
   init(gate: StudyTaskGate? = nil, failAfterWrite: Bool = false) {
     self.gate = gate
     self.failAfterWrite = failAfterWrite
@@ -87,11 +94,13 @@ private actor ModelServer {
     if path == "study_materials" {
       return try DownloadFixture.response(request, object: DownloadFixture.collection([material]))
     }
-    if path == "user", other {
-      var user = DownloadFixture.user
+    if path == "user" {
+      var user = user
       var data = user["data"] as! [String: Any]
-      data["id"] = "other-account"
-      data["username"] = "other"
+      if other {
+        data["id"] = "other-account"
+        data["username"] = "other"
+      }
       user["data"] = data
       return try DownloadFixture.response(request, object: user)
     }
@@ -331,6 +340,53 @@ private actor ModelRepository {
     #expect(await server.writes == 0)
   }
 
+  @Test(arguments: [false, true])
+  func cancelledRefreshWaiterStillPublishesTheCommittedAccountAtomically(_ explicitAccount: Bool)
+    async throws
+  {
+    let cache = try await store(pendingNote: true)
+    let credentials = MemoryCredentials("fixture")
+    let gate = StudyTaskGate()
+    let server = ModelServer(gate: gate)
+    await server.changeProfile(username: "refreshed", level: 13)
+    let model = StudyAppModel(
+      credentials: credentials, client: await server.client, openStore: { cache })
+    await model.restore()
+    let previousRevision = model.dataRevision
+    let previousSnapshot = try #require(model.snapshot)
+    let previousProfile = model.profile
+    let note = try #require(await cache.materials(accountID: account).first)
+    let request = Task {
+      if explicitAccount {
+        try await model.refresh(accountID: account)
+      } else {
+        await model.refresh()
+      }
+    }
+    await gate.waitForEntry()
+    #expect(model.isSyncing && model.snapshot?.username == previousSnapshot.username)
+    #expect(model.profile == previousProfile && model.dataRevision == previousRevision)
+    request.cancel()
+    await gate.resume()
+    if explicitAccount {
+      await #expect(throws: CancellationError.self) { try await request.value }
+    } else {
+      try await request.value
+    }
+    let committed = try #require(await cache.snapshot(credentialID: credential))
+    let committedProfile = try #require(await cache.accountState(accountID: account)).profile
+    #expect(committed.username == "refreshed" && committed.currentLevel == 13)
+    #expect(model.snapshot?.accountID == account && model.snapshot?.savedAt == committed.savedAt)
+    #expect(model.snapshot?.username == committed.username && model.snapshot?.currentLevel == 13)
+    #expect(model.profile == committedProfile && model.dataRevision != previousRevision)
+    #expect(model.error == nil && !model.isSyncing)
+    let retained = try #require(await cache.materials(accountID: account).first)
+    #expect(
+      retained.pending && retained.material == note.material && retained.revision == note.revision)
+    #expect(await server.subjectReads == 1)
+    #expect(await server.writes == 0)
+    #expect(credentials.token == "fixture" && credentials.saved.isEmpty)
+  }
   @Test func refreshAndSampleBrowsingDoNotSendOrReplaceSavedWork() async throws {
     let cache = try await store(pendingNote: true)
     let server = ModelServer()

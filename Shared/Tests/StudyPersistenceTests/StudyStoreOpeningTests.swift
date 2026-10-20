@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import SQLite3
 import StudyCore
@@ -107,6 +108,117 @@ struct StudyStoreOpeningTests {
     }
   }
 
+  @Test(arguments: ["partial-capture", "partial-candidate", "complete-unselected-candidate"])
+  func interruptedPreparationKeepsItsSourceAndAbandonedArtifactsWhileSelectingAFreshCandidate(
+    _ checkpoint: String
+  ) async throws {
+    let folder = temporaryFolder()
+    let seedFolder = temporaryFolder()
+    defer {
+      removeFolder(folder)
+      removeFolder(seedFolder)
+    }
+    let writer = try await StudyStore.open(at: seedFolder.appending(path: "study.store"))
+    defer { withExtendedLifetime(writer) {} }
+    for account in ["first", "second"] {
+      _ = try await writer.importLegacyAccount(
+        source(username: account), sourceID: "source-\(account)", verifiedAccountID: account,
+        verifiedUsername: account, credentialID: "credential-\(account)")
+    }
+    let expected = try await writer.generationSnapshot()
+    var originalReviews: [String: [SavedReview]] = [:]
+    var originalMaterials: [String: SavedStudyMaterial] = [:]
+    for account in ["first", "second"] {
+      originalReviews[account] = try await writer.pendingReviews(accountID: account)
+      let material = try #require(try await writer.materials(accountID: account).first)
+      originalMaterials[account] = material
+    }
+    let original = try family(in: seedFolder)
+    #expect(try #require(original["study.store-wal"]).count > 0)
+    try write(original, in: folder)
+    #expect(try family(in: seedFolder) == original)
+    let retainedID = UUID().uuidString
+    let abandonedID = UUID().uuidString
+    let retainedFolder = folder.appending(path: "generations/\(retainedID)")
+    let abandonedFolder = folder.appending(path: "generations/\(abandonedID)")
+    let work = folder.appending(path: "preparations/\(abandonedID)")
+    try FileManager.default.createDirectory(at: abandonedFolder, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
+    let fingerprints = original.mapValues {
+      SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined()
+    }
+    let preparing: [String: Any] = [
+      "formatVersion": 1, "schema": StudySchemaV1.versionIdentifier.description,
+      "phase": "preparing", "candidate": abandonedID, "retained": retainedID,
+      "source": fingerprints,
+    ]
+    let preparation = try PropertyListSerialization.data(
+      fromPropertyList: preparing, format: .binary, options: 0)
+    try preparation.write(to: folder.appending(path: "store-selection.plist"))
+    try preparation.write(to: work.appending(path: "preparation.plist"))
+    let main = try #require(original["study.store"])
+    if checkpoint == "partial-capture" {
+      try write(["study.store": Data(main.prefix(97))], in: work.appending(path: "capture"))
+    } else {
+      try write(original, in: retainedFolder)
+      if checkpoint == "partial-candidate" {
+        try write(["study.store": Data(main.prefix(97))], in: abandonedFolder)
+      } else {
+        try write(original, in: abandonedFolder)
+      }
+    }
+    // These are deterministic restart images, not a claim that a process was killed mid-copy.
+    let interrupted = try files(in: folder)
+    let selectedSnapshot: StudyGenerationSnapshot
+    let selectedBytes: Data
+    let selectedID: String
+    do {
+      let opened = try await StudyStore.openApplication(in: folder)
+      #expect(try await opened.generationSnapshot() == expected)
+      let selected = try selection(in: folder)
+      selectedID = try #require(selected["candidate"] as? String)
+      #expect(selected["phase"] as? String == "selected")
+      #expect(selected["schema"] as? String == StudySchemaV1.versionIdentifier.description)
+      #expect(selected["retained"] as? String == retainedID)
+      #expect(selected["source"] as? [String: String] == fingerprints)
+      #expect(selectedID != abandonedID && selectedID != retainedID)
+      #expect(try family(in: folder) == original)
+      #expect(try family(in: retainedFolder) == original)
+      let after = try files(in: folder)
+      for (path, bytes) in interrupted where path != "store-selection.plist" {
+        #expect(after[path] == bytes, "Interrupted artifact changed: \(path)")
+      }
+      for account in ["first", "second"] {
+        let oldReviews = try #require(originalReviews[account])
+        #expect(try await opened.pendingReviews(accountID: account) == oldReviews)
+        #expect(oldReviews.count == 1 && oldReviews.allSatisfy(\.attempted))
+        let oldMaterial = try #require(originalMaterials[account])
+        let material = try #require(try await opened.materials(accountID: account).first)
+        #expect(material.revision == oldMaterial.revision)
+        #expect(material.material == oldMaterial.material && material.issue == oldMaterial.issue)
+        #expect(material.pending && material.serverID == oldMaterial.serverID)
+        #expect(material.attemptedRevision == oldMaterial.attemptedRevision)
+        #expect(material.attemptedMaterial == oldMaterial.attemptedMaterial)
+      }
+      _ = try await opened.saveMaterial(
+        .init(subjectID: 48, meaningNote: "After interrupted preparation 日本"),
+        accountID: "first", expectedRevision: nil)
+      selectedSnapshot = try await opened.generationSnapshot()
+      selectedBytes = try Data(contentsOf: folder.appending(path: "store-selection.plist"))
+    }
+    let reopened = try await StudyStore.openApplication(in: folder)
+    #expect(try await reopened.generationSnapshot() == selectedSnapshot)
+    #expect(try Data(contentsOf: folder.appending(path: "store-selection.plist")) == selectedBytes)
+    #expect(try selection(in: folder)["candidate"] as? String == selectedID)
+    #expect(try family(in: folder) == original)
+    #expect(try family(in: retainedFolder) == original)
+    #expect(try family(in: seedFolder) == original)
+    let afterReopen = try files(in: folder)
+    for (path, bytes) in interrupted where path != "store-selection.plist" {
+      #expect(afterReopen[path] == bytes, "Interrupted artifact changed after reopen: \(path)")
+    }
+  }
+
   @Test(arguments: [
     "missing-selection", "missing-selected-store", "corrupt-selection", "future-selection",
   ])
@@ -200,6 +312,10 @@ struct StudyStoreOpeningTests {
       }
     }
     return result
+  }
+  private func write(_ image: [String: Data], in folder: URL) throws {
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    for (name, bytes) in image { try bytes.write(to: folder.appending(path: name)) }
   }
   private func files(in folder: URL) throws -> [String: Data] {
     var result: [String: Data] = [:]
