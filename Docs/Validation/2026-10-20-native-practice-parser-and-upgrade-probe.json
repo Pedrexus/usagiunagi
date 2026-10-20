@@ -1,0 +1,575 @@
+{
+  "date": "2026-10-20",
+  "kind": "scoped local validation; migration remains incomplete",
+  "source": {
+    "app": "efc3cd5a249e4b9eff297410e0c1f9e3be18583b",
+    "feature_commit": "ecc5070c",
+    "baseline": "465dd79c",
+    "mainboard": "87461e5eb71623f213f439c06a569bfad6c7bc84",
+    "root_task_commit": "99cec4896",
+    "branch": "codex/swiftui-27-curriculum",
+    "shared_files": 229,
+    "shared_manifest_sha256": "7230f443b48fbf1864aa5af6bb2d79832e361caa60ad3fd2ee7aafa3cc3edd48",
+    "app_shared_source_manifest_excluding_owner_edits": {
+      "source_files": 309,
+      "source_manifest_sha256": "f7476029501a3a5a6de486fce72a1cb91302b0c2f90ae04c617864fa1461e11a",
+      "excluded_owner_edits": [
+        "App/AnswerChecker.swift",
+        "App/FullRefreshOverlayView.swift",
+        "App/Features/Catalog/LegacyCatalogViewController.swift"
+      ]
+    },
+    "owner_edits": "Three preexisting header/whitespace edits remain unstaged. They were present during local compilation/parser checks and are excluded from the committed-source and production LOC inventory.",
+    "tooling_files": {
+      "mainboard.toml": "deb344233de8e1d29454bf9318ddc68537636a3e1b3e6add7e83890a70bde5cb",
+      ".github/workflows/apple.yml": "d89304c4fa61788331ab71fea9394d66d36ce5753d6b39748b680b1a3a510c2b"
+    }
+  },
+  "toolchain": {
+    "developer_directory": "/Applications/Xcode.app/Contents/Developer",
+    "xcode": "27.0 (27A266a)",
+    "swift": "6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)",
+    "macos": "27.0.1",
+    "simulators": "iOS 27.0; iPhone 18 Pro and iPad Pro 11-inch (M5)",
+    "execution": "Mainboard owns every build/test; GUI and simulator jobs serialized. Result readers and pure checks may overlap. No real account exercises, cloud writes, permissions changes, PRs, pushes or distribution."
+  },
+  "implementation": [
+    "One typed root navigation path now opens Katakana, eliminating the unused wrapper/nested modal stack and restoring native Mac quick settings beside Voice and End.",
+    "Katakana preserves original 107-card order/duplicate, reading-Anki settings and exact drafts; reveal is ungraded, explicit assessment counts once, summaries include completed cards and first reading mistakes, with no SRS/outbox effects.",
+    "Avatar requests use one explicitly injected cache/transport, bounded ImageIO decoding, cancellation/clear generations and no-store handling. Production transport has no credential/cookie store or second response cache; fixture transport is local PNG data.",
+    "Both retained iOS compatibility hosts explicitly receive the avatar cache so shared rendering does not silently become a placeholder there. These final two edits compile in mobile Debug/Release and pass quality/parser checks; no new legacy-host GUI acceptance is claimed.",
+    "Material Edit moved from GroupBox label into clickable content. Mac Sources/forecast tests now target actual native disclosure geometry and combined count label; original behavior assertions remain.",
+    "Eight original mobile developer/practice/settings IDs now use the native scene. Eleven old-host routes, seven hosted non-writer suites and the additional hosted notification invariant remain retirement obligations."
+  ],
+  "shared": {
+    "mac": {
+      "log": "/private/tmp/usagi-shared-native-navigation-final-mac.log",
+      "log_sha256": "c74f6e88846594ffc9d6c39014b556b75c82461d16864a199444fcb18a038eaa",
+      "bundle": null,
+      "compiler_warning_lines": 6,
+      "reported_tests": 523,
+      "reported_suites": 72,
+      "module_summaries": [
+        [
+          81,
+          7
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          196,
+          25
+        ],
+        [
+          239,
+          39
+        ]
+      ]
+    },
+    "ios": {
+      "log": "/private/tmp/usagi-shared-native-navigation-final-ios.log",
+      "log_sha256": "faa17fc07c5cc9b423e416575ae56ed6ae4f6acefe0d5e74a35054c9819ff7c7",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-d15ff4585214454599c5ec9f6469c2c5.xcresult",
+      "compiler_warning_lines": 6,
+      "reported_tests": 523,
+      "reported_suites": 72,
+      "module_summaries": [
+        [
+          81,
+          7
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          196,
+          25
+        ],
+        [
+          239,
+          39
+        ]
+      ]
+    },
+    "count_definition": "Sum of the four Swift Testing final summaries; not XCTest executed-zero lines or parameter invocation counts. Core 239/39, Persistence 196/25, Speech 7/1, UI/model 81/7.",
+    "warnings": "Six existing test compiler diagnostics in each final transcript: three companion captured-mutation warnings and three unused notification-request results; not a warning-free full-app Swift 6 claim."
+  },
+  "native_ui": {
+    "mac_final": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-59602a906f1740a488bf02d66b686e0e.xcresult",
+      "summary_file": "/private/tmp/usagi-native-parity-final-mac-results.json",
+      "result": "Passed",
+      "passed": 8,
+      "failed": 0,
+      "runtime_warnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+        }
+      ],
+      "failures": [
+
+      ],
+      "destinations": [
+        {
+          "deviceName": "My Mac",
+          "osVersion": "27.0.1",
+          "platform": "macOS",
+          "architecture": "arm64"
+        }
+      ]
+    },
+    "mac_scope": "All six MacCatalogTests plus typed and reading-Anki Katakana. Passing final bundle includes an explicit own-app-window capture, viewed after export. One internal QoS runtime warning remains.",
+    "ipad_settings_practice": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-2e27b27e7b1b4b4a9700c0ae4bce2a7c.xcresult",
+      "summary_file": "/private/tmp/usagi-parity-ipad-results.json",
+      "result": "Passed",
+      "passed": 10,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ],
+      "failures": [
+
+      ],
+      "destinations": [
+        {
+          "deviceName": "iPad Pro 11-inch (M5)",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator",
+          "architecture": "arm64"
+        }
+      ]
+    },
+    "phone_initial_settings_practice": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-e7369a7b9e3542e48bd067d0b206c262.xcresult",
+      "summary_file": "/private/tmp/usagi-native-settings-practice-phone-results.json",
+      "result": "Failed",
+      "passed": 7,
+      "failed": 3,
+      "runtime_warnings": [
+
+      ],
+      "failures": [
+        {
+          "failureText": "Failed to tap \"settings.page.appearance\" Button: No matches found for Elements matching predicate '\"settings.page.appearance\" IN identifiers' from input {(\n    Button, identifier: 'home.savedWork', label: 'Saved work',\n    Button, label: 'Refresh',\n    Button, identifier: 'BackButton', label: 'Settings',\n    Button, identifier: 'app.search', label: 'Search',\n    Button, identifier: 'app.settings', label: 'Settings',\n    Button, label: 'Done',\n    Button, identifier: 'settings.interfaceStyle', label: 'Interface style, Dark',\n    Button, identifier: 'navigation.Home', label: 'Home', Selected,\n    Button, identifier: 'navigation.Practice', label: 'Practice',\n    Button, identifier: 'navigation.Statistics', label: 'Stats',\n    Button, identifier: 'home.lessons', label: 'Lessons, 0 available', Disabled,\n    Button, identifier: 'home.reviews', label: 'Start reviews, 1 ready',\n    Button, identifier: 'home.chooseLessons', label: 'Choose lessons', Disabled,\n    Button, identifier: 'home.forecast', label: 'Upcoming reviews: 1 now, 0 more in the next 24 hours',\n    Button, label: 'Nothing more in the next 24 hours'\n)}",
+          "targetName": "AppStoreScreenshots",
+          "testIdentifier": 7,
+          "testIdentifierString": "ReviewFlowTests/testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation()",
+          "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation",
+          "testName": "testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation()"
+        },
+        {
+          "failureText": "Failed to tap \"settings.lessonOrderLink\" Button: No matches found for Elements matching predicate '\"settings.lessonOrderLink\" IN identifiers' from input {(\n    Button, identifier: 'home.savedWork', label: 'Saved work',\n    Button, label: 'Refresh',\n    Button, identifier: 'BackButton', label: 'Lessons',\n    Button, identifier: 'app.search', label: 'Search',\n    Button, identifier: 'app.settings', label: 'Settings',\n    Button, label: 'Reorder Kanji',\n    Button, label: 'Reorder Vocabulary',\n    Button, label: 'Reorder Radicals',\n    Button, identifier: 'navigation.Home', label: 'Home', Selected,\n    Button, identifier: 'navigation.Practice', label: 'Practice',\n    Button, identifier: 'navigation.Statistics', label: 'Stats',\n    Button, identifier: 'home.lessons', label: 'Lessons, 0 available', Disabled,\n    Button, identifier: 'home.reviews', label: 'Start reviews, 1 ready',\n    Button, identifier: 'home.chooseLessons', label: 'Choose lessons', Disabled,\n    Button, identifier: 'home.forecast', label: 'Upcoming reviews: 1 now, 0 more in the next 24 hours',\n    Button, label: 'Nothing more in the next 24 hours'\n)}",
+          "targetName": "AppStoreScreenshots",
+          "testIdentifier": 8,
+          "testIdentifierString": "ReviewFlowTests/testSettingsLessonChoicesAndReorderingPersistWhenReopened()",
+          "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testSettingsLessonChoicesAndReorderingPersistWhenReopened",
+          "testName": "testSettingsLessonChoicesAndReorderingPersistWhenReopened()"
+        },
+        {
+          "failureText": "Failed to tap \"settings.page.appearance\" Button: No matches found for Elements matching predicate '\"settings.page.appearance\" IN identifiers' from input {(\n    Button, identifier: 'home.savedWork', label: 'Saved work',\n    Button, label: 'Refresh',\n    Button, identifier: 'BackButton', label: 'Settings',\n    Button, identifier: 'app.search', label: 'Search',\n    Button, identifier: 'app.settings', label: 'Settings',\n    Button, label: 'Done',\n    Button, identifier: 'settings.interfaceStyle', label: 'Interface style, Light',\n    Button, identifier: 'navigation.Home', label: 'Home', Selected,\n    Button, identifier: 'navigation.Practice', label: 'Practice',\n    Button, identifier: 'navigation.Statistics', label: 'Stats',\n    Button, identifier: 'home.lessons', label: 'Lessons, 0 available', Disabled,\n    Button, identifier: 'home.reviews', label: 'Start reviews, 1 ready',\n    Button, identifier: 'home.chooseLessons', label: 'Choose lessons', Disabled,\n    Button, identifier: 'home.forecast', label: 'Upcoming reviews: 1 now, 0 more in the next 24 hours',\n    Button, label: 'Nothing more in the next 24 hours'\n)}",
+          "targetName": "AppStoreScreenshots",
+          "testIdentifier": 10,
+          "testIdentifierString": "ReviewFlowTests/testSharedNotificationSettingsPersistWithoutSystemPrompts()",
+          "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/ReviewFlowTests/testSharedNotificationSettingsPersistWithoutSystemPrompts",
+          "testName": "testSharedNotificationSettingsPersistWithoutSystemPrompts()"
+        }
+      ],
+      "destinations": [
+        {
+          "deviceName": "iPhone 18 Pro",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator",
+          "architecture": "arm64"
+        }
+      ]
+    },
+    "phone_retry_three": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-5fcb2dfc09d443abba6677ae58bd776b.xcresult",
+      "summary_file": "/private/tmp/usagi-parity-phone-retry-results.json",
+      "result": "Passed",
+      "passed": 3,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ],
+      "failures": [
+
+      ],
+      "destinations": [
+        {
+          "deviceName": "iPhone 18 Pro",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator",
+          "architecture": "arm64"
+        }
+      ]
+    },
+    "mobile_settings_scope": "Eight original IDs plus two native Katakana scenarios. Phone is seven initial passes plus three focused passing retries, not one fresh 10/10 batch. The only intervening test change scopes Back to navigationBars.buttons[BackButton], preserving all assertions; iPad passes the complete corrected ten-case batch.",
+    "phone_catalog_followup": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-40c7fecbfc2f4b9f8fd287c759c46dad.xcresult",
+      "summary_file": "/private/tmp/usagi-native-parity-final-phone-catalog-results.json",
+      "result": "Passed",
+      "passed": 2,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ],
+      "failures": [
+
+      ],
+      "destinations": [
+        {
+          "deviceName": "iPhone 18 Pro",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator",
+          "architecture": "arm64"
+        }
+      ]
+    },
+    "ipad_catalog_followup": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8479a6a9104c452a979b0daea1e5fc0d.xcresult",
+      "summary_file": "/private/tmp/usagi-native-parity-final-ipad-catalog-results.json",
+      "result": "Passed",
+      "passed": 2,
+      "failed": 0,
+      "runtime_warnings": [
+
+      ],
+      "failures": [
+
+      ],
+      "destinations": [
+        {
+          "deviceName": "iPad Pro 11-inch (M5)",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator",
+          "architecture": "arm64"
+        }
+      ]
+    },
+    "catalog_followup_scope": "Search/clear/details/material editor/cancel/query restoration and exclusion/detail-return after the shared header change. Earlier full mobile six-case results remain historical; no new full mobile six-case pass is claimed.",
+    "source_order": "Final Shared bytes are identical throughout accepted runs. The two retained iOS-only host cache injections follow the final Mac UI run and earlier ten-case mobile runs; later mobile catalog Debug builds and both Release builds include them.",
+    "mac_prior_mixed_eight": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-8b44dbd121bd45959740fee40f06d42b.xcresult",
+      "summary_file": "/private/tmp/usagi-parity-mac-catalog-first-results.json",
+      "result": "Failed",
+      "passed": 6,
+      "failed": 2,
+      "runtime_warnings": [
+
+      ],
+      "failures": [
+        {
+          "failureText": "XCTAssertTrue failed",
+          "targetName": "AppStoreScreenshots",
+          "testIdentifier": 7,
+          "testIdentifierString": "MacReviewModeTests/testKatakanaReadingAnkiPreservesMistakesAndOpensSummaryReading()",
+          "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/MacReviewModeTests/testKatakanaReadingAnkiPreservesMistakesAndOpensSummaryReading",
+          "testName": "testKatakanaReadingAnkiPreservesMistakesAndOpensSummaryReading()"
+        },
+        {
+          "failureText": "XCTAssertEqual failed: (\"Optional(\"a\")\") is not equal to (\"Optional(\"あ\")\")",
+          "targetName": "AppStoreScreenshots",
+          "testIdentifier": 8,
+          "testIdentifierString": "MacReviewModeTests/testKatakanaTypedPracticePreservesDraftSettingsAndCompletedSummary()",
+          "testIdentifierURL": "test://com.apple.xcode/UsagiUnagi/AppStoreScreenshots/MacReviewModeTests/testKatakanaTypedPracticePreservesDraftSettingsAndCompletedSummary",
+          "testName": "testKatakanaTypedPracticePreservesDraftSettingsAndCompletedSummary()"
+        }
+      ],
+      "destinations": [
+        {
+          "deviceName": "My Mac",
+          "osVersion": "27.0.1",
+          "platform": "macOS",
+          "architecture": "arm64"
+        }
+      ]
+    },
+    "failure_history": [
+      "Earlier historical Mac catalog batches failed search, inline Sources and forecast. The final result follows the clickable Edit fix and actual accessibility-query corrections; no assertions removed.",
+      "First mixed eight-case Mac batch passes all six catalog cases but fails both new Katakana queries (romaji draft and native Back). Corrected queries expose a real omitted Quick settings toolbar control in the modal route.",
+      "Mac test-a56910cc69f3493f938efbf574bf9993 passes Anki but typed fails missing Quick settings; diagnostic test-049a8be2381c4051bbd2fe9c05706aa3 confirms the own-app modal toolbar. Shared root navigation fixes it; test-3c63605f35174944a8502943cb4a160b passes both before final eight-case acceptance.",
+      "Phone initial three settings failures target an underlying Home control behind the settings sheet; stable BackButton query fixes them, and the three pass on retry. Other seven initially pass.",
+      "One phone launch was initially denied by automatic approval review over possible concurrent GUI work. Terminal session results and a process-name-only audit showed no runner; exact bounded retry was approved. No concurrency bypass or user permission change."
+    ],
+    "not_closed": "Remaining native Mac settings equivalence and eleven legacy-host routes; earlier material-editor four invalid-frame warnings per mobile destination remain independent. Current focused zero-warning results do not close that gate."
+  },
+  "parser_and_quality": {
+    "gate": {
+      "files": 625,
+      "rewritten": [
+
+      ],
+      "failures": [
+
+      ]
+    },
+    "scope": {
+      "inventory_files": 628,
+      "kept_files": 625,
+      "matched_swift_files": 313,
+      "invocations": 1,
+      "counts": {
+        "App/Tests/": 14,
+        "App/AppTests/": 8,
+        "App/AppStoreScreenshots/": 13,
+        "Shared/Tests/": 79,
+        "Shared/Sources/": 125,
+        "Resources/": 4
+      },
+      "excluded_components": [
+        ".build",
+        ".mainboard",
+        "Generated",
+        "Pods",
+        "Vendor"
+      ],
+      "native_helper_source": "/Users/pedro/Developer/Projects/packages/mainboard/src/mainboard/analysis/providers/swift_syntax.swift",
+      "native_helper_source_sha256": "b1eb0ffc6eac857b5419f8a85a25976c61110257b4b315709b9a487f7a69d1ae",
+      "source_manifest_sha256": "10068e81226d6aeda3bae092e180994a67984c6b3292eee7a5bf1ab50795c83a"
+    },
+    "scope_note": "625 kept inventory entries are not 625 Swift files; exactly 313 match swift-parse. Generated/vendor/build outputs are explicitly excluded. Parser source manifest includes the three preexisting owner edits.",
+    "quality": [
+      {
+        "files": 17,
+        "rewritten": [
+
+        ],
+        "failures": [
+
+        ]
+      },
+      {
+        "files": 2,
+        "rewritten": [
+
+        ],
+        "failures": [
+
+        ]
+      }
+    ],
+    "quality_scope": "Seventeen original changed Swift files plus two compatibility-host injection files; all read-only, zero failures/rewrites.",
+    "disposable_scope_verdict": {
+      "invalid_exit": 1,
+      "invalid_findings": 4,
+      "tested_paths": [
+        "App/Tests/Broken.swift",
+        "App/AppTests/Broken.swift",
+        "App/AppStoreScreenshots/Broken.swift",
+        "Shared/Tests/Broken.swift"
+      ],
+      "valid_exit": 0,
+      "excluded_generated_vendor_unreported": true,
+      "failed_gate_left_source_unchanged": true
+    },
+    "four_focused_regressions": {
+      "versions": {
+        "pytest": "9.1.1"
+      },
+      "isolation": {
+        "argv": [
+          "/Users/pedro/Developer/projects/.mainboard/envs/default/.pixi/envs/default/bin/python",
+          "-S",
+          "/Users/pedro/Developer/projects/packages/mainboard/integration/gates/native_probe.py",
+          "/private/tmp/mb-gate.vVUUndpG"
+        ],
+        "limit_seconds": 20,
+        "exit_code": 0,
+        "seconds": 0.041
+      },
+      "target": {
+        "argv": [
+          "/Users/pedro/Developer/projects/.mainboard/envs/default/.pixi/envs/default/bin/python",
+          "-m",
+          "pytest",
+          "-c",
+          "/Users/pedro/Developer/projects/packages/mainboard/pyproject.toml",
+          "-p",
+          "no:randomly",
+          "-p",
+          "no:cacheprovider",
+          "--basetemp",
+          "/private/tmp/mb-gate.vVUUndpG/pytest",
+          "--junitxml",
+          "/private/tmp/mainboard-parser-gate-focused/target.xml",
+          "/Users/pedro/Developer/projects/packages/mainboard/integration/test_swift_analysis.py::test_parser_gap_is_coverage_evidence_and_suppresses_partial_tree_judgments",
+          "/Users/pedro/Developer/projects/packages/mainboard/integration/test_swift_analysis.py::test_gate_is_read_only_and_reports_only_selected_swift_files",
+          "/Users/pedro/Developer/projects/packages/mainboard/integration/test_swift_analysis.py::test_selected_gate_validates_rule_ids_and_skip_further_narrows",
+          "/Users/pedro/Developer/projects/packages/mainboard/integration/test_swift_analysis.py::test_missing_native_toolchain_refuses_before_any_download"
+        ],
+        "limit_seconds": 210,
+        "exit_code": 0,
+        "seconds": 4.249
+      },
+      "wall_seconds": 4.805
+    },
+    "ci": "Separate swift-parse step returns failing finding status; broad analyze check remains a migration inventory. actionlint 1.7.12 passes current workflow syntax; no hosted execution or tooling publication claimed.",
+    "remaining": "Rule SDK/date provenance, full caller/resource/linkage inventory and reusable Mainboard LOC/dependency reporting remain planned. Heuristics do not resolve names/types or automatically migrate storage."
+  },
+  "persistence_experiment": {
+    "declared_task": "mainboard run --as-is usagi-test-persistence",
+    "exit_code": 0,
+    "deadline_seconds": 600,
+    "phases": [
+      "write",
+      "read-attempts",
+      "write-catalog",
+      "read-catalog",
+      "read-native-baseline",
+      "probe-native-upgrade"
+    ],
+    "log": "/private/tmp/usagi-persistence-task-accepted.log",
+    "source_hashes": {
+      "App/Tests/PersistenceProbe/README.md": "88000b87c7e61827e9c5260c17057a3dbf452bff3067e8541f836d1b87a9488e",
+      "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/main.swift": "b0176b9b0e1d7ba776fd072d63e89b4075396839fd7b9283a95730ad3dd976dd",
+      "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreBaseline.swift": "705a3f6d6bb83349ddca61826aad981debbf6c3b493868b585032c00673e7116",
+      "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreUpgrade.swift": "c9f964204e9032fa068514fb78f0d617b00d7debbd14f6915299d76df2e2cd3f"
+    },
+    "root_task_line_sha256": "4448af21ed27cc5e3a5a248594b9da23cf8c4457e9b305ff38442ff1c071704f",
+    "evidence": "Seven named V1 exact 38-record reads, real transaction/save/reopen and exact 49,472-byte committed WAL-only material change. Frozen fixture complete names/hashes remain identical.",
+    "limits": [
+      "macOS test-only, unchanged schema referencing current model classes and empty migration stages; no historical V1 freeze, real field migration, production selector or iOS G7 acceptance.",
+      "Public Core Data replacement operates only on marked disposable clones, never original fixture URL. Writable source clones can gain/change SHM and empty WAL; protected journal-free source refuses SQLite 8, protected WAL generation stays byte/name-exact.",
+      "Only the disposable candidate changes 0444 to 0600 before real write/reopen. No symlink/directory/externalStorage support; immutable retained source, staging and candidate remain required future production roles."
+    ]
+  },
+  "release": {
+    "ios": {
+      "log": "/private/tmp/usagi-native-parity-release-ios.log",
+      "log_sha256": "48a2afe898ee2fba2106d2d124bb0eef86e0fcafc61e824e6c1b2705cf9d786e",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-4404156d1bcc427f804b4775ad75ed5f.xcresult",
+      "compiler_warning_lines": 80
+    },
+    "mac": {
+      "log": "/private/tmp/usagi-native-parity-release-mac.log",
+      "log_sha256": "3d622125368f98bcf5c81a0d4a765a7858d84a38b5d653b73848252780c5b5a1",
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-7139d9d807bd45d3b91b53e199757c96.xcresult",
+      "compiler_warning_lines": 0
+    },
+    "fixture_absence": [
+      {
+        "platform": "iOS",
+        "executable": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Tsurukame",
+        "sha256": "d605254fc0bdb81daaf50c4d0bdffbd71997144f378cd89e779afe08fedf1839",
+        "modified_at": "2026-10-20T08:06:29Z",
+        "forbidden_strings": [
+          "--material-conflict-fixture",
+          "--material-conflict-failure-fixture",
+          "fixture.eventStatus",
+          "Concurrent material change committed",
+          "fixture/material-conflict/",
+          "--catalog-fixture",
+          "--review-fixture",
+          "viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"",
+          "probe-native-upgrade",
+          "usagi-native-upgrade-disposable-v1",
+          "native-avatar-fixture-"
+        ],
+        "forbidden_string_matches": [
+
+        ],
+        "unexpected_fixture_resources": [
+
+        ]
+      },
+      {
+        "platform": "macOS",
+        "executable": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Xcode/UnifiedMac/Build/Products/Release/Tsurukame.app/Contents/MacOS/Tsurukame",
+        "sha256": "d46699a6ed3aab83185703687fbe4e122c4253b00b04b7ff1ef33a226de4fc28",
+        "modified_at": "2026-10-20T08:07:54Z",
+        "forbidden_strings": [
+          "--material-conflict-fixture",
+          "--material-conflict-failure-fixture",
+          "fixture.eventStatus",
+          "Concurrent material change committed",
+          "fixture/material-conflict/",
+          "--catalog-fixture",
+          "--review-fixture",
+          "viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"",
+          "probe-native-upgrade",
+          "usagi-native-upgrade-disposable-v1",
+          "native-avatar-fixture-"
+        ],
+        "forbidden_string_matches": [
+
+        ],
+        "unexpected_fixture_resources": [
+
+        ]
+      }
+    ],
+    "warning_definition": "Compiler diagnostic lines matching : warning: in these incremental build transcripts; duplicate architecture diagnostics count separately. iOS 80 lines, Mac zero.",
+    "remaining_warnings": "iOS generated protobuf Sendable, retained legacy/deprecation warnings and StudyApplicationOwner background-submit deprecation remain. No FMDB absence or all-Swift product claim."
+  },
+  "production_loc": {
+    "baseline": "465dd79c",
+    "scope": "Physical lines in App/**/*.swift and Shared/Sources/**/*.swift, excluding Pods, Tests, AppTests, AppStoreScreenshots and the three owner-edited files. Includes generated production Swift and formatter wrapping. Includes new/untracked production files; no line savings inferred from moves or test deletion.",
+    "production": {
+      "before": 32049,
+      "after": 32221,
+      "changed": [
+        {
+          "path": "App/Features/Home/MainViewController.swift",
+          "before": 346,
+          "after": 347
+        },
+        {
+          "path": "App/Features/Settings/SettingsViewController.swift",
+          "before": 166,
+          "after": 169
+        },
+        {
+          "path": "Shared/Sources/StudyCore/KatakanaPractice.swift",
+          "before": 70,
+          "after": 99
+        },
+        {
+          "path": "Shared/Sources/StudyCore/LegacyAvatarCache.swift",
+          "before": 68,
+          "after": 124
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Application/StudyRootView.swift",
+          "before": 637,
+          "after": 636
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Catalog/SubjectDetailsContent.swift",
+          "before": 293,
+          "after": 292
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Practice/KatakanaPracticeView.swift",
+          "before": 202,
+          "after": 274
+        },
+        {
+          "path": "Shared/Sources/StudyUI/Shared/StudyAvatarView.swift",
+          "before": 26,
+          "after": 39
+        }
+      ],
+      "net": 172
+    },
+    "excluded_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift",
+      "App/Features/Catalog/LegacyCatalogViewController.swift"
+    ]
+  },
+  "p2_spec_correction": "Observed callback-time epochs cannot fence unreported Apple-account changes or retract accepted writes. KVS remains best effort with no CAS/remote acknowledgement; durable local history permits later reconciliation when contributors reconnect. Preserve bidirectional verified legacy binding; four prototype/lifecycle fixes, durable revocation and signed namespace remain unimplemented.",
+  "open_gates": [
+    "Production P0c/G7 generation resolution/capture/validation/selection, frozen historical schemas/decoders and actual populated Mac/iOS upgrades/interrupted restart.",
+    "P2 production integration, four prototype fixes, durable verified legacy binding/revocation, account/local-answer concurrency and signed shared namespace.",
+    "P3 eleven old-host routes, independent faithful Home oracle, native voice injection, remaining Mac settings equivalents and additional hosted notification invariant; seven hosted non-writer suite mappings.",
+    "P4 nineteen exact writer mappings and last-caller audit before FMDB/legacy host/controller/storyboard/dependency/linkage deletion; FMDB is still required by retained code.",
+    "P5 measured normalization of fifteen encoded attributes and P6 observation/service simplification only after compatible upgrades and behavior equality.",
+    "Existing invalid-frame/QoS and compiler warnings; physical IME/speech/audio/notifications/background/watch, signed Keychain/upgrade/cloud, full-account forecast/KanKen verification, Swift 6 app mode and standalone hosted CI."
+  ]
+}
