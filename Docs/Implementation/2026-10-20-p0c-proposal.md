@@ -10,7 +10,7 @@ No canonical P0c source was applied. The initial source review used installed pu
 
 The original temporary patch had SHA-256 `b73905a60c93381a3ebea7bd1ca6f7de6bf452d9dcecc026beb01f99031662be`. Its first Mac compile failed at `Darwin.flock`: Swift selected the C structure rather than the two-argument function. This revision changes only that expression to unqualified `flock(opened, LOCK_EX | LOCK_NB)`. The installed SDK declares the public function in `sys/fcntl.h:635`; the revised expression compiles on both destinations without a C shim, private API or warning suppression.
 
-A disposable copy of current `Shared` plus the eight shared-file patch hunks was built with Xcode 27/Swift 6.4 through Mainboard `ce36695787001398c206b5f7e0250447e3d13ee7`. The application-owner hunk was source-reviewed but not built in this copy. Package tests were copied to satisfy the existing manifest, but neither compiled nor run. No dependency or manifest change was needed.
+A disposable copy of current `Shared` plus the eight shared-file patch hunks was built with Xcode 27/Swift 6.4 through Mainboard `ce36695787001398c206b5f7e0250447e3d13ee7`. The application-owner hunk was not included in that first copy; the later full-app builds below cover it. Package tests were copied to satisfy the existing manifest, but neither compiled nor run. No dependency or manifest change was needed.
 
 | Destination | Compile-only invocation/result | Limits |
 | --- | --- | --- |
@@ -18,6 +18,31 @@ A disposable copy of current `Shared` plus the eight shared-file patch hunks was
 | Generic iOS Simulator | `mainboard apple execute` on the disposable package, scheme `StudyPersistence`, action `build`, Debug, signing disabled; exit 0; result `build-f0d4697029ec414aac215bb6474219ca.xcresult`; summary zero errors/warnings | Fresh derived-data folder; no simulator boot or application integration |
 
 Mainboard's automatically retained iOS `.build.json` report SHA-256 is `59d1be3c6b79a6c2d8354f9f7c2b440191e8847c87cdbda19defc845b25b7dca`. The revised Mac compile log SHA-256 is `b47ac8d084f0021cd28e3d8023da3391aa01c6d88b058dbf2517a24980b04f7e`. Both live under `/private/tmp/usagi-p0c-compile-20261020`; ignored report copies are retained under the app's `.build/Reports`. These are compiler evidence, not store-compatibility or runtime receipts. The revised generation file SHA-256 is `27aef2288583cd8abbfb5becc51a7354ad444b0a1c67e2de39f5e9452e5195db`. Forward applicability was checked against current canonical files, and reverse applicability against the compiled disposable shared sources.
+
+## Full-app compilation
+
+A second disposable copy contains the 479 tracked files under `App`, `Shared` and `Resources` from the `517bea3e` worktree, including the three untouched off-target owner edits. It contains no Git metadata, user store, credentials, prior build outputs or symlinks. The source archive SHA-256 is `366026d372d22f86567076128d03e15dbcc81569e7540af8257a03d05f93f6f6`. The exact nine-file proposal above was applied only inside `/private/tmp/usagi-p0c-app-compile-20261020`. Reverse applicability and the owner/generation/package-pin hashes were checked again after both builds. The patch itself is unchanged.
+
+Both Mainboard invocations used `run --as-is env -u PROTOC_PATH DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer mainboard apple execute` with the disposable `App/UsagiUnagi.xcworkspace`, `--action build`, Debug, `CODE_SIGNING_ALLOWED=NO`, invocation-scoped `-skipPackagePluginValidation` and a 900-second timeout. Separate fresh derived-data folders were used for Mac/iOS. The Mac invocation also sets `CODE_SIGN_IDENTITY=-`. The sole remote pin remains official SwiftProtobuf 1.39.0, revision `3d537cb81aef272a03cb3be815439e9bf0eb3bd3`; the declared source-built generator runs, but the app does not. No global trust, signing or toolchain configuration changed.
+
+| Destination/scheme | Result bundle | Native result summary |
+| --- | --- | --- |
+| `platform=macOS`, `UsagiUnagi` | `build-928467fee2f646b7ad03fda3116cccef.xcresult` | Exit 0, zero errors/warnings; arm64 Mac app including the AppKit owner check |
+| `generic/platform=iOS Simulator`, `Tsurukame` | `build-a72513ef71af43088d33b2fabc6ae03d.xcresult` | Exit 0, zero errors, one known empty WatchKit-host storyboard deprecation warning; app startup compiles for arm64/x86_64 with the embedded watch/widget graph |
+
+Both logs additionally contain Xcode's metadata-extraction-skipped message because no AppIntents framework dependency is present. This message is outside the native summary's warning count; do not describe either log as warning-free. The existing watch lifecycle/container migration remains open. No tests, simulator boot, installation, app execution, database opening or migration behavior occurred.
+
+The original result bundles and automatically retained reports live in the disposable `Results` directory. Ignored copies of both reports are retained in the app's `.build/Reports/P0cProposalAppMacBuild.json` and `P0cProposalAppIOSBuild.json`:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Mac build report | `6198862e1657cbb5ea1d7ff82f95e6812c55d4ded163b7f5f536ab51ce5ebdfb` |
+| iOS build report | `e40b5e240dc6600b5075a9dbf0c7fd2b4978fe8c5f151303601f91c481a52b17` |
+| Proposed `StudyApplicationOwner.swift` | `45cb8753ef1d79e2fb5c7e4be7a4c818d42db9a4633d69cfdb7fbfd709cc0c78` |
+| Proposed `StudyStoreGeneration.swift` | `27aef2288583cd8abbfb5becc51a7354ad444b0a1c67e2de39f5e9452e5195db` |
+| Workspace `Package.resolved` | `a44a404aa92b7f6ac990e3e55f8ac198fd0f027aeb97c5c31ddfeaf09f9ed009` |
+
+Compilation now covers all proposed production integration, but establishes no runtime recovery, decoder compatibility or data-preservation acceptance. Explicit approval to apply the proposal is still pending. The implementation-first sequence places original-app usability comparison and final tests after the remaining production changes; it does not authorize treating these builds as G7 acceptance.
 
 ## Entrypoints and ordering
 
@@ -78,7 +103,7 @@ The owner therefore refuses another currently running process with that concrete
 
 ## Remaining limitations / final acceptance gates
 
-1. Shared-module compilation succeeds on Mac/iOS Simulator, but the application integration is uncompiled and all migration behavior is unexecuted. Reference creation, WAL metadata visibility, exact physical hashes and fresh-version naming need Mac/iOS/iPad acceptance against the pinned unversioned store before any data/schema upgrade is accepted. Missing/incompatible metadata must fail without selecting a replacement.
+1. Shared-module and full-app compilation succeed on Mac/iOS Simulator, but all migration behavior remains unexecuted. Reference creation, WAL metadata visibility, exact physical hashes and fresh-version naming need Mac/iOS/iPad acceptance against the pinned unversioned store before any data/schema upgrade is accepted. Missing/incompatible metadata must fail without selecting a replacement.
 2. Historical Codable nominal types/decoders remain in current StudyCore/StudyPersistence. V1 comments explicitly forbid future decoder changes without preserving historical compatibility. Exact physical model hashes do not establish nested payload compatibility or guarantee unknown-field preservation. No V2/property normalization has been implemented.
 3. No externalStorage/relationships supported; additional family files or model relationships refuse. Future external-data models require a separate complete-image preservation proof.
 4. File/directory synchronization is visible in source but untested on iOS file protection, cancellation, disk-full, interruption and restart. No power-loss durability guarantee follows from source review. Candidate already validates/synchronizes before publication; a later publication-sync error may leave a fully validated selected selector visible even though startup reports failure. Interruption tests must cover that boundary.
