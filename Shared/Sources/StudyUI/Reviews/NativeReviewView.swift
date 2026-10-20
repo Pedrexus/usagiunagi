@@ -167,7 +167,7 @@ public struct NativeReviewView: View {
     .sheet(
       isPresented: $settings,
       onDismiss: {
-        answerFocused = screen.phase == .answering && !screen.isAnki
+        answerFocused = screen.phase != .details && !screen.isAnki
       }
     ) {
       ReviewSettingsSheet(
@@ -196,7 +196,10 @@ public struct NativeReviewView: View {
       NativeSubjectDetailsView(store: store, accountID: accountID, subjectID: id)
         .navigationTitle("Subject")
     }
-    .sheet(item: $voiceRequest) { request in
+    .sheet(
+      item: $voiceRequest,
+      onDismiss: { answerFocused = screen.phase != .details && !screen.isAnki }
+    ) { request in
       VoiceAnswerPanel(
         model: VoiceReviewController(question: request.question, capture: voiceCapture()),
         audio: audio
@@ -425,10 +428,13 @@ public struct NativeReviewView: View {
       }
       change(.exclude)
     case .voice:
+      answerFocused = false
       audio.stop()
       voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
     case .focus: answerFocused = true
-    case .settings: settings = true
+    case .settings:
+      answerFocused = false
+      settings = true
     case .wrap: change(.wrapUp)
     case .stopWrapping: change(.stopWrapping)
     case .end:

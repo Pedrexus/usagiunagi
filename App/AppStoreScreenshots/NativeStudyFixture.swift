@@ -2,6 +2,7 @@
   import CoreText
   import StudyCore
   import StudyPersistence
+  import StudySpeech
   import StudyUI
   import SwiftUI
 
@@ -128,6 +129,7 @@
                 .utf8)
             return (bytes, response)
           }),
+        voiceCapture: { FixtureVoiceCapture() },
         appearance: arguments.contains("--light-fixture")
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
         notice: "Synthetic review fixture · memory only · simulated sync",
@@ -135,6 +137,32 @@
           $0.yield(true)
           $0.finish()
         })
+    }
+    /// Deterministic transcription; acceptance fixtures never start microphones or Speech APIs.
+    private actor FixtureVoiceCapture: VoiceCapture {
+      private var callback: VoiceCaptureReport?
+      private var recordingID: UUID?
+      private var transcript = ""
+      func start(
+        id: UUID, locale: Locale, downloadModel _: Bool,
+        report: @escaping VoiceCaptureReport
+      ) async {
+        recordingID = id
+        callback = report
+        transcript = locale.identifier.hasPrefix("ja") ? "一" : "one"
+        await report(.listening)
+      }
+      func finish(id: UUID) async {
+        guard recordingID == id else { return }
+        await callback?(.segment(text: transcript, start: 0, end: 1, isFinal: true))
+        guard recordingID == id else { return }
+        await callback?(.finished)
+      }
+      func cancel(id: UUID) {
+        guard recordingID == id else { return }
+        callback = nil
+        recordingID = nil
+      }
     }
     private final class FixtureCredentials: StudyCredentialStore {
       private var token: String? = "fixture"

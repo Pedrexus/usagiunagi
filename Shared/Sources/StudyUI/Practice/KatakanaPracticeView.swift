@@ -84,13 +84,16 @@ struct KatakanaPracticeSessionView: View {
     }
     .sheet(
       isPresented: $settings,
-      onDismiss: { focused = screen.phase == .answering && !screen.isAnki }
+      onDismiss: { focused = screen.phase != .details && !screen.isAnki }
     ) {
       ReviewSettingsSheet(preferences: preferences, changed: savePreferences, fonts: fonts) {
         settings = false
       }
     }
-    .sheet(item: $voiceRequest) { request in
+    .sheet(
+      item: $voiceRequest,
+      onDismiss: { focused = screen.phase != .details && !screen.isAnki }
+    ) { request in
       VoiceAnswerPanel(
         model: VoiceReviewController(question: request.question, capture: voiceCapture())
       ) { answer in
@@ -267,6 +270,7 @@ struct KatakanaPracticeSessionView: View {
         present()
       case .voice:
         guard !screen.isAnki else { return }
+        focused = false
         voiceRequest = VoiceAnswerRequest(question: question)
       case .focus: focused = screen.phase == .answering && !screen.isAnki
       case .toggleFont:

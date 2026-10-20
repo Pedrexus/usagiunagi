@@ -12,6 +12,7 @@ struct StudyAnswerInput {
   let submitted: () -> Void
   let retried: () -> Void
   #if os(macOS)
+    @Environment(\.isEnabled) private var isEnabled
     @FocusState private var inputFocused: Bool
   #endif
 }
@@ -127,8 +128,11 @@ struct StudyAnswerInput {
       func textFieldDidBeginEditing(_ field: UITextField) { updateFocus(field) }
       func textFieldDidEndEditing(_ field: UITextField) { updateFocus(field) }
       private func updateFocus(_ field: UITextField) {
+        guard field.isEnabled else { return }
         Task { @MainActor [weak field] in
-          guard let field, self.parent.focused != field.isFirstResponder else { return }
+          guard let field, field.isEnabled, self.parent.focused != field.isFirstResponder else {
+            return
+          }
           self.parent.focused = field.isFirstResponder
         }
       }
@@ -169,10 +173,11 @@ struct StudyAnswerInput {
         .disabled(!editable)
         .focused($inputFocused).onSubmit(submitted)
         .accessibilityIdentifier("review.answer")
-        .onChange(of: focused, initial: true) { _, value in
+        .onChange(of: focused && editable && isEnabled, initial: true) { _, value in
           if inputFocused != value { inputFocused = value }
         }
         .onChange(of: inputFocused) { _, value in
+          guard editable, isEnabled else { return }
           if focused != value { focused = value }
         }
     }
