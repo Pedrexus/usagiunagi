@@ -4,13 +4,7 @@ import SwiftData
 
 /// Private, in-memory migration comparison. Unlike diagnostics, no account or receipt is omitted.
 struct StudyGenerationSnapshot: Encodable, Equatable, Sendable {
-  let contents: Data
-  // Synthesized equality includes private handoff state and compares preference Sets by membership.
-  let handoffs: [String: StudyLegacyHandoff]
-}
-
-private struct StudyGenerationContents: Encodable {
-  struct Attribute: Encodable {
+  struct Attribute: Encodable, Equatable, Sendable {
     let name: String
     let originalName: String
     let type: String
@@ -20,14 +14,14 @@ private struct StudyGenerationContents: Encodable {
     let transformable: Bool
     let hashModifier: String?
   }
-  struct Entity: Encodable {
+  struct Entity: Encodable, Equatable, Sendable {
     let name: String
     let attributes: [Attribute]
     let uniqueness: [[String]]
     let indices: [[String]]
     let relationships: [String]
   }
-  struct Record: Encodable {
+  struct Record: Encodable, Equatable, Sendable {
     let model: String
     let identity: [String]
     let fields: [String: Data]
@@ -35,6 +29,8 @@ private struct StudyGenerationContents: Encodable {
   let schemaVersion: String
   let entities: [Entity]
   let records: [Record]
+  // Synthesized equality includes private handoff state and compares preference Sets by membership.
+  let handoffs: [String: StudyLegacyHandoff]
 }
 
 extension StudyStore {
@@ -44,7 +40,7 @@ extension StudyStore {
     guard !modelContext.hasChanges else { throw StudyStoreOpeningError.invalidGeneration }
     let schema = modelContainer.schema
     let entities = schema.entities.map { entity in
-      StudyGenerationContents.Entity(
+      StudyGenerationSnapshot.Entity(
         name: entity.name,
         attributes: entity.attributes.map { attribute in
           .init(
@@ -65,7 +61,7 @@ extension StudyStore {
       encoder.outputFormatting = .sortedKeys
       return try encoder.encode(value)
     }
-    var records: [StudyGenerationContents.Record] = []
+    var records: [StudyGenerationSnapshot.Record] = []
     var handoffs: [String: StudyLegacyHandoff] = [:]
     for row in try modelContext.fetch(FetchDescriptor<SnapshotRecord>()) {
       records.append(
@@ -176,10 +172,8 @@ extension StudyStore {
       $0.model == $1.model
         ? $0.identity.lexicographicallyPrecedes($1.identity) : $0.model < $1.model
     }
-    return try StudyGenerationSnapshot(
-      contents: bytes(
-        StudyGenerationContents(
-          schemaVersion: schema.version.description, entities: entities, records: records)),
+    return StudyGenerationSnapshot(
+      schemaVersion: schema.version.description, entities: entities, records: records,
       handoffs: handoffs)
   }
   func retainApplicationLease(_ lease: StudyStoreLease) {

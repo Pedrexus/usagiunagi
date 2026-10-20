@@ -159,6 +159,7 @@ private struct StudyStoreGeneration: Sendable {
     }
     try makeDirectory(candidate)
     let store: StudyStore
+    let validated: StudyGenerationSnapshot
     if let source = selection.source, let retainedID = selection.retained {
       guard try fingerprints(in: directory, original: true) == source else {
         throw StudyStoreOpeningError.sourceChanged
@@ -228,7 +229,8 @@ private struct StudyStoreGeneration: Sendable {
         throw StudyStoreOpeningError.invalidGeneration
       }
       store = try namedStore(at: candidate.appending(path: storeName))
-      guard try await store.generationSnapshot() == expected,
+      validated = try await store.generationSnapshot()
+      guard validated == expected,
         try physicalSchema(in: candidate) == frozenV1,
         try fingerprints(in: retained) == source,
         try fingerprints(in: directory, original: true) == source
@@ -241,9 +243,8 @@ private struct StudyStoreGeneration: Sendable {
         throw StudyStoreOpeningError.sourceChanged
       }
       store = try namedStore(at: candidate.appending(path: storeName))
-      _ = try await store.generationSnapshot(requiringEmpty: true)
+      validated = try await store.generationSnapshot(requiringEmpty: true)
     }
-    let validated = try await store.generationSnapshot()
     try synchronize(candidate)
     try Task.checkCancellation()
     if selection.source == nil,
