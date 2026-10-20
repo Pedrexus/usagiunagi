@@ -24,7 +24,7 @@ final class SettingsController: WKHostingController<WatchSettingsView> {
 struct WatchSettingsView: View {
   @AppStorage(WatchCompanionCache.sourceKey) private var source = ComplicationDataSource.reviews
     .rawValue
-  @State private var status = WatchCompanionCache.sharedInstance.status
+  @State private var snapshot = WatchCompanionCache.sharedInstance.state.snapshot
 
   var body: some View {
     NavigationStack {
@@ -46,9 +46,9 @@ struct WatchSettingsView: View {
             }
           }
           Section("Last Updated") {
-            if let sentAt = status.sentAt {
-              Text(sentAt, style: .relative)
-              if status.isStale(at: context.date) {
+            if let snapshot {
+              Text(snapshot.sentAt, style: .relative)
+              if context.date >= snapshot.expiresAt {
                 Label(
                   "The data on this watch is stale. Open the app on your phone to update.",
                   systemImage: "exclamationmark.triangle")
@@ -61,14 +61,14 @@ struct WatchSettingsView: View {
       }
       .navigationTitle("Settings")
     }
-    .onAppear { status = WatchCompanionCache.sharedInstance.status }
+    .onAppear { snapshot = WatchCompanionCache.sharedInstance.state.snapshot }
     .onReceive(
       NotificationCenter.default.publisher(
         for: UserDefaults.didChangeNotification, object: UserDefaults.standard
       )
       .receive(on: RunLoop.main)
     ) { _ in
-      status = WatchCompanionCache.sharedInstance.status
+      snapshot = WatchCompanionCache.sharedInstance.state.snapshot
     }
   }
 

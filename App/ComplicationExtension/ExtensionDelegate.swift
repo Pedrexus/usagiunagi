@@ -16,13 +16,23 @@ import Foundation
 import WatchKit
 
 final class ExtensionDelegate: NSObject, WKExtensionDelegate {
+  private var started = false
+
   func applicationDidFinishLaunching() {
-    WatchCompanionCache.start()
+    guard !started else { return }
+    started = true
+    WatchHelper.reloadComplications()
+    WatchHelper.sharedInstance.awaitMessages { packet in
+      guard WatchCompanionCache.sharedInstance.receive(packet) else { return }
+      WatchHelper.reloadComplications()
+    }
   }
 
   func handle(_ backgroundTasks: Set<WKRefreshBackgroundTask>) {
     for task in backgroundTasks {
-      if let snapshot = task as? WKSnapshotRefreshBackgroundTask {
+      if let connectivity = task as? WKWatchConnectivityRefreshBackgroundTask {
+        WatchHelper.sharedInstance.retainConnectivityTask(connectivity)
+      } else if let snapshot = task as? WKSnapshotRefreshBackgroundTask {
         snapshot.setTaskCompleted(
           restoredDefaultState: true, estimatedSnapshotExpiration: Date.distantFuture, userInfo: nil
         )

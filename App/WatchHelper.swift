@@ -22,7 +22,8 @@ import os
 #endif
 
 #if os(watchOS)
-  import ClockKit
+  import WatchKit
+  import WidgetKit
 #endif
 
 #if os(watchOS)
@@ -49,15 +50,21 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
 #if os(watchOS)
   final class WatchConnectionClientDelegate: NSObject, WCSessionDelegate, Sendable {
     private let callback: ClientDelegateCallback
+    private let packetCallbacks = DispatchGroup()
+
+    var isProcessingPacket: Bool { packetCallbacks.wait(timeout: .now()) == .timedOut }
 
     init(_ callback: @escaping ClientDelegateCallback) {
       self.callback = callback
     }
 
-    func session(_: WCSession, activationDidCompleteWith _: WCSessionActivationState, error: Error?)
-    {
+    func session(
+      _: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?
+    ) {
       os_log(
         "watch activationDidCompleteWith err=%{public}@", error?.localizedDescription ?? "none")
+      let failed = error != nil || state != .activated
+      Task { @MainActor in WatchHelper.sharedInstance.activationCompleted(failed: failed) }
     }
 
     func session(_: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
@@ -69,7 +76,12 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
         os_log(.error, "Unable to encode WatchConnectivity property-list payload")
         return
       }
-      DispatchQueue.main.async { [callback] in
+      packetCallbacks.enter()
+      DispatchQueue.main.async { [callback, packetCallbacks] in
+        defer {
+          packetCallbacks.leave()
+          WatchHelper.sharedInstance.finishConnectivityTasks()
+        }
         guard
           let value = try? PropertyListSerialization.propertyList(from: data, format: nil),
           let userInfo = value as? [String: Any]
@@ -78,7 +90,6 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
           return
         }
         callback(userInfo)
-        WatchHelper.reloadComplications()
       }
     }
   }
@@ -125,6 +136,9 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
     private var serverHandler: WatchConnectionServerDelegate?
   #else
     private var clientHandler: WatchConnectionClientDelegate?
+    private var contentObservation: NSKeyValueObservation?
+    private var connectivityTasks: Set<WKWatchConnectivityRefreshBackgroundTask> = []
+    private var activationFailed = false
   #endif
 
   init(session: WCSession?) {
@@ -147,16 +161,46 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
   #endif
 
   #if os(watchOS)
-    static func reloadComplications() {
-      let server = CLKComplicationServer.sharedInstance()
-      for complication in server.activeComplications ?? [] {
-        server.reloadTimeline(for: complication)
+    func retainConnectivityTask(_ task: WKWatchConnectivityRefreshBackgroundTask) {
+      connectivityTasks.insert(task)
+      finishConnectivityTasks()
+    }
+
+    func activationCompleted(failed: Bool) {
+      activationFailed = failed
+      finishConnectivityTasks()
+    }
+
+    func finishConnectivityTasks() {
+      if let session, !activationFailed {
+        guard session.activationState == .activated, !session.hasContentPending else { return }
+      }
+      guard clientHandler?.isProcessingPacket != true else { return }
+      let tasks = connectivityTasks
+      connectivityTasks.removeAll()
+      for task in tasks { task.setTaskCompletedWithSnapshot(false) }
+    }
+
+    @discardableResult static func reloadComplications() -> Bool {
+      do {
+        try WatchCompanionCache.sharedInstance.publish()
+        WidgetCenter.shared.reloadTimelines(ofKind: WatchCompanionCache.widgetKind)
+        return true
+      } catch {
+        os_log(
+          .error, "Unable to publish the watch widget snapshot: %{public}@",
+          error.localizedDescription)
+        return false
       }
     }
 
     func awaitMessages(callback: @escaping ClientDelegateCallback) {
       clientHandler = WatchConnectionClientDelegate(callback)
       if let session = session {
+        contentObservation = session.observe(\.hasContentPending, options: [.new]) {
+          [weak self] _, _ in
+          Task { @MainActor in self?.finishConnectivityTasks() }
+        }
         session.delegate = clientHandler
         session.activate()
       }
