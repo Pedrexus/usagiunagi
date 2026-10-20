@@ -7,33 +7,6 @@ struct StudyMaterialBaseline: Codable, Equatable, Sendable {
   let remote: WaniKaniMaterial?
 }
 
-@Model final class MaterialRecord {
-  #Unique<MaterialRecord>([\.accountID, \.subjectID])
-  var accountID: String
-  var subjectID: Int64
-  var revision: UUID
-  var pending: Bool
-  var serverID: Int64? = nil
-  @Attribute(.codable) var issue: StudyUploadIssue? = nil
-  var attemptedRevision: UUID? = nil
-  @Attribute(.codable) var attemptedMaterial: StudyMaterial? = nil
-  @Attribute(.codable) var recoveryBaseline: StudyMaterialBaseline? = nil
-  @Attribute(.codable) var material: StudyMaterial
-  init(accountID: String, material: StudyMaterial, pending: Bool) {
-    self.accountID = accountID
-    self.subjectID = material.subjectID
-    self.material = material
-    self.pending = pending
-    revision = UUID()
-  }
-  var saved: SavedStudyMaterial {
-    SavedStudyMaterial(
-      accountID: accountID, revision: revision, pending: pending, serverID: serverID,
-      issue: issue, attemptedRevision: attemptedRevision, attemptedMaterial: attemptedMaterial,
-      material: material)
-  }
-}
-
 public struct SavedStudyMaterial: Sendable {
   public let accountID: String
   public let revision: UUID

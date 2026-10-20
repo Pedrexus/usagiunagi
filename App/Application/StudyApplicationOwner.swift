@@ -5,6 +5,10 @@ import StudyPersistence
 import StudyUI
 import SwiftUI
 
+#if os(macOS)
+  import AppKit
+#endif
+
 #if os(iOS)
   import BackgroundTasks
   import OSLog
@@ -86,7 +90,19 @@ import SwiftUI
       if StudyAppAssembly.isReviewFixture { return NativeStudyFixture.make() }
     #endif
     let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
-    let store = try await StudyStore.open(at: directory.appending(path: "study.store"))
+    #if os(macOS)
+      // The earlier native/TsurukameMacApp and unified Mac target used this ID and private root.
+      // This running-app snapshot excludes known current competitors, not future/external writers.
+      let identities = Set(
+        [Bundle.main.bundleIdentifier, "com.pedrexus.tsurukame.mac"].compactMap { $0 })
+      guard
+        !NSWorkspace.shared.runningApplications.contains(where: {
+          $0.processIdentifier != ProcessInfo.processInfo.processIdentifier
+            && identities.contains($0.bundleIdentifier ?? "")
+        })
+      else { throw StudyStoreOpeningError.alreadyOpen }
+    #endif
+    let store = try await StudyStore.openApplication(in: directory)
     var media = StudyMediaLayout.native
     #if os(iOS)
       let bootstrap = StudyLegacyBootstrap(

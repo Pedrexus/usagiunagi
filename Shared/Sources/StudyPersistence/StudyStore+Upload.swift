@@ -32,15 +32,6 @@ public enum StudyUploadError: Error, LocalizedError {
   }
 }
 
-@Model final class UploadPauseRecord {
-  @Attribute(.unique) var accountID: String
-  var retryAt: Date
-  init(accountID: String, retryAt: Date) {
-    self.accountID = accountID
-    self.retryAt = retryAt
-  }
-}
-
 extension StudyStore {
   /// One native upload lane per store. Account transitions must await cancelSynchronization before
   /// changing credentials or clearing data. No token is persisted in SwiftData.

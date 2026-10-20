@@ -2,44 +2,6 @@ import Foundation
 import StudyCore
 import SwiftData
 
-@Model final class CatalogRecord {
-  #Unique<CatalogRecord>([\.accountID, \.subjectID])
-  var accountID: String
-  var subjectID: Int64
-  var level: Int
-  var japanese: String
-  @Attribute(.codable) var subject: CatalogSubject
-  init(accountID: String, subject: CatalogSubject) {
-    self.accountID = accountID
-    subjectID = subject.id
-    level = subject.level
-    japanese = subject.japanese
-    self.subject = subject
-  }
-}
-
-@Model final class AssignmentRecord {
-  var revision: UUID = UUID()
-  #Unique<AssignmentRecord>([\.accountID, \.subjectID])
-  var accountID: String
-  var subjectID: Int64
-  @Attribute(.codable) var assignment: CatalogAssignment
-  init(accountID: String, assignment: CatalogAssignment) {
-    self.accountID = accountID
-    subjectID = assignment.subjectID
-    self.assignment = assignment
-  }
-}
-
-@Model final class AccountRecord {
-  @Attribute(.unique) var accountID: String
-  @Attribute(.codable) var state: StudyAccountState
-  init(accountID: String, state: StudyAccountState) {
-    self.accountID = accountID
-    self.state = state
-  }
-}
-
 public enum LegacyImportError: Error, LocalizedError {
   case unsupportedSchema(Int)
   case invalidData(String)

@@ -3,62 +3,6 @@ import Foundation
 import StudyCore
 import SwiftData
 
-@Model final class SnapshotRecord {
-  @Attribute(.unique) var credentialID: String
-  @Attribute(.codable) var snapshot: StudySnapshot
-  init(_ snapshot: StudySnapshot, credentialID: String) {
-    self.snapshot = snapshot
-    self.credentialID = credentialID
-  }
-}
-
-@Model final class SessionRecord {
-  @Attribute(.unique) var accountID: String
-  var revision: UUID
-  @Attribute(.codable) var session: StudySession
-  init(accountID: String, session: StudySession, revision: UUID) {
-    self.accountID = accountID
-    self.session = session
-    self.revision = revision
-  }
-}
-
-@Model final class ReviewRecord {
-  #Unique<ReviewRecord>([\.accountID, \.subjectID])
-  var accountID: String
-  var subjectID: Int64
-  var revision: UUID
-  var attempted: Bool
-  @Attribute(.codable) var submission: StudyReviewSubmission
-  @Attribute(.codable) var originalItem: StudySessionItem
-  @Attribute(.codable) var originalAssignment: CatalogAssignment? = nil
-  @Attribute(.codable) var issue: StudyUploadIssue? = nil
-  init(accountID: String, submission: StudyReviewSubmission, originalItem: StudySessionItem) {
-    self.accountID = accountID
-    self.subjectID = submission.subjectID
-    self.submission = submission
-    self.originalItem = originalItem
-    self.revision = UUID()
-    attempted = false
-  }
-  var saved: SavedReview {
-    .init(
-      accountID: accountID, subjectID: subjectID, revision: revision, submission: submission,
-      originalItem: originalItem, originalAssignment: originalAssignment, attempted: attempted,
-      issue: issue)
-  }
-}
-
-@Model final class ImportReceipt {
-  @Attribute(.unique) var sourceID: String
-  var digest: String
-  @Attribute(.codable) var handoff: StudyLegacyHandoff? = nil
-  init(sourceID: String, digest: String) {
-    self.sourceID = sourceID
-    self.digest = digest
-  }
-}
-
 public struct SavedStudySession: Sendable {
   public let revision: UUID
   public let session: StudySession
@@ -102,6 +46,7 @@ public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requires
 /// One actor/container per local store. Model values never escape its executor.
 /// CloudKit is deliberately disabled: WaniKani owns cross-device study progress.
 @ModelActor public actor StudyStore {
+  var applicationLease: StudyStoreLease?
   var uploadGeneration = UUID()
   private var changeObservers: [UUID: AsyncStream<Void>.Continuation] = [:]
   var synchronizationRun: SynchronizationRun?
@@ -112,11 +57,7 @@ public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requires
   @concurrent public static func open(at url: URL, inMemory: Bool = false) async throws
     -> StudyStore
   {
-    let schema = Schema([
-      SnapshotRecord.self, SessionRecord.self, ReviewRecord.self, MaterialRecord.self,
-      ImportReceipt.self, CatalogRecord.self, AssignmentRecord.self, AccountRecord.self,
-      UploadPauseRecord.self, ArchivedReviewRecord.self,
-    ])
+    let schema = StudySchemaV1.unversioned
     let configuration: ModelConfiguration
     if inMemory {
       configuration = ModelConfiguration(

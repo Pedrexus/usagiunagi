@@ -24,17 +24,6 @@ public struct ArchivedStudyReview: Codable, Identifiable, Sendable {
   public let archivedAt: Date
 }
 
-@Model final class ArchivedReviewRecord {
-  @Attribute(.unique) var id: UUID
-  var accountID: String
-  @Attribute(.codable) var answer: ArchivedStudyReview
-  init(_ answer: ArchivedStudyReview) {
-    id = answer.id
-    accountID = answer.saved.accountID
-    self.answer = answer
-  }
-}
-
 extension StudyStore {
   public func archivedReviews(accountID: String) throws -> [ArchivedStudyReview] {
     try requireAccount(accountID)
