@@ -21,6 +21,45 @@ defaults:
     shell: bash
 
 jobs:
+  release:
+    name: Release product (${{ matrix.platform }})
+    runs-on: xcode-27
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios, mac]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: phvv-me/mainboard
+          ref: db0700424e9434d70321d3888e64482c6b808b46
+          path: .build/Mainboard
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      - name: Restore Mainboard's locked environment
+        run: uv sync --project .build/Mainboard --locked --no-dev --python 3.14
+      - name: Build Release product
+        env:
+          PRODUCT: ${{ matrix.platform }}
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked "release-$PRODUCT"
+      - name: Inspect Release resources, metadata and linked symbols
+        env:
+          PRODUCT: ${{ matrix.platform }}
+        run: >-
+          uv run --project .build/Mainboard --locked --no-sync mainboard run --locked "audit-release-$PRODUCT"
+          > ".build/Results/Release-$PRODUCT.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: release-${{ matrix.platform }}
+          path: .build/Results/
+          include-hidden-files: true
+          retention-days: 7
+
   shared:
     name: Shared logic and persistence
     runs-on: xcode-27
@@ -32,7 +71,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 7776240c963a766e733d2ada28255e1f151fd541
+          ref: db0700424e9434d70321d3888e64482c6b808b46
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -123,7 +162,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 7776240c963a766e733d2ada28255e1f151fd541
+          ref: db0700424e9434d70321d3888e64482c6b808b46
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -205,7 +244,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 7776240c963a766e733d2ada28255e1f151fd541
+          ref: db0700424e9434d70321d3888e64482c6b808b46
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7

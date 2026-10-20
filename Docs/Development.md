@@ -26,10 +26,12 @@ From Developer/Projects, use `mainboard run --as-is <task>`:
 | `usagi-test-warm-links`, `usagi-test-warm-links-ipad` | Actual custom URL delivery into an already running synthetic app |
 | `usagi-build-mac-tests`, `usagi-test-mac` | Compile native Mac UI tests, or execute them |
 | `usagi-font-previews` | Export all eight native Core Text PNG previews without a simulator |
+| `usagi-release-ios`, `usagi-release-mac` | Build unsigned Release products with the same app tasks as Actions |
+| `usagi-audit-release-ios`, `usagi-audit-release-mac` | Inspect Release metadata, names, fixture exclusions and all packaged Mach-O architectures |
 
 Focused `usagi-test-*` tasks use the same executor. Each Xcode execution creates a unique `.xcresult` under `.build/Results`, streams native output and preserves native failure/timeout status. Successful test execution also requires actual passing cases. Inspect an exact bundle with `mainboard apple results <path> --json` or `mainboard apple diagnostics <path> --json`. A build-only pass does not establish UI acceptance. Simulator runs sharing a device must run sequentially. Native Mac UI fixtures also ignore saved window restoration through a process-only launch argument; they never clear the real app's saved windows or account data. Run interactive Mac and simulator UI acceptance sequentially. Capture only the app window in Mac screenshots.
 
-A standalone checkout uses the same native package resolver with Mainboard installed. Its minimal manifest declares lint tools, not a provisioned Python/Conda environment; call `mainboard apple`, `mainboard binary sync` and `mainboard lint` directly. `mainboard run --as-is` belongs to the parent workspace with its committed environment lock. The following command selects the isolated native root smoke tests:
+A standalone checkout uses the same native package resolver with Mainboard installed. Its minimal manifest declares lint tools and four native Release tasks. The committed `mb.lock` describes an empty managed environment with no Python/Conda package dependencies. Use `mainboard run --locked <task>` to restore it, including on a fresh checkout; `--as-is` requires an already installed environment. Mainboard owns its pinned underlying engine, while the installed Mainboard tool and selected Xcode supply execution. Direct `mainboard apple`, `mainboard binary sync` and `mainboard lint` remain available. The following command selects the isolated native root smoke tests:
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
@@ -42,6 +44,22 @@ env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme U
   --setting CODE_SIGNING_ALLOWED=NO --timeout 1800
 ```
 
+The dedicated Actions Release matrix uses `mainboard run --locked release-ios` / `release-mac`, followed
+by `audit-release-ios` / `audit-release-mac`. Local parent tasks delegate to those same app
+declarations. The audit writes JSON to stdout; retain it separately from build logs. For example,
+from the standalone checkout after selecting Xcode:
+
+```sh
+mainboard run --locked release-ios
+mainboard run --locked audit-release-ios > .build/Results/Release-ios.json
+```
+
+Bundle inspection is generic Mainboard functionality; names, retired-library patterns and fixture
+exclusions live in this app's manifest. A pass describes the supplied product, without proving
+source inputs, optimized-out static package provenance, signing, installation or rendered UI.
+Both Release lanes retain fresh native result bundles and audit JSON. They require publication
+of the pinned Mainboard commit before a hosted run; no push or hosted success is implied locally.
+
 The app build/test commands explicitly approve execution of the exact locked Apple SwiftProtobuf 1.39.0 build-tool plugin using Xcode’s invocation-only `-skipPackagePluginValidation` argument. Strict package resolution and revision `3d537cb81aef272a03cb3be815439e9bf0eb3bd3` remain required. The upstream checkout contains the sole build-tool plugin used by these app targets; its compiler and generator are bundled source targets. Commands unset the plugin’s optional `PROTOC_PATH` override to keep that declared compiler authoritative. This is approval for this pinned generator invocation, not a universal package trust policy. No global Xcode preference or trust file is changed. Reaudit the invocation when package pins or plugin declarations change. Shared-only and watch-only commands do not add this flag.
 
 The warm-link test adds `--url-test App/Tests/WarmLinks.json` and selects only its dedicated test identifier. The test writes fresh UUID markers inside its synthetic runner's data container; Mainboard allows only configured local routes and requires every route plus the test verdict to pass. It does not inspect browser credentials or use a real WaniKani account.
@@ -50,9 +68,9 @@ The held-refresh test uses the same driver with `App/Tests/HeldRefresh.json`. `u
 
 ## GitHub Actions
 
-The workflow runs shared tests/restart checks, iPhone/iPad acceptance and native Mac acceptance on the official [`xcode-27` image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md), selecting `/Applications/Xcode_27.app`. It uses read-only repository permissions, pinned action/tool commits, cancellation of stale branch jobs and seven-day result artifacts. Synthetic accounts require no token, signing certificate or publication secret. No release or store deployment is configured.
+The workflow runs shared tests/restart checks, unsigned Release product/audit lanes, iPhone/iPad acceptance and native Mac acceptance on the official [`xcode-27` image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md), selecting `/Applications/Xcode_27.app`. Its October 21 source check confirms macOS 27.0.1, Xcode 27.0 / 27A266a and both configured simulator models/runtimes. It uses read-only repository permissions, pinned action/tool commits, cancellation of stale branch jobs and seven-day result artifacts. Synthetic accounts require no token, signing certificate or publication secret. No distribution or store deployment is configured.
 
-Mainboard is pinned to `phvv-me/mainboard@1159d0d5d30abcab0891326353e9bc97b4d2bea1`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** Final workflow/regression validation is pending; no hosted CI pass is claimed.
+Mainboard is pinned to `phvv-me/mainboard@db0700424e9434d70321d3888e64482c6b808b46`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** Local tool/Release validation is recorded in the [current checkpoint](Implementation/2026-10-21-frozen-ios-and-review-focus.md); no hosted CI pass is claimed.
 
 The executor automatically retains readable build reports as `<result-name>.build.json`, and test actions retain available `<result-name>.tests.json`. It attempts diagnostics after native failure, preserves nonzero status and refuses to overwrite evidence. Results uploads include these files. Compare saved inventories with `mainboard analyze swift-compare before.json after.json --json`; this validates hashes/counts/parser coverage and separates byte changes from reclassification. The [reporting checkpoint](Implementation/2026-10-20-mainboard-reports.md) preserves the implementation receipt; the [current follow-up](Implementation/2026-10-20-original-flow.md#compact-native-scene-and-fixture-follow-up--october-21) records 228 Apple/Swift regressions and the broader Mainboard suite/typing limits. Reports do not attest which source bytes Xcode compiled.
 
@@ -198,13 +216,13 @@ Eleven existing review/font acceptance cases now launch the production SwiftUI s
 
 ## Swift rules and migration specification
 
-The [migration specification](Migration.md) is the execution contract for FMDB removal, SwiftData schema/observation work and remaining UI/service retirement. The current, unpublished pinned Mainboard `1159d0d5d30abcab0891326353e9bc97b4d2bea1` supplies the native Swift parser, review signals, offline `analyze explain RULE --json`, saved-inventory comparison and automatic Apple result reports. The app's standalone mainboard.toml and .swiftlint.yml use the same commands as the parent workspace and Actions. Select Xcode 27 through DEVELOPER_DIR; this Mac's default global selection is older and is not changed by the tool.
+The [migration specification](Migration.md) is the execution contract for FMDB removal, SwiftData schema/observation work and remaining UI/service retirement. The current, unpublished pinned Mainboard `db0700424e9434d70321d3888e64482c6b808b46` supplies the native Swift parser, review signals, offline `analyze explain RULE --json`, saved-inventory comparison, automatic Apple result reports and built-bundle inspection. The app's standalone mainboard.toml and .swiftlint.yml use the same commands as the parent workspace and Actions. Select Xcode 27 through DEVELOPER_DIR; this Mac's default global selection is older and is not changed by the tool.
 
 Run `mainboard binary sync` explicitly for the hash-pinned private SwiftLint executable. Lint never installs it or falls back to a global executable. The app profile enables 15 correctness/SwiftUI/availability rules and disables update checks. swift-format is the only formatter. The SwiftUI lane selects SW-UI0001–0004 plus SW-PARSE0001; parser failure cannot become a clean result. Migration inventory selects SW-MIG0001–0008 and ALL-MIG0001, reporting bridge/storage evidence with official references and no automatic framework or stored-format rewrite. `check` prints an inventory; `gate` returns a finding verdict for its named files.
 
 The strict source scopes in Actions are Shared/Sources, App/Application and the touched app/input-service boundaries; SwiftLint additionally checks App and Shared/Sources. Generated/vendor/build paths are excluded. Native SwiftSyntax tests run in the explicit macOS/Xcode lane; portable catalog/config/normalized-rule and missing-toolchain checks remain available elsewhere. A Swift analysis request without its native compiler/libraries fails visibly. At the persistence-rule checkpoint, the focused `Shared/Sources` scan had zero parser gaps and 17 review findings: 15 explicit `.codable` model attributes, one intentional `StudyStore` container construction and one `sqlite3_exec` in the then-retained old-host diagnostic helper. That helper is retired in the current untested source; refresh the inventory during final validation. The historical inventory does not establish that the supported stored representations or intentional boundaries are removable.
 
-Current Mainboard operational inventory reads all 262 kept Swift files with zero parser/context gaps and reports all fifteen Codable attributes. It records per-file hashes, syntax status, the selected parser toolchain and dated offline guidance provenance. Git supplies directory scopes to preserve actual descendant case on case-insensitive Macs. Cross-file shadows include top-level declarations only; same-file lexical and cross-target ambiguity remain explicit limits. Full rule regression, typing and formatting gates remain deferred with the app tests.
+The current Mainboard operational inventory reads all 259 kept Swift files with zero parser/context gaps and reports all fifteen Codable attributes. It records per-file hashes, syntax status, the selected parser toolchain and dated offline guidance provenance. Git supplies directory scopes to preserve actual descendant case on case-insensitive Macs. Cross-file shadows include top-level declarations only; same-file lexical and cross-target ambiguity remain explicit limits. Current full tool regression, configured typing and focused formatting evidence is in the checkpoint; rendered and device gates remain separate.
 
 The new review-only rules cover direct syntax under the matching framework import and exclude known project shadows:
 

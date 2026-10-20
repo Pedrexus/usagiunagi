@@ -4,6 +4,12 @@
 name = "usagiunagi"
 platforms = ["osx-arm64"]
 
+[tasks]
+release-ios = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
+release-mac = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination platform=macOS --derived-data .build/Xcode/UnifiedMac --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
+audit-release-ios = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
+audit-release-mac = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/UnifiedMac/Build/Products/Release/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
+
 # Official release asset coordinates; explicit setup: `mainboard binary sync`.
 [on.osx.binary.dev]
 swiftlint = { version = "0.65.1", url = "https://github.com/realm/SwiftLint/releases/download/0.65.1/portable_swiftlint.zip", sha256 = "c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0", member = "swiftlint" }
