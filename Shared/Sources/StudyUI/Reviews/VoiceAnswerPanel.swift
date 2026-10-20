@@ -2,8 +2,21 @@ import StudyCore
 import StudySpeech
 import SwiftUI
 
+/// Stable environment identity; each question still receives its own capture actor.
+nonisolated public final class StudyVoiceCaptureFactory: Sendable, Equatable {
+  public static let system = StudyVoiceCaptureFactory()
+  private let makeCapture: @Sendable () -> any VoiceCapture
+  public init(_ makeCapture: @escaping @Sendable () -> any VoiceCapture = { AppleVoiceCapture() }) {
+    self.makeCapture = makeCapture
+  }
+  public func callAsFunction() -> any VoiceCapture { makeCapture() }
+  public static func == (left: StudyVoiceCaptureFactory, right: StudyVoiceCaptureFactory) -> Bool {
+    left === right
+  }
+}
+
 extension EnvironmentValues {
-  @Entry public var studyVoiceCapture: @Sendable () -> any VoiceCapture = { AppleVoiceCapture() }
+  @Entry public var studyVoiceCapture = StudyVoiceCaptureFactory.system
 }
 
 /// Bind sheet presentation to its captured question so first presentation cannot be empty.
@@ -117,7 +130,10 @@ public struct VoiceAnswerPanel: View {
       }
     }
     .onChange(of: scenePhase) { _, phase in if phase == .background { model.cancel() } }
-    .onAppear { if audioLease == nil { audioLease = audio?.beginVoiceInput() } }
+    .onAppear {
+      if audioLease == nil { audioLease = audio?.beginVoiceInput() }
+      if model.phase == .idle { model.start() }
+    }
     .onDisappear {
       let cleanup = model.cancel()
       if let audioLease {

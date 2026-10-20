@@ -5,6 +5,7 @@ import SwiftUI
 struct CurriculumCoverageView: View {
   let snapshot: StudySnapshot
   let library: CurriculumLibrary
+  let focus: [StudyMetrics.FocusItem]
   let openSubject: (Int64) -> Void
   @State private var system = CurriculumSystem.jlpt
   @State private var threshold = 5
@@ -94,7 +95,7 @@ struct CurriculumCoverageView: View {
           if expanded == row.id {
             CoverageDetail(
               row: row, thresholdName: thresholdName, subjects: snapshot.subjects,
-              openSubject: openSubject)
+              focus: focus, openSubject: openSubject)
           }
           Divider()
         }
@@ -117,6 +118,7 @@ private struct CoverageDetail: View {
   let row: CurriculumCoverage
   let thresholdName: String
   let subjects: [StudySubject]
+  let focus: [StudyMetrics.FocusItem]
   let openSubject: (Int64) -> Void
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -128,7 +130,7 @@ private struct CoverageDetail: View {
         subjects.filter { $0.kind == .kanji }.map { ($0.characters, $0) },
         uniquingKeysWith: { first, _ in first })
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 64))], spacing: 12) {
-        ForEach(row.remaining, id: \.self) { character in
+        ForEach(prioritized(known), id: \.self) { character in
           if let subject = known[character] {
             Button {
               openSubject(subject.id)
@@ -146,9 +148,29 @@ private struct CoverageDetail: View {
           }
         }
       }
-      Text("Colored kanji open saved subject details. Gray kanji are outside your synced catalog.")
-        .studyNote()
+      Text(
+        "Recurring trouble kanji come first, then WaniKani level. Colored kanji open saved details; gray kanji are outside your synced catalog."
+      )
+      .studyNote()
     }.padding(.vertical, 8)
+  }
+
+  private func prioritized(_ known: [String: StudySubject]) -> [String] {
+    let ranks = Dictionary(
+      focus.enumerated().map { ($0.element.subjectID, $0.offset) }, uniquingKeysWith: min)
+    return row.remaining.sorted { left, right in
+      switch (known[left], known[right]) {
+      case (.some(let first), .some(let second)):
+        let firstRank = ranks[first.id] ?? Int.max
+        let secondRank = ranks[second.id] ?? Int.max
+        if firstRank != secondRank { return firstRank < secondRank }
+        if first.level != second.level { return first.level < second.level }
+      case (.some, .none): return true
+      case (.none, .some): return false
+      case (.none, .none): break
+      }
+      return left < right
+    }
   }
 }
 

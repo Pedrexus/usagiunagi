@@ -26,7 +26,7 @@ import os
 #endif
 
 #if os(watchOS)
-  typealias ClientDelegateCallback = ([String: Any]) -> Void
+  typealias ClientDelegateCallback = @MainActor @Sendable ([String: Any]) -> Void
 #endif
 typealias EpochTimeInt = Int64
 
@@ -47,8 +47,8 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
 }
 
 #if os(watchOS)
-  class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
-    let callback: ClientDelegateCallback
+  final class WatchConnectionClientDelegate: NSObject, WCSessionDelegate, Sendable {
+    private let callback: ClientDelegateCallback
 
     init(_ callback: @escaping ClientDelegateCallback) {
       self.callback = callback
@@ -61,27 +61,37 @@ final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable
     }
 
     func session(_: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-      #if os(watchOS)
-        let server = CLKComplicationServer.sharedInstance()
-        if let complications = server.activeComplications {
-          for complication in complications {
-            server.reloadTimeline(for: complication)
-          }
+      // Preserve property-list types and serial delivery without transferring Any across executors.
+      guard
+        let data = try? PropertyListSerialization.data(
+          fromPropertyList: userInfo, format: .binary, options: 0)
+      else {
+        os_log(.error, "Unable to encode WatchConnectivity property-list payload")
+        return
+      }
+      DispatchQueue.main.async { [callback] in
+        guard
+          let value = try? PropertyListSerialization.propertyList(from: data, format: nil),
+          let userInfo = value as? [String: Any]
+        else {
+          os_log(.error, "Unable to decode WatchConnectivity property-list payload")
+          return
         }
-      #endif
-      callback(userInfo)
+        callback(userInfo)
+        let server = CLKComplicationServer.sharedInstance()
+        for complication in server.activeComplications ?? [] {
+          server.reloadTimeline(for: complication)
+        }
+      }
     }
-
-    #if os(iOS)
-      func sessionDidBecomeInactive(_: WCSession) {}
-
-      func sessionDidDeactivate(_: WCSession) {}
-    #endif
   }
 
 #endif
 
-@MainActor final class WatchHelper {
+#if os(iOS)
+  @MainActor
+#endif
+final class WatchHelper {
   public static let keyReviewCount = "reviewCount"
   public static let keyReviewNextHourCount = "reviewHrCount"
   public static let keyReviewUpcomingHourlyCounts = "reviewHourly"

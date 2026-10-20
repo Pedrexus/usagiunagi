@@ -418,7 +418,7 @@ enum LegacyStudyImporter {
         sqlite3_column_blob(statement, index)
         .map { Data(bytes: $0, count: count) } ?? Data()
       let value: T
-      do { value = try T(serializedData: data) } catch {
+      do { value = try T(serializedBytes: data) } catch {
         throw LegacyImportError.invalidData("malformed protobuf content")
       }
       try known(value)

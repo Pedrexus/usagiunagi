@@ -60,7 +60,9 @@ public struct StudyDashboard: View {
           case .progress: progress
           case .coverage:
             if let library {
-              CurriculumCoverageView(snapshot: snapshot, library: library, openSubject: openSubject)
+              CurriculumCoverageView(
+                snapshot: snapshot, library: library, focus: metrics.focus, openSubject: openSubject
+              )
             } else {
               ContentUnavailableView(
                 "Curriculum data unavailable", systemImage: "exclamationmark.book.closed",

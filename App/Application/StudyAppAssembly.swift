@@ -19,7 +19,7 @@ import SwiftUI
   let notice: String?
   let avatars: LegacyAvatarCache
   let radicalImages: RadicalImageCache
-  let voiceCapture: @Sendable () -> any VoiceCapture
+  let voiceCapture: StudyVoiceCaptureFactory
 
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
@@ -44,7 +44,7 @@ import SwiftUI
     subjectSettings = StudySubjectSettings(
       store: DefaultsStudySubjectPreferences(defaults: defaults))
     self.radicalImages = radicalImages
-    self.voiceCapture = voiceCapture
+    self.voiceCapture = StudyVoiceCaptureFactory(voiceCapture)
     self.appearance = appearance
     self.notice = notice
     self.avatars =

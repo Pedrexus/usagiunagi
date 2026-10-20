@@ -191,50 +191,6 @@ message User {
   optional int32 vacation_started_at = 8;
 }
 
-message FormattedText {
-  enum Format {
-    UNKNOWN = 0;
-    RADICAL = 1;
-    KANJI = 2;
-    JAPANESE = 3;
-    READING = 4;
-    VOCABULARY = 5;
-    ITALIC = 6;
-    BOLD = 7;
-    LINK = 8;
-
-    // Used internally by Tsurukame.
-    APPRENTICE = 9;
-    GURU = 10;
-    MASTER = 11;
-    ENLIGHTENED = 12;
-  }
-  repeated Format format = 1;
-  optional string text = 2;
-  optional string link_url = 3;
-}
-
-message DataFileHeader {
-  repeated SubjectsByLevel subjects_by_level = 1;
-
-  // The level of each subject.
-  repeated int32 level_by_subject = 4;
-
-  // Subject IDs that no longer have any data.  The client should ignore any
-  // assignments with these subjects.
-  repeated int32 deleted_subject_ids = 3;
-
-  // Offset of each encoded Subject message, starting from the end of this
-  // header in the file.
-  repeated uint32 subject_byte_offset = 2;
-}
-
-message SubjectsByLevel {
-  repeated int64 radicals = 1;
-  repeated int64 kanji = 2;
-  repeated int64 vocabulary = 3;
-}
-
 message Level {
   optional int64 id = 1;
   optional int32 level = 2;
@@ -244,14 +200,6 @@ message Level {
   optional int32 passed_at = 6;
   optional int32 started_at = 7;
   optional int32 unlocked_at = 8;
-}
-
-message DeprecatedMnemonicFile {
-  message Subject {
-    optional int32 id = 1;
-    repeated FormattedText formatted_deprecated_mnemonic = 2;
-  }
-  repeated Subject subjects = 1;
 }
 
 message VoiceActor {

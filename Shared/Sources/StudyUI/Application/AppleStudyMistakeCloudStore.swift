@@ -23,7 +23,9 @@ import Synchronization
       notifications: notifications, object: store, continuation: continuation)
     self.observer = observer
     let center = notifications
-    continuation.onTermination = { _ in observer.cancel(in: center) }
+    continuation.onTermination = { _ in
+      Task { @MainActor in observer.cancel(in: center) }
+    }
     return stream
   }
   public func synchronize() -> Bool {
@@ -54,15 +56,15 @@ import Synchronization
 }
 
 /// A nil delivery queue observes the event on its posting thread, before the async consumer resumes.
-nonisolated final class StudyMistakeCloudObserver: Sendable {
-  private let observed = Mutex(UUID())
-  private let token = Mutex<(any NSObjectProtocol)?>(nil)
-  var epoch: UUID { observed.withLock { $0 } }
+@MainActor final class StudyMistakeCloudObserver {
+  private nonisolated let observed = Mutex(UUID())
+  private var token: (any NSObjectProtocol)?
+  nonisolated var epoch: UUID { observed.withLock { $0 } }
   init(
     notifications: NotificationCenter, object: AnyObject,
     continuation: AsyncStream<StudyMistakeCloudEvent>.Continuation
   ) {
-    let token = notifications.addObserver(
+    token = notifications.addObserver(
       forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
       object: object, queue: nil
     ) { [self] notification in
@@ -70,13 +72,10 @@ nonisolated final class StudyMistakeCloudObserver: Sendable {
       if event.reason != .server { observed.withLock { $0 = UUID() } }
       continuation.yield(event)
     }
-    self.token.withLock { $0 = token }
   }
   func cancel(in notifications: NotificationCenter) {
-    token.withLock {
-      if let token = $0 { notifications.removeObserver(token) }
-      $0 = nil
-    }
+    if let token { notifications.removeObserver(token) }
+    token = nil
   }
 }
 

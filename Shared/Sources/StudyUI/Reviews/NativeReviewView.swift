@@ -455,7 +455,6 @@ public struct NativeReviewView: View {
       }
     case .nextFont: cycleFont(1)
     case .previousFont: cycleFont(-1)
-    default: break
     }
   }
 

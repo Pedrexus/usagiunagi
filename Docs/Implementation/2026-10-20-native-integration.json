@@ -1,0 +1,152 @@
+{
+  "status": "production integration; compile-only; behavior unaccepted",
+  "app_base_commit": "45e480aa",
+  "branch": "codex/swiftui-27-curriculum",
+  "mainboard_commit": "a2e0e20933b5fda48e4b7402b4f1e6d88d8872b3",
+  "toolchain": "Xcode 27.0 build 27A266a; Apple Swift 6.4",
+  "owner_order": [
+    "finish production changes",
+    "compare original Tsurukame usability",
+    "port and run tests"
+  ],
+  "changes": [
+    "stable per-question voice capture factory and one-tap start",
+    "coverage trouble-first priority",
+    "MainActor-owned cloud observer token with synchronous observed-event epoch",
+    "watch callback serialization and MainActor delivery",
+    "strict native package reconciliation and official protobuf generation",
+    "Swift6 API and exhaustive-switch warning cleanup"
+  ],
+  "builds": [
+    {
+      "bundle": "/Users/pedro/Developer/Projects/apps/usagiunagi/.build/Results/build-baf1247c358b4d1d86d173a3b7abb6fa.xcresult",
+      "status": "succeeded",
+      "errors": 0,
+      "warnings": 0,
+      "stale_file_warnings": 0,
+      "note": "Final source; native Mac Debug; zero compiler warnings. No launch.",
+      "duration_seconds": 41.48,
+      "diagnostics_sha256": "df451249706553efae3169df59b72177a911fce3fea3df54cf5c940a7837bb76"
+    },
+    {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-75b74ac464b543bc8c0baea421421346.xcresult",
+      "status": "succeeded",
+      "errors": 0,
+      "warnings": 47,
+      "stale_file_warnings": 0,
+      "note": "Final source; fresh-cache generic iOS Simulator Debug including watch; 47 retained watch warnings, zero main-app warnings. No launch.",
+      "duration_seconds": 70.334,
+      "diagnostics_sha256": "eccea8b3263417451e5c5a8189b94d698ca5d758a32813b3448bd3ab11a4db5d"
+    }
+  ],
+  "earlier_attempts": [
+    {
+      "bundle": "build-6c4b379ff7d5481d8de61ed644aff202.xcresult",
+      "outcome": "failed: raw notification token transfer into Mutex; fixed by MainActor token ownership"
+    },
+    {
+      "bundle": "build-857c30885c194456bf123bd7707cb2bb.xcresult",
+      "outcome": "passed: 480 stale-cache warnings and 2 SwiftUI warnings; both source warnings fixed"
+    },
+    {
+      "bundle": "build-6fe35afbe52347eb8ceb648611185810.xcresult",
+      "outcome": "passed: 47 watch warnings plus 3 main-app warnings; main-app warnings fixed"
+    },
+    {
+      "bundle": "build-2a434558abdc4d4b8612a5d532dd4381.xcresult",
+      "outcome": "passed: stale-cache warning list capped at 1000; replaced by fresh-cache canonical-path evidence, not a clean diagnostic scope"
+    }
+  ],
+  "package_generation": "2026-10-20-protobuf-generation.json",
+  "source_inventory": {
+    "artifact": ".build/Reports/NativeIntegrationInventory.json",
+    "sha256": "061c2b9d3635cf5f105db67e72c6ea625d5701c5f2a92d2702127b116e6205a2",
+    "source_digest_algorithm": "SHA256 of sorted path + NUL + per-file SHA256 + newline",
+    "source_digest": "d3e31b60f161da0175f27ce039db1105d2501c2ca7dbe934c0a1dc424334cbdc",
+    "files": 262,
+    "rules": 14,
+    "totals": [
+      {
+        "language": "swift",
+        "kind": "production",
+        "files": 141,
+        "physical_lines": 20904,
+        "nonblank_lines": 20120,
+        "lint_files": 141,
+        "parsed_files": 141
+      },
+      {
+        "language": "swift",
+        "kind": "test",
+        "files": 116,
+        "physical_lines": 23717,
+        "nonblank_lines": 22909,
+        "lint_files": 116,
+        "parsed_files": 116
+      },
+      {
+        "language": "swift",
+        "kind": "tooling",
+        "files": 5,
+        "physical_lines": 282,
+        "nonblank_lines": 267,
+        "lint_files": 5,
+        "parsed_files": 5
+      }
+    ],
+    "parser_gaps": 0,
+    "context_gaps": 0,
+    "codable_signals": 15,
+    "toolchain": {
+      "compiler": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend",
+      "compiler_version": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0",
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "host_libraries": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host",
+      "helper_identity": "2754b76c792d3b7b3b5953c4",
+      "helper_source_sha256": "76ddf1ce1871229230a85d4f5473096336f2520774bb3076eb3f0ed0bb970a81"
+    },
+    "limits": "Counts include tests and three preserved off-target owner files. Syntax/category conventions do not establish target membership, type resolution or safe deletion.",
+    "comparison_with_45e480aa": {
+      "tracked_generated_swift_lines_removed": 2946,
+      "handwritten_production_physical_lines": [
+        20856,
+        20904
+      ],
+      "test_physical_lines": [
+        23717,
+        23717
+      ],
+      "tooling_physical_lines": [
+        281,
+        282
+      ]
+    }
+  },
+  "deferred_mainboard_regressions": [
+    "strict native tables/cell types/path coverage",
+    "mixed-case Git scopes and outside-Git behavior",
+    "cross-file top-level vs nested/local shadows",
+    "neighboring parse errors/provenance",
+    "typing/format/lint"
+  ],
+  "test_runs": 0,
+  "app_launches": 0,
+  "original_usability_comparison": "deferred until production changes complete",
+  "live_exercises": 0,
+  "historical_fixtures_regenerated": false,
+  "global_trust_settings_changed": false,
+  "no_pr_push_or_distribution": true,
+  "blocking_decision": "P0c production generation opening remains unapplied pending explicit approval after automatic review rejection; no workaround applied.",
+  "remaining_gates": [
+    "P0c/G7 approval and production-store recovery implementation",
+    "original lesson/review usability comparison using isolated fixtures",
+    "safe fixture cleanup/voice injection before any GUI launch",
+    "legacy test assertion ports and full final gates",
+    "watch modernization/physical behavior",
+    "signed identity, Keychain and shared iOS/Mac cloud namespace",
+    "physical speech/IME/audio/background/notification behavior",
+    "full-account statistics calibration",
+    "unpublished Mainboard pin and hosted Actions"
+  ],
+  "parent_recipe_commit": "c7dac805100a7f0b1a87922f981f959ff1136c7a"
+}
