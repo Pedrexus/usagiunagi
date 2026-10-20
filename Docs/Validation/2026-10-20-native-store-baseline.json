@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-20T02:41:31Z",
+  "phase": "P0b",
+  "writerCommit": "186c1cc350f03d69c11e85bcb6f4d4084bece9b1",
+  "writerSourceSHA256": "6b23acc31dae349bb5c128ecb47c4c892908821c2c057fe7303a62cc84f23eff",
+  "writerSourceFiles": 67,
+  "fixture": "App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3",
+  "fixtureFiles": [
+    {
+      "file": "study.store",
+      "bytes": 180224,
+      "sha256": "f82be6077bbe12593c95c3ef27b7df576e65dde06965b0a297dbd12be3a3bf94"
+    },
+    {
+      "file": "study.store.baseline.plist",
+      "bytes": 38261,
+      "sha256": "bf3c676dd2ca92219fd1eea95e492c6a1e90aa43f2f0201db16a0f177c7e968b"
+    }
+  ],
+  "totalBytes": 218485,
+  "records": 38,
+  "modelTypes": 10,
+  "accounts": 2,
+  "codableAttributes": 15,
+  "sources": {
+    "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/main.swift": "7efa2f4a6739740c94cef308d627e4ec80e730055f5fee253a2bf30c58c50566",
+    "App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreBaseline.swift": "2f8f61de4cfadc80d9e68f098d8d7952d3dd31ba2cfa4a9a6a41b237ed5316be"
+  },
+  "checks": [
+    {
+      "name": "Pinned archived writer generated the store",
+      "passed": true,
+      "log": "/private/tmp/usagi-native-v0-write.log"
+    },
+    {
+      "name": "Pinned reader reopened copies twice in another process",
+      "passed": true,
+      "log": "/private/tmp/usagi-native-v0-pinned-read.log"
+    },
+    {
+      "name": "Current reader restored all exact fields and metadata twice",
+      "passed": true,
+      "log": "/private/tmp/usagi-native-v0-current-read.log"
+    },
+    {
+      "name": "Frozen main store and expectation sidecar unchanged after reading",
+      "passed": true
+    }
+  ],
+  "coverage": [
+    "all stored attributes and uniqueness/index metadata",
+    "account isolation",
+    "session/assignment/outbox revisions",
+    "pending/attempted/conflicting material and observed missing baseline",
+    "archived review and durable backoff",
+    "activated/prepared/unbound/global handoff receipts",
+    "original local-time progress and typed account catalog/statistics/media"
+  ],
+  "fixtureCorrections": [
+    "Canonicalized /private/tmp and /tmp paths before provenance calculation",
+    "Kept imported pending assignment optional instead of inventing an assignment row"
+  ],
+  "limitations": [
+    "macOS baseline/reopen proof only; no versioned migration has been implemented",
+    "iOS frozen-store upgrade and future schema conversions remain G7 gates",
+    "Only synthetic data; no real credentials or account stores accessed",
+    "The writer exited before freezing; empty WAL and regenerable SHM were omitted"
+  ]
+}

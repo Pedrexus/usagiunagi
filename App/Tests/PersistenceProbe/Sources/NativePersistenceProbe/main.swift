@@ -7,18 +7,26 @@ import StudyPersistence
 @main struct Probe {
   static func main() async throws {
     let args = CommandLine.arguments
-    guard args.count == 3,
-      [
-        "write", "read", "read-attempts", "write-catalog", "read-catalog", "import-handoff",
-        "save-handoff", "activate-handoff", "edit-handoff", "read-handoff", "rollback-handoff",
-        "verify-rollback-handoff", "write-native-selection", "read-native-selection",
-      ].contains(args[1])
-    else {
+    var modes = [
+      "write", "read", "read-attempts", "write-catalog", "read-catalog", "import-handoff",
+      "save-handoff", "activate-handoff", "edit-handoff", "read-handoff", "rollback-handoff",
+      "verify-rollback-handoff", "write-native-selection", "read-native-selection",
+    ]
+    #if DEBUG
+      modes += ["write-native-baseline", "read-native-baseline"]
+    #endif
+    guard args.count == 3, modes.contains(args[1]) else {
       print(
-        "Usage: NativePersistenceProbe write|read|read-attempts|write-catalog|read-catalog|import-handoff|save-handoff|activate-handoff|edit-handoff|read-handoff|rollback-handoff|verify-rollback-handoff|write-native-selection|read-native-selection /path/to/disposable/study.store"
+        "Usage: NativePersistenceProbe write|read|read-attempts|write-catalog|read-catalog|import-handoff|save-handoff|activate-handoff|edit-handoff|read-handoff|rollback-handoff|verify-rollback-handoff|write-native-selection|read-native-selection|write-native-baseline|read-native-baseline /path/to/disposable/study.store"
       )
       exit(2)
     }
+    #if DEBUG
+      if args[1].hasSuffix("native-baseline") {
+        try await NativeStoreBaseline.run(args[1], url: URL(fileURLWithPath: args[2]))
+        return
+      }
+    #endif
     let store = try await StudyStore.open(at: URL(fileURLWithPath: args[2]))
     if args[1].hasSuffix("native-selection") {
       try await nativeSelection(args[1], store: store, url: URL(filePath: args[2]))

@@ -22,7 +22,7 @@ Shared grading, kana conversion, session policy, sync/recovery, lessons, reviews
 
 ## Evidence and decision baseline
 
-The implementation baseline is app commit `fa3c3ddf265b9ce1acd78ef74a0d59eb2f20ccc8` and Mainboard `5796a2e2b3b39e86642591eb4f8ca4e9dff36561`. Counts below describe that committed source, not a promised final shape. P1a subsequently isolates the source locator and removes FMDB from importer fixtures; [its receipt](Validation/2026-10-20-legacy-importer-without-fmdb.json) records nine hosted importer and 24 shared bootstrap functions passing. Later phases remain open; this evidence does not authorize a data reset or establish full FMDB removal.
+The implementation baseline is app commit `fa3c3ddf265b9ce1acd78ef74a0d59eb2f20ccc8` and Mainboard `5796a2e2b3b39e86642591eb4f8ca4e9dff36561`. Counts below describe that committed source, not a promised final shape. P1a subsequently isolates the source locator and removes FMDB from importer fixtures; [its receipt](Validation/2026-10-20-legacy-importer-without-fmdb.json) records nine hosted importer and 24 shared bootstrap functions passing. Later phases remain open; this evidence does not authorize a data reset or establish full FMDB removal. P0b now freezes the exact committed native writer in a synthetic 218,485-byte fixture; pinned/current separate-process readers restore all 38 records across ten model types and two accounts. [Its receipt](Validation/2026-10-20-native-store-baseline.json) scopes this to macOS baseline/reopen evidence, with future versioned/iOS upgrades still open.
 
 Source inspection found ten native model types and fifteen `.codable` attributes. In particular, `AccountRecord` contains the progress/statistics collections, `AssignmentRecord` wraps an assignment, and `SnapshotRecord` is keyed by a credential fingerprint. These are the starting points for modeling work, not a reason to create a second database abstraction. Reuse the existing `StudyStore` actor and four shared modules.
 
@@ -385,7 +385,7 @@ The committed Actions workflow already has shared/restart, mobile and native Mac
 
 ### Execution checklist and stop conditions
 
-1. Review this specification against TASKS, freeze P0b native-store fixtures, and retain the accepted P1a importer/bootstrap regression gates. Do not include unrelated owner annotations in that checkpoint.
+1. Review this specification against TASKS, preserve the frozen P0b native-store fixture, and retain the accepted P1a importer/bootstrap regression gates. Do not include unrelated owner annotations in that checkpoint.
 2. Implement P2 codec/store/owner tests and P1b diagnostics independently without changing the schema. Keep signed cloud-namespace acceptance visibly open.
 3. Port P3 cases and audit every remaining old-host route. Map all nineteen writer-test invariants, then remove each legacy caller/resource with its verified replacement.
 4. Remove FMDB declaration, lock/integration/source/linkage together in P4. Run G1–G4, G9 and G11; no hidden DEBUG writer may remain. Removing feature SQL additionally requires P1b and retirement of its last old diagnostic caller.
