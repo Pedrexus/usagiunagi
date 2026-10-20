@@ -8,7 +8,10 @@ import Testing
 private final class FrozenStoreBundle {}
 
 @Suite(.timeLimit(.minutes(1))) struct FrozenNativeStoreTests {
-  @Test func frozenStoreAdoptionPreservesEveryFieldAndKeepsNewWritesAfterReopening() async throws {
+  @Test(arguments: [false, true])
+  func frozenStoreAdoptionPreservesEveryFieldAndKeepsNewWritesAfterReopening(
+    committedWAL: Bool
+  ) async throws {
     let manager = FileManager.default
     let frozen = try #require(
       Bundle(for: FrozenStoreBundle.self).url(forResource: "native-v0-186c1cc3", withExtension: nil)
@@ -26,14 +29,47 @@ private final class FrozenStoreBundle {}
     let directory = manager.temporaryDirectory.appending(path: "frozen-native-\(UUID())")
     try manager.createDirectory(at: directory, withIntermediateDirectories: true)
     defer { remove(directory) }
-    let original = try family(in: frozen.deletingLastPathComponent())
-    for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+    let frozenFamily = try family(in: frozen.deletingLastPathComponent())
+    for (name, bytes) in frozenFamily { try bytes.write(to: directory.appending(path: name)) }
+    let writer: StudyStore?
+    let expected: NativeStoreBaseline.State
+    if committedWAL {
+      let seed = try await StudyStore.open(at: directory.appending(path: "study.store"))
+      writer = seed
+      #expect(try await seed.nativeBaselineState() == manifest.expected)
+      let account = NativeStoreBaseline.accounts[0]
+      let saved = try #require(
+        try await seed.materials(accountID: account).first { $0.material.subjectID == 42 })
+      var material = saved.material
+      material.meaningNote += "\nCommitted only in the iPhone WAL \u{0}🐰"
+      _ = try await seed.saveMaterial(
+        material, accountID: account, expectedRevision: saved.revision)
+      expected = try await seed.nativeBaselineState()
+      #expect(expected != manifest.expected && expected.records.count == 38)
+      for (before, after) in zip(manifest.expected.records, expected.records)
+      where before.model != "MaterialRecord" || before.identity != "\(account)/42" {
+        #expect(after == before, "Unexpected WAL seed edit to \(before.model)/\(before.identity)")
+      }
+      let committed = try #require(
+        try await seed.materials(accountID: account).first { $0.material.subjectID == 42 })
+      #expect(committed.material == material && committed.revision != saved.revision)
+    } else {
+      writer = nil
+      expected = manifest.expected
+    }
+    // Keep the old writer quiet and alive so closing it cannot checkpoint/remove the WAL.
+    defer { withExtendedLifetime(writer) {} }
+    let original = try family(in: directory)
+    if committedWAL {
+      #expect(try #require(original["study.store-wal"]).count > 0)
+      #expect(original["study.store"] == frozenBytes)
+    }
     let selectionURL = directory.appending(path: "store-selection.plist")
     let selectionBytes: Data
     let retained: URL
     do {
       let first = try await StudyStore.openApplication(in: directory)
-      #expect(try await first.nativeBaselineState() == manifest.expected)
+      #expect(try await first.nativeBaselineState() == expected)
       selectionBytes = try Data(contentsOf: selectionURL)
       let selection = try #require(
         PropertyListSerialization.propertyList(from: selectionBytes, format: nil) as? [String: Any])
@@ -49,7 +85,7 @@ private final class FrozenStoreBundle {}
     let edited: NativeStoreBaseline.State
     do {
       let reopened = try await StudyStore.openApplication(in: directory)
-      #expect(try await reopened.nativeBaselineState() == manifest.expected)
+      #expect(try await reopened.nativeBaselineState() == expected)
       #expect(try Data(contentsOf: selectionURL) == selectionBytes)
       let account = NativeStoreBaseline.accounts[0]
       let saved = try #require(
@@ -59,10 +95,10 @@ private final class FrozenStoreBundle {}
       _ = try await reopened.saveMaterial(
         material, accountID: account, expectedRevision: saved.revision)
       edited = try await reopened.nativeBaselineState()
-      #expect(edited != manifest.expected && edited.records.count == 38)
-      #expect(edited.schema == manifest.expected.schema)
-      #expect(edited.schemaVersion == manifest.expected.schemaVersion)
-      for (before, after) in zip(manifest.expected.records, edited.records)
+      #expect(edited != expected && edited.records.count == 38)
+      #expect(edited.schema == expected.schema)
+      #expect(edited.schemaVersion == expected.schemaVersion)
+      for (before, after) in zip(expected.records, edited.records)
       where before.model != "MaterialRecord" || before.identity != "\(account)/42" {
         #expect(after == before, "Unexpected edit to \(before.model)/\(before.identity)")
       }
@@ -79,7 +115,7 @@ private final class FrozenStoreBundle {}
     }
     #expect(try Data(contentsOf: frozen) == frozenBytes)
     #expect(try Data(contentsOf: baseline) == baselineBytes)
-    #expect(try family(in: frozen.deletingLastPathComponent()) == original)
+    #expect(try family(in: frozen.deletingLastPathComponent()) == frozenFamily)
   }
 
   private func digest(_ data: Data) -> String {
