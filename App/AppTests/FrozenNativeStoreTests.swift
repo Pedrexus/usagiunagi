@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import SQLite3
 import StudyCore
 import Testing
 
@@ -8,22 +9,131 @@ import Testing
 private final class FrozenStoreBundle {}
 
 @Suite(.timeLimit(.minutes(1))) struct FrozenNativeStoreTests {
+  struct PayloadCase: Sendable, CustomStringConvertible {
+    enum Damage: String, Sendable { case mistyped, truncated, null, valid }
+    let field: String
+    let key: String
+    let damage: Damage
+    var description: String { field + "." + damage.rawValue }
+    var table: String { "Z" + field.split(separator: ".")[0].uppercased() }
+    var column: String { "Z" + field.split(separator: ".")[1].uppercased() }
+  }
+  static let payloadCases: [PayloadCase] = {
+    // Independent, closed test whitelist: all fifteen persisted Codable paths in the frozen store.
+    let fields: [(path: String, key: String, optional: Bool)] = [
+      ("SnapshotRecord.snapshot", "currentLevel", false),
+      ("SessionRecord.session", "isPractice", false),
+      ("ReviewRecord.submission", "subjectID", false),
+      ("ReviewRecord.originalItem", "subjectID", false),
+      ("ReviewRecord.originalAssignment", "subjectID", true),
+      ("ReviewRecord.issue", "reason", true),
+      ("ImportReceipt.handoff", "sourceID", true),
+      ("CatalogRecord.subject", "id", false),
+      ("AssignmentRecord.assignment", "subjectID", false),
+      ("AccountRecord.state", "profile", false),
+      ("MaterialRecord.issue", "reason", true),
+      ("MaterialRecord.attemptedMaterial", "subjectID", true),
+      ("MaterialRecord.recoveryBaseline", "remote", true),
+      ("MaterialRecord.material", "subjectID", false),
+      ("ArchivedReviewRecord.answer", "id", false),
+    ]
+    return fields.flatMap { field in
+      (field.optional ? [PayloadCase.Damage.mistyped] : [.mistyped, .null]).map {
+        PayloadCase(field: field.path, key: field.key, damage: $0)
+      }
+    } + [
+      .init(field: "AccountRecord.state", key: "profile", damage: .truncated),
+      .init(field: "MaterialRecord.issue", key: "reason", damage: .truncated),
+      .init(field: "ReviewRecord.issue", key: "reason", damage: .valid),
+    ]
+  }()
+
+  @Test(arguments: Self.payloadCases)
+  func selectedPayloadDamageRefusesSafelyAndPreservesAllStoreImages(
+    _ test: PayloadCase
+  ) async throws {
+    #expect(Self.payloadCases.count == 27)
+    let manager = FileManager.default
+    let frozen = try frozenURL()
+    let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+    let frozenFamily = try family(in: frozen.deletingLastPathComponent())
+    let baseline = try Data(contentsOf: frozen.appendingPathExtension("baseline.plist"))
+    let directory = manager.temporaryDirectory.appending(path: "frozen-native-\(UUID())")
+    try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { remove(directory) }
+    for (name, bytes) in frozenFamily { try bytes.write(to: directory.appending(path: name)) }
+    do {
+      let intact = try await StudyStore.openApplication(in: directory)
+      #expect(try await intact.nativeBaselineState() == manifest.expected)
+    }
+    let selectorURL = directory.appending(path: "store-selection.plist")
+    let selector = try Data(contentsOf: selectorURL)
+    let selection = try #require(
+      PropertyListSerialization.propertyList(from: selector, format: nil) as? [String: Any])
+    try #require(selection["phase"] as? String == "selected")
+    let candidate = try #require(selection["candidate"] as? String)
+    let retainedID = try #require(selection["retained"] as? String)
+    try #require(UUID(uuidString: candidate) != nil && UUID(uuidString: retainedID) != nil)
+    let generations = directory.appending(path: "generations")
+    let selected = generations.appending(path: candidate)
+    let retained = generations.appending(path: retainedID)
+    let original = try family(in: directory)
+    let retainedFamily = try family(in: retained)
+    let generationNames = try manager.contentsOfDirectory(atPath: generations.path).sorted()
+    let issue = try #require(
+      manifest.expected.records.first {
+        $0.model == "MaterialRecord" && $0.fields["issue"] != Data("null".utf8)
+      }?.fields["issue"])
+    _ = try JSONDecoder().decode(StudyUploadIssue.self, from: issue)
+    try mutate(test, store: selected.appending(path: "study.store"), issue: issue)
+    let damagedFamily = try family(in: selected).filter { $0.key != "study.store-shm" }
+    var validControl: NativeStoreBaseline.State?
+    for _ in 0..<2 {
+      if test.damage == .valid {
+        let opened = try await StudyStore.openApplication(in: directory)
+        let actual = try await opened.nativeBaselineState()
+        if let validControl {
+          #expect(actual == validControl)
+        } else {
+          #expect(actual.schema == manifest.expected.schema)
+          #expect(actual.schemaVersion == manifest.expected.schemaVersion)
+          try #require(actual.records.count == manifest.expected.records.count)
+          let changes = zip(manifest.expected.records, actual.records).filter { $0 != $1 }
+          try #require(changes.count == 1)
+          let (before, after) = try #require(changes.first)
+          #expect(before.model == "ReviewRecord" && after.model == before.model)
+          #expect(after.identity == before.identity && after.accountID == before.accountID)
+          #expect(before.fields["issue"] == Data("null".utf8) && after.fields["issue"] == issue)
+          #expect(
+            before.fields.filter { $0.key != "issue" }
+              == after.fields.filter { $0.key != "issue" })
+          validControl = actual
+        }
+      } else {
+        do {
+          _ = try await StudyStore.openApplication(in: directory)
+          Issue.record("Damaged selected payload opened: \(test)")
+        } catch StudyStoreOpeningError.invalidGeneration {}
+      }
+      #expect(try family(in: directory) == original)
+      #expect(try family(in: retained) == retainedFamily)
+      #expect(try Data(contentsOf: selectorURL) == selector)
+      #expect(try manager.contentsOfDirectory(atPath: generations.path).sorted() == generationNames)
+      #expect(try family(in: selected).filter { $0.key != "study.store-shm" } == damagedFamily)
+    }
+    #expect(try family(in: frozen.deletingLastPathComponent()) == frozenFamily)
+    #expect(try Data(contentsOf: frozen.appendingPathExtension("baseline.plist")) == baseline)
+  }
+
   @Test(arguments: [false, true])
   func frozenStoreAdoptionPreservesEveryFieldAndKeepsNewWritesAfterReopening(
     committedWAL: Bool
   ) async throws {
     let manager = FileManager.default
-    let frozen = try #require(
-      Bundle(for: FrozenStoreBundle.self).url(forResource: "native-v0-186c1cc3", withExtension: nil)
-    )
-    .appending(path: "study.store")
+    let frozen = try frozenURL()
     let baseline = frozen.appendingPathExtension("baseline.plist")
     let frozenBytes = try Data(contentsOf: frozen)
     let baselineBytes = try Data(contentsOf: baseline)
-    try #require(
-      digest(frozenBytes) == "f82be6077bbe12593c95c3ef27b7df576e65dde06965b0a297dbd12be3a3bf94")
-    try #require(
-      digest(baselineBytes) == "bf3c676dd2ca92219fd1eea95e492c6a1e90aa43f2f0201db16a0f177c7e968b")
     let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
     #expect(manifest.expected.records.count == 38)
     let directory = manager.temporaryDirectory.appending(path: "frozen-native-\(UUID())")
@@ -120,6 +230,88 @@ private final class FrozenStoreBundle {}
 
   private func digest(_ data: Data) -> String {
     SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+  }
+
+  private func frozenURL() throws -> URL {
+    let url = try #require(
+      Bundle(for: FrozenStoreBundle.self).url(forResource: "native-v0-186c1cc3", withExtension: nil)
+    ).appending(path: "study.store")
+    try #require(
+      digest(Data(contentsOf: url))
+        == "f82be6077bbe12593c95c3ef27b7df576e65dde06965b0a297dbd12be3a3bf94")
+    try #require(
+      digest(Data(contentsOf: url.appendingPathExtension("baseline.plist")))
+        == "bf3c676dd2ca92219fd1eea95e492c6a1e90aa43f2f0201db16a0f177c7e968b")
+    return url
+  }
+
+  private func mutate(_ test: PayloadCase, store: URL, issue: Data) throws {
+    // Corruption is confined to a selected store inside this test's unique temporary image.
+    let root =
+      FileManager.default.temporaryDirectory.resolvingSymlinksInPath().path + "/frozen-native-"
+    try #require(store.resolvingSymlinksInPath().path.hasPrefix(root))
+    var pointer: OpaquePointer?
+    let status = sqlite3_open_v2(store.path, &pointer, SQLITE_OPEN_READWRITE, nil)
+    defer { if let pointer { sqlite3_close(pointer) } }
+    try #require(status == SQLITE_OK)
+    let database = try #require(pointer)
+    let predicate = test.field == "ReviewRecord.issue" ? "1" : "\(test.column) IS NOT NULL"
+    var query: OpaquePointer?
+    try #require(
+      sqlite3_prepare_v2(
+        database,
+        "SELECT Z_PK, \(test.column) FROM \(test.table) WHERE \(predicate) ORDER BY Z_PK LIMIT 1",
+        -1, &query, nil) == SQLITE_OK)
+    let row = try #require(query)
+    defer { sqlite3_finalize(row) }
+    try #require(sqlite3_step(row) == SQLITE_ROW)
+    let rowID = sqlite3_column_int64(row, 0)
+    let original: Data
+    if sqlite3_column_type(row, 1) == SQLITE_NULL {
+      try #require(test.field == "ReviewRecord.issue")
+      original = issue
+    } else {
+      try #require(sqlite3_column_type(row, 1) == SQLITE_BLOB)
+      original = Data(
+        bytes: try #require(sqlite3_column_blob(row, 1)), count: Int(sqlite3_column_bytes(row, 1)))
+    }
+    try #require(sqlite3_step(row) == SQLITE_DONE)
+    let replacement: Data?
+    switch test.damage {
+    case .valid: replacement = original
+    case .truncated: replacement = Data("{".utf8)
+    case .null: replacement = nil
+    case .mistyped:
+      var object = try #require(JSONSerialization.jsonObject(with: original) as? [String: Any])
+      try #require(object[test.key] != nil && !(object[test.key] is [Any]))
+      object[test.key] = [String]()
+      replacement = try JSONSerialization.data(withJSONObject: object, options: .sortedKeys)
+    }
+    let literal =
+      replacement.map { "x'" + $0.map { String(format: "%02x", $0) }.joined() + "'" } ?? "NULL"
+    try #require(
+      sqlite3_exec(
+        database, "UPDATE \(test.table) SET \(test.column) = \(literal) WHERE Z_PK = \(rowID)", nil,
+        nil, nil) == SQLITE_OK)
+    try #require(sqlite3_changes(database) == 1)
+    var readback: OpaquePointer?
+    try #require(
+      sqlite3_prepare_v2(
+        database, "SELECT \(test.column) FROM \(test.table) WHERE Z_PK = \(rowID)", -1,
+        &readback, nil) == SQLITE_OK)
+    let check = try #require(readback)
+    defer { sqlite3_finalize(check) }
+    try #require(sqlite3_step(check) == SQLITE_ROW)
+    if let replacement {
+      try #require(sqlite3_column_type(check, 0) == SQLITE_BLOB)
+      let actual = Data(
+        bytes: try #require(sqlite3_column_blob(check, 0)),
+        count: Int(sqlite3_column_bytes(check, 0)))
+      try #require(actual == replacement)
+    } else {
+      try #require(sqlite3_column_type(check, 0) == SQLITE_NULL)
+    }
+    try #require(sqlite3_step(check) == SQLITE_DONE)
   }
 
   private func family(in directory: URL) throws -> [String: Data] {
