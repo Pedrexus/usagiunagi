@@ -94,16 +94,7 @@ public enum ReviewScreenAction {
 /// Shared review layout; native input and rich details are supplied by each host during migration.
 public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  #if os(iOS)
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
-  #endif
-  private var compactLandscape: Bool {
-    #if os(iOS)
-      verticalSizeClass == .compact
-    #else
-      false
-    #endif
-  }
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var confirmEnd = false
   @Bindable private var state: ReviewScreenState
   private let audio: StudyAudioLibrary?
@@ -140,20 +131,23 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     VStack(spacing: 12) {
       progress
       if let audio { AudioPlaybackNotice(library: audio) }
-      let layout =
-        compactLandscape
-        ? AnyLayout(HStackLayout(spacing: 16))
-        : AnyLayout(VStackLayout(spacing: 12))
-      layout {
-        question
-        response
+      GeometryReader { viewport in
+        let horizontal =
+          viewport.size.width >= 560 && viewport.size.height < 360
+          && !typeSize.isAccessibilitySize
+        let layout =
+          horizontal
+          ? AnyLayout(HStackLayout(spacing: 16))
+          : AnyLayout(VStackLayout(spacing: 12))
+        layout {
+          question(horizontal: horizontal)
+          VStack(spacing: 12) { response }.frame(maxWidth: .infinity)
+        }
       }
     }
     .padding()
     .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
-    #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-    #endif
+    .toolbarTitleDisplayMode(.inline)
     .toolbar {
       if state.hasMenu {
         ToolbarItem(placement: .cancellationAction) {
@@ -211,7 +205,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         "Completed answers stay saved. Ending now discards unfinished answers. Wrap up to finish the current batch first."
       )
     }
-    .onChange(of: compactLandscape) { _, _ in action(.focus) }
     .sensoryFeedback(.success, trigger: state.successCount)
   }
 
@@ -293,7 +286,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           .accessibilityIdentifier("review.feedback")
       }
       if state.phase == .incorrect {
-        HStack {
+        controlsLayout {
           Button("Try again", systemImage: "arrow.counterclockwise") { action(.retry) }
             .keyboardShortcut(.delete, modifiers: [])
           Button("Reveal answer", systemImage: "eye") { action(.reveal) }
@@ -301,7 +294,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             .keyboardShortcut("f", modifiers: [])
         }.buttonStyle(.bordered)
       }
-      if !state.isAnki { input().disabled(!state.canAnswer).frame(minHeight: 48, maxHeight: 56) }
+      if !state.isAnki { input().disabled(!state.canAnswer).frame(minHeight: 48) }
       if let hint = state.answerHint, String(hint.characters) == state.answer {
         Text(hint).font(.title3)
           .accessibilityIdentifier("review.answerHint")
@@ -326,9 +319,9 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     }
   }
 
-  private var question: some View {
+  private func question(horizontal: Bool) -> some View {
     let layout =
-      compactLandscape
+      horizontal
       ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
     return layout {
       VStack(spacing: 8) {
@@ -393,8 +386,14 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     .clipShape(RoundedRectangle(cornerRadius: 16))
   }
 
+  private var controlsLayout: AnyLayout {
+    typeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+      : AnyLayout(HStackLayout(spacing: 8))
+  }
+
   private var answerActions: some View {
-    HStack {
+    controlsLayout {
       if state.isAnki {
         Button("Incorrect", systemImage: "xmark") { action(.incorrect) }
           .accessibilityIdentifier("review.incorrect")

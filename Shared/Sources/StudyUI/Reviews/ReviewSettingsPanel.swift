@@ -51,9 +51,7 @@ public struct ReviewSettingsPanel: View {
     .formStyle(.grouped)
     .navigationTitle("Quick settings")
     .onChange(of: sourcePreferences) { _, value in preferences = value }
-    #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-    #endif
+    .toolbarTitleDisplayMode(.inline)
     .toolbar {
       if let done {
         ToolbarItem(placement: .confirmationAction) {
@@ -105,8 +103,5 @@ public struct ReviewSettingsSheet: View {
       }
     }
     .presentationSizing(.form)
-    #if os(macOS)
-      .frame(minWidth: 380, minHeight: 460)
-    #endif
   }
 }

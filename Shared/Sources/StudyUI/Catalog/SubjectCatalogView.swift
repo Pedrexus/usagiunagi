@@ -145,18 +145,11 @@ public struct SubjectCatalogView: View {
     }
     .navigationTitle(mode == .level ? "Level \(query.level)" : title)
     .navigationBarBackButtonHidden(back != nil)
-    #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-      .searchable(
-        text: $query.text, isPresented: $searching,
-        placement: .navigationBarDrawer(displayMode: .always),
-        prompt: "Japanese, meaning or reading"
-      )
-      .searchPresentationToolbarBehavior(.avoidHidingContent)
-    #else
-      .searchable(
-        text: $query.text, isPresented: $searching, prompt: "Japanese, meaning or reading")
-    #endif
+    .toolbarTitleDisplayMode(.inline)
+    .searchable(
+      text: $query.text, isPresented: $searching, prompt: "Japanese, meaning or reading"
+    )
+    .searchPresentationToolbarBehavior(.avoidHidingContent)
     .toolbar {
       if let back {
         ToolbarItem(placement: .cancellationAction) {

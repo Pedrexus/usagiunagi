@@ -92,9 +92,7 @@ public struct NativeLessonView: View {
         ProgressView("Loading saved lessons")
       }
     }.navigationTitle("Lessons")
-      #if os(iOS)
-        .navigationBarBackButtonHidden(selection != nil)
-      #endif
+      .navigationBarBackButtonHidden(selection != nil)
       .task(
         id: LessonReadKey(accountID: accountID, preferences: lessonSettings.value)
       ) {

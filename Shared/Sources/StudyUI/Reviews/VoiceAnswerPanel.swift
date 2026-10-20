@@ -117,9 +117,7 @@ public struct VoiceAnswerPanel: View {
         }
       }
       .navigationTitle("Voice answer")
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
+      .toolbarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel") {

@@ -71,9 +71,6 @@ struct KatakanaPracticeSessionView: View {
       }
       if let error { Text(error).foregroundStyle(.red).padding() }
     }
-    #if os(macOS)
-      .frame(minWidth: 420, minHeight: 480)
-    #endif
     .interactiveDismissDisabled(!ended && practice?.question != nil)
     .navigationDestination(item: $summarySubject) { id in
       VStack(spacing: 16) {

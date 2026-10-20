@@ -144,9 +144,7 @@ public struct StudyMaterialEditor<Version: Equatable & Sendable>: View {
       }
       .disabled(busy)
       .navigationTitle("Notes and synonyms")
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
+      .toolbarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel") { if changed { discard = true } else { dismiss() } }.disabled(busy)
@@ -157,12 +155,10 @@ public struct StudyMaterialEditor<Version: Equatable & Sendable>: View {
             .accessibilityIdentifier("material.save")
             .disabled(busy || conflict != nil)
         }
-        #if os(iOS)
-          ToolbarItemGroup(placement: .keyboard) {
-            Spacer()
-            Button("Done") { focusedField = nil }.accessibilityIdentifier("material.keyboardDone")
-          }
-        #endif
+        ToolbarItemGroup(placement: .keyboard) {
+          Spacer()
+          Button("Done") { focusedField = nil }.accessibilityIdentifier("material.keyboardDone")
+        }
       }
       .interactiveDismissDisabled(changed || busy)
       .confirmationDialog(
@@ -182,9 +178,7 @@ public struct StudyMaterialEditor<Version: Equatable & Sendable>: View {
         )
       }
     }
-    #if os(macOS)
-      .frame(minWidth: 480, idealWidth: 560, minHeight: 560)
-    #endif
+    .presentationSizing(.form)
   }
 
   private func savedVersion(_ material: StudyMaterial) -> some View {

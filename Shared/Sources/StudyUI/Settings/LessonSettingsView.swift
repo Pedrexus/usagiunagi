@@ -19,30 +19,29 @@ public struct LessonSettingsView: View {
       Section {
         NavigationLink {
           List {
-            ForEach(settings.value.order, id: \.self) { kind in
-              HStack {
+            Section {
+              ForEach(settings.value.order, id: \.self) { kind in
                 Text(title(kind))
-                #if os(macOS)
-                  Spacer()
-                  Button("Move \(title(kind)) up", systemImage: "chevron.up") {
-                    shift(kind, by: -1)
+                  .accessibilityActions {
+                    if settings.value.order.first != kind {
+                      Button("Move \(title(kind)) up", systemImage: "chevron.up") {
+                        shift(kind, by: -1)
+                      }
+                      .accessibilityIdentifier("settings.lessonOrder.up.\(kind.rawValue)")
+                    }
+                    if settings.value.order.last != kind {
+                      Button("Move \(title(kind)) down", systemImage: "chevron.down") {
+                        shift(kind, by: 1)
+                      }
+                      .accessibilityIdentifier("settings.lessonOrder.down.\(kind.rawValue)")
+                    }
                   }
-                  .disabled(settings.value.order.first == kind).labelStyle(.iconOnly)
-                  .accessibilityIdentifier(
-                    "settings.lessonOrder.up.\(kind.rawValue)")
-                  Button("Move \(title(kind)) down", systemImage: "chevron.down") {
-                    shift(kind, by: 1)
-                  }
-                  .disabled(settings.value.order.last == kind).labelStyle(.iconOnly)
-                  .accessibilityIdentifier(
-                    "settings.lessonOrder.down.\(kind.rawValue)")
-                #endif
-              }
-            }.onMove(perform: move)
+              }.reorderable()
+            } footer: {
+              Text("Drag items to change the lesson order.")
+            }
           }
-          #if os(iOS)
-            .environment(\.editMode, .constant(.active))
-          #endif
+          .reorderContainer(for: SubjectKind.self, itemID: \.self, move: move)
           .navigationTitle("Lesson order").accessibilityIdentifier("settings.lessonOrder")
         } label: {
           LabeledContent("Order", value: settings.value.order.map(title).joined(separator: ", "))
@@ -79,10 +78,24 @@ public struct LessonSettingsView: View {
     .formStyle(.grouped)
     .navigationTitle("Lessons").task { settings.reload() }
   }
-  private func move(_ source: IndexSet, _ destination: Int) {
-    var value = settings.value
-    value.order.move(fromOffsets: source, toOffset: destination)
-    settings.applyChanges(from: settings.value, to: value)
+  private func move(
+    _ difference: ReorderDifference<SubjectKind, ReorderableSingleCollectionIdentifier>
+  ) {
+    let previous = settings.value
+    let moving = difference.sources
+    guard !moving.isEmpty, Set(moving).count == moving.count,
+      moving.allSatisfy(previous.order.contains)
+    else { return }
+    var value = previous
+    value.order.removeAll { moving.contains($0) }
+    switch difference.destination.position {
+    case .before(let kind):
+      guard let index = value.order.firstIndex(of: kind) else { return }
+      value.order.insert(contentsOf: moving, at: index)
+    case .end:
+      value.order.append(contentsOf: moving)
+    }
+    settings.applyChanges(from: previous, to: value)
   }
   private func shift(_ kind: SubjectKind, by offset: Int) {
     guard let index = settings.value.order.firstIndex(of: kind) else { return }

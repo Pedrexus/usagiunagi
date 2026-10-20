@@ -1,5 +1,7 @@
 # One shared codebase
 
+The primary product and design target is the iPhone/iOS study experience. iPad and native Mac use the same SwiftUI screens, navigation, state and services, with mostly automatic adaptations. Prefer available space, text size and real capabilities over device names or operating-system checks. Improve the iPhone flow first; validate that its shared adaptations also work elsewhere.
+
 The current implementation uses one SwiftUI app, `App/UsagiUnagiApp.swift`, for iPhone, iPad and native Mac. `App/UsagiUnagi.xcodeproj` has one multiplatform app scheme. Catalyst and the iPad compatibility destination are disabled. The main app, shared package and retained watch targets use Swift 6 language mode with the Xcode 27 / Swift 6.4 toolchain.
 
 The latest implementation is **not yet validated**. The owner requested production changes first, then comparison with the original Tsurukame, then tests. Historical receipts apply only to their recorded commits. [Current tasks](TASKS.md) track unfinished acceptance; [the migration specification](Migration.md) defines storage and account-safety contracts.
@@ -28,6 +30,10 @@ iOS cold import reads the original database through SQLite3 in a read-only trans
 Production startup now uses the owner-approved generation opener. It preserves a read-only source image, validates a separate candidate against physical schema metadata and complete values, durably selects that candidate, and retains its actor/lease for service ownership. The ten V1 model declarations preserve their original identities. Handoff values use typed equality so unordered preference Sets cannot falsely reject an equivalent store; session/catalog order stays significant. Canonical Mac/iOS compilation passes, but runtime migration and G7 remain unverified. Historical nested decoders still need independent freezing before a V2/property change. See the [implementation checkpoint](Implementation/2026-10-20-native-store-opening.md) and [migration specification](Migration.md).
 
 ## Study experience
+
+Use standard SwiftUI adaptation directly: semantic toolbar actions, native search placement, form presentation sizing, `ViewThatFits`/adaptive grids and `AnyLayout` driven by the offered viewport and Dynamic Type. Avoid parallel phone/tablet/desktop feature flows, an `isMac` utility layer or a generic platform capability framework. A view should only need an OS branch when an actual API or supported service is unavailable; keep that boundary narrow and explain it below. Do not hide a removable condition inside a helper or sacrifice Japanese input, accessibility, keyboard behavior or offline study merely to reduce a count.
+
+Review layout defaults to stacked iPhone portrait content. A short, wide study viewport can put the question beside one answer column, retaining the input subtree and its focus owner. Window/keyboard resizing must not trigger an extra focus command. Form sheets, search and title display use the same declarations on all three platforms. Native lesson reordering uses the SwiftUI 27 container rather than separate desktop buttons and mobile edit mode.
 
 `StudyRootView` owns one typed navigation stack and the Home, Practice and Statistics destinations. Review, lesson, catalog and settings behavior lives in shared views. WaniKani subject colors, system text styles, SF Symbols and native glass controls remain the visual basis. Layout adapts to available space; platform conditions belong at capability boundaries.
 

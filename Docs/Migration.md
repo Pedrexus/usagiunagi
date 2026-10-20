@@ -56,6 +56,8 @@ Eight original developer/practice/settings IDs now pass on the native phone/iPad
 
 ## Outcome and boundaries
 
+The owner's primary design priority is iPhone/iOS first. iPad and native Mac should be mostly automatic adaptations of the same screens and flows, using offered space, Dynamic Type, semantic toolbar roles and native presentation/search/reordering. Prefer these direct SwiftUI APIs to OS-specific layouts or a new platform utility framework. Keep narrow compile-time branches for genuinely unavailable APIs/services and preserve their behavior. This changes implementation priority without removing any data, sync, grading or acceptance requirement below.
+
 Ship one shared SwiftUI application for iPhone, iPad and native Mac, using Swift 6 and SwiftData for durable app data. Preserve WaniKani grading, lesson order, review options, offline work, notes, exclusions, account identity and synchronization. Retain WaniKani colors, system typography and SF Symbols, with restrained native Liquid Glass. The original Tsurukame iPad lesson/review flow remains the interaction reference. Changing frameworks must not silently change study behavior.
 
 The repository stays in `apps/usagiunagi`, with localized 兔鰻/usagiunagi identity. Work remains on the existing development branches, with commits and no PRs or pushes. Mainboard owns development dependencies, formatters, rules, builds, tests and receipts. App-specific task scripts must not grow into a second development system.
