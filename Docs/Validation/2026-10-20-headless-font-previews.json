@@ -1,0 +1,718 @@
+{
+  "date": "2026-10-20T09:23:03+0900",
+  "baseline": "44df3bf2cff68e51810b9a15016e3001e2cbbab8",
+  "branch": "codex/swiftui-27-curriculum",
+  "scope": "Replace only the developer font-preview app/tests with general Mainboard native rendering. Shipping UI, study behavior and resources are unchanged.",
+  "toolchain": {
+    "xcode": "Xcode 27.0\nBuild version 27A266a",
+    "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0",
+    "swift_path": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "xcresulttool_path": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcresulttool"
+  },
+  "sources": {
+    ".github/workflows/apple.yml": "a0de77fd9bbfbb92f1b4195171c84d7cc0b92312971303f2e8b5cd9a465e6a35",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "34c6cca2dae65d56ae3e7b3d1f0dbc9bf85b73c3496344862bf30c04f71c5aae",
+    "Docs/Architecture.md": "51d535e7c1f18d9e7aba3c6b5e34a89dce3ac103985df644ba3b27bbceb71e1a",
+    "Docs/Development.md": "15fefe1fb4c1bf91104b7ee506433de197f95e64aab132796708f995d9c1567c",
+    "Docs/History/task-checkpoints.md": "c6186dd1b199778f72bbfc1d96ff89e78f84ba7f1623843918226500a1aba750",
+    "Docs/TASKS.md": "f60141a56104ed6c4d1f66cd648f14ed4a127c8883b2e5f285cefe407bd1c094"
+  },
+  "mainboard": {
+    "commit": "9e6a5617927680a321023a2a28bd7c6528f64eb3",
+    "branch": "codex/apple-development",
+    "paths": [
+      "README.md",
+      "integration/test_apple_fonts.py",
+      "src/mainboard/apple.py",
+      "src/mainboard/apple_fonts.swift",
+      "src/mainboard/cli.py"
+    ],
+    "push": false,
+    "isolated_source": "/private/tmp/usagi-fonts-clean",
+    "gate": {
+      "import": "/private/tmp/usagi-fonts-clean/src/mainboard/__init__.py",
+      "python": "/Users/pedro/Developer/projects/.mainboard/envs/default/.pixi/envs/default/bin/python",
+      "temporary_root": "/private/tmp/mb-gate.36N1GQ2o",
+      "budget_seconds": 180,
+      "versions": {
+        "pytest": "9.1.1"
+      },
+      "isolation": {
+        "argv": [
+          "/Users/pedro/Developer/projects/.mainboard/envs/default/.pixi/envs/default/bin/python",
+          "-S",
+          "/private/tmp/usagi-fonts-clean/integration/gates/native_probe.py",
+          "/private/tmp/mb-gate.36N1GQ2o"
+        ],
+        "limit_seconds": 20,
+        "exit_code": 0,
+        "seconds": 0.024
+      },
+      "target": {
+        "argv": [
+          "/Users/pedro/Developer/projects/.mainboard/envs/default/.pixi/envs/default/bin/python",
+          "-m",
+          "pytest",
+          "-c",
+          "/private/tmp/usagi-fonts-clean/pyproject.toml",
+          "-p",
+          "no:randomly",
+          "-p",
+          "no:cacheprovider",
+          "--basetemp",
+          "/private/tmp/mb-gate.36N1GQ2o/pytest",
+          "--junitxml",
+          "/private/tmp/usagi-font-clean-final/target.xml",
+          "/private/tmp/usagi-fonts-clean/integration/test_apple.py",
+          "/private/tmp/usagi-fonts-clean/integration/test_apple_fonts.py",
+          "/private/tmp/usagi-fonts-clean/integration/test_every_command.py::test_every_command_answers_help[apple font-previews]",
+          "/private/tmp/usagi-fonts-clean/integration/test_every_command.py::test_every_parameter_says_what_it_is[apple font-previews]",
+          "/private/tmp/usagi-fonts-clean/integration/test_every_command.py::test_every_command_the_docs_name_exists"
+        ],
+        "limit_seconds": 150,
+        "exit_code": 0,
+        "seconds": 1.76
+      },
+      "wall_seconds": 1.82
+    },
+    "native_exports": [
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/armed-banana.ttf",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/armed-banana.png",
+        "font": "ArmedBanana",
+        "width": 960,
+        "height": 225
+      },
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/darts-font.woff",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/darts-font.png",
+        "font": "darts-font",
+        "width": 960,
+        "height": 225
+      },
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/hina-mincho.ttf",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/hina-mincho.png",
+        "font": "HinaMincho-Regular",
+        "width": 960,
+        "height": 321
+      },
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/hoso-fuwa.ttf",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/hoso-fuwa.png",
+        "font": "Hosofuwafont",
+        "width": 960,
+        "height": 225
+      },
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/nagayama-kai.otf",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/nagayama-kai.png",
+        "font": "nagayama_kai",
+        "width": 960,
+        "height": 225
+      },
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/noto-serif-jp.ttf",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/noto-serif-jp.png",
+        "font": "NotoSerifJP-ExtraLight",
+        "width": 960,
+        "height": 321
+      },
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/san-chou-me.ttf",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/san-chou-me.png",
+        "font": "santyoume-font",
+        "width": 960,
+        "height": 225
+      },
+      {
+        "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/sawarabi-mincho.ttf",
+        "image": "/private/tmp/usagi-font-committed-native/fonts-6f914f963681487dabddc24816d81193/sawarabi-mincho.png",
+        "font": "SawarabiMincho-Regular",
+        "width": 960,
+        "height": 324
+      }
+    ],
+    "failure_and_packaging": {
+      "failures": [
+        {
+          "case": "missing-glyph",
+          "exit": 1,
+          "error": "Font lacks preview glyphs: Helvetica.ttc"
+        },
+        {
+          "case": "invalid-font",
+          "exit": 1,
+          "error": "Cannot read font: broken.ttf"
+        },
+        {
+          "case": "existing-output",
+          "exit": 1,
+          "error": "Refusing to overwrite font preview output"
+        },
+        {
+          "case": "oversize",
+          "exit": 1,
+          "error": "Invalid font preview dimensions or text"
+        }
+      ],
+      "wheel": "mainboard-0.5.6-py3-none-any.whl"
+    },
+    "scoped_mypy": "Success: no issues found in 2 source files",
+    "full_mypy": "9 diagnostics in 6 unchanged files: 3 TOML typing errors in deps/editing.py and 6 missing-stub diagnostics for YAML/seaborn imports. Full package gate not passed. Scoped changed-module check passes; no suppression or dependency installation added.",
+    "lint": "lint: 3 files, rewrote 0, failed: none",
+    "isolated_source_ruff": "All checks passed!",
+    "isolated_cli_format": "1 file already formatted",
+    "growth": {
+      "implementation": 250,
+      "tests": 186,
+      "documentation": 10
+    },
+    "full_mypy_log": "/private/tmp/usagi-fonts-mypy.log"
+  },
+  "parent_workflow": {
+    "repository": "/Users/pedro/Developer/Projects",
+    "branch": "codex/usagi-apple-workflow",
+    "commit": "7fd419a062c6df4bae997abc4b2e1cb4f9dfdd6c",
+    "path": "mainboard.toml",
+    "task": "usagi-font-previews",
+    "before_sha256": "42bbd4f9a4f33ebfeb05a6ab9d7de7aba3d02b6777babaa7852bf8a2c6dc93dc",
+    "after_sha256": "90acc15056d33a8ff29e81603efa7003a27e67e10b0f9602036a58bd980ec2a9",
+    "push": false
+  },
+  "workspace_exports": [
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/armed-banana.ttf",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/armed-banana.png",
+      "font": "ArmedBanana",
+      "width": 960,
+      "height": 225
+    },
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/darts-font.woff",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/darts-font.png",
+      "font": "darts-font",
+      "width": 960,
+      "height": 225
+    },
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/hina-mincho.ttf",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/hina-mincho.png",
+      "font": "HinaMincho-Regular",
+      "width": 960,
+      "height": 321
+    },
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/hoso-fuwa.ttf",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/hoso-fuwa.png",
+      "font": "Hosofuwafont",
+      "width": 960,
+      "height": 225
+    },
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/nagayama-kai.otf",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/nagayama-kai.png",
+      "font": "nagayama_kai",
+      "width": 960,
+      "height": 225
+    },
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/noto-serif-jp.ttf",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/noto-serif-jp.png",
+      "font": "NotoSerifJP-ExtraLight",
+      "width": 960,
+      "height": 321
+    },
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/san-chou-me.ttf",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/san-chou-me.png",
+      "font": "santyoume-font",
+      "width": 960,
+      "height": 225
+    },
+    {
+      "source": "/Users/pedro/Developer/projects/apps/usagiunagi/App/Resources/fonts/sawarabi-mincho.ttf",
+      "image": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/fonts-2c792d66ce6749d886e8eae5cd6934d8/sawarabi-mincho.png",
+      "font": "SawarabiMincho-Regular",
+      "width": 960,
+      "height": 324
+    }
+  ],
+  "project_removal": {
+    "removed_targets": [
+      "FontScreenshotter",
+      "FontScreenshotterUITests"
+    ],
+    "surviving_targets": [
+      "AppTests",
+      "Tsurukame",
+      "Tests",
+      "Tsurukame Complication",
+      "Tsurukame Complication Extension",
+      "AppStoreScreenshots"
+    ],
+    "removed_objects": [
+      "63C42A2421B6A28D008CA938",
+      "63C42A2521B6A28D008CA938",
+      "63C42A3121B6A290008CA938",
+      "63C42A2321B6A28D008CA938",
+      "4874562C261DD28E00F33AA3",
+      "4874562D261DD28E00F33AA3",
+      "4874562E261DD28E00F33AA3",
+      "63C42A3621B6A290008CA938",
+      "63C42A2221B6A28D008CA938",
+      "63C42A3D21B6A290008CA938",
+      "63C42A3E21B6A290008CA938",
+      "63C42A3F21B6A290008CA938",
+      "63EF56E126060BA70038551A",
+      "63C42A1F21B6A28D008CA938",
+      "63C42A2621B6A28D008CA938",
+      "63C42A2021B6A28D008CA938",
+      "63EF56E226060BA70038551A",
+      "D93CBDFC9204BC20F4D08264",
+      "63C42A2121B6A28D008CA938",
+      "634EB1A321B6BC7000E1831C",
+      "63C42A4821B6AF02008CA938",
+      "63C42A3521B6A290008CA938",
+      "63C42A4021B6A290008CA938",
+      "63C42A4121B6A290008CA938",
+      "63C42A4221B6A290008CA938",
+      "63C42A3221B6A290008CA938",
+      "483EBFDC261DD7190043C804",
+      "63C42A3321B6A290008CA938",
+      "63C42A3421B6A290008CA938",
+      "63C42A3821B6A290008CA938",
+      "63C42A3721B6A290008CA938"
+    ],
+    "changed_objects": [
+      "630FD60B1FC45BDF00D21C1F",
+      "630FD60A1FC45BDF00D21C1F"
+    ]
+  },
+  "lines_and_assets": {
+    "baseline": "44df3bf2cff68e51810b9a15016e3001e2cbbab8",
+    "production_swift_before": 31217,
+    "production_swift_after": 31217,
+    "scope": "App-owned tracked App/**/*.swift and Shared/Sources/**/*.swift, excluding Pods, Tests, AppTests, AppStoreScreenshots, both FontScreenshotter utility folders and the two owner-annotated files.",
+    "correction": "The preceding measurement included the 39-line FontScreenshotterUITests file. Both utility folders are now explicitly excluded from production; this pass does not claim a production Swift reduction.",
+    "removed_developer_files": {
+      "App/FontScreenshotter/FontScreenshotterApp.swift": 25,
+      "App/FontScreenshotter/Info.plist": 39,
+      "App/FontScreenshotterUITests/Info.plist": 22,
+      "App/FontScreenshotterUITests/NativeFontPreviewTests.swift": 39
+    },
+    "project_numstat": "6\t280\tApp/UsagiUnagi.xcodeproj/project.pbxproj",
+    "preserved_assets": {
+      "App/Resources/fonts/armed-banana.ttf": "526877119ff8ef64a66761d786810fbc65fe30d692943dd899f087efc80a41a6",
+      "App/Resources/fonts/darts-font.woff": "d7cef1b736112e9c3f8f370b28a326731c69e071b8a996eb05b26ff48d61bf71",
+      "App/Resources/fonts/hina-mincho.ttf": "ac401c17b92a34550b2335a83328cb1c718b6cc97baaf2bf4cdac4e3c7e9afb5",
+      "App/Resources/fonts/hoso-fuwa.ttf": "5e2cd7ce4ceeb691b27985c6bacbe345b810fcac197130dd229ebd29c85a294e",
+      "App/Resources/fonts/nagayama-kai.otf": "36fa2bab41d9ac26e0ebb674fc997b997cde5a7d6972d311394d032821102b53",
+      "App/Resources/fonts/noto-serif-jp.ttf": "b2b6d5e52d8bbf1f21285bbd51f9b33e0ea4fbbb89a33306135da981af68cdbe",
+      "App/Resources/fonts/san-chou-me.ttf": "7a0d6e08890a85ff2f72b2c7e74f5fe1975e9f10e5b46739db2397101704f97b",
+      "App/Resources/fonts/sawarabi-mincho.ttf": "9e66635373a91dfd9cbcfb757ad5d35c83ae0c0cbfb02022c8d03356ca05f3ff",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/ArmedBanana.imageset/ArmedBanana.png": "1fddc0f5094acfec8221aefbe740f73fa1ac3b5c10fb61ff45c2a1bf4359e561",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/ArmedBanana.imageset/Contents.json": "73d03d9b1ed8d388834edeba42b5afec70e375155eb057330f53281e8b88aa01",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Contents.json": "0fd49ba3c3585c709678e0046a821c3c60685ec7063720d30d3a3448be3a208b",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hina Mincho.imageset/Contents.json": "107b3b2115bc8a629de8164dcb021d7343e8dbd884aee4419f56d025a1e845f3",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hina Mincho.imageset/Hina Mincho.png": "5cf40556582831ce664d843c6485706ab0191cfab5d8d6d218eb3b14b4ecea26",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hosofuwafont.imageset/Contents.json": "a762b12c8224bc97b6b2ba5f44853ae0aa08aab1ec5ada51ba5f863190a0525a",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Hosofuwafont.imageset/Hosofuwafont.png": "c5184aec09793001edf4a9becd7882032da7ce067d9d691e29b6273326e558eb",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Noto Serif JP.imageset/Contents.json": "9790c977dd6916a06279e64bfaa2c9af39f6582055990256cc7706dcfc676a2f",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Noto Serif JP.imageset/Noto Serif JP.png": "1340adf09cf865c34eb7c2139cfe0a60e4c60cba8a539fea45b72e182171cb40",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Sawarabi Mincho.imageset/Contents.json": "6edc8e59660cecd4779e1380b65f82908526c6a32e88c1ff08397e7a0d46ff1e",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/Sawarabi Mincho.imageset/Sawarabi Mincho.png": "a96447de6b2a98a5bf797981284c97553f3ba40b718da0d9ad65f950a39bc5c2",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/darts font.imageset/Contents.json": "c5208f54ac053ab3f711f0ac13092e84b3d2f74e9247db92f6e0f328c2f6584c",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/darts font.imageset/darts font.png": "6fa089c7e641d4d8046f8314e0f8428c0357a1e5f22581b0eff97cbacb3fc93c",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/nagayama_kai.imageset/Contents.json": "a637a783994ef633247820d27ac1bca3ea8adfc1752539841b9af3f1875174cc",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/nagayama_kai.imageset/nagayama_kai.png": "2a892d0b419300e318d4f9fbf2a3c1e7a91c5ec04648003c5f87856bc587b700",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/santyoume-font.imageset/Contents.json": "a2dcae1cf374c4ee96cc330b67753c4b6ec30be9b02d26f25dbbdffa6112f192",
+      "Shared/Sources/StudyUI/Resources/FontPreviews.xcassets/santyoume-font.imageset/santyoume-font.png": "50c3299dbb1e837b2a7876862a61b7c0dd04783cb83257d2a3bc67823e1b7d70"
+    },
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "validation": {
+    "mac-release": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-1669ca18b29f4a91a9cd33fb244fc320.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0,
+        "errors": [],
+        "warnings": [],
+        "analyzerWarnings": [],
+        "actionTitle": "Build \"UsagiUnagi\"",
+        "destination": {
+          "architecture": "arm64",
+          "deviceId": "00006040-000649442200801C",
+          "deviceName": "My Mac",
+          "modelName": "Mac mini",
+          "osBuildNumber": "26A434",
+          "osVersion": "27.0.1",
+          "platform": "macOS"
+        },
+        "endTime": 1792455597.335,
+        "startTime": 1792455544.546
+      },
+      "log": "/private/tmp/usagi-font-mac-release.log"
+    },
+    "ios-release": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-1c208c405d6a4a79ab4ea7c23703209b.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 42,
+        "analyzerWarningCount": 0,
+        "errors": [],
+        "warnings": [
+          {
+            "issueType": "Warning",
+            "message": "'CLKComplicationSupportedFamilies' has been deprecated starting in watchOS 7.0, use the ClockKit complications API instead."
+          },
+          {
+            "issueType": "NoUsage",
+            "message": "Immutable value 'objectType' was never used; consider replacing with '_' or removing it",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/APIClient.swift#EndingColumnNumber=15&EndingLineNumber=347&StartingColumnNumber=15&StartingLineNumber=347&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMMeaning' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=59&StartingColumnNumber=13&StartingLineNumber=59&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "AddPreconcurrencyImport",
+            "message": "Add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'SwiftProtobuf'",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=0&EndingLineNumber=24&StartingColumnNumber=0&StartingLineNumber=24&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property '_type' of 'Sendable'-conforming struct 'TKMMeaning' contains non-Sendable type 'TKMMeaning.TypeEnum'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=18&EndingLineNumber=114&StartingColumnNumber=18&StartingLineNumber=114&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMReading' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=151&StartingColumnNumber=13&StartingLineNumber=151&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property '_type' of 'Sendable'-conforming struct 'TKMReading' contains non-Sendable type 'TKMReading.TypeEnum'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=18&EndingLineNumber=200&StartingColumnNumber=18&StartingLineNumber=200&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMRadical' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=245&StartingColumnNumber=13&StartingLineNumber=245&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMKanji' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=307&StartingColumnNumber=13&StartingLineNumber=307&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'Sentence' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=15&EndingLineNumber=482&StartingColumnNumber=15&StartingLineNumber=482&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'PronunciationAudio' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=15&EndingLineNumber=513&StartingColumnNumber=15&StartingLineNumber=513&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'partsOfSpeech' of 'Sendable'-conforming struct 'TKMVocabulary' contains non-Sendable type 'TKMVocabulary.PartOfSpeech'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=343&StartingColumnNumber=13&StartingLineNumber=343&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMVocabulary' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=347&StartingColumnNumber=13&StartingLineNumber=347&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMAssignment' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=773&StartingColumnNumber=13&StartingLineNumber=773&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property '_subjectType' of 'Sendable'-conforming struct 'TKMAssignment' contains non-Sendable type 'TKMSubject.TypeEnum'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=18&EndingLineNumber=780&StartingColumnNumber=18&StartingLineNumber=780&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMProgress' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=857&StartingColumnNumber=13&StartingLineNumber=857&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMStudyMaterials' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=913&StartingColumnNumber=13&StartingLineNumber=913&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMUser' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1000&StartingColumnNumber=13&StartingLineNumber=1000&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'format' of 'Sendable'-conforming struct 'TKMFormattedText' contains non-Sendable type 'TKMFormattedText.Format'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1019&StartingColumnNumber=13&StartingLineNumber=1019&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMFormattedText' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1039&StartingColumnNumber=13&StartingLineNumber=1039&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMDataFileHeader' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1145&StartingColumnNumber=13&StartingLineNumber=1145&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMSubjectsByLevel' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1161&StartingColumnNumber=13&StartingLineNumber=1161&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMLevel' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1243&StartingColumnNumber=13&StartingLineNumber=1243&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'Subject' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=15&EndingLineNumber=1282&StartingColumnNumber=15&StartingLineNumber=1282&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMDeprecatedMnemonicFile' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1264&StartingColumnNumber=13&StartingLineNumber=1264&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMVoiceActor' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1333&StartingColumnNumber=13&StartingLineNumber=1333&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property '_gender' of 'Sendable'-conforming struct 'TKMVoiceActor' contains non-Sendable type 'TKMVoiceActor.Gender'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=18&EndingLineNumber=1376&StartingColumnNumber=18&StartingLineNumber=1376&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property 'unknownFields' of 'Sendable'-conforming struct 'TKMReviewStatistic' has non-Sendable type 'UnknownStorage'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=13&EndingLineNumber=1512&StartingColumnNumber=13&StartingLineNumber=1512&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Stored property '_type' of 'Sendable'-conforming struct 'TKMReviewStatistic' contains non-Sendable type 'TKMReviewStatistic.TypeEnum'; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift#EndingColumnNumber=18&EndingLineNumber=1561&StartingColumnNumber=18&StartingLineNumber=1561&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'unarchiveTopLevelObjectWithData' was deprecated in iOS 12.0: Use unarchivedObject(ofClass:from:) instead",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Settings.swift#EndingColumnNumber=33&EndingLineNumber=103&StartingColumnNumber=33&StartingLineNumber=103&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Extension declares a conformance of imported type 'FMResultSet' to imported protocol 'Sequence'; this will not behave correctly if the owners of 'FMDB' introduce this conformance in the future",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Extensions/FMDatabase+Assert.swift#EndingColumnNumber=0&EndingLineNumber=65&StartingColumnNumber=0&StartingLineNumber=65&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'init(input:modifierFlags:action:discoverabilityTitle:)' was deprecated in iOS 13.0",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Features/Home/MainWaniKaniTabViewController.swift#EndingColumnNumber=8&EndingLineNumber=204&StartingColumnNumber=8&StartingLineNumber=204&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'init(input:modifierFlags:action:discoverabilityTitle:)' was deprecated in iOS 13.0",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Features/Home/MainWaniKaniTabViewController.swift#EndingColumnNumber=8&EndingLineNumber=211&StartingColumnNumber=8&StartingLineNumber=211&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'init(input:modifierFlags:action:discoverabilityTitle:)' was deprecated in iOS 13.0",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Features/Home/MainWaniKaniTabViewController.swift#EndingColumnNumber=8&EndingLineNumber=221&StartingColumnNumber=8&StartingLineNumber=221&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'init(input:modifierFlags:action:discoverabilityTitle:)' was deprecated in iOS 13.0",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Features/Home/MainWaniKaniTabViewController.swift#EndingColumnNumber=8&EndingLineNumber=231&StartingColumnNumber=8&StartingLineNumber=231&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'main' was deprecated in iOS 26.0: Use a UIScreen instance found through context instead (i.e, view.window.windowScene.screen), or for properties like UIScreen.scale with trait equivalents, use a traitCollection found through context.",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/RadicalCharacterImages.swift#EndingColumnNumber=29&EndingLineNumber=27&StartingColumnNumber=29&StartingLineNumber=27&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Converting non-Sendable function value to '@isolated(any) @Sendable (Bool) -> Void' may introduce data races",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Features/Catalog/SubjectDetailsView.swift#EndingColumnNumber=84&EndingLineNumber=269&StartingColumnNumber=84&StartingLineNumber=269&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'init(input:modifierFlags:action:discoverabilityTitle:)' was deprecated in iOS 13.0",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/ReviewViewController.swift#EndingColumnNumber=8&EndingLineNumber=722&StartingColumnNumber=8&StartingLineNumber=722&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "ConformanceIsolation",
+            "message": "Conformance of 'LegacyStudyCoordinator' to protocol 'LoginViewControllerDelegate' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Platform/LegacyStudyCoordinator.swift#EndingColumnNumber=57&EndingLineNumber=19&StartingColumnNumber=57&StartingLineNumber=19&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "ImplicitStrongCapture",
+            "message": "'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Platform/LegacyStudyCoordinator.swift#EndingColumnNumber=37&EndingLineNumber=131&StartingColumnNumber=37&StartingLineNumber=131&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "Swift Compiler Warning",
+            "message": "Main actor-isolated static method 'scheduleBackgroundRefresh()' cannot be called from outside of the actor; this is an error in the Swift 6 language mode",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/UsagiUnagiApp.swift#EndingColumnNumber=30&EndingLineNumber=30&StartingColumnNumber=30&StartingLineNumber=30&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          },
+          {
+            "issueType": "DeprecatedDeclaration",
+            "message": "'submit' was deprecated in iOS 27.0: Use -submitTaskRequest:completionHandler: (Swift: submitTaskRequest(_:completionHandler:), or 'try await submitTaskRequest(_:)') to capture all error conditions",
+            "sourceURL": "file:///Users/pedro/Developer/projects/apps/usagiunagi/App/Application/StudyApplicationOwner.swift#EndingColumnNumber=38&EndingLineNumber=71&StartingColumnNumber=38&StartingLineNumber=71&Timestamp=814148400.8649729",
+            "className": "DVTTextDocumentLocation"
+          }
+        ],
+        "analyzerWarnings": [],
+        "actionTitle": "Build \"Tsurukame\"",
+        "destination": {
+          "architecture": "arm64",
+          "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "endTime": 1792455660.857,
+        "startTime": 1792455600.788
+      },
+      "log": "/private/tmp/usagi-font-ios-release.log"
+    },
+    "mac-test-build": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-for-testing-e3578092d7624d31b92582e21d158feb.xcresult",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0,
+        "analyzerWarningCount": 0,
+        "errors": [],
+        "warnings": [],
+        "analyzerWarnings": [],
+        "actionTitle": "Build for Testing \"UsagiUnagi\"",
+        "destination": {
+          "architecture": "arm64",
+          "deviceId": "00006040-000649442200801C",
+          "deviceName": "My Mac",
+          "modelName": "Mac mini",
+          "osBuildNumber": "26A434",
+          "osVersion": "27.0.1",
+          "platform": "macOS"
+        },
+        "endTime": 1792455668.575,
+        "startTime": 1792455664.364
+      },
+      "log": "/private/tmp/usagi-font-mac-test-build.log"
+    },
+    "hosted": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-060ffc6435eb4f3ca4fb6b9cd115ecf7.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0,
+        "testFailures": [],
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "302DAADD-ABFF-4582-AD9E-66CF64A5B622",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Tsurukame · Built with macOS 27.0.1",
+        "finishTime": 1792455688.561,
+        "runtimeWarnings": [],
+        "startTime": 1792455671.786,
+        "statistics": [],
+        "title": "Test - Tsurukame",
+        "topInsights": []
+      },
+      "log": "/private/tmp/usagi-font-hosted.log"
+    }
+  },
+  "shared_fonts": {
+    "functions": 6,
+    "passed": true,
+    "log": "/private/tmp/usagi-font-shared.log"
+  },
+  "workflow_syntax": "lint: 1 files, rewrote 0, failed: none",
+  "limits": [
+    "No new Mac GUI run: preceding automation initialization timeout remains unresolved.",
+    "No live WaniKani account access/exercises or OS permission changes.",
+    "No push, PR, hosted Actions pass, physical-device or signed-upgrade claim.",
+    "Legacy host/controller/writer deletion, speech/device, watch/delivery and statistics calibration remain open."
+  ]
+}

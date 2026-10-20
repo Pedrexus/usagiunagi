@@ -23,7 +23,7 @@ From Developer/Projects, use `mainboard run --as-is <task>`:
 | `usagi-test-ui`, `usagi-test-ui-ipad` | Full iPhone/iPad acceptance except host-driven warm links |
 | `usagi-test-warm-links`, `usagi-test-warm-links-ipad` | Actual custom URL delivery into an already running synthetic app |
 | `usagi-build-mac-tests`, `usagi-test-mac` | Compile native Mac UI tests, or execute them |
-| `usagi-font-previews` | Check all eight shared-catalog font previews and PNG attachments |
+| `usagi-font-previews` | Export all eight native Core Text PNG previews without a simulator |
 
 Focused `usagi-test-*` tasks use the same executor. Each Xcode execution creates a unique `.xcresult` under `.build/Results`, streams native output and preserves native failure/timeout status. Successful test execution also requires actual passing cases. Inspect an exact bundle with `mainboard apple results <path> --json` or `mainboard apple diagnostics <path> --json`. A build-only pass does not establish UI acceptance. Simulator runs sharing a device must run sequentially. Native Mac UI fixtures also ignore saved window restoration through a process-only launch argument; they never clear the real app's saved windows or account data. Run interactive Mac and simulator UI acceptance sequentially. Capture only the app window in Mac screenshots.
 
@@ -45,7 +45,7 @@ The warm-link test adds `--url-test App/Tests/WarmLinks.json` and selects only i
 
 The workflow runs shared tests/restart checks, iPhone/iPad acceptance and native Mac acceptance on the official [`xcode-27` image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md), selecting `/Applications/Xcode_27.app`. It uses read-only repository permissions, pinned action/tool commits, cancellation of stale branch jobs and seven-day result artifacts. Synthetic accounts require no token, signing certificate or publication secret. No release or store deployment is configured.
 
-Mainboard is pinned to `phvv-me/mainboard@7acaf736c8bae16f8b028678384fe83bb728c51b`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** The prepared Actions workflow has passed local syntax validation; no hosted CI pass is claimed.
+Mainboard is pinned to `phvv-me/mainboard@9e6a5617927680a321023a2a28bd7c6528f64eb3`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** The prepared Actions workflow has passed local syntax validation; no hosted CI pass is claimed.
 
 ## Automatic native sync acceptance
 
@@ -74,6 +74,8 @@ The [levels 1–3 display preview](../Resources/Fixtures/README.md) contains 357
 The existing `usagi-test-home` and `usagi-test-home-ipad` tasks cover the common grouped Home, availability, forecast, typed reviews, lessons, catalog navigation and inline Coverage. Native Mac acceptance uses the existing Home/forecast/search and lesson pause/resume cases; app-window screenshots show both light and dark native grouped sections. The initial grouped-layout gates ran before a screenshot-driven foreground-contrast correction; final Home/rotation checks rerun that presentation on all platforms, with the full typed-fixture and database changes unchanged. The original 60 synthetic subjects now use typed Swift construction rather than runtime protobuf-text parsing. A one-time local comparison verifies equality and identical serialized bytes against the evaluated original Swift literals; it does not require a live account. The existing response/recovery fixtures and active iOS SQL remain necessary until their callers are replaced. Exact source hashes, test results and physical LOC scopes are in the [cleanup receipt](Validation/2026-10-20-typed-fixtures-home.json).
 
 ## Font acceptance
+
+`usagi-font-previews` now calls Mainboard's general `apple font-previews` command with the original Japanese sample. It retains eight transparent PNGs in a fresh `.build/Results/fonts-*` directory and reports source files, actual font faces and pixel dimensions. Missing glyphs, substituted faces, corrupt exports and existing output paths fail. The old preview application/UI-test targets and their two folders are deleted; shipped font files and preview asset bytes are unchanged. CI runs the same headless renderer on its Apple host. The pinned Mainboard commit must be published before hosted Actions can fetch it; no hosted run is claimed.
 
 Shared font tests use isolated preferences/directories and local URLProtocol responses to check activation, glyph filtering, stale completion/cancellation, failure/retry and cache preservation. Hosted iOS tests additionally activate the eight original font files and verify the existing archived selection format. Native UI fixtures use the installed Japanese PostScript name `HiraMinProN-W3`; a nonexistent family name silently falls back to Helvetica on Mac and is not a valid Japanese test font. Fixture networking is local, delayed and cancellable; no live WaniKani exercises are used.
 
