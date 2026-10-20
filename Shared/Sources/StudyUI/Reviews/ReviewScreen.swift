@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 import StudyCore
 import SwiftUI
@@ -20,6 +21,7 @@ import SwiftUI
   public var stageAccessibility = ""
   public var answer = ""
   public var feedback = ""
+  public var answerHint: AttributedString?
   public var previous = ""
   public var completed = 0
   public var remaining = 0
@@ -42,6 +44,40 @@ import SwiftUI
   public var success: StudyMarkResult?
   public var feedbackPreferences = ReviewPreferences()
   public init() {}
+
+  /// Keep UTF-16 grading ranges attached to the exact normalized answer shown to the learner.
+  public func showAnswerHint(_ grade: AnswerGrade, exactMatch: Bool = false) {
+    answerHint = nil
+    let ranges: [NSRange]
+    switch grade {
+    case .mismatchingOkurigana(let value):
+      feedback = "Check the kana following the kanji."
+      ranges = value
+    case .containsInvalidCharacters(let value):
+      feedback = "Check the highlighted characters."
+      ranges = value
+    case .otherKanjiReading:
+      feedback = "Use the reading taught for this subject."
+      return
+    case .isReadingButWantMeaning:
+      feedback = "Enter the meaning. Your reading was correct."
+      return
+    case .imprecise where exactMatch:
+      feedback = "Use the exact meaning."
+      return
+    default: return
+    }
+    var highlighted = AttributedString(answer)
+    for range in ranges {
+      guard let source = Range(range, in: answer),
+        let lower = AttributedString.Index(source.lowerBound, within: highlighted),
+        let upper = AttributedString.Index(source.upperBound, within: highlighted)
+      else { continue }
+      highlighted[lower..<upper].foregroundColor = .red
+      highlighted[lower..<upper].underlineStyle = .single
+    }
+    answerHint = highlighted
+  }
 
   public func recordSuccess(_ mark: StudyMarkResult) {
     success = mark
@@ -125,6 +161,24 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             if state.canWrapUp { confirmEnd = true } else { action(.end) }
           }
           .accessibilityIdentifier("review.close")
+        }
+      }
+      ToolbarItem(placement: .secondaryAction) {
+        if state.canChangeFont || !state.previous.isEmpty {
+          Menu("Review actions", systemImage: "ellipsis") {
+            if !state.previous.isEmpty {
+              Button("Previous subject") { action(.previous) }.keyboardShortcut(
+                "p", modifiers: .command)
+            }
+            if state.canChangeFont {
+              Button("Toggle question font") { action(.toggleFont) }.keyboardShortcut(
+                .tab, modifiers: .option)
+              Button("Next font") { action(.nextFont) }.keyboardShortcut(
+                .rightArrow, modifiers: [.command, .option])
+              Button("Previous font") { action(.previousFont) }.keyboardShortcut(
+                .leftArrow, modifiers: [.command, .option])
+            }
+          }
         }
       }
       ToolbarItemGroup(placement: .primaryAction) {
@@ -224,10 +278,12 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       HStack {
         if state.canShowAll {
           Button("All information", systemImage: "info.circle") { action(.showAll) }
+            .keyboardShortcut(.space, modifiers: [])
         }
         Spacer()
         if state.canPlayAudio {
           Button("Audio", systemImage: "speaker.wave.2") { action(.playAudio) }
+            .keyboardShortcut("j", modifiers: [])
         }
       }.font(.callout)
       answerActions
@@ -239,11 +295,17 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       if state.phase == .incorrect {
         HStack {
           Button("Try again", systemImage: "arrow.counterclockwise") { action(.retry) }
+            .keyboardShortcut(.delete, modifiers: [])
           Button("Reveal answer", systemImage: "eye") { action(.reveal) }
             .accessibilityIdentifier("review.reveal")
+            .keyboardShortcut("f", modifiers: [])
         }.buttonStyle(.bordered)
       }
       if !state.isAnki { input().disabled(!state.canAnswer).frame(minHeight: 48, maxHeight: 56) }
+      if let hint = state.answerHint, String(hint.characters) == state.answer {
+        Text(hint).font(.title3)
+          .accessibilityIdentifier("review.answerHint")
+      }
       Button(
         state.phase == .incorrect
           ? "Continue"
@@ -260,6 +322,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           || (state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty)
       )
       .accessibilityIdentifier("review.submit")
+      .keyboardShortcut(state.isAnki ? .defaultAction : nil)
     }
   }
 
@@ -335,21 +398,33 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       if state.isAnki {
         Button("Incorrect", systemImage: "xmark") { action(.incorrect) }
           .accessibilityIdentifier("review.incorrect")
+          .keyboardShortcut("i", modifiers: .control)
         Button("Correct", systemImage: "checkmark") { action(.correct) }
           .buttonStyle(.borderedProminent).accessibilityIdentifier("review.correct")
+          .keyboardShortcut("c", modifiers: .control)
       } else {
         Button("Continue", systemImage: "arrow.right") { action(.submit) }
           .buttonStyle(.borderedProminent).accessibilityIdentifier("review.submit")
+          .keyboardShortcut(.defaultAction)
       }
       if state.canOverride || state.isAnki {
         Menu("Correct answer", systemImage: "ellipsis") {
+          // Preserve standard Copy/Select All; grading shortcuts use Control.
           Button("My answer was correct") { action(.correct) }
+            .keyboardShortcut("c", modifiers: .control)
+          if !state.isAnki {
+            Button("Keep answer incorrect") { action(.incorrect) }
+              .keyboardShortcut("i", modifiers: .control)
+          }
           Button("Ask again later") { action(.deferQuestion) }
+            .keyboardShortcut("a", modifiers: .control)
           if state.canExclude {
             Button("Exclude this item") { action(.exclude) }.accessibilityIdentifier(
               "review.exclude")
           }
-          if state.canAddSynonym { Button("Add synonym") { action(.synonym) } }
+          if state.canAddSynonym {
+            Button("Add synonym") { action(.synonym) }.keyboardShortcut("s", modifiers: .command)
+          }
         }.accessibilityIdentifier("review.corrections")
       }
     }.buttonStyle(.bordered)

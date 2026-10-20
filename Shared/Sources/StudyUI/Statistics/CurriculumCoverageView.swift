@@ -166,6 +166,12 @@ public struct StudySourcesView: View {
           Text(
             "JLPT does not publish current official kanji lists. These estimates cannot assess listening, grammar, vocabulary breadth or reading comprehension. Kanji Kentei also tests handwriting and other skills."
           )
+          Link(
+            "Official Kanji Kentei character allocations",
+            destination: URL(
+              string:
+                "https://www.kanken.or.jp/kanken/outline/data/outline_degree_national_list20200217.pdf"
+            )!)
           Link("JLPT official FAQ", destination: URL(string: "https://www.jlpt.jp/e/faq/")!)
           Link(
             "Kanji Kentei scopes and readiness checks",

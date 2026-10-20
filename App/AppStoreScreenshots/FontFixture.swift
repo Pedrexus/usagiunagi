@@ -5,23 +5,6 @@
   import StudyCore
   import Synchronization
 
-  #if os(iOS)
-    extension Screenshotter {
-      @nonobjc @MainActor static func fontFixture() -> (StudyFontCatalog, URLSessionConfiguration)?
-      {
-        guard isActive, ProcessInfo.processInfo.arguments.contains("FontFlowFixture") else {
-          return nil
-        }
-        var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
-        arguments["selectedFonts"] = try? NSKeyedArchiver.archivedData(
-          withRootObject: Set<String>(), requiringSecureCoding: true)
-        UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
-        return StudyFontFixture.make()
-      }
-    }
-
-  #endif
-
   @MainActor enum StudyFontFixture {
     static func make() -> (StudyFontCatalog, URLSessionConfiguration) {
       let font = CTFontCreateWithName("HiraMinProN-W3" as CFString, 24, nil)

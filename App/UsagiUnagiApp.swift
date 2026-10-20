@@ -5,24 +5,9 @@ import SwiftUI
 @main struct UsagiUnagiApp: App {
   @Environment(\.scenePhase) private var scenePhase
   @State private var owner = StudyApplicationOwner()
-  #if os(iOS) && DEBUG
-    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-  #endif
   var body: some Scene {
     WindowGroup(id: "study") {
-      #if os(iOS) && DEBUG
-        if Screenshotter.isActive {
-          if let fixture = appDelegate.legacyFixtureServices {
-            LegacyStudyWindow(services: fixture)
-          } else {
-            ProgressView()
-          }
-        } else {
-          nativeWindow
-        }
-      #else
-        nativeWindow
-      #endif
+      nativeWindow
     }
     #if os(iOS)
       .backgroundTask(.appRefresh(StudyApplicationOwner.refreshIdentifier)) {
@@ -32,7 +17,9 @@ import SwiftUI
         _ = await owner.refreshInBackground()
       }
       .onChange(of: scenePhase) { _, phase in
-        if phase == .background { StudyApplicationOwner.scheduleBackgroundRefresh() }
+        if phase == .background && backgroundPermitted {
+          Task { await StudyApplicationOwner.scheduleBackgroundRefresh() }
+        }
       }
     #endif
     #if os(macOS)
@@ -56,8 +43,8 @@ import SwiftUI
     #endif
   }
   private var backgroundPermitted: Bool {
-    #if os(iOS) && DEBUG
-      !Screenshotter.isActive && !StudyAppAssembly.isReviewFixture
+    #if DEBUG
+      !StudyAppAssembly.isReviewFixture
     #else
       true
     #endif

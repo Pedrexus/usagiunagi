@@ -1,19 +1,19 @@
 # Curriculum data sources
 
-`curricula.plist` is a reduced, combined dataset, distributed under CC BY-SA 4.0. It contains character-to-grade and estimated JLPT mappings only. It contains no user data. App source code remains under the repository's Apache 2.0 license.
+`curricula.plist` is a reduced, combined dataset, distributed under CC BY-SA 4.0. It contains character-to-grade, estimated JLPT and official Kanji Kentei allocation mappings only. It contains no user data. App source code remains under the repository's Apache 2.0 license.
 
 - School grades, Jōyō and Jinmeiyō classifications: KANJIDIC2, copyright James William BREEN and the Electronic Dictionary Research and Development Group (EDRDG). Source: https://www.edrdg.org/kanjidic/kanjidic2.xml.gz ; snapshot date recorded in the catalog. Project documentation: https://www.edrdg.org/wiki/index.php/KANJIDIC_Project . License: https://www.edrdg.org/edrdg/licence.html and https://creativecommons.org/licenses/by-sa/4.0/ . Transformations: selected literal and grade fields; omitted dictionary readings, meanings and other classifications. Grades 1–6 total 1,026; Jōyō including grade 8 totals 2,136. Canonical-equivalent Unicode forms are deduplicated, retaining the earliest school grade; otherwise compatibility variants can overwrite a Jōyō classification in Swift dictionaries. Name-use grades are retained in the resource but are not presented as an exam scope.
 - Estimated modern JLPT mapping: David Gouveia, kanji-data, commit 00fd7079c3890f430759536f91aa5e854ec0ca4f. https://github.com/davidluzgouveia/kanji-data . Extracted `jlpt_new`, without WaniKani level assignments. Repository license retained in kanji-data-LICENSE.txt. Underlying JLPT lists credited to Jonathan Waller: https://www.tanos.co.uk/jlpt/ . KANJIDIC is also an upstream source of kanji-data. This is community study material, not an official or exhaustive exam specification. Do not substitute old JLPT's four levels for the estimated modern five-level mapping.
 - JLPT explains why it does not publish current kanji/vocabulary/grammar lists: https://www.jlpt.jp/e/faq/ . Coverage cannot predict passing a JLPT level.
-- Kanji Kentei elementary targets and level 2 use the published school-grade/Jōyō scopes: https://www.kanken.or.jp/kanken/grades/meyasucheck/ . Intermediate levels 4, 3 and pre-2 are intentionally absent because exact subsets have not been sourced. No claims about handwriting, stroke order, compound formation or passing are made.
+- Kanji Kentei: Japan Kanji Aptitude Testing Foundation, official 2020 character-allocation table, https://www.kanken.or.jp/kanken/outline/data/outline_degree_national_list20200217.pdf , linked by https://www.kanken.or.jp/kanken/grades/overview/ . Reviewed document SHA-256: `8c7513a4ecfc7d6ca2b8f8aa71313b9097e972bac7a43f8a568fe99a9a1d7285`. Elementary levels 10–5 correspond to school grades 1–6; the new allocations on PDF pages 8–9, 10–11 and 12–13 contribute 313, 284 and 328 characters for levels 4, 3 and pre-2. The remaining 185 Jōyō characters complete level 2. The generator extracts only the character-classification facts from the reviewed table, excludes headings/sidebar/footer, canonically deduplicates and refuses changed document/layout/counts or overlapping/non-Jōyō entries. Neither the original chart design nor its PDF is bundled or relicensed. No claims about handwriting, stroke order, readings, compound formation or passing are made.
 
 ## Refresh procedure
 
-Refresh KANJIDIC2 before each release, and inspect the JLPT source for corrections. Download the two sources, decompress KANJIDIC2, and run:
+Refresh KANJIDIC2 before each release, and inspect the JLPT source for corrections. Download the three sources, decompress KANJIDIC2, and run the generator on macOS (PDFKit is a generator-only dependency):
 
-    swift Resources/Generators/update-curricula.swift /tmp/kanjidic2.xml /tmp/kanji.json Shared/Sources/StudyCore/Resources/curricula.plist
+    swift Resources/Generators/update-curricula.swift /tmp/kanjidic2.xml /tmp/kanji.json /tmp/kanken.pdf Shared/Sources/StudyCore/Resources/curricula.plist
 
-If changing the JLPT revision, update the generator and this attribution. Run StudyCoreTests; changed official totals require review rather than silently accepting incompatible data. The application exposes inline Sources details with the source snapshot date and license links.
+If changing the JLPT revision or official allocation PDF, update the generator and this attribution after visually reviewing the complete relevant source tables. Run StudyCoreTests; changed official totals require review rather than silently accepting incompatible data. The application exposes inline Sources details with the source snapshot date and license links.
 
 ## Legacy study supplements
 

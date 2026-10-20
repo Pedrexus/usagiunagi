@@ -21,6 +21,15 @@ public struct StudyLegacyHandoff: Codable, Equatable, Sendable {
   public let preferences: LegacyStudyPreferences?
   public var mediaLayout: StudyMediaLayout { preferences == nil ? .native : .legacyDocuments }
   public fileprivate(set) var activated = false
+  /// Nil on historical receipts; only a newly verified handoff can capture cloud ownership.
+  public fileprivate(set) var mistakeAccess: StudyLegacyMistakeAccess? = nil
+  mutating func revokeMistakes(ifUsernameChangedTo username: String) -> Bool {
+    guard case .active(let binding)? = mistakeAccess, binding.username != username else {
+      return false
+    }
+    mistakeAccess = .revoked(binding)
+    return true
+  }
   var receiptID: String { "ios:" + accountID + ":" + sourceID }
 }
 
@@ -47,11 +56,13 @@ public enum StudyBootstrapError: Error, LocalizedError {
   private let client: @Sendable (URL) -> any WaniKaniAccountReader
   private let preferenceImport: StudyPreferenceImport
   private let readLegacy: @MainActor () async throws -> StudyLegacySource
+  private let mistakeContext: StudyLegacyMistakeContext
   private var run: Task<StudyLegacyHandoff, any Error>?
 
   public init(
     store: StudyStore, sourceID: String, credentials: any StudyCredentialStore,
     preferences: StudyPreferenceImport,
+    mistakeContext: StudyLegacyMistakeContext = .init(locale: .current, calendar: .current),
     client: @escaping @Sendable (URL) -> any WaniKaniAccountReader = {
       WaniKaniClient(baseURL: $0)
     },
@@ -63,6 +74,7 @@ public enum StudyBootstrapError: Error, LocalizedError {
     self.client = client
     self.preferenceImport = preferences
     self.readLegacy = readLegacy
+    self.mistakeContext = mistakeContext
   }
 
   /// Select the native application before exposing any writer or background service.
@@ -140,7 +152,7 @@ public enum StudyBootstrapError: Error, LocalizedError {
       prepared = try await store.prepareLegacyHandoff(
         source.account, sourceID: sourceID,
         accountID: identity.id, credentialID: credentialID, identity: identity,
-        preferences: source.preferences)
+        preferences: source.preferences, mistakeContext: mistakeContext)
     }
     if prepared.activated { return try restorePreferences(prepared) }
     // Recheck after actor suspension; never overwrite another account's newer credential.
@@ -179,10 +191,11 @@ extension StudyStore {
 
   func prepareLegacyHandoff(
     _ source: LegacyStudyExport, sourceID: String, accountID: String,
-    credentialID: String, identity: WaniKaniAccount?, preferences: LegacyStudyPreferences
+    credentialID: String, identity: WaniKaniAccount?, preferences: LegacyStudyPreferences,
+    mistakeContext: StudyLegacyMistakeContext = .init(locale: .current, calendar: .current)
   ) throws -> StudyLegacyHandoff {
     try preferences.validate()
-    let handoff = StudyLegacyHandoff(
+    var handoff = StudyLegacyHandoff(
       sourceID: sourceID, accountID: accountID, credentialID: credentialID, preferences: preferences
     )
     if let previous = try legacyHandoff(sourceID: sourceID) {
@@ -190,12 +203,17 @@ extension StudyStore {
         throw StudyBootstrapError.credentialConflict
       }
       if previous.activated { return previous }
+      handoff = previous
       if let saved = previous.preferences, saved != preferences {
         throw StudyBootstrapError.sourceChanged
       }
     } else {
       guard let identity, identity.id == accountID else { throw StudyBootstrapError.invalidState }
       try identity.requireLegacyAccount(source.profile)
+      handoff.mistakeAccess = .active(
+        .init(
+          accountID: accountID, sourceID: sourceID, sourceDigest: try source.importDigest,
+          username: identity.username, context: mistakeContext))
     }
     // Import commits its own receipt first. An interruption before the binding below simply
     // requires fresh identity verification; its idempotent import cannot resurrect consumed work.
@@ -215,6 +233,14 @@ extension StudyStore {
               #Predicate { $0.sourceID == receiptID })
         ).first
       else { throw StudyBootstrapError.invalidState }
+      // A verified profile update above may already have revoked this receipt.
+      // Re-preparation can neither erase its evidence nor recreate active ownership.
+      if let saved = receipt.handoff {
+        guard saved.accountID == accountID, saved.credentialID == credentialID,
+          saved.sourceID == sourceID
+        else { throw StudyBootstrapError.invalidState }
+        handoff = saved
+      }
       receipt.handoff = handoff
     }
     return handoff

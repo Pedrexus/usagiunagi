@@ -4,7 +4,9 @@ Use Xcode 27.0 / Swift 6.4; Mainboard selects the toolchain. The obsolete Swift 
 
 ## Shared native scene acceptance
 
-The production app now uses one SwiftUI root and native store on iPhone, iPad and Mac. `AppStoreScreenshots/NativeRootFlowTests` launches that scene with injected memory-only account services via `--review-fixture`; the unported `ReviewFlowTests` cases use the temporary legacy DEBUG host. Its lesson/detail and cold/warm-link cases now launch the same native scene, keeping existing Mainboard task identifiers. Both are included in the mobile Actions gate. From the parent workspace run the generic Mainboard Apple executor with scheme `ReviewValidation`, action `test`, the iPhone/iPad simulator destination, and `--only-testing AppStoreScreenshots/NativeRootFlowTests`. Keep simulator GUI and hosted runs serialized. No live account exercise or OS microphone/notification authorization is part of these fixtures.
+The production app uses one SwiftUI root and native store on iPhone, iPad and Mac. `AppStoreScreenshots/NativeRootFlowTests` launches that scene with injected memory-only account services via `--review-fixture`. Ported `ReviewFlowTests` cases use the same scene and retain their Mainboard task identifiers. The current implementation retires the legacy DEBUG host; remaining old hosted, package and UI test callers must be ported before the full configured gates can run again. This retirement has not been built or tested yet. The acceptance sections below preserve their historical receipt scopes and do not establish acceptance of this newer source.
+
+For the final validation stage, use the generic Mainboard Apple executor with scheme `ReviewValidation`, action `test`, the iPhone/iPad simulator destination, and `--only-testing AppStoreScreenshots/NativeRootFlowTests`. Keep simulator GUI and hosted runs serialized. No live account exercise or OS microphone/notification authorization is part of these fixtures.
 
 The persistence probe additionally supports `write-native-selection` (expected abrupt exit 86) followed by `read-native-selection` (expected exit 0) against a disposable store. This proves a fresh installation retains its native-writer decision without reopening the old credentials/source after a process restart. The existing four restart phases and seven handoff/rollback phases continue to apply. The standalone Actions workflow includes all thirteen phases.
 
@@ -17,7 +19,7 @@ From Developer/Projects, use `mainboard run --as-is <task>`:
 
 | Task | Check |
 | --- | --- |
-| `usagi-restore`, `usagi-resolve` | CocoaPods deployment lock and committed Swift packages |
+| `usagi-restore`, `usagi-resolve` | Native Swift packages at committed resolved versions |
 | `usagi-test`, `usagi-test-persistence` | Shared Swift Testing and separate-process production-store restart/catalog checks |
 | `usagi-test-ios`, `usagi-test-app` | Shared iOS and hosted integration suites |
 | `usagi-test-ui`, `usagi-test-ui-ipad` | Full iPhone/iPad acceptance except host-driven warm links |
@@ -27,11 +29,12 @@ From Developer/Projects, use `mainboard run --as-is <task>`:
 
 Focused `usagi-test-*` tasks use the same executor. Each Xcode execution creates a unique `.xcresult` under `.build/Results`, streams native output and preserves native failure/timeout status. Successful test execution also requires actual passing cases. Inspect an exact bundle with `mainboard apple results <path> --json` or `mainboard apple diagnostics <path> --json`. A build-only pass does not establish UI acceptance. Simulator runs sharing a device must run sequentially. Native Mac UI fixtures also ignore saved window restoration through a process-only launch argument; they never clear the real app's saved windows or account data. Run interactive Mac and simulator UI acceptance sequentially. Capture only the app window in Mac screenshots.
 
-A standalone checkout can run the same commands directly with Mainboard installed:
+A standalone checkout uses the same native package resolver with Mainboard installed. The test command is the intended final gate after the remaining old test callers are ported:
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
-mainboard proc timeout 180 pod install --deployment --project-directory=App
+mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action resolve \
+  --derived-data .build/Xcode/iOS --timeout 600
 mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action test \
   --destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' \
   --derived-data .build/Xcode/iOS --only-testing AppStoreScreenshots/ReviewFlowTests \
@@ -45,7 +48,7 @@ The warm-link test adds `--url-test App/Tests/WarmLinks.json` and selects only i
 
 The workflow runs shared tests/restart checks, iPhone/iPad acceptance and native Mac acceptance on the official [`xcode-27` image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md), selecting `/Applications/Xcode_27.app`. It uses read-only repository permissions, pinned action/tool commits, cancellation of stale branch jobs and seven-day result artifacts. Synthetic accounts require no token, signing certificate or publication secret. No release or store deployment is configured.
 
-Mainboard is pinned to `phvv-me/mainboard@87461e5eb71623f213f439c06a569bfad6c7bc84`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** The prepared Actions workflow has passed local syntax validation; no hosted CI pass is claimed.
+Mainboard is pinned to `phvv-me/mainboard@9d19e7d74f6146f858a5b9d15ce518b4f63c28ab`, with `uv sync --locked` restoring its own environment. **That commit currently exists only locally on `codex/apple-development`. It must be published before the app workflow can fetch it. No push is authorized or performed here.** Final validation of the current workflow and its new source-inventory artifact is pending; no hosted CI pass is claimed.
 
 The pinned Mainboard includes the `41c2774` executor change: Apple execution suppresses automatic shell-script environment dumps with Xcode’s built-in `-hideShellScriptEnvironment`, including scheme pre-actions and descriptor-backed URL tests. This preserves the normal build environment while preventing Xcode from printing its values by default. A synthetic pre-action probe and all 80 executor regression cases verify the boundary. Use `mainboard apple results` and `mainboard apple diagnostics` for reviewable summaries; do not publish raw historical build logs. Scripts must also avoid explicitly printing credentials.
 
@@ -63,11 +66,15 @@ Shared Swift Testing covers exact/DST scheduling, capability and preference comb
 
 ## Source and resources
 
-`Shared/Package.swift` remains the authoritative shared dependency manifest. App package locks and `App/Podfile.lock` remain committed. FMDB, Reachability, SwiftGen and Hippolyte still serve active iOS migration callers; Mac's runtime has no CocoaPods dependency. Both app CI jobs restore the unified project's generated integration/file lists before building. `pod install` preserves a post-integration guard so iOS framework hooks do not run for the native Mac destination.
+`Shared/Package.swift` remains the authoritative shared dependency manifest. The app workspace contains only `UsagiUnagi.xcodeproj`; native Swift package resolution replaces CocoaPods restoration in Mainboard and both app Actions jobs. The existing resolved package revisions remain unchanged until final reconciliation. The obsolete `usagi-pods` task, Podfile/lock, CocoaPods framework hooks and SwiftGen scenes/segues/resource-generation phase are removed. App production linkage no longer includes FMDB, Reachability, SVGKit, Rexy or PromiseKit. Hippolyte remains declared only for the old legacy-package tests pending their final ports.
+
+The main app target now uses Swift 6 language mode on both iOS and Mac. Watch targets retain their separate language mode and WatchKit/ClockKit resources. Historical import keeps read-only SQLite3 access, generated protobuf decoding and the cold preference reader/schema, with no live Settings dependency. Three owner-edited legacy files remain on disk with their target memberships removed. The old controllers, writer services and 15 iOS storyboards are retired from the build; the watch's `Interface.storyboard`, branding, assets and fonts remain.
+
+This is an untested implementation checkpoint. No dependency resolution, build, test or GUI run has validated this retirement. Old hosted, package and UI tests still contain callers of the removed graph; port those assertions before final acceptance. Reconcile the existing package locks without upgrading retained revisions, then perform the final build/test and usability comparison. Historical validation receipts remain unchanged.
 
 App-specific generators are in `Resources/Generators`; the legacy protobuf schema is beside `App/WaniKaniAPI/Schema`; the production persistence executable is in `App/Tests/PersistenceProbe`. The Swift Testing suites live with Shared, hosted integration suites with App, and XCUITest remains appropriate for actual UI interactions.
 
-CircleCI, upstream Fastlane publishing/signing, unused snapshot capture, Xcode Cloud release notes, obsolete store screenshots and upstream Firebase deployment were retired. Generated Pods/build caches are ignored. Fonts and historical link-association references are retained under Resources/Hosted. Previous result logs/screenshots remain under ignored `.build/Previous`; durable receipts remain in Docs/Validation. No command deploys to the original author's account.
+CircleCI, upstream Fastlane publishing/signing, unused snapshot capture, Xcode Cloud release notes, obsolete store screenshots and upstream Firebase deployment were retired. Build caches and any leftover local Pods cache are ignored and are not part of app integration. Fonts and historical link-association references are retained under Resources/Hosted. Previous result logs/screenshots remain under ignored `.build/Previous`; durable receipts remain in Docs/Validation. No command deploys to the original author's account.
 
 The [levels 1–3 display preview](../Resources/Fixtures/README.md) contains 357 real catalog references read from WaniKani's visible level pages without an API token. Mainboard exported `Resources/Fixtures/free-levels.parquet` with Zstandard; the app reads matching binary Apple property-list data through Foundation. Mac Account → Preview free levels 1–3 opens it offline, with negative local IDs, no assignments/account identity and no uploads. These are display readings/meanings, not full accepted-answer rules, mnemonics or real WaniKani IDs. Complete review/lesson fixtures still require an authorized API catalog. Chrome was returned to the dashboard and no exercises or account changes were made.
 
@@ -179,11 +186,11 @@ Eleven existing review/font acceptance cases now launch the production SwiftUI s
 
 ## Swift rules and migration specification
 
-The [migration specification](Migration.md) is the execution contract for FMDB removal, SwiftData schema/observation work and remaining UI/service retirement. Current pinned Mainboard `87461e5eb71623f213f439c06a569bfad6c7bc84` supplies the native Swift parser, review signals and offline `analyze explain RULE --json` guidance. The app’s standalone mainboard.toml and .swiftlint.yml use the same commands as the parent workspace and Actions. Select Xcode 27 through DEVELOPER_DIR; this Mac’s default global selection is older and is not changed by the tool.
+The [migration specification](Migration.md) is the execution contract for FMDB removal, SwiftData schema/observation work and remaining UI/service retirement. The current, unpublished pinned Mainboard `9d19e7d74f6146f858a5b9d15ce518b4f63c28ab` supplies the native Swift parser, review signals and offline `analyze explain RULE --json` guidance. The app’s standalone mainboard.toml and .swiftlint.yml use the same commands as the parent workspace and Actions. Select Xcode 27 through DEVELOPER_DIR; this Mac’s default global selection is older and is not changed by the tool.
 
 Run `mainboard binary sync` explicitly for the hash-pinned private SwiftLint executable. Lint never installs it or falls back to a global executable. The app profile enables 15 correctness/SwiftUI/availability rules and disables update checks. swift-format is the only formatter. The SwiftUI lane selects SW-UI0001–0004 plus SW-PARSE0001; parser failure cannot become a clean result. Migration inventory selects SW-MIG0001–0008 and ALL-MIG0001, reporting bridge/storage evidence with official references and no automatic framework or stored-format rewrite. `check` prints an inventory; `gate` returns a finding verdict for its named files.
 
-The strict source scopes in Actions are Shared/Sources, App/Application and the touched app/input-service boundaries; SwiftLint additionally checks App and Shared/Sources. Generated/vendor/build paths are excluded. Native SwiftSyntax tests run in the explicit macOS/Xcode lane; portable catalog/config/normalized-rule and missing-toolchain checks remain available elsewhere. A Swift analysis request without its native compiler/libraries fails visibly. The focused current persistence scan of `Shared/Sources` has zero parser gaps and 17 review findings: 15 explicit `.codable` model attributes, one intentional `StudyStore` container construction and one `sqlite3_exec` in the retained old-host diagnostic helper. This inventory does not establish that these supported representations or boundaries are removable.
+The strict source scopes in Actions are Shared/Sources, App/Application and the touched app/input-service boundaries; SwiftLint additionally checks App and Shared/Sources. Generated/vendor/build paths are excluded. Native SwiftSyntax tests run in the explicit macOS/Xcode lane; portable catalog/config/normalized-rule and missing-toolchain checks remain available elsewhere. A Swift analysis request without its native compiler/libraries fails visibly. At the persistence-rule checkpoint, the focused `Shared/Sources` scan had zero parser gaps and 17 review findings: 15 explicit `.codable` model attributes, one intentional `StudyStore` container construction and one `sqlite3_exec` in the then-retained old-host diagnostic helper. That helper is retired in the current untested source; refresh the inventory during final validation. The historical inventory does not establish that the supported stored representations or intentional boundaries are removable.
 
 The new review-only rules cover direct syntax under the matching framework import and exclude known project shadows:
 

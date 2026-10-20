@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 87461e5eb71623f213f439c06a569bfad6c7bc84
+          ref: 9d19e7d74f6146f858a5b9d15ce518b4f63c28ab
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -46,12 +46,14 @@ jobs:
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 mainboard lint --check --only swift-parse . 2>&1 | tee .build/Results/SwiftParser.log
       - name: Swift format and correctness
         run: |
-          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App/Application App/UsagiUnagiApp.swift App/RadicalCharacterImages.swift App/WatchHelper.swift
+          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App/Application App/UsagiUnagiApp.swift App/WatchHelper.swift
           uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swiftlint App Shared/Sources
       - name: SwiftUI and storage migration inventory
         run: |
           mkdir -p .build/Results
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 180 mainboard analyze check . --rule SW-PARSE0001 --rule SW-MIG0001 --rule SW-MIG0002 --rule SW-MIG0003 --rule SW-MIG0004 --rule SW-MIG0005 --rule SW-MIG0006 --rule SW-MIG0007 --rule SW-MIG0008 --rule ALL-MIG0001 | tee .build/Results/SwiftMigration.log
+      - name: Swift source and dependency inventory
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 180 mainboard analyze swift-inventory . --json > .build/Results/SwiftInventory.json
       - name: Native font preview exports
         run: |
           mkdir -p .build/Results
@@ -117,7 +119,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 87461e5eb71623f213f439c06a569bfad6c7bc84
+          ref: 9d19e7d74f6146f858a5b9d15ce518b4f63c28ab
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -125,7 +127,6 @@ jobs:
         run: uv sync --project .build/Mainboard --locked --no-dev --python 3.14
       - name: Restore committed app dependencies
         run: |
-          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 180 pod install --deployment --project-directory=App
           uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action resolve --derived-data .build/Xcode/iOS
       - name: Shared iOS tests
         if: matrix.device == 'iPhone 18 Pro'
@@ -192,14 +193,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 87461e5eb71623f213f439c06a569bfad6c7bc84
+          ref: 9d19e7d74f6146f858a5b9d15ce518b4f63c28ab
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
       - name: Restore Mainboard's locked environment
         run: uv sync --project .build/Mainboard --locked --no-dev --python 3.14
-      - name: Restore unified project integration
-        run: uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 180 pod install --deployment --project-directory=App
+      - name: Restore committed app dependencies
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action resolve --derived-data .build/Xcode/macOS --timeout 600
       - name: Native Mac app and UI tests
         run: >-
           uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action test

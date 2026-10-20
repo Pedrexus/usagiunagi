@@ -1,5 +1,1 @@
-#include? "../Pods/Target Support Files/Pods-Tsurukame/Pods-Tsurukame.release.xcconfig"
-OTHER_LDFLAGS[sdk=macosx*] =
-FRAMEWORK_SEARCH_PATHS[sdk=macosx*] =
-OTHER_SWIFT_FLAGS[sdk=macosx*] =
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited)

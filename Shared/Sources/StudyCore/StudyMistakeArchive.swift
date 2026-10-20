@@ -102,6 +102,11 @@ public struct StudyMistakeArchive: Codable, Equatable, Sendable {
   public static func merge(_ lhs: [Int64: Int64], _ rhs: [Int64: Int64]) -> [Int64: Int64] {
     lhs.merging(rhs, uniquingKeysWith: max)
   }
+  /// Only the wire ages out. Future instants remain unchanged; practice eligibility is separate.
+  public static func recentValues(_ values: [Int64: Int64], now: Date) -> [Int64: Int64] {
+    let cutoff = now.addingTimeInterval(-86_400).timeIntervalSince1970
+    return values.filter { Double($0.value) >= cutoff }
+  }
 }
 
 /// An explicit interpretation of an old local-time wire format, not recovered historical metadata.
@@ -156,11 +161,14 @@ public struct StudyLegacyMistakes: Sendable {
     unresolvedKeys = unresolved
   }
   /// Nil means no semantic change. Uninterpretable original entries are never replaced.
-  public func updatedData(merging incoming: [Int64: Int64]) throws -> Data? {
+  public func updatedData(merging incoming: [Int64: Int64], now: Date = .now) throws -> Data? {
     let formatter = context.formatter
     var updated = originals
+    let recent = StudyMistakeArchive.recentValues(values, now: now)
+    for id in values.keys where recent[id] == nil { updated.removeValue(forKey: String(id)) }
+    // Unresolved original text stays recoverable; only interpretable timestamps can expire.
     // The legacy civil-date wire cannot represent the full native Int64 timestamp range.
-    for (id, timestamp) in incoming
+    for (id, timestamp) in StudyMistakeArchive.recentValues(incoming, now: now)
     where id > 0 && id <= Int32.max && timestamp >= 0 && timestamp <= 253_402_300_799 {
       let key = String(id)
       guard !unresolvedKeys.contains(key), timestamp > (values[id] ?? -1) else { continue }

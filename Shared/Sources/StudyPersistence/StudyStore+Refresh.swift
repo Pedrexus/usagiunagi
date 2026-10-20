@@ -210,6 +210,11 @@ extension StudyStore {
       progress += previousProgress.values.filter {
         pendingIDs.contains($0.subjectID) && !progressIDs.contains($0.subjectID)
       }
+      for (receipt, handoff) in try legacyMistakeRevocations(
+        accountID: accountID, username: download.profile.username)
+      {
+        receipt.handoff = handoff
+      }
       var state = StudyAccountState(download: download, progress: progress)
       state.systems = download.systems ?? stateRow?.state.systems
       // Only this read’s captured marker can be consumed. A later attempt/result wins.

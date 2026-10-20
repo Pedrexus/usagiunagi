@@ -1,5 +1,6 @@
 import StudyCore
 import StudyPersistence
+import StudySpeech
 import StudyUI
 import SwiftUI
 
@@ -7,6 +8,7 @@ import SwiftUI
 @MainActor struct StudyAppAssembly {
   let model: StudyAppModel
   let automaticSync: StudyAutomaticSync
+  let mistakeSync: StudyMistakeSync?
   let fonts: StudyFontLibrary
   let audio: StudyAudioLibrary
   let defaults: UserDefaults
@@ -17,17 +19,21 @@ import SwiftUI
   let notice: String?
   let avatars: LegacyAvatarCache
   let radicalImages: RadicalImageCache
+  let voiceCapture: @Sendable () -> any VoiceCapture
 
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
     companion: StudyCompanionDelivery? = nil, avatars: LegacyAvatarCache? = nil,
     radicalImages: RadicalImageCache = .shared,
+    mistakeCloud: (any StudyMistakeCloudStore)? = nil,
+    voiceCapture: @escaping @Sendable () -> any VoiceCapture = { AppleVoiceCapture() },
     appearance: ColorScheme? = nil, notice: String? = nil,
     paths: AsyncStream<Bool>? = nil
   ) {
     self.model = model
     automaticSync = StudyAutomaticSync(model: model, paths: paths)
+    mistakeSync = mistakeCloud.map { StudyMistakeSync(model: model, cloud: $0) }
     self.fonts = fonts
     self.audio = audio
     self.defaults = defaults
@@ -38,6 +44,7 @@ import SwiftUI
     subjectSettings = StudySubjectSettings(
       store: DefaultsStudySubjectPreferences(defaults: defaults))
     self.radicalImages = radicalImages
+    self.voiceCapture = voiceCapture
     self.appearance = appearance
     self.notice = notice
     self.avatars =
@@ -74,6 +81,7 @@ import SwiftUI
           bundledFonts: mediaLayout == .legacyDocuments
             ? Bundle.main.resourceURL?.appending(path: "fonts") : nil)),
       audio: StudyAudioLibrary(
-        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion)
+        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion,
+      mistakeCloud: AppleStudyMistakeCloudStore(store: .default))
   }
 }

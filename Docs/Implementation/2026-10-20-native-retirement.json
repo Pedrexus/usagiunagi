@@ -1,0 +1,1330 @@
+{
+  "delete_sources": [
+    "App/AnswerTextField.swift",
+    "App/AppDelegate.swift",
+    "App/Extensions/FMDatabase+Assert.swift",
+    "App/Extensions/NSMutableAttributedString+Replacements.swift",
+    "App/Extensions/UIWindow+InterfaceStyle.swift",
+    "App/Features/Account/LoginViewController.swift",
+    "App/Features/Catalog/SubjectDetailsView.swift",
+    "App/Features/Catalog/SubjectDetailsViewController.swift",
+    "App/Features/Home/HomeTiming.swift",
+    "App/Features/Home/MainViewController.swift",
+    "App/Features/Home/MainWaniKaniTabViewController.swift",
+    "App/Features/Lessons/LessonPickerViewController.swift",
+    "App/Features/Lessons/LessonsViewController.swift",
+    "App/Features/Practice/MainPracticeTabViewController.swift",
+    "App/Features/Settings/ArchivedPreference.swift",
+    "App/Features/Settings/LegacyPreferences.swift",
+    "App/Features/Settings/OfflineAudio.swift",
+    "App/Features/Settings/ReviewSettings.swift",
+    "App/Features/Settings/SettingsViewController.swift",
+    "App/Features/Statistics/StatisticsViewController.swift",
+    "App/LocalCachingClient.swift",
+    "App/SyncStore.swift",
+    "App/NavigationController.swift",
+    "App/NotificationDispatcher.swift",
+    "App/PendingUploadStore.swift",
+    "App/Platform/LegacyStudyCoordinator.swift",
+    "App/Platform/LegacyStudyWindow.swift",
+    "App/RadicalCharacterImages.swift",
+    "App/RecentMistakeHandler.swift",
+    "App/ReviewItem.swift",
+    "App/ReviewQuickSettings/ReviewContainerViewController.swift",
+    "App/ReviewSession.swift",
+    "App/ReviewSummaryViewController.swift",
+    "App/ReviewViewController.swift",
+    "App/Services.swift",
+    "App/Settings.swift",
+    "App/SiriShortcutHelper.swift",
+    "App/StudyStatistics.swift",
+    "App/Style.swift",
+    "App/SubjectDelegate.swift",
+    "App/TKMKanaInput.swift",
+    "App/UpcomingReviewsViewController.swift",
+    "App/VocabularyHighlighter.swift",
+    "App/AppStoreScreenshots/Screenshotter.swift",
+    "App/AppStoreScreenshots/ShellFixture.swift",
+    "App/AppStoreScreenshots/LoginFixture.swift",
+    "App/Generated/IB-Scenes+Generated.swift",
+    "App/Generated/IB-Segues+Generated.swift",
+    "App/Generated/XCAssets+Generated.swift",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/APIClient.swift",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/Subject.swift",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/MarkupFormatter.swift",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/URLRequest+SetBody.swift",
+    "Shared/Sources/StudyPersistence/SQLiteDiagnosticArchive.swift",
+    "App/Features/Settings/DeveloperSettings.swift",
+    "App/AppStoreScreenshots/DeveloperFixture.swift"
+  ],
+  "delete_resources": [
+    "App/Resources/Settings.storyboard",
+    "App/Resources/Review.storyboard",
+    "App/Resources/Lessons.storyboard",
+    "App/Resources/Navigation.storyboard",
+    "App/Resources/SearchResult.storyboard",
+    "App/Resources/SubjectCatalogue.storyboard",
+    "App/Resources/SubjectsRemaining.storyboard",
+    "App/Resources/SubjectDetails.storyboard",
+    "App/Resources/SubjectsByCategory.storyboard",
+    "App/Resources/ReviewContainer.storyboard",
+    "App/Resources/ReviewSummary.storyboard",
+    "App/Resources/UpcomingReviews.storyboard",
+    "App/Resources/LessonPicker.storyboard",
+    "App/Resources/Main.storyboard",
+    "App/SubjectsExcluded.storyboard",
+    "App/Resources/Assets.xcassets/svg/Contents.json",
+    "App/Resources/Assets.xcassets/svg/Makefile",
+    "App/Resources/Assets.xcassets/svg/appicon.png",
+    "App/Resources/Assets.xcassets/svg/ios-arrow-back.svg",
+    "App/Resources/Assets.xcassets/svg/ios-arrow-forward.svg",
+    "App/Resources/Assets.xcassets/svg/ios-refresh-empty.svg"
+  ],
+  "delete_tooling": ["App/swiftgen.yml","App/swiftgen-inputs.xcfilelist","App/swiftgen-outputs.xcfilelist"],
+  "retain_on_disk_remove_target_membership": ["App/AnswerChecker.swift","App/FullRefreshOverlayView.swift","App/Features/Catalog/LegacyCatalogViewController.swift"],
+  "trim_legacy_portions_keep_native": ["App/AppStoreScreenshots/AudioFixture.swift","App/AppStoreScreenshots/FontFixture.swift","App/AppStoreScreenshots/NotificationFixture.swift","App/WaniKaniAPI/Sources/WaniKaniAPI/ProtobufExtensions.swift"],
+  "preserve": [
+    "App/Application",
+    "App/LegacyStudyImporter.swift",
+    "App/WatchHelper.swift",
+    "App/ComplicationExtension",
+    "App/Complication/Base.lproj/Interface.storyboard",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift",
+    "App/Resources/fonts",
+    "App/Resources/Assets.xcassets",
+    "App/WaniKaniAPI/Sources/WaniKaniAPI/wanikani_api.pb.swift",
+    "Resources/UsagiUnagi.icon",
+    "App/WaniKaniAPI/Schema/wanikani_api.proto"
+  ],
+  "replacements": {
+    "FMDB/PendingUploadStore/SyncStore": "Shared/Sources/StudyPersistence/StudyStore*.swift",
+    "legacy host/controllers/storyboards": "Shared/Sources/StudyUI + App/Application",
+    "old APIClient": "Shared/Sources/StudyCore/WaniKaniClient*.swift",
+    "old recent mistakes": "native StudyMistakeSync + persisted authority",
+    "SVGKit rendering": "RadicalImageCache + SwiftUI WebView",
+    "Settings": "shared typed defaults + read-only LegacyPreferenceImporter/Schema"
+  },
+  "sqlite_copy_retirement": {
+    "status": "implementation-only/untested",
+    "removed_lines": 64,
+    "test_references": [
+      "App/AppTests/NativeAppAssemblyTests.swift:252",
+      "Shared/Tests/StudyPersistenceTests/SQLiteDiagnosticArchiveTests.swift:18",
+      "Shared/Tests/StudyPersistenceTests/SQLiteDiagnosticArchiveTests.swift:41",
+      "Shared/Tests/StudyPersistenceTests/SQLiteDiagnosticArchiveTests.swift:43",
+      "Shared/Tests/StudyPersistenceTests/SQLiteDiagnosticArchiveTests.swift:57"
+    ],
+    "preserved_responsibilities": [
+      "LegacyStudyImporter opens original source read-only and never deletes it",
+      "Native StudyDiagnosticArchive remains account-scoped typed diagnostic export; it is not a restorable backup",
+      "P0c staged recovery implementation has no dependency on this diagnostic copy helper"
+    ]
+  },
+  "status": "implementation-only/untested",
+  "date": "2026-10-20",
+  "original_reference": "4842707d",
+  "original_commit": "4842707d4a32d15c5bd50d22a3f2abf029bf61f4",
+  "ordering": ["finish production implementation","compare usability with original Tsurukame","adapt and run final tests"],
+  "acceptance": {
+    "builds_run": false,
+    "tests_run": false,
+    "gui_run": false,
+    "live_account_or_cloud_access": false,
+    "hosted_actions_pass": false,
+    "dependency_resolution_run": false,
+    "note": "Source retirement is not feature-parity, migration, signed cloud delivery, schema upgrade or release acceptance."
+  },
+  "removed_file_evidence": [
+    {
+      "path": "App/AnswerTextField.swift",
+      "original_sha256": "3c1e940a2a696f3ff00eb72ff00d7576a33c431de21b460ebffa7969139ec32e",
+      "original_bytes": 651,
+      "original_lines": 17,
+      "removed_declarations": [{"name":"AnswerTextField","kind":"class","line":17}]
+    },
+    {"path":"App/AppDelegate.swift","original_sha256":"6b8cc7db0ec9bce7b20fa680c4d261551ef7b528b0c34538b0ff073c393ac247","original_bytes":1458,"original_lines":38,"removed_declarations":[]},
+    {"path":"App/Extensions/FMDatabase+Assert.swift","original_sha256":"a6c6779763110a38580944976c63e0d102f8565644c03abcb474b0a35dae001c","original_bytes":2916,"original_lines":100,"removed_declarations":[]},
+    {
+      "path": "App/Extensions/NSMutableAttributedString+Replacements.swift",
+      "original_sha256": "25afec03deb16dbc78d8922ddd6a13dc8be2dc634a9cbb8a96acebc8c74b1faa",
+      "original_bytes": 1397,
+      "original_lines": 41,
+      "removed_declarations": []
+    },
+    {"path":"App/Extensions/UIWindow+InterfaceStyle.swift","original_sha256":"79188a54c535ff3565a510fa24b8c683dd6a0b6158e17b91365186b62a43bf07","original_bytes":925,"original_lines":29,"removed_declarations":[]},
+    {
+      "path": "App/Features/Account/LoginViewController.swift",
+      "original_sha256": "f4ddbcaf30c4b46c3e46390e1b1902551217d5b462c1b457ccb517f5ab63d823",
+      "original_bytes": 3024,
+      "original_lines": 79,
+      "removed_declarations": [{"name":"LoginViewControllerDelegate","kind":"protocol","line":24},{"name":"LoginViewController","kind":"class","line":26}]
+    },
+    {
+      "path": "App/Features/Catalog/SubjectDetailsView.swift",
+      "original_sha256": "fda130de9acf245af3a27059b76491257d432e3dd1729ac9e6f4247b2f411890",
+      "original_bytes": 11348,
+      "original_lines": 273,
+      "removed_declarations": [{"name":"SubjectDetailsPage","kind":"struct","line":194}]
+    },
+    {
+      "path": "App/Features/Catalog/SubjectDetailsViewController.swift",
+      "original_sha256": "aedaa997fdd96382c2c79b2ee2b8ebd6ffc9e0ec34c998db656b4f7bfbbdbd1c",
+      "original_bytes": 2761,
+      "original_lines": 70,
+      "removed_declarations": [{"name":"SubjectDetailsViewController","kind":"class","line":19}]
+    },
+    {
+      "path": "App/Features/Home/HomeTiming.swift",
+      "original_sha256": "ea6784a5732633d2fe12cd7cc044bdee539aa0cedd05490905acc539a35e44fa",
+      "original_bytes": 2159,
+      "original_lines": 49,
+      "removed_declarations": [{"name":"HomeTiming","kind":"enum","line":8}]
+    },
+    {
+      "path": "App/Features/Home/MainViewController.swift",
+      "original_sha256": "ff08753acb5e95e6de2ca86698d56178dc157b516f22f294521b5c044dbef818",
+      "original_bytes": 11367,
+      "original_lines": 347,
+      "removed_declarations": [{"name":"MainViewController","kind":"class","line":29},{"name":"MainShellRoot","kind":"struct","line":307},{"name":"ShellDestination","kind":"struct","line":341}]
+    },
+    {
+      "path": "App/Features/Home/MainWaniKaniTabViewController.swift",
+      "original_sha256": "37935c2ee34e0e590939897b8bfaf6f246b462512c4c16b44c9ea2bf48d540db",
+      "original_bytes": 10605,
+      "original_lines": 277,
+      "removed_declarations": [{"name":"MainWaniKaniTabViewController","kind":"class","line":9}]
+    },
+    {
+      "path": "App/Features/Lessons/LessonPickerViewController.swift",
+      "original_sha256": "937e68f99139e53bf25912bbbc9a0466021271c24469ce6dc082e8003e0a4713",
+      "original_bytes": 3278,
+      "original_lines": 71,
+      "removed_declarations": [{"name":"LessonPickerViewController","kind":"class","line":21}]
+    },
+    {
+      "path": "App/Features/Lessons/LessonsViewController.swift",
+      "original_sha256": "b968fdfbb02a9e7b48c3f7df552bfe98bca7652ab9cbf00f87938ebc1f8da67a",
+      "original_bytes": 5199,
+      "original_lines": 126,
+      "removed_declarations": [{"name":"LessonsViewController","kind":"class","line":21},{"name":"LessonPage","kind":"enum","line":102},{"name":"LessonQuizView","kind":"struct","line":119}]
+    },
+    {
+      "path": "App/Features/Practice/MainPracticeTabViewController.swift",
+      "original_sha256": "dabf3fdbb22f624e8fbf5342db84ca64501bf4e720fc125ca919340aa6d4b296",
+      "original_bytes": 2073,
+      "original_lines": 67,
+      "removed_declarations": [{"name":"MainPracticeTabViewController","kind":"class","line":21}]
+    },
+    {
+      "path": "App/Features/Settings/ArchivedPreference.swift",
+      "original_sha256": "b560564306658f49801dbf7b19805e4a663feb4f5451fbfac6d25a76a70a3066",
+      "original_bytes": 1598,
+      "original_lines": 55,
+      "removed_declarations": [{"name":"SettingToggle","kind":"struct","line":35}]
+    },
+    {
+      "path": "App/Features/Settings/LegacyPreferences.swift",
+      "original_sha256": "5e8c67e5bd8482fe0c43c864a70d4e2dec37319c07623dc6163f621fbdefae99",
+      "original_bytes": 17265,
+      "original_lines": 408,
+      "removed_declarations": [
+        {"name":"ReviewPreferencesAdapter","kind":"enum","line":20},
+        {"name":"LegacyFontPreferences","kind":"class","line":150},
+        {"name":"LegacyAudioPreferences","kind":"class","line":158},
+        {"name":"LegacyLessonPreferences","kind":"class","line":176},
+        {"name":"LegacySubjectPreferences","kind":"class","line":214},
+        {"name":"LegacyNotificationPreferences","kind":"class","line":243},
+        {"name":"LegacyPreferenceImporter","kind":"enum","line":271}
+      ]
+    },
+    {
+      "path": "App/Features/Settings/OfflineAudio.swift",
+      "original_sha256": "86b64ac46c8962ec0d0a4ca08bd8ebcff609338eac41b879f8dc28d34aeb9176",
+      "original_bytes": 1580,
+      "original_lines": 41,
+      "removed_declarations": [{"name":"OfflineAudio","kind":"class","line":8}]
+    },
+    {
+      "path": "App/Features/Settings/ReviewSettings.swift",
+      "original_sha256": "4830f4c60a8449a2575350d37b7864a0f8dbd1eb7d3635b552230b7013327bba",
+      "original_bytes": 1915,
+      "original_lines": 56,
+      "removed_declarations": [{"name":"ReviewSettings","kind":"struct","line":8}]
+    },
+    {
+      "path": "App/Features/Settings/SettingsViewController.swift",
+      "original_sha256": "f6db15ce109d58fb8818223504242dc54b32d7c4ad58d23648f0e2444bec4bc6",
+      "original_bytes": 6887,
+      "original_lines": 169,
+      "removed_declarations": [{"name":"ApplicationSettings","kind":"struct","line":23},{"name":"SettingsViewController","kind":"class","line":116}]
+    },
+    {
+      "path": "App/Features/Statistics/StatisticsViewController.swift",
+      "original_sha256": "b3b0a0e89f54c71b9e816decd0db01c897114137cef3a99ddf5cc8cbd5023d59",
+      "original_bytes": 3738,
+      "original_lines": 90,
+      "removed_declarations": [{"name":"StatisticsViewController","kind":"class","line":22}]
+    },
+    {
+      "path": "App/LocalCachingClient.swift",
+      "original_sha256": "7a0c307d0c336292755faeca4d16d737636792d67f8c3aef91cc465433ac375a",
+      "original_bytes": 56138,
+      "original_lines": 1641,
+      "removed_declarations": [{"name":"ReviewComposition","kind":"struct","line":33},{"name":"LocalCachingClient","kind":"class","line":57},{"name":"Cached","kind":"struct","line":1613}]
+    },
+    {
+      "path": "App/SyncStore.swift",
+      "original_sha256": "42f84a993796620667d99d0d52e3134d69eb11628b7e7f0b3adbfa2fe2af5902",
+      "original_bytes": 8965,
+      "original_lines": 231,
+      "removed_declarations": [{"name":"SyncStore","kind":"enum","line":22}]
+    },
+    {
+      "path": "App/NavigationController.swift",
+      "original_sha256": "9c1517356a6137da2753aae7014902f6d0020c14eb5915d989ac9fa35708f9d2",
+      "original_bytes": 3305,
+      "original_lines": 99,
+      "removed_declarations": [{"name":"TKMViewController","kind":"protocol","line":18},{"name":"NavigationController","kind":"class","line":22}]
+    },
+    {
+      "path": "App/NotificationDispatcher.swift",
+      "original_sha256": "13328858b5ec60a680d8e9e986d29a66e3505960b39580693a505e644e418625",
+      "original_bytes": 1275,
+      "original_lines": 35,
+      "removed_declarations": [{"name":"NotificationDispatcher","kind":"class","line":19}]
+    },
+    {
+      "path": "App/PendingUploadStore.swift",
+      "original_sha256": "f81202dc21dccbf95fb748593214f022f35bfefce091c18ae8461eebbab2526b",
+      "original_bytes": 1869,
+      "original_lines": 48,
+      "removed_declarations": [{"name":"PendingUploadStore","kind":"enum","line":21}]
+    },
+    {
+      "path": "App/Platform/LegacyStudyCoordinator.swift",
+      "original_sha256": "c1ec3e946ceebee550b527711c267583794ba3371991502a9ff1369c0c898794",
+      "original_bytes": 6982,
+      "original_lines": 202,
+      "removed_declarations": [{"name":"LegacyStudyCoordinator","kind":"class","line":20}]
+    },
+    {
+      "path": "App/Platform/LegacyStudyWindow.swift",
+      "original_sha256": "851ae69561ba02e08d7cdd6ae2a37efb2f44039394e811bc2fce44cbbcda19a7",
+      "original_bytes": 2237,
+      "original_lines": 69,
+      "removed_declarations": [{"name":"LegacyStudyWindow","kind":"struct","line":5},{"name":"LegacyNavigationHost","kind":"struct","line":63}]
+    },
+    {
+      "path": "App/RadicalCharacterImages.swift",
+      "original_sha256": "af42f2298df1d850b3d5f1e56960e30861c9c515ce23979e1caa0f0ae09c4f98",
+      "original_bytes": 4934,
+      "original_lines": 149,
+      "removed_declarations": [{"name":"RadicalCharacterImages","kind":"class","line":18}]
+    },
+    {
+      "path": "App/RecentMistakeHandler.swift",
+      "original_sha256": "48c7e521e60e72e3c1751d6113646099b644fdcad388e796e4f98d950605e07d",
+      "original_bytes": 2616,
+      "original_lines": 72,
+      "removed_declarations": [{"name":"RecentMistakeHandler","kind":"class","line":17}]
+    },
+    {
+      "path": "App/ReviewItem.swift",
+      "original_sha256": "a2e4a5b284e253fc6113a9c11edf5387fa9688df8bbe7621ab983a1631ede42c",
+      "original_bytes": 4028,
+      "original_lines": 147,
+      "removed_declarations": [{"name":"TaskType","kind":"typealias","line":19},{"name":"ReviewItem","kind":"class","line":21}]
+    },
+    {
+      "path": "App/ReviewQuickSettings/ReviewContainerViewController.swift",
+      "original_sha256": "e2c7b024f28802941d9fab9208b551a656f78067d745ccef3f5b4942aac71360",
+      "original_bytes": 3275,
+      "original_lines": 86,
+      "removed_declarations": [{"name":"ReviewContainerViewController","kind":"class","line":22}]
+    },
+    {
+      "path": "App/ReviewSession.swift",
+      "original_sha256": "183d0749fd485ba9b248e814d2a18324cb057941612efda2260fd6492ecbb036",
+      "original_bytes": 7543,
+      "original_lines": 197,
+      "removed_declarations": [{"name":"ReviewRepository","kind":"struct","line":20},{"name":"ReviewSession","kind":"class","line":43}]
+    },
+    {
+      "path": "App/ReviewSummaryViewController.swift",
+      "original_sha256": "9cc838de3e3393d579cde273e0eca13f64e2cc6d6c7c9169ccbc78eb9e7039fc",
+      "original_bytes": 3242,
+      "original_lines": 65,
+      "removed_declarations": [{"name":"ReviewSummaryViewController","kind":"class","line":21}]
+    },
+    {
+      "path": "App/ReviewViewController.swift",
+      "original_sha256": "3aa16e4d3027fee21abedc2b57cab4368b1e39fd94bb2562bf5ac15023b89f9a",
+      "original_bytes": 26430,
+      "original_lines": 765,
+      "removed_declarations": [{"name":"ReviewViewControllerDelegate","kind":"protocol","line":81},{"name":"ReviewViewController","kind":"class","line":94},{"name":"ExistingReviewView","kind":"struct","line":761}]
+    },
+    {
+      "path": "App/Services.swift",
+      "original_sha256": "f889e75c0c7047d1190bbb3e737e1c7f2b1fd72218f379ed1e12c0128bf1fcdf",
+      "original_bytes": 3505,
+      "original_lines": 79,
+      "removed_declarations": [{"name":"TKMServices","kind":"class","line":21}]
+    },
+    {
+      "path": "App/Settings.swift",
+      "original_sha256": "5010057d7ce3196da34633669ee59ce60ac5b461805edf0961fb16014d558eeb",
+      "original_bytes": 9989,
+      "original_lines": 264,
+      "removed_declarations": [{"name":"SettingEnum","kind":"typealias","line":19},{"name":"SettingProtocol","kind":"protocol","line":107}]
+    },
+    {
+      "path": "App/SiriShortcutHelper.swift",
+      "original_sha256": "91ffa0f0b438c1e06ac24c30dbee8132a7afc1c8f8d5663611937f7a1c52e813",
+      "original_bytes": 1156,
+      "original_lines": 37,
+      "removed_declarations": [{"name":"SiriShortcutHelper","kind":"class","line":20}]
+    },
+    {
+      "path": "App/StudyStatistics.swift",
+      "original_sha256": "1af0232503993c72b3c736fae1cdf7442f0faa62cd37ec4bed2a327453e3bf39",
+      "original_bytes": 2303,
+      "original_lines": 57,
+      "removed_declarations": [{"name":"StudyStatistics","kind":"typealias","line":20}]
+    },
+    {
+      "path": "App/Style.swift",
+      "original_sha256": "4413f127e0b5d3f21451a5967821e90fee81ad0fe5d5c180ab1696311b86b1c0",
+      "original_bytes": 6886,
+      "original_lines": 177,
+      "removed_declarations": [{"name":"TKMStyle","kind":"class","line":36}]
+    },
+    {
+      "path": "App/SubjectDelegate.swift",
+      "original_sha256": "8139205b3151bbaa4b4d5863517ad45b478c4f1e99b4e26276eb7f5698d560a2",
+      "original_bytes": 708,
+      "original_lines": 20,
+      "removed_declarations": [{"name":"SubjectDelegate","kind":"protocol","line":18}]
+    },
+    {
+      "path": "App/TKMKanaInput.swift",
+      "original_sha256": "87abe375fa716bc5d3f4bcd2caf3eedf7a042dec47e3e2981cd61c57ce284a7e",
+      "original_bytes": 2068,
+      "original_lines": 52,
+      "removed_declarations": [{"name":"TKMKanaInput","kind":"class","line":19}]
+    },
+    {
+      "path": "App/UpcomingReviewsViewController.swift",
+      "original_sha256": "a566bbc123ee6a718a3b7185934977bfd9f67283fb009d9796c5d2a7df79d76c",
+      "original_bytes": 2120,
+      "original_lines": 51,
+      "removed_declarations": [{"name":"UpcomingReviewsViewController","kind":"class","line":19}]
+    },
+    {
+      "path": "App/VocabularyHighlighter.swift",
+      "original_sha256": "92e50c1a520a6e01c9305a8cfb2c08d66656ba6d4ad9d6e083ca31f1eb82bc36",
+      "original_bytes": 11303,
+      "original_lines": 306,
+      "removed_declarations": [{"name":"ConjugationGroup","kind":"class","line":21}]
+    },
+    {"path":"App/AppStoreScreenshots/Screenshotter.swift","original_sha256":"941a6917e71e5d16b077e6a6b1303ca28666bd74686525e861dd2e895018f8cd","original_bytes":35751,"original_lines":842,"removed_declarations":[]},
+    {"path":"App/AppStoreScreenshots/ShellFixture.swift","original_sha256":"70df60157f91026cc5522626a9a3c86c79497ebb67bf13f902748794525009b5","original_bytes":772,"original_lines":26,"removed_declarations":[]},
+    {"path":"App/AppStoreScreenshots/LoginFixture.swift","original_sha256":"c8a0f40c66bc969ef5fbf00f2d8e9602c73e0a1f76f169b7e1d62082c06d0e51","original_bytes":1747,"original_lines":46,"removed_declarations":[]},
+    {
+      "path": "App/Generated/IB-Scenes+Generated.swift",
+      "original_sha256": "c9819bcf5a264f3814e7338c9c18ff37b6b89e0b9b04b096fa2e816bf7b57227",
+      "original_bytes": 5843,
+      "original_lines": 152,
+      "removed_declarations": [
+        {"name":"StoryboardScene","kind":"enum","line":14},
+        {"name":"StoryboardType","kind":"protocol","line":94},
+        {"name":"SceneType","kind":"struct","line":105},
+        {"name":"InitialSceneType","kind":"struct","line":123},
+        {"name":"BundleToken","kind":"class","line":143}
+      ]
+    },
+    {
+      "path": "App/Generated/IB-Segues+Generated.swift",
+      "original_sha256": "fa9a4462269d2621216359efe216ef2d3560127cbdcbb4a792de900807fbcf46",
+      "original_bytes": 1664,
+      "original_lines": 58,
+      "removed_declarations": [{"name":"StoryboardSegue","kind":"enum","line":14},{"name":"SegueType","kind":"protocol","line":44}]
+    },
+    {
+      "path": "App/Generated/XCAssets+Generated.swift",
+      "original_sha256": "4a789cde2b2e650e25acf3e0eed032dad306f6bbf837f23e31034d48770119b7",
+      "original_bytes": 9126,
+      "original_lines": 276,
+      "removed_declarations": [
+        {"name":"AssetColorTypeAlias","kind":"typealias","line":17},
+        {"name":"AssetImageTypeAlias","kind":"typealias","line":19},
+        {"name":"Asset","kind":"enum","line":26},
+        {"name":"ColorAsset","kind":"class","line":61},
+        {"name":"ImageAsset","kind":"struct","line":125},
+        {"name":"SymbolAsset","kind":"struct","line":206},
+        {"name":"BundleToken","kind":"class","line":267}
+      ]
+    },
+    {
+      "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/APIClient.swift",
+      "original_sha256": "1c6b19f5817c09d87438001ab045df06e0484ec2cc308375a04a04d160cd9c48",
+      "original_bytes": 34391,
+      "original_lines": 998,
+      "removed_declarations": [
+        {"name":"SubjectLevelGetter","kind":"protocol","line":19},
+        {"name":"WaniKaniAPIClient","kind":"class","line":24},
+        {"name":"WaniKaniAPIError","kind":"struct","line":598},
+        {"name":"WaniKaniJSONDecodeError","kind":"struct","line":605},
+        {"name":"WaniKaniDate","kind":"struct","line":626},
+        {"name":"Response","kind":"class","line":701},
+        {"name":"PaginatedResponse","kind":"class","line":710},
+        {"name":"MultiResourceResponse","kind":"class","line":742},
+        {"name":"UserData","kind":"struct","line":765},
+        {"name":"AssignmentData","kind":"struct","line":795},
+        {"name":"StudyMaterialData","kind":"struct","line":835},
+        {"name":"LevelProgressionData","kind":"struct","line":860},
+        {"name":"ReviewData","kind":"struct","line":884},
+        {"name":"StartAssignmentRequest","kind":"struct","line":895},
+        {"name":"CreateReviewRequest","kind":"struct","line":901},
+        {"name":"StudyMaterialRequest","kind":"struct","line":913},
+        {"name":"VoiceActorData","kind":"struct","line":927},
+        {"name":"ReviewStatisticData","kind":"struct","line":949},
+        {"name":"ErrorResponse","kind":"struct","line":995}
+      ]
+    },
+    {
+      "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/Subject.swift",
+      "original_sha256": "a05e8fd73c062911edc9d569e3e02218da0b720e5afc9320a594f083500938a3",
+      "original_bytes": 9657,
+      "original_lines": 339,
+      "removed_declarations": [{"name":"SubjectData","kind":"struct","line":21}]
+    },
+    {
+      "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/MarkupFormatter.swift",
+      "original_sha256": "ea313df2cb0bec57b1bce882fe8376cd39dc612b21262ba41cb4d24f18fbf0b5",
+      "original_bytes": 3045,
+      "original_lines": 99,
+      "removed_declarations": []
+    },
+    {
+      "path": "App/WaniKaniAPI/Sources/WaniKaniAPI/URLRequest+SetBody.swift",
+      "original_sha256": "3891f3ff0b97746299373c6c0116d41ab3e0708fde5fb3262bd3a662857ca1f9",
+      "original_bytes": 947,
+      "original_lines": 27,
+      "removed_declarations": []
+    },
+    {
+      "path": "Shared/Sources/StudyPersistence/SQLiteDiagnosticArchive.swift",
+      "original_sha256": "f6b206d40bb085513ba87ea8518633289526c84a3710a5c5ddf324b7e4d61eb6",
+      "original_bytes": 3044,
+      "original_lines": 73,
+      "removed_declarations": [{"name":"SQLiteDiagnosticArchive","kind":"struct","line":6}]
+    },
+    {
+      "path": "App/Features/Settings/DeveloperSettings.swift",
+      "original_sha256": "967bb74d04d55e70811d82dc1934939bb07209e7ee6e452b71e67d84a8dfa271",
+      "original_bytes": 1339,
+      "original_lines": 42,
+      "removed_declarations": [{"name":"DeveloperSettingsContent","kind":"struct","line":9}]
+    },
+    {"path":"App/AppStoreScreenshots/DeveloperFixture.swift","original_sha256":"83581b6a6c96f15cd6b28781cf59b64fdd64a0c6dbb433286981e057fdd7aa53","original_bytes":1543,"original_lines":34,"removed_declarations":[]},
+    {"path":"App/Resources/Settings.storyboard","original_sha256":"3d242dd4ff81719f3355bb98ff0a4b3aa1d9c9044410905fe33a18c38f7db1dd","original_bytes":1183,"original_lines":15,"removed_declarations":[]},
+    {"path":"App/Resources/Review.storyboard","original_sha256":"de6f1fd60fa96f91b9d2e5a39788f3ebb0ec10388dd86d12a520ade3810feeee","original_bytes":3185,"original_lines":48,"removed_declarations":[]},
+    {"path":"App/Resources/Lessons.storyboard","original_sha256":"5dc53f0a9f865aa2be10853da5d765ebea4314ad4131ec0a44edacc8d03a5157","original_bytes":1498,"original_lines":23,"removed_declarations":[]},
+    {"path":"App/Resources/Navigation.storyboard","original_sha256":"8cac58f4fbdec019f456ec96f97e12fb9bdeb847687df5b54a60b8c2c75fe765","original_bytes":1527,"original_lines":23,"removed_declarations":[]},
+    {"path":"App/Resources/SearchResult.storyboard","original_sha256":"c5598f1347b979a63909f485d9890e7ab3e93163c22adf623f57697684703f73","original_bytes":1187,"original_lines":15,"removed_declarations":[]},
+    {"path":"App/Resources/SubjectCatalogue.storyboard","original_sha256":"21d1a0916d29e0177c6c5ce8827a81548f502e6d1dd040abe7de1786558a655e","original_bytes":1191,"original_lines":15,"removed_declarations":[]},
+    {"path":"App/Resources/SubjectsRemaining.storyboard","original_sha256":"b1919e9dae5f015f8d6f1aabf322ffb362dc4d150e4da1a4fafe7a60e240f858","original_bytes":1192,"original_lines":15,"removed_declarations":[]},
+    {"path":"App/Resources/SubjectDetails.storyboard","original_sha256":"c0c4600e0597ad8a528b5a9a1f8e3a469cc51a2df3f5031df59f9ff34b6eb5c5","original_bytes":1391,"original_lines":21,"removed_declarations":[]},
+    {"path":"App/Resources/SubjectsByCategory.storyboard","original_sha256":"d043c4c139a4fab5efdb21c56ad511ef340b6ef32d00099ec0801b13da3783f0","original_bytes":1193,"original_lines":15,"removed_declarations":[]},
+    {"path":"App/Resources/ReviewContainer.storyboard","original_sha256":"6ef4d3edf0c41bf81a7f733c16fa3715804dbb9b56f0df76d7500f711f2523b1","original_bytes":1934,"original_lines":28,"removed_declarations":[]},
+    {"path":"App/Resources/ReviewSummary.storyboard","original_sha256":"477a67f885f5d8b4d862efb8ca3c716e3b13fc35a11ad271baf8fdd7389be480","original_bytes":2178,"original_lines":35,"removed_declarations":[]},
+    {"path":"App/Resources/UpcomingReviews.storyboard","original_sha256":"ec4be1d39d13db747bdca79e4670fca17c1dcf60954e9e0fd1165905bec63a24","original_bytes":1687,"original_lines":27,"removed_declarations":[]},
+    {"path":"App/Resources/LessonPicker.storyboard","original_sha256":"9f01a9bce08d6c75826bc963465a6eac31e6e607d75d358a30c65022c625f847","original_bytes":2656,"original_lines":42,"removed_declarations":[]},
+    {"path":"App/Resources/Main.storyboard","original_sha256":"2ab6409856d017d006e92d3b68093d3b7f9d47b781e3378f950cc0aa19c3699c","original_bytes":11821,"original_lines":175,"removed_declarations":[]},
+    {"path":"App/SubjectsExcluded.storyboard","original_sha256":"8c5465d69496c896c418c47e4d9bc195408ee76c724003a8dbc084ea1aa68936","original_bytes":1191,"original_lines":15,"removed_declarations":[]},
+    {"path":"App/Resources/Assets.xcassets/svg/Contents.json","original_sha256":"972ec1fd42325872438eb085ac29e94f51c10788ec18ec5549439950866c541d","original_bytes":62,"original_lines":6,"removed_declarations":[]},
+    {"path":"App/Resources/Assets.xcassets/svg/Makefile","original_sha256":"055094bafe3b93c5012654daf35d5d70316c49d152ae4642a4334359b0379775","original_bytes":797,"original_lines":14,"removed_declarations":[]},
+    {"path":"App/Resources/Assets.xcassets/svg/appicon.png","original_sha256":"9192769c559f717f1483dd1efc35ee63cec60d71132718c84c1ce1415b8b222f","original_bytes":533344,"original_lines":1990,"removed_declarations":[]},
+    {"path":"App/Resources/Assets.xcassets/svg/ios-arrow-back.svg","original_sha256":"c13fbec332a669ab3185c93123990e508089bb6053872191f9ed405387d0ea51","original_bytes":585,"original_lines":7,"removed_declarations":[]},
+    {"path":"App/Resources/Assets.xcassets/svg/ios-arrow-forward.svg","original_sha256":"1858a1ac43ddbacdd642005d9f20fee22f3a954fb2eaa47e00821463c64de4e3","original_bytes":585,"original_lines":7,"removed_declarations":[]},
+    {"path":"App/Resources/Assets.xcassets/svg/ios-refresh-empty.svg","original_sha256":"e849e87daaf68e85a2d3c31429a499a0c777fd493480048bd76ef184804449e5","original_bytes":725,"original_lines":10,"removed_declarations":[]},
+    {"path":"App/swiftgen.yml","original_sha256":"a2301449eae538410661ea1fc93fa652582e63d63876c486f28927a9d68bf844","original_bytes":396,"original_lines":19,"removed_declarations":[]},
+    {"path":"App/swiftgen-inputs.xcfilelist","original_sha256":"4ad480520e570ecc57d026a5f4042402cebd13bc7fc6f0f8fcf487b2b539d387","original_bytes":530,"original_lines":13,"removed_declarations":[]},
+    {"path":"App/swiftgen-outputs.xcfilelist","original_sha256":"62c0eab1ed288eb31f8edfa5b893e839d7c8abe7dadb9b8ef18195133fe6e4a7","original_bytes":98,"original_lines":3,"removed_declarations":[]}
+  ],
+  "deferred_test_source_ports": [
+    {
+      "path": "App/AppTests/AudioLibraryTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [{"name":"sharedAudioPreservesTheExistingArchivedPreferences","line":8}],
+      "retired_references": [
+        {"line":20,"symbols":["Settings"]},
+        {"line":21,"symbols":["Settings"]},
+        {"line":22,"symbols":["Settings"]},
+        {"line":23,"symbols":["LegacyAudioPreferences"]},
+        {"line":31,"symbols":["Settings"]},
+        {"line":32,"symbols":["Settings"]}
+      ]
+    },
+    {
+      "path": "App/AppTests/FontLibraryTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [{"name":"originalCatalogFilesActivateAndGlyphChecksHandleUTF16","line":13},{"name":"sharedSelectionKeepsTheExistingArchivedPreferenceFormat","line":24}],
+      "retired_references": [{"line":33,"symbols":["Settings"]},{"line":34,"symbols":["LegacyFontPreferences"]},{"line":37,"symbols":["Settings"]}]
+    },
+    {
+      "path": "App/AppTests/LessonPreferenceTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [{"name":"commonPreferencesKeepTheOriginalIPhoneArchivesAndUnrelatedOptions","line":9},{"name":"legacyItemsUseTheCommonStrictSortKeys","line":42}],
+      "retired_references": [
+        {"line":24,"symbols":["Settings"]},
+        {"line":32,"symbols":["LegacyLessonPreferences"]},
+        {"line":36,"symbols":["Settings"]},
+        {"line":37,"symbols":["Settings"]},
+        {"line":39,"symbols":["Settings"]},
+        {"line":47,"symbols":["ReviewItem"]},
+        {"line":49,"symbols":["ReviewItem"]}
+      ]
+    },
+    {
+      "path": "App/AppTests/NativeAppAssemblyTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"sharedOwnerSendsConfirmedWorkReadsAndPublishesWithoutAWindow","line":146},
+        {"name":"disconnectedOwnerClearsCompanionWithoutSigningInOrPrompting","line":158},
+        {"name":"failedReadKeepsTheAccountCacheAndPendingWork","line":167},
+        {"name":"applicationPreparationIsSharedAcrossCancelledAndRemainingWindows","line":181},
+        {"name":"failedApplicationPreparationRetainsAnExplicitRetry","line":201},
+        {"name":"nativeBackgroundTaskSendsConfirmedWork","line":215},
+        {"name":"expiredBackgroundTaskDoesNotCancelSharedPreparationOrStartLateWrites","line":223},
+        {"name":"nativeDiagnosticExportReopensTheLiveCatalogAndProtectedOutbox","line":245}
+      ],
+      "retired_references": [{"line":252,"symbols":["SQLiteDiagnosticArchive"]}]
+    },
+    {
+      "path": "App/AppTests/NotificationPreferencesTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"disconnectedSettingsHostIgnoresLateAccountNotifications","line":10},
+        {"name":"commonNotificationChoicesPreserveTheOriginalArchivedSettings","line":24},
+        {"name":"logoutQueuesAnEmptyWatchPacketWithoutActivatingARealSession","line":50},
+        {"name":"companionWirePacketRetainsEveryExistingKeyAndValueType","line":59}
+      ],
+      "retired_references": [{"line":11,"symbols":["StoryboardScene","Settings"]},{"line":38,"symbols":["LegacyNotificationPreferences"]},{"line":47,"symbols":["Settings"]},{"line":48,"symbols":["Settings"]}]
+    },
+    {
+      "path": "App/AppTests/ReviewSessionOptionsTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"legacySettingsProducePortableAnkiModes","line":9},
+        {"name":"missingSourceValuesUseOriginalDefaultsWithoutWritingArchives","line":46},
+        {"name":"actualKeyedArchivesMapEveryPreferenceGroupWithoutCopyingTheToken","line":55},
+        {"name":"oldUnarchivedValuesAndIndicatorMigrationAreReadWithoutRewritingTheSource","line":129},
+        {"name":"malformedSourceValuesFailWithoutChangingAnySourceKey","line":142}
+      ],
+      "retired_references": [
+        {"line":11,"symbols":["Settings"]},
+        {"line":14,"symbols":["Settings"]},
+        {"line":15,"symbols":["Settings"]},
+        {"line":16,"symbols":["Settings"]},
+        {"line":23,"symbols":["Settings"]},
+        {"line":24,"symbols":["Settings"]},
+        {"line":25,"symbols":["Settings"]},
+        {"line":26,"symbols":["ReviewSession"]},
+        {"line":80,"symbols":["Settings"]}
+      ]
+    },
+    {
+      "path": "App/AppTests/SubjectPreferenceArchiveTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [{"name":"productionHostLoadsTheBundledArtworkCatalog","line":8},{"name":"commonChoicesPreserveTheOriginalIPhoneArchivesAndReviewPolicy","line":11}],
+      "retired_references": [{"line":26,"symbols":["Settings"]},{"line":27,"symbols":["Settings"]},{"line":37,"symbols":["LegacySubjectPreferences"]},{"line":39,"symbols":["Settings"]},{"line":40,"symbols":["Settings"]}]
+    },
+    {
+      "path": "App/Tests/AnswerCheckerTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testKatakanaToHiragana","line":20},
+        {"name":"testNormalizedString","line":27},
+        {"name":"testMeaningSynonymsAndAuxiliaryWhitelist","line":74},
+        {"name":"testBlacklistWinsEvenOverExactSynonym","line":87},
+        {"name":"testMeaningTypoToleranceAndTransposition","line":98},
+        {"name":"testPrimaryAndAlternateReadingSemantics","line":105},
+        {"name":"testKatakanaSubjectPreservesLongVowel","line":113},
+        {"name":"testSingleKanjiVocabularyConsultsItsComponent","line":119},
+        {"name":"testInvalidScriptRanges","line":134},
+        {"name":"testMismatchingOkuriganaIsNotAnOrdinaryWrongAnswer","line":141},
+        {"name":"testReadingEnteredForMeaningGetsSpecificFeedback","line":149}
+      ],
+      "retired_references": [
+        {"line":21,"symbols":["AnswerChecker"]},
+        {"line":22,"symbols":["AnswerChecker"]},
+        {"line":23,"symbols":["AnswerChecker"]},
+        {"line":24,"symbols":["AnswerChecker"]},
+        {"line":29,"symbols":["AnswerChecker"]},
+        {"line":30,"symbols":["TaskType"]},
+        {"line":32,"symbols":["AnswerChecker"]},
+        {"line":33,"symbols":["TaskType"]},
+        {"line":62,"symbols":["TaskType"]},
+        {"line":66,"symbols":["AnswerChecker"]},
+        {"line":69,"symbols":["AnswerChecker"]}
+      ]
+    },
+    {
+      "path": "App/Tests/PendingUploadAcknowledgementTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testMatchingAndRepeatedProgressAcknowledgements","line":62},
+        {"name":"testOldProgressAcknowledgementPreservesNewerPayloadAfterRestart","line":76},
+        {"name":"testOldMaterialAcknowledgementPreservesNewSynonymAndNotes","line":102},
+        {"name":"testSerializedUploadsReloadSQLiteAndPreserveInFlightEdits","line":127}
+      ],
+      "retired_references": [
+        {"line":15,"symbols":["FMDB"]},
+        {"line":68,"symbols":["PendingUploadStore"]},
+        {"line":71,"symbols":["PendingUploadStore"]},
+        {"line":89,"symbols":["PendingUploadStore"]},
+        {"line":96,"symbols":["PendingUploadStore"]},
+        {"line":113,"symbols":["PendingUploadStore"]},
+        {"line":116,"symbols":["PendingUploadStore"]},
+        {"line":121,"symbols":["PendingUploadStore"]},
+        {"line":142,"symbols":["PendingUploadStore"]},
+        {"line":152,"symbols":["PendingUploadStore"]},
+        {"line":166,"symbols":["PendingUploadStore"]}
+      ]
+    },
+    {
+      "path": "App/Tests/RecentMistakesTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testEmptyMergeGivesNothing","line":19},
+        {"name":"testMergeMistakesOneArrayOnly","line":26},
+        {"name":"testOldDatesRemoved","line":42},
+        {"name":"testSimpleMergeTwoDiffDatasets","line":57},
+        {"name":"testSimpleMergeSameDataDatasets","line":75},
+        {"name":"testSimpleMergeSameDatasetsMultipleSubjects","line":90},
+        {"name":"testSubjectIdConflictMerge","line":107},
+        {"name":"testSubjectIdConflictMergeMultipleSubjects","line":123},
+        {"name":"testSameDateDifferentSubjectsMerge","line":144},
+        {"name":"oldCloudArchiveSkipsOnlyInvalidEntries","line":163},
+        {"name":"newCloudArchiveRemainsReadableByTheOriginalJSONFormat","line":176},
+        {"name":"unreadableCloudArchiveDoesNotInventOrRewriteMistakes","line":193}
+      ],
+      "retired_references": [
+        {"line":20,"symbols":["RecentMistakeHandler"]},
+        {"line":31,"symbols":["RecentMistakeHandler"]},
+        {"line":36,"symbols":["RecentMistakeHandler"]},
+        {"line":50,"symbols":["RecentMistakeHandler"]},
+        {"line":53,"symbols":["RecentMistakeHandler"]},
+        {"line":64,"symbols":["RecentMistakeHandler"]},
+        {"line":69,"symbols":["RecentMistakeHandler"]},
+        {"line":81,"symbols":["RecentMistakeHandler"]},
+        {"line":85,"symbols":["RecentMistakeHandler"]},
+        {"line":96,"symbols":["RecentMistakeHandler"]},
+        {"line":101,"symbols":["RecentMistakeHandler"]},
+        {"line":114,"symbols":["RecentMistakeHandler"]},
+        {"line":118,"symbols":["RecentMistakeHandler"]},
+        {"line":131,"symbols":["RecentMistakeHandler"]},
+        {"line":137,"symbols":["RecentMistakeHandler"]},
+        {"line":151,"symbols":["RecentMistakeHandler"]},
+        {"line":157,"symbols":["RecentMistakeHandler"]},
+        {"line":165,"symbols":["RecentMistakeHandler"]},
+        {"line":178,"symbols":["RecentMistakeHandler"]},
+        {"line":195,"symbols":["RecentMistakeHandler"]}
+      ]
+    },
+    {
+      "path": "App/Tests/ReviewPreferencesAdapterTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"mapsExistingArchivesAndKeepsTheirStorageFormat","line":31},
+        {"name":"appliesOnlyChangedFieldsIncludingSessionAndPolicy","line":61},
+        {"name":"originalOrderingCodesRemainArchived","line":85},
+        {"name":"fullSessionOptionsRoundTripAndDriveTheExistingEngine","line":98},
+        {"name":"disablingAnkiPreservesTaskArchiveButClearsCombinedMode","line":120}
+      ],
+      "retired_references": [
+        {"line":33,"symbols":["Settings"]},
+        {"line":34,"symbols":["Settings"]},
+        {"line":35,"symbols":["Settings"]},
+        {"line":36,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":52,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":53,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":54,"symbols":["Settings"]},
+        {"line":56,"symbols":["Settings"]},
+        {"line":57,"symbols":["Settings"]},
+        {"line":63,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":64,"symbols":["Settings"]},
+        {"line":65,"symbols":["Settings"]},
+        {"line":66,"symbols":["Settings"]},
+        {"line":67,"symbols":["Settings"]},
+        {"line":72,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":74,"symbols":["Settings"]},
+        {"line":75,"symbols":["Settings"]},
+        {"line":77,"symbols":["Settings"]},
+        {"line":78,"symbols":["Settings"]},
+        {"line":80,"symbols":["Settings"]},
+        {"line":81,"symbols":["Settings"]},
+        {"line":82,"symbols":["Settings"]},
+        {"line":89,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":92,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":93,"symbols":["Settings"]},
+        {"line":94,"symbols":["Settings"]},
+        {"line":95,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":100,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":113,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":114,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":115,"symbols":["ReviewSession"]},
+        {"line":116,"symbols":["Settings"]},
+        {"line":117,"symbols":["ReviewSession"]},
+        {"line":122,"symbols":["Settings"]},
+        {"line":123,"symbols":["Settings"]},
+        {"line":124,"symbols":["Settings"]},
+        {"line":125,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":129,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":130,"symbols":["Settings"]},
+        {"line":131,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":134,"symbols":["ReviewPreferencesAdapter"]},
+        {"line":136,"symbols":["Settings"]},
+        {"line":137,"symbols":["Settings"]}
+      ]
+    },
+    {
+      "path": "App/Tests/ReviewSessionTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testCompletedSubjectUsesExistingDurableWriteBoundaryExactlyOnce","line":54},
+        {"name":"testPracticeNeverWritesProgressEvenWhenCallerJustMarksCorrect","line":80},
+        {"name":"testIncompleteCatalogDoesNotSilentlySkipOrUpload","line":96},
+        {"name":"testOverrideAndReadingCreditReachTheProtobufPayload","line":111},
+        {"name":"testSynonymsAndExclusionKeepExistingMaterialFields","line":132},
+        {"name":"testRefreshingMaterialsPreservesEditsMadeInAnswerDetails","line":159}
+      ],
+      "retired_references": [
+        {"line":37,"symbols":["ReviewItem"]},
+        {"line":44,"symbols":["ReviewItem"]},
+        {"line":57,"symbols":["ReviewSession"]},
+        {"line":58,"symbols":["ReviewRepository"]},
+        {"line":82,"symbols":["ReviewSession"]},
+        {"line":83,"symbols":["ReviewRepository"]},
+        {"line":98,"symbols":["ReviewSession"]},
+        {"line":99,"symbols":["ReviewRepository"]},
+        {"line":114,"symbols":["ReviewSession"]},
+        {"line":115,"symbols":["ReviewRepository"]},
+        {"line":140,"symbols":["ReviewRepository"]},
+        {"line":148,"symbols":["ReviewSession"]},
+        {"line":164,"symbols":["ReviewRepository"]},
+        {"line":167,"symbols":["ReviewSession"]}
+      ]
+    },
+    {
+      "path": "App/Tests/StudyStatisticsTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testEmptyHistoryDoesNotInventAccuracyOrPace","line":73},
+        {"name":"testAccuracyWeightsAnswersAndExcludesHiddenItems","line":82},
+        {"name":"testScheduleCountsEachActiveAssignmentOnceAndSeparatesOverdue","line":94},
+        {"name":"testMissingAvailableDateIsNotOverdue","line":107},
+        {"name":"testFocusIncludesZeroStreakButRequiresEvidenceAndActiveItem","line":113},
+        {"name":"testRecoveryStreakLowersPriority","line":125},
+        {"name":"testPaceUsesMedianAndInterpolatedQuartiles","line":135},
+        {"name":"testVacationAndElapsedPaceSuppressDates","line":145},
+        {"name":"testResetAndSmallSampleSuppressPace","line":152},
+        {"name":"testDuplicateLevelIsNotCountedTwice","line":162}
+      ],
+      "retired_references": [{"line":65,"symbols":["StudyStatistics"]},{"line":68,"symbols":["StudyStatistics"]}]
+    },
+    {
+      "path": "App/Tests/SyncStoreTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testRequestingFullRefreshRetainsOfflineSnapshotsAndPendingEdits","line":61},
+        {"name":"testMaterialSnapshotAndStaleDownloadPreservePendingBytesAcrossRestart","line":93},
+        {"name":"testAssignmentSnapshotKeepsPendingProgressAndMistakeDatesWithoutDuplicateReviews","line":122},
+        {"name":"testIncrementalAssignmentRemovesReplacedIDsButDoesNotResurrectPendingSubjects","line":152},
+        {"name":"testSnapshotTransactionRollbackRetainsCacheAndCursor","line":173},
+        {"name":"testFullCatalogReplacementRemovesObsoleteMetadata","line":190},
+        {"name":"testInvalidatedDownloadCannotTouchClosedDatabase","line":206},
+        {"name":"testAcknowledgedEditStillWinsOverEarlierDownloadIncludingFullSnapshotPruning","line":218},
+        {"name":"testChangingAnEditBackToOriginalBytesStillProtectsItFromAnEarlierResponse","line":237},
+        {"name":"testLocalRevisionMigrationPreservesExistingBytesAndRollsBackAtomically","line":252},
+        {"name":"testAcknowledgedReviewCannotBeResurrectedByAnOlderAssignmentSnapshot","line":275},
+        {"name":"testProgressRevisionMigrationPreservesExistingState","line":304},
+        {"name":"editsPreserveServerIdentityAndDoNotQueueUnchangedNotes","line":335},
+        {"name":"changedAccountAndStaleEditorLeaveTheNewerPendingPayloadIntact","line":373},
+        {"name":"anObservedMissingOrDeletedMaterialCannotReplaceAnotherVersion","line":397}
+      ],
+      "retired_references": [
+        {"line":15,"symbols":["FMDB"]},
+        {"line":74,"symbols":["SyncStore"]},
+        {"line":88,"symbols":["PendingUploadStore"]},
+        {"line":104,"symbols":["SyncStore"]},
+        {"line":106,"symbols":["SyncStore"]},
+        {"line":114,"symbols":["PendingUploadStore"]},
+        {"line":115,"symbols":["PendingUploadStore"]},
+        {"line":116,"symbols":["SyncStore"]},
+        {"line":117,"symbols":["SyncStore"]},
+        {"line":131,"symbols":["SyncStore"]},
+        {"line":139,"symbols":["SyncStore"]},
+        {"line":155,"symbols":["SyncStore"]},
+        {"line":157,"symbols":["SyncStore"]},
+        {"line":159,"symbols":["SyncStore"]},
+        {"line":161,"symbols":["SyncStore"]},
+        {"line":165,"symbols":["SyncStore"]},
+        {"line":167,"symbols":["SyncStore"]},
+        {"line":181,"symbols":["SyncStore"]},
+        {"line":182,"symbols":["SyncStore"]},
+        {"line":198,"symbols":["SyncStore"]},
+        {"line":199,"symbols":["SyncStore"]},
+        {"line":200,"symbols":["SyncStore"]},
+        {"line":213,"symbols":["SyncStore"]},
+        {"line":223,"symbols":["SyncStore"]},
+        {"line":225,"symbols":["SyncStore"]},
+        {"line":226,"symbols":["PendingUploadStore"]},
+        {"line":230,"symbols":["SyncStore"]},
+        {"line":241,"symbols":["SyncStore"]},
+        {"line":242,"symbols":["SyncStore"]},
+        {"line":243,"symbols":["SyncStore"]},
+        {"line":244,"symbols":["PendingUploadStore"]},
+        {"line":247,"symbols":["SyncStore"]},
+        {"line":249,"symbols":["SyncStore"]},
+        {"line":261,"symbols":["SyncStore"]},
+        {"line":267,"symbols":["SyncStore"]},
+        {"line":271,"symbols":["SyncStore"]},
+        {"line":280,"symbols":["SyncStore"]},
+        {"line":281,"symbols":["SyncStore"]},
+        {"line":285,"symbols":["SyncStore"]},
+        {"line":286,"symbols":["PendingUploadStore"]},
+        {"line":289,"symbols":["SyncStore"]},
+        {"line":293,"symbols":["SyncStore"]},
+        {"line":296,"symbols":["SyncStore"]},
+        {"line":298,"symbols":["SyncStore"]},
+        {"line":313,"symbols":["SyncStore"]},
+        {"line":318,"symbols":["SyncStore"]},
+        {"line":319,"symbols":["SyncStore"]},
+        {"line":341,"symbols":["SyncStore"]},
+        {"line":344,"symbols":["PendingUploadStore"]},
+        {"line":361,"symbols":["SyncStore"]},
+        {"line":363,"symbols":["SyncStore"]},
+        {"line":365,"symbols":["PendingUploadStore"]},
+        {"line":368,"symbols":["SyncStore"]},
+        {"line":370,"symbols":["SyncStore"]},
+        {"line":380,"symbols":["SyncStore"]},
+        {"line":384,"symbols":["SyncStore"]},
+        {"line":387,"symbols":["SyncStore"]},
+        {"line":390,"symbols":["SyncStore"]},
+        {"line":392,"symbols":["SyncStore"]},
+        {"line":394,"symbols":["PendingUploadStore"]},
+        {"line":403,"symbols":["SyncStore"]},
+        {"line":410,"symbols":["SyncStore"]},
+        {"line":413,"symbols":["SyncStore"]},
+        {"line":414,"symbols":["SyncStore"]}
+      ]
+    },
+    {
+      "path": "App/Tests/TKMKanaInputTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testDisabledInputAndDeletionPassThrough","line":41},
+        {"name":"testEveryRomanizationPattern","line":57},
+        {"name":"testLowercaseAndUppercaseDoubledConsonants","line":74},
+        {"name":"testLowercaseAndUppercaseNasalBeforeConsonant","line":88},
+        {"name":"testKatakanaAlphabetAndSelectedVowel","line":102},
+        {"name":"testPastePlacesCursorAfterAllInsertedKana","line":121},
+        {"name":"testDelegateVetoAndReturnAreForwarded","line":134},
+        {"name":"testMarkedTextIsLeftToTheInputMethod","line":149}
+      ],
+      "retired_references": [{"line":35,"symbols":["TKMKanaInput"]},{"line":36,"symbols":["TKMKanaInput"]}]
+    },
+    {
+      "path": "App/WaniKaniAPI/Tests/WaniKaniAPITests/APIClientTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [
+        {"name":"testDateParsing","line":39},
+        {"name":"testUser","line":62},
+        {"name":"testAllAssignments","line":114},
+        {"name":"testAssignmentsUpdatedAfter","line":175},
+        {"name":"testAssignmentsUpdatedAfterNoResults","line":205},
+        {"name":"testAssignmentPagination","line":235},
+        {"name":"testAllStudyMaterials","line":325},
+        {"name":"testStudyMaterialsUpdatedAfter","line":379},
+        {"name":"testStudyMaterialBySubjectId","line":410},
+        {"name":"testStudyMaterialBySubjectIdNoResult","line":463},
+        {"name":"testAllLevelProgressions","line":492},
+        {"name":"testLevelProgressionsUpdatedAfter","line":546},
+        {"name":"testStartAssignment","line":577},
+        {"name":"testStartAssignmentWithoutTimestampUsesServerTime","line":579},
+        {"name":"testCreateReview","line":627},
+        {"name":"testCreateNewStudyMaterial","line":720},
+        {"name":"testUpdateExistingStudyMaterial","line":767},
+        {"name":"testStudyMaterialRejectsHTTPFailures","line":850},
+        {"name":"testStudyMaterialRejectsEmptyOrMalformedSuccessfulResponse","line":865},
+        {"name":"testStudyMaterialRejectsResponseForAnotherSubject","line":875},
+        {"name":"testStudyMaterialRejectsLookupForAnotherSubjectBeforeWriting","line":883},
+        {"name":"test4xxErrorResponse","line":896},
+        {"name":"test5xxErrorResponse","line":924},
+        {"name":"testJSONDecodeError","line":952},
+        {"name":"testAllSubjectsParsesOneSubject","line":975},
+        {"name":"testSubjectsUpdatedAfter","line":1123}
+      ],
+      "retired_references": [
+        {"line":21,"symbols":["WaniKaniAPIClient"]},
+        {"line":29,"symbols":["WaniKaniAPIClient"]},
+        {"line":41,"symbols":["WaniKaniDate"]},
+        {"line":860,"symbols":["WaniKaniAPIError"]},
+        {"line":910,"symbols":["WaniKaniAPIError"]},
+        {"line":938,"symbols":["WaniKaniAPIError"]}
+      ]
+    },
+    {
+      "path": "App/WaniKaniAPI/Tests/WaniKaniAPITests/MarkupFormatterTest.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [{"name":"testNestedTags","line":19},{"name":"testLinkTag","line":55}],
+      "retired_references": [{"line":20,"symbols":["parseFormattedText"]},{"line":56,"symbols":["parseFormattedText"]}]
+    },
+    {
+      "path": "Shared/Tests/StudyPersistenceTests/SQLiteDiagnosticArchiveTests.swift",
+      "status": "pending final test adaptation",
+      "test_functions": [{"name":"liveWALSnapshotPreservesRowsIdentifiersAndSchemaWithoutChangingSource","line":8},{"name":"eachExportHasItsOwnImmutableFile","line":35},{"name":"failedExportsNeverCreateSourceOrKeepPartialCopies","line":49}],
+      "retired_references": [{"line":18,"symbols":["SQLiteDiagnosticArchive"]},{"line":41,"symbols":["SQLiteDiagnosticArchive"]},{"line":43,"symbols":["SQLiteDiagnosticArchive"]},{"line":57,"symbols":["SQLiteDiagnosticArchive"]}]
+    }
+  ],
+  "deferred_ui_ports": [
+    {
+      "id": "ReviewFlowTests/testAccountExpiryUsesNativeReauthenticationAndPreservesForcedEmail",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 35,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testHibernationWarningStaysDismissedAcrossNativeTabChanges",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 71,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testAccountWarningWaitsForReviewCloseAndKeepsTheAnswerDraft",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 88,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testNativeLoginTokenFailuresHibernationAndHomeNavigation",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 115,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testNativeLoginUsesOnlyTheTokenAndSubmitsFromKeyboard",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 156,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testColdStudyLinkWaitsForSignInBeforeOpeningTheReview",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 259,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testShellFullRefreshUpdatesProgressAndKeepsBlockingAfterForeground",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 310,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testHomeProgressCountsChartsAndRefreshSurviveRotation",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 356,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {
+      "id": "ReviewFlowTests/testHomeDisablesEmptyStudyQueuesAndHidesVacationActions",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 402,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    },
+    {"id":"ReviewFlowTests/testCompleteSampleReviewsThroughTypedAnswers","path":"App/AppStoreScreenshots/ReviewFlowTests.swift","line":1047,"status":"pending native fixture/launcher port; preserve original assertions"},
+    {
+      "id": "ReviewFlowTests/testVoiceTranscriptUsesNormalGradingAndKanaFallback",
+      "path": "App/AppStoreScreenshots/ReviewFlowTests.swift",
+      "line": 1113,
+      "status": "pending native fixture/launcher port; preserve original assertions"
+    }
+  ],
+  "unsafe_retired_harness_cleanup": {
+    "helpers": [{"path":"App/AppStoreScreenshots/ReviewFlowTests.swift","name":"clearFixture","line":1207}],
+    "direct_test_callers": [
+      {"id":"ReviewFlowTests/testNativeLoginTokenFailuresHibernationAndHomeNavigation","line":115},
+      {"id":"ReviewFlowTests/testNativeLoginUsesOnlyTheTokenAndSubmitsFromKeyboard","line":156},
+      {"id":"ReviewFlowTests/testColdStudyLinkWaitsForSignInBeforeOpeningTheReview","line":259},
+      {"id":"ReviewFlowTests/testShellFullRefreshUpdatesProgressAndKeepsBlockingAfterForeground","line":310},
+      {"id":"ReviewFlowTests/testHomeProgressCountsChartsAndRefreshSurviveRotation","line":356},
+      {"id":"ReviewFlowTests/testHomeDisablesEmptyStudyQueuesAndHidesVacationActions","line":402},
+      {"id":"ReviewFlowTests/testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft","line":639},
+      {"id":"ReviewFlowTests/testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled","line":663},
+      {"id":"ReviewFlowTests/testFontDownloadContinuesAfterLeavingThePicker","line":704},
+      {"id":"ReviewFlowTests/testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft","line":727},
+      {"id":"ReviewFlowTests/testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion","line":768},
+      {"id":"ReviewFlowTests/testSummaryShowsMissedMeaningAndOpensSubjectDetails","line":933},
+      {"id":"ReviewFlowTests/testPracticeMenuPreservesTypedReviewsAndReturns","line":996},
+      {"id":"ReviewFlowTests/testPracticeMenuPreservesAnkiReadingMode","line":1026},
+      {"id":"ReviewFlowTests/testIncorrectAnswerRevealAndOverride","line":1216},
+      {"id":"ReviewFlowTests/testCombinedAnkiIncorrectThenCorrectCompletesOneSubject","line":1241},
+      {"id":"ReviewFlowTests/testLandscapeReviewKeepsAnswerControlsAccessible","line":1259},
+      {"id":"ReviewFlowTests/testQuickSettingsPreservesDraftAndAppliesExactMatch","line":1292},
+      {"id":"ReviewFlowTests/testWrapUpCanBeStoppedAndCompleted","line":1334},
+      {"id":"ReviewFlowTests/testFontLibraryReturnsToDraftAndUnstartedReviewCanClose","line":1364},
+      {"id":"ReviewFlowTests/testExplicitEndDiscardsOnlyTheUnfinishedSession","line":1385},
+      {"id":"ReviewFlowTests/testReviewDetailsConcealUnansweredReadingAndBlurTranslations","line":1647},
+      {"id":"ReviewFlowTests/testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement","line":1673},
+      {"id":"ReviewFlowTests/testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents","line":1720},
+      {"id":"ReviewFlowTests/testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit","line":1765}
+    ],
+    "requirement": "Before GUI/test execution remove bare FASTLANE_SNAPSHOT/ResetUserDefaults relaunches. Use termination or explicit isolated --review-fixture launches; unsupported legacy flags must never start production as test cleanup."
+  },
+  "responsibility_ports": [
+    {
+      "original": "App/Tests/PendingUploadAcknowledgementTest.swift + App/Tests/SyncStoreTest.swift",
+      "native": "StudyStore review/material outbox, revision, refresh and rollback suites",
+      "retain": "All nineteen writer mappings in Docs/Migration.md: exact acknowledged revision/bytes, attempted markers, identity, no stale resurrection, changed-back edits, durable retries/reopen and rollback."
+    },
+    {
+      "original": "App/Tests/ReviewSessionTest.swift + App/AppTests/ReviewSessionOptionsTests.swift",
+      "native": "StudySessionTests + NativeReviewTests + StudyStoreTests + native quick settings",
+      "retain": "Exactly-once completion, zero practice uploads, incomplete catalogs, Anki/order/grouping, correction/reading credit, synonyms/details edits and frozen active options."
+    },
+    {
+      "original": "App/Tests/ReviewPreferencesAdapterTest.swift and hosted archived preference suites",
+      "native": "LegacyPreferenceImporter/Schema + LegacyStudyPreferencesTests + typed native preferences",
+      "retain": "Exact archive keys/defaults/raw enum values/fingerprint, no source mutation, invalid payload rejection, option round trip; do not recreate live Settings getters."
+    },
+    {
+      "original": "App/Tests/TKMKanaInputTest.swift + App/Tests/AnswerCheckerTest.swift",
+      "native": "KanaConverterTests + AnswerGraderTests + retained StudyAnswerInput IME bridge",
+      "retain": "Original mapping/grading corpus and context, UTF-16 caret/selection/paste/deletion, untouched marked text and native submit behavior."
+    },
+    {
+      "original": "App/Tests/StudyStatisticsTest.swift",
+      "native": "Native metrics/pace/curriculum and G12 suites",
+      "retain": "Missing/hidden data, weighted accuracy, overdue scheduling, focus, resets/duplicate levels, and suppressed unsupported forecasts."
+    },
+    {
+      "original": "App/Tests/RecentMistakesTest.swift",
+      "native": "StudyMistakeArchiveTests + StudyMistakeStoreTests + StudyMistakeSyncTests",
+      "retain": "Original JSON/local-time compatibility, maximum timestamp, 24h window, persisted binding/revocation/restart, event epochs and best-effort convergence; never mutate grading/outbox."
+    },
+    {
+      "original": "App/WaniKaniAPI/Tests/WaniKaniAPITests",
+      "native": "Shared WaniKaniClient and styled mnemonic suites; retained protobuf reader fixtures",
+      "retain": "Original HTTP/date/pagination/error/material request and markup cases under native APIs, plus all supported legacy protobuf/schema decoding. Hippolyte remains test-only pending this port."
+    },
+    {
+      "original": "App/AppTests/NativeAppAssemblyTests.swift::nativeDiagnosticExportReopensTheLiveCatalogAndProtectedOutbox + Shared/Tests/StudyPersistenceTests/SQLiteDiagnosticArchiveTests.swift",
+      "native": "StudyDiagnosticArchiveTests + native generation/reopen gates",
+      "retain": "Account-scoped nonmutating diagnostics, original source preservation, committed WAL/reopen/catalog/outbox correctness, unique copy/cleanup and failure without modifying source. Typed export is not a restorable backup."
+    },
+    {
+      "original": "App/AppTests/NotificationPreferencesTests.swift hosted storyboard invariant",
+      "native": "Native StudyNotifications + SwiftUI settings hosted/physical acceptance",
+      "retain": "Preference/default migration and common native notification controls without system prompts; explicitly retire the removed UIKit storyboard lookup."
+    }
+  ],
+  "dependency_integration": {
+    "owner": "swift_lint",
+    "source_authorized_removals": ["FMDB","Reachability","SwiftGen","PromiseKit","Rexy","SVGKit","CocoaPods integration"],
+    "retained": ["SwiftProtobuf for read-only migration","test-only Hippolyte until final API test adaptation"],
+    "resolution_status": "not run; existing pins are not fresh dependency evidence"
+  },
+  "counts": {
+    "swift_files_deleted": 56,
+    "resources_deleted": 21,
+    "tooling_files_deleted": 3,
+    "protected_owner_files": 3,
+    "deferred_test_source_files": 18,
+    "deferred_ui_scenarios": 11,
+    "swift_original_lines_deleted": 10264,
+    "deferred_test_functions_in_affected_files": 126,
+    "writer_case_mappings": 19
+  },
+  "empty_directories_removed": ["App/Features/Home","App/Features/Lessons","App/Features/Practice","App/Features/Settings","App/Features/Statistics","App/Features/Account","App/ReviewQuickSettings","App/Generated","App/Extensions","App/Platform"],
+  "line_count_scope": "Physical lines in deleted Swift files at original_reference only; excludes trimmed-file changes and new code, so this is not a net LOC or executable-size claim.",
+  "writer_case_mappings": [
+    {
+      "legacy_id": "PendingUploadAcknowledgementTest/testMatchingAndRepeatedProgressAcknowledgements",
+      "path": "App/Tests/PendingUploadAcknowledgementTest.swift",
+      "line": 62,
+      "native_assertion_candidates": ["StudyStoreTests.oldAcknowledgementCannotRemoveNextReviewForSameSubject"],
+      "contract": "`StudyStoreTests.oldAcknowledgementCannotRemoveNextReviewForSameSubject`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "PendingUploadAcknowledgementTest/testOldProgressAcknowledgementPreservesNewerPayloadAfterRestart",
+      "path": "App/Tests/PendingUploadAcknowledgementTest.swift",
+      "line": 76,
+      "native_assertion_candidates": ["StudyStoreTests.oldAcknowledgementCannotRemoveNextReviewForSameSubject"],
+      "contract": "`StudyStoreTests.oldAcknowledgementCannotRemoveNextReviewForSameSubject`: durable reopen, exact newer submission/revision. Separate-process proof uses G2/probe; this function alone does not launch a process",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "PendingUploadAcknowledgementTest/testOldMaterialAcknowledgementPreservesNewSynonymAndNotes",
+      "path": "App/Tests/PendingUploadAcknowledgementTest.swift",
+      "line": 102,
+      "native_assertion_candidates": ["NativeSynchronizationTests.queuedSendReloadsAnInFlightEditAndCoalescesDuplicateRequests","StudyStoreTests.acknowledgedNotesSurviveOlderDownloadAndStaleAcknowledgement"],
+      "contract": "`NativeSynchronizationTests.queuedSendReloadsAnInFlightEditAndCoalescesDuplicateRequests`; `StudyStoreTests.acknowledgedNotesSurviveOlderDownloadAndStaleAcknowledgement`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "PendingUploadAcknowledgementTest/testSerializedUploadsReloadSQLiteAndPreserveInFlightEdits",
+      "path": "App/Tests/PendingUploadAcknowledgementTest.swift",
+      "line": 127,
+      "native_assertion_candidates": ["NativeSynchronizationTests.queuedSendReloadsAnInFlightEditAndCoalescesDuplicateRequests"],
+      "contract": "`NativeSynchronizationTests.queuedSendReloadsAnInFlightEditAndCoalescesDuplicateRequests`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testRequestingFullRefreshRetainsOfflineSnapshotsAndPendingEdits",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 61,
+      "native_assertion_candidates": ["NativeRefreshTests.refreshPreservesPendingAnswersNotesAndHalfAnsweredSession","NativeRefreshTests.failedOrChangedAccountDownloadPreservesThePriorStore"],
+      "contract": "`NativeRefreshTests.refreshPreservesPendingAnswersNotesAndHalfAnsweredSession`; `NativeRefreshTests.failedOrChangedAccountDownloadPreservesThePriorStore`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testMaterialSnapshotAndStaleDownloadPreservePendingBytesAcrossRestart",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 93,
+      "native_assertion_candidates": ["NativeRefreshTests.pendingMaterialKeepsExactContentAndRevisionAfterStaleFullRefreshAndReopen"],
+      "contract": "`NativeRefreshTests.pendingMaterialKeepsExactContentAndRevisionAfterStaleFullRefreshAndReopen`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testAssignmentSnapshotKeepsPendingProgressAndMistakeDatesWithoutDuplicateReviews",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 122,
+      "native_assertion_candidates": ["NativeRefreshTests.fullAssignmentRefreshPreservesPendingAndOtherMistakesWhilePruningObsoleteProgress"],
+      "contract": "`NativeRefreshTests.fullAssignmentRefreshPreservesPendingAndOtherMistakesWhilePruningObsoleteProgress`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testIncrementalAssignmentRemovesReplacedIDsButDoesNotResurrectPendingSubjects",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 152,
+      "native_assertion_candidates": ["NativeRefreshTests.replacementAssignmentIDsCannotDuplicateOrResurrectPendingReviews"],
+      "contract": "`NativeRefreshTests.replacementAssignmentIDsCannotDuplicateOrResurrectPendingReviews`; full native refresh replaces retired incremental mechanics",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testSnapshotTransactionRollbackRetainsCacheAndCursor",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 173,
+      "native_assertion_candidates": ["NativeRefreshRollbackTests.readOnlyDefaultStoreRejectsRefreshAfterDirtyMutationsAndRollsBackAcrossReopen"],
+      "contract": "`NativeRefreshRollbackTests.readOnlyDefaultStoreRejectsRefreshAfterDirtyMutationsAndRollsBackAcrossReopen`: real dirty `willSave`, permission error 513, no successful save, exact two-account rollback and disk reopen; passes on Mac and iOS",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testFullCatalogReplacementRemovesObsoleteMetadata",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 190,
+      "native_assertion_candidates": ["NativeRefreshTests.fullReplacementRemovesStaleRowsButRetainsPendingRecoveryContent"],
+      "contract": "`NativeRefreshTests.fullReplacementRemovesStaleRowsButRetainsPendingRecoveryContent`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testInvalidatedDownloadCannotTouchClosedDatabase",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 206,
+      "native_assertion_candidates": ["NativeRefreshTests.cancellationAndOverlappingRefreshDoNotPublishLateResults","NativeSynchronizationTests.accountTransitionDrainsReadAndQueuedSendBeforeAllowingNewWork"],
+      "contract": "`NativeRefreshTests.cancellationAndOverlappingRefreshDoNotPublishLateResults`; `NativeSynchronizationTests.accountTransitionDrainsReadAndQueuedSendBeforeAllowingNewWork`. SQL connection closure itself retires",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testAcknowledgedEditStillWinsOverEarlierDownloadIncludingFullSnapshotPruning",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 218,
+      "native_assertion_candidates": ["StudyStoreTests.acknowledgedMaterialsAbsentFromAnOlderFullSnapshotSurviveReopen","NativeRefreshTests.acknowledgementDuringDownloadCannotRestoreAnOlderNote"],
+      "contract": "`StudyStoreTests.acknowledgedMaterialsAbsentFromAnOlderFullSnapshotSurviveReopen`; `NativeRefreshTests.acknowledgementDuringDownloadCannotRestoreAnOlderNote`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testChangingAnEditBackToOriginalBytesStillProtectsItFromAnEarlierResponse",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 237,
+      "native_assertion_candidates": ["StudyStoreTests.acknowledgedNotesSurviveOlderDownloadAndStaleAcknowledgement"],
+      "contract": "`StudyStoreTests.acknowledgedNotesSurviveOlderDownloadAndStaleAcknowledgement`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testLocalRevisionMigrationPreservesExistingBytesAndRollsBackAtomically",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 252,
+      "native_assertion_candidates": [
+        "LegacyStudyImporterTests.everySupportedSchemaAndDuplicateAssignmentMigration",
+        "LegacyStudyImporterTests.fullDatabaseImportsWithoutChangingSourceAndReopensNatively",
+        "LegacyImportTests.completeImportSurvivesReopenAndSeparatesPendingAnswers",
+        "LegacyImportTests.invalidPendingPayloadRollsBackCatalogAndReceipt"
+      ],
+      "contract": "`LegacyStudyImporterTests.everySupportedSchemaAndDuplicateAssignmentMigration`; `LegacyStudyImporterTests.fullDatabaseImportsWithoutChangingSourceAndReopensNatively`; `LegacyImportTests.completeImportSurvivesReopenAndSeparatesPendingAnswers`; `LegacyImportTests.invalidPendingPayloadRollsBackCatalogAndReceipt`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testAcknowledgedReviewCannotBeResurrectedByAnOlderAssignmentSnapshot",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 275,
+      "native_assertion_candidates": ["NativeRefreshTests.uploadedAssignmentKeepsCatalogLevelAndWinsOverAnOlderDownload","CatalogFreshnessTests.aReadCanOnlyConsumeTheMarkerItCapturedBeforeDownloading"],
+      "contract": "`NativeRefreshTests.uploadedAssignmentKeepsCatalogLevelAndWinsOverAnOlderDownload`; `CatalogFreshnessTests.aReadCanOnlyConsumeTheMarkerItCapturedBeforeDownloading`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "SyncStoreTest/testProgressRevisionMigrationPreservesExistingState",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 304,
+      "native_assertion_candidates": [
+        "LegacyStudyImporterTests.everySupportedSchemaAndDuplicateAssignmentMigration",
+        "LegacyStudyImporterTests.fullDatabaseImportsWithoutChangingSourceAndReopensNatively",
+        "LegacyImportTests.completeImportSurvivesReopenAndSeparatesPendingAnswers"
+      ],
+      "contract": "`LegacyStudyImporterTests.everySupportedSchemaAndDuplicateAssignmentMigration`; `LegacyStudyImporterTests.fullDatabaseImportsWithoutChangingSourceAndReopensNatively`; `LegacyImportTests.completeImportSurvivesReopenAndSeparatesPendingAnswers`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "MaterialEditorStoreTests/editsPreserveServerIdentityAndDoNotQueueUnchangedNotes",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 335,
+      "native_assertion_candidates": ["SubjectMaterialEditingTests.editedTextAndQueueSurviveReopening","SubjectMaterialEditingTests.unchangedAndEmptyContentDoesNotCreateUploadsOrRevisions"],
+      "contract": "`SubjectMaterialEditingTests.editedTextAndQueueSurviveReopening`; `SubjectMaterialEditingTests.unchangedAndEmptyContentDoesNotCreateUploadsOrRevisions`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "MaterialEditorStoreTests/changedAccountAndStaleEditorLeaveTheNewerPendingPayloadIntact",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 373,
+      "native_assertion_candidates": ["SubjectMaterialEditingTests.switchingAccountsCannotReplaceEitherAccountsNotesWithAnOldEditorDraft"],
+      "contract": "`SubjectMaterialEditingTests.switchingAccountsCannotReplaceEitherAccountsNotesWithAnOldEditorDraft`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    },
+    {
+      "legacy_id": "MaterialEditorStoreTests/anObservedMissingOrDeletedMaterialCannotReplaceAnotherVersion",
+      "path": "App/Tests/SyncStoreTest.swift",
+      "line": 397,
+      "native_assertion_candidates": ["SubjectMaterialEditingTests.staleEditorsCannotOverwriteEvenIdenticalContent","SubjectMaterialEditingTests.aPrunedMaterialCannotBeRecreatedByAnEditorHoldingItsOldRevision"],
+      "contract": "`SubjectMaterialEditingTests.staleEditorsCannotOverwriteEvenIdenticalContent`; `SubjectMaterialEditingTests.aPrunedMaterialCannotBeRecreatedByAnEditorHoldingItsOldRevision`",
+      "status": "required final assertion-strength and execution verification; no current pass claim"
+    }
+  ],
+  "source_only_measurement": {
+    "tool": "Mainboard",
+    "tool_commit": "9d19e7d74f6146f858a5b9d15ce518b4f63c28ab",
+    "report_sha256": "b8a229456e3aa433eb2db3488b2d16ae7310376c5b8957d42b0a07f6dfcaf239",
+    "report_note": "Full report retained privately; compact source measurement only is tracked here.",
+    "swift_files": 263,
+    "categories": [{"kind":"generated","files":1,"physical_lines":2946},{"kind":"production","files":141,"physical_lines":20856},{"kind":"test","files":116,"physical_lines":23717},{"kind":"tooling","files":5,"physical_lines":281}],
+    "syntax_gaps": 0,
+    "production_scope": "Includes the three protected owner Swift files retained on disk without app target membership.",
+    "limits": [
+      "Path-based source inventory, not compiled target membership or resolved dependency/linkage evidence.",
+      "Physical lines include comments and are not logical, executable or net LOC.",
+      "Zero syntax gaps is not type checking, a build, a test result or feature acceptance."
+    ]
+  }
+}

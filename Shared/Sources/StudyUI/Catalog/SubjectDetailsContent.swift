@@ -95,7 +95,7 @@ public struct SubjectDetailsContent: View {
         section("Context sentences") {
           ForEach(Array(subject.sentences.enumerated()), id: \.offset) { index, sentence in
             ContextSentence(
-              sentence: sentence, text: sentenceText?(sentence),
+              sentence: sentence, text: contextSentenceText(sentence),
               blurTranslation: preferences.blurTranslations, index: index)
           }
         }
@@ -122,6 +122,21 @@ public struct SubjectDetailsContent: View {
         Link("Open on WaniKani", destination: url)
       }
     }.textSelection(.enabled)
+  }
+  private func contextSentenceText(_ sentence: CatalogSubject.Sentence) -> AttributedString {
+    if let sentenceText { return sentenceText(sentence) }
+    let source = sentence.japanese
+    var result = AttributedString()
+    var cursor = source.startIndex
+    for range in VocabularyHighlighter.ranges(of: subject, in: source) {
+      result += AttributedString(source[cursor..<range.lowerBound])
+      var highlighted = AttributedString(source[range])
+      highlighted.foregroundColor = .red
+      result += highlighted
+      cursor = range.upperBound
+    }
+    result += AttributedString(source[cursor...])
+    return result
   }
   @ViewBuilder private var meaning: some View {
     if visibility.meaning {
@@ -262,13 +277,13 @@ public struct SubjectDetailsHeader: View {
 
 private struct ContextSentence: View {
   let sentence: CatalogSubject.Sentence
-  let text: AttributedString?
+  let text: AttributedString
   let blurTranslation: Bool
   let index: Int
   @State private var revealed = false
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      if let text { Text(text) } else { Text(sentence.japanese) }
+      Text(text)
       if blurTranslation && !revealed {
         Button("Show translation", systemImage: "eye") { revealed = true }
           .buttonStyle(.bordered).controlSize(.large)

@@ -1,6 +1,22 @@
 # Swift and SwiftData migration specification
 
-Updated October 20, 2026. Status: specified for staged implementation; acceptance gates remain open. This is the execution specification for the remaining modernization. [TASKS.md](TASKS.md) tracks current status; historical validation receipts remain evidence for their stated source and scope. A plan item is complete only after its acceptance gate passes. FMDB removal and complete feature parity are still open.
+Updated October 20, 2026. Status: specified for staged implementation; acceptance gates remain open. This is the execution specification for the remaining modernization. [TASKS.md](TASKS.md) tracks current status; historical validation receipts remain evidence for their stated source and scope. A plan item is complete only after its acceptance gate passes. Current source/dependency retirement is untested; actual product linkage and complete feature parity remain open.
+
+## Current implementation order — October 20
+
+The owner now requests **all production changes first, original-app usability comparison second, tests last**. That supersedes older tests-before-deletion sequencing below. Acceptance contracts, data preservation, exact writer assertion mappings and physical/signed gates remain required; source deletion is not acceptance. Old tests remain unmodified while production retirement proceeds and are not currently expected to compile. Do not run the legacy UI harness before its fixture launches/cleanup are ported: its retired flags must never fall through to a real production account.
+
+Current untested changes include:
+
+- One native SwiftUI root in every build; retiring the old DEBUG host, duplicate controllers, fifteen iOS storyboards, FMDB/old API clients, raw SQL diagnostics and generated wrappers. CocoaPods/SwiftGen integration is removed; native Swift packages retain committed resolution pending final reconciliation. Three preexisting owner-edited legacy files remain on disk, excluded from targets.
+- Cold preference metadata/import separated from the deleted Settings UI. The remaining historical importer uses only read-only SQLite3 and generated Swift protobuf decoding. Main app Swift 6 is enabled on iOS as well as Mac; watch UI remains a documented boundary.
+- Native review synonym/correction transactions, previous-subject navigation, keyboard controls, original-conjugation context highlighting, early completed-item summaries, continuing without forced reveal and exact-character feedback. Voice capture is injected through the app-owned environment.
+- P2 prototype defects addressed with synchronous observed-event epochs, bounded lifecycle reconciliation and 24-hour wire projection; verified legacy binding/revocation persists in the existing Codable handoff payload without a model-field change. Production worker ownership is wired. Old-decoder/restart/concurrency tests and signed shared namespace remain open.
+- Official Kanji Kentei 4/3/pre-2 subsets added to the bundled catalog/generator. Mainboard has a reusable per-file Swift source/import/platform/migration inventory. Neither addition has final suite evidence yet.
+
+P0c/G7 production generation opening is a **separate reviewed draft, not applied**. Automatic approval review rejected application because it changes production persistence opening without validation. Explicit owner approval is pending. The review map is `/private/tmp/usagi-p0c-review-map.md`; the exact patch is `/private/tmp/usagi-p0c-production-draft.patch` with SHA-256 `b73905a60c93381a3ebea7bd1ca6f7de6bf452d9dcecc026beb01f99031662be`. It preserves all ten model declaration bodies at their existing nominal identities, independently compares stored physical model hashes before opening a verification clone, validates a separate candidate, and selects it durably. It has no V2/model normalization and does not freeze historical nested Codable decoders independently. Uncompiled API/WAL/physical-hash behavior, iOS file protection/fsync/interruption and external-writer limits are explicit. Do not silently apply this patch or equate the older disposable naming experiment with G7.
+
+The phase/status tables below describe the last accepted checkpoint. [TASKS](TASKS.md) and the [retirement manifest](Implementation/2026-10-20-native-retirement.json) own current implementation/deferred obligations. No tests, app builds, UI comparison or live exercises have run for this production-change stage. Formatter and read-only source/configuration inspections are not feature acceptance.
 
 ## How to execute this specification
 
@@ -51,7 +67,7 @@ Apple documentation was checked on October 20, 2026, against the installed Xcode
 | Schema evolution | VersionedSchema and SchemaMigrationPlan describe explicit model versions and migration stages | Freeze the current store fixture before any model declaration changes; verify an actual upgrade, including the current unversioned store. [VersionedSchema](https://developer.apple.com/documentation/swiftdata/versionedschema), [SchemaMigrationPlan](https://developer.apple.com/documentation/swiftdata/schemamigrationplan) |
 | AI and system actions | Foundation Models calls an app-defined Tool; AppIntent exposes an app-defined action | Add explicit bounded read adapters later. Do not assume SwiftData exposes the schema automatically or let generated output grade answers. [Tool](https://developer.apple.com/documentation/foundationmodels/tool), [AppIntent](https://developer.apple.com/documentation/appintents/appintent) |
 
-## Checkpoints and current validation
+## Historical accepted checkpoints and validation
 
 Acceptance is scoped to source and destination on `codex/swiftui-27-curriculum`. P1a/P0b/P1b retain their earlier receipts; P2 remains an unwired tested prototype. The [current validation receipt](Validation/2026-10-20-native-practice-parser-and-upgrade-probe.json) adds the current platform, parser and test-only upgrade evidence. It supersedes the three Mac failures at `39f9ef9c` only for this new source. Production Swift lines grow from 32,049 at `465dd79c` to 32,221 (+172), excluding three unrelated owner edits and including formatter wrapping; no new runtime dependency or LOC savings is claimed. No push or hosted Actions pass is claimed.
 

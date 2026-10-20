@@ -1,7 +1,8 @@
 import StudyCore
+import StudySpeech
 import SwiftUI
 
-/// The legacy iOS host retains its study options while sharing the native practice menu.
+/// The shared practice destination uses the same saved study options on every platform.
 public struct KatakanaPracticeMenu: View {
   private let start: () -> Void
   public init(start: @escaping () -> Void) { self.start = start }
@@ -24,6 +25,7 @@ public struct KatakanaPracticeMenu: View {
 struct KatakanaPracticeSessionView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(StudyFontLibrary.self) private var fonts
+  @Environment(\.studyVoiceCapture) private var voiceCapture
   @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
   @StoredReviewPreferences private var preferences
   @State private var practice: KatakanaPractice?
@@ -87,7 +89,9 @@ struct KatakanaPracticeSessionView: View {
       }
     }
     .sheet(item: $voiceRequest) { request in
-      VoiceAnswerPanel(question: request.question) { answer in
+      VoiceAnswerPanel(
+        model: VoiceReviewController(question: request.question, capture: voiceCapture())
+      ) { answer in
         voiceRequest = nil
         guard practice?.question == request.question else { return }
         screen.answer = answer
@@ -95,9 +99,7 @@ struct KatakanaPracticeSessionView: View {
       } cancel: {
         voiceRequest = nil
       }
-      #if os(macOS)
-        .frame(minWidth: 420, minHeight: 440)
-      #endif
+      .presentationSizing(.form)
     }
     .task {
       guard practice == nil else { return }
@@ -138,6 +140,7 @@ struct KatakanaPracticeSessionView: View {
       practice.session.currentDecision == .incorrect
       ? (preferences.revealAnswers ? .details : .incorrect) : .answering
     screen.answer = ""
+    screen.answerHint = nil
     screen.feedback = practice.session.currentDecision == .incorrect ? "Incorrect answer" : ""
     screen.success = nil
     screen.canShowAll = false
@@ -146,7 +149,7 @@ struct KatakanaPracticeSessionView: View {
     applyPreferences()
     customFont = fonts.fontNames(for: screen.question).randomElement() ?? ""
     chooseFont()
-    focused = screen.phase == .answering && !screen.isAnki
+    focused = screen.phase != .details && !screen.isAnki
   }
   private func applyPreferences() {
     practice?.options = preferences.sessionOptions
@@ -196,7 +199,7 @@ struct KatakanaPracticeSessionView: View {
         screen.answer = result.normalized
       default:
         screen.answer = result.normalized
-        screen.feedback = "Enter the reading in kana."
+        screen.showAnswerHint(result.grade)
       }
     }
   }
@@ -220,11 +223,9 @@ struct KatakanaPracticeSessionView: View {
         if screen.isAnki {
           screen.phase = .details
           focused = false
-        } else if screen.phase == .details {
+        } else if screen.phase == .details || screen.phase == .incorrect {
           try practice?.advance(question)
           present()
-        } else if screen.phase == .incorrect {
-          screen.phase = .details
         } else {
           submit()
         }
@@ -247,7 +248,12 @@ struct KatakanaPracticeSessionView: View {
         present()
         if let success { screen.recordSuccess(success) }
       case .incorrect:
-        guard screen.isAnki && screen.phase == .details else { return }
+        guard screen.phase == .details else { return }
+        if !screen.isAnki {
+          try practice?.advance(question)
+          present()
+          return
+        }
         if practice?.session.currentDecision == .incorrect {
           try practice?.advance(question)
         } else {

@@ -4,58 +4,6 @@
   import StudyCore
   import Synchronization
   import Observation
-  #if os(iOS)
-    import WaniKaniAPI
-
-    extension Screenshotter {
-      @nonobjc @MainActor static func audioFixture() -> StudyAudioDownloads? {
-        guard isActive, ProcessInfo.processInfo.arguments.contains("AudioFlowFixture") else {
-          return nil
-        }
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
-          "audio-fixture-\(UUID())")
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        if ProcessInfo.processInfo.arguments.contains("AudioCacheFixture") {
-          try? Data("ID3-fixture".utf8).write(to: directory.appendingPathComponent("a71-1.mp3"))
-        }
-        var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
-        for key in ["offlineAudio", "offlineAudioCellular"] {
-          arguments[key] = try? NSKeyedArchiver.archivedData(
-            withRootObject: false, requiringSecureCoding: true)
-        }
-        arguments["offlineAudioVoiceActors"] = try? NSKeyedArchiver.archivedData(
-          withRootObject: Set<Int64>(), requiringSecureCoding: true)
-        UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [AudioFixtureProtocol.self]
-        return StudyAudioDownloads(directory: directory, configuration: configuration)
-      }
-    }
-
-    final class AudioFixtureCachingClient: FakeLocalCachingClient {
-      override func getVoiceActors() -> [TKMVoiceActor] {
-        [Int64(1), 2].map {
-          var voice = TKMVoiceActor()
-          voice.id = $0
-          voice.name = "Voice \($0) fixture"
-          voice.description_p = "Tokyo accent"
-          voice.gender = $0 == 1 ? .male : .female
-          return voice
-        }
-      }
-      override func getAudioUrls(levels: [Int], voiceActorIds: [Int64]) -> [AudioUrl] {
-        let level = max(1, Int(getUserInfo()?.currentLevel ?? 1))
-        return voiceActorIds.sorted().filter { [1, 2].contains($0) }.map {
-          (
-            subjectId: 70 + $0, voiceActorId: $0, level: level,
-            url: "https://audio.example.test/\($0).mp3"
-          )
-        }
-      }
-    }
-
-  #endif
-
   @MainActor @Observable final class SampleAudioPlayback: StudyAudioPlayback {
     private(set) var state = SubjectAudioState.idle
     private(set) var error: String?

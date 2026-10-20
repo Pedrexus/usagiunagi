@@ -13,11 +13,25 @@ public enum CurriculumSystem: String, CaseIterable, Identifiable, Sendable {
     case .school:
       "Cumulative Japanese school-grade kanji. Grade 6 includes all 1,026 elementary kanji."
     case .kanken:
-      "Kanji scope for levels 10–5 and 2. Handwriting and other exam skills are not assessed. Levels 4, 3 and pre-2 need separately verified lists."
+      "Cumulative official kanji scopes for levels 10–2, including pre-2. Handwriting, readings and other exam skills are not assessed."
     case .joyo:
       "Elementary-school and everyday-use character sets. These describe kanji scope, not test scores."
     }
   }
+}
+
+public enum KankenLevel: String, CaseIterable, Codable, Sendable {
+  case ten = "10"
+  case nine = "9"
+  case eight = "8"
+  case seven = "7"
+  case six = "6"
+  case five = "5"
+  case four = "4"
+  case three = "3"
+  case preTwo = "pre2"
+  case two = "2"
+  public var title: String { self == .preTwo ? "Pre-2" : "Level \(rawValue)" }
 }
 
 public struct Curriculum: Identifiable, Sendable {
@@ -30,6 +44,7 @@ public struct CurriculumLibrary: Decodable, Sendable {
   public struct Entry: Decodable, Sendable {
     public let grade: Int?
     public let jlpt: Int?
+    public let kanken: KankenLevel?
   }
   public let version: Int
   public let kanjidicDate: String
@@ -49,9 +64,11 @@ public struct CurriculumLibrary: Decodable, Sendable {
       return (1...6).map { g in make("grade\(g)", "Grade \(g)") { (1...g).contains($0.grade ?? 0) }
       }
     case .kanken:
-      return (1...6).map { g in
-        make("kanken\(11-g)", "Level \(11-g)") { (1...g).contains($0.grade ?? 0) }
-      } + [make("kanken2", "Level 2") { (1...6).contains($0.grade ?? 0) || $0.grade == 8 }]
+      var included = Set<String>()
+      return KankenLevel.allCases.map { level in
+        included.formUnion(entries.filter { $0.value.kanken == level }.keys)
+        return Curriculum(id: "kanken\(level.rawValue)", title: level.title, characters: included)
+      }
     case .joyo:
       return [
         make("joyo", "Jōyō") { (1...6).contains($0.grade ?? 0) || $0.grade == 8 },

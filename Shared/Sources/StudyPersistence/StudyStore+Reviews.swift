@@ -90,6 +90,7 @@ public enum NativeReviewError: Error, LocalizedError, Equatable {
 
 public enum NativeReviewAction: Sendable {
   case advance, overrideCorrect, deferQuestion, wrapUp, stopWrapping, exclude
+  case addSynonym(String)
 }
 
 extension StudyStore {
@@ -288,6 +289,23 @@ extension StudyStore {
       success = try session.mark(
         .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
       session.nextQuestion()
+    case .addSynonym(let text):
+      let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard question.kind == .meaning, !text.isEmpty,
+        session.currentDecision == .incorrect, !state.isLesson || state.isAnki,
+        let subject = state.subject
+      else { throw StudyStoreError.invalidMaterial }
+      try validateCurrentAssignment(state, accountID: accountID)
+      let current = try subjectDetails(subjectID: subject.id, accountID: accountID)
+      var material = current.material ?? StudyMaterial(subjectID: subject.id)
+      material.meaningSynonyms.append(text)
+      success = try markReviewCorrect(
+        &session, question: question, combined: state.combinesAnki, now: now)
+      session.nextQuestion()
+      let saved = try commitReviewMaterial(
+        session, material: .init(material: material, version: current.savedMaterial?.revision),
+        accountID: accountID, expectedRevision: expectedRevision, now: now)
+      return try reviewState(saved, accountID: accountID, success: success)
     case .exclude:
       guard session.currentDecision == .incorrect, let subject = state.subject,
         subject.kind == .vocabulary,
@@ -299,7 +317,7 @@ extension StudyStore {
       material.isExcluded = true
       try session.excludeQuestion(question)
       session.nextQuestion()
-      let saved = try commitReviewExclusion(
+      let saved = try commitReviewMaterial(
         session, material: .init(material: material, version: current.savedMaterial?.revision),
         accountID: accountID, expectedRevision: expectedRevision, now: now)
       return try reviewState(saved, accountID: accountID)
@@ -317,8 +335,8 @@ extension StudyStore {
       session, accountID: accountID, expectedRevision: expectedRevision, success: success, now: now)
   }
 
-  /// One transaction owns the exclusion marker and queue removal; it never credits the item.
-  func commitReviewExclusion(
+  /// Notes and the corresponding queue decision commit together, with their original revisions.
+  func commitReviewMaterial(
     _ session: StudySession, material: StudyMaterialEdit<UUID>, accountID: String,
     expectedRevision: UUID, now: Date
   ) throws -> SavedStudySession {
@@ -366,20 +384,24 @@ extension StudyStore {
     var session = state.saved.session
     var success: StudyMarkResult?
     if correct {
-      success = try session.mark(
-        .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
-      if state.combinesAnki, success?.subjectFinished == false {
-        guard let other = session.nextQuestion(continuingCurrentItem: true),
-          other.itemID == question.itemID
-        else {
-          throw StudyStoreError.invalidSession
-        }
-        success = try session.mark(.correct, for: other, now: Int64(now.timeIntervalSince1970))
-      }
+      success = try markReviewCorrect(
+        &session, question: question, combined: state.combinesAnki, now: now)
     }
     session.nextQuestion()
     return try saveReviewState(
       session, accountID: accountID, expectedRevision: expectedRevision, success: success, now: now)
+  }
+
+  private func markReviewCorrect(
+    _ session: inout StudySession, question: StudyQuestion, combined: Bool, now: Date
+  ) throws -> StudyMarkResult {
+    let mark = try session.mark(
+      .overrideCorrect, for: question, now: Int64(now.timeIntervalSince1970))
+    guard combined, !mark.subjectFinished else { return mark }
+    guard let other = session.nextQuestion(continuingCurrentItem: true),
+      other.itemID == question.itemID
+    else { throw StudyStoreError.invalidSession }
+    return try session.mark(.correct, for: other, now: Int64(now.timeIntervalSince1970))
   }
 
   private func nativeSessionOptions(_ options: StudySessionOptions) -> StudySessionOptions {

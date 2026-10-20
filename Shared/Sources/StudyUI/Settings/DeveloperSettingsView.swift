@@ -5,7 +5,6 @@ import SwiftUI
 public struct DeveloperSettingsView: View {
   @Binding var endpoint: String
   let defaultEndpoint: String
-  let archive: SQLiteDiagnosticArchive?
   let studyArchive: StudyDiagnosticArchive?
   let applyEndpoint: (@MainActor (String) throws -> Void)?
   @State private var endpointError: String?
@@ -18,14 +17,13 @@ public struct DeveloperSettingsView: View {
   @State private var cacheError: String?
 
   public init(
-    endpoint: Binding<String>, defaultEndpoint: String, archive: SQLiteDiagnosticArchive? = nil,
+    endpoint: Binding<String>, defaultEndpoint: String,
     studyArchive: StudyDiagnosticArchive? = nil,
     applyEndpoint: (@MainActor (String) throws -> Void)? = nil,
     clearAvatarCache: @escaping @MainActor () async throws -> Void
   ) {
     self._endpoint = endpoint
     self.defaultEndpoint = defaultEndpoint
-    self.archive = archive
     self.studyArchive = studyArchive
     self.applyEndpoint = applyEndpoint
     self.clearAvatarCache = clearAvatarCache
@@ -53,10 +51,6 @@ public struct DeveloperSettingsView: View {
           ShareLink(item: studyArchive, preview: SharePreview("Study diagnostics")) {
             Label("Export study diagnostics", systemImage: "square.and.arrow.up")
           }.accessibilityIdentifier("developer.export")
-        } else if let archive {
-          ShareLink(item: archive, preview: SharePreview("Local database")) {
-            Label("Export local database", systemImage: "square.and.arrow.up")
-          }.accessibilityIdentifier("developer.export")
         }
         Button("Clear avatar image cache", systemImage: "person.crop.circle.badge.xmark") {
           clearingCache = true
@@ -75,8 +69,6 @@ public struct DeveloperSettingsView: View {
           Text(
             "Share this account’s study diagnostics, including notes and pending work. This is not a restorable backup."
           )
-        } else if archive != nil {
-          Text("Share a copy of the local study database for diagnostics.")
         } else {
           Text("Connect to WaniKani to export saved study diagnostics.")
         }

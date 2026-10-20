@@ -1,32 +1,35 @@
 import Foundation
 import StudyCore
+import Synchronization
 
 /// The app explicitly supplies Apple's default store; tests supply a protocol fake instead.
 @MainActor public final class AppleStudyMistakeCloudStore: StudyMistakeCloudStore {
   private let store: NSUbiquitousKeyValueStore
   private let notifications: NotificationCenter
-  private let hasAccount: @MainActor () -> Bool
-  public var available: Bool { hasAccount() }
+  private let idleEpoch = UUID()
+  private var observer: StudyMistakeCloudObserver?
+  /// The last local synchronization request succeeded; this does not establish account or delivery.
+  public private(set) var available = false
+  public var observedEpoch: UUID { observer?.epoch ?? idleEpoch }
   public init(
-    store: NSUbiquitousKeyValueStore, notifications: NotificationCenter = .default,
-    hasAccount: @escaping @MainActor () -> Bool = {
-      FileManager.default.ubiquityIdentityToken != nil
-    }
+    store: NSUbiquitousKeyValueStore, notifications: NotificationCenter = .default
   ) {
     self.store = store
     self.notifications = notifications
-    self.hasAccount = hasAccount
   }
   public func changes() -> AsyncStream<StudyMistakeCloudEvent> {
     let (stream, continuation) = AsyncStream<StudyMistakeCloudEvent>.makeStream()
-    let token = notifications.addObserver(of: store, for: CloudMessage.self) { message in
-      continuation.yield(message.event)
-    }
+    let observer = StudyMistakeCloudObserver(
+      notifications: notifications, object: store, continuation: continuation)
+    self.observer = observer
     let center = notifications
-    continuation.onTermination = { _ in center.removeObserver(token) }
+    continuation.onTermination = { _ in observer.cancel(in: center) }
     return stream
   }
-  public func synchronize() -> Bool { available && store.synchronize() }
+  public func synchronize() -> Bool {
+    available = store.synchronize()
+    return available
+  }
   public func data(forKey key: String) throws -> Data? {
     guard available else { throw StudyMistakeError.unavailable }
     guard key.utf16.count <= 128 else { throw StudyMistakeError.invalidKey }
@@ -34,7 +37,7 @@ import StudyCore
     guard let data = value as? Data else { throw StudyMistakeError.invalidArchive }
     return data
   }
-  public func set(_ data: Data, forKey key: String) throws {
+  public func set(_ data: Data, forKey key: String, observedEpoch: UUID) throws {
     guard available else { throw StudyMistakeError.unavailable }
     guard !key.isEmpty, key.utf16.count <= 128 else { throw StudyMistakeError.invalidKey }
     var projected = store.dictionaryRepresentation
@@ -45,16 +48,35 @@ import StudyCore
         .count
         <= StudyMistakeArchive.maximumBytes
     else { throw StudyMistakeError.quotaExceeded }
+    guard self.observedEpoch == observedEpoch else { throw CancellationError() }
     store.set(data, forKey: key)
   }
 }
 
-private nonisolated struct CloudMessage: NotificationCenter.AsyncMessage {
-  typealias Subject = NSUbiquitousKeyValueStore
-  static var name: Notification.Name { NSUbiquitousKeyValueStore.didChangeExternallyNotification }
-  let event: StudyMistakeCloudEvent
-  static func makeMessage(_ notification: Notification) -> Self? {
-    .init(event: StudyMistakeCloudEvent(notification: notification))
+/// A nil delivery queue observes the event on its posting thread, before the async consumer resumes.
+nonisolated final class StudyMistakeCloudObserver: Sendable {
+  private let observed = Mutex(UUID())
+  private let token = Mutex<(any NSObjectProtocol)?>(nil)
+  var epoch: UUID { observed.withLock { $0 } }
+  init(
+    notifications: NotificationCenter, object: AnyObject,
+    continuation: AsyncStream<StudyMistakeCloudEvent>.Continuation
+  ) {
+    let token = notifications.addObserver(
+      forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+      object: object, queue: nil
+    ) { [self] notification in
+      let event = StudyMistakeCloudEvent(notification: notification)
+      if event.reason != .server { observed.withLock { $0 = UUID() } }
+      continuation.yield(event)
+    }
+    self.token.withLock { $0 = token }
+  }
+  func cancel(in notifications: NotificationCenter) {
+    token.withLock {
+      if let token = $0 { notifications.removeObserver(token) }
+      $0 = nil
+    }
   }
 }
 

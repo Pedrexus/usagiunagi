@@ -1,5 +1,6 @@
 import StudyCore
 import StudyPersistence
+import StudySpeech
 import SwiftUI
 
 public enum NativeStudyMode: Hashable, Sendable {
@@ -20,14 +21,18 @@ public struct NativeReviewView: View {
   @State private var review: NativeReviewState?
   @State private var screen = ReviewScreenState()
   @State private var busy = false
+  @State private var ended = false
   @State private var error: String?
   @State private var summarySubjectID: Int64?
   @State private var readyImage: String?
   @State private var voiceRequest: VoiceAnswerRequest?
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudyAudioLibrary.self) private var audio
+  @Environment(\.studyVoiceCapture) private var voiceCapture
   @Environment(StudyFontLibrary.self) private var fonts
   @State private var settings = false
+  @State private var addingSynonym = false
+  @State private var synonym = ""
   @State private var fontSubjectID: Int64?
   @State private var customFont = ""
   @State private var fullDetails = false
@@ -62,7 +67,7 @@ public struct NativeReviewView: View {
         ) { audio.stop() }.accessibilityIdentifier("review.stopAudio")
       }
       if let review {
-        if review.question == nil {
+        if ended || review.question == nil {
           SessionSummaryView(
             summary: review.summary(showOldMeanings: subjectSettings.value.showDeprecatedMnemonic),
             title: isPractice
@@ -84,8 +89,10 @@ public struct NativeReviewView: View {
             ToolbarItem(placement: .confirmationAction) {
               Button("Done") {
                 run {
-                  try await store.finishReviews(
-                    accountID: accountID, expectedRevision: review.saved.revision)
+                  if !ended {
+                    try await store.finishReviews(
+                      accountID: accountID, expectedRevision: review.saved.revision)
+                  }
                   self.review = nil
                   finished()
                 }
@@ -170,18 +177,29 @@ public struct NativeReviewView: View {
     }
 
     .toolbar {
-      if review?.question != nil {
+      if !ended && review?.question != nil {
         ToolbarItem(placement: .secondaryAction) {
           Button("Ask later", systemImage: "arrow.uturn.forward") { change(.deferQuestion) }
         }
       }
+    }
+    .alert("Add synonym", isPresented: $addingSynonym) {
+      TextField("Meaning", text: $synonym).autocorrectionDisabled()
+      Button("Add and mark correct") { change(.addSynonym(synonym)) }
+        .disabled(synonym.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("Accept this meaning for future reviews.")
     }
     .navigationDestination(item: $summarySubjectID) { id in
       NativeSubjectDetailsView(store: store, accountID: accountID, subjectID: id)
         .navigationTitle("Subject")
     }
     .sheet(item: $voiceRequest) { request in
-      VoiceAnswerPanel(question: request.question, audio: audio) { text in
+      VoiceAnswerPanel(
+        model: VoiceReviewController(question: request.question, capture: voiceCapture()),
+        audio: audio
+      ) { text in
         voiceRequest = nil
         guard review?.question == request.question else { return }
         screen.answer = text
@@ -189,7 +207,7 @@ public struct NativeReviewView: View {
       } cancel: {
         voiceRequest = nil
       }
-      .frame(minWidth: 420, minHeight: 440)
+      .presentationSizing(.form)
     }
     .task(id: accountID) { if review == nil { load() } }
   }
@@ -256,6 +274,12 @@ public struct NativeReviewView: View {
       ? StudyPalette.kanji
       : value.subject?.kind == .radical ? StudyPalette.radical : StudyPalette.vocabulary
     screen.level = value.subject.map { "Level \($0.level)" } ?? ""
+    screen.previous =
+      session.completedIDs.last.flatMap { id in
+        session.items[id].flatMap { value.subjects[$0.subjectID] }.map {
+          $0.japanese.isEmpty ? "Radical" : $0.japanese
+        }
+      } ?? ""
     screen.completed = session.completedIDs.count
     screen.remaining = session.activeIDs.count + session.queuedIDs.count
     screen.accuracy = "\(session.successRate)%"
@@ -269,6 +293,7 @@ public struct NativeReviewView: View {
       session.currentDecision == .incorrect
       ? (value.isAnki || preferences.revealAnswers ? .details : .incorrect) : .answering
     screen.answer = restoringDraft ? draftAnswer : ""
+    screen.answerHint = nil
     screen.feedback =
       session.currentDecision == .incorrect ? "Incorrect answer. Try again or reveal it." : ""
     if restoringDraft {
@@ -355,19 +380,7 @@ public struct NativeReviewView: View {
         applyPreferences()
       }
       if result.state.question == question { screen.answer = result.normalized }
-      switch result.grade {
-      case .precise: break
-      case .imprecise:
-        if exactMatch {
-          screen.feedback = "Use the exact meaning."
-        }
-      case .incorrect: break
-      case .otherKanjiReading: screen.feedback = "Use the reading taught for this subject."
-      case .mismatchingOkurigana: screen.feedback = "Check the kana following the kanji."
-      case .containsInvalidCharacters: screen.feedback = "Enter this reading in kana."
-      case .isReadingButWantMeaning:
-        screen.feedback = "Enter the meaning. Your reading was correct."
-      }
+      screen.showAnswerHint(result.grade, exactMatch: exactMatch)
     }
   }
   private func act(_ action: ReviewScreenAction) {
@@ -378,7 +391,7 @@ public struct NativeReviewView: View {
       } else if screen.phase == .details {
         change(.advance)
       } else if screen.phase == .incorrect {
-        screen.phase = .details
+        change(.advance)
       } else {
         submit()
       }
@@ -394,7 +407,16 @@ public struct NativeReviewView: View {
     case .correct:
       if screen.isAnki { assessAnki(true) } else if screen.canOverride { change(.overrideCorrect) }
     case .incorrect:
-      if screen.isAnki { assessAnki(false) }
+      if screen.isAnki { assessAnki(false) } else if screen.phase == .details { change(.advance) }
+    case .synonym:
+      guard screen.phase == .details, screen.canAddSynonym, screen.canOverride || screen.isAnki
+      else { return }
+      synonym = screen.answer
+      addingSynonym = true
+    case .previous:
+      if let session = review?.saved.session, let id = session.completedIDs.last {
+        summarySubjectID = session.items[id]?.subjectID
+      }
     case .deferQuestion: change(.deferQuestion)
     case .exclude:
       guard screen.phase == .details, screen.canExclude, screen.canOverride || screen.isAnki else {
@@ -412,8 +434,15 @@ public struct NativeReviewView: View {
       guard let review else { return }
       run {
         try await store.endReviews(accountID: accountID, expectedRevision: review.saved.revision)
-        self.review = nil
-        finished()
+        answerFocused = false
+        voiceRequest = nil
+        draftIdentity = ""
+        if review.saved.session.completedIDs.isEmpty {
+          self.review = nil
+          finished()
+        } else {
+          ended = true
+        }
       }
     case .playAudio:
       if let subject = review?.subject {
@@ -476,6 +505,7 @@ public struct NativeReviewView: View {
       && review?.saved.session.currentDecision == .incorrect
     let available: Set<StudyQuestionKind> =
       review?.subject?.readings.isEmpty == false ? [.meaning, .reading] : [.meaning]
+    screen.canAddSynonym = review?.question?.kind == .meaning
     screen.canShowAll = !available.isSubset(of: visibleQuestions)
     let stage = review?.question.flatMap { review?.saved.session.items[$0.itemID]?.srsStage } ?? 0
     let name: String

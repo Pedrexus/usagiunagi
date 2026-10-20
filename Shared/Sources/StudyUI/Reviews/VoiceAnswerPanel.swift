@@ -2,6 +2,10 @@ import StudyCore
 import StudySpeech
 import SwiftUI
 
+extension EnvironmentValues {
+  @Entry public var studyVoiceCapture: @Sendable () -> any VoiceCapture = { AppleVoiceCapture() }
+}
+
 /// Bind sheet presentation to its captured question so first presentation cannot be empty.
 struct VoiceAnswerRequest: Identifiable {
   let question: StudyQuestion
@@ -16,15 +20,6 @@ public struct VoiceAnswerPanel: View {
   @State private var audioLease: UUID?
   private let submit: (String) -> Void
   private let cancel: () -> Void
-
-  public init(
-    question: StudyQuestion, audio: StudyAudioLibrary? = nil, submit: @escaping (String) -> Void,
-    cancel: @escaping () -> Void
-  ) {
-    self.init(
-      model: VoiceReviewController(question: question), audio: audio, submit: submit, cancel: cancel
-    )
-  }
 
   public init(
     model: VoiceReviewController, audio: StudyAudioLibrary? = nil,

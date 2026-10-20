@@ -36,6 +36,7 @@ import SwiftUI
             value.model.error ?? "Saved study data could not be restored.")
         }
         services = value
+        value.mistakeSync?.start()
         #if os(macOS)
           value.automaticSync.start()
         #endif
@@ -68,16 +69,13 @@ import SwiftUI
     } catch { return false }
   }
   #if os(iOS)
-    static var refreshIdentifier: String {
+    nonisolated static var refreshIdentifier: String {
       (Bundle.main.bundleIdentifier ?? "com.davidsansome.wanikani") + ".study-refresh"
     }
-    static func scheduleBackgroundRefresh() {
-      #if DEBUG
-        guard !StudyAppAssembly.isReviewFixture, !Screenshotter.isActive else { return }
-      #endif
+    @concurrent nonisolated static func scheduleBackgroundRefresh() async {
       let request = BGAppRefreshTaskRequest(identifier: refreshIdentifier)
       request.earliestBeginDate = Date().addingTimeInterval(1800)
-      do { try BGTaskScheduler.shared.submit(request) } catch {
+      do { try await BGTaskScheduler.shared.submitTaskRequest(request) } catch {
         Logger(subsystem: "usagiunagi", category: "Background refresh")
           .debug("Study refresh was not scheduled: \(error.localizedDescription, privacy: .public)")
       }
@@ -124,12 +122,14 @@ struct StudyApplicationWindow: View {
       if let services = owner.services {
         StudyRootView(
           model: services.model, automaticSync: services.automaticSync,
-          appName: AppIdentity.name, appearance: services.appearance, notice: services.notice,
+          appName: AppIdentity.name, appearance: services.appearance,
+          notice: services.mistakeSync?.notice ?? services.notice,
           notifications: services.notifications,
           avatars: services.avatars, links: links
         )
         .environment(services.fonts).environment(services.audio)
         .environment(\.studyRadicalImages, services.radicalImages)
+        .environment(\.studyVoiceCapture, services.voiceCapture)
         .environment(services.lessonSettings).environment(services.subjectSettings)
         .defaultAppStorage(services.defaults)
       } else if let failure = owner.failure {
@@ -146,7 +146,10 @@ struct StudyApplicationWindow: View {
     }
     .task(id: scenePhase) {
       await owner.prepare()
-      if !Task.isCancelled && scenePhase == .active { owner.services?.automaticSync.start() }
+      if !Task.isCancelled && scenePhase == .active {
+        owner.services?.automaticSync.start()
+        await owner.services?.mistakeSync?.wake()
+      }
     }
     .onOpenURL { url in
       #if DEBUG

@@ -25,56 +25,63 @@ import os
   import ClockKit
 #endif
 
-typealias ClientDelegateCallback = ([String: Any]) -> Void
+#if os(watchOS)
+  typealias ClientDelegateCallback = ([String: Any]) -> Void
+#endif
 typealias EpochTimeInt = Int64
 
-class WatchConnectionServerDelegate: NSObject, WCSessionDelegate {
-  var activated: (@MainActor () -> Void)?
+/// WatchConnectivity calls on its own queue; the immutable callback returns to the UI actor.
+final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable {
+  private let activated: @MainActor @Sendable () -> Void
+  init(activated: @escaping @MainActor @Sendable () -> Void) { self.activated = activated }
   func session(
     _: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?
   ) {
     guard state == .activated, error == nil else { return }
-    DispatchQueue.main.async { self.activated?() }
+    Task { @MainActor [activated] in activated() }
   }
-
   #if os(iOS)
     func sessionDidBecomeInactive(_: WCSession) {}
-
     func sessionDidDeactivate(_ session: WCSession) { session.activate() }
   #endif
 }
 
-class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
-  let callback: ClientDelegateCallback
+#if os(watchOS)
+  class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
+    let callback: ClientDelegateCallback
 
-  init(_ callback: @escaping ClientDelegateCallback) {
-    self.callback = callback
-  }
+    init(_ callback: @escaping ClientDelegateCallback) {
+      self.callback = callback
+    }
 
-  func session(_: WCSession, activationDidCompleteWith _: WCSessionActivationState, error: Error?) {
-    os_log("watch activationDidCompleteWith err=%{public}@", error?.localizedDescription ?? "none")
-  }
+    func session(_: WCSession, activationDidCompleteWith _: WCSessionActivationState, error: Error?)
+    {
+      os_log(
+        "watch activationDidCompleteWith err=%{public}@", error?.localizedDescription ?? "none")
+    }
 
-  func session(_: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-    #if os(watchOS)
-      let server = CLKComplicationServer.sharedInstance()
-      if let complications = server.activeComplications {
-        for complication in complications {
-          server.reloadTimeline(for: complication)
+    func session(_: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+      #if os(watchOS)
+        let server = CLKComplicationServer.sharedInstance()
+        if let complications = server.activeComplications {
+          for complication in complications {
+            server.reloadTimeline(for: complication)
+          }
         }
-      }
+      #endif
+      callback(userInfo)
+    }
+
+    #if os(iOS)
+      func sessionDidBecomeInactive(_: WCSession) {}
+
+      func sessionDidDeactivate(_: WCSession) {}
     #endif
-    callback(userInfo)
   }
 
-  #if os(iOS)
-    func sessionDidBecomeInactive(_: WCSession) {}
+#endif
 
-    func sessionDidDeactivate(_: WCSession) {}
-  #endif
-}
-
-@objc class WatchHelper: NSObject {
+@MainActor final class WatchHelper {
   public static let keyReviewCount = "reviewCount"
   public static let keyReviewNextHourCount = "reviewHrCount"
   public static let keyReviewUpcomingHourlyCounts = "reviewHourly"
@@ -85,7 +92,8 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
   public static let keyNextReviewAt = "nextReview"
   public static let keySentAt = "sent"
 
-  @objc public static let sharedInstance = WatchHelper()
+  static let sharedInstance = WatchHelper(
+    session: WCSession.isSupported() ? WCSession.default : nil)
   private let session: WCSession?
   #if os(iOS)
     @MainActor private(set) lazy var companion = StudyCompanionDelivery { [weak self] value, date in
@@ -108,39 +116,40 @@ class WatchConnectionClientDelegate: NSObject, WCSessionDelegate {
       ]
     }
   #endif
-  // WCSession.delegate is weak; own both handlers so their callbacks remain available.
-  private let serverHandler = WatchConnectionServerDelegate()
-  private var clientHandler: WatchConnectionClientDelegate?
-
-  override convenience init() {
-    self.init(session: WCSession.isSupported() ? WCSession.default : nil)
-  }
+  // WCSession.delegate is weak; retain the platform's handler for the whole session.
+  #if os(iOS)
+    private var serverHandler: WatchConnectionServerDelegate?
+  #else
+    private var clientHandler: WatchConnectionClientDelegate?
+  #endif
 
   init(session: WCSession?) {
     self.session = session
-    super.init()
     #if os(iOS)
       startServerSession()
     #endif
   }
 
   #if os(iOS)
-    @objc func startServerSession() {
-      serverHandler.activated = { [weak self] in self?.companion.flush() }
+    func startServerSession() {
+      let handler = WatchConnectionServerDelegate { [weak self] in self?.companion.flush() }
+      serverHandler = handler
       if let session = session {
-        session.delegate = serverHandler
+        session.delegate = handler
         session.activate()
       }
     }
 
   #endif
 
-  func awaitMessages(callback: @escaping ClientDelegateCallback) {
-    clientHandler = WatchConnectionClientDelegate(callback)
-    if let session = session {
-      session.delegate = clientHandler
-      session.activate()
+  #if os(watchOS)
+    func awaitMessages(callback: @escaping ClientDelegateCallback) {
+      clientHandler = WatchConnectionClientDelegate(callback)
+      if let session = session {
+        session.delegate = clientHandler
+        session.activate()
+      }
     }
-  }
+  #endif
 
 }
