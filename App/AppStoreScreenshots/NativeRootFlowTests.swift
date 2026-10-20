@@ -154,6 +154,40 @@
       XCTAssertTrue(app.alerts["API base URL"].waitForExistence(timeout: 5))
       app.alerts.buttons["Cancel"].tap()
       XCTAssertFalse(app.alerts.firstMatch.exists)
+      let export = app.buttons["developer.export"]
+      scrollTo(export, in: app)
+      XCTAssertEqual(export.label, "Export study diagnostics")
+      let picture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      picture.name = "Native account-scoped study diagnostics"
+      picture.lifetime = .keepAlways
+      add(picture)
+      export.tap()
+      let save = app.descendants(matching: .any).matching(
+        NSPredicate(format: "label == %@", "Save to Files")
+      ).firstMatch
+      XCTAssertTrue(save.waitForExistence(timeout: 10), app.debugDescription)
+      let close = app.buttons["Close"].firstMatch
+      let cancel = app.buttons["Cancel"].firstMatch
+      if close.exists {
+        close.tap()
+      } else if cancel.exists {
+        cancel.tap()
+      } else {
+        let popup = app.popovers.firstMatch
+        XCTAssertTrue(popup.exists, app.debugDescription)
+        let regions = app.otherElements.matching(identifier: "PopoverDismissRegion")
+        guard regions.count > 0 else {
+          XCTFail(app.debugDescription)
+          return
+        }
+        regions.element(boundBy: regions.count - 1).coordinate(
+          withNormalizedOffset: CGVector(
+            dx: popup.frame.midX < app.frame.midX ? 0.95 : 0.05, dy: 0.5)
+        ).tap()
+      }
+      XCTAssertTrue(save.waitForNonExistence(timeout: 5), app.debugDescription)
+      XCTAssertTrue(app.navigationBars["Developer options"].exists)
+      XCTAssertTrue(export.exists)
     }
     @MainActor func testNativeLogoutCanBeCancelledAndReconnectsWithoutReopeningTheOldWriter() {
       let app = launch()

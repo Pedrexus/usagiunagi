@@ -7,9 +7,50 @@
 
   /// Isolated UI acceptance data. Never used by a release build or a live account.
   @MainActor enum NativeStudyFixture {
+    private static var materialEvent:
+      (token: String, environment: Task<(StudyStore, StudyDownload), any Error>)?
+
+    /// Only an explicitly armed synthetic account can accept this one-shot acceptance event.
+    /// The owner must publish the returned task's result after it completes, including failures.
+    static func receive(_ url: URL) -> Task<String, Never>? {
+      let arguments = ProcessInfo.processInfo.arguments
+      guard arguments.contains("--review-fixture"),
+        arguments.contains("--material-conflict-fixture"),
+        let event = materialEvent,
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+        components.scheme == "usagiunagi", components.host?.isEmpty != false,
+        components.percentEncodedPath == "/fixture/material-conflict/\(event.token)",
+        components.user == nil, components.password == nil, components.port == nil,
+        components.fragment == nil, components.query == nil
+      else { return nil }
+      materialEvent = nil
+      let reject = arguments.contains("--material-conflict-failure-fixture")
+      return Task {
+        do {
+          let store = try await event.environment.value.0
+          let current = try await store.subjectDetails(subjectID: 1, accountID: "review-fixture")
+          var changed = current.material ?? StudyMaterial(subjectID: 1)
+          changed.meaningNote = "Concurrent saved note\n" + StudyMaterial.exclusionMarker
+          changed.readingNote = "Concurrent hidden reading note"
+          try await store.saveMaterial(
+            changed, accountID: "review-fixture",
+            expectedRevision: reject ? UUID() : current.savedMaterial?.revision)
+          return "Concurrent material change committed"
+        } catch {
+          return "Fixture event failed: \(error.localizedDescription)"
+        }
+      }
+    }
     static func make() -> StudyAppAssembly {
       let arguments = ProcessInfo.processInfo.arguments
       let environment = Task { try await reviewFixtureStore() }
+      materialEvent = nil
+      if arguments.contains("--review-fixture"), arguments.contains("--material-conflict-fixture"),
+        let index = arguments.firstIndex(of: "--fixture-event-token"),
+        arguments.indices.contains(index + 1), UUID(uuidString: arguments[index + 1]) != nil
+      {
+        materialEvent = (arguments[index + 1], environment)
+      }
       let suite = "dev.usagiunagi.mac-review-fixture"
       let defaults = UserDefaults(suiteName: suite)!
       defaults.removePersistentDomain(forName: suite)
@@ -147,6 +188,9 @@
         subject.japanese = "一つ"
         subject.meanings = [.init("One thing", role: .primary)]
         subject.readings = [.init("ひとつ", isPrimary: true, kind: .unknown)]
+        subject.meaningMnemonic = "One <vocabulary>thing</vocabulary>."
+        subject.readingMnemonic = "Read this as <reading>ひとつ</reading>."
+        subject.sentences = [.init(japanese: "一つください。", english: "One, please.")]
         subject.audio = [Int64(1), 2].map {
           .init(url: "https://audio.example.test/\($0).mp3", voiceActorID: $0)
         }
@@ -229,6 +273,21 @@
         ]
       }
       fixture.assignments = [assignment]
+      if ProcessInfo.processInfo.arguments.contains("--review-feedback-fixture") {
+        fixture.assignments[0].srsStage = 4
+        var second = CatalogSubject(id: 4, kind: .vocabulary)
+        second.level = 1
+        second.japanese = "二つ"
+        second.meanings = [.init("Two things", role: .primary)]
+        second.readings = [.init("ふたつ", isPrimary: true, kind: .unknown)]
+        var due = CatalogAssignment(id: 104, subjectID: second.id, kind: second.kind)
+        due.level = 1
+        due.srsStage = 4
+        due.startedAt = 1
+        due.availableAt = 1
+        fixture.subjects.append(second)
+        fixture.assignments.append(due)
+      }
       if ProcessInfo.processInfo.arguments.contains("--lesson-settings-fixture") {
         let examples: [(SubjectKind, String, String, String)] = [
           (.radical, "人", "Person", ""), (.radical, "口", "Mouth", ""),

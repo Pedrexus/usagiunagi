@@ -90,7 +90,7 @@ public struct NativeSubjectDetailsView: View {
               ).foregroundStyle(.secondary).padding(.horizontal)
             }
           }.padding(.bottom)
-        }
+        }.accessibilityIdentifier("subject.scroll")
       } else if let error {
         ContentUnavailableView(
           "Subject unavailable", systemImage: "book.closed", description: Text(error))

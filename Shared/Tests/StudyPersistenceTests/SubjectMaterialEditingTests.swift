@@ -55,6 +55,14 @@ struct SubjectMaterialEditingTests {
     let new = try await store.subjectDetails(subjectID: 2, accountID: account)
     #expect(new.savedMaterial?.pending == true)
     try await store.saveSubjectMaterial(
+      #require(new.material), accountID: account, expectedRevision: new.savedMaterial?.revision)
+    let repeated = try await store.subjectDetails(subjectID: 2, accountID: account)
+    #expect(
+      repeated.material == new.material
+        && repeated.savedMaterial?.revision == new.savedMaterial?.revision)
+    #expect(repeated.savedMaterial?.pending == true)
+
+    try await store.saveSubjectMaterial(
       .init(subjectID: 2), accountID: account, expectedRevision: new.savedMaterial?.revision)
     let cleared = try await store.subjectDetails(subjectID: 2, accountID: account)
     #expect(
@@ -167,5 +175,78 @@ struct SubjectMaterialEditingTests {
       expectedRevision: review.saved.revision, now: now)
     #expect(result.grade == .precise)
     #expect(try await store.materials(accountID: account).first?.pending == true)
+  }
+}
+
+extension SubjectMaterialEditingTests {
+  @Test func aPrunedMaterialCannotBeRecreatedByAnEditorHoldingItsOldRevision() async throws {
+    let store = try await store()
+    let original = try await store.subjectDetails(subjectID: 1, accountID: account)
+    var value = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    value.materials = []
+    _ = try await store.applyDownload(
+      value, credentialID: "credential",
+      baseline: store.refreshBaseline(accountID: account))
+    #expect(try await store.subjectDetails(subjectID: 1, accountID: account).savedMaterial == nil)
+    let draft = StudyMaterial(
+      subjectID: 1, meaningNote: "Draft from before deletion", readingNote: "Hidden old reading",
+      meaningSynonyms: ["Older synonym"])
+    do {
+      try await store.saveSubjectMaterial(
+        draft, accountID: account, expectedRevision: original.savedMaterial?.revision)
+      Issue.record("An editor holding the pruned revision recreated deleted material")
+    } catch StudyStoreError.staleMaterial {}
+    #expect(try await store.materials(accountID: account).isEmpty)
+    try await store.saveSubjectMaterial(draft, accountID: account, expectedRevision: nil)
+    let fresh = try await store.subjectDetails(subjectID: 1, accountID: account)
+    #expect(fresh.material == draft && fresh.savedMaterial?.pending == true)
+    #expect(fresh.savedMaterial?.revision != original.savedMaterial?.revision)
+  }
+
+  @Test func switchingAccountsCannotReplaceEitherAccountsNotesWithAnOldEditorDraft() async throws {
+    let store = try await store()
+    let original = try await store.subjectDetails(subjectID: 1, accountID: account)
+    let newer = StudyMaterial(
+      subjectID: 1, meaningNote: "  Newer unsent note 🐰\nSecond line",
+      readingNote: "Hidden newer reading\nいち", meaningSynonyms: ["Exact newer", "一"])
+    try await store.saveSubjectMaterial(
+      newer, accountID: account, expectedRevision: original.savedMaterial?.revision)
+    let pending = try #require(await store.materials(accountID: account).first)
+    let oldDraft = StudyMaterial(subjectID: 1, meaningNote: "Old editor")
+    do {
+      try await store.saveSubjectMaterial(
+        oldDraft, accountID: account, expectedRevision: original.savedMaterial?.revision)
+      Issue.record("A stale editor replaced the newer pending notes")
+    } catch StudyStoreError.staleMaterial {}
+    try await store.removeSnapshot(credentialID: "credential")
+    let source = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    let otherNote = StudyMaterial(
+      subjectID: 1, meaningNote: "Other account note", readingNote: "別",
+      meaningSynonyms: ["Other"])
+    let other = StudyDownload(
+      accountID: "other-account", profile: source.profile, subjects: source.subjects,
+      assignments: source.assignments, materials: [.init(id: 901, value: otherNote)])
+    _ = try await store.applyDownload(
+      other, credentialID: "credential",
+      baseline: store.refreshBaseline(accountID: other.accountID))
+    let otherBefore = try #require(await store.materials(accountID: other.accountID).first)
+    do {
+      try await store.saveSubjectMaterial(
+        oldDraft, accountID: account, expectedRevision: pending.revision)
+      Issue.record("An editor from the disconnected account saved after an account switch")
+    } catch StudyStoreError.invalidIdentity {}
+    let retained = try #require(await store.materials(accountID: account).first)
+    #expect(retained.material == newer && retained.pending && retained.revision == pending.revision)
+    #expect(
+      retained.serverID == pending.serverID
+        && retained.attemptedRevision == pending.attemptedRevision)
+    let otherAfter = try #require(await store.materials(accountID: other.accountID).first)
+    #expect(
+      otherAfter.material == otherNote && otherAfter.revision == otherBefore.revision
+        && !otherAfter.pending)
+    #expect(otherAfter.serverID == 901 && otherAfter.attemptedRevision == nil)
+    #expect(try await store.snapshot(credentialID: "credential")?.accountID == other.accountID)
   }
 }

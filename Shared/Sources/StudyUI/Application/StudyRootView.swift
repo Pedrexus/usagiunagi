@@ -11,7 +11,6 @@ public struct StudyRootView: View {
   private let appearance: ColorScheme?
   private let notice: String?
   private let notifications: StudyNotifications?
-  private let diagnostics: SQLiteDiagnosticArchive?
   private let avatars: LegacyAvatarCache
   @Environment(\.scenePhase) private var scenePhase
   @Environment(StudyLessonSettings.self) private var lessonSettings
@@ -45,7 +44,7 @@ public struct StudyRootView: View {
   public init(
     model: StudyAppModel, automaticSync: StudyAutomaticSync, appName: String,
     appearance: ColorScheme? = nil, notice: String? = nil,
-    notifications: StudyNotifications? = nil, diagnostics: SQLiteDiagnosticArchive? = nil,
+    notifications: StudyNotifications? = nil,
     avatars: LegacyAvatarCache,
     links: StudyLinkInbox = .init()
   ) {
@@ -60,9 +59,14 @@ public struct StudyRootView: View {
     self.appearance = appearance
     self.notice = notice
     self.notifications = notifications
-    self.diagnostics = diagnostics
     self.avatars = avatars
     self.links = links
+  }
+  private var diagnosticArchive: StudyDiagnosticArchive? {
+    guard let snapshot = model.snapshot, !snapshot.isSample, let accountID = snapshot.accountID,
+      let store = model.savedWorkStore
+    else { return nil }
+    return StudyDiagnosticArchive(store: store, accountID: accountID)
   }
   private struct AudioReadKey: Equatable {
     let accountID: String?
@@ -293,7 +297,8 @@ public struct StudyRootView: View {
     case .developerSettings:
       DeveloperSettingsView(
         endpoint: $apiEndpoint,
-        defaultEndpoint: WaniKaniClient.defaultBaseURL.absoluteString, archive: diagnostics,
+        defaultEndpoint: WaniKaniClient.defaultBaseURL.absoluteString,
+        studyArchive: diagnosticArchive,
         applyEndpoint: { value in
           guard let url = URL(string: value) else { throw WaniKaniClient.APIError.invalidResponse }
           try model.setAPIEndpoint(url)

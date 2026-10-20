@@ -185,6 +185,7 @@ struct NativeRefreshTests {
       _ = try state.mark(.correct, for: question, now: 100)
     }
     _ = try await store.saveSession(state, accountID: initial.accountID, expectedRevision: nil)
+    let beforeUpload = try await store.refreshBaseline(accountID: initial.accountID)
     let gate = RefreshGate()
     let server = RefreshServer(gate: gate)
     let reader = await server.client
@@ -219,6 +220,22 @@ struct NativeRefreshTests {
     let saved = try #require(await store.assignments(accountID: initial.accountID).first)
     #expect(saved.level == 1 && saved.srsStage == 6)
     #expect(snapshot.assignments.first?.srsStageNumber == 6 && snapshot.pendingReviews == 0)
+    var empty = initial
+    empty.assignments = []
+    _ = try await store.applyDownload(empty, credentialID: "credential", baseline: beforeUpload)
+    #expect(try await store.assignments(accountID: initial.accountID) == [saved])
+    #expect(
+      try await store.accountState(accountID: initial.accountID)?.progress.first {
+        $0.subjectID == saved.subjectID
+      }?.srsStage == 6)
+    #expect(try await store.pendingReviews(accountID: initial.accountID).isEmpty)
+    var fresh = initial
+    fresh.assignments = [saved]
+    let current = try await store.refreshBaseline(accountID: initial.accountID)
+    let accepted = try await store.applyDownload(
+      fresh, credentialID: "credential", baseline: current)
+    #expect(try await store.assignments(accountID: initial.accountID) == [saved])
+    #expect(accepted.assignments.count == 1 && accepted.assignments.first?.srsStageNumber == 6)
   }
 
   @Test func fullReplacementRemovesStaleRowsButRetainsPendingRecoveryContent() async throws {
@@ -229,10 +246,15 @@ struct NativeRefreshTests {
       baseline: store.refreshBaseline(accountID: initial.accountID))
     let state = try session()
     _ = try await store.saveSession(state, accountID: initial.accountID, expectedRevision: nil)
+    #expect(!initial.voices.isEmpty && !initial.statistics.isEmpty && !initial.levels.isEmpty)
+    #expect(initial.subjects.contains { !$0.audio.isEmpty })
     var empty = initial
     empty.subjects = []
     empty.assignments = []
     empty.materials = []
+    empty.voices = []
+    empty.statistics = []
+    empty.levels = []
     _ = try await store.applyDownload(
       empty, credentialID: "credential",
       baseline: store.refreshBaseline(accountID: initial.accountID))
@@ -241,6 +263,12 @@ struct NativeRefreshTests {
     #expect(try await store.materials(accountID: initial.accountID).isEmpty)
     #expect(try await store.pendingReviews(accountID: initial.accountID).count == 1)
     #expect(try await store.snapshot(credentialID: "credential")?.subjects.isEmpty == true)
+    let accountState = try #require(await store.accountState(accountID: initial.accountID))
+    #expect(
+      accountState.voices.isEmpty && accountState.statistics.isEmpty && accountState.audio.isEmpty
+        && accountState.levels.isEmpty)
+    #expect(accountState.cursors.isEmpty)
+
   }
 
   @Test(arguments: ["failure", "identity"])
@@ -250,6 +278,17 @@ struct NativeRefreshTests {
     _ = try await store.applyDownload(
       initial, credentialID: "credential",
       baseline: store.refreshBaseline(accountID: initial.accountID))
+    let note = try #require(await store.materials(accountID: initial.accountID).first)
+    let draft = StudyMaterial(
+      subjectID: 1, meaningNote: "Pending during failed refresh 🐰\nLine two",
+      readingNote: "Exact reading\nいち", meaningSynonyms: ["Exact", "一"])
+    try await store.saveSubjectMaterial(
+      draft, accountID: initial.accountID, expectedRevision: note.revision)
+    let completed = try session()
+    let revision = try await store.saveSession(
+      completed, accountID: initial.accountID, expectedRevision: nil)
+    let pending = try await store.pendingReviews(accountID: initial.accountID)
+    let pendingMaterial = try #require(await store.materials(accountID: initial.accountID).first)
     let server = RefreshServer(fault: fault)
     let client = await server.client
     await #expect(throws: (any Error).self) {
@@ -258,6 +297,12 @@ struct NativeRefreshTests {
     #expect(try await store.snapshot(credentialID: "credential")?.savedAt == initial.fetchedAt)
     #expect(try await store.catalog(accountID: initial.accountID).count == 5)
     #expect(try await store.catalog(accountID: "different-account").isEmpty)
+    #expect(try await store.pendingReviews(accountID: initial.accountID) == pending)
+    #expect(try await store.session(accountID: initial.accountID)?.revision == revision)
+    let retained = try #require(await store.materials(accountID: initial.accountID).first)
+    #expect(
+      retained.material == draft && retained.pending
+        && retained.revision == pendingMaterial.revision)
   }
 
   @Test func cancellationAndOverlappingRefreshDoNotPublishLateResults() async throws {
@@ -298,5 +343,145 @@ struct NativeRefreshTests {
       try await store.refresh(credentialID: "credential", token: "fixture", client: client)
     }
     #expect(await server.count == count)
+  }
+}
+
+extension NativeRefreshTests {
+  @Test func pendingMaterialKeepsExactContentAndRevisionAfterStaleFullRefreshAndReopen()
+    async throws
+  {
+    let folder = URL.temporaryDirectory.appending(path: UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: folder) }
+    let url = folder.appending(path: "study.store")
+    let edited = StudyMaterial(
+      subjectID: 1, meaningNote: "  Offline\u{0000} note 🐰\nSecond line",
+      readingNote: "\nいち  ", meaningSynonyms: ["One, alone", "First\nonly", "一"])
+    let expectedRevision: UUID
+    let expectedServerID: Int64?
+    do {
+      let store = try await StudyStore.open(at: url)
+      let initial = try await download()
+      _ = try await store.applyDownload(
+        initial, credentialID: "credential",
+        baseline: store.refreshBaseline(accountID: initial.accountID))
+      let baseline = try await store.refreshBaseline(accountID: initial.accountID)
+      let original = try await store.subjectDetails(subjectID: 1, accountID: initial.accountID)
+      try await store.saveSubjectMaterial(
+        edited, accountID: initial.accountID,
+        expectedRevision: original.savedMaterial?.revision)
+      let pending = try #require(await store.materials(accountID: initial.accountID).first)
+      expectedRevision = pending.revision
+      expectedServerID = pending.serverID
+      _ = try await store.applyDownload(initial, credentialID: "credential", baseline: baseline)
+      var empty = initial
+      empty.materials = []
+      _ = try await store.applyDownload(empty, credentialID: "credential", baseline: baseline)
+      let saved = try #require(await store.materials(accountID: initial.accountID).first)
+      #expect(saved.material == edited && saved.pending && saved.revision == expectedRevision)
+    }
+    let reopened = try await StudyStore.open(at: url)
+    let restored = try #require(await reopened.materials(accountID: "fixture-user-id").first)
+    #expect(
+      restored.material == edited && restored.pending && restored.revision == expectedRevision)
+    #expect(
+      restored.serverID == expectedServerID && restored.attemptedRevision == nil
+        && restored.issue == nil)
+  }
+
+  @Test func replacementAssignmentIDsCannotDuplicateOrResurrectPendingReviews() async throws {
+    let store = try await store()
+    var value = try await download()
+    _ = try await store.applyDownload(
+      value, credentialID: "credential",
+      baseline: store.refreshBaseline(accountID: value.accountID))
+    var replacement = CatalogAssignment(id: 201, subjectID: 1, kind: .kanji)
+    replacement.level = 1
+    replacement.srsStage = 4
+    replacement.startedAt = 1
+    replacement.availableAt = 1
+    value.assignments = [replacement]
+    _ = try await store.applyDownload(
+      value, credentialID: "credential",
+      baseline: store.refreshBaseline(accountID: value.accountID))
+    #expect(try await store.assignments(accountID: value.accountID) == [replacement])
+    let baseline = try await store.refreshBaseline(accountID: value.accountID)
+    var session = try StudySession(
+      items: [replacement.sessionItem(id: 0, isLesson: false)], seed: 1)
+    while let question = session.nextQuestion() {
+      _ = try session.mark(.correct, for: question, now: 100)
+    }
+    try await store.saveSession(session, accountID: value.accountID, expectedRevision: nil)
+    let pending = try await store.pendingReviews(accountID: value.accountID)
+    var obsolete = CatalogAssignment(id: 301, subjectID: 1, kind: .kanji)
+    obsolete.level = 1
+    obsolete.srsStage = 1
+    obsolete.startedAt = 1
+    obsolete.availableAt = 1
+    value.assignments = [obsolete]
+    let snapshot = try await store.applyDownload(
+      value, credentialID: "credential", baseline: baseline)
+    #expect(try await store.assignments(accountID: value.accountID) == [replacement])
+    #expect(try await store.pendingReviews(accountID: value.accountID) == pending)
+    #expect(pending.count == 1 && snapshot.pendingReviews == 1 && snapshot.assignments.isEmpty)
+    #expect(try await store.accountState(accountID: value.accountID)?.progress.first?.srsStage == 4)
+  }
+
+  @Test func fullAssignmentRefreshPreservesPendingAndOtherMistakesWhilePruningObsoleteProgress()
+    async throws
+  {
+    let store = try await store()
+    var value = try await download()
+    var source = LegacyStudyExport(schemaVersion: 15, profile: value.profile)
+    source.subjects = value.subjects
+    for id: Int64 in [1, 2, 3] {
+      let kind = try #require(value.subjects.first { $0.id == id }).kind
+      var assignment = CatalogAssignment(id: 100 + id, subjectID: id, kind: kind)
+      assignment.level = 1
+      assignment.srsStage = id == 1 ? 5 : 2
+      assignment.startedAt = 1
+      assignment.availableAt = 1
+      source.assignments.append(assignment)
+      source.progress.append(
+        .init(
+          subjectID: id, level: 1, srsStage: assignment.srsStage,
+          kind: assignment.kind, lastMistakeLocalTime: "Exact local mistake \(id)",
+          legacyRevision: id, lastMistakeAt: 100 + id))
+    }
+    let queued = StudyReviewSubmission(
+      itemID: 0, subjectID: 1, assignmentID: 101, isLesson: false,
+      meaningWrong: true, readingWrong: false, meaningWrongCount: 2, readingWrongCount: 0,
+      createdAt: 200)
+    source.pendingReviews = [.init(assignment: source.assignments[0], submission: queued)]
+    _ = try await store.importLegacyAccount(
+      source, sourceID: "mixed-progress", verifiedAccountID: value.accountID,
+      verifiedUsername: value.profile.username, credentialID: "credential")
+    let pending = try await store.pendingReviews(accountID: value.accountID)
+    var changed = CatalogAssignment(id: 202, subjectID: 2, kind: source.assignments[1].kind)
+    changed.level = 1
+    changed.srsStage = 4
+    changed.startedAt = 1
+    changed.availableAt = 1
+    var stale = source.assignments[0]
+    stale.srsStage = 1
+    value.assignments = [stale, changed]
+    let snapshot = try await store.applyDownload(
+      value, credentialID: "credential",
+      baseline: store.refreshBaseline(accountID: value.accountID))
+    let progress = try #require(await store.accountState(accountID: value.accountID)).progress
+    #expect(progress.map(\.subjectID).sorted() == [1, 2])
+    let kept = try #require(progress.first { $0.subjectID == 1 })
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    #expect(try encoder.encode(kept) == encoder.encode(source.progress[0]))
+    let other = try #require(progress.first { $0.subjectID == 2 })
+    #expect(
+      other.srsStage == 4 && other.lastMistakeLocalTime == source.progress[1].lastMistakeLocalTime)
+    #expect(
+      other.lastMistakeAt == source.progress[1].lastMistakeAt
+        && other.legacyRevision == source.progress[1].legacyRevision)
+    #expect(try await store.pendingReviews(accountID: value.accountID) == pending)
+    #expect(pending.count == 1 && pending.first?.submission == queued)
+    #expect(snapshot.pendingReviews == 1 && snapshot.assignments.map(\.subjectID) == [2])
+    #expect(try await store.assignments(accountID: value.accountID).map(\.id) == [202])
   }
 }

@@ -178,9 +178,12 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 5), app.debugDescription)
   }
   @MainActor private func requestNativeLink(_ route: String) throws {
+    try requestNativeURL(URL(string: "usagiunagi:///" + route)!)
+  }
+  @MainActor private func requestNativeURL(_ url: URL) throws {
     let marker = FileManager.default.temporaryDirectory.appendingPathComponent(
       "usagi-warm-link.json")
-    let request = ["id": UUID().uuidString, "url": "usagiunagi:///" + route]
+    let request = ["id": UUID().uuidString, "url": url.absoluteString]
     try JSONSerialization.data(withJSONObject: request).write(to: marker, options: .atomic)
     let open = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Open"]
       .firstMatch
@@ -330,7 +333,7 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor private func attachHomeScreenshot(_ title: String) {
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = title
     attachment.lifetime = .keepAlways
     add(attachment)
@@ -479,7 +482,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
     confirmation.buttons["OK"].tap()
     XCTAssertFalse(confirmation.exists)
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     screenshot.name = "Native developer options and diagnostics"
     screenshot.lifetime = .keepAlways
     add(screenshot)
@@ -506,19 +509,25 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor private func launchOfflineAudio(extra: [String] = []) -> XCUIApplication {
-    let app = launchSettings(extra: ["AudioFlowFixture"] + extra)
+    let app = XCUIApplication()
+    app.launchArguments = ["--review-fixture", "--audio-fixture", "--light-fixture"] + extra
+    app.launch()
+    XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 10), app.debugDescription)
+    app.buttons["app.settings"].tap()
+    XCTAssertTrue(app.buttons["settings.page.reviews"].waitForExistence(timeout: 5))
     app.buttons["settings.page.reviews"].tap()
     let audio = app.buttons["reviewSettings.offlineAudio"]
     scrollTo(audio, in: app)
     audio.tap()
     XCTAssertTrue(app.navigationBars["Offline Audio"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.switches["offlineAudio.voice.1"].waitForExistence(timeout: 5))
     return app
   }
 
   @MainActor func testOfflineAudioVoiceChoicesAndCellularSettingPersist() {
     continueAfterFailure = false
     let app = launchOfflineAudio(extra: ["AudioHeldFixture"])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let enabled = app.switches["offlineAudio.enabled"]
     let cellular = app.switches["offlineAudio.cellular"]
     let first = app.switches["offlineAudio.voice.1"]
@@ -531,7 +540,7 @@ final class ReviewFlowTests: XCTestCase {
     setSettingsSwitch(first, on: false, in: app)
     XCTAssertEqual(second.value as? String, "1")
     setSettingsSwitch(cellular, on: true, in: app)
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     screenshot.name = "SwiftUI offline audio with selected voices"
     screenshot.lifetime = .keepAlways
     add(screenshot)
@@ -553,7 +562,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testOfflineAudioDownloadsKeepAndExplicitDeletion() {
     continueAfterFailure = false
     let app = launchOfflineAudio()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let enabled = app.switches["offlineAudio.enabled"]
     setSettingsSwitch(enabled, on: true, in: app)
     let status = app.staticTexts["Up to date"]
@@ -579,7 +588,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testOfflineAudioFailuresRemainVisibleAndCanRetry() {
     continueAfterFailure = false
     let app = launchOfflineAudio(extra: ["AudioFailedFixture"])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let enabled = app.switches["offlineAudio.enabled"]
     setSettingsSwitch(enabled, on: true, in: app)
     let error = app.staticTexts["offlineAudio.error"]
@@ -696,13 +705,11 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft() {
     continueAfterFailure = false
-    let app = launchSingleReview(extra: [
-      "-animateParticleExplosion", "YES", "-animatePlusOne", "YES", "-animateLevelUpPopup", "YES",
-    ])
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
-    field.typeText("personally")
+    field.typeText("one thing")
     app.buttons["review.submit"].tap()
     let feedback = app.descendants(matching: .any).matching(identifier: "review.success").firstMatch
     XCTAssertTrue(feedback.waitForExistence(timeout: 5))
@@ -710,7 +717,8 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertFalse(feedback.label.contains("+1"))
     XCTAssertFalse(feedback.label.contains("Estimated SRS"))
     field.tap()
-    field.typeText("wata")
+    field.typeText("hito")
+    XCTAssertEqual(field.value as? String, "ひと")
     app.buttons["review.settings"].tap()
     let correct = app.switches["reviewSettings.correctAnswerFeedback"]
     scrollTo(correct, in: app)
@@ -718,25 +726,29 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertEqual(app.switches["reviewSettings.completedItemFeedback"].value as? String, "1")
     XCTAssertEqual(app.switches["reviewSettings.srsMilestoneFeedback"].value as? String, "1")
     app.buttons["reviewSettings.done"].tap()
-    XCTAssertEqual(field.value as? String, "わた")
-    XCTAssertFalse(feedback.label.contains("Previous answer correct"))
+    XCTAssertEqual(field.value as? String, "ひと")
+    let correctFeedback = app.descendants(matching: .any).matching(
+      NSPredicate(
+        format: "identifier == %@ AND label CONTAINS %@", "review.success",
+        "Previous answer correct"))
+    XCTAssertEqual(correctFeedback.count, 0)
     app.buttons["review.settings"].tap()
     scrollTo(correct, in: app)
     XCTAssertEqual(correct.value as? String, "0")
     app.buttons["reviewSettings.done"].tap()
-    app.typeText("shijishin")
+    XCTAssertEqual(field.value as? String, "ひと")
+    field.typeText("tsu")
+    XCTAssertEqual(field.value as? String, "ひとつ")
     app.buttons["review.submit"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor
   func testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion() {
     continueAfterFailure = false
     changeReduceMotion(to: true, restoreAfterTest: true)
-    let app = launchSingleReview(extra: [
-      "ReviewFeedbackFixture", "-ankiMode", "YES",
-      "-ankiModeCombineReadingMeaning", "YES", "-animateParticleExplosion", "YES",
-      "-animatePlusOne", "YES", "-animateLevelUpPopup", "YES",
+    let app = launchNativeReview(extra: [
+      "--review-feedback-fixture", "--anki-fixture", "--combined-anki-fixture",
     ])
     defer { clearFixture(app) }
     app.buttons["review.submit"].tap()
@@ -747,7 +759,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(feedback.label.contains("+1 completed"))
     XCTAssertTrue(feedback.label.contains("Estimated SRS stage: Guru"))
     XCTAssertTrue(app.staticTexts["review.progress"].label.contains("1 completed"))
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     screenshot.name = "Native review feedback with Reduce Motion"
     screenshot.lifetime = .keepAlways
     add(screenshot)
@@ -767,7 +779,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(feedback.label.contains("Previous answer correct"))
     app.buttons["review.submit"].tap()
     app.buttons["review.correct"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor private func changeReduceMotion(to enabled: Bool, restoreAfterTest: Bool = false) {
@@ -833,7 +845,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(remaining.waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Stats"].firstMatch.isHittable)
     XCTAssertFalse(app.buttons["Done"].exists)
-    let expanded = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let expanded = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     expanded.name = "Inline offline curriculum coverage"
     expanded.lifetime = .keepAlways
     add(expanded)
@@ -889,7 +901,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Apprentice"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Guru"].exists)
     XCTAssertTrue(app.staticTexts["Radical"].exists)
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = "SwiftUI upcoming review breakdown"
     attachment.lifetime = .keepAlways
     add(attachment)
@@ -956,7 +968,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(tab.waitForExistence(timeout: 10))
     tab.tap()
     XCTAssertTrue(app.buttons["practice.katakana"].waitForExistence(timeout: 5))
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = "Native SwiftUI practice menu"
     attachment.lifetime = .keepAlways
     add(attachment)
@@ -1052,7 +1064,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     let question = app.staticTexts["review.question"]
     let prompt = app.staticTexts["review.prompt"]
-    let initial = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let initial = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     initial.name = "SwiftUI review question"
     initial.lifetime = .keepAlways
     add(initial)
@@ -1076,7 +1088,7 @@ final class ReviewFlowTests: XCTestCase {
       if summary.exists { break }
     }
     XCTAssertTrue(summary.waitForExistence(timeout: 10))
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = "Completed sample review session"
     attachment.lifetime = .keepAlways
     add(attachment)
@@ -1135,7 +1147,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertFalse(
       app.buttons["voice.submit"]
         .isEnabled)  // Kanji transcription is not a reading answer.
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = "Voice reading correction"
     attachment.lifetime = .keepAlways
     add(attachment)
@@ -1156,23 +1168,6 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 10), app.debugDescription)
     app.buttons["home.reviews"].tap()
     XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10), app.debugDescription)
-    return app
-  }
-
-  @MainActor
-  private func launchSingleReview(extra: [String] = []) -> XCUIApplication {
-    let app = XCUIApplication()
-    app.launchArguments =
-      [
-        "-FASTLANE_SNAPSHOT", "YES", "SingleReviewFixture",
-        "-groupMeaningReading", "YES", "-meaningFirst", "YES", "-ankiMode", "NO",
-        "-autoSwitchKeyboard", "NO", "-playAudioAutomatically", "NO",
-        "-allowSkippingReviews", "NO", "-showAnswerImmediately", "NO",
-        "-enableCheats", "YES",
-      ] + extra
-    app.launch()
-    startReviews(in: app)
-    XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
     return app
   }
 
@@ -1553,12 +1548,13 @@ extension ReviewFlowTests {
           form.swipeUp(velocity: .slow)
         }
       } else if details.exists && details.isHittable {
-        if towardTop || element.exists && element.frame.midY < details.frame.minY {
-          details.swipeDown(velocity: .slow)
-        } else {
-          details.swipeUp(velocity: .slow)
-        }
-      } else if home.exists {
+        let down = towardTop || element.exists && element.frame.midY < details.frame.minY
+        let start = details.coordinate(
+          withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.3 : 0.7))
+        let end = details.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.6 : 0.4))
+        start.press(
+          forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.15)
+      } else if home.exists && home.isHittable {
         // Keep drags clear of the floating tab bar, which covers the center in landscape.
         let down = towardTop || element.exists && element.frame.midY < home.frame.minY
         let start = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.25 : 0.7))
@@ -1574,7 +1570,7 @@ extension ReviewFlowTests {
     hierarchy.name = "Unreachable detail control"
     hierarchy.lifetime = .keepAlways
     add(hierarchy)
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     screenshot.name = "Unreachable detail control screen"
     screenshot.lifetime = .keepAlways
     add(screenshot)
@@ -1633,7 +1629,7 @@ extension ReviewFlowTests {
   @MainActor
   func testReviewDetailsConcealUnansweredReadingAndBlurTranslations() {
     continueAfterFailure = false
-    let app = launchSingleReview(extra: ["-blurContextSentences", "YES"])
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     revealIncorrectMeaning(in: app)
     let reading = app.descendants(matching: .any).matching(identifier: "subject.readingExplanation")
@@ -1646,26 +1642,39 @@ extension ReviewFlowTests {
     XCTAssertTrue(reading.waitForExistence(timeout: 5))
     let translation = app.buttons["subject.translation.0"]
     scrollTo(translation, in: app)
-    let english = app.staticTexts["Personally, I'm indifferent to the zoo's issues."]
+    let english = app.staticTexts["One, please."]
     XCTAssertFalse(english.exists)
     translation.tap()
     XCTAssertTrue(english.waitForExistence(timeout: 5))
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "Shared SwiftUI review details and sentence translation"
     attachment.lifetime = .keepAlways
     add(attachment)
   }
 
   @MainActor
-  func testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement() {
+  func testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement() throws {
     continueAfterFailure = false
-    let app = launchSingleReview(extra: ["MaterialConflictFixture"])
+    let token = "00000000-0000-4000-8000-000000000001"
+    let app = launchNativeReview(extra: [
+      "--material-conflict-fixture", "--fixture-event-token", token,
+    ])
     defer { clearFixture(app) }
     revealIncorrectMeaning(in: app)
     openMaterialEditor(in: app)
     let note = app.textViews["material.meaningNote"]
     note.tap()
     note.typeText("My draft survives")
+    XCTAssertFalse(app.textViews["material.readingNote"].exists)
+    try requestNativeURL(URL(string: "usagiunagi:///fixture/material-conflict/\(token)")!)
+    let status = app.descendants(matching: .any).matching(identifier: "fixture.eventStatus")
+      .firstMatch
+    let committed = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label == %@", "Concurrent material change committed"),
+      object: status)
+    XCTAssertEqual(XCTWaiter.wait(for: [committed], timeout: 5), .completed)
+    XCTAssertEqual(note.value as? String, "My draft survives")
+    XCTAssertFalse(app.textViews["material.readingNote"].exists)
     app.buttons["material.save"].tap()
     XCTAssertTrue(app.buttons["material.save"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["material.save"].isEnabled)
@@ -1690,6 +1699,85 @@ extension ReviewFlowTests {
       app.textViews["material.readingNote"].value as? String, "Concurrent hidden reading note")
     app.buttons["material.cancel"].tap()
   }
+  @MainActor
+  func testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents() throws {
+    continueAfterFailure = false
+    let token = "00000000-0000-4000-8000-000000000002"
+    let cases: [(name: String, arguments: [String], route: String)] = [
+      ("unarmed", ["--fixture-event-token", token], "material-conflict/\(token)"),
+      ("missing token", ["--material-conflict-fixture"], "material-conflict/\(token)"),
+      (
+        "wrong token", ["--material-conflict-fixture", "--fixture-event-token", token],
+        "material-conflict/00000000-0000-4000-8000-000000000003"
+      ),
+      (
+        "wrong path", ["--material-conflict-fixture", "--fixture-event-token", token],
+        "unknown-event/\(token)"
+      ),
+    ]
+    for fixture in cases {
+      try XCTContext.runActivity(named: fixture.name) { _ in
+        let app = launchNativeReview(extra: fixture.arguments)
+        defer { clearFixture(app) }
+        revealIncorrectMeaning(in: app)
+        openMaterialEditor(in: app)
+        let note = app.textViews["material.meaningNote"]
+        note.tap()
+        note.typeText("Only my local draft")
+        try requestNativeURL(URL(string: "usagiunagi:///fixture/\(fixture.route)")!)
+        let event = app.descendants(matching: .any).matching(
+          NSPredicate(
+            format: "identifier == %@ AND label != %@", "fixture.eventStatus", "")
+        ).firstMatch
+        XCTAssertFalse(event.waitForExistence(timeout: 1))
+        XCTAssertEqual(note.value as? String, "Only my local draft")
+        XCTAssertFalse(app.textViews["material.readingNote"].exists)
+        app.buttons["material.save"].tap()
+        XCTAssertFalse(app.buttons["material.save"].waitForExistence(timeout: 2))
+        app.buttons["All information"].tap()
+        openMaterialEditor(in: app)
+        XCTAssertEqual(note.value as? String, "Only my local draft")
+        XCTAssertEqual(app.textViews["material.readingNote"].value as? String, "")
+        XCTAssertFalse(app.staticTexts["Excluded from lessons and reviews"].exists)
+        app.buttons["material.cancel"].tap()
+      }
+    }
+  }
+
+  @MainActor
+  func testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit() throws {
+    continueAfterFailure = false
+    let token = "00000000-0000-4000-8000-000000000004"
+    let app = launchNativeReview(extra: [
+      "--material-conflict-fixture", "--fixture-event-token", token,
+      "--material-conflict-failure-fixture",
+    ])
+    defer { clearFixture(app) }
+    revealIncorrectMeaning(in: app)
+    openMaterialEditor(in: app)
+    let note = app.textViews["material.meaningNote"]
+    note.tap()
+    note.typeText("Draft after rejected event")
+    try requestNativeURL(URL(string: "usagiunagi:///fixture/material-conflict/\(token)")!)
+    let status = app.descendants(matching: .any).matching(identifier: "fixture.eventStatus")
+      .firstMatch
+    let failed = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label BEGINSWITH %@", "Fixture event failed: "),
+      object: status)
+    XCTAssertEqual(XCTWaiter.wait(for: [failed], timeout: 5), .completed)
+    XCTAssertNotEqual(status.label, "Concurrent material change committed")
+    XCTAssertEqual(note.value as? String, "Draft after rejected event")
+    XCTAssertFalse(app.textViews["material.readingNote"].exists)
+    app.buttons["material.save"].tap()
+    XCTAssertFalse(app.buttons["material.save"].waitForExistence(timeout: 2))
+    app.buttons["All information"].tap()
+    openMaterialEditor(in: app)
+    XCTAssertEqual(note.value as? String, "Draft after rejected event")
+    XCTAssertEqual(app.textViews["material.readingNote"].value as? String, "")
+    XCTAssertFalse(app.staticTexts["Excluded from lessons and reviews"].exists)
+    app.buttons["material.cancel"].tap()
+  }
+
 }
 
 extension ReviewFlowTests {
@@ -1762,7 +1850,7 @@ extension ReviewFlowTests {
     XCTAssertTrue(settingsPickerText(batch).contains("2"), batch.debugDescription)
     let limit = app.buttons["settings.apprenticeLessonsLimit"]
     XCTAssertTrue(settingsPickerText(limit).contains("50"), limit.debugDescription)
-    let image = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let image = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     image.name = "Native SwiftUI lesson settings"
     image.lifetime = .keepAlways
     add(image)
@@ -1856,7 +1944,7 @@ extension ReviewFlowTests {
     XCTAssertTrue(email.waitForExistence(timeout: 5))
     XCTAssertEqual(email.value as? String, "fixture@example.invalid")
     XCTAssertTrue(settingsPickerText(style).contains("Dark"), style.debugDescription)
-    let image = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let image = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     image.name = "Native SwiftUI appearance and notification settings"
     image.lifetime = .keepAlways
     add(image)
@@ -1941,7 +2029,7 @@ extension ReviewFlowTests {
     XCTAssertTrue(last.isHittable)
     for _ in 0..<4 where !app.buttons["catalog.level"].isHittable { app.swipeDown() }
     XCTAssertTrue(app.buttons["catalog.level"].isHittable)
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     screenshot.name = "SwiftUI level catalog with hidden answers"
     screenshot.lifetime = .keepAlways
     add(screenshot)
@@ -1989,7 +2077,7 @@ extension ReviewFlowTests {
     field.tap()
     field.typeText("personally")
     XCTAssertTrue(result.waitForExistence(timeout: 5))
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     screenshot.name = "SwiftUI catalog search"
     screenshot.lifetime = .keepAlways
     add(screenshot)
@@ -2014,7 +2102,7 @@ extension ReviewFlowTests {
     XCTAssertLessThan(due.frame.minY, lesson.frame.minY)
     XCTAssertTrue(app.buttons["catalog.subject.8790"].label.contains("Locked"))
     XCTAssertFalse(app.buttons["catalog.subject.689"].exists)
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     screenshot.name = "SwiftUI remaining items and next actions"
     screenshot.lifetime = .keepAlways
     add(screenshot)

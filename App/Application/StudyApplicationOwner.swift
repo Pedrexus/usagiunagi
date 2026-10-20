@@ -44,6 +44,14 @@ import SwiftUI
     preparation = task
     await task.value
   }
+  #if DEBUG
+    private(set) var fixtureEventStatus: String?
+    func receiveFixtureEvent(_ url: URL) -> Bool {
+      guard let event = NativeStudyFixture.receive(url) else { return false }
+      Task { fixtureEventStatus = await event.value }
+      return true
+    }
+  #endif
   func refreshInBackground() async -> Bool {
     guard !Task.isCancelled else { return false }
     await prepare()
@@ -118,7 +126,6 @@ struct StudyApplicationWindow: View {
           model: services.model, automaticSync: services.automaticSync,
           appName: AppIdentity.name, appearance: services.appearance, notice: services.notice,
           notifications: services.notifications,
-          diagnostics: services.database.map(SQLiteDiagnosticArchive.init),
           avatars: services.avatars, links: links
         )
         .environment(services.fonts).environment(services.audio)
@@ -140,11 +147,24 @@ struct StudyApplicationWindow: View {
       await owner.prepare()
       if !Task.isCancelled && scenePhase == .active { owner.services?.automaticSync.start() }
     }
-    .onOpenURL { url in if let link = StudyLink(url: url) { links.receive(link) } }
+    .onOpenURL { url in
+      #if DEBUG
+        if owner.receiveFixtureEvent(url) { return }
+      #endif
+      if let link = StudyLink(url: url) { links.receive(link) }
+    }
     .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
       if let url = activity.webpageURL, let link = StudyLink(url: url) { links.receive(link) }
     }
     .onContinueUserActivity(StudyActivity.reviews.rawValue) { _ in links.receive(.reviews) }
     .onContinueUserActivity(StudyActivity.lessons.rawValue) { _ in links.receive(.lessons) }
+    .overlay(alignment: .top) {
+      #if DEBUG
+        if let status = owner.fixtureEventStatus {
+          Text(status).font(.caption).accessibilityIdentifier("fixture.eventStatus")
+            .allowsHitTesting(false)
+        }
+      #endif
+    }
   }
 }

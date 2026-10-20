@@ -12,6 +12,7 @@ private actor SynchronizationServer {
   let failRead: Bool
   private(set) var subjectReads = 0
   private(set) var writes = 0
+  private(set) var writeBodies: [Data] = []
   private var material: [String: Any] = DownloadFixture.rows["study_materials"]!.first!
   init(
     gate: StudyTaskGate? = nil, failAfterWrite: Bool = false, pauseWrites: Bool = false,
@@ -32,6 +33,7 @@ private actor SynchronizationServer {
     }
     if request.httpMethod != "GET" {
       writes += 1
+      writeBodies.append(try #require(request.httpBody))
       if writes == 1, pauseWrites, let gate { await gate.pause() }
       let body = try JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
       var value = body["study_material"] as! [String: Any]
@@ -336,4 +338,59 @@ struct NativeSynchronizationTests {
     #expect(await server.writes == 1)
   }
 
+}
+
+extension NativeSynchronizationTests {
+  @Test func queuedSendReloadsAnInFlightEditAndCoalescesDuplicateRequests() async throws {
+    let store = try await store(pendingNote: true)
+    let gate = StudyTaskGate()
+    let server = SynchronizationServer(gate: gate, pauseWrites: true)
+    let client = await server.client
+    let first = try await store.synchronizationTask(
+      .uploadSavedWork(accountID: "fixture-user-id"), credentialID: "credential", token: "fixture",
+      client: client)
+    await gate.waitForEntry()
+    let attempted = try #require(await store.materials(accountID: "fixture-user-id").first)
+    let old = attempted.material
+    let edited = StudyMaterial(
+      subjectID: 1, meaningNote: "  In-flight edit 🐰\nSecond line",
+      readingNote: "\nいち  ", meaningSynonyms: ["One, alone", "First\nonly", "一"])
+    try await store.saveSubjectMaterial(
+      edited, accountID: "fixture-user-id", expectedRevision: attempted.revision)
+    let queued = try await store.synchronizationTask(
+      .sendSavedWork(accountID: "fixture-user-id"), credentialID: "credential", token: "fixture",
+      client: client)
+    let run = await store.synchronizationRun?.id
+    let duplicate = try await store.synchronizationTask(
+      .sendSavedWork(accountID: "fixture-user-id"), credentialID: "credential", token: "fixture",
+      client: client)
+    #expect(await store.synchronizationRun?.id == run)
+    #expect(await server.writes == 1)
+    let during = try #require(await store.materials(accountID: "fixture-user-id").first)
+    #expect(during.pending && during.material == edited && during.attemptedMaterial == old)
+    await gate.resume()
+    _ = try await first.value
+    for task in [queued, duplicate] {
+      #expect(try await task.value.upload?.uploadedMaterials == 1)
+    }
+    let saved = try #require(await store.materials(accountID: "fixture-user-id").first)
+    #expect(saved.material == edited && !saved.pending && saved.attemptedRevision == nil)
+    #expect(saved.serverID == attempted.serverID)
+    let bodies = await server.writeBodies
+    #expect(bodies.count == 2)
+    #expect(await server.writes == 2)
+    for (body, expected) in zip(bodies, [old, edited]) {
+      let actual = try JSONSerialization.jsonObject(with: body) as? NSDictionary
+      let expectedMaterial: [String: Any] = [
+        "meaning_note": expected.meaningNote, "reading_note": expected.readingNote,
+        "meaning_synonyms": expected.meaningSynonyms,
+      ]
+      let expectedBody = NSDictionary(dictionary: ["study_material": expectedMaterial])
+      #expect(actual == expectedBody)
+    }
+    _ = try await store.synchronize(
+      .uploadSavedWork(accountID: "fixture-user-id"),
+      credentialID: "credential", token: "fixture", client: client)
+    #expect(await server.writes == 2)
+  }
 }

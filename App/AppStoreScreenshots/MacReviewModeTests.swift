@@ -627,6 +627,27 @@
         app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "study-AppWindow-"))
           .count, 1)
     }
+    func testNativeStudyDiagnosticsUsesAccountScopedSharingAndReturnsToSettings() {
+      let app = launch([])
+      defer { app.terminate() }
+      app.buttons["app.settings"].click()
+      app.buttons["settings.developer"].click()
+      let export = app.descendants(matching: .any).matching(identifier: "developer.export")
+        .firstMatch
+      XCTAssertTrue(export.waitForExistence(timeout: 5), app.debugDescription)
+      XCTAssertEqual(export.label, "Export study diagnostics")
+      export.click()
+      XCTAssertTrue(
+        app.popovers.firstMatch.waitForExistence(timeout: 5) || app.menus.firstMatch.exists,
+        app.debugDescription)
+      app.typeKey(.escape, modifierFlags: [])
+      XCTAssertTrue(export.waitForExistence(timeout: 5))
+      app.buttons["Done"].click()
+      XCTAssertTrue(app.buttons["app.settings"].waitForExistence(timeout: 5))
+      XCTAssertEqual(
+        app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "study-AppWindow-"))
+          .count, 1)
+    }
     func testHomeForecastAndSavedSubjectSearchOpenNativeScreens() {
       let app = launch(["--light-fixture"])
       defer { app.terminate() }

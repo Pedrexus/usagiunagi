@@ -15,14 +15,13 @@ import SwiftUI
   let subjectSettings: StudySubjectSettings
   let appearance: ColorScheme?
   let notice: String?
-  let database: URL?
   let avatars: LegacyAvatarCache
 
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
     companion: StudyCompanionDelivery? = nil, avatars: LegacyAvatarCache? = nil,
-    appearance: ColorScheme? = nil, notice: String? = nil, database: URL? = nil,
+    appearance: ColorScheme? = nil, notice: String? = nil,
     paths: AsyncStream<Bool>? = nil
   ) {
     self.model = model
@@ -38,7 +37,6 @@ import SwiftUI
       store: DefaultsStudySubjectPreferences(defaults: defaults))
     self.appearance = appearance
     self.notice = notice
-    self.database = database
     self.avatars =
       avatars
       ?? LegacyAvatarCache(
@@ -73,7 +71,6 @@ import SwiftUI
           bundledFonts: mediaLayout == .legacyDocuments
             ? Bundle.main.resourceURL?.appending(path: "fonts") : nil)),
       audio: StudyAudioLibrary(
-        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion,
-      database: directory.appending(path: "study.store"))
+        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion)
   }
 }
