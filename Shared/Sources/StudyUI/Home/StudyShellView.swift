@@ -26,8 +26,6 @@ import SwiftUI
 
 public struct StudyShellView<Content: View>: View {
   let state: StudyShellState
-  let search: () -> Void
-  let settings: () -> Void
   let signIn: () -> Void
   let manageToken: (() -> Void)?
   let acknowledgeAccountIssue: () -> Void
@@ -36,14 +34,11 @@ public struct StudyShellView<Content: View>: View {
   let content: Content
 
   public init(
-    state: StudyShellState, search: @escaping () -> Void, settings: @escaping () -> Void,
-    signIn: @escaping () -> Void, manageToken: (() -> Void)?,
+    state: StudyShellState, signIn: @escaping () -> Void, manageToken: (() -> Void)?,
     acknowledgeAccountIssue: @escaping () -> Void,
     @ViewBuilder content: () -> Content
   ) {
     self.state = state
-    self.search = search
-    self.settings = settings
     self.signIn = signIn
     self.manageToken = manageToken
     self.acknowledgeAccountIssue = acknowledgeAccountIssue
@@ -65,12 +60,6 @@ public struct StudyShellView<Content: View>: View {
           )
           .font(.subheadline).foregroundStyle(.secondary).accessibilityIdentifier("app.level")
         }.frame(maxWidth: .infinity, alignment: .leading)
-        HStack(spacing: 8) {
-          Button("Search", systemImage: "magnifyingglass", action: search).accessibilityIdentifier(
-            "app.search")
-          Button("Settings", systemImage: "gearshape", action: settings).accessibilityIdentifier(
-            "app.settings")
-        }.labelStyle(.iconOnly).buttonStyle(.glass).controlSize(.large)
       }.padding(.horizontal, 16).padding(.vertical, 8)
       if state.onVacation {
         VStack(alignment: .leading, spacing: 6) {
