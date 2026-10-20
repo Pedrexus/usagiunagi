@@ -78,6 +78,8 @@ The watch settings and WidgetKit complications use SwiftUI. Reviews/Level remain
 
 The watch retains Apple's documented incremental `WKHostingController` path. The existing WatchKit extension product inherits `_WKExtensionMain`; availability of SwiftUI `App` and `WKApplicationDelegateAdaptor` alone does not establish its launch handoff. The current Apple workout sample has already converted its active target to an application, so it is not proof for changing this extension's linker settings. No speculative entry-point, bundle-identity or container migration is applied. The [watch checkpoint](Implementation/2026-10-20-watch-swiftui.json) records the source and SDK evidence.
 
+An October 21 trial confirms this boundary in the actual product: adding a SwiftUI app/delegate and removing the hosting scene compiles, but both watch architectures still link with `-e _WKExtensionMain`. Mainboard's maintained bundle inspector rejects that candidate when asked to forbid the legacy entry symbol. This does not prove a runtime failure; it proves that a green compiler result alone cannot establish the replacement launch path. The trial was reverted completely. Its receipts and the restored Release build are in the [watch follow-up](Implementation/2026-10-20-widgetkit.md#october-21-launch-handoff-trial).
+
 ## Remaining non-SwiftUI boundaries
 
 - The iOS Japanese answer field is a narrow UIKit adapter for keyboard-language selection, marked text, selection and caret behavior. It is not a second study screen. Removal requires equivalent native SwiftUI input behavior on physical devices.
@@ -86,7 +88,7 @@ The watch retains Apple's documented incremental `WKHostingController` path. The
 - The watch settings screen retains the three-line `WKHostingController` adapter and empty 18-line scene for its installed extension/defaults identity. WidgetKit owns complication rendering in all four accessory families; the original ClockKit class now only migrates installed faces. Shared-container access, signed face upgrades and physical delivery remain unvalidated. The final single-target watch lifecycle conversion is separate. The main iPhone/iPad/Mac app has no storyboard/controller host. See the [WidgetKit checkpoint](Implementation/2026-10-20-widgetkit.md).
 - Historical account conversion still needs SQLite3 and generated Swift protobuf messages. These decode old files; SwiftData cannot directly interpret the original custom schema.
 
-The old DEBUG UIKit host, duplicate controllers, fifteen iOS storyboards, generated navigation/assets wrappers, FMDB and associated dependency integration are being retired together. Three preexisting owner-edited legacy files remain untouched on disk and are excluded from targets. Old test sources still need their final-stage ports. No pass or final LOC/dependency acceptance follows from source deletion alone.
+The old DEBUG UIKit host, duplicate controllers, fifteen iOS storyboards, generated navigation/assets wrappers, FMDB and associated dependency integration are retired. Three preexisting owner-edited legacy files remain untouched on disk and are excluded from targets. Native test ports and remaining execution gates are tracked in [TASKS](TASKS.md). Source deletion alone does not establish final acceptance.
 
 ## Developer workflow
 
