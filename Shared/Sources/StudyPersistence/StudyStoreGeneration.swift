@@ -2,6 +2,7 @@ import CoreData
 import CryptoKit
 import Darwin
 import Foundation
+import StudyCore
 import SwiftData
 
 public enum StudyStoreOpeningError: Error, LocalizedError {
@@ -198,6 +199,7 @@ private struct StudyStoreGeneration: Sendable {
       let oldConfiguration = ModelConfiguration(
         schema: oldSchema, url: verification.appending(path: storeName), allowsSave: false,
         cloudKitDatabase: .none)
+      try validateCodableValues(at: verification.appending(path: storeName))
       let reader = StudyStore(
         modelContainer: try ModelContainer(
           for: oldSchema, configurations: oldConfiguration))
@@ -275,11 +277,108 @@ private struct StudyStoreGeneration: Sendable {
     return PhysicalSchema(storeType: storeType, entityHashes: hashes)
   }
   private func namedStore(at url: URL) throws -> StudyStore {
+    if manager.fileExists(atPath: url.path) { try validateCodableValues(at: url) }
     let schema = StudySchemaV1.schema
     let configuration = ModelConfiguration(schema: schema, url: url, cloudKitDatabase: .none)
     return StudyStore(
       modelContainer: try ModelContainer(
         for: schema, migrationPlan: StudySchemaMigrationPlan.self, configurations: configuration))
+  }
+  /// Binary projections avoid Core Data's fatal transformed-value decoding. Only active selected
+  /// stores and mutable verification/candidate images reach this method, never retained originals.
+  private func validateCodableValues(at url: URL) throws {
+    try requireRegular(url)
+    try Task.checkCancellation()
+    let schema = StudySchemaV1.schema
+    let options = [NSReadOnlyPersistentStoreOption: true]
+    let metadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+      type: .sqlite, at: url, options: options)
+    let model = try NSPersistentStoreCoordinator.cachedModelForPersistentStore(
+      at: url, options: options)
+    guard let frozen = NSManagedObjectModel.makeManagedObjectModel(for: schema),
+      metadata[NSStoreTypeKey] as? String == NSSQLiteStoreType,
+      let hashes = metadata[NSStoreModelVersionHashesKey] as? [String: Data],
+      hashes == model.entityVersionHashesByName && hashes == frozen.entityVersionHashesByName,
+      Set(hashes.keys) == Set(schema.entities.map(\.name))
+    else { throw StudyStoreOpeningError.invalidGeneration }
+    let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+    let persistent = try coordinator.addPersistentStore(type: .sqlite, at: url, options: options)
+    let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+    context.persistentStoreCoordinator = coordinator
+    do {
+      try context.performAndWait {
+        defer { context.reset() }
+        let schema = StudySchemaV1.schema
+        func decode<Value: Decodable>(_ type: Value.Type, _ data: Data) throws {
+          do { _ = try JSONDecoder().decode(type, from: data) } catch is DecodingError {
+            throw StudyStoreOpeningError.invalidGeneration
+          }
+        }
+        let validators: [String: (Data) throws -> Void] = [
+          "SnapshotRecord.snapshot": { try decode(StudySnapshot.self, $0) },
+          "SessionRecord.session": { try decode(StudySession.self, $0) },
+          "ReviewRecord.submission": { try decode(StudyReviewSubmission.self, $0) },
+          "ReviewRecord.originalItem": { try decode(StudySessionItem.self, $0) },
+          "ReviewRecord.originalAssignment": { try decode(CatalogAssignment?.self, $0) },
+          "ReviewRecord.issue": { try decode(StudyUploadIssue?.self, $0) },
+          "ImportReceipt.handoff": { try decode(StudyLegacyHandoff?.self, $0) },
+          "CatalogRecord.subject": { try decode(CatalogSubject.self, $0) },
+          "AssignmentRecord.assignment": { try decode(CatalogAssignment.self, $0) },
+          "AccountRecord.state": { try decode(StudyAccountState.self, $0) },
+          "MaterialRecord.issue": { try decode(StudyUploadIssue?.self, $0) },
+          "MaterialRecord.attemptedMaterial": { try decode(StudyMaterial?.self, $0) },
+          "MaterialRecord.recoveryBaseline": { try decode(StudyMaterialBaseline?.self, $0) },
+          "MaterialRecord.material": { try decode(StudyMaterial.self, $0) },
+          "ArchivedReviewRecord.answer": { try decode(ArchivedStudyReview.self, $0) },
+        ]
+        let fields = Set(
+          schema.entities.flatMap { entity in
+            entity.attributes.filter(\.isCodable).map { entity.name + "." + $0.name }
+          })
+        guard fields == Set(validators.keys) else {
+          throw StudyStoreOpeningError.invalidGeneration
+        }
+        for entity in schema.entities {
+          try Task.checkCancellation()
+          let attributes = entity.attributes.filter(\.isCodable)
+          guard !attributes.isEmpty else { continue }
+          guard
+            let description = NSEntityDescription.entity(forEntityName: entity.name, in: context)
+          else { throw StudyStoreOpeningError.invalidGeneration }
+          let request = NSFetchRequest<NSDictionary>(entityName: entity.name)
+          request.entity = description
+          request.resultType = .dictionaryResultType
+          request.propertiesToFetch = attributes.map { attribute in
+            let projection = NSExpressionDescription()
+            projection.name = attribute.name
+            projection.expression = NSExpression(forKeyPath: attribute.name)
+            projection.resultType = .binaryData
+            return projection
+          }
+          request.includesPendingChanges = false
+          for row in try context.fetch(request) {
+            try Task.checkCancellation()
+            for attribute in attributes {
+              let key = entity.name + "." + attribute.name
+              guard let validate = validators[key] else {
+                throw StudyStoreOpeningError.invalidGeneration
+              }
+              if let data = row[attribute.name] as? Data {
+                try validate(data)
+              } else if !attribute.isOptional
+                || !(row[attribute.name] == nil || row[attribute.name] is NSNull)
+              {
+                throw StudyStoreOpeningError.invalidGeneration
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      try coordinator.remove(persistent)
+      throw error
+    }
+    try coordinator.remove(persistent)
   }
   private func loadSelection() throws -> Selection {
     try requireRegular(selectionURL)

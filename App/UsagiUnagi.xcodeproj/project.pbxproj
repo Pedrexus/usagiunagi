@@ -47,6 +47,8 @@
 		A27700000000000000000001 /* StudyShellStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27700000000000000000002 /* StudyShellStateTests.swift */; };
 		A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27800000000000000000002 /* ReviewSessionOptionsTests.swift */; };
 		A27900000000000000000001 /* NativeAppAssemblyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27900000000000000000002 /* NativeAppAssemblyTests.swift */; };
+		A28700000000000000000001 /* WatchCompanionCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28700000000000000000002 /* WatchCompanionCacheTests.swift */; };
+		A28700000000000000000003 /* WatchCompanionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */; };
 		A27B00000000000000000001 /* NotificationFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27B00000000000000000002 /* NotificationFixture.swift */; };
 		A28000000000000000000001 /* StudyApplicationOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28000000000000000000002 /* StudyApplicationOwner.swift */; };
 		A28100000000000000000001 /* NativeRootFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28100000000000000000002 /* NativeRootFlowTests.swift */; platformFilter = ios; };
@@ -201,6 +203,7 @@
 		A27700000000000000000002 /* StudyShellStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyShellStateTests.swift; path = AppTests/StudyShellStateTests.swift; sourceTree = "<group>"; };
 		A27800000000000000000002 /* ReviewSessionOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewSessionOptionsTests.swift; path = AppTests/ReviewSessionOptionsTests.swift; sourceTree = "<group>"; };
 		A27900000000000000000002 /* NativeAppAssemblyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeAppAssemblyTests.swift; path = AppTests/NativeAppAssemblyTests.swift; sourceTree = "<group>"; };
+		A28700000000000000000002 /* WatchCompanionCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchCompanionCacheTests.swift; path = AppTests/WatchCompanionCacheTests.swift; sourceTree = "<group>"; };
 		A27B00000000000000000002 /* NotificationFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationFixture.swift; sourceTree = "<group>"; };
 		A28000000000000000000002 /* StudyApplicationOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyApplicationOwner.swift; path = Application/StudyApplicationOwner.swift; sourceTree = "<group>"; };
 		A28100000000000000000002 /* NativeRootFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRootFlowTests.swift; sourceTree = "<group>"; };
@@ -313,6 +316,7 @@
 				A27700000000000000000002 /* StudyShellStateTests.swift */,
 				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
 				A27900000000000000000002 /* NativeAppAssemblyTests.swift */,
+				A28700000000000000000002 /* WatchCompanionCacheTests.swift */,
 				A27000000000000000000002 /* NotificationPreferencesTests.swift */,
 				A27000000000000000000003 /* AppTests.xctest */,
 				631CAD62234AD5FC008CEA73 /* AnswerChecker.swift */,
@@ -768,6 +772,8 @@
 				A27700000000000000000001 /* StudyShellStateTests.swift in Sources */,
 				A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */,
 				A27900000000000000000001 /* NativeAppAssemblyTests.swift in Sources */,
+				A28700000000000000000001 /* WatchCompanionCacheTests.swift in Sources */,
+				A28700000000000000000003 /* WatchCompanionCache.swift in Sources */,
 				A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */,
 				F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */,
 				A7AC4D2FC92ED19AAC0BA475 /* LessonPreferenceTests.swift in Sources */,

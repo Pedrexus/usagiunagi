@@ -4,7 +4,7 @@ The primary product and design target is the iPhone/iOS study experience. iPad a
 
 The current implementation uses one SwiftUI app, `App/UsagiUnagiApp.swift`, for iPhone, iPad and native Mac. `App/UsagiUnagi.xcodeproj` has one multiplatform app scheme. Catalyst and the iPad compatibility destination are disabled. The main app, shared package and retained watch targets use Swift 6 language mode with the Xcode 27 / Swift 6.4 toolchain.
 
-The latest implementation is **not yet validated**. The owner requested production changes first, then comparison with the original Tsurukame, then tests. Historical receipts apply only to their recorded commits. [Current tasks](TASKS.md) track unfinished acceptance; [the migration specification](Migration.md) defines storage and account-safety contracts.
+Automated validation has passed within the scopes recorded in [current tasks](TASKS.md); rendered usability and signed-device acceptance remain unfinished. The owner requested production changes first, then comparison with the original Tsurukame, then tests. Historical receipts apply only to their recorded sources. [The migration specification](Migration.md) defines storage and account-safety contracts.
 
 | Location | Responsibility |
 | --- | --- |
@@ -31,9 +31,13 @@ iOS cold import reads the original database through SQLite3 in a read-only trans
 
 Production startup uses the owner-approved generation opener. It preserves a read-only source image, validates a separate candidate against physical schema metadata and complete values, durably selects that candidate, and retains its actor/lease for service ownership. The ten V1 model declarations preserve their original identities. Handoff values use typed equality so unordered preference Sets cannot falsely reject an equivalent store; session/catalog order stays significant. Disposable frozen base/WAL adoption, exact records, lease refusal, writes and abrupt-process reopens pass on Mac; wider G7 failures and frozen-store iOS adoption remain open. Historical nested decoders need independent freezing before a V2/property change. See the [implementation checkpoint](Implementation/2026-10-20-native-store-opening.md) and [migration specification](Migration.md).
 
+Existing store images receive a read-only Core Data payload preflight before SwiftData property decoding. Public binary expression projections and the exact frozen model hashes let the existing generation owner validate all fifteen Codable fields without triggering SwiftData's fatal transformed-value decoder. Normal queries/writes remain on SwiftData models and the store actor. The two actual malformed-payload regressions now refuse through the existing startup error path; broader corruption/device/performance acceptance remains open. This adds no per-launch clone or storage service. See the [follow-up evidence](Implementation/2026-10-21-adaptive-validation.md).
+
 ## Study experience
 
 Use standard SwiftUI adaptation directly: semantic toolbar actions, native search placement, form presentation sizing, `ViewThatFits`/adaptive grids and `AnyLayout` driven by the offered viewport and Dynamic Type. Avoid parallel phone/tablet/desktop feature flows, an `isMac` utility layer or a generic platform capability framework. A view should only need an OS branch when an actual API or supported service is unavailable; keep that boundary narrow and explain it below. Do not hide a removable condition inside a helper or sacrifice Japanese input, accessibility, keyboard behavior or offline study merely to reduce a count.
+
+The remaining shared-UI OS conditions configure Japanese input, iOS keyboard traits, audio interruption, notification authorization/system Settings and activity prediction. They do not choose separate layouts or navigation flows. Keep these checks beside their unavailable APIs; replacing them with generic flags would add indirection without making the experience adapt better. Review new screens first at iPhone portrait width, then with larger text, the keyboard present, a short landscape viewport and freely resized windows.
 
 Review layout defaults to stacked iPhone portrait content. A short, wide study viewport can put the question beside one answer column, retaining the input subtree and its focus owner. Window/keyboard resizing must not trigger an extra focus command. Form sheets, search and title display use the same declarations on all three platforms. Native lesson reordering uses the SwiftUI 27 container rather than separate desktop buttons and mobile edit mode.
 

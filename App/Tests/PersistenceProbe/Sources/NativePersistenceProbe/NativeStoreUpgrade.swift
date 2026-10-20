@@ -3,6 +3,7 @@
   import CryptoKit
   import Darwin
   import Foundation
+  import SQLite3
   import StudyCore
   import SwiftData
 
@@ -32,6 +33,8 @@
       "probe-application-opening", "initialize-application-opening",
       "verify-application-opening", "write-application-opening", "lease-application-opening",
       "refuse-application-opening",
+      "probe-application-payload-corruption", "inspect-application-payload",
+      "probe-application-payload-validation", "inspect-application-raw-payload",
     ]
     private static let marker = Data("usagi-native-upgrade-disposable-v1".utf8)
 
@@ -44,7 +47,38 @@
         try applicationExperiment(frozen: url)
         return
       }
+      if command == "probe-application-payload-corruption" {
+        try payloadExperiment(frozen: url)
+        return
+      }
+      if command == "probe-application-payload-validation" {
+        try payloadExperiment(frozen: url, validateRaw: true)
+        return
+      }
       try requireDisposable(url)
+      if command == "inspect-application-raw-payload" {
+        do {
+          try validateRawPayloads(application: url)
+          log("RAW PAYLOADS VALID: all declared V1 Codable projections checked")
+          _exit(0)
+        } catch {
+          let failure = error as NSError
+          log("RAW PAYLOADS REFUSED: \(failure.domain)/\(failure.code): \(failure)")
+          _exit(74)
+        }
+      }
+      if command == "inspect-application-payload" {
+        do {
+          let store = try await StudyStore.openApplication(in: url.deletingLastPathComponent())
+          let state = try await store.nativeBaselineState()
+          log("ACCEPTED MALFORMED PAYLOAD: \(state.records.count) records")
+          _exit(0)
+        } catch {
+          let failure = error as NSError
+          log("REFUSED MALFORMED PAYLOAD: \(failure.domain)/\(failure.code): \(failure)")
+          _exit(74)
+        }
+      }
       if command.hasSuffix("application-opening") {
         try await applicationCommand(command, url: url)
         return
@@ -279,6 +313,253 @@
       log("SCOPE: production Mac opener/restarts, not mid-copy interruption, disk-full, V2 or iOS")
     }
 
+    private struct PayloadOutcome: Codable {
+      let field: String
+      let termination: String
+      let status: Int32
+      let originalUnchanged: Bool
+      let retainedUnchanged: Bool
+      let selectionUnchanged: Bool
+      let generationNamesUnchanged: Bool
+      let candidateChangedFiles: [String]
+      let output: String
+    }
+
+    private static func payloadExperiment(frozen: URL, validateRaw: Bool = false) throws {
+      let manager = FileManager.default
+      let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+      let source = frozen.deletingLastPathComponent()
+      let pristine = try hashes(in: source)
+      let root = URL.temporaryDirectory.appending(path: "native-upgrade-\(UUID())")
+      try manager.createDirectory(at: root, withIntermediateDirectories: true)
+      try marker.write(to: root.appending(path: ".disposable"), options: .atomic)
+      log("DISPOSABLE PAYLOAD PROBE: \(root.path)")
+      var outcomes: [PayloadOutcome] = []
+      for field in ["AccountRecord.state", "MaterialRecord.issue"] {
+        let directory = root.appending(path: field)
+        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (name, bytes) in try applicationSource(in: source) {
+          try bytes.write(to: directory.appending(path: name))
+        }
+        let url = directory.appending(path: "study.store")
+        try encode(manifest.expected, to: directory.appendingPathExtension("expected.plist"))
+        try child("verify-application-opening", store: url)
+        let selector = directory.appending(path: "store-selection.plist")
+        let selection = try Data(contentsOf: selector)
+        guard
+          let fields = try PropertyListSerialization.propertyList(
+            from: selection, format: nil) as? [String: Any],
+          fields["phase"] as? String == "selected",
+          let candidate = fields["candidate"] as? String, UUID(uuidString: candidate) != nil,
+          let retained = fields["retained"] as? String, UUID(uuidString: retained) != nil
+        else { throw NativeStoreBaseline.Failure(description: "Missing verified selection") }
+        let generations = directory.appending(path: "generations")
+        let names = Set(try manager.contentsOfDirectory(atPath: generations.path))
+        let original = try applicationSource(in: directory)
+        let retainedURL = generations.appending(path: retained)
+        let retainedBytes = try applicationSource(in: retainedURL)
+        let candidateURL = generations.appending(path: candidate).appending(path: "study.store")
+        if validateRaw {
+          let validation = try child(
+            "inspect-application-raw-payload", store: url,
+            status: nil,
+            output: root.appending(path: field + ".valid-raw.log"))
+          log("VALID RAW RESULT: \(validation.reason), status=\(validation.status)")
+          guard validation.reason == .exit && validation.status == 0 else {
+            log("FAIL: raw preflight could not validate an intact fixture; no corruption attempted")
+            _exit(1)
+          }
+        }
+        try corruptPayload(field, application: url, selected: candidateURL)
+        let corrupted = try hashes(in: candidateURL.deletingLastPathComponent())
+        let output = root.appending(path: field + ".child.log")
+        let result = try child(
+          validateRaw ? "inspect-application-raw-payload" : "inspect-application-payload",
+          store: url, status: nil, output: output)
+        let after = try hashes(in: candidateURL.deletingLastPathComponent())
+        let outcome = PayloadOutcome(
+          field: field, termination: result.reason == .exit ? "exit" : "uncaughtSignal",
+          status: result.status,
+          originalUnchanged: try applicationSource(in: directory) == original,
+          retainedUnchanged: try applicationSource(in: retainedURL) == retainedBytes,
+          selectionUnchanged: try Data(contentsOf: selector) == selection,
+          generationNamesUnchanged:
+            Set(try manager.contentsOfDirectory(atPath: generations.path)) == names,
+          candidateChangedFiles:
+            Set(corrupted.keys).union(after.keys).filter { corrupted[$0] != after[$0] }.sorted(),
+          output: output.path)
+        outcomes.append(outcome)
+        log(
+          "PAYLOAD RESULT: \(field), \(outcome.termination)/\(outcome.status), output=\(output.path)"
+        )
+      }
+      try encode(outcomes, to: root.appending(path: "payload-outcomes.plist"))
+      try NativeStoreBaseline.require(try hashes(in: source) == pristine, "Frozen fixture changed")
+      try NativeStoreBaseline.require(
+        outcomes.allSatisfy {
+          $0.originalUnchanged && $0.retainedUnchanged && $0.selectionUnchanged
+            && $0.generationNamesUnchanged
+        }, "Payload opening changed original/retained/selection bytes or generation membership")
+      log("PASS: frozen fixture, original, retained, selection and generation names preserved")
+      guard outcomes.allSatisfy({ $0.termination == "exit" && $0.status == 74 }) else {
+        log("FAIL: malformed payload did not safely refuse; signals and acceptance remain failures")
+        _exit(1)
+      }
+      log("PASS: both malformed payloads refused through a thrown error before returning an owner")
+      if validateRaw {
+        log(
+          "EXPERIMENT ONLY: raw projections; production-opener acceptance is a separate command")
+      }
+      log("SCOPE: disposable selected-store payloads on Mac, not corruption recovery or iOS proof")
+    }
+
+    private static func validateRawPayloads(application: URL) throws {
+      try requireDisposable(application)
+      let manager = FileManager.default
+      let directory = application.deletingLastPathComponent()
+      let root = directory.deletingLastPathComponent()
+      let selection = try Data(contentsOf: directory.appending(path: "store-selection.plist"))
+      guard
+        let fields = try PropertyListSerialization.propertyList(
+          from: selection, format: nil) as? [String: Any],
+        fields["phase"] as? String == "selected",
+        let candidate = fields["candidate"] as? String, UUID(uuidString: candidate) != nil
+      else { throw NativeStoreBaseline.Failure(description: "Missing selected payload source") }
+      let verification = root.appending(path: "raw-verification-\(UUID())")
+      let reference = root.appending(path: "raw-reference-\(UUID())")
+      for (from, to) in [
+        (directory.appending(path: "generations/\(candidate)"), verification),
+        (directory, reference),
+      ] {
+        try manager.createDirectory(at: to, withIntermediateDirectories: true)
+        for (name, bytes) in try applicationSource(in: from) {
+          try bytes.write(to: to.appending(path: name))
+        }
+      }
+      let options = [NSReadOnlyPersistentStoreOption: true]
+      let url = verification.appending(path: "study.store")
+      let metadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+        type: .sqlite, at: url, options: options)
+      let expected = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+        type: .sqlite, at: reference.appending(path: "study.store"), options: options)
+      let model = try NSPersistentStoreCoordinator.cachedModelForPersistentStore(
+        at: url, options: options)
+      guard
+        let frozenModel = NSManagedObjectModel.makeManagedObjectModel(for: StudySchemaV1.schema),
+        let hashes = metadata[NSStoreModelVersionHashesKey] as? [String: Data],
+        let expectedHashes = expected[NSStoreModelVersionHashesKey] as? [String: Data],
+        metadata[NSStoreTypeKey] as? String == NSSQLiteStoreType,
+        hashes == expectedHashes && hashes == model.entityVersionHashesByName,
+        hashes == frozenModel.entityVersionHashesByName,
+        Set(hashes.keys) == Set(NativeStoreBaseline.models)
+      else {
+        throw NativeStoreBaseline.Failure(description: "Raw projection model identity changed")
+      }
+      let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+      let persistent = try coordinator.addPersistentStore(
+        type: .sqlite, at: url, options: options)
+      defer { try? coordinator.remove(persistent) }
+      let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+      context.persistentStoreCoordinator = coordinator
+      try context.performAndWait {
+        func decode<Value: Decodable>(_ type: Value.Type, _ data: Data) throws {
+          _ = try JSONDecoder().decode(type, from: data)
+        }
+        let validators: [String: (Data) throws -> Void] = [
+          "SnapshotRecord.snapshot": { try decode(StudySnapshot.self, $0) },
+          "SessionRecord.session": { try decode(StudySession.self, $0) },
+          "ReviewRecord.submission": { try decode(StudyReviewSubmission.self, $0) },
+          "ReviewRecord.originalItem": { try decode(StudySessionItem.self, $0) },
+          "ReviewRecord.originalAssignment": { try decode(CatalogAssignment?.self, $0) },
+          "ReviewRecord.issue": { try decode(StudyUploadIssue?.self, $0) },
+          "ImportReceipt.handoff": { try decode(StudyLegacyHandoff?.self, $0) },
+          "CatalogRecord.subject": { try decode(CatalogSubject.self, $0) },
+          "AssignmentRecord.assignment": { try decode(CatalogAssignment.self, $0) },
+          "AccountRecord.state": { try decode(StudyAccountState.self, $0) },
+          "MaterialRecord.issue": { try decode(StudyUploadIssue?.self, $0) },
+          "MaterialRecord.attemptedMaterial": { try decode(StudyMaterial?.self, $0) },
+          "MaterialRecord.recoveryBaseline": { try decode(StudyMaterialBaseline?.self, $0) },
+          "MaterialRecord.material": { try decode(StudyMaterial.self, $0) },
+          "ArchivedReviewRecord.answer": { try decode(ArchivedStudyReview.self, $0) },
+        ]
+        var seen: Set<String> = []
+        for entity in StudySchemaV1.schema.entities.sorted(by: { $0.name < $1.name }) {
+          let attributes = entity.attributes.filter(\.isCodable).sorted { $0.name < $1.name }
+          guard !attributes.isEmpty else { continue }
+          let request = NSFetchRequest<NSDictionary>(entityName: entity.name)
+          guard
+            let description = NSEntityDescription.entity(forEntityName: entity.name, in: context)
+          else { throw NativeStoreBaseline.Failure(description: "Missing raw entity") }
+          request.entity = description
+          request.resultType = .dictionaryResultType
+          request.propertiesToFetch = attributes.map { attribute in
+            let projection = NSExpressionDescription()
+            projection.name = attribute.name
+            projection.expression = NSExpression(forKeyPath: attribute.name)
+            projection.resultType = .binaryData
+            return projection
+          }
+          request.includesPendingChanges = false
+          let rows = try context.fetch(request)
+          for attribute in attributes {
+            let key = entity.name + "." + attribute.name
+            guard let validate = validators[key] else {
+              throw NativeStoreBaseline.Failure(description: "Uncovered V1 payload: \(key)")
+            }
+            var dataCount = 0
+            var nullCount = 0
+            for row in rows {
+              if let data = row[attribute.name] as? Data {
+                try validate(data)
+                dataCount += 1
+              } else if attribute.isOptional,
+                row[attribute.name] == nil || row[attribute.name] is NSNull
+              {
+                nullCount += 1
+              } else {
+                throw NativeStoreBaseline.Failure(description: "Raw Data unavailable: \(key)")
+              }
+            }
+            seen.insert(key)
+            log("RAW FIELD: \(key), Data=\(dataCount), null=\(nullCount)")
+          }
+        }
+        try NativeStoreBaseline.require(
+          seen == Set(validators.keys), "Not all 15 V1 fields fetched")
+      }
+    }
+
+    private static func corruptPayload(_ field: String, application: URL, selected: URL) throws {
+      try requireDisposable(application)
+      let directory = application.deletingLastPathComponent().resolvingSymlinksInPath()
+      let candidate = selected.resolvingSymlinksInPath()
+      try NativeStoreBaseline.require(
+        candidate.path.hasPrefix(directory.appending(path: "generations").path + "/")
+          && candidate.lastPathComponent == "study.store",
+        "SQL corruption requires an existing selected store in the marked disposable image")
+      let sql: String
+      switch field {
+      case "AccountRecord.state":
+        sql =
+          "UPDATE ZACCOUNTRECORD SET ZSTATE = x'7b' WHERE Z_PK = (SELECT MIN(Z_PK) FROM ZACCOUNTRECORD WHERE ZSTATE IS NOT NULL)"
+      case "MaterialRecord.issue":
+        sql =
+          "UPDATE ZMATERIALRECORD SET ZISSUE = x'7b' WHERE Z_PK = (SELECT MIN(Z_PK) FROM ZMATERIALRECORD WHERE ZISSUE IS NOT NULL)"
+      default: throw NativeStoreBaseline.Failure(description: "Unknown corruption field")
+      }
+      var database: OpaquePointer?
+      let opened = sqlite3_open_v2(candidate.path, &database, SQLITE_OPEN_READWRITE, nil)
+      guard opened == SQLITE_OK, let database else {
+        if let database { sqlite3_close(database) }
+        throw NativeStoreBaseline.Failure(description: "Disposable SQL open failed: \(opened)")
+      }
+      defer { sqlite3_close(database) }
+      try NativeStoreBaseline.require(
+        sqlite3_exec(database, sql, nil, nil, nil) == SQLITE_OK && sqlite3_changes(database) == 1,
+        "The single selected non-null payload was not corrupted")
+      log("CORRUPTED DISPOSABLE: \(field), one stored JSON blob replaced with truncated object")
+    }
+
     private static func applicationSource(in directory: URL) throws -> [String: Data] {
       var result: [String: Data] = [:]
       for name in ["study.store", "study.store-wal", "study.store-shm"] {
@@ -357,17 +638,30 @@
       try encode(expected, to: expectedURL(url))
       for _ in 0..<2 { try child("verify-native-upgrade", store: url) }
     }
-    private static func child(_ command: String, store: URL, status: Int32 = 0) throws {
+    @discardableResult private static func child(
+      _ command: String, store: URL, status: Int32? = 0, output: URL? = nil
+    ) throws -> (reason: Process.TerminationReason, status: Int32) {
       let process = Process()
       process.executableURL = Bundle.main.executableURL
       process.arguments = [command, store.path]
-      process.standardOutput = FileHandle.standardOutput
-      process.standardError = FileHandle.standardError
+      let outputHandle: FileHandle?
+      if let output {
+        try Data().write(to: output)
+        outputHandle = try FileHandle(forWritingTo: output)
+      } else {
+        outputHandle = nil
+      }
+      defer { try? outputHandle?.close() }
+      process.standardOutput = outputHandle ?? FileHandle.standardOutput
+      process.standardError = outputHandle ?? FileHandle.standardError
       try process.run()
       process.waitUntilExit()
-      try NativeStoreBaseline.require(
-        process.terminationReason == .exit && process.terminationStatus == status,
-        "\(command) process failed: \(process.terminationStatus)")
+      if let status {
+        try NativeStoreBaseline.require(
+          process.terminationReason == .exit && process.terminationStatus == status,
+          "\(command) process failed: \(process.terminationStatus)")
+      }
+      return (process.terminationReason, process.terminationStatus)
     }
     private static func requireDisposable(_ url: URL) throws {
       let root = url.resolvingSymlinksInPath().deletingLastPathComponent()

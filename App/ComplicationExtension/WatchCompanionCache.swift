@@ -21,7 +21,7 @@ enum ComplicationDataSource: Int, Codable, Sendable {
 }
 
 /// The original phone packet; decoding never turns missing data into a verified zero.
-struct WatchCompanionSnapshot: Codable, Sendable {
+struct WatchCompanionSnapshot: Codable, Equatable, Sendable {
   let reviews: Int
   let nextHour: Int
   let hours: [Int]
@@ -73,20 +73,23 @@ struct WatchCompanionSnapshot: Codable, Sendable {
     return dates + [expiresAt]
   }
 
+  fileprivate var isValid: Bool {
+    sent > 0 && reviews >= 0 && nextHour >= 0 && level >= 0 && learned >= 0 && total >= 0
+      && hours.allSatisfy { $0 >= 0 }
+  }
+
   static func decode(_ packet: [String: Any]) -> Self? {
     guard
       let data = try? PropertyListSerialization.data(
         fromPropertyList: packet, format: .binary, options: 0),
       let value = try? PropertyListDecoder().decode(Self.self, from: data),
-      value.sent > 0, value.reviews >= 0, value.nextHour >= 0,
-      value.level >= 0, value.learned >= 0, value.total >= 0,
-      value.hours.allSatisfy({ $0 >= 0 })
+      value.isValid
     else { return nil }
     return value
   }
 }
 
-struct WatchCompanionState: Codable, Sendable {
+struct WatchCompanionState: Codable, Equatable, Sendable {
   var sourceRawValue = ComplicationDataSource.reviews.rawValue
   var snapshot: WatchCompanionSnapshot?
 
@@ -102,32 +105,47 @@ struct WatchCompanionCache: Sendable {
   static let widgetKind = "StudyComplication"
   private static let dataKey = "LastKnownData"
 
-  enum CacheError: Error { case sharedContainerUnavailable }
+  private let defaultsSuiteName: String?
+  private let mirrorURL: URL?
+
+  init(defaultsSuiteName: String? = nil, mirrorURL: URL? = Self.snapshotURL) {
+    self.defaultsSuiteName = defaultsSuiteName
+    self.mirrorURL = mirrorURL
+  }
+
+  enum CacheError: Error { case defaultsUnavailable, sharedContainerUnavailable }
+
+  private var defaults: UserDefaults? {
+    if let defaultsSuiteName { UserDefaults(suiteName: defaultsSuiteName) } else { .standard }
+  }
 
   var state: WatchCompanionState {
-    WatchCompanionState(
-      sourceRawValue: UserDefaults.standard.integer(forKey: Self.sourceKey),
-      snapshot: UserDefaults.standard.dictionary(forKey: Self.dataKey)
+    guard let defaults else { return WatchCompanionState() }
+    return WatchCompanionState(
+      sourceRawValue: defaults.integer(forKey: Self.sourceKey),
+      snapshot: defaults.dictionary(forKey: Self.dataKey)
         .flatMap(WatchCompanionSnapshot.decode))
   }
 
-  static func widgetState() -> WatchCompanionState {
-    guard let url = snapshotURL, let data = try? Data(contentsOf: url),
-      let value = try? PropertyListDecoder().decode(WatchCompanionState.self, from: data)
+  static func widgetState(at url: URL? = snapshotURL) -> WatchCompanionState {
+    guard let url, let data = try? Data(contentsOf: url),
+      var value = try? PropertyListDecoder().decode(WatchCompanionState.self, from: data)
     else { return WatchCompanionState() }
+    if let snapshot = value.snapshot, !snapshot.isValid { value.snapshot = nil }
     return value
   }
 
   func receive(_ packet: [String: Any], at date: Date = .now) -> Bool {
-    guard let snapshot = WatchCompanionSnapshot.decode(packet),
+    guard let defaults, let snapshot = WatchCompanionSnapshot.decode(packet),
       snapshot.sentAt >= date.addingTimeInterval(-7200)
     else { return false }
-    UserDefaults.standard.set(packet, forKey: Self.dataKey)
+    defaults.set(packet, forKey: Self.dataKey)
     return true
   }
 
   func publish() throws {
-    guard let url = Self.snapshotURL else { throw CacheError.sharedContainerUnavailable }
+    guard defaults != nil else { throw CacheError.defaultsUnavailable }
+    guard let url = mirrorURL else { throw CacheError.sharedContainerUnavailable }
     let encoder = PropertyListEncoder()
     encoder.outputFormat = .binary
     try encoder.encode(state).write(to: url, options: .atomic)

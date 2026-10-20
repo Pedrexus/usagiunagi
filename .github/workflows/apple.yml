@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 1159d0d5d30abcab0891326353e9bc97b4d2bea1
+          ref: 7776240c963a766e733d2ada28255e1f151fd541
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -71,6 +71,7 @@ jobs:
           # Disposable unchanged-schema experiment; not production G7/cutover acceptance.
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe probe-native-upgrade App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store 2>&1 | tee "$report/native-upgrade.log"
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe probe-application-opening App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store 2>&1 | tee "$report/application-opening.log"
+          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe probe-application-payload-corruption App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store 2>&1 | tee "$report/application-payload-corruption.log"
           set -o pipefail
           for phase in import-handoff save-handoff activate-handoff; do
             case "$phase" in
@@ -120,7 +121,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 1159d0d5d30abcab0891326353e9bc97b4d2bea1
+          ref: 7776240c963a766e733d2ada28255e1f151fd541
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -202,7 +203,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 1159d0d5d30abcab0891326353e9bc97b4d2bea1
+          ref: 7776240c963a766e733d2ada28255e1f151fd541
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
