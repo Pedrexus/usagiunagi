@@ -1203,6 +1203,64 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor
+  func testPreviousSubjectReturnRestoresTypingFocusAndPreservesDraft() {
+    continueAfterFailure = false
+    let app = launchNativeReview(extra: ["--review-feedback-fixture"])
+    defer { clearFixture(app) }
+    let field = app.textFields["review.answer"]
+    let question = app.staticTexts["review.question"]
+    let prompt = app.staticTexts["review.prompt"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    let completedQuestion = question.value as? String ?? ""
+    let answers = ["一つ": ("one thing", "hitotsu"), "二つ": ("two things", "futatsu")]
+    guard let completedAnswers = answers[completedQuestion] else {
+      XCTFail("Unexpected fixture question: \(completedQuestion)")
+      return
+    }
+    XCTAssertTrue(prompt.label.contains("Meaning"))
+    field.tap()
+    field.typeText(completedAnswers.0)
+    app.buttons["review.submit"].tap()
+    let reading = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label CONTAINS %@", "Reading"), object: prompt)
+    XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+    field.tap()
+    field.typeText(completedAnswers.1)
+    app.buttons["review.submit"].tap()
+    let progress = app.staticTexts["review.progress"]
+    let completed = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "label BEGINSWITH %@", "1 completed"), object: progress)
+    XCTAssertEqual(XCTWaiter.wait(for: [completed], timeout: 5), .completed)
+    let remainingQuestion = question.value as? String ?? ""
+    XCTAssertNotEqual(remainingQuestion, completedQuestion)
+    XCTAssertNotNil(answers[remainingQuestion])
+    XCTAssertTrue(prompt.label.contains("Meaning"))
+    let currentPrompt = prompt.label
+    let currentProgress = progress.label
+    field.tap()
+    field.typeText("draft")
+    XCTAssertEqual(field.value as? String, "draft")
+    let previousSubject = app.buttons["Previous: " + completedQuestion]
+    scrollTo(previousSubject, in: app, towardTop: true)
+    previousSubject.tap()
+    let subject = app.navigationBars["Subject"]
+    XCTAssertTrue(subject.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["subject.meanings"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["subject.meanings"].label.lowercased(), completedAnswers.0)
+    navigateNativeBack(in: app)
+    let returned = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "exists == false"), object: subject)
+    XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "draft")
+    app.typeText(" retained")
+    XCTAssertEqual(field.value as? String, "draft retained")
+    XCTAssertEqual(question.value as? String, remainingQuestion)
+    XCTAssertEqual(prompt.label, currentPrompt)
+    XCTAssertEqual(progress.label, currentProgress)
+  }
+
+  @MainActor
   func testIncorrectAnswerRevealAndOverride() {
     continueAfterFailure = false
     let app = launchNativeReview()

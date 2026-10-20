@@ -313,8 +313,55 @@
       log("SCOPE: production Mac opener/restarts, not mid-copy interruption, disk-full, V2 or iOS")
     }
 
+    private enum PayloadField: String, CaseIterable {
+      case snapshot = "SnapshotRecord.snapshot"
+      case session = "SessionRecord.session"
+      case submission = "ReviewRecord.submission"
+      case originalItem = "ReviewRecord.originalItem"
+      case originalAssignment = "ReviewRecord.originalAssignment"
+      case reviewIssue = "ReviewRecord.issue"
+      case handoff = "ImportReceipt.handoff"
+      case subject = "CatalogRecord.subject"
+      case assignment = "AssignmentRecord.assignment"
+      case account = "AccountRecord.state"
+      case materialIssue = "MaterialRecord.issue"
+      case attemptedMaterial = "MaterialRecord.attemptedMaterial"
+      case recoveryBaseline = "MaterialRecord.recoveryBaseline"
+      case material = "MaterialRecord.material"
+      case archive = "ArchivedReviewRecord.answer"
+      var table: String { "Z" + rawValue.split(separator: ".")[0].uppercased() }
+      var column: String { "Z" + rawValue.split(separator: ".")[1].uppercased() }
+      var optional: Bool {
+        [
+          .originalAssignment, .reviewIssue, .handoff, .materialIssue, .attemptedMaterial,
+          .recoveryBaseline,
+        ].contains(self)
+      }
+      var key: String {
+        switch self {
+        case .snapshot: "currentLevel"
+        case .session: "isPractice"
+        case .submission, .originalItem, .originalAssignment, .assignment, .attemptedMaterial,
+          .material:
+          "subjectID"
+        case .reviewIssue, .materialIssue: "reason"
+        case .handoff: "sourceID"
+        case .subject, .archive: "id"
+        case .account: "profile"
+        case .recoveryBaseline: "remote"
+        }
+      }
+    }
+    private enum PayloadDamage: String { case truncated, mistyped, null }
+    private struct PayloadCase {
+      let field: PayloadField
+      let damage: PayloadDamage
+      var id: String { field.rawValue + "." + damage.rawValue }
+    }
     private struct PayloadOutcome: Codable {
       let field: String
+      let damage: String
+      let openerExercised: Bool
       let termination: String
       let status: Int32
       let originalUnchanged: Bool
@@ -323,27 +370,56 @@
       let generationNamesUnchanged: Bool
       let candidateChangedFiles: [String]
       let output: String
+      var preserved: Bool {
+        originalUnchanged && retainedUnchanged && selectionUnchanged && generationNamesUnchanged
+          && Set(candidateChangedFiles).isSubset(of: ["study.store-shm"])
+      }
+      var accepted: Bool {
+        guard preserved else { return false }
+        if !openerExercised { return damage == "null" && termination == "sqlConstraint" }
+        return termination == "exit" && status == (damage == "valid-control" ? 0 : 74)
+      }
     }
 
     private static func payloadExperiment(frozen: URL, validateRaw: Bool = false) throws {
       let manager = FileManager.default
+      try requirePayloadCapacity()
       let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
       let source = frozen.deletingLastPathComponent()
+      let sourceSize = try manager.contentsOfDirectory(
+        at: source, includingPropertiesForKeys: [.fileSizeKey]
+      )
+      .reduce(0) { try $0 + ($1.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0) }
+      try NativeStoreBaseline.require(
+        sourceSize <= 16 * 1024 * 1024, "Payload fixture exceeds 16 MiB bound")
       let pristine = try hashes(in: source)
       let root = URL.temporaryDirectory.appending(path: "native-upgrade-\(UUID())")
       try manager.createDirectory(at: root, withIntermediateDirectories: true)
       try marker.write(to: root.appending(path: ".disposable"), options: .atomic)
       log("DISPOSABLE PAYLOAD PROBE: \(root.path)")
       var outcomes: [PayloadOutcome] = []
-      for field in ["AccountRecord.state", "MaterialRecord.issue"] {
-        let directory = root.appending(path: field)
+      let cases =
+        [
+          PayloadCase(field: .account, damage: .truncated),
+          PayloadCase(field: .materialIssue, damage: .truncated),
+        ] + PayloadField.allCases.map { PayloadCase(field: $0, damage: .mistyped) }
+        + PayloadField.allCases.filter { !$0.optional }.map {
+          PayloadCase(field: $0, damage: .null)
+        }
+      try NativeStoreBaseline.require(
+        cases.count == 26, "Payload matrix changed from its reviewed bound")
+      for test in cases {
+        try requirePayloadCapacity()
+        let directory = root.appending(path: test.id)
         try manager.createDirectory(at: directory, withIntermediateDirectories: true)
         for (name, bytes) in try applicationSource(in: source) {
           try bytes.write(to: directory.appending(path: name))
         }
         let url = directory.appending(path: "study.store")
         try encode(manifest.expected, to: directory.appendingPathExtension("expected.plist"))
-        try child("verify-application-opening", store: url)
+        try child(
+          "verify-application-opening", store: url,
+          output: root.appending(path: test.id + ".intact.log"))
         let selector = directory.appending(path: "store-selection.plist")
         let selection = try Data(contentsOf: selector)
         guard
@@ -359,53 +435,104 @@
         let retainedURL = generations.appending(path: retained)
         let retainedBytes = try applicationSource(in: retainedURL)
         let candidateURL = generations.appending(path: candidate).appending(path: "study.store")
+        func outcome(
+          _ damage: String, exercised: Bool, reason: String, status: Int32,
+          before: [String: String], after: [String: String], output: URL
+        ) throws -> PayloadOutcome {
+          .init(
+            field: test.field.rawValue, damage: damage, openerExercised: exercised,
+            termination: reason, status: status,
+            originalUnchanged: try applicationSource(in: directory) == original,
+            retainedUnchanged: try applicationSource(in: retainedURL) == retainedBytes,
+            selectionUnchanged: try Data(contentsOf: selector) == selection,
+            generationNamesUnchanged: Set(try manager.contentsOfDirectory(atPath: generations.path))
+              == names,
+            candidateChangedFiles: Set(before.keys).union(after.keys).filter {
+              before[$0] != after[$0]
+            }.sorted(),
+            output: output.path)
+        }
+        if test.field == .reviewIssue {
+          let expected = try populateReviewIssue(
+            application: url, selected: candidateURL, expected: manifest.expected)
+          try encode(expected, to: directory.appendingPathExtension("expected.plist"))
+          let before = try hashes(in: candidateURL.deletingLastPathComponent())
+          let output = root.appending(path: "ReviewRecord.issue.valid-control.log")
+          let control = try child(
+            "verify-application-opening", store: url, status: nil, output: output)
+          let result = try outcome(
+            "valid-control", exercised: true,
+            reason: control.reason == .exit ? "exit" : "uncaughtSignal", status: control.status,
+            before: before, after: hashes(in: candidateURL.deletingLastPathComponent()),
+            output: output)
+          outcomes.append(result)
+          try encode(outcomes, to: root.appending(path: "payload-outcomes.plist"))
+          try NativeStoreBaseline.require(
+            result.accepted, "Populated review issue failed exact-state control")
+          log("PASS CONTROL: one populated ReviewRecord.issue; exact 38-record state preserved")
+        }
         if validateRaw {
           let validation = try child(
             "inspect-application-raw-payload", store: url,
             status: nil,
-            output: root.appending(path: field + ".valid-raw.log"))
+            output: root.appending(path: test.id + ".valid-raw.log"))
           log("VALID RAW RESULT: \(validation.reason), status=\(validation.status)")
           guard validation.reason == .exit && validation.status == 0 else {
             log("FAIL: raw preflight could not validate an intact fixture; no corruption attempted")
             _exit(1)
           }
         }
-        try corruptPayload(field, application: url, selected: candidateURL)
+        let beforeMutation = try hashes(in: candidateURL.deletingLastPathComponent())
+        let constraint = try corruptPayload(test, application: url, selected: candidateURL)
         let corrupted = try hashes(in: candidateURL.deletingLastPathComponent())
-        let output = root.appending(path: field + ".child.log")
-        let result = try child(
-          validateRaw ? "inspect-application-raw-payload" : "inspect-application-payload",
-          store: url, status: nil, output: output)
+        let output = root.appending(path: test.id + ".child.log")
+        let result: (reason: Process.TerminationReason, status: Int32)
+        if let constraint {
+          try Data("UNEXERCISED: SQLite rejected NULL with code \(constraint)\n".utf8).write(
+            to: output)
+          result = (.exit, constraint)
+        } else {
+          result = try child(
+            validateRaw ? "inspect-application-raw-payload" : "inspect-application-payload",
+            store: url, status: nil, output: output)
+        }
         let after = try hashes(in: candidateURL.deletingLastPathComponent())
-        let outcome = PayloadOutcome(
-          field: field, termination: result.reason == .exit ? "exit" : "uncaughtSignal",
-          status: result.status,
-          originalUnchanged: try applicationSource(in: directory) == original,
-          retainedUnchanged: try applicationSource(in: retainedURL) == retainedBytes,
-          selectionUnchanged: try Data(contentsOf: selector) == selection,
-          generationNamesUnchanged:
-            Set(try manager.contentsOfDirectory(atPath: generations.path)) == names,
-          candidateChangedFiles:
-            Set(corrupted.keys).union(after.keys).filter { corrupted[$0] != after[$0] }.sorted(),
-          output: output.path)
-        outcomes.append(outcome)
+        let recorded = try outcome(
+          test.damage.rawValue, exercised: constraint == nil,
+          reason: constraint != nil
+            ? "sqlConstraint" : (result.reason == .exit ? "exit" : "uncaughtSignal"),
+          status: result.status, before: constraint == nil ? corrupted : beforeMutation,
+          after: after, output: output)
+        outcomes.append(recorded)
+        try encode(outcomes, to: root.appending(path: "payload-outcomes.plist"))
         log(
-          "PAYLOAD RESULT: \(field), \(outcome.termination)/\(outcome.status), output=\(output.path)"
+          "PAYLOAD RESULT: \(test.id), \(recorded.termination)/\(recorded.status), opener=\(recorded.openerExercised), output=\(output.path)"
         )
+        if recorded.accepted && recorded.openerExercised {
+          try requireDisposable(url)
+          try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: retainedURL.path)
+          try manager.removeItem(at: directory)
+          try manager.removeItem(at: directory.appendingPathExtension("expected.plist"))
+        }
       }
       try encode(outcomes, to: root.appending(path: "payload-outcomes.plist"))
       try NativeStoreBaseline.require(try hashes(in: source) == pristine, "Frozen fixture changed")
       try NativeStoreBaseline.require(
-        outcomes.allSatisfy {
-          $0.originalUnchanged && $0.retainedUnchanged && $0.selectionUnchanged
-            && $0.generationNamesUnchanged
-        }, "Payload opening changed original/retained/selection bytes or generation membership")
-      log("PASS: frozen fixture, original, retained, selection and generation names preserved")
-      guard outcomes.allSatisfy({ $0.termination == "exit" && $0.status == 74 }) else {
+        outcomes.count == 27 && outcomes.allSatisfy(\.preserved),
+        "Payload opening changed DB/WAL, original/retained/selection bytes or generation membership"
+      )
+      log(
+        "PASS: frozen fixture, original, retained, selection, selected DB/WAL and generation names preserved; only SHM may change"
+      )
+      guard outcomes.allSatisfy(\.accepted) else {
         log("FAIL: malformed payload did not safely refuse; signals and acceptance remain failures")
         _exit(1)
       }
-      log("PASS: both malformed payloads refused through a thrown error before returning an owner")
+      let refused = outcomes.filter { $0.openerExercised && $0.damage != "valid-control" }.count
+      let unexercised = outcomes.filter { !$0.openerExercised }.count
+      log(
+        "PASS: \(refused) actual opener refusals, 1 exact-state control; \(unexercised) SQL NULL attempts UNEXERCISED"
+      )
       if validateRaw {
         log(
           "EXPERIMENT ONLY: raw projections; production-opener acceptance is a separate command")
@@ -529,24 +656,18 @@
       }
     }
 
-    private static func corruptPayload(_ field: String, application: URL, selected: URL) throws {
+    private static func payloadDatabase<Value>(
+      application: URL, selected: URL, _ body: (OpaquePointer) throws -> Value
+    ) throws -> Value {
       try requireDisposable(application)
       let directory = application.deletingLastPathComponent().resolvingSymlinksInPath()
       let candidate = selected.resolvingSymlinksInPath()
       try NativeStoreBaseline.require(
-        candidate.path.hasPrefix(directory.appending(path: "generations").path + "/")
+        candidate.deletingLastPathComponent().deletingLastPathComponent().path
+          == directory.appending(path: "generations").path
+          && UUID(uuidString: candidate.deletingLastPathComponent().lastPathComponent) != nil
           && candidate.lastPathComponent == "study.store",
         "SQL corruption requires an existing selected store in the marked disposable image")
-      let sql: String
-      switch field {
-      case "AccountRecord.state":
-        sql =
-          "UPDATE ZACCOUNTRECORD SET ZSTATE = x'7b' WHERE Z_PK = (SELECT MIN(Z_PK) FROM ZACCOUNTRECORD WHERE ZSTATE IS NOT NULL)"
-      case "MaterialRecord.issue":
-        sql =
-          "UPDATE ZMATERIALRECORD SET ZISSUE = x'7b' WHERE Z_PK = (SELECT MIN(Z_PK) FROM ZMATERIALRECORD WHERE ZISSUE IS NOT NULL)"
-      default: throw NativeStoreBaseline.Failure(description: "Unknown corruption field")
-      }
       var database: OpaquePointer?
       let opened = sqlite3_open_v2(candidate.path, &database, SQLITE_OPEN_READWRITE, nil)
       guard opened == SQLITE_OK, let database else {
@@ -554,10 +675,176 @@
         throw NativeStoreBaseline.Failure(description: "Disposable SQL open failed: \(opened)")
       }
       defer { sqlite3_close(database) }
+      return try body(database)
+    }
+
+    private static func payloadRow(
+      _ field: PayloadField, database: OpaquePointer, id: Int64? = nil
+    ) throws -> (id: Int64, data: Data?) {
+      let predicate =
+        id.map { "Z_PK = \($0)" }
+        ?? "\(field.column) IS NOT NULL ORDER BY Z_PK LIMIT 1"
+      var statement: OpaquePointer?
       try NativeStoreBaseline.require(
-        sqlite3_exec(database, sql, nil, nil, nil) == SQLITE_OK && sqlite3_changes(database) == 1,
-        "The single selected non-null payload was not corrupted")
-      log("CORRUPTED DISPOSABLE: \(field), one stored JSON blob replaced with truncated object")
+        sqlite3_prepare_v2(
+          database, "SELECT Z_PK, \(field.column) FROM \(field.table) WHERE \(predicate)", -1,
+          &statement, nil) == SQLITE_OK,
+        "Cannot prepare the closed-whitelist payload query")
+      guard let statement else {
+        throw NativeStoreBaseline.Failure(description: "Missing payload query")
+      }
+      defer { sqlite3_finalize(statement) }
+      try NativeStoreBaseline.require(
+        sqlite3_step(statement) == SQLITE_ROW, "Missing selected payload row: \(field.rawValue)")
+      let rowID = sqlite3_column_int64(statement, 0)
+      let data: Data?
+      if sqlite3_column_type(statement, 1) == SQLITE_NULL {
+        data = nil
+      } else {
+        try NativeStoreBaseline.require(
+          sqlite3_column_type(statement, 1) == SQLITE_BLOB, "Payload is not a BLOB")
+        let count = Int(sqlite3_column_bytes(statement, 1))
+        if count == 0 {
+          data = Data()
+        } else if let bytes = sqlite3_column_blob(statement, 1) {
+          data = Data(bytes: bytes, count: count)
+        } else {
+          throw NativeStoreBaseline.Failure(description: "Missing payload bytes")
+        }
+      }
+      try NativeStoreBaseline.require(
+        sqlite3_step(statement) == SQLITE_DONE, "Payload query returned multiple rows")
+      return (rowID, data)
+    }
+
+    private static func replacePayload(
+      _ field: PayloadField, database: OpaquePointer, id: Int64, with data: Data?
+    ) throws -> Int32? {
+      let before = try payloadRow(field, database: database, id: id).data
+      let literal =
+        data.map { "x'" + $0.map { String(format: "%02x", $0) }.joined() + "'" } ?? "NULL"
+      let result = sqlite3_exec(
+        database, "UPDATE \(field.table) SET \(field.column) = \(literal) WHERE Z_PK = \(id)", nil,
+        nil, nil)
+      if result == SQLITE_CONSTRAINT && data == nil {
+        let code = sqlite3_extended_errcode(database)
+        try NativeStoreBaseline.require(
+          sqlite3_changes(database) == 0
+            && payloadRow(field, database: database, id: id).data == before,
+          "A rejected NULL mutation changed its payload")
+        return code
+      }
+      try NativeStoreBaseline.require(
+        result == SQLITE_OK && sqlite3_changes(database) == 1,
+        "The single selected payload was not changed: \(field.rawValue), SQLite \(result)")
+      try NativeStoreBaseline.require(
+        payloadRow(field, database: database, id: id).data == data,
+        "The exact selected payload did not survive SQL readback")
+      return nil
+    }
+
+    private static func populateReviewIssue(
+      application: URL, selected: URL, expected: NativeStoreBaseline.State
+    ) throws -> NativeStoreBaseline.State {
+      guard let target = expected.records.first(where: { $0.model == "ReviewRecord" }),
+        target.fields["issue"] == Data("null".utf8),
+        let donor = expected.records.first(where: {
+          $0.model == "MaterialRecord" && $0.fields["issue"] != Data("null".utf8)
+        }),
+        let issue = donor.fields["issue"], let account = target.accountID,
+        let subjectData = target.fields["subjectID"]
+      else {
+        throw NativeStoreBaseline.Failure(description: "Missing exact review-issue control source")
+      }
+      _ = try JSONDecoder().decode(StudyUploadIssue.self, from: issue)
+      let subjectID = try JSONDecoder().decode(Int64.self, from: subjectData)
+      try payloadDatabase(application: application, selected: selected) { database in
+        var statement: OpaquePointer?
+        try NativeStoreBaseline.require(
+          sqlite3_prepare_v2(
+            database, "SELECT Z_PK FROM ZREVIEWRECORD WHERE ZACCOUNTID = ? AND ZSUBJECTID = ?", -1,
+            &statement, nil) == SQLITE_OK,
+          "Cannot prepare review-issue control identity")
+        guard let statement else {
+          throw NativeStoreBaseline.Failure(description: "Missing review-issue identity")
+        }
+        defer { sqlite3_finalize(statement) }
+        let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+        try NativeStoreBaseline.require(
+          sqlite3_bind_text(statement, 1, account, -1, transient) == SQLITE_OK
+            && sqlite3_bind_int64(statement, 2, subjectID) == SQLITE_OK
+            && sqlite3_step(statement) == SQLITE_ROW,
+          "Missing exact review-issue control identity")
+        let rowID = sqlite3_column_int64(statement, 0)
+        try NativeStoreBaseline.require(
+          sqlite3_step(statement) == SQLITE_DONE, "Duplicate review-issue identity")
+        try NativeStoreBaseline.require(
+          payloadRow(.reviewIssue, database: database, id: rowID).data == nil,
+          "Review issue was already populated")
+        try NativeStoreBaseline.require(
+          replacePayload(.reviewIssue, database: database, id: rowID, with: issue) == nil,
+          "Valid review issue was rejected")
+      }
+      let records = expected.records.map { record in
+        guard record.model == target.model && record.identity == target.identity else {
+          return record
+        }
+        return NativeStoreBaseline.Record(
+          model: record.model, identity: record.identity, accountID: record.accountID,
+          fields: record.fields.merging(["issue": issue]) { _, replacement in replacement })
+      }
+      return .init(schemaVersion: expected.schemaVersion, schema: expected.schema, records: records)
+    }
+
+    private static func corruptPayload(
+      _ test: PayloadCase, application: URL, selected: URL
+    ) throws -> Int32? {
+      try payloadDatabase(application: application, selected: selected) { database in
+        let row = try payloadRow(test.field, database: database)
+        guard let original = row.data else {
+          throw NativeStoreBaseline.Failure(description: "No populated payload to corrupt")
+        }
+        let data: Data?
+        switch test.damage {
+        case .truncated: data = Data("{".utf8)
+        case .null: data = nil
+        case .mistyped:
+          guard let object = try JSONSerialization.jsonObject(with: original) as? [String: Any],
+            object[test.field.key] != nil
+          else {
+            throw NativeStoreBaseline.Failure(
+              description: "Missing reviewed payload key: \(test.field.rawValue)")
+          }
+          var changed = object
+          changed[test.field.key] = [String]()
+          let encoded = try JSONSerialization.data(withJSONObject: changed, options: .sortedKeys)
+          guard let restored = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+          else {
+            throw NativeStoreBaseline.Failure(
+              description: "Mistyped payload is not a valid JSON object")
+          }
+          try NativeStoreBaseline.require(
+            NSDictionary(dictionary: restored.filter { $0.key != test.field.key }).isEqual(
+              to: object.filter { $0.key != test.field.key })
+              && (restored[test.field.key] as? [String]) == []
+              && !(object[test.field.key] is [Any]),
+            "Mistyped mutation changed unrelated JSON fields or retained the original type")
+          data = encoded
+        }
+        let constraint = try replacePayload(test.field, database: database, id: row.id, with: data)
+        log(
+          "MUTATED DISPOSABLE: \(test.id), exactly one row/readback; constraint=\(constraint.map(String.init) ?? "none")"
+        )
+        return constraint
+      }
+    }
+
+    private static func requirePayloadCapacity() throws {
+      let attributes = try FileManager.default.attributesOfFileSystem(
+        forPath: URL.temporaryDirectory.path)
+      try NativeStoreBaseline.require(
+        ((attributes[.systemFreeSize] as? NSNumber)?.int64Value ?? 0) >= 512 * 1024 * 1024,
+        "Payload probe requires at least 512 MiB free; it never fills a volume to simulate failure")
     }
 
     private static func applicationSource(in directory: URL) throws -> [String: Data] {
@@ -655,6 +942,27 @@
       process.standardOutput = outputHandle ?? FileHandle.standardOutput
       process.standardError = outputHandle ?? FileHandle.standardError
       try process.run()
+      if let output {
+        let deadline = Date.now.addingTimeInterval(10)
+        while process.isRunning {
+          let attributes = try? FileManager.default.attributesOfItem(atPath: output.path)
+          let count = (attributes?[.size] as? NSNumber)?.int64Value ?? Int64.max
+          var lowCapacity = false
+          do { try requirePayloadCapacity() } catch { lowCapacity = true }
+          if Date.now >= deadline || count > 1024 * 1024 || lowCapacity {
+            process.terminate()
+            let grace = Date.now.addingTimeInterval(1)
+            while process.isRunning && Date.now < grace { Thread.sleep(forTimeInterval: 0.05) }
+            if process.isRunning { Darwin.kill(process.processIdentifier, SIGKILL) }
+            process.waitUntilExit()
+            throw NativeStoreBaseline.Failure(
+              description:
+                "Payload child exceeded its 10s/1MiB/free-space bound; image retained: \(output.path)"
+            )
+          }
+          Thread.sleep(forTimeInterval: 0.05)
+        }
+      }
       process.waitUntilExit()
       if let status {
         try NativeStoreBaseline.require(

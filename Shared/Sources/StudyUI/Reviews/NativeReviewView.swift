@@ -196,6 +196,12 @@ public struct NativeReviewView: View {
       NativeSubjectDetailsView(store: store, accountID: accountID, subjectID: id)
         .navigationTitle("Subject")
     }
+    .onChange(of: summarySubjectID) { previous, current in
+      guard previous != nil, current == nil, !ended, review?.question != nil,
+        screen.phase != .details, !screen.isAnki
+      else { return }
+      answerFocused = true
+    }
     .sheet(
       item: $voiceRequest,
       onDismiss: { answerFocused = screen.phase != .details && !screen.isAnki }

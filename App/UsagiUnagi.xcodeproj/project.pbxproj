@@ -49,6 +49,9 @@
 		A27900000000000000000001 /* NativeAppAssemblyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27900000000000000000002 /* NativeAppAssemblyTests.swift */; };
 		A28700000000000000000001 /* WatchCompanionCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28700000000000000000002 /* WatchCompanionCacheTests.swift */; };
 		A28700000000000000000003 /* WatchCompanionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */; };
+		A28800000000000000000001 /* FrozenNativeStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28800000000000000000002 /* FrozenNativeStoreTests.swift */; };
+		A28800000000000000000003 /* NativeStoreBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28800000000000000000004 /* NativeStoreBaseline.swift */; };
+		A28800000000000000000005 /* native-v0-186c1cc3 in Resources */ = {isa = PBXBuildFile; fileRef = A28800000000000000000006 /* native-v0-186c1cc3 */; };
 		A27B00000000000000000001 /* NotificationFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27B00000000000000000002 /* NotificationFixture.swift */; };
 		A28000000000000000000001 /* StudyApplicationOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28000000000000000000002 /* StudyApplicationOwner.swift */; };
 		A28100000000000000000001 /* NativeRootFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28100000000000000000002 /* NativeRootFlowTests.swift */; platformFilter = ios; };
@@ -204,6 +207,9 @@
 		A27800000000000000000002 /* ReviewSessionOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewSessionOptionsTests.swift; path = AppTests/ReviewSessionOptionsTests.swift; sourceTree = "<group>"; };
 		A27900000000000000000002 /* NativeAppAssemblyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeAppAssemblyTests.swift; path = AppTests/NativeAppAssemblyTests.swift; sourceTree = "<group>"; };
 		A28700000000000000000002 /* WatchCompanionCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchCompanionCacheTests.swift; path = AppTests/WatchCompanionCacheTests.swift; sourceTree = "<group>"; };
+		A28800000000000000000002 /* FrozenNativeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FrozenNativeStoreTests.swift; path = AppTests/FrozenNativeStoreTests.swift; sourceTree = "<group>"; };
+		A28800000000000000000004 /* NativeStoreBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeStoreBaseline.swift; path = Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreBaseline.swift; sourceTree = "<group>"; };
+		A28800000000000000000006 /* native-v0-186c1cc3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-v0-186c1cc3"; path = "Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3"; sourceTree = "<group>"; };
 		A27B00000000000000000002 /* NotificationFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationFixture.swift; sourceTree = "<group>"; };
 		A28000000000000000000002 /* StudyApplicationOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyApplicationOwner.swift; path = Application/StudyApplicationOwner.swift; sourceTree = "<group>"; };
 		A28100000000000000000002 /* NativeRootFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRootFlowTests.swift; sourceTree = "<group>"; };
@@ -317,6 +323,9 @@
 				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
 				A27900000000000000000002 /* NativeAppAssemblyTests.swift */,
 				A28700000000000000000002 /* WatchCompanionCacheTests.swift */,
+				A28800000000000000000002 /* FrozenNativeStoreTests.swift */,
+				A28800000000000000000004 /* NativeStoreBaseline.swift */,
+				A28800000000000000000006 /* native-v0-186c1cc3 */,
 				A27000000000000000000002 /* NotificationPreferencesTests.swift */,
 				A27000000000000000000003 /* AppTests.xctest */,
 				631CAD62234AD5FC008CEA73 /* AnswerChecker.swift */,
@@ -680,6 +689,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A27100000000000000000003 /* fonts in Resources */,
+				A28800000000000000000005 /* native-v0-186c1cc3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -774,6 +784,8 @@
 				A27900000000000000000001 /* NativeAppAssemblyTests.swift in Sources */,
 				A28700000000000000000001 /* WatchCompanionCacheTests.swift in Sources */,
 				A28700000000000000000003 /* WatchCompanionCache.swift in Sources */,
+				A28800000000000000000001 /* FrozenNativeStoreTests.swift in Sources */,
+				A28800000000000000000003 /* NativeStoreBaseline.swift in Sources */,
 				A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */,
 				F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */,
 				A7AC4D2FC92ED19AAC0BA475 /* LessonPreferenceTests.swift in Sources */,
@@ -1265,6 +1277,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
