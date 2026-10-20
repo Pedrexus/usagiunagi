@@ -223,8 +223,12 @@ struct KatakanaPracticeSessionView: View {
       switch action {
       case .submit:
         if screen.isAnki {
-          screen.phase = .details
-          focused = false
+          if screen.phase == .details {
+            screen.showAssessment = true
+          } else {
+            screen.phase = .details
+            focused = false
+          }
         } else if screen.phase == .details || screen.phase == .incorrect {
           try practice?.advance(question)
           present()

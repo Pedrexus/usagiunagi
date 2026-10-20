@@ -35,6 +35,7 @@
       "refuse-application-opening",
       "probe-application-payload-corruption", "inspect-application-payload",
       "probe-application-payload-validation", "inspect-application-raw-payload",
+      "probe-application-metadata-corruption", "inspect-application-metadata",
     ]
     private static let marker = Data("usagi-native-upgrade-disposable-v1".utf8)
 
@@ -55,6 +56,10 @@
         try payloadExperiment(frozen: url, validateRaw: true)
         return
       }
+      if command == "probe-application-metadata-corruption" {
+        try metadataExperiment(frozen: url)
+        return
+      }
       try requireDisposable(url)
       if command == "inspect-application-raw-payload" {
         do {
@@ -67,15 +72,15 @@
           _exit(74)
         }
       }
-      if command == "inspect-application-payload" {
+      if command == "inspect-application-payload" || command == "inspect-application-metadata" {
         do {
           let store = try await StudyStore.openApplication(in: url.deletingLastPathComponent())
           let state = try await store.nativeBaselineState()
-          log("ACCEPTED MALFORMED PAYLOAD: \(state.records.count) records")
+          log("APPLICATION OPENER ACCEPTED: \(state.records.count) records")
           _exit(0)
         } catch {
           let failure = error as NSError
-          log("REFUSED MALFORMED PAYLOAD: \(failure.domain)/\(failure.code): \(failure)")
+          log("APPLICATION OPENER REFUSED: \(failure.domain)/\(failure.code): \(failure)")
           _exit(74)
         }
       }
@@ -538,6 +543,217 @@
           "EXPERIMENT ONLY: raw projections; production-opener acceptance is a separate command")
       }
       log("SCOPE: disposable selected-store payloads on Mac, not corruption recovery or iOS proof")
+    }
+
+    private enum MetadataCase: String, CaseIterable {
+      case control, metadataMissing, metadataMalformed, metadataMissingHashes
+      case cacheMissing, cacheMalformed
+      var table: String {
+        switch self {
+        case .cacheMissing, .cacheMalformed: "Z_MODELCACHE"
+        default: "Z_METADATA"
+        }
+      }
+      var column: String { table == "Z_METADATA" ? "Z_PLIST" : "Z_CONTENT" }
+      var removesRow: Bool { self == .metadataMissing || self == .cacheMissing }
+    }
+    private struct MetadataRow: Equatable {
+      let id: Int64
+      let uuid: String?
+      let data: Data
+    }
+    private struct MetadataChange: Codable {
+      let table: String
+      let column: String
+      let rowID: Int64
+      let deletedRow: Bool
+      let affectedRows: Int32
+      let beforeSHA256: String
+      let afterSHA256: String?
+    }
+    private struct MetadataOutcome: Codable {
+      let scenario: String
+      let mutation: MetadataChange?
+      let opening: PayloadOutcome
+    }
+    private static func metadataExperiment(frozen: URL) throws {
+      let manager = FileManager.default
+      try requirePayloadCapacity()
+      let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+      let source = frozen.deletingLastPathComponent()
+      let pristine = try hashes(in: source)
+      let originalSource = try applicationSource(in: source)
+      try NativeStoreBaseline.require(
+        originalSource.values.reduce(0) { $0 + $1.count } <= 16 * 1024 * 1024,
+        "Metadata fixture exceeds 16 MiB bound")
+      let root = URL.temporaryDirectory.appending(path: "native-upgrade-\(UUID())")
+      try manager.createDirectory(at: root, withIntermediateDirectories: true)
+      try marker.write(to: root.appending(path: ".disposable"), options: .atomic)
+      log("DISPOSABLE METADATA PROBE: \(root.path)")
+      try NativeStoreBaseline.require(
+        MetadataCase.allCases.count == 6, "Metadata matrix changed from its reviewed bound")
+      var outcomes: [MetadataOutcome] = []
+      for test in MetadataCase.allCases {
+        try requirePayloadCapacity()
+        let directory = root.appending(path: test.rawValue)
+        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (name, bytes) in originalSource {
+          try bytes.write(to: directory.appending(path: name))
+        }
+        let url = directory.appending(path: "study.store")
+        try encode(manifest.expected, to: directory.appendingPathExtension("expected.plist"))
+        try child(
+          "verify-application-opening", store: url,
+          output: root.appending(path: test.rawValue + ".intact.log"))
+        let selector = directory.appending(path: "store-selection.plist")
+        let selection = try Data(contentsOf: selector)
+        guard
+          let fields = try PropertyListSerialization.propertyList(from: selection, format: nil)
+            as? [String: Any], fields["phase"] as? String == "selected",
+          let candidate = fields["candidate"] as? String, UUID(uuidString: candidate) != nil,
+          let retained = fields["retained"] as? String, UUID(uuidString: retained) != nil
+        else { throw NativeStoreBaseline.Failure(description: "Missing verified selection") }
+        let generations = directory.appending(path: "generations")
+        let names = Set(try manager.contentsOfDirectory(atPath: generations.path))
+        let original = try applicationSource(in: directory)
+        let retainedURL = generations.appending(path: retained)
+        let retainedBytes = try applicationSource(in: retainedURL)
+        let selected = generations.appending(path: candidate).appending(path: "study.store")
+        let mutation = try corruptMetadata(test, application: url, selected: selected)
+        let before = try hashes(in: selected.deletingLastPathComponent())
+        let output = root.appending(path: test.rawValue + ".child.log")
+        let result = try child(
+          test == .control ? "verify-application-opening" : "inspect-application-metadata",
+          store: url, status: nil, output: output)
+        let after = try hashes(in: selected.deletingLastPathComponent())
+        let opening = PayloadOutcome(
+          field: test.table + "." + test.column,
+          damage: test == .control ? "valid-control" : test.rawValue, openerExercised: true,
+          termination: result.reason == .exit ? "exit" : "uncaughtSignal", status: result.status,
+          originalUnchanged: try applicationSource(in: directory) == original,
+          retainedUnchanged: try applicationSource(in: retainedURL) == retainedBytes,
+          selectionUnchanged: try Data(contentsOf: selector) == selection,
+          generationNamesUnchanged: Set(try manager.contentsOfDirectory(atPath: generations.path))
+            == names,
+          candidateChangedFiles: Set(before.keys).union(after.keys).filter {
+            before[$0] != after[$0]
+          }.sorted(), output: output.path)
+        outcomes.append(.init(scenario: test.rawValue, mutation: mutation, opening: opening))
+        try encode(outcomes, to: root.appending(path: "metadata-outcomes.plist"))
+        try NativeStoreBaseline.require(
+          try hashes(in: source) == pristine, "Frozen fixture changed")
+        log("METADATA RESULT: \(test.rawValue), \(opening.termination)/\(opening.status)")
+        guard opening.accepted else {
+          log("FAIL: metadata opener did not safely refuse/preserve; stopped, image retained")
+          _exit(1)
+        }
+        try requireDisposable(url)
+        try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: retainedURL.path)
+        try manager.removeItem(at: directory)
+        try manager.removeItem(at: directory.appendingPathExtension("expected.plist"))
+      }
+      log("PASS: 5 actual metadata/cache opener refusals and 1 exact 38-record control")
+      log("PASS: original/retained/selector/generation names and selected DB/WAL preserved")
+      log("SCOPE: selected-generation Mac metadata/cache only; no adoption or iOS failure proof")
+    }
+    private static func metadataRow(
+      _ test: MetadataCase, database: OpaquePointer
+    ) throws -> MetadataRow? {
+      var statement: OpaquePointer?
+      let uuid = test.table == "Z_METADATA" ? "Z_UUID" : "NULL"
+      try NativeStoreBaseline.require(
+        sqlite3_prepare_v2(
+          database, "SELECT rowid, \(uuid), \(test.column) FROM \(test.table)", -1,
+          &statement, nil) == SQLITE_OK,
+        "Cannot prepare the closed-whitelist metadata query")
+      guard let statement else {
+        throw NativeStoreBaseline.Failure(description: "Missing metadata query")
+      }
+      defer { sqlite3_finalize(statement) }
+      let status = sqlite3_step(statement)
+      if status == SQLITE_DONE { return nil }
+      try NativeStoreBaseline.require(
+        status == SQLITE_ROW && sqlite3_column_type(statement, 2) == SQLITE_BLOB,
+        "Metadata row has no BLOB")
+      let count = Int(sqlite3_column_bytes(statement, 2))
+      guard count > 0, count <= 16 * 1024 * 1024,
+        let bytes = sqlite3_column_blob(statement, 2)
+      else { throw NativeStoreBaseline.Failure(description: "Metadata BLOB size unsupported") }
+      let row = MetadataRow(
+        id: sqlite3_column_int64(statement, 0),
+        uuid: sqlite3_column_text(statement, 1).map { String(cString: $0) },
+        data: Data(bytes: bytes, count: count))
+      try NativeStoreBaseline.require(
+        sqlite3_step(statement) == SQLITE_DONE, "Metadata query found multiple rows")
+      return row
+    }
+    private static func corruptMetadata(
+      _ test: MetadataCase, application: URL, selected: URL
+    ) throws -> MetadataChange? {
+      if test == .control { return nil }
+      return try payloadDatabase(application: application, selected: selected) { database in
+        guard let row = try metadataRow(test, database: database) else {
+          throw NativeStoreBaseline.Failure(description: "No populated metadata/cache row")
+        }
+        let other: MetadataCase = test.table == "Z_METADATA" ? .cacheMalformed : .metadataMalformed
+        let unrelated = try metadataRow(other, database: database)
+        var trigger: OpaquePointer?
+        try NativeStoreBaseline.require(
+          sqlite3_prepare_v2(
+            database, "SELECT 1 FROM sqlite_master WHERE type = 'trigger' LIMIT 1", -1,
+            &trigger, nil) == SQLITE_OK,
+          "Cannot check disposable SQL trigger safety")
+        guard let trigger else {
+          throw NativeStoreBaseline.Failure(description: "Missing trigger query")
+        }
+        defer { sqlite3_finalize(trigger) }
+        try NativeStoreBaseline.require(
+          sqlite3_step(trigger) == SQLITE_DONE, "Fixture contains SQL triggers")
+        var data = Data([0x7b])
+        if test == .metadataMissingHashes {
+          guard
+            let original = try PropertyListSerialization.propertyList(from: row.data, format: nil)
+              as? [String: Any], original[NSStoreModelVersionHashesKey] != nil
+          else { throw NativeStoreBaseline.Failure(description: "Missing original model hashes") }
+          var changed = original
+          changed.removeValue(forKey: NSStoreModelVersionHashesKey)
+          data = try PropertyListSerialization.data(
+            fromPropertyList: changed, format: .binary, options: 0)
+          guard
+            let readback = try PropertyListSerialization.propertyList(from: data, format: nil)
+              as? [String: Any]
+          else { throw NativeStoreBaseline.Failure(description: "Changed metadata is not a plist") }
+          try NativeStoreBaseline.require(
+            readback[NSStoreModelVersionHashesKey] == nil
+              && NSDictionary(dictionary: readback).isEqual(
+                to: original.filter {
+                  $0.key != NSStoreModelVersionHashesKey
+                }),
+            "Metadata mutation changed unrelated plist keys")
+        }
+        let literal = "x'" + data.map { String(format: "%02x", $0) }.joined() + "'"
+        let sql =
+          test.removesRow
+          ? "DELETE FROM \(test.table) WHERE rowid = \(row.id)"
+          : "UPDATE \(test.table) SET \(test.column) = \(literal) WHERE rowid = \(row.id)"
+        try NativeStoreBaseline.require(
+          sqlite3_exec(database, sql, nil, nil, nil) == SQLITE_OK
+            && sqlite3_changes(database) == 1 && sqlite3_total_changes(database) == 1,
+          "Metadata mutation did not change exactly one row")
+        let after = try metadataRow(test, database: database)
+        try NativeStoreBaseline.require(
+          (test.removesRow
+            ? after == nil : after == MetadataRow(id: row.id, uuid: row.uuid, data: data))
+            && metadataRow(other, database: database) == unrelated,
+          "Metadata mutation failed exact readback or changed the other metadata table")
+        return MetadataChange(
+          table: test.table, column: test.column, rowID: row.id, deletedRow: test.removesRow,
+          affectedRows: sqlite3_changes(database),
+          beforeSHA256: SHA256.hash(data: row.data).map { String(format: "%02x", $0) }.joined(),
+          afterSHA256: after.map {
+            SHA256.hash(data: $0.data).map { String(format: "%02x", $0) }.joined()
+          })
+      }
     }
 
     private static func validateRawPayloads(application: URL) throws {

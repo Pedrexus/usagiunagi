@@ -34,16 +34,9 @@ struct CurriculumCoverageView: View {
   }
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
-      HStack {
-        Picker("System", selection: $system) {
-          ForEach(CurriculumSystem.allCases) { Text($0.rawValue).tag($0) }
-        }
-        .accessibilityIdentifier("coverage.system")
-        Spacer()
-        Picker("Count as covered", selection: $threshold) {
-          ForEach(thresholds, id: \.0) { value, name in Text(name).tag(value) }
-        }
-        .accessibilityIdentifier("coverage.threshold")
+      ViewThatFits(in: .horizontal) {
+        HStack(spacing: 20) { filters }.fixedSize(horizontal: true, vertical: false)
+        VStack(alignment: .leading, spacing: 12) { filters }
       }.pickerStyle(.menu)
       StudyCard("Kanji coverage", subtitle: system.explanation) {
         Chart(coverage) { row in
@@ -111,6 +104,17 @@ struct CurriculumCoverageView: View {
       }
     }
     .onChange(of: system) { _, _ in expanded = nil }
+  }
+
+  @ViewBuilder private var filters: some View {
+    Picker("System", selection: $system) {
+      ForEach(CurriculumSystem.allCases) { Text($0.rawValue).tag($0) }
+    }
+    .accessibilityIdentifier("coverage.system")
+    Picker("Count as covered", selection: $threshold) {
+      ForEach(thresholds, id: \.0) { value, name in Text(name).tag(value) }
+    }
+    .accessibilityIdentifier("coverage.threshold")
   }
 }
 

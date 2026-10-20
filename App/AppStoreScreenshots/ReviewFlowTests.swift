@@ -1295,6 +1295,26 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertFalse(app.buttons["review.voice"].exists)
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.buttons["review.incorrect"].waitForExistence(timeout: 5))
+    let question = app.staticTexts["review.question"].value as? String
+    let progress = app.staticTexts["review.progress"].label
+    app.buttons["review.corrections"].tap()
+    XCTAssertTrue(app.buttons["My answer was incorrect"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["My answer was correct"].exists)
+    XCTAssertTrue(app.buttons["Ask again later"].exists)
+    XCTAssertTrue(app.buttons["review.exclude"].exists)
+    XCTAssertTrue(app.buttons["Add synonym"].exists)
+    let cancel = app.buttons["Cancel"].firstMatch
+    if cancel.exists {
+      cancel.tap()
+    } else {
+      XCTAssertTrue(app.popovers.firstMatch.exists)
+      app.navigationBars["Reviews"].coordinate(
+        withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)
+      ).tap()
+    }
+    XCTAssertFalse(app.buttons["My answer was incorrect"].exists)
+    XCTAssertEqual(app.staticTexts["review.question"].value as? String, question)
+    XCTAssertEqual(app.staticTexts["review.progress"].label, progress)
     app.buttons["review.incorrect"].tap()
     XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 5))
     app.buttons["review.submit"].tap()

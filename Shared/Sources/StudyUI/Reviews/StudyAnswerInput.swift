@@ -29,6 +29,19 @@ struct StudyAnswerInput {
       didSet { if oldValue != useJapaneseKeyboard && isFirstResponder { reloadInputViews() } }
     }
     var wantsFocus = false
+    open override func cut(_ sender: Any?) {
+      guard (delegate as? StudyAnswerInput.Coordinator)?.parent.editable != false else { return }
+      super.cut(sender)
+    }
+    open override func deleteBackward() {
+      guard let coordinator = delegate as? StudyAnswerInput.Coordinator,
+        !coordinator.parent.editable
+      else {
+        super.deleteBackward()
+        return
+      }
+      coordinator.parent.retried()
+    }
     open override var textInputContextIdentifier: String? {
       useJapaneseKeyboard ? "com.tsurukame.answer.ja" : "com.tsurukame.answer"
     }

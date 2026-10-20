@@ -140,6 +140,34 @@ import UIKit
     #expect(!coordinator.textFieldShouldReturn(field))
     #expect(submissions == 1)
   }
+  @Test func testLockedAdapterCutPreservesSelectionAndActualBackspaceRetries() throws {
+    var retries = 0
+    let coordinator = input(editable: false, retried: { retries += 1 })
+    let field = StudyJapaneseTextField()
+    field.delegate = coordinator
+    let original = "かな😀"
+    field.text = original
+    field.selectedTextRange = field.textRange(
+      from: field.beginningOfDocument, to: field.endOfDocument)
+    field.cut(nil)
+    #expect(field.text == original)
+    #expect(retries == 0)
+    let selection = try #require(field.selectedTextRange)
+    #expect(field.offset(from: field.beginningOfDocument, to: selection.start) == 0)
+    #expect(
+      field.offset(from: field.beginningOfDocument, to: selection.end) == original.utf16.count)
+    field.selectedTextRange = field.textRange(from: field.endOfDocument, to: field.endOfDocument)
+    field.deleteBackward()
+    #expect(field.text == original)
+    #expect(retries == 1)
+    coordinator.parent = input(editable: true, retried: { retries += 1 }).parent
+    field.text = "かな"
+    field.selectedTextRange = field.textRange(from: field.endOfDocument, to: field.endOfDocument)
+    field.deleteBackward()
+    #expect(field.text == "か")
+    #expect(retries == 1)
+  }
+
   @Test func testMarkedTextIsLeftToTheInputMethod() {
     var submissions = 0
     let coordinator = input(submitted: { submissions += 1 })
