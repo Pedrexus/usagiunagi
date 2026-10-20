@@ -143,7 +143,7 @@ public struct SubjectCatalogView: View {
         }
       }.allowsHitTesting(false)
     }
-    .navigationTitle(title)
+    .navigationTitle(mode == .level ? "Level \(query.level)" : title)
     .navigationBarBackButtonHidden(back != nil)
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
@@ -228,7 +228,7 @@ public struct SubjectCatalogView: View {
   private func rows(_ items: [SubjectCatalogItem]) -> some View {
     ForEach(items) { item in
       let row = SubjectCatalogRow(
-        item: item, showAnswers: showAnswers, showsTiming: mode == .remaining,
+        item: item, showAnswers: mode == .search || showAnswers, showsTiming: mode == .remaining,
         preferences: preferences, japaneseFont: japaneseFont, image: image(item.id))
       Button {
         openSubject(item.id)

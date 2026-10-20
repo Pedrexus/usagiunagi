@@ -7,8 +7,10 @@ struct StudyAnswerInput {
   @Binding var focused: Bool
   let reading: Bool
   let automaticJapanese: Bool
+  let editable: Bool
   let alphabet: KanaAlphabet
   let submitted: () -> Void
+  let retried: () -> Void
   #if os(macOS)
     @FocusState private var inputFocused: Bool
   #endif
@@ -97,6 +99,10 @@ struct StudyAnswerInput {
         _ field: UITextField, shouldChangeCharactersIn range: NSRange,
         replacementString value: String
       ) -> Bool {
+        guard parent.editable else {
+          if value.isEmpty { parent.retried() }
+          return false
+        }
         guard parent.reading, field.markedTextRange == nil,
           let edit = KanaConverter.edit(
             text: field.text ?? "", range: range,
@@ -160,6 +166,7 @@ struct StudyAnswerInput {
     var body: some View {
       TextField(prompt, text: $text)
         .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
+        .disabled(!editable)
         .focused($inputFocused).onSubmit(submitted)
         .accessibilityIdentifier("review.answer")
         .onChange(of: focused, initial: true) { _, value in

@@ -57,6 +57,7 @@ struct NativeHomeDashboardView: View {
         if active { await load() }
       }
     }
+    .disabled(!active)
   }
   private var content: some View {
 

@@ -49,7 +49,8 @@ struct KatakanaPracticeSessionView: View {
           .navigationTitle("Review Summary")
           .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-              Button("Done") { dismiss() }.accessibilityIdentifier("review.finish")
+              Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("review.finish")
             }
           }
         } else {
@@ -59,8 +60,9 @@ struct KatakanaPracticeSessionView: View {
             StudyAnswerInput(
               prompt: "Reading", text: $screen.answer,
               focused: $focused, reading: true,
-              automaticJapanese: automaticJapanese, alphabet: .hiragana,
-              submitted: { act(.submit) }
+              automaticJapanese: automaticJapanese, editable: screen.phase == .answering,
+              alphabet: .hiragana,
+              submitted: { act(.submit) }, retried: { act(.retry) }
             ).frame(minHeight: 44)
           } details: {
             reading(practice.subject)

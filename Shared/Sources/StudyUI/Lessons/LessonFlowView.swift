@@ -9,7 +9,7 @@ public struct LessonFlowView<Page: View>: View {
   private let page: (Int) -> Page
   private let back: () -> Void
   private let backTitle: String
-  private let playAudio: (() -> Void)?
+  private let playAudio: (Int) -> Void
   @State private var index = 0
   @FocusState private var keyboardFocus: Bool
 
@@ -17,7 +17,7 @@ public struct LessonFlowView<Page: View>: View {
     subjects: [StudySubject], initialPage: Int = 0, japaneseFont: String? = nil,
     image: @escaping (Int64) -> Image? = { _ in nil }, backTitle: String = "Back",
     back: @escaping () -> Void,
-    playAudio: (() -> Void)? = nil, @ViewBuilder page: @escaping (Int) -> Page
+    playAudio: @escaping (Int) -> Void, @ViewBuilder page: @escaping (Int) -> Page
   ) {
     self.subjects = subjects
     self._index = State(initialValue: min(subjects.count, max(0, initialPage)))
@@ -115,8 +115,7 @@ public struct LessonFlowView<Page: View>: View {
         case .rightArrow, .return, "d": index += 1
         case "q": index = subjects.count
         case .space, "j":
-          guard let playAudio else { return .ignored }
-          playAudio()
+          playAudio(index)
         default: return .ignored
         }
         return .handled

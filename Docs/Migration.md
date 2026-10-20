@@ -16,7 +16,7 @@ Current untested changes include:
 
 P0c production generation opening is **owner-approved and applied; G7 remains open**. The [implementation checkpoint](Implementation/2026-10-20-native-store-opening.md) records canonical Mac/iOS compilation, exact sources, historical proposal evidence and the source-reviewed fix for unordered handoff preference Sets. All ten model declarations retain their original identities/bodies. The opener compares stored physical model hashes before opening a verification clone, validates separate candidate values, durably selects that candidate and retains the actor's lifetime lease. Full handoff values use typed equality; ordered session/catalog arrays retain byte-sensitive order. No migration behavior was executed, no V2/model normalization exists, and historical nested Codable decoders are not independently frozen. WAL/physical-hash behavior, iOS file protection/fsync/interruption and external-writer limits remain open. Compilation and the older disposable naming experiment do not establish G7 acceptance.
 
-The phase/status tables below describe the last accepted checkpoint. [TASKS](TASKS.md) and the [retirement manifest](Implementation/2026-10-20-native-retirement.json) own current implementation/deferred obligations. Debug app compilation now succeeds on Mac and iOS Simulator, including the watch dependency; no tests, app launches, UI comparison or live exercises have run for this production-change stage. The [integration checkpoint](Implementation/2026-10-20-native-integration.json) separates compiler evidence from behavior and retains watch warnings. Formatter and read-only source/configuration inspections are not feature acceptance.
+The phase/status tables below describe the last accepted checkpoint. [TASKS](TASKS.md) and the [retirement manifest](Implementation/2026-10-20-native-retirement.json) own current implementation/deferred obligations. The [original-flow source comparison](Implementation/2026-10-20-original-flow.md) identifies focused production corrections; no tests, app launches, rendered UI comparison or live exercises have run for this production-change stage. The [integration checkpoint](Implementation/2026-10-20-native-integration.json) separates compiler evidence from behavior and retains watch warnings. Formatter and read-only source/configuration inspections are not feature acceptance.
 
 ## Watch UI and complication migration
 
@@ -90,9 +90,11 @@ Apple documentation was checked on October 20, 2026, against the installed Xcode
 
 ## Historical accepted checkpoints and validation
 
+This table preserves the state at `efc3cd5a`; it is not the current implementation ledger. P0c is now applied and P2 is wired, as recorded above and in [TASKS](TASKS.md), while their final runtime acceptance remains open.
+
 Acceptance is scoped to source and destination on `codex/swiftui-27-curriculum`. P1a/P0b/P1b retain their earlier receipts; P2 remains an unwired tested prototype. The [current validation receipt](Validation/2026-10-20-native-practice-parser-and-upgrade-probe.json) adds the current platform, parser and test-only upgrade evidence. It supersedes the three Mac failures at `39f9ef9c` only for this new source. Production Swift lines grow from 32,049 at `465dd79c` to 32,221 (+172), excluding three unrelated owner edits and including formatter wrapping; no new runtime dependency or LOC savings is claimed. No push or hosted Actions pass is claimed.
 
-| Phase | Status at this review | Next evidence required |
+| Phase | Status in the historical receipt | Next evidence required then |
 | --- | --- | --- |
 | P0 | Fourteen-rule inventory and 130 earlier selected regressions at Mainboard `87461e5e`; separate parser verdict now covers all 313 first-party Swift inputs, with four focused scope regressions and invalid/valid fixtures; nineteen changed Swift files pass quality gates | Caller/resource/linkage audit, documented boundaries and SDK/date guidance provenance remain; findings are review signals and tooling publication requires authorization |
 | P0b | Accepted at `8669eca8`: frozen native store, exact schema/values and Mac process reopen | G7 still needs a real versioned upgrade and iOS execution; never regenerate the fixture to make a migration pass |

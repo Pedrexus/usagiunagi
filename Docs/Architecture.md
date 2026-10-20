@@ -35,6 +35,8 @@ Reviews and extra study use the same grader/session engine. Native review action
 
 Command-C and Command-A retain system Copy/Select All behavior; correction actions use Control-C/Control-A. Font actions preserve ordinary Tab and arrow-key focus/caret behavior. These intentional shortcut changes must be included in the original-app usability comparison.
 
+The [original-flow source comparison](Implementation/2026-10-20-original-flow.md) restores lesson pronunciation, locked incorrect-answer editing, summary Return/current-level labels, independent search visibility, paged titles, Home study commands and the detail size preference. Home owns Command-L/R; Mac refresh uses Command-Shift-R. Actual keyboard dispatch, rendered layouts and native usability remain final acceptance work.
+
 Voice views receive an app-owned capture factory. Opening Voice starts listening without another Start tap; unavailable models still require an explicit download. Recognition produces a reviewable transcript; reading answers containing kanji require explicit kana correction. Voice never changes the grading policy. Capture cleanup and a shared audio lease prevent recording/autoplay conflicts across windows. Physical microphones, speech models, latency, interruptions and audio routes remain device gates.
 
 `SessionSummaryView` counts completed subjects, using each meaning/reading's first result. Missed items reopen shared subject details. Subject details use the shared original-conjugation vocabulary highlighter, optional attributed mnemonic artwork, hidden/locked-subject filtering and one revision-checked material editor. Font/audio catalogs and caches have one owner; shared default adapters preserve imported settings and media paths.

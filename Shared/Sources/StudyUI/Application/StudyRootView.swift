@@ -94,7 +94,9 @@ public struct StudyRootView: View {
             if model.snapshot == nil {
               account
             } else {
-              NativeHomeDashboardView(model: model, active: tab == .home && path.isEmpty) {
+              NativeHomeDashboardView(
+                model: model, active: tab == .home && path.isEmpty && !showSettings
+              ) {
                 path = [$0]
               }
             }

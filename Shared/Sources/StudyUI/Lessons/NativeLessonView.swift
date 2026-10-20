@@ -5,6 +5,8 @@ import SwiftUI
 /// Teaching and quizzes share the account's existing durable study session.
 public struct NativeLessonView: View {
   @Environment(StudyLessonSettings.self) private var lessonSettings
+  @Environment(StudyAudioLibrary.self) private var audio
+  @StoredReviewPreferences private var preferences
   private let store: StudyStore
   private let accountID: String
   private let automaticBatchSize: Int?
@@ -19,7 +21,7 @@ public struct NativeLessonView: View {
   @State private var error: String?
   private struct Selection: Identifiable {
     let id = UUID()
-    let subjects: [StudySubject]
+    let subjects: [CatalogSubject]
     var resumeQuiz = false
   }
   public init(
@@ -35,7 +37,7 @@ public struct NativeLessonView: View {
     Group {
       if let selection {
         LessonFlowView(
-          subjects: selection.subjects,
+          subjects: selection.subjects.map(\.summary),
           initialPage: selection.resumeQuiz ? selection.subjects.count : 0,
           backTitle: automaticBatchSize == nil ? "Choose lessons" : "Back",
           back: {
@@ -45,6 +47,11 @@ public struct NativeLessonView: View {
               self.selection = nil
               Task { await load() }
             }
+          },
+          playAudio: { index in
+            audio.toggle(
+              subject: selection.subjects[index],
+              interruptBackgroundAudio: preferences.interruptBackgroundAudio)
           }
         ) { index in
           if index == selection.subjects.count {
@@ -66,7 +73,7 @@ public struct NativeLessonView: View {
         VStack {
           Text("Finish or end your paused quiz before choosing different lessons.")
             .font(.callout).foregroundStyle(.secondary).padding()
-          picker(pausedLesson.subjects, paused: pausedLesson)
+          picker(pausedLesson.subjects.map(\.summary), paused: pausedLesson)
         }
       } else if pausedReview {
         ContentUnavailableView(
@@ -105,12 +112,12 @@ public struct NativeLessonView: View {
       }
       let available = try await store.availableLessons(
         accountID: accountID, lessonPreferences: lessonSettings.value)
-      let byID = Dictionary(uniqueKeysWithValues: available.map { ($0.id, $0.summary) })
+      let byID = Dictionary(uniqueKeysWithValues: available.map { ($0.id, $0) })
       guard !ids.isEmpty, ids.allSatisfy({ byID[$0] != nil }) else {
         throw NativeReviewError.invalidLessonSelection
       }
       let selected = Set(ids)
-      selection = Selection(subjects: available.filter { selected.contains($0.id) }.map(\.summary))
+      selection = Selection(subjects: available.filter { selected.contains($0.id) })
     }
   }
   private struct LessonReadKey: Equatable {
@@ -135,7 +142,7 @@ public struct NativeLessonView: View {
           guard let subject = state.subjects[item.subjectID] else {
             throw NativeReviewError.incompleteContent(item.subjectID)
           }
-          return subject.summary
+          return subject
         }
         try Task.checkCancellation()
         selectedIDs = Set(subjects.map(\.id))
@@ -150,7 +157,7 @@ public struct NativeLessonView: View {
         loaded = true
         if let automaticBatchSize, !initialBatchOpened, !items.isEmpty {
           initialBatchOpened = true
-          selection = Selection(subjects: Array(items.prefix(max(1, automaticBatchSize))))
+          selection = Selection(subjects: Array(available.prefix(max(1, automaticBatchSize))))
         }
       }
     } catch { if !Task.isCancelled { self.error = error.localizedDescription } }

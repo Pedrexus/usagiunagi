@@ -34,7 +34,7 @@ import SwiftUI
               await services.model.refresh()
               await services.automaticSync.wake()
             }
-          }.keyboardShortcut("r")
+          }.keyboardShortcut("r", modifiers: [.command, .shift])
           .disabled(
             owner.services?.model.isSyncing != false
               || owner.services?.model.snapshot?.isSample != false)

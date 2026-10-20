@@ -13,4 +13,13 @@ public enum StudyPalette {
     case .vocabulary: vocabulary
     }
   }
+  public static func color(for category: StudySRSCategory) -> Color {
+    switch category {
+    case .apprentice: kanji
+    case .guru: vocabulary
+    case .master: Color(red: 47.0 / 255, green: 85.0 / 255, blue: 181.0 / 255)
+    case .enlightened: Color(red: 47.0 / 255, green: 127.0 / 255, blue: 181.0 / 255)
+    case .burned: .primary
+    }
+  }
 }

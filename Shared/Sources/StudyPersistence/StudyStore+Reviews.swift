@@ -5,6 +5,7 @@ import StudyCore
 public struct NativeReviewState: Sendable {
   public let saved: SavedStudySession
   public let subjects: [Int64: CatalogSubject]
+  public let currentLevel: Int?
   /// A transient receipt for a newly saved correct answer; never replayed on resume.
   public let success: StudyMarkResult?
   public var isAnki: Bool {
@@ -41,7 +42,7 @@ public struct NativeReviewState: Sendable {
           id: id, subject: subject, level: subject?.level ?? 0,
           meaningWrong: item.meaning.firstAnswerWrong == true,
           readingWrong: item.reading.firstAnswerWrong == true)
-      })
+      }, currentLevel: currentLevel)
   }
   public var subject: CatalogSubject? {
     question.flatMap { saved.session.items[$0.itemID] }.flatMap { subjects[$0.subjectID] }
@@ -475,6 +476,7 @@ extension StudyStore {
       ).map(\.subject)
     return .init(
       saved: saved, subjects: Dictionary(uniqueKeysWithValues: subjects.map { ($0.id, $0) }),
+      currentLevel: try accountState(accountID: accountID)?.profile.level,
       success: success)
   }
   private func requireReviewContent(_ subject: CatalogSubject, assignment: CatalogAssignment) throws

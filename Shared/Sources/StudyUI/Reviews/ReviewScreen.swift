@@ -322,7 +322,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           || (state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty)
       )
       .accessibilityIdentifier("review.submit")
-      .keyboardShortcut(state.isAnki ? .defaultAction : nil)
+      .keyboardShortcut(state.isAnki || state.phase == .incorrect ? .defaultAction : nil)
     }
   }
 

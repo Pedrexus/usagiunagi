@@ -103,15 +103,14 @@ public struct StudyDashboard: View {
       ], alignment: .leading, spacing: 20
     ) {
       StudyCard("SRS progress", subtitle: "Your active study stages") {
-        let groups = ["Apprentice", "Guru", "Master", "Enlightened", "Burned"]
-        let counts = [1...4, 5...6, 7...7, 8...8, 9...9].map { stages in
-          snapshot.assignments.filter { stages.contains($0.srsStageNumber) }.count
-        }
-        Chart(Array(groups.enumerated()), id: \.offset) { index, name in
-          BarMark(x: .value("Items", counts[index]), y: .value("Stage", name))
-            .foregroundStyle(index == 4 ? Color.secondary : StudyPalette.vocabulary)
+        Chart(StudySRSCategory.allCases, id: \.self) { category in
+          let count = snapshot.assignments.filter {
+            StudySRSStage(rawValue: $0.srsStageNumber)?.category == category
+          }.count
+          BarMark(x: .value("Items", count), y: .value("Stage", category.name))
+            .foregroundStyle(StudyPalette.color(for: category))
             .annotation(position: .trailing) {
-              Text(counts[index].formatted()).font(.caption).foregroundStyle(.secondary)
+              Text(count.formatted()).font(.caption).foregroundStyle(.secondary)
             }
         }.frame(height: 190).chartXAxisLabel("Items")
         Text("A stage describes WaniKani review progress, not a test score.").studyNote()

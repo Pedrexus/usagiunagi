@@ -96,7 +96,7 @@ public struct NativeReviewView: View {
                   self.review = nil
                   finished()
                 }
-              }.accessibilityIdentifier("review.finish")
+              }.keyboardShortcut(.defaultAction).accessibilityIdentifier("review.finish")
             }
           }
         } else if let subject = review.subject {
@@ -122,10 +122,11 @@ public struct NativeReviewView: View {
               prompt: screen.prompt, text: $screen.answer,
               focused: $answerFocused,
               reading: screen.questionKind == .reading, automaticJapanese: automaticJapanese,
+              editable: screen.phase == .answering,
               alphabet: subjectSettings.value.useKatakanaForOnyomi
                 && subject.readings.first(where: \.isPrimary)?.kind == .onyomi
                 ? .katakana : .hiragana,
-              submitted: { act(.submit) }
+              submitted: { act(.submit) }, retried: { act(.retry) }
             ).frame(minHeight: 44)
           } details: {
             NativeSubjectDetailsView(
