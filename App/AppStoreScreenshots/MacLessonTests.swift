@@ -68,7 +68,7 @@
       app.buttons["review.submit"].click()
       XCTAssertTrue(
         app.staticTexts["Lesson quiz saved"].waitForExistence(timeout: 5), app.debugDescription)
-      app.buttons["Finish session"].click()
+      app.buttons["review.finish"].click()
       let lessons = app.buttons["home.lessons"]
       XCTAssertTrue(lessons.waitForExistence(timeout: 5))
       XCTAssertFalse(lessons.isEnabled)

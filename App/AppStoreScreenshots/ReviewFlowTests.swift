@@ -596,7 +596,7 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor private func launchFontLibrary(extra: [String] = []) -> XCUIApplication {
-    let app = launchSingleReview(extra: ["FontFlowFixture"] + extra)
+    let app = launchNativeReview(extra: extra)
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("personally")
@@ -614,7 +614,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(selection.waitForExistence(timeout: 5))
     XCTAssertEqual(selection.value as? String, "0")
     setSettingsSwitch(selection, on: true, in: app)
-    let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     screenshot.name = "SwiftUI font library selection"
     screenshot.lifetime = .keepAlways
     add(screenshot)
@@ -900,7 +900,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testSummaryShowsMissedMeaningAndOpensSubjectDetails() {
     continueAfterFailure = false
-    let app = launchSingleReview()
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
@@ -909,33 +909,37 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
     app.buttons["review.reveal"].tap()
     app.buttons["review.submit"].tap()
-    let complete = app.staticTexts["Session complete"]
+    let complete = app.staticTexts["Review session saved"]
     for _ in 0..<3 {
       if complete.exists { break }
       XCTAssertTrue(field.waitForExistence(timeout: 5))
       let answer =
-        app.staticTexts["review.prompt"].label.contains("Reading") ? "watashijishin" : "personally"
+        app.staticTexts["review.prompt"].label.contains("Reading") ? "hitotsu" : "one thing"
       field.tap()
       field.typeText(answer)
       app.buttons["review.submit"].tap()
     }
     XCTAssertTrue(complete.waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["Missed items"].exists)
+    XCTAssertTrue(
+      app.staticTexts[
+        "Completed answers are saved on this device and sync automatically when online."
+      ].isHittable)
+    XCTAssertTrue(app.staticTexts["Missed · level 1"].exists)
     let missed = app.buttons["summary.subject.0"]
     XCTAssertTrue(missed.waitForExistence(timeout: 5))
     XCTAssertTrue(missed.label.contains("Meaning missed"))
     XCTAssertFalse(missed.label.contains("Reading missed"))
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "SwiftUI missed-subject summary"
     attachment.lifetime = .keepAlways
     add(attachment)
     missed.tap()
-    XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 5))
-    app.buttons["Back"].tap()
+    XCTAssertTrue(app.navigationBars.buttons.firstMatch.waitForExistence(timeout: 5))
+    app.navigationBars.buttons.firstMatch.tap()
     XCTAssertTrue(missed.waitForExistence(timeout: 5))
-    app.navigationBars["Review Summary"].buttons["Done"].tap()
+    app.buttons["review.finish"].tap()
     XCTAssertTrue(
-      app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews")).firstMatch
+      app.buttons["app.settings"]
         .waitForExistence(timeout: 5))
   }
 
@@ -1144,6 +1148,17 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
   }
 
+  @MainActor private func launchNativeReview(extra: [String] = []) -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments =
+      ["--review-fixture", "--manual-review-fixture", "--audio-fixture", "--light-fixture"] + extra
+    app.launch()
+    XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 10), app.debugDescription)
+    app.buttons["home.reviews"].tap()
+    XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10), app.debugDescription)
+    return app
+  }
+
   @MainActor
   private func launchSingleReview(extra: [String] = []) -> XCUIApplication {
     let app = XCUIApplication()
@@ -1181,6 +1196,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   private func clearFixture(_ app: XCUIApplication) {
     app.terminate()
+    guard !app.launchArguments.contains("--review-fixture") else { return }
     app.launchArguments = ["-FASTLANE_SNAPSHOT", "YES", "ResetUserDefaults"]
     app.launch()
     app.terminate()
@@ -1189,7 +1205,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testIncorrectAnswerRevealAndOverride() {
     continueAfterFailure = false
-    let app = launchSingleReview()
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
@@ -1198,7 +1214,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
     app.buttons["review.reveal"].tap()
     XCTAssertTrue(app.buttons["review.corrections"].waitForExistence(timeout: 5))
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "SwiftUI incorrect answer details"
     attachment.lifetime = .keepAlways
     add(attachment)
@@ -1206,19 +1222,16 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["My answer was correct"].tap()
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
-    field.typeText("watashijishin")
+    field.typeText("hitotsu")
     app.buttons["review.submit"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor
   func testCombinedAnkiIncorrectThenCorrectCompletesOneSubject() {
     continueAfterFailure = false
-    let app = launchSingleReview(extra: [
-      "-ankiMode",
-      "YES",
-      "-ankiModeCombineReadingMeaning",
-      "YES",
+    let app = launchNativeReview(extra: [
+      "--anki-fixture", "--combined-anki-fixture",
     ])
     defer { clearFixture(app) }
     XCTAssertFalse(app.buttons["review.voice"].exists)
@@ -1229,13 +1242,13 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.buttons["review.correct"].waitForExistence(timeout: 5))
     app.buttons["review.correct"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor
   func testLandscapeReviewKeepsAnswerControlsAccessible() {
     continueAfterFailure = false
-    let app = launchSingleReview()
+    let app = launchNativeReview()
     defer {
       XCUIDevice.shared.orientation = .portrait
       clearFixture(app)
@@ -1249,40 +1262,42 @@ final class ReviewFlowTests: XCTestCase {
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
-    field.typeText("personally")
+    field.typeText("one thing")
     XCTAssertTrue(app.buttons["review.submit"].isHittable)
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    XCTAssertTrue(app.staticTexts["review.prompt"].isHittable)
+    XCTAssertTrue(app.staticTexts["Level 1"].isHittable)
+    let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "SwiftUI landscape review"
     attachment.lifetime = .keepAlways
     add(attachment)
     app.buttons["review.submit"].tap()
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
-    field.typeText("watashijishin")
+    field.typeText("hitotsu")
     app.buttons["review.submit"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor
   func testQuickSettingsPreservesDraftAndAppliesExactMatch() {
     continueAfterFailure = false
-    let app = launchSingleReview(extra: ["-exactMatch", "NO"])
+    let app = launchNativeReview(extra: ["-exactMatch", "NO"])
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
-    field.typeText("personaly")
+    field.typeText("one thng")
     app.buttons["review.settings"].tap()
     let exact = app.switches["reviewSettings.exactMatch"]
     XCTAssertTrue(exact.waitForExistence(timeout: 5))
     XCTAssertEqual(exact.value as? String, "0")
     exact.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
     XCTAssertEqual(exact.value as? String, "1")
-    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "SwiftUI quick settings"
     attachment.lifetime = .keepAlways
     add(attachment)
     app.buttons["reviewSettings.done"].tap()
-    XCTAssertEqual(field.value as? String, "personaly")
+    XCTAssertEqual(field.value as? String, "one thng")
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.staticTexts["review.feedback"].waitForExistence(timeout: 5))
     XCTAssertEqual(app.staticTexts["review.feedback"].label, "Use the exact meaning.")
@@ -1292,7 +1307,7 @@ final class ReviewFlowTests: XCTestCase {
     exact.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
     XCTAssertEqual(exact.value as? String, "0")
     app.buttons["reviewSettings.done"].tap()
-    XCTAssertEqual(field.value as? String, "personaly")
+    XCTAssertEqual(field.value as? String, "one thng")
     app.buttons["review.submit"].tap()
     let reading = XCTNSPredicateExpectation(
       predicate: NSPredicate { _, _ in
@@ -1300,19 +1315,19 @@ final class ReviewFlowTests: XCTestCase {
       }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
     field.tap()
-    field.typeText("watashijishin")
+    field.typeText("hitotsu")
     app.buttons["review.submit"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor
   func testWrapUpCanBeStoppedAndCompleted() {
     continueAfterFailure = false
-    let app = launchSingleReview()
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
-    field.typeText("personally")
+    field.typeText("one thing")
     app.buttons["review.submit"].tap()
     app.buttons["review.close"].tap()
     let wrap = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Wrap up ("))
@@ -1323,24 +1338,26 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.close"].tap()
     XCTAssertTrue(app.buttons["Stop wrapping up"].waitForExistence(timeout: 5))
     app.buttons["Stop wrapping up"].tap()
-    XCTAssertFalse(app.staticTexts["Wrapping up"].exists)
+    let stopped = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "exists == false"), object: app.staticTexts["Wrapping up"])
+    XCTAssertEqual(XCTWaiter.wait(for: [stopped], timeout: 5), .completed, app.debugDescription)
     app.buttons["review.close"].tap()
     XCTAssertTrue(wrap.waitForExistence(timeout: 5))
     wrap.tap()
     field.tap()
-    field.typeText("watashijishin")
+    field.typeText("hitotsu")
     app.buttons["review.submit"].tap()
-    XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
   }
 
   @MainActor
   func testFontLibraryReturnsToDraftAndUnstartedReviewCanClose() {
     continueAfterFailure = false
-    let app = launchSingleReview()
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
-    field.typeText("personally")
+    field.typeText("one thing")
     app.buttons["review.settings"].tap()
     XCTAssertTrue(app.buttons["reviewSettings.fonts"].waitForExistence(timeout: 5))
     app.buttons["reviewSettings.fonts"].tap()
@@ -1348,29 +1365,27 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(navigation.waitForExistence(timeout: 5))
     app.buttons["reviewSettings.done"].tap()
     XCTAssertTrue(field.waitForExistence(timeout: 5))
-    XCTAssertEqual(field.value as? String, "personally")
+    XCTAssertEqual(field.value as? String, "one thing")
     app.buttons["review.close"].tap()
-    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
-      .firstMatch
+    let start = app.buttons["home.reviews"]
     XCTAssertTrue(start.waitForExistence(timeout: 5))
   }
 
   @MainActor
   func testExplicitEndDiscardsOnlyTheUnfinishedSession() {
     continueAfterFailure = false
-    let app = launchSingleReview()
+    let app = launchNativeReview()
     defer { clearFixture(app) }
     let field = app.textFields["review.answer"]
     field.tap()
-    field.typeText("personally")
+    field.typeText("one thing")
     app.buttons["review.submit"].tap()
     app.buttons["review.close"].tap()
     XCTAssertTrue(app.buttons["End review session"].waitForExistence(timeout: 5))
     app.buttons["End review session"].tap()
-    let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
-      .firstMatch
+    let start = app.buttons["home.reviews"]
     XCTAssertTrue(start.waitForExistence(timeout: 5))
-    XCTAssertFalse(app.staticTexts["Session complete"].exists)
+    XCTAssertFalse(app.staticTexts["Review session saved"].exists)
   }
 }
 
@@ -1473,7 +1488,7 @@ extension ReviewFlowTests {
       app.buttons["review.submit"].tap()
     }
     XCTAssertTrue(saved.waitForExistence(timeout: 5), app.debugDescription)
-    app.buttons["Finish session"].tap()
+    app.buttons["review.finish"].tap()
     let choose = app.buttons["home.chooseLessons"]
     XCTAssertTrue(choose.waitForExistence(timeout: 5))
     choose.tap()

@@ -56,7 +56,7 @@
         }
       }
       XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 10), app.debugDescription)
-      app.buttons["Finish session"].tap()
+      app.buttons["review.finish"].tap()
       XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 10))
     }
     @MainActor private func requireEmptyOutbox(_ app: XCUIApplication) {

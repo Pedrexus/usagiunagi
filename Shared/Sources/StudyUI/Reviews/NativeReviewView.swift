@@ -13,16 +13,15 @@ public struct NativeReviewView: View {
   private let store: StudyStore
   private let accountID: String
   private let mode: NativeStudyMode
-  private var lessonSubjectIDs: [Int64]? { if case .lessons(let ids) = mode { ids } else { nil } }
   private var isPractice: Bool { if case .practice = mode { true } else { false } }
   @Binding private var wrapUpRequested: Bool
   private let finished: () -> Void
-  private var isLesson: Bool { lessonSubjectIDs != nil }
+  private var isLesson: Bool { if case .lessons = mode { true } else { false } }
   @State private var review: NativeReviewState?
   @State private var screen = ReviewScreenState()
   @State private var busy = false
   @State private var error: String?
-  @State private var confirmEnd = false
+  @State private var summarySubjectID: Int64?
   @State private var readyImage: String?
   @State private var voiceRequest: VoiceAnswerRequest?
   @Environment(StudyLessonSettings.self) private var lessonSettings
@@ -67,48 +66,37 @@ public struct NativeReviewView: View {
         ) { audio.stop() }.accessibilityIdentifier("review.stopAudio")
       }
       if let review {
-        if review.question != nil {
-          HStack {
-            Spacer()
-            Button("Quick settings", systemImage: "slider.horizontal.3") { settings = true }
-              .accessibilityIdentifier("review.settings")
-            Button("End session", systemImage: "xmark") { confirmEnd = true }
-              .accessibilityIdentifier("review.end")
-          }.padding(.horizontal)
-        }
         if review.question == nil {
-          ContentUnavailableView(
-            isPractice
-              ? "Practice complete"
-              : review.saved.session.completedIDs.isEmpty
-                ? "Session complete" : isLesson ? "Lesson quiz saved" : "Review session saved",
-            systemImage: "checkmark.circle",
-            description: Text(
-              review.saved.session.completedIDs.isEmpty
-                ? "No subjects completed. Saved notes and exclusions sync automatically when online."
-                : "\(review.saved.session.completedIDs.count) completed · \(review.saved.session.successRate)% accuracy. "
-                  + (isPractice
-                    ? "Practice answers do not change WaniKani progress or create review uploads."
-                    : "Completed answers are saved on this device and sync automatically when online.")
-            ))
-          Button("Finish session") {
-            run {
-              try await store.finishReviews(
-                accountID: accountID, expectedRevision: review.saved.revision)
-              self.review = nil
-              finished()
+          SessionSummaryView(
+            summary: review.summary(showOldMeanings: subjectSettings.value.showDeprecatedMnemonic),
+            title: isPractice
+              ? "Practice complete" : isLesson ? "Lesson quiz saved" : "Review session saved",
+            message: isPractice
+              ? "Practice answers do not change WaniKani progress or create review uploads."
+              : "Completed answers are saved on this device and sync automatically when online.",
+            imageURL: { id in
+              guard let item = review.saved.session.items[id],
+                let path = review.subjects[item.subjectID]?.characterImageURL, !path.isEmpty
+              else { return nil }
+              return URL(string: path)
+            }
+          ) { id in summarySubjectID = review.saved.session.items[id]?.subjectID }
+          .navigationTitle(
+            isPractice ? "Practice summary" : isLesson ? "Lesson summary" : "Review summary"
+          )
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Done") {
+                run {
+                  try await store.finishReviews(
+                    accountID: accountID, expectedRevision: review.saved.revision)
+                  self.review = nil
+                  finished()
+                }
+              }.accessibilityIdentifier("review.finish")
             }
           }
         } else if let subject = review.subject {
-          HStack {
-            Text("Answers save automatically. Leave this page to pause.").font(.caption)
-              .foregroundStyle(.secondary)
-            Spacer()
-            Button("Ask later") { change(.deferQuestion) }
-            Button(review.saved.session.wrappingUp ? "Stop wrapping up" : "Wrap up") {
-              change(review.saved.session.wrappingUp ? .stopWrapping : .wrapUp)
-            }.disabled(!review.saved.session.canWrapUp && !review.saved.session.wrappingUp)
-          }.padding(.horizontal)
           ReviewScreen(
             state: screen, action: act,
             question: {
@@ -156,25 +144,10 @@ public struct NativeReviewView: View {
             ))
           Button("Ask this question later") { change(.deferQuestion) }
         }
-      } else {
-        ContentUnavailableView(
-          isPractice ? "Extra study" : isLesson ? "Lesson quiz" : "Offline reviews",
-          systemImage: "rectangle.and.pencil.and.ellipsis",
-          description: Text(
-            isPractice
-              ? "Practice answers use your saved subjects without changing WaniKani progress or creating review uploads."
-              : isLesson
-                ? "Quiz the lessons you selected. Completed lessons are saved here and sync automatically when online."
-                : "Start with the reviews due in your saved account, or resume the session already saved on this device."
-          ))
-        Button(
-          isPractice
-            ? "Start or resume practice"
-            : isLesson ? "Start or resume quiz" : "Start or resume reviews"
-        ) { load() }
-        .buttonStyle(.borderedProminent)
+      } else if error == nil {
+        ProgressView("Opening study session")
       }
-      if busy { ProgressView("Saving") }
+      if busy && review != nil { ProgressView("Saving") }
       if let error {
         Text(error).foregroundStyle(.red).textSelection(.enabled).padding()
         Button("Reload saved session") { load() }
@@ -207,26 +180,16 @@ public struct NativeReviewView: View {
       }
     }
 
-    .confirmationDialog(
-      isPractice ? "End practice?" : isLesson ? "End lesson quiz?" : "End review session?",
-      isPresented: $confirmEnd,
-      titleVisibility: .visible
-    ) {
-      if let review {
-        Button("End session", role: .destructive) {
-          run {
-            try await store.endReviews(
-              accountID: accountID, expectedRevision: review.saved.revision)
-            self.review = nil
-            finished()
-          }
-        }.accessibilityIdentifier("review.confirmEnd")
+    .toolbar {
+      if review?.question != nil {
+        ToolbarItem(placement: .secondaryAction) {
+          Button("Ask later", systemImage: "arrow.uturn.forward") { change(.deferQuestion) }
+        }
       }
-    } message: {
-      Text(
-        isPractice
-          ? "Practice answers do not affect your WaniKani progress."
-          : "Completed answers stay saved. Progress on unfinished subjects will be discarded.")
+    }
+    .navigationDestination(item: $summarySubjectID) { id in
+      NativeSubjectDetailsView(store: store, accountID: accountID, subjectID: id)
+        .navigationTitle("Subject")
     }
     .sheet(item: $voiceRequest) { request in
       VoiceAnswerPanel(question: request.question, audio: audio) { text in
@@ -308,6 +271,11 @@ public struct NativeReviewView: View {
     screen.remaining = session.activeIDs.count + session.queuedIDs.count
     screen.accuracy = "\(session.successRate)%"
     screen.wrappingUp = session.wrappingUp
+    screen.hasMenu = true
+    screen.endTitle =
+      isPractice ? "End practice" : isLesson ? "End lesson quiz" : "End review session"
+    screen.canWrapUp = session.canWrapUp || session.wrappingUp
+    screen.activeCount = session.activeIDs.count
     screen.phase =
       session.currentDecision == .incorrect
       ? (value.isAnki || preferences.revealAnswers ? .details : .incorrect) : .answering
@@ -449,6 +417,15 @@ public struct NativeReviewView: View {
       voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
     case .focus: answerFocused = true
     case .settings: settings = true
+    case .wrap: change(.wrapUp)
+    case .stopWrapping: change(.stopWrapping)
+    case .end:
+      guard let review else { return }
+      run {
+        try await store.endReviews(accountID: accountID, expectedRevision: review.saved.revision)
+        self.review = nil
+        finished()
+      }
     case .playAudio:
       if let subject = review?.subject {
         audio.toggle(

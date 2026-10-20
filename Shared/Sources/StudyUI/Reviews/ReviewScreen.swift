@@ -35,6 +35,7 @@ import SwiftUI
   public var canPlayAudio = false
   public var canShowAll = true
   public var hasMenu = false
+  public var endTitle = "End review session"
   public var canChangeFont = false
   public var showAssessment = false
   public var successCount = 0
@@ -143,17 +144,17 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       Button("Ask again later") { action(.deferQuestion) }
     }
     .confirmationDialog(
-      "End review session?", isPresented: $confirmEnd, titleVisibility: .visible
+      state.endTitle + "?", isPresented: $confirmEnd, titleVisibility: .visible
     ) {
       if state.wrappingUp {
         Button("Stop wrapping up") { action(.stopWrapping) }
       } else {
         Button("Wrap up (\(state.activeCount) to go)") { action(.wrap) }
       }
-      Button("End review session", role: .destructive) { action(.end) }
+      Button(state.endTitle, role: .destructive) { action(.end) }
     } message: {
       Text(
-        "Ending now loses progress on half-answered reviews. Wrap up to finish the current batch first."
+        "Completed answers stay saved. Ending now discards unfinished answers. Wrap up to finish the current batch first."
       )
     }
     .onChange(of: compactLandscape) { _, _ in action(.focus) }
@@ -181,7 +182,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       feedbackLabels(horizontal: false)
     }
     .font(.caption).foregroundStyle(.secondary)
-    .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+    .frame(maxWidth: .infinity, alignment: .leading)
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("review.success")
   }
@@ -263,7 +264,10 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   }
 
   private var question: some View {
-    VStack(spacing: 0) {
+    let layout =
+      compactLandscape
+      ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+    return layout {
       VStack(spacing: 8) {
         Group {
           if let image = state.questionImage {

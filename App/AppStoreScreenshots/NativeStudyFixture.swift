@@ -14,7 +14,7 @@
       let defaults = UserDefaults(suiteName: suite)!
       defaults.removePersistentDomain(forName: suite)
       var preferences = ReviewPreferences()
-      if arguments.contains("--lesson-fixture") {
+      if arguments.contains("--lesson-fixture") || arguments.contains("--manual-review-fixture") {
         preferences.revealAnswers = false
         preferences.sessionOptions.groupMeaningReading = true
         preferences.sessionOptions.incorrectAnswerDelay = 0

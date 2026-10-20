@@ -58,6 +58,47 @@ struct NativeReviewTests {
     #expect(try await reopened.pendingReviews(accountID: account).count == 1)
   }
 
+  @Test func missedSubjectSummarySurvivesReopenWithoutCountingRetriesAsSubjects() async throws {
+    let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: folder) }
+    let url = folder.appending(path: "study.store")
+    do {
+      let store = try await store(at: url)
+      var options = StudySessionOptions()
+      options.groupMeaningReading = true
+      options.incorrectAnswerDelay = 0
+      let initial = try await store.openReviews(accountID: account, options: options, now: now)
+      #expect(
+        initial.summary(showOldMeanings: false).entries.isEmpty
+          && initial.summary(showOldMeanings: false).accuracy == nil)
+      let question = try #require(initial.question)
+      #expect(question.kind == .meaning)
+      let wrong = try await store.answerReview(
+        "wrong", question: question, accountID: account, expectedRevision: initial.saved.revision,
+        now: now)
+      var state = try await store.changeReview(
+        .advance, accountID: account, expectedRevision: wrong.state.saved.revision, now: now)
+      for _ in 0..<4 {
+        guard let question = state.question else { break }
+        state = try await store.answerReview(
+          question.kind == .meaning ? "single" : "いち", question: question, accountID: account,
+          expectedRevision: state.saved.revision, now: now
+        ).state
+      }
+      #expect(state.question == nil)
+    }
+    let reopened = try await StudyStore.open(at: url)
+    let state = try await reopened.openReviews(accountID: account, now: now)
+    let summary = state.summary(showOldMeanings: false)
+    let entry = try #require(summary.entries.first)
+    #expect(summary.entries.count == 1 && summary.correctCount == 0 && summary.accuracy == 0)
+    #expect(entry.meaningWrong && !entry.readingWrong)
+    #expect(entry.subject?.characters == "一" && entry.subject?.readings == ["いち"])
+    #expect(entry.subject?.meaning == "One, Single")
+    #expect(summary.missedGroups.map(\.id) == [1])
+    #expect(try await reopened.pendingReviews(accountID: account).count == 1)
+  }
+
   @Test func staleWindowsAndVoiceTokensCannotCreditAnotherQuestion() async throws {
     let store = try await store()
     let opened = try await store.openReviews(accountID: account, now: now)
@@ -289,7 +330,10 @@ extension NativeReviewTests {
     profile.maxLevelGranted = 60
     var subject = CatalogSubject(id: 8790, kind: .radical)
     subject.level = 1
-    subject.meanings = [.init("Death Star", role: .primary)]
+    subject.meanings = [
+      .init("Death Star", role: .primary), .init("Old name", role: .auxiliaryWhitelist),
+      .init("Wrong", role: .blacklist),
+    ]
     subject.characterImageURL = "https://cdn.wanikani.com/fixture.svg"
     var assignment = CatalogAssignment(id: 101, subjectID: subject.id, kind: .radical)
     assignment.level = 1
@@ -314,6 +358,12 @@ extension NativeReviewTests {
       "death star", question: answer, accountID: account,
       expectedRevision: resumed.saved.revision, now: now)
     #expect(completed.grade == .precise && completed.state.question == nil)
+    #expect(
+      completed.state.summary(showOldMeanings: false).entries.first?.subject?.meaning
+        == "Death Star")
+    #expect(
+      completed.state.summary(showOldMeanings: true).entries.first?.subject?.meaning
+        == "Death Star, Old name")
     let pending = try await store.pendingReviews(accountID: account)
     #expect(pending.count == 1)
     let submission = try #require(pending.first).submission

@@ -22,6 +22,27 @@ public struct NativeReviewState: Sendable {
     else { return nil }
     return question
   }
+  public func summary(showOldMeanings: Bool) -> StudySessionSummary {
+    StudySessionSummary(
+      entries: saved.session.completedIDs.compactMap { id in
+        guard let item = saved.session.items[id] else { return nil }
+        let catalog = subjects[item.subjectID]
+        let subject = catalog.map { value in
+          StudySubject(
+            id: value.id, characters: value.japanese,
+            meaning: value.meanings.filter {
+              $0.role != .blacklist
+                && ($0.role != .auxiliaryWhitelist || (value.kind == .radical && showOldMeanings))
+            }.map(\.text).joined(separator: ", "),
+            readings: value.readings.filter { value.kind != .kanji || $0.isPrimary }.map(\.text),
+            kind: value.kind, level: value.level, documentURL: URL(string: value.documentURL))
+        }
+        return .init(
+          id: id, subject: subject, level: subject?.level ?? 0,
+          meaningWrong: item.meaning.firstAnswerWrong == true,
+          readingWrong: item.reading.firstAnswerWrong == true)
+      })
+  }
   public var subject: CatalogSubject? {
     question.flatMap { saved.session.items[$0.itemID] }.flatMap { subjects[$0.subjectID] }
   }

@@ -46,7 +46,7 @@
       showAnswer(in: app)
       app.buttons["review.correct"].click()
       XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
-      app.buttons["Finish session"].click()
+      app.buttons["review.finish"].click()
       let reviews = app.buttons["home.reviews"]
       XCTAssertTrue(reviews.waitForExistence(timeout: 5))
       let caughtUp = XCTNSPredicateExpectation(
@@ -158,7 +158,7 @@
         app.buttons["review.submit"].click()
       }
       XCTAssertTrue(app.staticTexts["Practice complete"].waitForExistence(timeout: 5))
-      app.buttons["Finish session"].click()
+      app.buttons["review.finish"].click()
       let reviews = app.buttons["home.reviews"]
       XCTAssertTrue(reviews.waitForExistence(timeout: 5))
       XCTAssertTrue(reviews.isEnabled && reviews.label.contains("1 ready"))
@@ -344,8 +344,7 @@
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       input.click()
       input.typeText("Unsubmitted text")
-      app.buttons["review.end"].click()
-      app.buttons["review.confirmEnd"].click()
+      app.buttons["review.close"].click()
       XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 5))
       app.buttons["home.reviews"].click()
       XCTAssertTrue(input.waitForExistence(timeout: 5))
@@ -446,7 +445,7 @@
       XCTAssertTrue(open.waitForExistence(timeout: 5))
       open.click()
       XCTAssertTrue(
-        app.buttons["Stop wrapping up"].waitForExistence(timeout: 5), app.debugDescription)
+        app.staticTexts["Wrapping up"].waitForExistence(timeout: 5), app.debugDescription)
       XCTAssertFalse(app.staticTexts["Review session saved"].exists)
       input.click()
       input.typeText(first == "Reading" ? "one" : "ichi")
@@ -838,7 +837,7 @@
       image.name = "Native review-menu exclusion"
       image.lifetime = .keepAlways
       add(image)
-      app.buttons["Finish session"].click()
+      app.buttons["review.finish"].click()
       let start = app.buttons[lesson ? "home.lessons" : "home.reviews"]
       XCTAssertTrue(start.waitForExistence(timeout: 5))
       XCTAssertFalse(start.isEnabled)

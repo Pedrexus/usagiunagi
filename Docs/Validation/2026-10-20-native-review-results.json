@@ -1,0 +1,267 @@
+{
+  "date": "2026-10-20T10:05:46+0900",
+  "baseline": "0f42a7848a437816ebd134b32f3fa9d6a2e6e069",
+  "branch": "codex/swiftui-27-curriculum",
+  "sources": {
+    "App/AppStoreScreenshots/MacLessonTests.swift": "80c3eb13913cc45b115062d7789950a37e98718c10bf445faa1352dc753fadba",
+    "App/AppStoreScreenshots/MacReviewModeTests.swift": "0bd6cf1f9de309b5074638371724ea094be31e4da4a3025f76db0b4f57eb1a27",
+    "App/AppStoreScreenshots/NativeRootFlowTests.swift": "f68e00c0e287d89dee5e412aa3c7c0093a701eb36699acd25acae575a31bcb6c",
+    "App/AppStoreScreenshots/NativeStudyFixture.swift": "99b60f0bef4a41ef2922e0bb5d49af5b7cf2b853ac084531bb6b7541df356f29",
+    "App/AppStoreScreenshots/ReviewFlowTests.swift": "479dd42048838f4bb3f63c9848677a800eadd8daef200dad3029827852cbdd07",
+    "App/Generated/IB-Scenes+Generated.swift": "c9819bcf5a264f3814e7338c9c18ff37b6b89e0b9b04b096fa2e816bf7b57227",
+    "App/Info.plist": "bf87c8490dc1fd85ba27178057630458e2c47e7b928ede0fc038009e0b8a974c",
+    "App/UsagiUnagi.xcodeproj/project.pbxproj": "bf0dcf1c29fdedca040884b5a0b03977ccdc96e260d644b12af1bc7e7e192430",
+    "Docs/Architecture.md": "b17c2b9767bde7041dbccf07f35c673f00b391ebeb484c9ad7d49fa83ae1f053",
+    "Docs/Development.md": "47d051037ed040fbf584a9fd0d5dd3b312433025068d7733f7be838b1edef9d9",
+    "Docs/History/task-checkpoints.md": "d4ce064a399b83e3fbf02da09951c3e9278a72b4f0a192b281d21b99c7c90428",
+    "Docs/TASKS.md": "43e2aa77c5818a36e71617e253cea1c71b36d9adf127230f00c1e91c72be1bc1",
+    "Shared/Sources/StudyPersistence/StudyStore+Reviews.swift": "e94444458d4d4efb6d806439e433b5cf465202a13cccc52ef5677fffb04d4004",
+    "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift": "4bf5a43c5df2d35c1743dab5cb03fca7544410b11196ee63fc74a7632e8a8359",
+    "Shared/Sources/StudyUI/Reviews/ReviewScreen.swift": "e629d92f18cc39b4b5447ac40e6125586082507bfaf00aef5fb3f3bf35f4a4be",
+    "Shared/Sources/StudyUI/Reviews/SessionSummaryView.swift": "0773c1bdc49caa505b528d8ef3dea5a17584a1c3f693d8bcd1fff335e8e6c63a",
+    "Shared/Tests/StudyPersistenceTests/NativeReviewTests.swift": "5c3b4c39c9dfbaf1a1d14f13b65afbc5086ca8752b1b37a1f54de746bed87218"
+  },
+  "change": "Restore native review summary parity, share study controls, improve compact metadata layout and remove redundant opening/launch UI. No grading, account schema, outbox protocol, palette or dependency change.",
+  "cases": {
+    "migrated_review": [
+      "testSummaryShowsMissedMeaningAndOpensSubjectDetails",
+      "testIncorrectAnswerRevealAndOverride",
+      "testCombinedAnkiIncorrectThenCorrectCompletesOneSubject",
+      "testLandscapeReviewKeepsAnswerControlsAccessible",
+      "testQuickSettingsPreservesDraftAndAppliesExactMatch",
+      "testWrapUpCanBeStoppedAndCompleted",
+      "testFontLibraryReturnsToDraftAndUnstartedReviewCanClose",
+      "testExplicitEndDiscardsOnlyTheUnfinishedSession"
+    ],
+    "migrated_fonts": [
+      "testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft",
+      "testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled",
+      "testFontDownloadContinuesAfterLeavingThePicker"
+    ],
+    "behavior": [
+      "AppStoreScreenshots/ReviewFlowTests/testSummaryShowsMissedMeaningAndOpensSubjectDetails",
+      "AppStoreScreenshots/ReviewFlowTests/testIncorrectAnswerRevealAndOverride",
+      "AppStoreScreenshots/ReviewFlowTests/testCombinedAnkiIncorrectThenCorrectCompletesOneSubject",
+      "AppStoreScreenshots/ReviewFlowTests/testLandscapeReviewKeepsAnswerControlsAccessible",
+      "AppStoreScreenshots/ReviewFlowTests/testQuickSettingsPreservesDraftAndAppliesExactMatch",
+      "AppStoreScreenshots/ReviewFlowTests/testWrapUpCanBeStoppedAndCompleted",
+      "AppStoreScreenshots/ReviewFlowTests/testFontLibraryReturnsToDraftAndUnstartedReviewCanClose",
+      "AppStoreScreenshots/ReviewFlowTests/testExplicitEndDiscardsOnlyTheUnfinishedSession",
+      "AppStoreScreenshots/ReviewFlowTests/testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft",
+      "AppStoreScreenshots/ReviewFlowTests/testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled",
+      "AppStoreScreenshots/ReviewFlowTests/testFontDownloadContinuesAfterLeavingThePicker",
+      "AppStoreScreenshots/ReviewFlowTests/testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson",
+      "AppStoreScreenshots/NativeRootFlowTests/testNativeTypedReviewCompletesAndUploadsWithoutAManualSync",
+      "AppStoreScreenshots/NativeRootFlowTests/testNativeLessonsTeachQuizAndUploadWithoutAManualSync"
+    ],
+    "layout": [
+      "AppStoreScreenshots/NativeRootFlowTests/testNativeReviewConvertsRomajiAndPreservesDraftThroughSettingsAndPause",
+      "AppStoreScreenshots/NativeRootFlowTests/testNativeTypedReviewCompletesAndUploadsWithoutAManualSync",
+      "AppStoreScreenshots/NativeRootFlowTests/testNativeLessonsTeachQuizAndUploadWithoutAManualSync",
+      "AppStoreScreenshots/ReviewFlowTests/testSummaryShowsMissedMeaningAndOpensSubjectDetails",
+      "AppStoreScreenshots/ReviewFlowTests/testLandscapeReviewKeepsAnswerControlsAccessible"
+    ]
+  },
+  "phases": {
+    "phone-final": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a0553de51e1f431d87027b7d28bbe8ee.xcresult",
+      "log": "/private/tmp/usagi-native-review-phone-final.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 14,
+        "passedTests": 14,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "ipad-final": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-1ace0dfd65ea4b36aedc1cd03adec11f.xcresult",
+      "log": "/private/tmp/usagi-native-review-ipad-final.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 14,
+        "passedTests": 14,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "phone-layout": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-bc6b4b1dce8a4914be7a615a0bf7e286.xcresult",
+      "log": "/private/tmp/usagi-native-review-phone-layout.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "ipad-layout": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-a787cddefdea4938b0ea9b26534b955a.xcresult",
+      "log": "/private/tmp/usagi-native-review-ipad-layout.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "phone-summary-accepted": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-6d11b85f3b7e4b3bbdc9cfd1eae9ac8d.xcresult",
+      "log": "/private/tmp/usagi-native-review-phone-summary-accepted.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "ipad-summary-accepted": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-0dc6899432614baba4089442b343629a.xcresult",
+      "log": "/private/tmp/usagi-native-review-ipad-summary-accepted.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "opening-accepted": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-50063e403e954f35866b9a195b58c55e.xcresult",
+      "log": "/private/tmp/usagi-native-review-opening-accepted.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "shared-ios-final-source": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/test-7f166480b6f0401ba54ddefb0c32a861.xcresult",
+      "log": "/private/tmp/usagi-native-review-shared-ios-final-source.log",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 479,
+        "passedTests": 479,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      }
+    },
+    "mac-release-final-source": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-871571c91b054cb8812a54756f3fa4da.xcresult",
+      "log": "/private/tmp/usagi-native-review-mac-release-final-source.log",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "mac-tests-final-source": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-for-testing-3d1049b42fda4be78cc5ab7ccf6194f4.xcresult",
+      "log": "/private/tmp/usagi-native-review-mac-tests-final-source.log",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 0
+      }
+    },
+    "ios-release-final-source": {
+      "bundle": "/Users/pedro/Developer/projects/apps/usagiunagi/.build/Results/build-344ab168e91c45e4b33815f545ddd09f.xcresult",
+      "log": "/private/tmp/usagi-native-review-ios-release-final-source.log",
+      "summary": {
+        "status": "succeeded",
+        "errorCount": 0,
+        "warningCount": 42
+      }
+    }
+  },
+  "phase_scope": "14-case behavior runs precede the final compact/Done changes. Five-case runs verify those changes. Footer-only checks verify both messages are visible; after removing the redundant opening panel, two direct entry/upload cases pass again. Shared and Release/current test-compilation checks use the final source. The isolated synthetic account never submits to live WaniKani.",
+  "shared_mac": {
+    "functions": 479,
+    "modules": {
+      "core": 222,
+      "persistence": 179,
+      "speech": 7,
+      "ui": 71
+    },
+    "log": "/private/tmp/usagi-native-review-shared-final-source.log"
+  },
+  "lines": {
+    "scope": "Physical lines in app-owned tracked/new App/**/*.swift and Shared/Sources/**/*.swift; excludes Pods, Tests, AppTests, AppStoreScreenshots, FontScreenshotter and the two owner-only annotated files. Includes all changed production files, not merely deleted/moved ones. Test, resource and documentation lines are reported separately, not hidden as production Swift.",
+    "before": 31217,
+    "after": 31228,
+    "changed": [
+      {
+        "path": "App/Generated/IB-Scenes+Generated.swift",
+        "before": 157,
+        "after": 152
+      },
+      {
+        "path": "Shared/Sources/StudyPersistence/StudyStore+Reviews.swift",
+        "before": 463,
+        "after": 484
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/NativeReviewView.swift",
+        "before": 544,
+        "after": 521
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/ReviewScreen.swift",
+        "before": 353,
+        "after": 357
+      },
+      {
+        "path": "Shared/Sources/StudyUI/Reviews/SessionSummaryView.swift",
+        "before": 79,
+        "after": 93
+      }
+    ],
+    "preserved_owner_edits": [
+      "App/AnswerChecker.swift",
+      "App/FullRefreshOverlayView.swift"
+    ]
+  },
+  "deleted": {
+    "storyboard": "App/Resources/LaunchScreen.storyboard",
+    "storyboard_lines": 37,
+    "generated_accessor_lines": 5,
+    "project_references": 4
+  },
+  "launch": {
+    "source": "App/Info.plist",
+    "key": "UILaunchScreen",
+    "value": {},
+    "removed_key": "UILaunchStoryboardName",
+    "built_info": ".build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app/Info.plist",
+    "compiled_storyboard_present": false,
+    "reference": "https://developer.apple.com/documentation/bundleresources/information-property-list/uilaunchscreen"
+  },
+  "screenshots": {
+    "scope": "Explicit own-app window attachments only; no desktop capture.",
+    "compact": ".build/Results/ReviewImages-bc6b4b1/FDBB3D9F-B164-4B02-BC16-A8A83A6241C2.png",
+    "summary": ".build/Results/ReviewSummary-6d11b85/561D4160-947F-41A7-B90A-25B3C78BDD45.png"
+  },
+  "retained_failure": {
+    "bundle": ".build/Results/test-e0e25ed881394ad8adf0b6369af43be3.xcresult",
+    "reason": "Initial wrap-up case assumed synchronous legacy updates. Waiting for committed state resolves it; later device runs pass. Initial summary check also exposed alternate kanji readings; the original primary-reading rule is now preserved."
+  },
+  "remaining": [
+    "Port the native recent-mistake iCloud/source handoff before retiring its old cache adapter.",
+    "Port remaining legacy account, Home/catalog, practice/voice, audio/settings, feedback and material-conflict acceptance before controller/writer deletion.",
+    "No new Mac GUI run: automation initialization gate remains. Physical speech/IME, signed upgrades, OS/watch delivery and statistics calibration remain.",
+    "Mainboard pin unpublished; no push, PR, hosted CI or release claim."
+  ]
+}

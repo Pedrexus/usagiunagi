@@ -3,30 +3,42 @@ import SwiftUI
 
 /// Read-only results; hosts supply cached images and retain subject navigation during migration.
 public struct SessionSummaryView: View {
+  private let title: String
+  private let message: String?
   private let summary: StudySessionSummary
   private let japaneseFont: String
+  private let imageURL: (Int) -> URL?
   private let image: (Int) -> Image?
   private let openSubject: (Int) -> Void
   public init(
-    summary: StudySessionSummary, japaneseFont: String = "",
+    summary: StudySessionSummary, title: String = "Session complete", message: String? = nil,
+    japaneseFont: String = "",
+    imageURL: @escaping (Int) -> URL? = { _ in nil },
     image: @escaping (Int) -> Image? = { _ in nil }, openSubject: @escaping (Int) -> Void
   ) {
+    self.title = title
+    self.message = message
     self.summary = summary
     self.japaneseFont = japaneseFont
+    self.imageURL = imageURL
     self.image = image
     self.openSubject = openSubject
   }
   public var body: some View {
     List {
       Section {
-        Label("Session complete", systemImage: "checkmark.circle")
+        Label(title, systemImage: "checkmark.circle")
           .font(.title2).accessibilityAddTraits(.isHeader)
         LabeledContent("Accuracy", value: summary.accuracy.map { "\($0)%" } ?? "–")
           .accessibilityIdentifier("summary.accuracy")
         LabeledContent("Correct", value: "\(summary.correctCount)/\(summary.entries.count)")
           .accessibilityIdentifier("summary.correct")
       } footer: {
-        Text("Counts completed subjects. A missed meaning or reading makes that subject incorrect.")
+        VStack(alignment: .leading, spacing: 4) {
+          Text(
+            "Counts completed subjects. A missed meaning or reading makes that subject incorrect.")
+          if let message { Text(message) }
+        }
       }
       ForEach(summary.missedGroups) { group in
         Section(
@@ -45,6 +57,8 @@ public struct SessionSummaryView: View {
                     if let image = image(entry.id) {
                       image.resizable().scaledToFit().frame(width: 32, height: 32)
                         .accessibilityLabel("Radical image")
+                    } else if let url = imageURL(entry.id) {
+                      RadicalImageView(url: url).frame(width: 32, height: 32)
                     } else if !subject.characters.isEmpty {
                       Text(subject.characters).font(
                         japaneseFont.isEmpty
