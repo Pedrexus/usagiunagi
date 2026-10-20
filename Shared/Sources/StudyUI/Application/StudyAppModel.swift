@@ -204,7 +204,12 @@ public final class StudyAppModel {
   }
   public func setAPIEndpoint(_ url: URL) throws {
     guard !isSyncing else { throw StudyUploadError.alreadyRunning }
-    reader = WaniKaniClient(baseURL: url)
+    guard
+      let normalized = DeveloperEndpoint.normalized(
+        url.absoluteString, defaultURL: WaniKaniClient.defaultBaseURL.absoluteString),
+      let endpoint = URL(string: normalized)
+    else { throw WaniKaniServiceConfigurationError.invalidEndpoint }
+    reader = try reader.reconfigured(baseURL: endpoint)
   }
   /// Read through the same fenced lane without rewriting credentials or sending pending work.
   public func refresh(accountID: String) async throws {

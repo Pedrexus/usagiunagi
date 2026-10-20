@@ -16,11 +16,13 @@ import SwiftUI
   let appearance: ColorScheme?
   let notice: String?
   let avatars: LegacyAvatarCache
+  let radicalImages: RadicalImageCache
 
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
     companion: StudyCompanionDelivery? = nil, avatars: LegacyAvatarCache? = nil,
+    radicalImages: RadicalImageCache = .shared,
     appearance: ColorScheme? = nil, notice: String? = nil,
     paths: AsyncStream<Bool>? = nil
   ) {
@@ -35,6 +37,7 @@ import SwiftUI
     lessonSettings = StudyLessonSettings(store: DefaultsStudyLessonPreferences(defaults: defaults))
     subjectSettings = StudySubjectSettings(
       store: DefaultsStudySubjectPreferences(defaults: defaults))
+    self.radicalImages = radicalImages
     self.appearance = appearance
     self.notice = notice
     self.avatars =

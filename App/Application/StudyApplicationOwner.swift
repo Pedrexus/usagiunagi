@@ -129,6 +129,7 @@ struct StudyApplicationWindow: View {
           avatars: services.avatars, links: links
         )
         .environment(services.fonts).environment(services.audio)
+        .environment(\.studyRadicalImages, services.radicalImages)
         .environment(services.lessonSettings).environment(services.subjectSettings)
         .defaultAppStorage(services.defaults)
       } else if let failure = owner.failure {

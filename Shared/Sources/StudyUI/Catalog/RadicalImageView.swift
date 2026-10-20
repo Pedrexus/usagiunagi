@@ -2,10 +2,14 @@ import StudyCore
 import SwiftUI
 import WebKit
 
+extension EnvironmentValues {
+  @Entry public var studyRadicalImages: RadicalImageCache = .shared
+}
+
 /// SVG stays inside an image context. Web content cannot run scripts or fetch other resources.
 public struct RadicalImageView: View {
   private let url: URL
-  private let cache: RadicalImageCache
+  @Environment(\.studyRadicalImages) private var cache
   private let available: (Bool) -> Void
   @Environment(\.colorScheme) private var colorScheme
   @State private var page: WebPage
@@ -14,10 +18,9 @@ public struct RadicalImageView: View {
   @State private var attempt = 0
 
   public init(
-    url: URL, cache: RadicalImageCache = .shared, available: @escaping (Bool) -> Void = { _ in }
+    url: URL, available: @escaping (Bool) -> Void = { _ in }
   ) {
     self.url = url
-    self.cache = cache
     self.available = available
     var configuration = WebPage.Configuration()
     configuration.websiteDataStore = .nonPersistent()

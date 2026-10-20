@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 41c27749cddc49ff0d07085db92037b5ae940d70
+          ref: 87461e5eb71623f213f439c06a569bfad6c7bc84
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -47,7 +47,7 @@ jobs:
       - name: SwiftUI and storage migration inventory
         run: |
           mkdir -p .build/Results
-          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 180 mainboard analyze check . --rule SW-PARSE0001 --rule SW-MIG0001 --rule SW-MIG0002 --rule SW-MIG0003 --rule SW-MIG0004 --rule SW-MIG0005 --rule ALL-MIG0001 | tee .build/Results/SwiftMigration.log
+          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 180 mainboard analyze check . --rule SW-PARSE0001 --rule SW-MIG0001 --rule SW-MIG0002 --rule SW-MIG0003 --rule SW-MIG0004 --rule SW-MIG0005 --rule SW-MIG0006 --rule SW-MIG0007 --rule SW-MIG0008 --rule ALL-MIG0001 | tee .build/Results/SwiftMigration.log
       - name: Native font preview exports
         run: |
           mkdir -p .build/Results
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 41c27749cddc49ff0d07085db92037b5ae940d70
+          ref: 87461e5eb71623f213f439c06a569bfad6c7bc84
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -186,7 +186,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: 41c27749cddc49ff0d07085db92037b5ae940d70
+          ref: 87461e5eb71623f213f439c06a569bfad6c7bc84
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7

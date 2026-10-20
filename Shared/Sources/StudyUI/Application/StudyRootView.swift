@@ -369,9 +369,17 @@ public struct StudyRootView: View {
           }
           .navigationTitle("Saved work")
         case .catalog(let query, let remaining):
+          let mode: SubjectCatalogView.Mode =
+            if remaining { .remaining } else if query.level > 0 { .level } else {
+              switch query.scope {
+              case .apprentice, .guru, .master, .enlightened, .burned: .stage
+              case .excluded: .excluded
+              default: .all
+              }
+            }
           NativeSubjectCatalogView(
             store: store, accountID: accountID, maximumLevel: model.maximumContentLevel,
-            initialQuery: query, mode: remaining ? .remaining : query.level > 0 ? .level : .all,
+            initialQuery: query, mode: mode,
             title: remaining
               ? "Remaining" : query.level > 0 ? "Level \(query.level)" : query.scope.rawValue)
         case .search:

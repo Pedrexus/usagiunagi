@@ -96,6 +96,7 @@ public struct SubjectCatalogView: View {
       }
     }
     .listStyle(.inset).id(collection.id)
+    .accessibilityIdentifier("catalog.list")
     .scrollDismissesKeyboard(.interactively)
     .highPriorityGesture(
       DragGesture(minimumDistance: 60).onEnded { value in
@@ -143,6 +144,7 @@ public struct SubjectCatalogView: View {
       }.allowsHitTesting(false)
     }
     .navigationTitle(title)
+    .navigationBarBackButtonHidden(back != nil)
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
       .searchable(

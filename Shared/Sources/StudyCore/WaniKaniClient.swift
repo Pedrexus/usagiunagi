@@ -6,6 +6,7 @@ public protocol WaniKaniAccountReader: Sendable {
 }
 
 public protocol WaniKaniService: WaniKaniAccountReader {
+  func reconfigured(baseURL: URL) throws -> any WaniKaniService
   func download(token: String) async throws -> StudyDownload
   func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment?
   func material(subjectID: Int64, token: String) async throws -> WaniKaniMaterial?
@@ -14,7 +15,21 @@ public protocol WaniKaniService: WaniKaniAccountReader {
   func writeMaterial(_ value: StudyMaterial, serverID: Int64?, token: String) async throws
     -> WaniKaniMaterial
 }
+public enum WaniKaniServiceConfigurationError: Error, LocalizedError, Equatable, Sendable {
+  case invalidEndpoint, unsupportedEndpointChange
+  public var errorDescription: String? {
+    switch self {
+    case .invalidEndpoint: "Enter a valid http or https URL."
+    case .unsupportedEndpointChange: "This connection does not support changing the API URL."
+    }
+  }
+}
+
 extension WaniKaniService {
+  /// A fixed injected service must never acquire the production network transport implicitly.
+  public func reconfigured(baseURL: URL) throws -> any WaniKaniService {
+    throw WaniKaniServiceConfigurationError.unsupportedEndpointChange
+  }
   public func submit(_ answer: StudyReviewSubmission, token: String) async throws
     -> CatalogAssignment
   {
@@ -41,6 +56,15 @@ public struct WaniKaniClient: WaniKaniService {
   public init(baseURL: URL = Self.defaultBaseURL, transport: @escaping Transport) {
     self.baseURL = baseURL
     self.transport = transport
+  }
+
+  public func reconfigured(baseURL: URL) throws -> any WaniKaniService {
+    guard
+      let normalized = DeveloperEndpoint.normalized(
+        baseURL.absoluteString, defaultURL: Self.defaultBaseURL.absoluteString),
+      let endpoint = URL(string: normalized)
+    else { throw WaniKaniServiceConfigurationError.invalidEndpoint }
+    return Self(baseURL: endpoint, transport: transport)
   }
 
   public enum APIError: Error, LocalizedError {
