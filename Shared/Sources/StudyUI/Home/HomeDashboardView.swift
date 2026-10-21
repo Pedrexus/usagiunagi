@@ -34,22 +34,18 @@ public struct HomeDashboardView: View {
       }
       if let title = data.resumeTitle, let resume {
         Button(title, systemImage: "play.circle", action: resume)
-          .buttonStyle(.borderedProminent).accessibilityIdentifier("home.resume")
+          .font(.headline).accessibilityIdentifier("home.resume")
       }
       if !data.onVacation {
         Section {
-          ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 12) {
-              lessonCard.frame(minWidth: 230)
-              reviewCard.frame(minWidth: 230)
-            }
-            VStack(spacing: 12) {
-              lessonCard
-              reviewCard
-            }
-          }.padding(.vertical, 4)
-          Button("Choose lessons", systemImage: "list.bullet") { action(.chooseLessons) }
-            .accessibilityIdentifier("home.chooseLessons").disabled(lessonsUnavailable)
+          lessonCard
+          reviewCard
+          navigationButton(
+            "Choose lessons", id: "home.chooseLessons", action: .chooseLessons
+          ).disabled(lessonsUnavailable)
+        } header: {
+          Text("Available now")
+        } footer: {
           if let message = data.studyUnavailableMessage ?? data.lessonsDisabledMessage {
             Text(message).font(.callout).foregroundStyle(.secondary)
           }
@@ -104,12 +100,14 @@ public struct HomeDashboardView: View {
               .accessibilityIdentifier("home.level.\(level.id).\(row.kind.rawValue)")
           }
           if level.id == data.levels.last?.id && !data.onVacation && !data.timing.isEmpty {
-            ForEach(Array(data.timing.dropFirst())) { item in
-              LabeledContent(item.id, value: item.value)
+            DisclosureGroup("Level-up estimates") {
+              ForEach(Array(data.timing.dropFirst())) { item in
+                LabeledContent(item.id, value: item.value)
+              }
+              Text(
+                "Timing uses SRS intervals and past pace. It assumes correct, on-time reviews and is a scenario, not a guarantee."
+              ).font(.caption).foregroundStyle(.secondary)
             }
-            Text(
-              "Timing uses SRS intervals and past pace. It assumes correct, on-time reviews and is a scenario, not a guarantee."
-            ).font(.caption).foregroundStyle(.secondary)
           }
           navigationButton(
             "Show remaining", id: "home.remaining.\(level.id)", action: .remaining(level.id))
@@ -281,11 +279,13 @@ public struct HomeDashboardView: View {
       self.action(action)
     } label: {
       HStack {
-        Label(title, systemImage: symbol).font(.headline)
+        Label(title, systemImage: symbol)
+          .foregroundStyle(isEnabled && !disabled ? color : .secondary)
         Spacer()
-        Text(count.formatted()).font(.title2.bold()).monospacedDigit()
-      }.foregroundStyle(isEnabled && !disabled ? Color.white : Color.primary)
-        .frame(maxWidth: .infinity).padding(.vertical, 8)
-    }.buttonStyle(.glassProminent).controlSize(.large).tint(color).disabled(disabled)
+        Text(count.formatted()).font(.title3.weight(.semibold)).monospacedDigit()
+        Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+      }.foregroundStyle(isEnabled && !disabled ? Color.primary : .secondary)
+        .frame(minHeight: 44).contentShape(Rectangle())
+    }.buttonStyle(.plain).disabled(disabled)
   }
 }

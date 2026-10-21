@@ -30,20 +30,23 @@ public struct StudyDashboard: View {
 
   public var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 24) {
-        VStack(alignment: .leading, spacing: 6) {
-          Text(snapshot.isSample ? "Statistics · Sample data" : "Your progress").font(
-            .largeTitle.bold())
-          Text("Level \(snapshot.currentLevel) · \(snapshot.username)").foregroundStyle(.secondary)
-          if snapshot.onVacation {
-            Label("Vacation mode", systemImage: "pause.circle").foregroundStyle(.secondary)
-          }
-          if snapshot.pendingReviews > 0 {
-            Label(
-              "\(snapshot.pendingReviews) uploads pending. Statistics show synced results.",
-              systemImage: "arrow.triangle.2.circlepath"
-            )
-            .font(.callout).foregroundStyle(.secondary)
+      VStack(alignment: .leading, spacing: 20) {
+        if snapshot.isSample || snapshot.onVacation || snapshot.pendingReviews > 0 {
+          VStack(alignment: .leading, spacing: 6) {
+            if snapshot.isSample {
+              Label("Sample statistics", systemImage: "info.circle")
+                .font(.callout).foregroundStyle(.secondary)
+            }
+            if snapshot.onVacation {
+              Label("Vacation mode", systemImage: "pause.circle").foregroundStyle(.secondary)
+            }
+            if snapshot.pendingReviews > 0 {
+              Label(
+                "\(snapshot.pendingReviews) uploads pending. Statistics show synced results.",
+                systemImage: "arrow.triangle.2.circlepath"
+              )
+              .font(.callout).foregroundStyle(.secondary)
+            }
           }
         }
         Picker("Statistics section", selection: $page) {
@@ -81,7 +84,7 @@ public struct StudyDashboard: View {
         Text("Snapshot: \(snapshot.savedAt.formatted(date: .abbreviated, time: .shortened))")
           .font(.caption).foregroundStyle(.secondary)
       }
-      .padding().frame(maxWidth: 1200, alignment: .leading).frame(maxWidth: .infinity)
+      .padding().frame(maxWidth: 960, alignment: .leading).frame(maxWidth: .infinity)
     }
     .onGeometryChange(for: CGFloat.self) {
       $0.size.width
@@ -289,12 +292,12 @@ struct StudyCard<Content: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       VStack(alignment: .leading, spacing: 4) {
-        Text(title).font(.title3.bold())
-        Text(subtitle).font(.callout).foregroundStyle(.secondary)
+        Text(title).font(.headline)
+        Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
       }
       content
-    }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
-      .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 20))
+    }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+      .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 16))
   }
 }
 

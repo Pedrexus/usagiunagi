@@ -145,13 +145,19 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             VStack(spacing: 12) { response }
               .frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: true)
           }
-        }.frame(maxWidth: .infinity, minHeight: viewport.size.height, alignment: .top)
+        }.frame(maxWidth: 760, minHeight: viewport.size.height, alignment: .top)
+          .frame(maxWidth: .infinity)
       }
       .scrollBounceBehavior(.basedOnSize)
       .scrollDismissesKeyboard(.never)
       .accessibilityIdentifier("review.scroll")
     }
     .padding()
+    .safeAreaInset(edge: .bottom) {
+      if state.phase == .details {
+        answerActions.padding().frame(maxWidth: 760).frame(maxWidth: .infinity).background(.bar)
+      }
+    }
     .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
     .toolbarTitleDisplayMode(.inline)
     .toolbar {
@@ -224,6 +230,11 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         value: Double(state.completed), total: Double(max(1, state.completed + state.remaining)))
       successFeedback
       if state.wrappingUp { Label("Wrapping up", systemImage: "clock").font(.caption) }
+      if !state.previous.isEmpty && state.phase == .answering {
+        Button("Previous: " + state.previous, systemImage: "clock.arrow.circlepath") {
+          action(.previous)
+        }.font(.caption).frame(maxWidth: .infinity, alignment: .leading)
+      }
     }.accessibilityElement(children: .contain)
   }
 
@@ -270,12 +281,28 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             .keyboardShortcut("j", modifiers: [])
         }
       }.font(.callout)
-      answerActions
     } else {
+      if !state.isAnki { input().disabled(!state.canAnswer).frame(minHeight: 48) }
       if !state.feedback.isEmpty {
         Text(state.feedback).font(.callout).foregroundStyle(.red)
           .accessibilityIdentifier("review.feedback")
       }
+      if let hint = state.answerHint, String(hint.characters) == state.answer {
+        Text(hint).font(.title3)
+          .accessibilityIdentifier("review.answerHint")
+      }
+      Button {
+        action(.submit)
+      } label: {
+        Text(submitTitle).frame(maxWidth: .infinity, minHeight: 24)
+      }
+      .buttonStyle(.borderedProminent).controlSize(.large)
+      .disabled(
+        !state.canAnswer
+          || (state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty)
+      )
+      .accessibilityIdentifier("review.submit")
+      .keyboardShortcut(state.isAnki || state.phase == .incorrect ? .defaultAction : nil)
       if state.phase == .incorrect {
         adaptiveControls {
           Button("Try again", systemImage: "arrow.counterclockwise") { action(.retry) }
@@ -283,31 +310,16 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           Button("Reveal answer", systemImage: "eye") { action(.reveal) }
             .accessibilityIdentifier("review.reveal")
             .keyboardShortcut("f", modifiers: [])
-        }.buttonStyle(.bordered)
+        }.buttonStyle(.bordered).controlSize(.large)
       }
-      if !state.isAnki { input().disabled(!state.canAnswer).frame(minHeight: 48) }
-      if let hint = state.answerHint, String(hint.characters) == state.answer {
-        Text(hint).font(.title3)
-          .accessibilityIdentifier("review.answerHint")
-      }
-      Button(
-        state.phase == .incorrect
-          ? "Continue"
-          : state.isAnki
-            ? "Show answer"
-            : state.canSkip && state.answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-              ? "Skip" : "Check answer"
-      ) {
-        action(.submit)
-      }
-      .buttonStyle(.borderedProminent)
-      .disabled(
-        !state.canAnswer
-          || (state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty)
-      )
-      .accessibilityIdentifier("review.submit")
-      .keyboardShortcut(state.isAnki || state.phase == .incorrect ? .defaultAction : nil)
     }
+  }
+
+  private var submitTitle: String {
+    if state.phase == .incorrect { return "Continue" }
+    if state.isAnki { return "Show answer" }
+    return state.canSkip && state.answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      ? "Skip" : "Check answer"
   }
 
   private func question(horizontal: Bool) -> some View {
@@ -349,12 +361,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
               action(value.translation.width < 0 ? .nextFont : .previousFont)
             }
           })
-        if !state.previous.isEmpty && state.phase == .answering {
-          Button("Previous: " + state.previous, systemImage: "clock.arrow.circlepath") {
-            action(.previous)
-          }
-          .font(.caption)
-        }
       }.padding().foregroundStyle(.white).tint(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity).background(state.subjectColor)
       VStack(spacing: 4) {
@@ -385,18 +391,25 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   }
 
   private var answerActions: some View {
-    adaptiveControls {
+    VStack(spacing: 12) {
       if state.isAnki {
-        Button("Incorrect", systemImage: "xmark") { action(.incorrect) }
-          .accessibilityIdentifier("review.incorrect")
-          .keyboardShortcut("i", modifiers: .control)
-        Button("Correct", systemImage: "checkmark") { action(.correct) }
-          .buttonStyle(.borderedProminent).accessibilityIdentifier("review.correct")
-          .keyboardShortcut("c", modifiers: .control)
+        adaptiveControls {
+          Button("Incorrect", systemImage: "xmark") { action(.incorrect) }
+            .accessibilityIdentifier("review.incorrect")
+            .keyboardShortcut("i", modifiers: .control)
+          Button("Correct", systemImage: "checkmark") { action(.correct) }
+            .buttonStyle(.borderedProminent).accessibilityIdentifier("review.correct")
+            .keyboardShortcut("c", modifiers: .control)
+        }
       } else {
-        Button("Continue", systemImage: "arrow.right") { action(.submit) }
-          .buttonStyle(.borderedProminent).accessibilityIdentifier("review.submit")
-          .keyboardShortcut(.defaultAction)
+        Button {
+          action(.submit)
+        } label: {
+          Label("Continue", systemImage: "arrow.right")
+            .frame(maxWidth: .infinity, minHeight: 24)
+        }
+        .buttonStyle(.borderedProminent).accessibilityIdentifier("review.submit")
+        .keyboardShortcut(.defaultAction)
       }
       if state.canOverride || state.isAnki {
         Group {
@@ -412,7 +425,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           }
         }.accessibilityIdentifier("review.corrections")
       }
-    }.buttonStyle(.bordered)
+    }.buttonStyle(.bordered).controlSize(.large)
   }
 
   @ViewBuilder private var correctionActions: some View {
