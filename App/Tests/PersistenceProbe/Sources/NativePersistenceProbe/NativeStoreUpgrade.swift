@@ -93,6 +93,7 @@
       "probe-application-adoption-corruption",
       "probe-application-space", "write-application-space", "commit-application-space",
       "commit-review-application-space", "verify-application-space",
+      "open-application-space", "retry-opening-application-space",
     ]
     private static let marker = Data("usagi-native-upgrade-disposable-v1".utf8)
 
@@ -103,6 +104,7 @@
       }
       if command == "write-application-space" || command == "commit-application-space"
         || command == "commit-review-application-space" || command == "verify-application-space"
+        || command == "open-application-space" || command == "retry-opening-application-space"
       {
         try await spaceCommand(command, url: url)
         return
@@ -274,13 +276,37 @@
       log("SCOPED EXPERIMENT: no production activation, failure matrix, external-data or iOS proof")
     }
 
-    private enum SpacePoint: String, Codable, CaseIterable {
+    private enum SpacePoint: String, Codable, CaseIterable, Sendable {
       case beforeMutation, beforeCommit, beforeReviewCommit
+      case afterVerificationOpen, beforeSelection
+      var opensStore: Bool { self == .afterVerificationOpen || self == .beforeSelection }
       var command: String {
         switch self {
         case .beforeMutation: "write-application-space"
         case .beforeCommit: "commit-application-space"
         case .beforeReviewCommit: "commit-review-application-space"
+        case .afterVerificationOpen, .beforeSelection: "open-application-space"
+        }
+      }
+    }
+    private struct OpeningSpaceEvidence: Codable, Sendable {
+      let producerPID: Int32
+      let selector: Data
+      let openedPath: String
+      let readOnly: Bool
+      let filledBytes: Int
+    }
+    private final class OpeningSpaceWitness: Sendable {
+      private let observed = Mutex<Result<OpeningSpaceEvidence, any Error>?>(nil)
+      func capture(_ operation: () throws -> OpeningSpaceEvidence) {
+        observed.withLock { if $0 == nil { $0 = Result(catching: operation) } }
+      }
+      func evidence() throws -> OpeningSpaceEvidence {
+        try observed.withLock {
+          guard let result = $0 else {
+            throw NativeStoreBaseline.Failure(description: "No opening-space checkpoint observed")
+          }
+          return try result.get()
         }
       }
     }
@@ -290,9 +316,10 @@
       let filledBytes: Int
       let saveErrorDomain: String
       let saveErrorCode: Int
-      let sqliteCode: Int32
+      let sqliteCode: Int32?
       let restoredRecords: Int
       let review: ReviewSpaceEvidence?
+      var opening: OpeningSpaceEvidence? = nil
     }
 
     private static func spaceVolume(_ volume: URL) throws -> Int {
@@ -363,12 +390,37 @@
         for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
         try encode(manifest.expected, to: directory.appendingPathExtension("expected.plist"))
         let store = directory.appending(path: "study.store")
-        try child("verify-application-space", store: store)
         let selectorURL = directory.appending(path: "store-selection.plist")
+        if point.opensStore {
+          try child(point.command, store: store)
+          let failed = try adoptionArtifacts(in: directory)
+          let preparing = try Data(contentsOf: selectorURL)
+          let previous = try PropertyListDecoder().decode(AdoptionSelection.self, from: preparing)
+          try NativeStoreBaseline.require(
+            previous.phase == "preparing" && previous.validation == nil,
+            "Full-volume opening selected an unverified writer")
+          try child("retry-opening-application-space", store: store)
+          let current = try PropertyListDecoder().decode(
+            AdoptionSelection.self, from: Data(contentsOf: selectorURL))
+          let recovered = try adoptionArtifacts(in: directory)
+          try NativeStoreBaseline.require(
+            current.phase == "selected" && current.validation?.count == 64
+              && current.candidate != previous.candidate && current.retained == previous.retained
+              && current.source == previous.source
+              && failed.allSatisfy({
+                $0.key == "store-selection.plist" || recovered[$0.key] == $0.value
+              }),
+            "Space retry reused a failed candidate or changed an abandoned artifact")
+        } else {
+          try child("verify-application-space", store: store)
+          let before = try Data(contentsOf: selectorURL)
+          try child(point.command, store: store)
+          try NativeStoreBaseline.require(
+            Data(contentsOf: selectorURL) == before, "Full-volume save changed the selected writer")
+        }
         let selector = try Data(contentsOf: selectorURL)
         let selection = try PropertyListDecoder().decode(AdoptionSelection.self, from: selector)
         let retained = directory.appending(path: "generations/\(selection.retained)")
-        try child(point.command, store: store)
         for _ in 0..<2 { try child("verify-application-space", store: store) }
         try NativeStoreBaseline.require(
           try applicationSource(in: directory) == original
@@ -384,9 +436,12 @@
             && outcome.writerPID != ProcessInfo.processInfo.processIdentifier
             && outcome.restoredRecords
               == manifest.expected.records.count + (point == .beforeReviewCommit ? 1 : 0)
-            && (point == .beforeReviewCommit ? outcome.review != nil : outcome.review == nil),
+            && (point == .beforeReviewCommit ? outcome.review != nil : outcome.review == nil)
+            && (point.opensStore
+              ? outcome.opening?.producerPID != outcome.writerPID && outcome.opening != nil
+              : outcome.opening == nil && outcome.sqliteCode != nil),
           "Missing space-failure and complete-state recovery evidence")
-        log("PASS: \(point.rawValue) save refused, exact rollback, retry and two fresh reopens")
+        log("PASS: \(point.rawValue) refused, exact recovery, retry and two fresh reopens")
       }
       log(
         "SCOPE: disposable Mac APFS disk-full write/recovery; not iOS Data Protection or power loss"
@@ -405,6 +460,10 @@
       let expectedURL = directory.appendingPathExtension("expected.plist")
       let expected = try PropertyListDecoder().decode(
         NativeStoreBaseline.State.self, from: Data(contentsOf: expectedURL))
+      if command == "open-application-space" {
+        try await openingSpaceCommand(directory: directory, expected: expected, capacity: capacity)
+        return
+      }
       let store = try await StudyStore.openApplication(in: directory)
       defer { withExtendedLifetime(store) {} }
       try NativeStoreBaseline.require(
@@ -428,7 +487,10 @@
       else { throw NativeStoreBaseline.Failure(description: "Space fixture material missing") }
       var material = saved.material
       material.meaningNote += String(repeating: "Synthetic disk-full note 日本語. ", count: 32768)
-      guard let point = SpacePoint.allCases.first(where: { $0.command == command }) else {
+      guard let point = SpacePoint(rawValue: directory.lastPathComponent),
+        command == point.command
+          || (point.opensStore && command == "retry-opening-application-space")
+      else {
         throw NativeStoreBaseline.Failure(description: "Unknown space failure point")
       }
       let pressure = root.appending(path: "volume-pressure")
@@ -436,26 +498,48 @@
         if manager.fileExists(atPath: pressure.path) { try? manager.removeItem(at: pressure) }
       }
       let failure: NSError
-      do {
-        if point == .beforeMutation {
-          _ = try fillSpace(at: pressure, capacity: capacity)
-          _ = try await store.saveMaterial(
-            material, accountID: account, expectedRevision: saved.revision)
-        } else {
-          try await store.saveMaterialWhileFillingVolume(
-            material, accountID: account, expectedRevision: saved.revision
-          ) { _ = try fillSpace(at: pressure, capacity: capacity) }
+      let filled: Int
+      let sqlite: Int32?
+      let opening: OpeningSpaceEvidence?
+      if point.opensStore {
+        let rejected = try PropertyListDecoder().decode(
+          SpaceOutcome.self, from: Data(contentsOf: directory.appendingPathExtension("space.plist"))
+        )
+        guard let evidence = rejected.opening else {
+          throw NativeStoreBaseline.Failure(description: "Missing opening-space producer receipt")
         }
-        throw NativeStoreBaseline.Failure(description: "Full-volume save unexpectedly succeeded")
-      } catch let error as NativeStoreBaseline.Failure {
-        throw error
-      } catch {
-        failure = error as NSError
-        log("SPACE SAVE REFUSED: \(failure.domain)/\(failure.code), \(failure)")
+        try NativeStoreBaseline.require(
+          rejected.point == point
+            && evidence.producerPID != ProcessInfo.processInfo.processIdentifier
+            && evidence.filledBytes > 0 && rejected.restoredRecords == expected.records.count,
+          "Opening-space retry did not follow a different failed producer")
+        failure = NSError(domain: rejected.saveErrorDomain, code: rejected.saveErrorCode)
+        filled = evidence.filledBytes
+        sqlite = rejected.sqliteCode
+        opening = evidence
+      } else {
+        do {
+          if point == .beforeMutation {
+            _ = try fillSpace(at: pressure, capacity: capacity)
+            _ = try await store.saveMaterial(
+              material, accountID: account, expectedRevision: saved.revision)
+          } else {
+            try await store.saveMaterialWhileFillingVolume(
+              material, accountID: account, expectedRevision: saved.revision
+            ) { _ = try fillSpace(at: pressure, capacity: capacity) }
+          }
+          throw NativeStoreBaseline.Failure(description: "Full-volume save unexpectedly succeeded")
+        } catch let error as NativeStoreBaseline.Failure {
+          throw error
+        } catch {
+          failure = error as NSError
+          log("SPACE SAVE REFUSED: \(failure.domain)/\(failure.code), \(failure)")
+        }
+        filled = try pressure.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+        sqlite = try spaceError(failure)
+        opening = nil
+        try manager.removeItem(at: pressure)
       }
-      let filled = try pressure.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-      let sqlite = try spaceError(failure)
-      try manager.removeItem(at: pressure)
       try NativeStoreBaseline.require(
         try await store.nativeBaselineState() == expected,
         "Failed full-volume save left dirty values or lost saved work after space recovery")
@@ -492,15 +576,120 @@
         SpaceOutcome(
           point: point, writerPID: ProcessInfo.processInfo.processIdentifier,
           filledBytes: filled, saveErrorDomain: failure.domain, saveErrorCode: failure.code,
-          sqliteCode: sqlite, restoredRecords: actual.records.count, review: nil),
+          sqliteCode: sqlite, restoredRecords: actual.records.count, review: nil, opening: opening),
         to: directory.appendingPathExtension("space.plist"))
       log("PASS: real ENOSPC save rollback preserved all records and the same revision retried")
+    }
+
+    private static func openingSpaceCommand(
+      directory: URL, expected: NativeStoreBaseline.State, capacity: Int
+    ) async throws {
+      guard let point = SpacePoint(rawValue: directory.lastPathComponent), point.opensStore else {
+        throw NativeStoreBaseline.Failure(description: "Unknown opening-space checkpoint")
+      }
+      let manager = FileManager.default
+      let original = try applicationSource(in: directory)
+      let selectorURL = directory.appending(path: "store-selection.plist")
+      try NativeStoreBaseline.require(
+        !manager.fileExists(atPath: selectorURL.path), "Opening-space fixture was already adopted")
+      let pressure = directory.deletingLastPathComponent().appending(path: "volume-pressure")
+      defer {
+        if manager.fileExists(atPath: pressure.path) { try? manager.removeItem(at: pressure) }
+      }
+      let prefix = directory.resolvingSymlinksInPath().path + "/"
+      let witness = OpeningSpaceWitness()
+      let center = NotificationCenter.default
+      let observer = center.addObserver(
+        forName: .NSPersistentStoreCoordinatorStoresDidChange, object: nil, queue: nil
+      ) { notification in
+        guard let coordinator = notification.object as? NSPersistentStoreCoordinator,
+          Set(coordinator.managedObjectModel.entities.compactMap(\.name))
+            == Set(StudySchemaV1.schema.entities.map(\.name))
+        else { return }
+        let stores =
+          notification.userInfo?[NSAddedPersistentStoresKey] as? [NSPersistentStore] ?? []
+        for attached in stores {
+          guard let url = attached.url?.resolvingSymlinksInPath(),
+            // Binary preflight uses a plain read-only coordinator; wait for SwiftData's attachment.
+            (attached.options?[NSPersistentHistoryTrackingKey] as? NSNumber)?.boolValue == true,
+            url.path.hasPrefix(
+              prefix + (point == .beforeSelection ? "generations/" : "preparations/")),
+            url.path.hasSuffix(
+              point == .beforeSelection ? "/study.store" : "/verification/study.store"),
+            attached.isReadOnly == (point == .afterVerificationOpen)
+          else { continue }
+          witness.capture {
+            let selector = try Data(contentsOf: selectorURL)
+            let selection = try PropertyListDecoder().decode(AdoptionSelection.self, from: selector)
+            let suffix =
+              point == .beforeSelection
+              ? "generations/\(selection.candidate)/study.store"
+              : "preparations/\(selection.candidate)/verification/study.store"
+            try NativeStoreBaseline.require(
+              selection.phase == "preparing" && selection.validation == nil
+                && url.path == prefix + suffix
+                && applicationSource(in: directory) == original
+                && applicationSource(
+                  in: directory.appending(path: "generations/\(selection.retained)")) == original,
+              "Opening-space checkpoint changed original/retained data or selected early")
+            let filled = try fillSpace(at: pressure, capacity: capacity)
+            return .init(
+              producerPID: ProcessInfo.processInfo.processIdentifier, selector: selector,
+              openedPath: suffix, readOnly: attached.isReadOnly, filledBytes: filled)
+          }
+        }
+      }
+      defer { center.removeObserver(observer) }
+      let failure: NSError
+      do {
+        _ = try await StudyStore.openApplication(in: directory)
+        throw NativeStoreBaseline.Failure(
+          description: "Full-volume opening unexpectedly selected a writer")
+      } catch let error as NativeStoreBaseline.Failure {
+        throw error
+      } catch {
+        failure = error as NSError
+        log("SPACE OPEN REFUSED: \(point.rawValue), \(failure.domain)/\(failure.code), \(failure)")
+      }
+      let evidence = try witness.evidence()
+      let noSpace =
+        failure.domain == NSCocoaErrorDomain
+        && failure.code == CocoaError.fileWriteOutOfSpace.rawValue
+        || failure.domain == NSPOSIXErrorDomain && failure.code == Int(ENOSPC)
+      let sqlite = noSpace ? nil : try spaceError(failure)
+      if point == .beforeSelection {
+        let failedURL =
+          (failure.userInfo[NSURLErrorKey] as? URL)
+          ?? (failure.userInfo[NSFilePathErrorKey] as? String).map { URL(filePath: $0) }
+        try NativeStoreBaseline.require(
+          failure.domain == NSCocoaErrorDomain
+            && failure.code == CocoaError.fileWriteOutOfSpace.rawValue
+            && failedURL?.isFileURL == true
+            && failedURL?.standardizedFileURL.resolvingSymlinksInPath().path
+              == selectorURL.standardizedFileURL.resolvingSymlinksInPath().path,
+          "Space failure did not reach final selector publication")
+      }
+      try NativeStoreBaseline.require(
+        Data(contentsOf: selectorURL) == evidence.selector
+          && applicationSource(in: directory) == original,
+        "Failed opening changed the preparing selector or original source")
+      try manager.removeItem(at: pressure)
+      try encode(
+        SpaceOutcome(
+          point: point, writerPID: evidence.producerPID, filledBytes: evidence.filledBytes,
+          saveErrorDomain: failure.domain, saveErrorCode: failure.code, sqliteCode: sqlite,
+          restoredRecords: expected.records.count, review: nil, opening: evidence),
+        to: directory.appendingPathExtension("space.plist"))
+      log(
+        "PASS: \(point.rawValue) disk-full refusal retained preparing selection for a fresh retry")
     }
 
     private static func spaceError(_ failure: NSError) throws -> Int32 {
       // sqlite3.h's extended macro is not imported by Swift.
       let sharedMemoryOpenError = SQLITE_IOERR | (Int32(18) << 8)
-      guard let sqlite = (failure.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.int32Value,
+      let rawCode = failure.domain == "NSSQLiteErrorDomain" ? Int32(exactly: failure.code) : nil
+      guard
+        let sqlite = (failure.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.int32Value ?? rawCode,
         (failure.domain == NSCocoaErrorDomain
           && [SQLITE_FULL, sharedMemoryOpenError].contains(sqlite))
           || (failure.domain == "NSSQLiteErrorDomain" && failure.code == Int(SQLITE_FULL)

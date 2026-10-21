@@ -117,7 +117,7 @@ for space_outcome in "$space_mount"/native-upgrade-*/*.space.plist; do
   cp "$space_outcome" "$space_report/"
   space_outcomes=$((space_outcomes + 1))
 done
-test "$space_outcomes" -eq 3
+test "$space_outcomes" -eq 5
 printf "SPACE REPORT: %s\\n" "$space_report"
 '
 '''
