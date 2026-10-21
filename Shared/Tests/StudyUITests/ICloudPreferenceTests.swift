@@ -23,7 +23,7 @@ import Testing
     }
   }
 
-  @Test func onlyTheThreeDisplayFieldsCanReachThePrivateStore() throws {
+  @Test func explicitPortableReviewEditsReachThePrivateStore() throws {
     try fixture { store, _, _ in
       var updated = ReviewPreferences()
       updated.appearance = .dark
@@ -35,12 +35,128 @@ import Testing
       updated.sessionOptions.skipKanjiReadings = true
       store.recordChanges(from: .init(), to: updated)
       let values = try store.values()
-      #expect(Set(values.map(\.field)) == ["appearance", "fontScale", "stageIndicator"])
-      #expect(Set(values.map(\.value)) == ["dark", "1.5", "dots"])
+      #expect(
+        Dictionary(uniqueKeysWithValues: values.map { ($0.field, $0.value) }) == [
+          "appearance": "dark", "fontScale": "1.5", "stageIndicator": "dots",
+          "reviewLimit": "77", "exactMatch": "true", "autoplayAudio": "true",
+          "skipKanjiReadings": "true",
+        ])
       #expect(values.allSatisfy { $0.revision == 1 && $0.formatVersion == 1 })
       let container = try #require(store.container)
       #expect(container.schema.entities.count == 1)
       #expect(container.configurations.allSatisfy { $0.cloudKitContainerIdentifier == nil })
+    }
+  }
+
+  @Test func portableAllowlistIsExactAndContainsNoAccountOrDeviceState() {
+    let expected: Set<String> = [
+      "appearance", "stageIndicator", "fontScale", "reviewOrder", "reviewLimitEnabled",
+      "reviewLimit", "leechThreshold", "answerMode", "sessionBatchSize", "incorrectAnswerDelay",
+      "groupMeaningReading", "meaningFirst", "skipKanjiReadings", "minimizePenalty",
+      "revealAnswers", "revealFullAnswer", "exactMatch", "allowCorrections", "allowSkipping",
+      "autoplayAudio", "correctAnswerFeedback", "completedItemFeedback", "srsMilestoneFeedback",
+      "lessonOrder", "lessonBatchSize", "apprenticeLimit", "prioritizeCurrentLevel",
+      "includeKanaVocabulary", "allowVocabularyExclusion", "primaryKanjiReadingsOnly",
+      "useKatakanaForOnyomi", "showDeprecatedMnemonic", "blurTranslations", "showStatistics",
+      "showArtwork", "showPreviousLevelGraph", "showSimilarKanjiAboveCurrentLevel",
+      "native.waniKani.audio", "native.waniKani.reviewOrder", "native.waniKani.srsFeedback",
+      "native.waniKani.lessonBatch", "native.showMinutesForNextLevelUpReview",
+      "catalog.showAnswers",
+      "native.gravatarCustomEmail", "selectedFonts", "offlineAudioVoices",
+    ]
+    #expect(expected.count == 46)
+    #expect(StudyPortableField.all.count == expected.count)
+    #expect(Set(StudyPortableField.all.map(\.name)) == expected)
+  }
+
+  @Test func lessonSubjectAndFontEditsPersistReopenAndReconcileWithoutEcho() throws {
+    try fixture { store, defaults, directory in
+      var lessons = StudyLessonPreferences()
+      lessons.order = [.vocabulary, .radical, .kanji]
+      lessons.batchSize = 3
+      lessons.apprenticeLimit = 50
+      store.recordLessonChanges(from: .init(), to: lessons)
+      var subjects = SubjectDetailsPreferences()
+      subjects.showArtwork.toggle()
+      store.recordSubjectChanges(from: .init(), to: subjects)
+      store.recordFontChanges(from: [], to: ["Kaisho.ttf", "Mincho.ttf"])
+      let saved = try store.values()
+      #expect(
+        Set(saved.map(\.field)) == [
+          "lessonOrder", "lessonBatchSize", "apprenticeLimit", "showArtwork", "selectedFonts",
+        ])
+      let reopened = StudyICloudPreferences(directory: directory, defaults: defaults)
+      let values = try StudyPortablePreferences.read(defaults)
+      #expect(values.lessons == lessons && values.subjects == subjects)
+      #expect(values.fonts == ["Kaisho.ttf", "Mincho.ttf"])
+      #expect(Set(try reopened.values().map(\.id)) == Set(saved.map(\.id)))
+      reopened.reconcile(try reopened.values())
+      #expect(try reopened.values().count == saved.count)
+    }
+  }
+
+  @Test func learningImportsWaitForEveryStudyingSceneWhileDisplayAppliesImmediately() throws {
+    try fixture { store, defaults, _ in
+      defaults.set(try JSONEncoder().encode(ReviewPreferences()), forKey: key)
+      let first = UUID()
+      let second = UUID()
+      store.updateScene(first, studying: true)
+      store.updateScene(second, studying: true)
+      let context = try #require(store.container?.mainContext)
+      context.insert(Change(field: "exactMatch", value: "true", revision: 1))
+      context.insert(Change(field: "appearance", value: "dark", revision: 1))
+      try context.save()
+      store.reconcile(try store.values())
+      var value = try StudyPortablePreferences.read(defaults)
+      #expect(value.review.appearance == .dark && !value.review.exactMatch)
+      #expect(store.hasDeferredLearningChanges)
+      store.updateScene(first, studying: false)
+      #expect(try !StudyPortablePreferences.read(defaults).review.exactMatch)
+      store.updateScene(second, studying: false)
+      value = try StudyPortablePreferences.read(defaults)
+      #expect(value.review.exactMatch && !store.hasDeferredLearningChanges)
+      #expect(try store.values().count == 2)
+    }
+  }
+
+  @Test func deviceLocalChangesAndUnknownAccountFieldsAreNeverPublishedOrImported() throws {
+    try fixture { store, defaults, _ in
+      var review = ReviewPreferences()
+      review.interruptBackgroundAudio.toggle()
+      defaults.set(try JSONEncoder().encode(review), forKey: key)
+      store.recordChanges(from: .init(), to: review)
+      #expect(try store.values().isEmpty)
+      let protected = Data("device-local-account-and-outbox".utf8)
+      defaults.set(protected, forKey: "unrelated.account.state")
+      defaults.set(true, forKey: "native.autoSwitchKeyboard")
+      store.reconcile(
+        [
+          "apiToken", "accountID", "assignments", "pendingSubmissions", "native.autoSwitchKeyboard",
+          "interruptBackgroundAudio",
+        ].map { Change(field: $0, value: "must-never-apply", revision: 99).snapshot })
+      #expect(try StudyPortablePreferences.read(defaults).review == review)
+      #expect(defaults.bool(forKey: "native.autoSwitchKeyboard"))
+      #expect(defaults.data(forKey: "unrelated.account.state") == protected)
+      #expect(try store.values().isEmpty)
+    }
+  }
+
+  @Test(arguments: [
+    ("selectedFonts", "../unsafe.ttf"), ("selectedFonts", "A.ttf,A.ttf"),
+    ("offlineAudioVoices", "0"), ("offlineAudioVoices", "1,1"),
+    ("offlineAudioVoices", "bad"), ("lessonOrder", "kanji,kanji,vocabulary"),
+    ("answerMode", "both,reading"), ("sessionBatchSize", "11"),
+  ])
+  func invalidPortableImportsPreserveAllExistingGroups(field: String, raw: String) throws {
+    try fixture { store, defaults, _ in
+      let before = try JSONEncoder().encode(ReviewPreferences())
+      defaults.set(before, forKey: key)
+      defaults.set(["Kept.ttf"], forKey: "native.selectedFonts")
+      store.reconcile([Change(field: field, value: raw, revision: 1).snapshot])
+      #expect(defaults.data(forKey: key) == before)
+      #expect(defaults.stringArray(forKey: "native.selectedFonts") == ["Kept.ttf"])
+      #expect(store.notice != nil)
+      #expect(try store.values().isEmpty)
     }
   }
 

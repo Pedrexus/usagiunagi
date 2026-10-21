@@ -313,7 +313,7 @@
       app.buttons["home.reviews"].click()
       let input = app.textFields["review.answer"]
       XCTAssertTrue(input.waitForExistence(timeout: 5))
-      app.buttons["review.settings"].click()
+      app.openReviewSettings()
       let autoreveal = app.switches["reviewSettings.autoreveal"]
       makeVisible(autoreveal, in: app.sheets.firstMatch.scrollViews.firstMatch)
       XCTAssertEqual((autoreveal.value as? NSNumber)?.boolValue, true)
@@ -377,7 +377,7 @@
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       input.click()
       input.typeText("Unsubmitted draft")
-      app.buttons["review.settings"].click()
+      app.openReviewSettings()
       try await deliverLink("usagiunagi://subject/1")
       let pending = app.buttons["applink.open"]
       XCTAssertTrue(pending.waitForExistence(timeout: 5), app.debugDescription)
@@ -682,7 +682,7 @@
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       input.click()
       input.typeText("one")
-      app.buttons["review.settings"].click()
+      app.openReviewSettings()
       let fonts = app.buttons["reviewSettings.fonts"]
       XCTAssertTrue(fonts.waitForExistence(timeout: 5))
       fonts.click()
@@ -702,7 +702,7 @@
       app.buttons["reviewSettings.done"].click()
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       XCTAssertEqual(input.value as? String, "one")
-      app.buttons["review.settings"].click()
+      app.openReviewSettings()
       app.buttons["reviewSettings.fonts"].click()
       XCTAssertTrue(selection.waitForExistence(timeout: 5))
       XCTAssertEqual((selection.value as? NSNumber)?.intValue, 1)
@@ -754,7 +754,7 @@
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       input.click()
       input.typeText("one thing")
-      app.buttons["review.settings"].click()
+      app.openReviewSettings()
       app.buttons["reviewSettings.offlineAudio"].click()
       let enabled = app.switches["offlineAudio.enabled"]
       XCTAssertTrue(enabled.waitForExistence(timeout: 5), app.debugDescription)
@@ -1013,13 +1013,11 @@
       input.typeText("i")
       let draft = input.value as? String
       XCTAssertEqual(draft, "i")
-      let settings = app.buttons["review.settings"]
-      XCTAssertTrue(settings.waitForExistence(timeout: 5), app.debugDescription)
       let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
       image.name = "Native Mac typed practice in shared navigation"
       image.lifetime = .keepAlways
       add(image)
-      settings.click()
+      app.openReviewSettings()
       let done = app.buttons["reviewSettings.done"]
       XCTAssertTrue(done.waitForExistence(timeout: 5))
       done.click()
@@ -1067,6 +1065,17 @@
   }
 
   extension XCUIApplication {
+    func openReviewTools() {
+      let tools = descendants(matching: .any).matching(identifier: "review.tools").firstMatch
+      XCTAssertTrue(tools.waitForExistence(timeout: 5), debugDescription)
+      tools.click()
+    }
+    func openReviewSettings() {
+      let settings = descendants(matching: .any).matching(identifier: "review.settings").firstMatch
+      if !settings.exists { openReviewTools() }
+      XCTAssertTrue(settings.waitForExistence(timeout: 5), debugDescription)
+      settings.click()
+    }
     func pauseStudyAndReturn() {
       let back = toolbars.buttons["chevron.backward"]
       XCTAssertTrue(back.waitForExistence(timeout: 5), debugDescription)

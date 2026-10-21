@@ -163,7 +163,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     }
     .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
     .toolbarTitleDisplayMode(.inline)
-    .navigationBarBackButtonHidden(state.hasMenu)
     .toolbar {
       if state.hasMenu {
         ToolbarItem(placement: .cancellationAction) {
@@ -197,13 +196,16 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   private var progress: some View {
     VStack(spacing: 6) {
       adaptiveControls {
-        if let accuracy = state.accuracy { Label(accuracy, systemImage: "hand.thumbsup") }
+        if let accuracy = state.accuracy {
+          Label(accuracy, systemImage: "hand.thumbsup").accessibilityLabel("Accuracy \(accuracy)")
+        }
         Label("\(state.completed)", systemImage: "checkmark")
           .accessibilityLabel("\(state.completed) completed")
         Label("\(state.remaining)", systemImage: "tray")
           .accessibilityLabel("\(state.remaining) remaining")
       }.font(.caption).foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .trailing)
+        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("review.progress")
       ProgressView(
         value: Double(state.completed), total: Double(max(1, state.completed + state.remaining)))

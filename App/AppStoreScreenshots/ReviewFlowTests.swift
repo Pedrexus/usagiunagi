@@ -15,6 +15,40 @@
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor func testLessonGroupSelectionAndClearRemainAccessibleButtons() {
+    let app = fixtureApplication(["--lesson-fixture", "--lesson-settings-fixture"])
+    launchFixture(app)
+    app.buttons["home.chooseLessons"].tap()
+    let group = app.buttons["lesson.selectGroup.1-radical"]
+    XCTAssertTrue(group.waitForExistence(timeout: 5), app.debugDescription)
+    group.tap()
+    XCTAssertEqual(group.label, "Clear")
+    XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "2 selected")
+    group.tap()
+    XCTAssertEqual(group.label, "Select all")
+    XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "0 selected")
+    XCTAssertTrue(app.buttons["lesson.startSelection"].isEnabled)
+  }
+
+  @MainActor func testReviewKeyboardToolsRemainAvailableAtLargestDynamicType() {
+    let app = launchNativeHome([
+      "--manual-review-fixture", "--audio-fixture", "-UIPreferredContentSizeCategoryName",
+      "UICTContentSizeCategoryAccessibilityXXXL",
+    ])
+    openFixture(URL(string: "usagiunagi:///reviews")!, in: app)
+    XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["review.voice"].isHittable)
+    XCTAssertTrue(app.buttons["review.defer"].isHittable)
+    XCTAssertTrue(app.staticTexts["review.progress"].label.contains("0 completed"))
+    app.openReviewSettings()
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+    let image = XCTAttachment(screenshot: app.screenshot())
+    image.name = "Shared review at largest Dynamic Type"
+    image.lifetime = .keepAlways
+    add(image)
+  }
+
   override func setUp() async throws {
     try await super.setUp()
     await MainActor.run { XCUIDevice.shared.orientation = .portrait }
@@ -287,7 +321,7 @@ final class ReviewFlowTests: XCTestCase {
         field.typeText("hold")
         let draft = field.value as? String
         XCTAssertFalse((draft ?? "").isEmpty)
-        app.buttons["review.settings"].tap()
+        app.openReviewSettings()
         XCTAssertTrue(app.buttons["reviewSettings.done"].waitForExistence(timeout: 5))
         try requestNativeLink("subject/1")
         XCTAssertTrue(app.buttons["reviewSettings.done"].isHittable, app.debugDescription)
@@ -695,7 +729,7 @@ final class ReviewFlowTests: XCTestCase {
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("personally")
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     app.buttons["reviewSettings.fonts"].tap()
     XCTAssertTrue(app.navigationBars["Select Fonts"].waitForExistence(timeout: 5))
     return app
@@ -719,7 +753,7 @@ final class ReviewFlowTests: XCTestCase {
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertEqual(field.value as? String, "personally")
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     app.buttons["reviewSettings.fonts"].tap()
     XCTAssertTrue(selection.waitForExistence(timeout: 5))
     XCTAssertEqual(selection.value as? String, "1")
@@ -781,7 +815,7 @@ final class ReviewFlowTests: XCTestCase {
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertEqual(field.value as? String, "personally")
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     app.buttons["reviewSettings.fonts"].tap()
     let selected = app.switches["font.selection.font-download.ttf"]
     XCTAssertTrue(selected.waitForExistence(timeout: 15))
@@ -805,7 +839,7 @@ final class ReviewFlowTests: XCTestCase {
     field.tap()
     field.typeText("hito")
     XCTAssertEqual(field.value as? String, "ひと")
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     let correct = app.switches["reviewSettings.correctAnswerFeedback"]
     scrollTo(correct, in: app)
     setSettingsSwitch(correct, on: false, in: app)
@@ -818,7 +852,7 @@ final class ReviewFlowTests: XCTestCase {
         format: "identifier == %@ AND label CONTAINS %@", "review.success",
         "Previous answer correct"))
     XCTAssertEqual(correctFeedback.count, 0)
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     scrollTo(correct, in: app)
     XCTAssertEqual(correct.value as? String, "0")
     app.buttons["reviewSettings.done"].tap()
@@ -850,14 +884,14 @@ final class ReviewFlowTests: XCTestCase {
     screenshot.name = "Native review feedback with Reduce Motion"
     screenshot.lifetime = .keepAlways
     add(screenshot)
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     let completed = app.switches["reviewSettings.completedItemFeedback"]
     scrollTo(completed, in: app)
     setSettingsSwitch(completed, on: false, in: app)
     app.buttons["reviewSettings.done"].tap()
     XCTAssertFalse(feedback.label.contains("+1 completed"))
     XCTAssertTrue(feedback.label.contains("Estimated SRS stage: Guru"))
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     let milestone = app.switches["reviewSettings.srsMilestoneFeedback"]
     scrollTo(milestone, in: app)
     setSettingsSwitch(milestone, on: false, in: app)
@@ -1037,7 +1071,7 @@ final class ReviewFlowTests: XCTestCase {
     field.tap()
     field.typeText("i")
     let draft = field.value as? String
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     XCTAssertTrue(app.buttons["reviewSettings.done"].waitForExistence(timeout: 5))
     app.buttons["reviewSettings.done"].tap()
     XCTAssertEqual(field.value as? String, draft)
@@ -1198,6 +1232,30 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor
+  func testNativeBackPausesTheReviewAndRestoresTypingDraft() {
+    continueAfterFailure = false
+    let app = launchNativeReview()
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("unfinished")
+    let question = app.staticTexts["review.question"].value as? String
+    let prompt = app.staticTexts["review.prompt"].label
+    let progress = app.staticTexts["review.progress"].label
+    navigateNativeBack(in: app)
+    let start = app.buttons["home.reviews"]
+    XCTAssertTrue(start.waitForExistence(timeout: 5), app.debugDescription)
+    XCTAssertFalse(app.alerts.firstMatch.exists)
+    start.tap()
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "unfinished")
+    XCTAssertEqual(app.staticTexts["review.question"].value as? String, question)
+    XCTAssertEqual(app.staticTexts["review.prompt"].label, prompt)
+    XCTAssertEqual(app.staticTexts["review.progress"].label, progress)
+    app.typeText(" retained")
+    XCTAssertEqual(field.value as? String, "unfinished retained")
+  }
+
+  @MainActor
   func testPreviousSubjectReturnRestoresTypingFocusAndPreservesDraft() {
     continueAfterFailure = false
     let app = launchNativeReview(extra: ["--review-feedback-fixture"])
@@ -1224,7 +1282,7 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.submit"].tap()
     let progress = app.staticTexts["review.progress"]
     let completed = XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "label BEGINSWITH %@", "1 completed"), object: progress)
+      predicate: NSPredicate(format: "label CONTAINS %@", "1 completed"), object: progress)
     XCTAssertEqual(XCTWaiter.wait(for: [completed], timeout: 5), .completed)
     let remainingQuestion = question.value as? String ?? ""
     XCTAssertNotEqual(remainingQuestion, completedQuestion)
@@ -1236,7 +1294,7 @@ final class ReviewFlowTests: XCTestCase {
     field.typeText("draft")
     XCTAssertEqual(field.value as? String, "draft")
     let previousSubject = app.buttons["Previous: " + completedQuestion]
-    scrollTo(previousSubject, in: app, towardTop: true)
+    app.openReviewTools()
     previousSubject.tap()
     let subject = app.navigationBars["Subject"]
     XCTAssertTrue(subject.waitForExistence(timeout: 5))
@@ -1303,9 +1361,10 @@ final class ReviewFlowTests: XCTestCase {
       cancel.tap()
     } else {
       XCTAssertTrue(app.popovers.firstMatch.exists)
-      app.navigationBars["Reviews"].coordinate(
-        withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)
-      ).tap()
+      let counts = app.staticTexts["review.progress"]
+      let center = CGPoint(x: counts.frame.midX, y: counts.frame.midY)
+      XCTAssertFalse(app.popovers.firstMatch.frame.contains(center))
+      counts.tap()
     }
     XCTAssertFalse(app.buttons["My answer was incorrect"].exists)
     XCTAssertEqual(app.staticTexts["review.question"].value as? String, question)
@@ -1359,7 +1418,7 @@ final class ReviewFlowTests: XCTestCase {
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("one thng")
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     let exact = app.switches["reviewSettings.exactMatch"]
     XCTAssertTrue(exact.waitForExistence(timeout: 5))
     XCTAssertEqual(exact.value as? String, "0")
@@ -1374,7 +1433,7 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.staticTexts["review.feedback"].waitForExistence(timeout: 5))
     XCTAssertEqual(app.staticTexts["review.feedback"].label, "Use the exact meaning.")
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     XCTAssertTrue(exact.waitForExistence(timeout: 5))
     XCTAssertEqual(exact.value as? String, "1")
     exact.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -1431,7 +1490,7 @@ final class ReviewFlowTests: XCTestCase {
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("one thing")
-    app.buttons["review.settings"].tap()
+    app.openReviewSettings()
     XCTAssertTrue(app.buttons["reviewSettings.fonts"].waitForExistence(timeout: 5))
     app.buttons["reviewSettings.fonts"].tap()
     let navigation = app.navigationBars["Select Fonts"]
@@ -1491,7 +1550,9 @@ extension ReviewFlowTests {
     continueAfterFailure = false
     let app = launchLessonPicker()
     defer { app.terminate() }
-    XCTAssertFalse(app.buttons["lesson.startSelection"].isEnabled)
+    XCTAssertTrue(app.buttons["lesson.startSelection"].isEnabled)
+    XCTAssertTrue(app.buttons["lesson.startSelection"].label.contains("Start a batch"))
+    XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "0 selected")
     let radical = app.buttons["lesson.select.10"]
     radical.tap()
     XCTAssertEqual(radical.value as? String, "Selected")
@@ -2226,5 +2287,19 @@ extension ReviewFlowTests {
     XCTAssertTrue(app.staticTexts["No matching subjects"].waitForExistence(timeout: 5))
     XCTAssertFalse(row.exists)
     navigateNativeBack(in: app)
+  }
+}
+
+@MainActor extension XCUIApplication {
+  func openReviewTools() {
+    let tools = descendants(matching: .any).matching(identifier: "review.tools").firstMatch
+    XCTAssertTrue(tools.waitForExistence(timeout: 5), debugDescription)
+    tools.tap()
+  }
+  func openReviewSettings() {
+    let settings = descendants(matching: .any).matching(identifier: "review.settings").firstMatch
+    if !settings.exists { openReviewTools() }
+    XCTAssertTrue(settings.waitForExistence(timeout: 5), debugDescription)
+    settings.tap()
   }
 }

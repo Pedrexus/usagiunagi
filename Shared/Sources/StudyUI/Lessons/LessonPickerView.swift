@@ -48,28 +48,32 @@ struct LessonPickerView: View {
         }
         ForEach(groups) { group in
           GroupBox {
-            LazyVGrid(
-              columns: [
-                GridItem(
-                  .adaptive(
-                    minimum: typeSize.isAccessibilitySize
-                      || group.items.first?.kind == .vocabulary ? 156 : 84), spacing: 8)
-              ], spacing: 12
-            ) {
-              ForEach(group.items) { tile($0) }
-            }.padding(.top, 8)
-          } label: {
-            HStack {
-              Text(group.title)
-              Spacer()
-              Button(group.items.allSatisfy { selected.contains($0.id) } ? "Clear" : "Select all") {
-                let ids = Set(group.items.map(\.id))
-                if ids.isSubset(of: selected) {
-                  selected.subtract(ids)
-                } else {
-                  selected.formUnion(ids)
-                }
-              }.font(.callout).accessibilityIdentifier("lesson.selectGroup.\(group.id)")
+            VStack(alignment: .leading, spacing: 8) {
+              HStack {
+                Text(group.title).font(.headline).accessibilityAddTraits(.isHeader)
+                Spacer()
+                Button {
+                  let ids = Set(group.items.map(\.id))
+                  if ids.isSubset(of: selected) {
+                    selected.subtract(ids)
+                  } else {
+                    selected.formUnion(ids)
+                  }
+                } label: {
+                  Text(group.items.allSatisfy { selected.contains($0.id) } ? "Clear" : "Select all")
+                    .frame(minHeight: 44)
+                }.font(.callout).accessibilityIdentifier("lesson.selectGroup.\(group.id)")
+              }
+              LazyVGrid(
+                columns: [
+                  GridItem(
+                    .adaptive(
+                      minimum: typeSize.isAccessibilitySize
+                        || group.items.first?.kind == .vocabulary ? 156 : 84), spacing: 8)
+                ], spacing: 12
+              ) {
+                ForEach(group.items) { tile($0) }
+              }
             }
           }
         }

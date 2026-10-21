@@ -13,9 +13,17 @@
 // limitations under the License.
 
 import Foundation
+import SwiftUI
 import WatchKit
 
-final class ExtensionDelegate: NSObject, WKExtensionDelegate {
+@main
+struct WatchApp: App {
+  @WKApplicationDelegateAdaptor(WatchAppDelegate.self) private var delegate
+
+  var body: some Scene { WindowGroup { WatchSettingsView() } }
+}
+
+final class WatchAppDelegate: NSObject, WKApplicationDelegate {
   private var started = false
 
   func applicationDidFinishLaunching() {

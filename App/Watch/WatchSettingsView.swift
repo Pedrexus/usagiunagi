@@ -12,23 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Combine
 import Foundation
 import SwiftUI
-
-/// Retains the installed WatchKit scene and extension identity while SwiftUI owns its content.
-final class SettingsController: WKHostingController<WatchSettingsView> {
-  override var body: WatchSettingsView { WatchSettingsView() }
-}
 
 struct WatchSettingsView: View {
   @AppStorage(WatchCompanionCache.sourceKey) private var source = ComplicationDataSource.reviews
     .rawValue
   @State private var snapshot = WatchCompanionCache.sharedInstance.state.snapshot
+  @State private var clockStart = Date.now
 
   var body: some View {
     NavigationStack {
-      TimelineView(.periodic(from: Date(), by: 60)) { context in
+      TimelineView(.periodic(from: clockStart, by: 60)) { context in
         Form {
           Section("Data Source") {
             Picker("Show", selection: selection) {
@@ -61,14 +56,14 @@ struct WatchSettingsView: View {
       }
       .navigationTitle("Settings")
     }
-    .onAppear { snapshot = WatchCompanionCache.sharedInstance.state.snapshot }
-    .onReceive(
-      NotificationCenter.default.publisher(
-        for: UserDefaults.didChangeNotification, object: UserDefaults.standard
-      )
-      .receive(on: RunLoop.main)
-    ) { _ in
+    .task {
       snapshot = WatchCompanionCache.sharedInstance.state.snapshot
+      for await _ in NotificationCenter.default.notifications(
+        named: UserDefaults.didChangeNotification)
+      {
+        guard !Task.isCancelled else { return }
+        snapshot = WatchCompanionCache.sharedInstance.state.snapshot
+      }
     }
   }
 

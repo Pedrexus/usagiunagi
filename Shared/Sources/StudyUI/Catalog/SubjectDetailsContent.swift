@@ -128,7 +128,7 @@ public struct SubjectDetailsContent: View {
       if let url = StudyMarkup.webURL(subject.documentURL), url.host == "www.wanikani.com" {
         Link("Open on WaniKani", destination: url)
       }
-    }.textSelection(.enabled)
+    }.frame(maxWidth: 760).frame(maxWidth: .infinity).textSelection(.enabled)
   }
   private func contextSentenceText(_ sentence: CatalogSubject.Sentence) -> AttributedString {
     if let sentenceText { return sentenceText(sentence) }

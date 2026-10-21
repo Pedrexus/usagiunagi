@@ -198,6 +198,9 @@ jobs:
       - name: Native iPhone bounded-volume access
         if: matrix.device == 'iPhone 18 Pro'
         run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-volume-access-ios
+      - name: Native iPhone disk-full save and fresh-process recovery
+        if: matrix.device == 'iPhone 18 Pro'
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-space-ios
       - name: Review, lesson, settings and dashboard acceptance
         run: >-
           env -u PROTOC_PATH uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --setting=-skipPackagePluginValidation --scheme UsagiUnagi --action test
