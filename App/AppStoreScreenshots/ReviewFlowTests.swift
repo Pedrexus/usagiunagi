@@ -1362,10 +1362,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertFalse(
       app.buttons["voice.submit"]
         .isEnabled)  // Kanji transcription is not a reading answer.
-    XCTAssertTrue(
-      app.staticTexts[
-        "Speech recognition returned characters other than kana. Edit the reading into kana before submitting."
-      ].exists)
+    XCTAssertTrue(app.staticTexts["Use kana for the reading before submitting."].exists)
     let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
     attachment.name = "Voice reading correction"
     attachment.lifetime = .keepAlways

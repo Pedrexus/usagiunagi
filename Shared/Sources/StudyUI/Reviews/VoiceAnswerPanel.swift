@@ -31,17 +31,16 @@ public struct VoiceAnswerPanel: View {
   @Environment(\.scenePhase) private var scenePhase
   @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
   @State private var transcriptFocused = false
-  private let audio: StudyAudioLibrary?
+  @Environment(StudyAudioLibrary.self) private var audio
   @State private var audioLease: UUID?
   private let submit: (String) -> Void
   private let cancel: () -> Void
 
   public init(
-    model: VoiceReviewController, audio: StudyAudioLibrary? = nil,
+    model: VoiceReviewController,
     submit: @escaping (String) -> Void, cancel: @escaping () -> Void
   ) {
     _model = State(initialValue: model)
-    self.audio = audio
     self.submit = submit
     self.cancel = cancel
   }
@@ -110,7 +109,7 @@ public struct VoiceAnswerPanel: View {
               if let answer = model.answer(for: model.question) {
                 // A reviewable transcript follows capture completion; release before grading/autoplay.
                 if let audioLease {
-                  audio?.endVoiceInput(audioLease)
+                  audio.endVoiceInput(audioLease)
                   self.audioLease = nil
                 }
                 submit(answer)
@@ -153,7 +152,7 @@ public struct VoiceAnswerPanel: View {
       if phase != .reviewing { transcriptFocused = false }
     }
     .onAppear {
-      if audioLease == nil { audioLease = audio?.beginVoiceInput() }
+      if audioLease == nil { audioLease = audio.beginVoiceInput() }
       if model.phase == .idle { model.start() }
     }
     .onDisappear {
@@ -162,7 +161,7 @@ public struct VoiceAnswerPanel: View {
         self.audioLease = nil
         Task {
           await cleanup?.value
-          audio?.endVoiceInput(audioLease)
+          audio.endVoiceInput(audioLease)
         }
       }
     }

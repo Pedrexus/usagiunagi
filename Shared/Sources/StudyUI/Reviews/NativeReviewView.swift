@@ -204,8 +204,7 @@ public struct NativeReviewView: View {
       onDismiss: { answerFocused = screen.phase != .details && !screen.isAnki }
     ) { request in
       VoiceAnswerPanel(
-        model: VoiceReviewController(question: request.question, capture: voiceCapture()),
-        audio: audio
+        model: VoiceReviewController(question: request.question, capture: voiceCapture())
       ) { text in
         voiceRequest = nil
         guard review?.question == request.question else { return }

@@ -227,3 +227,100 @@ wording counted only the review class; these focused passes accept neither compl
 nor final-source iPad/Mac interaction. Physical accessibility/IME/voice, signed services,
 watch continuity, real-data calibration and storage acceptance remain tracked in TASKS.
 No real account/exercise, microphone permission, signing, PR, push or distribution is used.
+
+## Ownership audit — October 22
+
+Starting at `25a9457b`, two independent read-only audits find gaps outside the focused
+layout checks. Katakana practice omits `VoiceAnswerPanel`'s optional audio dependency;
+its lease therefore never stops or blocks shared pronunciation. This can feed playback
+from another native Mac window into voice input. The existing library test checks
+explicitly acquired leases, not this missing integration. Make the panel's existing
+shared audio environment mandatory rather than add another optional host convention.
+
+The WaniKani preference read is owned by a calling view task. Its replacement returns
+false while the canceled read is still loading; the old read then exits at its
+cancellation check. A catalog-refresh/scene transition or closing one of two windows
+can leave no reader and unavailable/stale settings. Reuse one app-owned read task,
+retaining credential/account fences and explicit refresh behavior; add a gated overlap
+and cancellation regression before accepting the repair.
+
+The canceled-view regression reproduces nil preferences and an extra read on the old
+implementation (`Ownership-Settings-ReproductionReady-20261022.log`). The first test-only
+trial cannot compile an internal memberwise initializer across modules; it is retained
+as `Ownership-Settings-Reproduction-20261022.log`, then corrected with a testable import.
+This compile failure is not an app failure. The model now owns one identity-checked read
+task. Ordinary callers share it; explicit forced refreshes wait their turn and fetch again.
+View cancellation cannot cancel transport, but disconnect/source changes cancel the task.
+The older task's cleanup cannot clear a newer task. Three regression functions cover
+the canceled/overlapping caller, fresh explicit reads and late disconnect/reconnect results.
+All 580 shared Mac functions pass on the repaired source: 111 UI, eight speech, 207
+persistence and 254 core functions (`Ownership-SharedMac-20261022.log`).
+
+The voice panel now gets its required audio library from the existing app environment;
+the optional initializer argument and redundant native-review argument are removed.
+Its existing lease/release policy is retained. The fake capture also checks acquisition
+at its start boundary, and the existing katakana flow now opens voice, switches back to
+typing and checks its retained draft. The repaired Debug build
+`build-521a3a79325a45dfb970638cf9ae6e8f.xcresult` has no compiler/analyzer diagnostics.
+Manual Device Hub inspection on the isolated phone sees Listening, returns to the saved
+`あ`, restores the onscreen keyboard and continues to `あい`. The fake capture enforces
+the ownership precondition; it never opens a microphone. There is no pre-fix native
+reproduction or physical microphone claim for this gap.
+
+The current native trial `test-6a9720f196514ec881e4f5029f759af4.xcresult` passes katakana
+voice/cancel/draft preservation and typed review/automatic upload, but fails the voice
+journey at its stale warning-text assertion. At that boundary the transcript is `一`,
+submission is disabled, and Device Hub shows the actual warning, “Use kana for the reading
+before submitting.” Only the old wording assertion changes; grading, disabled-submission
+and keyboard-fallback checks stay intact. The original failure and its exports under
+`Ownership-VoiceFailureCapture-20261022/` remain retained.
+`test-7ace2c438568402cbb3af0b2646eb7c9.xcresult` then passes the complete voice journey,
+including typing fallback and the finished-review summary. Both bundles report zero
+runtime warnings or skips. Together they accept three current scenarios across two runs,
+not one all-green three-case bundle. The inspected renewed capture is
+`Ownership-VoiceRenewedCapture-20261022/6E32E73C-FB88-490F-97B0-5B79C7C60953.png`.
+`Ownership-VoiceFailureScope-20261022.sha256` retains the old test/runner identities;
+`Ownership-RenewedSource-20261022.sha256` includes the corrected test and unchanged shipping
+scope. The production change adds 20 net Swift lines; it is a correctness repair, not an
+overall LOC reduction. No dependency, persistent schema, grading policy or OS branch changes.
+
+Mac Release `build-8ce87c929f734377b954382ae6f12f79.xcresult` succeeds with zero compiler/
+analyzer diagnostics. The separate metadata extractor still prints its known no-AppIntents
+dependency notice. `Ownership-ReleaseMacBundle-20261022.json` reports zero violations.
+`Ownership-ScopedLint-20261022.log` passes the six initially changed Swift files; the
+separate `Ownership-VoiceAssertionLint-20261022.log` passes the seventh test file.
+iOS Release `build-473c966f3e3d4ea194fb9fc860b5b703.xcresult` also succeeds without compiler/
+analyzer diagnostics; `Ownership-ReleaseIOSBundle-20261022.json` audits three binaries
+without violations. Together the Release policies audit four binaries.
+`Ownership-RenewedFullLint-20261022.log` reports 447 files, no rewrites and only 30 protected
+formatter errors. `Ownership-RenewedRules-20261022.log` retains 230 findings / 98 rules;
+an inventory exit zero does not mean the findings are resolved. The fresh baseline
+`ContinuedAudit-Lint-20261022.log` and `ContinuedAudit-Rules-20261022.log` retain their scope.
+
+The nine-method native-root phone run passes in
+`test-37c76e529e9e4f9a9826fb91926cc8bc.xcresult`, with zero failures/skips or reported
+runtime warnings. Its build finished before any Swift edits.
+`ContinuedAudit-BaselineSwift-20261022.sha256` and
+`ContinuedAudit-BaselineBinaries-20261022.sha256` record that baseline; the three binaries
+remain exact through its terminal completion. These results cannot accept later edits.
+`Ownership-FinalSource-20261022.sha256` records the repaired scope separately. All receipt
+paths are under `.build/Results/`, with hashes under `.build/Reports/`.
+
+The disk audit also finds only about 10 GiB available. Five inactive, ignored DerivedData
+caches (`Shared`, `SharedIOS`, `SharedMac`, `ReleaseMac`, `UnifiedMacRelease` under
+`.build/Xcode/`) occupy about 2.1 GiB and are removed after checking active build paths.
+Canonical reports, frozen fixtures, sources and active `iOS`/`UnifiedMac` products stay
+retained; only regenerable caches are removed. Available space rises to about 12 GiB.
+`Ownership-InactiveCacheSizes-20261022.log` and `Ownership-FreeSpaceBefore/After-20261022.log`
+under `.build/Reports/` record the scope and measurements. Existing `usagi-results-shared`
+needs a new shared-iOS run to rebuild its removed DerivedData log index; the original
+canonical `.build/Results/` bundles remain available. A fresh GitHub lookup still returns
+HTTP 422 for Mainboard `b34c931` (`Ownership-MainboardPin-20261022.log`).
+
+Next: run the ordinary 61-method phone lane using the declared two test classes and the
+same five URL-event exclusions as Actions. Keep the separate three material-conflict,
+one held-refresh and one warm-link methods for their event-driver lanes. The local timeout
+must accommodate the observed per-case/collector delays; do not restart a live runner
+merely because it is quiet. Reduce Motion remains an unconfigured-device skip until
+that preference is explicitly exercised. Broader device, signed-service and full phone
+gates remain open. No real account, microphone, signing, push, PR or distribution is used.

@@ -61,6 +61,7 @@ public final class StudyAppModel {
   @ObservationIgnored private var reader: any WaniKaniService
   @ObservationIgnored private let preferenceCacheDirectory: URL?
   @ObservationIgnored private var preferencePersistence: Task<WaniKaniSettingsCache, any Error>?
+  @ObservationIgnored private var preferenceRead: (id: UUID, task: Task<Bool, Never>)?
   @ObservationIgnored private var preferenceWrite: Task<Void, Never>?
   @ObservationIgnored private var preferenceDebounce: Task<Void, any Error>?
   private var preferenceEditRevision = UUID()
@@ -401,6 +402,8 @@ public final class StudyAppModel {
     generation = UUID()
     activeRequests = 0
     activeCredential = nil
+    preferenceRead?.task.cancel()
+    preferenceRead = nil
     isLoadingWaniKaniPreferences = false
     isDisconnecting = true
     defer { isDisconnecting = false }
@@ -431,6 +434,8 @@ public final class StudyAppModel {
   }
 
   private func clearWaniKaniPreferences() {
+    preferenceRead?.task.cancel()
+    preferenceRead = nil
     preferenceWrite?.cancel()
     preferenceDebounce?.cancel()
     preferenceDebounce = nil
@@ -465,7 +470,24 @@ public final class StudyAppModel {
 
   /// Reads never manufacture edits. A persisted, unattempted user edit may resume afterward.
   @discardableResult public func refreshWaniKaniPreferences(force: Bool = false) async -> Bool {
-    guard preferenceWrite == nil, !isLoadingWaniKaniPreferences, !isDisconnecting,
+    while let read = preferenceRead {
+      let result = await read.task.value
+      if !force { return result }
+    }
+    guard !Task.isCancelled else { return false }
+    let id = UUID()
+    let task = Task {
+      defer { if preferenceRead?.id == id { preferenceRead = nil } }
+      return await readWaniKaniPreferences(force: force)
+    }
+    preferenceRead = (id, task)
+    return await task.value
+  }
+
+  /// View cancellation only stops waiting; account/source transitions cancel the shared read.
+  private func readWaniKaniPreferences(force: Bool) async -> Bool {
+    guard !Task.isCancelled, preferenceWrite == nil, !isLoadingWaniKaniPreferences,
+      !isDisconnecting,
       snapshot?.isSample == false,
       let account = snapshot?.accountID
     else { return false }

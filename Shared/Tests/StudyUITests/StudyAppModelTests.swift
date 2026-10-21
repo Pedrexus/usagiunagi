@@ -1,9 +1,9 @@
 import Foundation
-import StudyCore
 import StudyTestSupport
 import StudyUI
 import Testing
 
+@testable import StudyCore
 @testable import StudyPersistence
 
 @MainActor final class MemoryCredentials: StudyCredentialStore {
@@ -49,6 +49,14 @@ private actor ModelServer {
   private(set) var reads = 0
   private(set) var writes = 0
   private(set) var subjectReads = 0
+  private(set) var userReads = 0
+  private var userGate: StudyTaskGate?
+  private var preferences = WaniKaniPreferences(
+    extraStudyAutoplayAudio: false, lessonsAutoplayAudio: false, lessonsBatchSize: 5,
+    reviewsAutoplayAudio: false, reviewsDisplaySrsIndicator: true,
+    reviewsPresentationOrder: "shuffled")
+  func holdNextUserRead(_ gate: StudyTaskGate) { userGate = gate }
+  func lessonBatch(_ size: Int) { preferences.lessonsBatchSize = size }
   private var material = DownloadFixture.rows["study_materials"]!.first!
   private var user = DownloadFixture.user
   func changeProfile(username: String, level: Int) {
@@ -95,8 +103,16 @@ private actor ModelServer {
       return try DownloadFixture.response(request, object: DownloadFixture.collection([material]))
     }
     if path == "user" {
+      userReads += 1
+      if let userGate {
+        self.userGate = nil
+        await userGate.pause()
+      }
       var user = user
       var data = user["data"] as! [String: Any]
+      let encoder = JSONEncoder()
+      encoder.keyEncodingStrategy = .convertToSnakeCase
+      data["preferences"] = try JSONSerialization.jsonObject(with: encoder.encode(preferences))
       if other {
         data["id"] = "other-account"
         data["username"] = "other"
@@ -155,6 +171,80 @@ private actor ModelRepository {
     #expect(model.maximumContentLevel == 3 && !model.contentAccessVerified)
     #expect(await repository.opens == 0)
     #expect(await server.reads == 0)
+  }
+
+  @Test func cancelingASettingsViewKeepsItsReadAndExplicitRefreshStillFetches() async throws {
+    let cache = try await store(cached: true)
+    let server = ModelServer()
+    let model = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), client: await server.client,
+      openStore: { cache })
+    await model.restore()
+    let gate = StudyTaskGate()
+    await server.holdNextUserRead(gate)
+    let reading = Task { await model.refreshWaniKaniPreferences() }
+    await gate.waitForEntry()
+    let otherView = Task { await model.refreshWaniKaniPreferences() }
+    reading.cancel()
+    await gate.resume()
+    _ = await reading.value
+    #expect(await otherView.value)
+    #expect(model.waniKaniPreferences?.lessonsBatchSize == 5)
+    #expect(!model.isLoadingWaniKaniPreferences && !model.isSyncing)
+    #expect(await model.refreshWaniKaniPreferences())
+    #expect(await server.userReads == 1)
+    await server.lessonBatch(3)
+    #expect(await model.refreshWaniKaniPreferences(force: true))
+    #expect(model.waniKaniPreferences?.lessonsBatchSize == 3)
+    #expect(await server.userReads == 2)
+  }
+
+  @Test func aDisconnectedSettingsReadCannotReplaceOrClearTheReconnectedRead() async throws {
+    let cache = try await store(cached: true)
+    let server = ModelServer()
+    let model = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), client: await server.client,
+      openStore: { cache })
+    await model.restore()
+    let oldGate = StudyTaskGate()
+    await server.holdNextUserRead(oldGate)
+    let oldRead = Task { await model.refreshWaniKaniPreferences() }
+    await oldGate.waitForEntry()
+    await model.disconnect()
+    #expect(model.snapshot == nil && !model.isLoadingWaniKaniPreferences)
+    try await model.connect("fixture")
+    let newGate = StudyTaskGate()
+    await server.holdNextUserRead(newGate)
+    let newRead = Task { await model.refreshWaniKaniPreferences() }
+    await newGate.waitForEntry()
+    await oldGate.resume()
+    #expect(await oldRead.value == false)
+    #expect(model.isLoadingWaniKaniPreferences && model.waniKaniPreferences == nil)
+    await newGate.resume()
+    #expect(await newRead.value)
+    #expect(model.waniKaniPreferences?.lessonsBatchSize == 5)
+    #expect(!model.isLoadingWaniKaniPreferences && !model.isSyncing)
+  }
+
+  @Test func explicitSettingsRefreshesWaitTheirTurnInsteadOfReplacingAnotherRead() async throws {
+    let cache = try await store(cached: true)
+    let server = ModelServer()
+    let model = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), client: await server.client,
+      openStore: { cache })
+    await model.restore()
+    let gate = StudyTaskGate()
+    await server.holdNextUserRead(gate)
+    let reading = Task { await model.refreshWaniKaniPreferences() }
+    await gate.waitForEntry()
+    let first = Task { await model.refreshWaniKaniPreferences(force: true) }
+    let second = Task { await model.refreshWaniKaniPreferences(force: true) }
+    await gate.resume()
+    #expect(await reading.value)
+    #expect(await first.value)
+    #expect(await second.value)
+    #expect(await server.userReads == 3)
+    #expect(!model.isLoadingWaniKaniPreferences && !model.isSyncing)
   }
 
   @Test func restoreUsesTheSavedAccountAndOnlyOpensTheRepositoryOnce() async throws {

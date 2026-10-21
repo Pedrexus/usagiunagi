@@ -6,6 +6,20 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Ownership bugs repaired:** katakana voice uses the mandatory shared audio environment,
+and WaniKani settings reads belong to one app-owned task. A canceled-view regression fails
+before the repair and passes afterward; overlapping callers, explicit refresh and late
+disconnect/reconnect responses are covered. All 580 shared Mac functions, three current
+native phone scenarios, both unsigned Release builds and four executable audits pass.
+The nine-method native-root baseline also passes on `25a9457b`; its scope stays separate.
+One failed native trial catches stale voice-warning wording in the test, then the renewed
+voice journey passes with its grading/fallback assertions retained. Full lint remains at
+30 protected formatting errors and 230 signals / 98 rules. Five inactive build caches are
+removed, recovering about 2 GiB; reports and frozen fixtures stay retained.
+[Exact receipts and limits](Validation/2026-10-21-code-audit.md#ownership-audit--october-22).
+Next is the ordinary 61-method phone lane; the five URL-driven methods remain separate.
+The full 66-method phone gate and broader acceptance are still open.
+
 **Dense feedback follow-up:** manual onscreen-keyboard grading finds the Correct banner
 clipping the next question in short landscape. A first native trial also records a
 zero-width question when three notices compete at 250% question size; that failure stays

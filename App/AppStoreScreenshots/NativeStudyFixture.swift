@@ -156,18 +156,19 @@
       let (catalog, fontConfiguration) = StudyFontFixture.make()
       let audioConfiguration = URLSessionConfiguration.ephemeral
       audioConfiguration.protocolClasses = [AudioFixtureProtocol.self]
+      let audio = StudyAudioLibrary(
+        downloads: StudyAudioDownloads(
+          directory: URL.temporaryDirectory.appending(path: "mac-audio-fixture-\(UUID())"),
+          configuration: audioConfiguration),
+        preferences: DefaultsStudyAudioPreferences(defaults: defaults),
+        playback: SampleAudioPlayback())
       return StudyAppAssembly(
         model: model,
         fonts: StudyFontLibrary(
           catalog: catalog,
           preferences: DefaultsStudyFontPreferences(defaults: defaults),
           configuration: fontConfiguration),
-        audio: StudyAudioLibrary(
-          downloads: StudyAudioDownloads(
-            directory: URL.temporaryDirectory.appending(path: "mac-audio-fixture-\(UUID())"),
-            configuration: audioConfiguration),
-          preferences: DefaultsStudyAudioPreferences(defaults: defaults),
-          playback: SampleAudioPlayback()),
+        audio: audio,
         defaults: defaults,
         notifications: StudyNotifications(
           preferences: DefaultsStudyNotificationPreferences(defaults: defaults),
@@ -200,7 +201,7 @@
                 .utf8)
             return (bytes, response)
           }),
-        voiceCapture: { FixtureVoiceCapture() },
+        voiceCapture: { FixtureVoiceCapture(audio: audio) },
         appearance: arguments.contains("--light-fixture")
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
         paths: AsyncStream {
@@ -210,13 +211,19 @@
     }
     /// Deterministic transcription; acceptance fixtures never start microphones or Speech APIs.
     private actor FixtureVoiceCapture: VoiceCapture {
+      private let audio: StudyAudioLibrary
       private var callback: VoiceCaptureReport?
       private var recordingID: UUID?
       private var transcript = ""
+      init(audio: StudyAudioLibrary) { self.audio = audio }
       func start(
         id: UUID, locale: Locale, downloadModel _: Bool,
         report: @escaping VoiceCaptureReport
       ) async {
+        guard await audio.voiceInputActive else {
+          await report(.failed("Voice input does not own pronunciation."))
+          return
+        }
         recordingID = id
         callback = report
         transcript = locale.identifier.hasPrefix("ja") ? "一" : "one"
