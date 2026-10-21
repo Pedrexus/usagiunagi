@@ -1,6 +1,12 @@
 # Levels 1–3 display catalog
 
-`free-levels.parquet` is a Zstandard-compressed development reference. The native app reads the matching binary Apple property list `Shared/Sources/StudyCore/Resources/free-levels-preview.plist` through Foundation; no Arrow/Parquet runtime is added to the app. On Mac, Account → Preview free levels 1–3 opens it offline. Demo IDs are negative, account identity is absent and no assignments/answers are invented or uploaded.
+Normal account data comes from WaniKani's API through URLSession and is persisted in SwiftData. No Parquet file, conversion pipeline or manual export is required. The unused development `free-levels.parquet` derivative is removed; its historical validation remains below.
+
+The native app's offline preview reads `Shared/Sources/StudyCore/Resources/free-levels-preview.plist` through Foundation. On Mac, Account → Preview free levels 1–3 opens it offline before connecting an account. Demo IDs are negative, account identity is absent and no assignments/answers are invented or uploaded. Small deterministic fixtures still support tests without a network or real exercises.
+
+The [official API](https://docs.api.wanikani.com/20170710/#authentication) requires a personal API token for every request, including subjects. WaniKani recommends [local subject caching](https://docs.api.wanikani.com/20170710/#caching), [conditional requests](https://docs.api.wanikani.com/20170710/#conditional-requests) and [`updated_after`](https://docs.api.wanikani.com/20170710/#leveraging-the-updated_after-filter). Subscription content limits still apply.
+
+The current client downloads complete collections, and `StudyStore.applyDownload` atomically applies them while preserving pending work. Incremental refresh remains separate work: its partial collections must merge without deleting absent rows or advancing cursors before a successful save. Fetch the needed offline study content in advance; avoid requiring a network request for each answer. Keep the existing store owner and direct model queries rather than adding another cache framework.
 
 Captured read-only on 2026-10-18 from the visible subject grids in the user's existing Chrome session:
 
@@ -14,41 +20,25 @@ All 357 rows contain only level, kind, characters, displayed reading and display
 
 These are authentic **display fields**, not complete API subjects. They lack WaniKani IDs, all accepted/auxiliary answers, alternate readings, mnemonics, component relationships, SRS rules and audio. The preview is for browsing and UI mocks; a complete review/lesson fixture still needs an authorized API catalog. WaniKani content is governed separately by [its terms](https://www.wanikani.com/terms); no broader content license is asserted.
 
-Export the property list to temporary JSON with Apple’s built-in `plutil`, then regenerate the development Parquet using Mainboard's existing Zstandard exporter, from Developer/Projects:
-
-```sh
-mainboard run --as-is plutil -convert json -o /tmp/free-levels-preview.json apps/usagiunagi/Shared/Sources/StudyCore/Resources/free-levels-preview.plist
-mainboard query "SELECT * FROM read_json_auto('/tmp/free-levels-preview.json')" --out /tmp/free-levels.parquet
-```
-
-The exporter refuses overwriting evidence. Inspect row counts with `read_parquet` and the compression column in `parquet_metadata` before replacing the committed development artifact. Updates require a fresh visible capture and matching row-count/integrity review, rather than guessing curriculum changes.
-
 ## Native catalog export
 
 Settings → Developer options → **Export saved levels 1–3** now uses the same account-bound source as the existing diagnostics action, with a separate public-content projection. Apple's ShareLink/CoreTransferable publishes `usagiunagi-free-levels.plist`; there is no custom share controller, extra runtime dependency or export cache. No export is performed automatically.
 
 `StudyCatalogDocument` format 1 contains `capturedAt` (an ISO 8601 string), `requestedLevels`, native `CatalogSubject` values, optional public SRS systems and public voice-actor metadata. The capture time describes the export, not a verified server-update time. Subjects retain IDs, meaning/reading roles, relationships, image/audio references and teaching fields. Account identity/profile, credentials, personal notes/synonyms, assignments, review history, sessions, queues, preferences, cursors and handoff receipts are excluded. A direct SwiftData model query selects this account's levels 1–3 in level/ID order; hidden subjects are omitted. Empty/sample/missing sources and inconsistent stored IDs/levels refuse export. Missing SRS metadata remains absent rather than becoming invented defaults.
 
-The file describes **saved content in the requested scope**. It does not establish completeness or an official current curriculum. Keep its original bytes and provenance, validate the source and all required fields, and compare actual level/kind counts before using a genuine export as a review fixture. The current bundled preview remains display-only and byte-exact; its loader does not accept this different document format. A complete authorized export and subsequent fixture integration are still required. No account or exercises were accessed to prepare this feature.
+The file describes **saved content in the requested scope**. It does not establish completeness or an official current curriculum. Validate provenance and grading fields before using a genuine export as a test fixture. The current bundled preview remains display-only and byte-exact; its loader does not accept this different document format. No account or exercises were accessed to prepare this feature.
 
-Mainboard's existing tools can derive subject-row Parquet without adding Arrow to the app. Keep the original property list too: the flattened derivative does not carry the document's SRS/voice/capture metadata.
-
-```sh
-catalog_work=$(mainboard run /usr/bin/mktemp -d /tmp/usagi-catalog.XXXXXX)
-mainboard run /usr/bin/plutil -convert json -o "$catalog_work/catalog.json" /path/to/usagiunagi-free-levels.plist
-mainboard query "SELECT subject.* FROM (SELECT unnest(subjects) AS subject FROM read_json_auto('$catalog_work/catalog.json')) ORDER BY level, id" --out "$catalog_work/free-levels.parquet"
-mainboard query "SELECT DISTINCT compression FROM parquet_metadata('$catalog_work/free-levels.parquet')"
-```
+This optional developer sharing action is independent of normal API synchronization. It is not a step users need to take to populate SwiftData or study offline.
 
 ### Public-source check — October 21
 
 The focused public search did not verify a complete current source with original IDs and accepted/auxiliary-answer metadata. The [2014 export announcement](https://community.wanikani.com/t/export-of-wanikani-radicals-kanji-and-vocab/6786/2) explicitly dates its corpus to December 2014. The [Anki exporter source](https://github.com/BtbN/Anki-WaniKaniSync/blob/master/importer.py) consumes supplied API subject records; its compressed supporting files provide pitch/phonetic data, not the requested catalog. An anonymous [public kanji page](https://www.wanikani.com/kanji/%E4%B8%80) supplies display information and reading groups, while the inspected HTML lacks explicit accepted-answer/auxiliary-meaning fields. The [official API reference](https://docs.api.wanikani.com/#subjects) defines those semantics and gives illustrative records; examples are not a complete curriculum export. No absence claim is made about every possible public repository, and no content redistribution license is inferred from an API-client code license.
 
-### Validation scope
+### Historical export validation — `d3b2a20a`
 
 Both native Debug builds pass with zero compiler/analyzer warnings in their summaries. All **560 shared functions / 72 suites** pass on Mac and iPhone, including **843 iPhone executions**, with no skips/failures. Four added export tests preserve exact public fields, alternate/whitelist/blacklist metadata and public SRS/voices, reject wrong levels/hidden/foreign/sample/empty/inconsistent sources, and prove cancellation/export leave every saved account-work field unchanged. Scoped formatting, SwiftLint and parser/UI checks pass without final rewrites. Inventory parses **262/262** files without context issues: production **146 / 21,694** physical lines, tests **111 / 26,205**, tooling **five / 281**. V1 and its frozen fixtures/decoder sources are unchanged.
 
-A disposable Swift package under `/private/tmp/usagi-free-catalog.zDU2Pl` uses only an in-memory synthetic account and the actual public export API. Its binary plist converts through Apple's `plutil` and Mainboard's existing query exporter to **three synthetic rows / three levels / IDs 1001–1003**, with Parquet metadata reporting **ZSTD**. These are pipeline controls, not real WaniKani subjects, and replace no bundled data. The genuine 357-row Parquet remains SHA `df9846fa93dcb9902aa36da60aaf827e216fb93dcbc3568d3bf2d08d879996a2`; the native preview remains `b09e54c0b4a010a4cf1c393234524f06997a5e56e0bd529e07a6034f14b52995`.
+A disposable Swift package under `/private/tmp/usagi-free-catalog.zDU2Pl` used only an in-memory synthetic account and the actual public export API. Its binary plist converted through Apple's `plutil` and Mainboard's query exporter to **three synthetic rows / three levels / IDs 1001–1003**, with Parquet metadata reporting **ZSTD**. These were pipeline controls, not real WaniKani subjects, and replaced no bundled data. The now-removed 357-row Parquet had SHA `df9846fa93dcb9902aa36da60aaf827e216fb93dcbc3568d3bf2d08d879996a2`; the unchanged native preview remains `b09e54c0b4a010a4cf1c393234524f06997a5e56e0bd529e07a6034f14b52995`.
 
 | Evidence under `.build/Results/` or `.build/Reports/` | SHA-256 |
 | --- | --- |
