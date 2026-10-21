@@ -6,6 +6,20 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Review layout and keyboard verification:** answering keeps the question and response
+as the same two `AnyLayout` children across orientation, and portrait feedback gains
+scrolling recovery actions. Production falls five Swift lines. All 577 shared Mac
+functions, five native iPhone scenarios, both unsigned Release products and four
+executable audits pass. Inspection catches a false-positive keyboard assertion: a
+keyboard can exist below the screen. The renewed test requires a visible letter key
+and full-screen captures. It rejects the hidden keyboard, then passes unchanged after
+Device Hub restores software-keyboard display. Both final captures are inspected;
+question/prompt/input stay clear, and the draft survives settings, rotation and typing.
+The failed precondition run is retained. Full lint remains at 30 protected formatter
+errors, the inventory remains 231 findings / 98 rules, and hosted CI cannot fetch its
+Mainboard pin. [Exact scope and evidence](Validation/2026-10-21-code-audit.md#review-layout-and-keyboard-verification--october-22).
+The full UI/accessibility/device/signed-service gates below remain open.
+
 **Native accessibility follow-up:** the exploratory full iPhone audit finalizes with
 three failed cases / 74 issues, including one test-selector mistake. A standalone native
 SwiftUI form reproduces three contrast warnings, but no Dynamic Type warning. Captures

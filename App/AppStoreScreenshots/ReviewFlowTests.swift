@@ -148,11 +148,14 @@ final class ReviewFlowTests: XCTestCase {
           + navigation.staticTexts.allElementsBoundByIndex
         let top = navigationItems.map(\.frame.maxY).max() ?? navigation.frame.maxY
         let bottom = controls.frame.minY
-        return app.keyboards.firstMatch.exists
+        let window = app.windows.firstMatch.frame
+        let keyboard = app.keyboards.firstMatch
+        let key = keyboard.keys["a"]
+        return keyboard.exists && !keyboard.frame.isEmpty
+          && key.exists && !key.frame.isEmpty && window.contains(key.frame)
           && content.allSatisfy {
             guard $0.exists else { return false }
             let frame = $0.frame
-            let window = app.windows.firstMatch.frame
             return frame.width > 0 && frame.height > 0
               && frame.minX >= window.minX - 1 && frame.maxX <= window.maxX + 1
               && frame.minY >= top - 1 && frame.maxY <= bottom + 1
@@ -161,16 +164,18 @@ final class ReviewFlowTests: XCTestCase {
           && app.textFields["review.answer"].isHittable && app.buttons["review.submit"].isHittable
       }, object: nil)
     let result = XCTWaiter.wait(for: [ready], timeout: 5)
+    let frames = content.map { "\($0.identifier): \($0.frame)" }
+    let geometry = XCTAttachment(
+      string: ([
+        "Window: \(app.windows.firstMatch.frame)",
+        "Navigation: \(app.navigationBars.firstMatch.frame)",
+        "Controls: \(controls.frame)", "Keyboard: \(app.keyboards.firstMatch.frame)",
+        "A key: \(app.keyboards.firstMatch.keys["a"].frame)",
+      ] + frames).joined(separator: "\n") + "\n" + app.debugDescription)
+    geometry.name = "Review viewport visibility \(result == .completed ? "verified" : "failure")"
+    geometry.lifetime = .keepAlways
+    add(geometry)
     if result != .completed {
-      let frames = content.map { "\($0.identifier): \($0.frame), hittable: \($0.isHittable)" }
-      let geometry = XCTAttachment(
-        string: ([
-          "Navigation: \(app.navigationBars.firstMatch.frame)",
-          "Controls: \(controls.frame)", "Keyboard: \(app.keyboards.firstMatch.frame)",
-        ] + frames).joined(separator: "\n") + "\n" + app.debugDescription)
-      geometry.name = "Review viewport visibility failure"
-      geometry.lifetime = .keepAlways
-      add(geometry)
       attachHomeScreenshot("Review viewport visibility failure")
     }
     XCTAssertEqual(result, .completed, file: file, line: line)
@@ -566,7 +571,7 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor private func attachHomeScreenshot(_ title: String) {
-    let attachment = XCTAttachment(screenshot: XCUIApplication().windows.firstMatch.screenshot())
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
     attachment.name = title
     attachment.lifetime = .keepAlways
     add(attachment)

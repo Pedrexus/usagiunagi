@@ -106,7 +106,9 @@ inspected historical screenshot. The October 22 viewport follow-up retains that 
 except below 140 points of available height, where glyph and prompt share a row so neither
 disappears behind a landscape keyboard at very large text sizes. The shared input retains
 its binding and native focus behavior; the renewed regression checks draft preservation
-and question/prompt/input geometry through rotation. The account/vacation header now scrolls
+and question/prompt/input geometry through rotation. Question and response remain the same
+two `AnyLayout` children across orientations; feedback actions scroll independently of
+the question in either layout. The account/vacation header now scrolls
 with Home instead of consuming study space. See the [exact evidence](Implementation/2026-10-21-adaptive-validation.md#home-and-review-viewport-follow-up--october-22).
 
 In that short wide column, a standard small-control request also selects a smaller semantic

@@ -95,6 +95,13 @@ The warm-link test adds `--url-test App/Tests/WarmLinks.json` and selects only i
 
 The held-refresh test uses the same driver with `App/Tests/HeldRefresh.json`. `usagi-test-shell` and its iPad task include this configuration. CI selects the refresh test in its own lane so its one-shot release route cannot be omitted or confused with warm-link/material events. Cached content and Settings remain available during atomic refresh; duplicate Refresh is disabled, and the exact learned-kanji header changes from 864 to 865 only after completion. No visible debug control or real network request is involved.
 
+For onscreen-keyboard checks, verify the keyboard is visible in the isolated fixture first.
+Device Hub exposes **Device → Keyboard → Toggle Software Keyboard**. A keyboard can remain
+in the accessibility tree below the screen while hidden. Review geometry tests therefore
+require a letter key inside the visible window and retain full-screen captures plus frame
+diagnostics. Preserve a failed precondition result before correcting the simulator state
+and retrying; keyboard existence alone is insufficient evidence.
+
 ## GitHub Actions
 
 The workflow runs shared tests/restart checks, unsigned Release product/audit lanes, iPhone/iPad acceptance and native Mac acceptance on the official [`xcode-27` image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md), selecting `/Applications/Xcode_27.app`. Its October 21 source check confirms macOS 27.0.1, Xcode 27.0 / 27A266a and both configured simulator models/runtimes. It uses read-only repository permissions, pinned action/tool commits, cancellation of stale branch jobs and seven-day result artifacts. Synthetic accounts require no token, signing certificate or publication secret. No distribution or store deployment is configured.

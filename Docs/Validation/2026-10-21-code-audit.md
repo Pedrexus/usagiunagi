@@ -125,3 +125,52 @@ Passing taps and hit-region checks do not accept those layouts. Full lint still 
 the 30 protected formatter diagnostics, and the inventory remains 230 findings from 98
 rules. GitHub still refuses the pinned Mainboard commit with HTTP 422; no publication or
 hosted execution is claimed.
+
+## Review layout and keyboard verification — October 22
+
+Starting from `eea734c3`, answering keeps the question and response as the same two
+`AnyLayout` children across orientation. Feedback/recovery actions scroll in portrait
+as well as landscape. Production changes only `ReviewScreen.swift`, removing five net
+Swift lines; grading, persistence, dependencies and platform branches are unchanged.
+Isolated manual largest-text checks retain a typed draft through rotation and reach
+Reveal answer by a touch scroll. The earlier Home/header fixes retain their own
+[viewport receipt](../Implementation/2026-10-21-adaptive-validation.md#home-and-review-viewport-follow-up--october-22).
+
+All following paths are under `.build/Results/` unless otherwise stated.
+
+| Check | Current result |
+| --- | --- |
+| Shared Mac suite | 577 functions pass (108/8/207/254); `StableInput-SharedMac-20261022.log` |
+| Five native iPhone scenarios | `test-85b311f0793d4ec0aa3ec47576567da7.xcresult`: five passes, no failures/skips or reported runtime warnings; incorrect reveal/override, landscape grading, Back/draft, exact-match settings and largest-text rotation |
+| Unsigned Release products | Mac `build-bed34f78ea5f44cb83ffe4f9d3ece865.xcresult`, iOS `build-61de075b02f74c10b1e5c8dccf242373.xcresult`; zero compiler/analyzer warnings/errors |
+| Release bundle audits | `StableInput-ReleaseMacBundle-20261022.json` and `StableInput-ReleaseIOSBundle-20261022.json`: one Mac plus three iOS/watch/widget executables, zero violations |
+| Full lint and rules | `StableInput-KeyboardProofFullLint-20261022.log`: 447 files, no rewrites, only the same 30 protected formatter errors. `StableInput-KeyboardProofRules-20261022.log`: 231 findings / 98 rules; inventory exit 0 is not acceptance |
+| Hosted Actions prerequisite | `StableInput-MainboardPin-20261022.log`: GitHub still returns HTTP 422 for Mainboard `b34c931d776a93d502a0d53061366ae898be5840`; no publication |
+
+Inspection of the five-pass run's exports finds no visible software keyboard. That run
+does not establish onscreen-keyboard geometry, despite a present keyboard accessibility
+element. The renewed helper requires a nonempty letter-key frame inside the window,
+records geometry on success/failure, and captures the entire composited screen rather
+than only the app window. The stricter run `test-32c01a80f74f4be7ac3d73c035d7be83.xcresult`
+fails this precondition; Device Hub independently shows the hidden keyboard during
+cleanup. Its frame export places the keyboard at y=891 and its A key at y=952, below
+the 874-point window (`StableInput-KeyboardProofFailure-20261022/83F382B0-17C9-4AAA-A45A-70B6A1B319CF.txt`).
+Device Hub's native Toggle Software Keyboard command restores a visibly presented
+keyboard before the unchanged-source retry. That retry,
+`test-7d6ea3c7978a4b38936faff990ce3546.xcresult`, passes with no failures/skips or reported
+runtime warnings. Both full-screen exports are inspected in
+`StableInput-VisibleKeyboardCapture-20261022/`: portrait
+`6A5DC54C-CF75-4013-972B-ADFD4D6F4A3B.png`, then landscape
+`100CABE8-08F7-495A-A213-5B5B963C3C61.png` with `draft retained` and a visible keyboard.
+The geometry exports place the keyboard at y=590 in the 874-point portrait window and
+y=222 in the 402-point landscape window. Question, prompt and input stay above the
+controls/keyboard without intersecting them; visible-key, draft/settings, hit-region,
+rotation and continued-typing checks pass. The new assertion is unchanged between the
+failed and successful runs; both remain retained. Source hashes are recorded in
+`.build/Reports/StableInput-KeyboardProofSource-20261022.sha256`.
+
+The protected owner-file hashes, frozen V1 schema, historical writer archives/store and
+decoders remain unchanged. The whole 57-method phone gate, final-source iPad/Mac
+interaction, physical accessibility/IME/voice, signed iCloud/watch continuity, real-data
+performance/calibration and the other [tracked gates](../TASKS.md) stay open. No normal
+account, real exercise, microphone permission, PR, push, signing or distribution is used.

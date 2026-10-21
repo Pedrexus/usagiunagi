@@ -145,31 +145,26 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           .accessibilityIdentifier("review.scroll")
       } else {
         let horizontal = viewport.size.width >= 560 && viewport.size.height < 420
-        let layout = horizontal ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout())
+        let layout =
+          horizontal ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 0))
         layout {
           VStack(spacing: 0) {
             studyStatus
             question(compact: viewport.size.height < 420, inline: viewport.size.height < 140)
           }
-          if horizontal {
-            Group {
-              if state.phase == .answering && state.feedback.isEmpty {
-                VStack(spacing: 8) { response }
-              } else {
-                ScrollView { VStack(spacing: 8) { response } }
-                  .accessibilityIdentifier("review.answerScroll")
-              }
-            }.padding(.horizontal, 12).frame(maxWidth: .infinity)
-              .controlSize(
-                viewport.size.height < 140 && typeSize >= .accessibility3 ? .small : .regular)
-          }
-        }.frame(maxWidth: 760).frame(maxWidth: .infinity)
-          .safeAreaInset(edge: .bottom) {
-            if !horizontal {
-              VStack(spacing: 8) { response }.padding(12).frame(maxWidth: .infinity)
-                .background(.bar)
+          Group {
+            if state.phase == .answering && state.feedback.isEmpty {
+              VStack(spacing: 8) { response }
+            } else {
+              ScrollView { VStack(spacing: 8) { response } }
+                .accessibilityIdentifier("review.answerScroll")
             }
-          }
+          }.padding(.horizontal, 12).padding(.vertical, horizontal ? 0 : 12)
+            .frame(maxWidth: .infinity).background(.bar)
+            .controlSize(
+              horizontal && viewport.size.height < 140 && typeSize >= .accessibility3
+                ? .small : .regular)
+        }.frame(maxWidth: 760, maxHeight: .infinity).frame(maxWidth: .infinity)
       }
     }
     .safeAreaInset(edge: .bottom) {
