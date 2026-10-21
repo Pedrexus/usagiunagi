@@ -78,7 +78,7 @@ struct LessonPickerView: View {
           }
         }
       }.padding(16)
-    }.disabled(busy)
+    }.accessibilityIdentifier("lesson.picker").disabled(busy)
       .safeAreaInset(edge: .bottom) {
         VStack(alignment: .leading, spacing: 12) {
           Toggle("Interleave lessons", isOn: $interleave)
@@ -95,6 +95,8 @@ struct LessonPickerView: View {
             }.frame(maxWidth: .infinity, alignment: .leading)
           }
         }.padding().background(.bar).disabled(busy)
+          .accessibilityElement(children: .contain).accessibilityLabel("Lesson controls")
+          .accessibilityIdentifier("lesson.controls")
       }
       .toolbar {
         ToolbarItem(placement: .primaryAction) {

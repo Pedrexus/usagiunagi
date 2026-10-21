@@ -107,3 +107,21 @@ both unsigned Release products and their four executable audits pass on that sou
 The fresh `NotesWarning-FinalFullLint-20261022.log` still fails only 30 protected-file
 formatter diagnostics; `NotesWarning-FinalAllRules-20261022.log` still inventories 230
 findings from 98 rules. The three owner-file hashes and frozen schema remain unchanged.
+
+## Native accessibility follow-up — October 22
+
+The [native audit and scoped fixes](../Implementation/2026-10-21-adaptive-validation.md#native-accessibility-audit--october-22)
+retain three failed full-audit cases / 74 issues and an independent native-form control.
+Subject headers now scale and wrap, key text has stronger contrast, Home cards can grow,
+and review progress has one spoken count. The lesson picker identifies its list/footer;
+the test helper scrolls above the fixed controls. The final heading/privacy suite passes
+both cases without failures/skips or reported runtime warnings. Measured heading height
+grows from 57.3 to 191 points. All 577 shared Mac functions and both unsigned Release builds
+pass on the current source; the linked receipt owns exact scope and failed trials.
+
+The full accessibility gate remains open: captures expose an oversized fixed Home account
+header and an answer-focus path that scrolls the review question out of view at large text.
+Passing taps and hit-region checks do not accept those layouts. Full lint still fails only
+the 30 protected formatter diagnostics, and the inventory remains 230 findings from 98
+rules. GitHub still refuses the pinned Mainboard commit with HTTP 422; no publication or
+hosted execution is claimed.

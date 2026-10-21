@@ -16,6 +16,57 @@ import UIKit
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor func testHomeActionsAndProgressRemainReachableAtLargestDynamicType() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--home-fixture", "--home-progress-fixture", "--manual-review-fixture", "--light-fixture",
+      "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
+    ])
+    defer { app.terminate() }
+    let reviews = app.buttons["home.reviews"]
+    scrollTo(reviews, in: app)
+    attachHomeScreenshot("Home study actions at largest Dynamic Type")
+    reviews.tap()
+    XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 10))
+    navigateNativeBack(in: app)
+    XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 5))
+    let kanji = app.descendants(matching: .any).matching(identifier: "home.level.24.kanji")
+      .firstMatch
+    scrollTo(kanji, in: app)
+    XCTAssertTrue(kanji.label.contains("1 of 25 at Guru"))
+    attachHomeScreenshot("Home level progress at largest Dynamic Type")
+    kanji.tap()
+    XCTAssertTrue(app.collectionViews["catalog.list"].waitForExistence(timeout: 5))
+  }
+
+  @MainActor func testLessonHeadingAndFooterSupportLargestDynamicType() {
+    continueAfterFailure = false
+    var heights: [CGFloat] = []
+    for category in ["UICTContentSizeCategoryL", "UICTContentSizeCategoryAccessibilityXXXL"] {
+      let app = launchLessonPicker(extra: ["-UIPreferredContentSizeCategoryName", category])
+      defer { app.terminate() }
+      let vocabulary = app.buttons["lesson.select.14"]
+      scrollTo(vocabulary, in: app)
+      vocabulary.tap()
+      app.buttons["lesson.startSelection"].tap()
+      expectLessonPage("Lesson 1 of 1", in: app)
+      let heading = app.staticTexts["subject.characters"]
+      XCTAssertTrue(heading.waitForExistence(timeout: 5))
+      XCTAssertEqual(heading.label, "こんにちは")
+      heights.append(heading.frame.height)
+      XCTAssertTrue(app.buttons["lesson.quiz"].isHittable)
+      let image = XCTAttachment(screenshot: app.screenshot())
+      image.name = "Lesson heading and footer at \(category)"
+      image.lifetime = .keepAlways
+      add(image)
+    }
+    XCTAssertGreaterThan(heights[1], heights[0] * 1.25)
+    let measurement = XCTAttachment(string: "Lesson heading heights in points: \(heights)")
+    measurement.name = "Default and largest Dynamic Type heading heights"
+    measurement.lifetime = .keepAlways
+    add(measurement)
+  }
+
   @MainActor func testLessonGroupSelectionAndClearRemainAccessibleButtons() {
     let app = fixtureApplication(["--lesson-fixture", "--lesson-settings-fixture"])
     defer { app.terminate() }
@@ -32,7 +83,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["lesson.startSelection"].isEnabled)
   }
 
-  @MainActor func testReviewKeyboardToolsRemainAvailableAtLargestDynamicType() {
+  @MainActor func testReviewKeyboardToolsRemainAvailableAtLargestDynamicType() throws {
     let app = launchNativeHome([
       "--manual-review-fixture", "--audio-fixture", "-UIPreferredContentSizeCategoryName",
       "UICTContentSizeCategoryAccessibilityXXXL",
@@ -43,9 +94,11 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["review.voice"].isHittable)
     XCTAssertTrue(app.buttons["review.defer"].isHittable)
     XCTAssertTrue(app.staticTexts["review.progress"].label.contains("0 completed"))
+    XCTAssertTrue(app.staticTexts["review.progress"].label.contains("remaining"))
     app.openReviewSettings()
     app.buttons["reviewSettings.done"].tap()
     XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+    try app.performAccessibilityAudit(for: .hitRegion)
     let image = XCTAttachment(screenshot: app.screenshot())
     image.name = "Shared review at largest Dynamic Type"
     image.lifetime = .keepAlways
@@ -1516,14 +1569,16 @@ final class ReviewFlowTests: XCTestCase {
 
 extension ReviewFlowTests {
   @MainActor
-  private func launchLessonPicker() -> XCUIApplication {
-    let app = fixtureApplication([
-      "--lesson-fixture", "--lesson-settings-fixture", "--light-fixture",
-    ])
+  private func launchLessonPicker(extra: [String] = []) -> XCUIApplication {
+    let app = fixtureApplication(
+      [
+        "--lesson-fixture", "--lesson-settings-fixture", "--light-fixture",
+      ] + extra)
     launchFixture(app)
     let choose = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose lessons"))
       .firstMatch
-    XCTAssertTrue(choose.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.collectionViews["home.dashboard"].waitForExistence(timeout: 10))
+    scrollTo(choose, in: app)
     choose.tap()
     XCTAssertTrue(app.buttons["lesson.startSelection"].waitForExistence(timeout: 5))
     return app
@@ -1676,8 +1731,9 @@ extension ReviewFlowTests {
     for _ in 0..<16 {
       let details = app.scrollViews["subject.scroll"]
       let form = app.descendants(matching: .any).matching(identifier: "material.form").firstMatch
-      let controls = app.descendants(matching: .any).matching(identifier: "review.controls")
-        .firstMatch
+      let controls = app.descendants(matching: .any).matching(
+        NSPredicate(format: "identifier IN %@", ["review.controls", "lesson.controls"])
+      ).firstMatch
       if element.exists && element.isHittable {
         let tabs = app.tabBars.firstMatch
         let center = CGPoint(x: element.frame.midX, y: element.frame.midY)
@@ -1688,18 +1744,24 @@ extension ReviewFlowTests {
       }
       let catalog = app.collectionViews["catalog.list"]
       let home = app.collectionViews["home.dashboard"]
+      let picker = app.scrollViews["lesson.picker"]
+      let review = app.scrollViews["review.scroll"]
       if form.exists && form.isHittable {
         if element.exists && element.frame.midY < form.frame.minY {
           form.swipeDown(velocity: .slow)
         } else {
           form.swipeUp(velocity: .slow)
         }
-      } else if details.exists || catalog.exists {
-        let content = details.exists ? details : catalog
+      } else if let content = [details, catalog, picker, review].first(where: { $0.exists }) {
         let down = towardTop || element.exists && element.frame.midY < content.frame.minY
-        let start = content.coordinate(
-          withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.3 : 0.7))
-        let end = content.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.6 : 0.4))
+        let footer = (picker.exists || review.exists) && controls.exists
+        let bottom = footer ? min(content.frame.maxY, controls.frame.minY) : content.frame.maxY
+        let height = max(1, bottom - content.frame.minY)
+        let origin = content.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(
+          CGVector(dx: content.frame.width * 0.5, dy: height * (down ? 0.2 : 0.8)))
+        let end = origin.withOffset(
+          CGVector(dx: content.frame.width * 0.5, dy: height * (down ? 0.8 : 0.2)))
         start.press(
           forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.15)
       } else if home.exists {

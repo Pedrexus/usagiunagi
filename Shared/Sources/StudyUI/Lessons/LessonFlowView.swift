@@ -48,7 +48,7 @@ public struct LessonFlowView<Page: View>: View {
       if !subjects.isEmpty {
         HStack(spacing: 4) {
           Text(index == subjects.count ? "Quiz" : "\(index + 1)/\(subjects.count)")
-            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+            .font(.caption).monospacedDigit().fixedSize(horizontal: true, vertical: false)
             .accessibilityLabel(
               index == subjects.count ? "Quiz" : "Lesson \(index + 1) of \(subjects.count)"
             )

@@ -210,7 +210,9 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("review.progress")
       ProgressView(
-        value: Double(state.completed), total: Double(max(1, state.completed + state.remaining)))
+        value: Double(state.completed), total: Double(max(1, state.completed + state.remaining))
+      )
+      .accessibilityHidden(true)
       successFeedback
       if state.wrappingUp { Label("Wrapping up", systemImage: "clock").font(.caption) }
     }.accessibilityElement(children: .contain)

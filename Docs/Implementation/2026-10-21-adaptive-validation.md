@@ -534,3 +534,136 @@ failures/skips, zero compiler/analyzer warnings and the same runtime warning
 The native action takes 419.048 seconds including startup/finalization. This single
 measurement finds no useful reduction in the repeated teardown delay and does not
 establish its cause. App, Mainboard and CI diagnostic defaults remain unchanged.
+
+## Native accessibility audit — October 22
+
+The installed Xcode 27 `XCUIAutomation` header and Swift interface document
+`performAccessibilityAudit()` as the current-view audit, defaulting to `.all`. Each
+returned issue records an XCTest failure; an optional handler can suppress it. The new
+tests use the default full scope with no handler. No system accessibility preference,
+account or microphone state is changed.
+
+Three isolated iPhone tests cover Home's action viewport and level-progress viewport,
+the lesson picker and a selected teaching page, and review answering plus revealed
+details. They reuse existing fixture launches and navigation. Source hashes are retained
+in `.build/Reports/Accessibility-AuditSource-20261022.sha256`; scoped parser/UI rules,
+strict formatting and SwiftLint pass in `Accessibility-AuditLint-20261022.log`.
+`Accessibility-AuditInitial-20261022.log` finalizes as
+`test-2997b2dd2393432c9329a39f7852c8fa.xcresult`: all three cases fail, with 74 recorded
+failures and no compiler/analyzer or reported runtime warnings. This is discovery
+evidence, not passing accessibility acceptance. These automated checks do not replace
+a physical VoiceOver walkthrough or complete the wider visual/keyboard/device gates.
+
+The export in `Accessibility-AuditInitialCapture-20261022/` retains full issue descriptions,
+element/app screenshots and recordings. Detailed case trees are in
+`.build/Reports/Accessibility-HomeDetails-20261022.json` and
+`Accessibility-LessonDetails-20261022.json`. Findings comprise 29 partial Dynamic Type,
+one unsupported Dynamic Type, 26 near-threshold contrast, 12 contrast failures, three
+clipping reports, two hit-region reports and one failed test assertion. These counts
+are issues across three cases, not 74 distinct application defects.
+
+The Home test mistakenly queries its combined level-progress row as a button; the existing
+regression correctly uses the general accessibility-element query. Its second audit
+therefore runs at the wrong viewport after the failed scroll. Captures also show a
+fully visible `1/1` lesson indicator despite a clipping report, and contrast targets
+behind the native floating tab bar. The fixed-size system font in the subject header
+and redundant thin review progress indicator are separate actionable findings. Remaining
+reports on semantic SwiftUI fonts need an independent control before layout workarounds.
+
+### Independent native control and focused changes
+
+Mainboard cross-compiles a 25-line standalone SwiftUI app containing only a native form,
+semantic body/headline/secondary text, labeled content and a glass button. The explicit
+fixture argument and unique `dev.usagiunagi.accessibility-probe` identifier isolate it
+from account services. Source/plist, binary hash and test driver are retained under
+`.build/Reports/Accessibility-Probe*20261022*`. The full audit finalizes as
+`test-24e2beade97a44058baafec7b26cadc3.xcresult`: one failed case with three near-threshold
+contrast issues, on the standard section header, secondary text and glass button.
+There is no Dynamic Type failure or reported runtime warning. The exported light-mode
+capture is inspected. This is a scoped native control, not a claim that every application
+contrast or font finding is a framework defect. The app is terminated/uninstalled and
+its temporary binary directory is removed.
+
+The subject header now uses native scaled metrics for its system font and image height,
+and the matching relative text style for custom fonts. Long subject text can wrap instead
+of shrinking back into one line. Home action cards request their full vertical content
+height. Account-level and subject-section text inherit the primary style; the compact
+lesson counter keeps its intrinsic width. The thin review progress bar remains visible
+but leaves the accessibility tree because the combined row already announces exact
+completed/remaining counts and accuracy. No action or saved information is removed.
+
+The exploratory full audits and standalone test driver are retained as diagnostic source
+receipts, without adding a failing broad audit to the default regression suite or filtering
+its recorded issues. Full accessibility acceptance remains open. Stable native regressions
+instead check largest-text Home review/catalog navigation, actual lesson-heading height
+growth and long-vocabulary wrapping, lesson-footer access, and the full native hit-region
+audit of largest-text review controls. Scoped checks of all six changed Swift files pass
+in `Accessibility-FixesLintFinal-20261022.log`; final source hashes are in
+`Accessibility-FixesSource-20261022.sha256`. The initial focused native run in
+`Accessibility-LargestType-20261022.log` is retained as the failed trial below.
+
+The largest-text trial completes Home review/return and level-catalog navigation, then
+stops the lesson comparison before its second heading check. Its default-size vocabulary
+page is captured, but at the largest size the helper waits for an offscreen Choose lessons
+row instead of scrolling Home. A read-only native capture while the fixture process is
+confirmed live (`Accessibility-LessonFailureLive-20261022.png`) shows that Home did launch.
+This failed helper is not accepted scaling evidence. The fixed account header also
+occupies substantial space with large/long text; its scrolling/presentation needs a
+separate usability follow-up. The complete trial finalizes as
+`test-6b4984dd2fcd49a0af6aa90e5355cc00.xcresult`: Home navigation and the largest-text
+review hit-region audit pass; the lesson helper fails. There are no compiler/analyzer
+or reported runtime warnings. This is not a passing combined suite.
+
+The lesson-only retry (`test-4c8dd89cb0b74909884c33ee43337af2.xcresult`) correctly scrolls
+Home, then fails reaching the final vocabulary tile. Its captured picker has an
+accessibility scroll frame extending from `y = 227.3` through the bottom of the window,
+including the large fixed controls. The fallback swipes the window rather than the
+visible list. `Accessibility-LessonRetryCapture-20261022/` preserves the real failure
+hierarchy and screenshot; no heading-growth assertion has passed in this trial.
+
+The picker now names its existing list and Lesson controls accessibility group. The
+existing scroll helper selects the relevant named scroll surface, clips drag coordinates
+above fixed controls, and avoids accepting targets covered by either study footer. No
+extra application scrolling abstraction, platform branch, retry tap or diagnostic filter
+is added. Scoped checks pass in `Accessibility-ViewportLintFinal-20261022.log`. Source
+hashes are in `Accessibility-ViewportSource-20261022.sha256`; the bounded heading/privacy
+rerun in `Accessibility-ViewportFinal-20261022.log` finalizes as recorded below.
+
+Inspected largest-text captures also keep two usability failures open: fixed account
+identity occupies too much of Home, and focusing an answer can scroll the Japanese
+question outside the visible review area. The fixture-only notice magnifies the former,
+but does not justify treating the production identity layout as accepted. The next
+correction should place account context in scrolling Home content and keep the current
+question visible with the answer/keyboard, preserving the compact normal-size flow,
+hidden readings, pause and grading. A passing hit-region audit alone proves neither.
+
+### Final scoped evidence
+
+`test-990b0e617842427698df445b5628eb91.xcresult` finalizes successfully: the renewed lesson
+comparison and review-privacy case both pass, with zero failures/skips, compiler/analyzer
+warnings or reported runtime warnings. The unchanged-source receipt is
+`Accessibility-ViewportSource-20261022.sha256`. Exports in
+`Accessibility-ViewportCapture-20261022/` are inspected. The measured greeting height is
+57.333 points at the default category and 191 points at accessibility XXXL, with all five
+characters visible across two lines. The footer's Quiz action remains reachable; the
+primary Start quiz button is visible. The default-size view retains its compact header.
+The privacy case keeps unanswered reading content concealed until All information and
+keeps English concealed until Show translation. These two passes do not erase either
+failed trial or establish full accessibility acceptance.
+
+All 577 shared Mac test functions pass in `Accessibility-SharedMac-20261022.log`.
+Final Release builds `build-fe73542425ad42128382c1c65899ec69.xcresult` (Mac) and
+`build-ae55071a58ab447abed9e90c160ddb4c.xcresult` (iOS) pass with zero compiler/analyzer
+errors or warnings. `Accessibility-ReleaseMacBundle-20261022.json` and
+`Accessibility-ReleaseIOSBundle-20261022.json` audit one Mac and three iOS/watch/widget
+executables with zero violations.
+The fresh complete lint still checks 447 files
+without rewriting any and fails only the same 30 protected formatter diagnostics
+(`Accessibility-FinalFullLint-20261022.log`). The full rule inventory remains 230 findings
+from 98 rules (`Accessibility-FinalAllRules-20261022.log`). The three owner-file hashes
+and frozen V1 schema remain unchanged.
+
+`Accessibility-MainboardPin-20261022.log` rechecks GitHub: the pinned Mainboard `b34c931`
+still returns HTTP 422, No commit found. All five workflow checkouts use the same pin;
+no hosted execution, publication, signing or distribution is claimed. No probe app or
+binary is left installed, and no application dependency or platform check is introduced.

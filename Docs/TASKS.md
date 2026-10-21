@@ -6,6 +6,25 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Native accessibility follow-up:** the exploratory full iPhone audit finalizes with
+three failed cases / 74 issues, including one test-selector mistake. A standalone native
+SwiftUI form reproduces three contrast warnings, but no Dynamic Type warning. Captures
+and the full failures stay recorded. Scaled/wrapping subject headings, expanding Home
+cards, clearer key text, an intrinsic-width lesson counter and one review progress
+announcement are implemented. Home navigation and review hit-region checks pass within
+the first failed trial; the renewed heading/privacy suite then finalizes with two passes,
+zero failures/skips and zero reported runtime warnings. The actual greeting grows from
+57.3 to 191 points. Full accessibility and physical VoiceOver acceptance remain open.
+[Scope, native control and exact evidence](Implementation/2026-10-21-adaptive-validation.md#native-accessibility-audit--october-22).
+The next local usability work is to move the oversized fixed account header into Home's
+scrolling content and keep the review question visible while the answer keyboard is open.
+Largest-text captures expose both despite passing taps/hit regions. The lesson comparison
+now scrolls within the visible list above its fixed footer and passes its scaling check.
+The larger header/question-layout corrections remain local UI obligations, separate from
+signed/device gates.
+The complete phone UI gate now contains 57 test methods, including the separately driven
+URL cases; the focused passes above do not accept that full gate or iPad/Mac interaction.
+
 **Latest keyboard/detail diagnosis:** a standalone SwiftUI form reproduces the notes
 frame warning when a keyboard-toolbar button is present, even without a sheet or spacer;
 the captured plain-form controls stay clean. This is a scoped simulator/framework

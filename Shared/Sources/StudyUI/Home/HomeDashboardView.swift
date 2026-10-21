@@ -336,6 +336,7 @@ struct HomeDashboardView: View {
             .font(.headline)
         }
       }.padding(18).foregroundStyle(.white)
+        .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
         .background(isEnabled && !disabled ? color : Color.gray, in: .rect(cornerRadius: 20))
         .contentShape(.rect(cornerRadius: 20))

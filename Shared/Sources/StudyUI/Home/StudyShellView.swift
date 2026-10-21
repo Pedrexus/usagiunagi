@@ -58,7 +58,7 @@ public struct StudyShellView<Content: View>: View {
               : state.learnedKanji.map { "Level \(state.level) · \($0.formatted()) kanji learned" }
                 ?? "Level \(state.level)"
           )
-          .font(.subheadline).foregroundStyle(.secondary).accessibilityIdentifier("app.level")
+          .font(.subheadline).accessibilityIdentifier("app.level")
         }.frame(maxWidth: .infinity, alignment: .leading)
       }.padding(.horizontal, 16).padding(.vertical, 8)
       if state.onVacation {
