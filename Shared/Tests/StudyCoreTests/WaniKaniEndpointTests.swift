@@ -28,7 +28,13 @@ struct WaniKaniEndpointTests {
       ])
   }
 
-  @Test(arguments: ["file:///tmp/study.store", "ftp://localhost/api"])
+  @Test(arguments: [
+    "file:///tmp/study.store", "ftp://localhost/api",
+    "https://user:password@example.test/v2", "https://user@example.test/v2",
+    "https://example.test/v2?token=fixture", "https://example.test/v2#user",
+    "https://example.test/v2/../other", "https://example.test/v2/./other",
+    "https://example.test/v2/%2e%2e/other",
+  ])
   func invalidEndpointsRejectBeforeUsingTheTransport(_ address: String) async throws {
     let transport = EndpointTransport()
     let original = WaniKaniClient { try await transport.respond($0) }

@@ -6,6 +6,16 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21
 
+**Latest code/rule audit:** [the current receipt](Validation/2026-10-21-code-audit.md) fixes
+acceptance of unusable custom API URLs, repairs unprotected formatting/text failures and
+adds standard standalone Mainboard tasks plus watch style coverage in CI. Shared Mac and
+iPhone suites pass 577 functions each (907 iPhone executions); the unsigned iOS Debug
+product builds. Complete lint intentionally remains red for 30 formatting diagnostics
+in two protected owner-edited files. The full rule inventory still has 230 review and
+maintainability findings, including the 86 existing Swift migration signals; inventory
+exit 0 is not a green gate. Hosted CI still cannot resolve the unpublished Mainboard pin.
+The broader acceptance obligations below remain open.
+
 **Execution of finish stages 1–4:** the constructor follow-up is committed in the projects repository at `070f3f2a4`: nonthrowing `@Memberwise`, default-backed typed-rule inference, a compiled nonpersistent pilot and an explicit decision to retain the app's native constructors because the unpublished dependency saves only three pilot lines. The weak-capture audit is recorded in [Swift helpers](Swift-Helpers.md). Xcode's supported conversion now removes the separate WatchKit extension target; a SwiftUI `App`/native application delegate, WidgetKit and the installed-face migrator live under `App/Watch`. The storyboard/hosting controller and extension-only plist are removed. No study schema, frozen nested decoder, account protocol or watch packet format changes. Historical-decoder binding remains required before a future stored-schema/payload change, not a reason to introduce that change now.
 
 Stage 2's isolated native manual subset covers Mac Home/review/Quick settings, iPad lesson picking/group select-and-clear/interleaved teaching/rotation, and phone review controls/progress. It finds and fixes the stale group custom action by exposing a separate real selection button, combines progress for accessibility, and caps wide lesson reading width. Final native iPhone/Mac builds are `build-eb8d8d8b957a427c9fa189686fbd874b` / `build-f33eb24aa0c44a3cbde797e52c9530d1`; the final watch build is `build-50907aa2561a41b2bff4c83f656b0374`, all with zero compiler/analyzer errors or warnings. Captures are in `.build/Results/FinishStages-20261021/`. Original behavior is compared against pinned `upstream/master` lesson paging/subject-strip and review focus/previous/settings/wrap-up handlers plus the owner's current screenshots; the original binary is not rebuilt or exercised. No real account/exercise/microphone or signed service is used. Broad accessibility/IME/physical and installed-face acceptance remains open.
@@ -18,7 +28,7 @@ Source/config/test work is committed at `43266939`; the current [finish-stage re
 
 **The goal is active; the app is not yet fully accepted.** The app checkout is physically under `projects/apps/usagiunagi`; `codex/swiftui-27-curriculum` is its Git branch, not another folder. Portable settings are committed at `4771355d`; the initial separate `dataclass` source is committed in the projects repository at `88a211843`. The current visual follow-up and its exact evidence are recorded in [WaniKani design](WaniKani-Design.md#current-implementation-and-manual-evidence). Preserve the three protected owner edits. Mainboard remains at `b72cd6f`.
 
-Implemented source covers the shared SwiftUI app, SwiftData writer and historical import, voice input, charts/curriculum coverage, branding, WidgetKit, API caching, WaniKani settings and 46 portable iCloud preferences. This does not establish complete behavior or signed delivery. The latest iOS and Mac unsigned Release builds pass with zero native compiler/analyzer warnings/errors, scoped formatting passes and six packaged binaries pass the existing audits. Automated tests predate the latest settings changes and must not be presented as current-source acceptance. AppIntents metadata notes and the historical watch-host warning retain their separate scopes.
+Implemented source covers the shared SwiftUI app, SwiftData writer and historical import, voice input, charts/curriculum coverage, branding, WidgetKit, API caching, WaniKani settings and 46 portable iCloud preferences. This does not establish complete behavior or signed delivery. The prior iOS and Mac unsigned Release builds and four packaged executable paths pass the recorded audits; they predate this endpoint fix. Current shared tests cover settings changes and the endpoint fix, and the current iOS Debug build passes. Scoped formatting passes; the protected-file formatting and broader acceptance limits are explicit above. AppIntents metadata notes retain their separate scope.
 
 | Finish order | Remaining work and completion evidence |
 | --- | --- |

@@ -16,7 +16,14 @@ struct DeveloperEndpointTests {
   func blankRestoresDefault(_ input: String) {
     #expect(DeveloperEndpoint.normalized(input, defaultURL: standard) == standard)
   }
-  @Test(arguments: ["not a URL", "file:///tmp/cache.db", "ftp://example.test", "https://"])
+  @Test(arguments: [
+    "not a URL", "file:///tmp/cache.db", "ftp://example.test", "https://",
+    "https://user:password@example.test/v2", "https://user@example.test/v2",
+    "https://example.test/v2?token=fixture", "https://example.test/v2?",
+    "https://example.test/v2#user", "https://example.test/v2#",
+    "https://example.test/v2/../other", "https://example.test/v2/./other",
+    "https://example.test/v2/%2e%2e/other",
+  ])
   func invalidEndpointsCannotReplaceSavedValue(_ input: String) {
     #expect(DeveloperEndpoint.normalized(input, defaultURL: standard) == nil)
   }

@@ -21,6 +21,15 @@ The persistence probe additionally supports `write-native-selection` (expected a
 
 ## Mainboard owns execution
 
+From this app checkout, `mainboard run --locked setup` installs the pinned correctness tool,
+`mainboard run --locked lint` checks the full repository without changing files,
+`mainboard run --locked test` runs the shared Mac Swift Testing suites, and
+`mainboard run --locked build` compiles the unsigned iOS simulator Debug app. `typecheck`
+delegates to that same native build. Hosted app/UI, iOS shared, watch and recovery checks
+remain separate required tasks; `test` alone does not establish full acceptance.
+The complete lint command intentionally reports formatting in protected owner edits rather
+than excluding them or claiming a green result. CI's gradually adopted style scope is explicit.
+
 Generic Apple patterns live in Mainboard: native arguments, committed package resolution, process-tree timeout, fresh result bundles, diagnostics, test verdicts and simulator URL delivery. There is no app `Tools` folder or custom CI shell driver. Schemes, test filters, fixtures and resource generation remain app-specific.
 
 The optional cloud transport now has one [private display-preferences configuration](PrivateICloud.md). Both platform entitlements and app metadata use `USAGI_ICLOUD_CONTAINER_IDENTIFIER`; signing/container registration is still required before live sync. Existing hosted fixtures never create this owner. Shared tests use disposable local-only sidecars and defaults, so the regular Mainboard tasks require no iCloud login or network access. No cloud-schema initialization hook runs at startup.

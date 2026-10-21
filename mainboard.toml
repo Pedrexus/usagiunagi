@@ -5,6 +5,12 @@ name = "usagiunagi"
 platforms = ["osx-arm64"]
 
 [tasks]
+setup = "mainboard binary sync"
+lint = "mainboard proc timeout 600 mainboard lint --check ."
+test = "mainboard proc timeout 900 /usr/bin/xcrun swift test --package-path Shared --scratch-path .build/Shared --jobs 4"
+build = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Debug --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
+# Native compilation includes type checking; use the same product and toolchain.
+typecheck = "mainboard run --locked build"
 build-watch = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme 'Tsurukame Complication' --action build --configuration Debug --destination 'generic/platform=watchOS Simulator' --derived-data .build/Xcode/Watch --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
 native-v1-values = '''mainboard proc timeout 600 sh -eu -c '
 frozen_fixture=App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3

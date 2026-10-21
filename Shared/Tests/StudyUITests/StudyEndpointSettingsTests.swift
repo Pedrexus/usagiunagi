@@ -128,4 +128,30 @@ private struct FixedEndpointService: WaniKaniService {
     let requests = await transport.urls
     #expect(!requests.isEmpty && requests.allSatisfy { $0.host == "api.wanikani.com" })
   }
+
+  @Test(arguments: [
+    "https://user:password@example.test/v2", "https://example.test/v2?token=fixture",
+    "https://example.test/v2#user", "https://example.test/v2/../other",
+  ])
+  func invalidChangesKeepWorkingSettingsAndTheOriginalTransport(_ address: String) async throws {
+    let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
+    let transport = EndpointModelTransport()
+    let credentials = MemoryCredentials("fixture")
+    let model = StudyAppModel(
+      credentials: credentials, client: WaniKaniClient { try await transport.respond($0) },
+      openStore: { store })
+    await model.refresh()
+    let original = try #require(model.snapshot)
+    let revision = model.preferenceSourceRevision
+    let count = await transport.urls.count
+    #expect(throws: WaniKaniServiceConfigurationError.invalidEndpoint) {
+      try model.setAPIEndpoint(URL(string: address)!)
+    }
+    #expect(await transport.urls.count == count)
+    #expect(model.preferenceSourceRevision == revision)
+    await model.refresh()
+    #expect(model.error == nil && model.snapshot?.accountID == original.accountID)
+    #expect(await transport.urls.allSatisfy { $0.host == "api.wanikani.com" })
+    #expect(credentials.saved.isEmpty && credentials.token == "fixture")
+  }
 }

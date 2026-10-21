@@ -7,7 +7,9 @@ public enum DeveloperEndpoint {
     while value.hasSuffix("/") { value.removeLast() }
     if value.isEmpty { return defaultURL }
     guard let url = URL(string: value), let scheme = url.scheme?.lowercased(),
-      ["http", "https"].contains(scheme), let host = url.host, !host.isEmpty
+      ["http", "https"].contains(scheme), let host = url.host, !host.isEmpty,
+      url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+      !url.path.split(separator: "/").contains(where: { $0 == "." || $0 == ".." })
     else { return nil }
     return value
   }

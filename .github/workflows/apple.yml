@@ -85,7 +85,7 @@ jobs:
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 mainboard lint --check --only swift-parse . 2>&1 | tee .build/Results/SwiftParser.log
       - name: Swift format and correctness
         run: |
-          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App/Application App/UsagiUnagiApp.swift App/WatchHelper.swift
+          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App/Application App/UsagiUnagiApp.swift App/WatchHelper.swift App/Watch
           uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swiftlint App Shared/Sources
       - name: SwiftUI and storage migration inventory
         run: |
@@ -100,7 +100,7 @@ jobs:
       - name: Swift Testing and separate-process restart checks
         run: |
           mkdir -p .build/Results
-          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 900 xcrun swift test --package-path Shared --scratch-path .build/Shared --jobs 4 2>&1 | tee .build/Results/Shared.log
+          uv run --project .build/Mainboard --locked --no-sync mainboard run --locked test 2>&1 | tee .build/Results/Shared.log
           report=$(mktemp -d "$PWD/.build/Results/Persistence.XXXXXX")
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 300 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe NativePersistenceProbe write "$report/study.store"
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe read-attempts "$report/study.store"
