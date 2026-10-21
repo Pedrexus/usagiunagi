@@ -137,6 +137,9 @@ jobs:
           test "$selection_status" -eq 86
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe read-native-selection "$report/selection.store"
 
+      - name: Independent frozen SwiftData value decoders
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-v1-values
+
       - name: APFS full-volume save and recovery
         run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-space
 

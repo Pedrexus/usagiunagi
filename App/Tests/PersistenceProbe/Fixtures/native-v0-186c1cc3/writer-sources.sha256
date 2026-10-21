@@ -1,0 +1,5 @@
+2ed05b530b28af35279d8c6d7fedcebfc2917335dc6f905792b396b88746ec94  App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/writer-sources.zip
+473f1489fc565a35e34e0b2f1834b6e05a6e0e4692e18dbb198ea1e95994df76  App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/baseline-reader.zip
+95e6d0b1d0f6b93e804459ff8b2bf2c95b9297da143bdc54beaf3b7479fdd0d2  App/Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreBaseline.swift
+f82be6077bbe12593c95c3ef27b7df576e65dde06965b0a297dbd12be3a3bf94  App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store
+bf3c676dd2ca92219fd1eea95e492c6a1e90aa43f2f0201db16a0f177c7e968b  App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store.baseline.plist
