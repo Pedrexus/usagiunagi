@@ -228,8 +228,18 @@ public struct SubjectDetailsContent: View {
             openSubject(subject.id)
           } label: {
             HStack {
-              Text(subject.japanese.isEmpty ? subject.summary.meaning : subject.japanese)
-                .font(.title3).foregroundStyle(StudyPalette.color(for: subject.kind))
+              Group {
+                if subject.japanese.isEmpty, let url = URL(string: subject.characterImageURL),
+                  !subject.characterImageURL.isEmpty
+                {
+                  RadicalImageView(url: url).environment(\.colorScheme, .dark)
+                    .frame(width: 28, height: 28)
+                } else {
+                  Text(subject.japanese.isEmpty ? subject.summary.meaning : subject.japanese)
+                    .font(.title3)
+                }
+              }.padding(8).frame(minWidth: 44, minHeight: 44).foregroundStyle(.white)
+                .background(StudyPalette.color(for: subject.kind), in: .rect(cornerRadius: 8))
               Text(subject.summary.meaning).foregroundStyle(.primary)
               Spacer()
               Text("Level \(subject.level)").font(.caption).foregroundStyle(.secondary)

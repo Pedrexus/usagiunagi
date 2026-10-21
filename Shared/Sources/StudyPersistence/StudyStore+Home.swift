@@ -74,6 +74,26 @@ extension StudyStore {
         data.levels.append(.init(number: current - 1, progress: previous))
       }
       data.levels.append(.init(number: current, progress: available.progress(level: current)))
+      let byID = Dictionary(
+        uniqueKeysWithValues: available.subjects.filter {
+          $0.hiddenAt == nil && $0.level <= available.account.profile.maxLevelGranted
+        }.map { ($0.id, $0) })
+      let confirmed = available.assignments.filter {
+        $0.hidden != true && !available.pending.contains($0.subjectID)
+          && byID[$0.subjectID] != nil
+      }
+      let cutoff =
+        calendar.date(byAdding: .day, value: -30, to: now)
+        ?? now.addingTimeInterval(-30 * 86400)
+      let window = Int64(cutoff.timeIntervalSince1970)...Int64(now.timeIntervalSince1970)
+      data.recentlyUnlocked = confirmed.filter {
+        $0.unlockedAt.map(window.contains) == true
+      }.sorted { ($0.unlockedAt ?? 0, $0.subjectID) > ($1.unlockedAt ?? 0, $1.subjectID) }
+        .compactMap { byID[$0.subjectID]?.summary }
+      data.recentlyBurned = confirmed.filter {
+        $0.srsStage == 9 && $0.burnedAt.map(window.contains) == true
+      }.sorted { ($0.burnedAt ?? 0, $0.subjectID) > ($1.burnedAt ?? 0, $1.subjectID) }
+        .compactMap { byID[$0.subjectID]?.summary }
     }
     if let saved = try session(accountID: accountID) {
       let title =

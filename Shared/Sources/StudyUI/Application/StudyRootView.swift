@@ -81,94 +81,97 @@ public struct StudyRootView: View {
     let source: UUID
     let phase: ScenePhase
   }
+  private var notices: some View {
+    VStack(spacing: 4) {
+      if let notice { Text(notice).font(.caption).padding(6) }
+      if let link = links.pending.first {
+        HStack {
+          Text(link.title)
+          Button("Open") { openIncomingLink = true }.accessibilityIdentifier("applink.open")
+            .disabled(model.isSyncing || model.snapshot?.isSample != false)
+          Button("Dismiss") {
+            if links.pending.first == link { links.pending.removeFirst() }
+            openIncomingLink = false
+          }.accessibilityIdentifier("applink.dismiss")
+        }.font(.callout).padding(8)
+      }
+      if let message = linkMessage {
+        Label(message, systemImage: "link").font(.callout).padding(8)
+          .accessibilityIdentifier("applink.message")
+      }
+      if let message = automaticSync.notice {
+        Label(message, systemImage: "arrow.triangle.2.circlepath").font(.callout).padding(8)
+          .accessibilityIdentifier("app.automaticSync")
+      }
+      if let error = model.error, signIn.error == nil {
+        Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding(8)
+      }
+    }
+  }
   public var body: some View {
-    NavigationStack(path: $path) {
-      StudyShellView(
-        state: shell,
-        signIn: {
-          if model.reauthenticationContext != nil { presentAccount() }
-        },
-        manageToken: {
-          if model.reauthenticationContext != nil { presentAccount() }
-          openURL(URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
-        },
-        acknowledgeAccountIssue: {
-          if let context = model.reauthenticationContext { model.acknowledgeAccountIssue(context) }
-        }
-      ) {
-        StudyTabs(selection: $tab) {
-          Group {
-            if model.snapshot == nil {
-              account
+    VStack(spacing: 0) {
+      notices
+      NavigationStack(path: $path) {
+        StudyShellView(
+          state: shell,
+          signIn: {
+            if model.reauthenticationContext != nil { presentAccount() }
+          },
+          manageToken: {
+            if model.reauthenticationContext != nil { presentAccount() }
+            openURL(URL(string: "https://www.wanikani.com/settings/personal_access_tokens")!)
+          },
+          acknowledgeAccountIssue: {
+            if let context = model.reauthenticationContext {
+              model.acknowledgeAccountIssue(context)
+            }
+          }
+        ) {
+          StudyTabs(selection: $tab) {
+            Group {
+              if model.snapshot == nil {
+                account
+              } else {
+                NativeHomeDashboardView(
+                  model: model, active: tab == .home && path.isEmpty && !showSettings
+                ) {
+                  path = [$0]
+                }
+              }
+            }
+          } practice: {
+            KatakanaPracticeMenu { path = [.katakana] }
+          } statistics: {
+            if let snapshot = model.snapshot {
+              StudyDashboard(snapshot: snapshot) { id in
+                subject = snapshot.subjects.first { $0.id == id }
+              }
             } else {
-              NativeHomeDashboardView(
-                model: model, active: tab == .home && path.isEmpty && !showSettings
-              ) {
-                path = [$0]
+              account
+            }
+          }
+        }.navigationTitle(tab == .home ? "Home" : tab == .practice ? "Practice" : "Stats")
+          .toolbarTitleDisplayMode(.inline)
+          .navigationDestination(for: StudyDestination.self) { value in destination(value) }
+          .toolbar {
+            if path.isEmpty {
+              ToolbarItemGroup(placement: .primaryAction) {
+                Button("Search", systemImage: "magnifyingglass") { path = [.search] }
+                  .accessibilityIdentifier("app.search")
+                Button("Settings", systemImage: "gearshape") {
+                  settingsPath = []
+                  showSettings = true
+                }.accessibilityIdentifier("app.settings")
+              }
+              ToolbarItemGroup(placement: .automatic) {
+                if tab == .home { savedWorkButton }
+                if tab != .practice { refreshButton }
               }
             }
           }
-        } practice: {
-          KatakanaPracticeMenu { path = [.katakana] }
-        } statistics: {
-          if let snapshot = model.snapshot {
-            StudyDashboard(snapshot: snapshot) { id in
-              subject = snapshot.subjects.first { $0.id == id }
-            }
-          } else {
-            account
-          }
-        }
-      }.navigationTitle(tab == .home ? "Home" : tab == .practice ? "Practice" : "Stats")
-        .navigationDestination(for: StudyDestination.self) { value in destination(value) }
-        .toolbar {
-          if path.isEmpty {
-            ToolbarItemGroup(placement: .primaryAction) {
-              Button("Search", systemImage: "magnifyingglass") { path = [.search] }
-                .accessibilityIdentifier("app.search")
-              Button("Settings", systemImage: "gearshape") {
-                settingsPath = []
-                showSettings = true
-              }.accessibilityIdentifier("app.settings")
-            }
-            ToolbarItemGroup(placement: .automatic) {
-              if tab == .home { savedWorkButton }
-              if tab != .practice { refreshButton }
-            }
-          }
-        }
+      }
     }.preferredColorScheme(appearance ?? $preferences.colorScheme)
       .handlesExternalEvents(preferring: appearsActive ? ["*"] : [], allowing: ["*"])
-      .safeAreaInset(edge: .bottom) {
-        VStack(spacing: 4) {
-          if let notice {
-            Text(notice).font(.caption).padding(6)
-          }
-          if let link = links.pending.first {
-            HStack {
-              Text(link.title)
-              Button("Open") { openIncomingLink = true }.accessibilityIdentifier("applink.open")
-                .disabled(model.isSyncing || model.snapshot?.isSample != false)
-              Button("Dismiss") {
-                if links.pending.first == link { links.pending.removeFirst() }
-                openIncomingLink = false
-              }
-              .accessibilityIdentifier("applink.dismiss")
-            }.font(.callout).padding(8)
-          }
-          if let message = linkMessage {
-            Label(message, systemImage: "link").font(.callout).padding(8).accessibilityIdentifier(
-              "applink.message")
-          }
-          if let message = automaticSync.notice {
-            Label(message, systemImage: "arrow.triangle.2.circlepath").font(.callout).padding(8)
-              .accessibilityIdentifier("app.automaticSync")
-          }
-          if let error = model.error, signIn.error == nil {
-            Label(error, systemImage: "exclamationmark.triangle").font(.callout).padding(8)
-          }
-        }
-      }
       .task(
         id: LinkReadKey(
           account: model.snapshot?.accountID, busy: model.isSyncing,

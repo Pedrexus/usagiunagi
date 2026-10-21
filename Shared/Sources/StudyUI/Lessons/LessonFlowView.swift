@@ -92,7 +92,7 @@ public struct LessonFlowView<Page: View>: View {
                       }
                     }
                 }
-                Button("Quiz") { index = subjects.count }.buttonStyle(.bordered).tint(
+                Button("Quiz") { index = subjects.count }.buttonStyle(.glass).tint(
                   .primary
                 )
                 .id(subjects.count).accessibilityValue(
@@ -115,7 +115,7 @@ public struct LessonFlowView<Page: View>: View {
           Button(index == subjects.count - 1 ? "Start quiz" : "Next") {
             index = min(subjects.count, index + 1)
           }
-          .buttonStyle(.borderedProminent).accessibilityIdentifier("lesson.next")
+          .buttonStyle(.glassProminent).accessibilityIdentifier("lesson.next")
         }
       }.visibilityPriority(.high)
     }.toolbarTitleDisplayMode(.inline)

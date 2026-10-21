@@ -12,6 +12,7 @@ import SwiftUI
   public var questionFont = ""
   public var questionSize: Double = 72
   public var prompt = ""
+  public var subjectType = ""
   public var questionKind = StudyQuestionKind.meaning
   public var title: String?
   public var canAnswer = true
@@ -374,7 +375,8 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       }.padding().foregroundStyle(.white).tint(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity).background(state.subjectColor)
       VStack(spacing: 4) {
-        Text(state.prompt).font(.headline).accessibilityIdentifier("review.prompt")
+        Text([state.subjectType, state.prompt].filter { !$0.isEmpty }.joined(separator: " "))
+          .font(.headline).accessibilityIdentifier("review.prompt")
         HStack {
           if !state.level.isEmpty { Text(state.level) }
           if !state.stage.isEmpty { Text(state.stage).accessibilityLabel(state.stageAccessibility) }

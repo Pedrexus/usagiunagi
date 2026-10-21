@@ -33,24 +33,26 @@ struct NativeHomeDashboardView: View {
   let route: (StudyDestination) -> Void
   @State private var data: HomeDashboardData?
   @State private var error: String?
+  @State private var clockStart = Date.now
   private struct Request: Hashable {
     let active: Bool
     let account: String?
     let revision: UUID
     let pending: Int?
-    let date: Date
+    let minute: Int
     let lessonPreferences: StudyLessonPreferences
     let policy: StudyReviewPolicy
     let showMinutes: Bool
     let showPreviousLevelGraph: Bool
   }
   var body: some View {
-    TimelineView(.periodic(from: .now, by: 60)) { context in
+    TimelineView(.periodic(from: clockStart, by: 60)) { context in
       content.task(
         id: Request(
           active: active, account: model.snapshot?.accountID,
           revision: model.dataRevision, pending: model.snapshot?.pendingReviews,
-          date: context.date, lessonPreferences: lessonSettings.value,
+          minute: Int(context.date.timeIntervalSince1970 / 60),
+          lessonPreferences: lessonSettings.value,
           policy: reviewPreferences.policy, showMinutes: showMinutes,
           showPreviousLevelGraph: subjectSettings.value.showPreviousLevelGraph)
       ) {
@@ -162,6 +164,12 @@ struct NativeHomeDashboardView: View {
       guard let category = StudySRSCategory(rawValue: index) else { return }
       var query = SubjectCatalogQuery()
       query.scope = category.catalogScope
+      route(.catalog(query))
+    case .subject(let id): route(.subject(id))
+    case .levelSubjects(let level, let kind):
+      var query = SubjectCatalogQuery()
+      query.level = level
+      query.kind = kind
       route(.catalog(query))
     case .excluded:
       var query = SubjectCatalogQuery()

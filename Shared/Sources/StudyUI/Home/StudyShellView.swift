@@ -78,7 +78,7 @@ public struct StudyShellView<Content: View>: View {
         ProgressView(progress).progressViewStyle(.linear).labelsHidden()
           .accessibilityLabel("WaniKani sync").accessibilityIdentifier("app.syncProgress")
       }
-      content.ignoresSafeArea(.container, edges: .bottom)
+      content
     }.background(.background).tint(StudyPalette.radical)
       .onAppear { isVisible = true }
       .onDisappear { isVisible = false }

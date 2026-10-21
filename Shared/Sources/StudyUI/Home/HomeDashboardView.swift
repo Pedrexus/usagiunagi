@@ -8,6 +8,8 @@ public enum HomeAction: Hashable, Sendable {
   case catalog(Int)
   case remaining(Int)
   case stage(Int)
+  case subject(Int64)
+  case levelSubjects(Int, SubjectKind)
 }
 
 struct HomeDashboardView: View {
@@ -18,7 +20,7 @@ struct HomeDashboardView: View {
   @Environment(\.isEnabled) private var isEnabled
   @FocusState private var keyboardFocus: Bool
   var body: some View {
-    List {
+    Form {
       if let notice = data.notice {
         Text(notice).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier(
           "home.notice")
@@ -42,7 +44,20 @@ struct HomeDashboardView: View {
           }
         }
         forecast
-        if data.apprenticePractice + data.recentLessons + data.recentMistakes + data.leeches > 0 {
+        Section {
+          if data.recentMistakes > 0 {
+            countButton(
+              "Review recent mistakes", count: data.recentMistakes, action: .recentMistakes)
+          } else if data.studyUnavailableMessage == nil {
+            Label("No recent mistakes to review", systemImage: "checkmark.seal")
+              .foregroundStyle(.secondary)
+          }
+        } header: {
+          Label("Recent mistakes", systemImage: "arrow.counterclockwise")
+        } footer: {
+          Text("Revisit items you answered incorrectly in the last 24 hours.")
+        }
+        if data.apprenticePractice + data.recentLessons + data.leeches > 0 {
           Section("Extra study") {
             Text("Additional practice outside your scheduled reviews.")
               .font(.caption).foregroundStyle(.secondary)
@@ -53,10 +68,6 @@ struct HomeDashboardView: View {
             if data.recentLessons > 0 {
               countButton(
                 "Review recent lessons", count: data.recentLessons, action: .recentLessons)
-            }
-            if data.recentMistakes > 0 {
-              countButton(
-                "Review recent mistakes", count: data.recentMistakes, action: .recentMistakes)
             }
             if data.leeches > 0 {
               countButton("Review all leeches", count: data.leeches, action: .leeches)
@@ -70,21 +81,24 @@ struct HomeDashboardView: View {
             ? "Previous level (\(level.id))" : "Current level (\(level.id))"
         ) {
           ForEach(level.progress) { row in
-            VStack(alignment: .leading, spacing: 7) {
-              LabeledContent(title(row.kind), value: "\(row.guru) of \(row.total) at Guru").font(
-                .subheadline)
-              Chart {
-                BarMark(x: .value("Items", row.guru), y: .value("Subject", "Progress"))
+            Button {
+              action(.levelSubjects(level.id, row.kind))
+            } label: {
+              VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                  Label(
+                    title(row.kind),
+                    systemImage: row.kind == .radical ? "square.grid.2x2" : "character"
+                  )
                   .foregroundStyle(StudyPalette.color(for: row.kind))
-                BarMark(x: .value("Items", row.apprentice), y: .value("Subject", "Progress"))
-                  .foregroundStyle(StudyPalette.color(for: row.kind).opacity(0.45))
-                BarMark(x: .value("Items", row.lessons), y: .value("Subject", "Progress"))
-                  .foregroundStyle(Color.gray.opacity(0.5))
-                BarMark(x: .value("Items", row.locked), y: .value("Subject", "Progress"))
-                  .foregroundStyle(Color.gray.opacity(0.2))
-              }.chartXScale(domain: 0...max(row.total, 1)).chartXAxis(.hidden).chartYAxis(.hidden)
-                .frame(height: 12)
-            }.padding(.vertical, 4).accessibilityElement(children: .ignore)
+                  Spacer()
+                  Text("\(row.guru) / \(row.total)").monospacedDigit()
+                  Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                }.font(.subheadline)
+                ProgressView(value: Double(row.guru), total: Double(max(1, row.total)))
+                  .tint(StudyPalette.color(for: row.kind))
+              }.padding(.vertical, 6).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityElement(children: .ignore)
               .accessibilityLabel(
                 "\(title(row.kind)): \(row.guru) of \(row.total) at Guru, \(row.apprentice) in Apprentice, \(row.lessons) in lessons, \(row.locked) locked"
               )
@@ -105,7 +119,7 @@ struct HomeDashboardView: View {
           navigationButton("Show all", id: "home.catalog.\(level.id)", action: .catalog(level.id))
         }
       }
-      Section("All levels") {
+      Section("Item spread · All levels") {
         if let message = data.progressUnavailableMessage {
           Text(message).foregroundStyle(.secondary)
         } else {
@@ -121,7 +135,8 @@ struct HomeDashboardView: View {
               action(.stage(index))
             } label: {
               HStack {
-                Circle().fill(StudyPalette.color(for: category)).frame(width: 10, height: 10)
+                Image(systemName: category == .burned ? "flame.fill" : "leaf.fill")
+                  .foregroundStyle(StudyPalette.color(for: category)).frame(width: 24)
                 Text(category.name).foregroundStyle(.primary)
                 Spacer()
                 Text(count.formatted()).foregroundStyle(.secondary)
@@ -140,14 +155,53 @@ struct HomeDashboardView: View {
           countButton("Excluded items", count: data.excluded, action: .excluded)
         }
       }
+      if data.progressUnavailableMessage == nil && data.studyUnavailableMessage == nil {
+        recentSubjects("Recently unlocked", symbol: "lock.open", subjects: data.recentlyUnlocked)
+        recentSubjects("Recently burned", symbol: "flame", subjects: data.recentlyBurned)
+      }
+      Section {
+        Link(destination: URL(string: "https://community.wanikani.com")!) {
+          Label("WaniKani community", systemImage: "bubble.left.and.bubble.right")
+        }
+      }
     }
-    .listStyle(.inset)
+    .formStyle(.grouped)
     .frame(maxWidth: 960).frame(maxWidth: .infinity)
     .tint(StudyPalette.radical)
     .refreshable { await refresh() }.accessibilityIdentifier("home.dashboard")
     .focusable().focused($keyboardFocus)
     .onAppear { keyboardFocus = true }
     .onKeyPress(keys: [.return], action: openStudy)
+  }
+  private func recentSubjects(_ title: String, symbol: String, subjects: [StudySubject])
+    -> some View
+  {
+    Section {
+      if subjects.isEmpty {
+        Text("No items in the last 30 days.").foregroundStyle(.secondary)
+      } else {
+        ScrollView(.horizontal) {
+          LazyHStack(spacing: 8) {
+            ForEach(subjects) { subject in
+              Button {
+                action(.subject(subject.id))
+              } label: {
+                Text(subject.characters.isEmpty ? subject.meaning : subject.characters)
+                  .font(.title3).padding(12).frame(minHeight: 44)
+                  .foregroundStyle(.white)
+                  .background(StudyPalette.color(for: subject.kind), in: .rect(cornerRadius: 10))
+              }.buttonStyle(.plain)
+                .accessibilityLabel("\(subject.characters), \(subject.meaning)")
+                .accessibilityIdentifier("home.recent.\(subject.id)")
+            }
+          }
+        }.scrollIndicators(.hidden)
+      }
+    } header: {
+      Label("\(title) · \(subjects.count)", systemImage: symbol)
+    } footer: {
+      Text("Confirmed WaniKani activity in the last 30 days.")
+    }
   }
   private var forecast: some View {
     Section("Upcoming reviews") {
@@ -160,10 +214,8 @@ struct HomeDashboardView: View {
         } label: {
           VStack(alignment: .leading, spacing: 10) {
             let upcoming = data.hourlyReviews.dropFirst().reduce(0, +)
-            Text(
-              upcoming == 0
-                ? "Nothing more in the next 24 hours" : "+\(upcoming) in the next 24 hours"
-            ).font(.caption).foregroundStyle(.secondary)
+            LabeledContent("Next 24 hours", value: "+\(upcoming) items")
+              .font(.headline).foregroundStyle(.primary)
             if data.hourlyReviews.contains(where: { $0 > 0 }) {
               Chart(Array(data.hourlyReviews.enumerated()), id: \.offset) { hour, count in
                 BarMark(x: .value("Hour", hour), y: .value("Reviews", count))
@@ -270,13 +322,24 @@ struct HomeDashboardView: View {
       self.action(action)
     } label: {
       HStack {
-        Label(title, systemImage: symbol)
-          .foregroundStyle(isEnabled && !disabled ? color : .secondary)
-        Spacer()
-        Text(count.formatted()).font(.title3.weight(.semibold)).monospacedDigit()
-        Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
-      }.foregroundStyle(isEnabled && !disabled ? Color.primary : .secondary)
-        .frame(minHeight: 44).contentShape(Rectangle())
-    }.buttonStyle(.plain).disabled(disabled)
+        Image(systemName: symbol).font(.largeTitle).symbolRenderingMode(.hierarchical)
+          .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 8) {
+          HStack {
+            Text(title).font(.title2.bold())
+            Spacer()
+            Text(count.formatted()).font(.title2.bold()).monospacedDigit()
+          }
+          Text(action == .lessons ? "Learn something new." : "Review to unlock new lessons.")
+            .font(.subheadline)
+          Label(action == .lessons ? "Start lessons" : "Start reviews", systemImage: "arrow.right")
+            .font(.headline)
+        }
+      }.padding(18).foregroundStyle(.white)
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
+        .background(isEnabled && !disabled ? color : Color.gray, in: .rect(cornerRadius: 20))
+        .contentShape(.rect(cornerRadius: 20))
+    }.buttonStyle(.plain).disabled(disabled).listRowBackground(Color.clear)
+      .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
   }
 }

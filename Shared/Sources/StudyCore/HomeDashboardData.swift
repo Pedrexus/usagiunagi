@@ -30,6 +30,8 @@ public struct HomeDashboardData: Sendable {
   public var levels: [Level] = []
   public var timing: [Metric] = []
   public var stageCounts: [Int] = []
+  public var recentlyUnlocked: [StudySubject] = []
+  public var recentlyBurned: [StudySubject] = []
   public var date = Date.now
   public init() {}
 }

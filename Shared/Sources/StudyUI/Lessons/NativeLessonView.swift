@@ -109,7 +109,13 @@ public struct NativeLessonView: View {
       }
   }
   private func picker(_ items: [CatalogSubject], paused: Selection? = nil) -> some View {
-    LessonPickerView(items: items, selection: $selectedIDs) { ids in
+    LessonPickerView(
+      items: items,
+      batchSize: paused?.subjects.count
+        ?? lessonSettings.value.effectiveBatchSize(
+          waniKani: waniKaniPreferences, followWaniKani: waniKaniSources.lessonBatch),
+      selection: $selectedIDs
+    ) { ids in
       if let paused {
         guard Set(ids) == Set(paused.subjects.map(\.id)) else {
           throw NativeReviewError.sessionInProgress(isLesson: true)
@@ -123,8 +129,7 @@ public struct NativeLessonView: View {
       guard !ids.isEmpty, ids.allSatisfy({ byID[$0] != nil }) else {
         throw NativeReviewError.invalidLessonSelection
       }
-      let selected = Set(ids)
-      selection = Selection(subjects: available.filter { selected.contains($0.id) })
+      selection = Selection(subjects: ids.compactMap { byID[$0] })
     }
   }
   private struct LessonReadKey: Equatable {

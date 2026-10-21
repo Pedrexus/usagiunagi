@@ -4,6 +4,7 @@ import SwiftUI
 /// The original level/type grid, with native selection and host-owned lesson validation.
 struct LessonPickerView: View {
   let items: [CatalogSubject]
+  var batchSize = 5
   var selection: Binding<Set<Int64>>? = nil
   let start: @MainActor ([Int64]) async throws -> Void
   @State private var localSelection: Set<Int64> = []
@@ -14,6 +15,7 @@ struct LessonPickerView: View {
     }
   }
   @State private var busy = false
+  @State private var interleave = false
   @State private var error: String?
   @Environment(\.dynamicTypeSize) private var typeSize
   @ScaledMetric(relativeTo: .title2) private var glyphSize = 28
@@ -45,30 +47,57 @@ struct LessonPickerView: View {
             description: Text("Refresh your account to check for new lessons."))
         }
         ForEach(groups) { group in
-          Text(group.title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-            .padding(.top, 8)
-          LazyVGrid(
-            columns: [
-              GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 140 : 76), spacing: 8)
-            ], spacing: 12
-          ) {
-            ForEach(group.items) { tile($0) }
+          GroupBox {
+            LazyVGrid(
+              columns: [
+                GridItem(
+                  .adaptive(
+                    minimum: typeSize.isAccessibilitySize
+                      || group.items.first?.kind == .vocabulary ? 156 : 84), spacing: 8)
+              ], spacing: 12
+            ) {
+              ForEach(group.items) { tile($0) }
+            }.padding(.top, 8)
+          } label: {
+            HStack {
+              Text(group.title)
+              Spacer()
+              Button(group.items.allSatisfy { selected.contains($0.id) } ? "Clear" : "Select all") {
+                let ids = Set(group.items.map(\.id))
+                if ids.isSubset(of: selected) {
+                  selected.subtract(ids)
+                } else {
+                  selected.formUnion(ids)
+                }
+              }.font(.callout).accessibilityIdentifier("lesson.selectGroup.\(group.id)")
+            }
           }
         }
       }.padding(16)
     }.disabled(busy)
       .safeAreaInset(edge: .bottom) {
-        ViewThatFits(in: .horizontal) {
-          HStack {
-            selectionCount.fixedSize(horizontal: true, vertical: false)
-            Spacer(minLength: 12)
-            startButton.fixedSize(horizontal: true, vertical: false)
+        VStack(alignment: .leading, spacing: 12) {
+          Toggle("Interleave lessons", isOn: $interleave)
+            .accessibilityIdentifier("lesson.interleave")
+          ViewThatFits(in: .horizontal) {
+            HStack {
+              selectionCount.fixedSize(horizontal: true, vertical: false)
+              Spacer(minLength: 12)
+              startButton.fixedSize(horizontal: true, vertical: false)
+            }
+            VStack(alignment: .leading, spacing: 12) {
+              selectionCount
+              startButton
+            }.frame(maxWidth: .infinity, alignment: .leading)
           }
-          VStack(alignment: .leading, spacing: 12) {
-            selectionCount
-            startButton
-          }.frame(maxWidth: .infinity, alignment: .leading)
-        }.padding().background(.bar)
+        }.padding().background(.bar).disabled(busy)
+      }
+      .toolbar {
+        ToolbarItem(placement: .primaryAction) {
+          Button(selected.count == items.count ? "Deselect all" : "Select all") {
+            selected = selected.count == items.count ? [] : Set(items.map(\.id))
+          }.disabled(items.isEmpty || busy).accessibilityIdentifier("lesson.selectAll")
+        }
       }
       .onChange(of: items.map(\.id)) { _, ids in selected.formIntersection(ids) }
   }
@@ -77,15 +106,24 @@ struct LessonPickerView: View {
       .accessibilityIdentifier("lesson.selectionCount")
   }
   private var startButton: some View {
-    Button("Start lessons", systemImage: "arrow.right") {
-      let ids = groups.flatMap(\.items).map(\.id).filter { selected.contains($0) }
+    Button(selected.isEmpty ? "Start a batch" : "Start lessons", systemImage: "arrow.right") {
+      let chosen = items.filter { selected.isEmpty || selected.contains($0.id) }
+      let queues = [SubjectKind.radical, .kanji, .vocabulary].map { kind in
+        chosen.filter { $0.kind == kind }
+      }
+      let ordered =
+        interleave
+        ? (0..<(queues.map(\.count).max() ?? 0)).flatMap { index in
+          queues.compactMap { $0.indices.contains(index) ? $0[index] : nil }
+        } : chosen
+      let ids = ordered.prefix(selected.isEmpty ? max(1, batchSize) : ordered.count).map(\.id)
       busy = true
       error = nil
       Task {
         defer { busy = false }
         do { try await start(ids) } catch { self.error = error.localizedDescription }
       }
-    }.buttonStyle(.borderedProminent).disabled(selected.isEmpty || busy)
+    }.buttonStyle(.glassProminent).disabled(items.isEmpty || busy)
       .accessibilityIdentifier("lesson.startSelection")
   }
   private func tile(_ item: CatalogSubject) -> some View {

@@ -289,6 +289,7 @@ public struct NativeReviewView: View {
       ? (session.options.meaningFirst ? "Meaning + Reading" : "Reading + Meaning")
       : value.question?.kind == .reading ? "Reading" : "Meaning"
     screen.questionKind = value.question?.kind ?? .meaning
+    screen.subjectType = value.subject?.kind.rawValue.capitalized ?? ""
     screen.subjectColor =
       value.subject?.kind == .kanji
       ? StudyPalette.kanji
