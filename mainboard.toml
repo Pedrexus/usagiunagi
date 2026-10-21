@@ -126,6 +126,10 @@ release-mac = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworks
 audit-release-ios = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
 audit-release-mac = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/UnifiedMac/Build/Products/Release/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
 
+[on.osx.env]
+# Native lint and tasks share Xcode; an explicit shell/CI selection takes precedence.
+DEVELOPER_DIR = "{{ env('DEVELOPER_DIR', '/Applications/Xcode.app/Contents/Developer') }}"
+
 # Official release asset coordinates; explicit setup: `mainboard binary sync`.
 [on.osx.binary.dev]
 swiftlint = { version = "0.65.1", url = "https://github.com/realm/SwiftLint/releases/download/0.65.1/portable_swiftlint.zip", sha256 = "c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0", member = "swiftlint" }
@@ -134,26 +138,27 @@ swiftlint = { version = "0.65.1", url = "https://github.com/realm/SwiftLint/rele
 exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/.mainboard/**", "**/Vendor/**"]
 
 # Parse every kept first-party Swift file independently of gradual style adoption.
+# Native checks activate the declared environment without installing tools or resolving deps.
 [lint.tools.swift-parse]
-check = "mainboard analyze gate --rule SW-PARSE0001 {files}"
+check = "mainboard run --locked --no-install mainboard analyze gate --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
 exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/.mainboard/**", "**/Vendor/**"]
 serial = true
 timeout = 600
 
 [lint.tools.swift-ui]
-check = "mainboard analyze gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
+check = "mainboard run --locked --no-install mainboard analyze gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
 exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/Vendor/**"]
 serial = true
 timeout = 600
 
 [lint.tools.swift-format]
-check = "/usr/bin/xcrun swift format lint --strict {files}"
-fix = "/usr/bin/xcrun swift format format --in-place {files}"
+check = "mainboard run --locked --no-install /usr/bin/xcrun swift format lint --strict {files}"
+fix = "mainboard run --locked --no-install /usr/bin/xcrun swift format format --in-place {files}"
 files = ["*.swift"]
 
 [lint.tools.swiftlint]
-check = "{root}/.mainboard/envs/default/binary/bin/swiftlint lint --strict --quiet --no-cache --force-exclude -- {files}"
+check = "mainboard run --locked --no-install {root}/.mainboard/envs/default/binary/bin/swiftlint lint --strict --quiet --no-cache --force-exclude -- {files}"
 files = ["*.swift"]
 timeout = 120

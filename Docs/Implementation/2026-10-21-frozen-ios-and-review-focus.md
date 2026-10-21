@@ -752,3 +752,29 @@ Mainboard parses 261/261 files with no context issues. Production is 145 files/2
 | `.build/Reports/SynthesisSurfaceInventory.json` | `b30e8131f2194593775fadd368e35c7e21e26b2273845f6829c2d00c3ef32676` |
 
 No new Release, watch, storage interruption/disk-full, rendered, physical/signed or hosted CI result is claimed. Required public APIs and the documented native bridges remain; this is not a blanket initializer ban or permission to remove validating/persistent constructors. The overall modernization remains active with its full remaining scope in [TASKS](../TASKS.md).
+
+## Mainboard native environment and current Release checks
+
+The constructor pass exposes a reproducible tooling difference: full Mainboard tasks apply the manifest environment, while the lint provisioner's lightweight context only prepends installed tools to PATH. With this Mac's global Command Line Tools selection, native lint cannot find SourceKit/SwiftParser even though builds select Xcode correctly. Declaring an environment alone does not fix that lightweight context. The app manifest now supplies its Mac Xcode default in `on.osx.env`, preserving an explicit shell/CI DEVELOPER_DIR, and all five native check/format commands enter it through the existing `mainboard run --locked --no-install` path. The four tools, rule selections, timeouts, strict verdicts and formatter ownership are unchanged. No new Mainboard API, driver, package change or dependency is introduced; binary setup remains explicit.
+
+Final native parser checks over the full retained tree, strict formatter/SwiftUI rules over the exact Actions source scopes, and whole App/Shared-source SwiftLint all pass with DEVELOPER_DIR removed from the calling shell. The formatter's writing command also passes with zero rewrites. A temporary alternate Developer symlink is preserved literally by activation and passes all four native checks; a missing explicit Xcode path fails with exit 1 instead of selecting the default. The six-type initializer control still returns strict exit 2 with exactly the two expected violations, retaining its required public/private-storage/transforming/class constructors. Default reporting identifies Xcode 27.0/27A266a and Swift 6.4. Global `xcode-select -p` remains byte-identical at `/Library/Developer/CommandLineTools`. The app's empty dependency lock remains byte-identical, SHA-256 `fcb0c110b128cd94ac8f10d66ee254a8635b6cadddae308c85fbde71f8910897`.
+
+Current unsigned Release tasks now also pass without a manual export: generic iOS Simulator and native Mac, both zero native compiler/analyzer errors/warnings. This includes the current shared constructor/API cleanup. The existing bundle policies pass for all six packaged Mach-O files, with untruncated successful all-architecture nm/otool output, no named retired-library matches, and no forbidden store/test fixtures. App/localized names, icon metadata and required microphone description retain their expected values. These are incremental local Release/product results; the prior fresh watch-storyboard warning, fresh-source restoration scopes and signed/physical acceptance remain separate. No normal account or GUI is launched.
+
+Preliminary environment-only lint still fails visibly; its receipt is not called a pass. The first missing-Xcode control expects the word `invalid`, while this xcrun reports `missing DEVELOPER_DIR path`; the final control verifies that actual refusal and its nonzero status. No diagnostic is suppressed. Final checks use the no-install command form. No Swift source/test/assertion, schema/baseline, package pin, lock or workflow runner changes. The three owner edits remain intact. Existing Swift Testing results retain the preceding source scope; no new unit, persistence-interruption, disk-full, voice, watch delivery or hosted CI run is claimed.
+
+| Final local receipt | SHA-256 |
+| --- | --- |
+| `.build/Results/MainboardXcodeParserFinal.log` | `a04ffba9f2511b6a079f92f070e8e9243da04d5f034a0a4168d96b615b6a7c62` |
+| `.build/Results/MainboardXcodeStyleFinal.log` | `8cc9ddf12dec42661d18594e3d648fd32ab4851a1e5eeabc5143f5d74d174271` |
+| `.build/Results/MainboardXcodeSwiftLintFinal.log` | `36805ab38830d7065d48da6c55c97b8956ebb3c0319856a7f3addf7046150bbb` |
+| `.build/Results/MainboardXcodeFormatterFinal.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| `.build/Results/MainboardXcodeOverrideLintFinal.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| `.build/Results/MainboardXcodeInvalidToolchainFinal.log` | `c1693e6bd055021102bb049b65a7064b8c93d60953a93000e460de939bc8f47c` |
+| `.build/Results/MainboardXcodeRuleControlFinal.json` | `f20ee65fad35645f2bd62387c0ff47b1456f8f36dd59dccb3ac9424775b19a3a` |
+| `build-5305a059d5974aaa93d9f789060b707a.build.json` (Release iOS) | `da61373a702f2d5a0c25b00d5065f0b42dbb5ec00b9a92255afe29b5d4cb1f8f` |
+| `build-34385709470d4edd8f916336e7a12c49.build.json` (Release Mac) | `9f84a23abcc259c7be3a8c035a86bb8c316236ebb2e6a58155d76fac35204e0d` |
+| `.build/Results/MainboardXcodeReleaseAuditIOS.json` | `fc2096a643e2f124eebb4c32d97620a81917474fd9dffabf1297286773a959f1` |
+| `.build/Results/MainboardXcodeReleaseAuditMac.json` | `65cc2e85c052e2866a178732c879c8f9e9005503fbabeaf9bd986da218523a37` |
+
+The overall objective stays active. Historical decoder binding before V2, remaining G7 failures/device performance, rendered iPhone/iPad/Mac usability, real speech, full-account statistics, signed services/watch/icon acceptance and Mainboard publication/hosted CI remain open in [TASKS](../TASKS.md). This fixes local toolchain consistency and closes current Release/product checks; it does not establish those remaining outcomes.
