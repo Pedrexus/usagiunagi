@@ -262,7 +262,7 @@ extension WaniKaniClient {
     else { throw APIError.invalidResponse }
     return .init(id: id, value: resource.data.value)
   }
-  private func encode(_ value: some Encodable) throws -> Data {
+  func encode(_ value: some Encodable) throws -> Data {
     let encoder = JSONEncoder()
     encoder.keyEncodingStrategy = .convertToSnakeCase
     return try encoder.encode(value)

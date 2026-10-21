@@ -15,6 +15,10 @@ public protocol WaniKaniService: WaniKaniAccountReader {
     -> CatalogAssignment
   func writeMaterial(_ value: StudyMaterial, serverID: Int64?, token: String) async throws
     -> WaniKaniMaterial
+  func userPreferences(accountID: String, token: String) async throws -> WaniKaniPreferences
+  func updateUserPreferences(
+    _ changes: WaniKaniPreferenceChanges, accountID: String, token: String
+  ) async throws -> WaniKaniPreferences
 }
 public enum WaniKaniServiceConfigurationError: Error, LocalizedError, Equatable, Sendable {
   case invalidEndpoint, unsupportedEndpointChange
@@ -216,6 +220,9 @@ public struct WaniKaniClient: WaniKaniService {
         throw APIError.invalidResponse
       }
       if response.statusCode == 401 || response.statusCode == 403 {
+        if response.statusCode == 403, method == .put, url.path == endpoint("user").path {
+          throw WaniKaniPreferenceError.permissionDenied
+        }
         let message = try? JSONDecoder().decode(APIMessage.self, from: data)
         if method == .get, url.path == endpoint("user").path,
           message?.error?.localizedCaseInsensitiveContains("hibernat") == true
