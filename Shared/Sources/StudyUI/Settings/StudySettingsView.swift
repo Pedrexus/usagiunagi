@@ -28,6 +28,7 @@ public enum StudySettingsPage: String, Hashable, CaseIterable, Identifiable, Sen
 public struct StudySettingsView<Destination: Hashable, Diagnostics: View, AccountActions: View>:
   View
 {
+  @Environment(\.studyCloudPreferences) private var cloudPreferences
   private let account: StudyShellState?
   private let destination: (StudySettingsPage) -> Destination
   private let diagnostics: Diagnostics
@@ -62,6 +63,20 @@ public struct StudySettingsView<Destination: Hashable, Diagnostics: View, Accoun
             Label(page.rawValue, systemImage: page.symbol)
           }
           .accessibilityIdentifier("settings.page.\(page.identifier)")
+        }
+      }
+      if let cloudPreferences {
+        Section("iCloud display settings") {
+          Label(
+            cloudPreferences.cloudEnabled ? "Private iCloud enabled" : "Saved on this device",
+            systemImage: cloudPreferences.cloudEnabled ? "icloud" : "icloud.slash")
+          Text(
+            "Appearance, Japanese font size and SRS indicator. WaniKani remains the source of truth for study progress."
+          )
+          .font(.caption).foregroundStyle(.secondary)
+          if let notice = cloudPreferences.notice {
+            Text(notice).font(.caption).foregroundStyle(.secondary)
+          }
         }
       }
       Section("Diagnostics") {

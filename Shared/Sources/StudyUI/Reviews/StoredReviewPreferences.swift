@@ -4,6 +4,7 @@ import SwiftUI
 /// Native hosts share AppStorage observation without replacing legacy iOS preference keys.
 @propertyWrapper struct StoredReviewPreferences: DynamicProperty {
   @AppStorage("native.reviewPreferences") private var data = Data()
+  @Environment(\.studyCloudPreferences) private var cloud
   var wrappedValue: ReviewPreferences {
     (try? JSONDecoder().decode(ReviewPreferences.self, from: data)) ?? .init()
   }
@@ -16,8 +17,10 @@ import SwiftUI
     }
   }
   func applyChanges(from old: ReviewPreferences, to new: ReviewPreferences) throws {
-    var current = wrappedValue
+    let previous = wrappedValue
+    var current = previous
     current.applyChanges(from: old, to: new)
     data = try JSONEncoder().encode(current)
+    cloud?.recordChanges(from: previous, to: current)
   }
 }

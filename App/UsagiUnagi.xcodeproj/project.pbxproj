@@ -560,6 +560,12 @@
 							com.apple.BackgroundModes = {
 								enabled = 1;
 							};
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+							com.apple.Push = {
+								enabled = 1;
+							};
 						};
 					};
 					6335B46123CF0C820071671E = {
@@ -916,6 +922,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-lcompression";
 				SDKROOT = iphoneos;
+				USAGI_ICLOUD_CONTAINER_IDENTIFIER = iCloud.com.pedrexus.usagiunagi;
 				USAGI_WATCH_APP_GROUP = group.com.pedrexus.usagiunagi.watch;
 				USAGI_WATCH_WIDGET_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.watchapp.c.widgets;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -978,6 +985,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-lcompression";
 				SDKROOT = iphoneos;
+				USAGI_ICLOUD_CONTAINER_IDENTIFIER = iCloud.com.pedrexus.usagiunagi;
 				USAGI_WATCH_APP_GROUP = group.com.pedrexus.usagiunagi.watch;
 				USAGI_WATCH_WIDGET_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.watchapp.c.widgets;
 				SWIFT_COMPILATION_MODE = wholemodule;

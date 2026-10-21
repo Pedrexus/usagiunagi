@@ -149,6 +149,7 @@ struct StudyApplicationWindow: View {
         .environment(\.studyVoiceCapture, services.voiceCapture)
         .environment(services.lessonSettings).environment(services.subjectSettings)
         .defaultAppStorage(services.defaults)
+        .studyCloudPreferences(services.cloudPreferences)
       } else if let failure = owner.failure {
         VStack(spacing: 16) {
           ContentUnavailableView(

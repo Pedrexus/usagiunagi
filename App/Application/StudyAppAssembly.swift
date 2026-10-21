@@ -9,6 +9,7 @@ import SwiftUI
   let model: StudyAppModel
   let automaticSync: StudyAutomaticSync
   let mistakeSync: StudyMistakeSync?
+  let cloudPreferences: StudyCloudPreferences?
   let fonts: StudyFontLibrary
   let audio: StudyAudioLibrary
   let defaults: UserDefaults
@@ -27,6 +28,7 @@ import SwiftUI
     companion: StudyCompanionDelivery? = nil, avatars: LegacyAvatarCache? = nil,
     radicalImages: RadicalImageCache = .shared,
     mistakeCloud: (any StudyMistakeCloudStore)? = nil,
+    cloudPreferences: StudyCloudPreferences? = nil,
     voiceCapture: @escaping @Sendable () -> any VoiceCapture = { AppleVoiceCapture() },
     appearance: ColorScheme? = nil, notice: String? = nil,
     paths: AsyncStream<Bool>? = nil
@@ -34,6 +36,7 @@ import SwiftUI
     self.model = model
     automaticSync = StudyAutomaticSync(model: model, paths: paths)
     mistakeSync = mistakeCloud.map { StudyMistakeSync(model: model, cloud: $0) }
+    self.cloudPreferences = cloudPreferences
     self.fonts = fonts
     self.audio = audio
     self.defaults = defaults
@@ -82,6 +85,11 @@ import SwiftUI
             ? Bundle.main.resourceURL?.appending(path: "fonts") : nil)),
       audio: StudyAudioLibrary(
         downloads: StudyAudioDownloads(directory: media.audio)), companion: companion,
-      mistakeCloud: AppleStudyMistakeCloudStore(store: .default))
+      mistakeCloud: AppleStudyMistakeCloudStore(store: .default),
+      cloudPreferences: StudyCloudPreferences(
+        directory: URL.applicationSupportDirectory.appending(path: "UsagiPrivatePreferences"),
+        cloudContainerIdentifier: Bundle.main.object(
+          forInfoDictionaryKey: "UsagiPrivateCloudContainer") as? String,
+        defaults: .standard))
   }
 }
