@@ -141,7 +141,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             ? AnyLayout(HStackLayout(spacing: 16))
             : AnyLayout(VStackLayout(spacing: 12))
           layout {
-            question(horizontal: horizontal)
+            question
             VStack(spacing: 12) { response }
               .frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: true)
           }
@@ -322,11 +322,8 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       ? "Skip" : "Check answer"
   }
 
-  private func question(horizontal: Bool) -> some View {
-    let layout =
-      horizontal
-      ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
-    return layout {
+  private var question: some View {
+    VStack(spacing: 0) {
       VStack(spacing: 8) {
         Group {
           if let image = state.questionImage {

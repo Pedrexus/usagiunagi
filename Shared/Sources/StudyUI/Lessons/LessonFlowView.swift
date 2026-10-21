@@ -89,7 +89,7 @@ public struct LessonFlowView<Page: View>: View {
                       }
                     }
                 }
-                Button("Quiz") { index = subjects.count }.buttonStyle(.borderedProminent).tint(
+                Button("Quiz") { index = subjects.count }.buttonStyle(.bordered).tint(
                   .primary
                 )
                 .id(subjects.count).accessibilityValue(
@@ -107,7 +107,17 @@ public struct LessonFlowView<Page: View>: View {
         Button(backTitle, systemImage: "chevron.backward", action: back)
           .accessibilityIdentifier("lesson.back")
       }
-    }.focusable(index < subjects.count).focused($keyboardFocus)
+      ToolbarItem(placement: .primaryAction) {
+        if index < subjects.count {
+          Button(
+            index == subjects.count - 1 ? "Start quiz" : "Next",
+            systemImage: "chevron.forward"
+          ) { index = min(subjects.count, index + 1) }
+          .buttonStyle(.borderedProminent).accessibilityIdentifier("lesson.next")
+        }
+      }
+    }.toolbarTitleDisplayMode(.inline)
+      .focusable(index < subjects.count).focused($keyboardFocus)
       .onAppear { keyboardFocus = index < subjects.count }
       .onChange(of: index) { _, page in keyboardFocus = page < subjects.count }
       .onKeyPress(keys: [.leftArrow, .rightArrow, .return, .space, "a", "d", "q", "j"]) { press in

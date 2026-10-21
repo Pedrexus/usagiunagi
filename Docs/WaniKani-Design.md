@@ -37,3 +37,23 @@ The Mainboard inventory parses all 259 scoped files without declaration-context 
 | `UsabilityLint.log` | `a980dafcb72209be5775de86db7d114911651eb490bb750603e0682b7b0d309b` |
 
 This is source/compiler/unit evidence. The existing denial of device/computer access remains in force; only the isolated unit-test host started, with no normal account launch, UI capture or GUI automation. Rendered acceptance is still required for iPhone portrait/landscape and large text, safe-area action reachability, onscreen/hardware keyboard and marked-text focus, Previous/Retry/reveal/correction/Anki flows, disclosure reachability and VoiceOver order. Follow with iPad split windows and Mac resizing. The existing fixture-only UI approval request remains unanswered. No real exercise or private account was opened, and no signed-device, speech-capture or calibrated-statistics gate is closed by these results.
+
+### Lesson progression and compact review headers
+
+Source comparison with the same pinned original `LessonsViewController` and `LessonsPageControl` confirms its direct subject/Quiz strip, swipes and keyboard progression. The shared lesson flow preserved those routes but offered no explicit touch Next action. It now adds **Next**, changing to **Start quiz** on the final teaching page, in the native primary toolbar. The action reuses the existing page index and quiz route, clamping repeated events at the quiz boundary; it disappears for an empty lesson list and during the quiz. The study title stays inline, and the existing bottom Quiz shortcut uses a secondary bordered style. Chips, swipes, audio keys, Return/arrow keys, selection, Back and durable quiz ownership remain unchanged. This is an intentional discoverability improvement, not a claim that the original had the new button.
+
+Short/wide reviews previously applied horizontal layout twice: question beside answer, then glyph beside its prompt inside the question column. The question now always keeps its meaning/reading strip below its colored subject, matching the inspected historical screenshot. Only the existing outer layout chooses columns. This removes the nested layout and gives the subject the full question-column width without changing the input subtree, focus owner, font preferences, feedback, grading or scrolling fallback.
+
+Two shared view files change, adding seven physical Swift lines overall. No OS check, platform utility, dependency, model or new view type is added. Mainboard's iPhone Simulator and native Mac Debug builds pass with zero native-summary compiler/analyzer warnings/errors. All **556 shared functions / 72 suites** pass (92, 8, 206 and 250 in four batches), and scoped parser/UI rules, strict formatting and SwiftLint pass with no rewrite. No tests/assertions are added or changed for these presentation edits. Earlier hosted iPhone/Mac and storage receipts retain their own source scopes; they were not rerun here.
+
+Inventory parses **261/261** files without context issues: production **145 / 21,608** physical lines; test **111 / 26,085** and tooling **five / 281** are unchanged. Receipts under `.build/Results/` and `.build/Reports/`:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `build-191cc7fe5f034352aa83388798aae61f.build.json` | `0e9a0650c2fb30e6765428c7931d0fb54eafb084b6fcdb7a98b4b92d086cae26` |
+| `build-c2fa528b6ee24b589eb96889c797b628.build.json` | `58c3978e5ae7defe78605655971f6f332644f580dbe750904967c2d3dab71260` |
+| `StudyNavigationFinalSharedTests.log` | `02d5051645638d8414f7dc19a6dfa023819d7ff239fae4c33cf739b050b927bf` |
+| `StudyNavigationFinalLint.log` | `43ffb4eacddbf5a536f92075a09543524d3791e220410189eedc931ae8e9b30e` |
+| `StudyNavigationFinalInventory.json` | `8aa425592e3f870d2bc1b5b87383c0ae394971ae4f9f1cda7004cde2dad903e8` |
+
+The final source hashes are LessonFlowView `0612cfe4f25e380d1d10e12bee12ddfd9c5ea6bd269d7302ff9e1dc35d76389d` and ReviewScreen `f4feb91bc9e7e676b443bcd2d393a582de4f090269ee043b4bc55a393d2f90f3`. The first passing compiler/shared receipts precede the final rapid-tap boundary clamp and remain historical; all final checks above ran after it. Actual UI execution remains restricted. Required on-screen checks now also include Next/Start quiz with single/multiple/empty/resumed lessons and repeated taps, one transition into the existing quiz, chip/swipe/keyboard/Back equivalence, toolbar behavior around related subjects, and the question/prompt/input at short heights and large text. No device restriction was bypassed, normal account opened or exercise performed; storage, voice, statistics, watch and signed-device gates remain open.
