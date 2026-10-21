@@ -802,3 +802,26 @@ The app manifest's expected receipt count changes from three to five; the existi
 | `.build/Reports/OpeningSpaceInventoryFinal.json` | `540d2665ee995400cd64bcca6090ee7a9c2ba6fb126d5c3a45640a799ee5e01d` |
 
 No new shared/app/GUI, Release, independent historical-writer, signed/device or hosted CI result is claimed. WAL-backed disk-full adoption, earlier capture/activation combinations, actual mid-copy/publication interruption, native iPhone space/Data Protection, historical decoder binding/V2, measured device performance and every other open workstream remain in [TASKS](../TASKS.md). The overall goal stays active.
+
+## Committed-WAL disk-full matrix
+
+The bounded task now runs all five points against two source forms: the pinned journal-free image and a real committed WAL-only edit. The existing WAL writer receives only a marked disposable clone under its unchanged temporary-root guard, saves a note and exits 86 without orderly container teardown. The parent requires unchanged main DB bytes and a populated WAL. An independent field comparison requires the exact NUL/Japanese note, a new UUID revision and pending status while preserving every other field/attempt, schema and record identity across both accounts. The resulting expected state is therefore more than a record-count check or a round trip through the same writer. The canonical fixture never reaches a persistence opener.
+
+The same five-case body and recovery assertions consume both source images; WAL case directories receive a strict wal- prefix and receipts carry the source-form flag. No separate recovery implementation, extra command, production hook or broader path allowance is introduced. Each first-adoption case preserves all original/retained DB/WAL/SHM bytes and abandoned artifacts, retries in a new process and verifies the exact pending note after two more process reopens. The WAL-backed completed-review case additionally preserves its original wrong-answer penalty, abandoned-revision rejection and one unattempted queued answer, with the full 39-record state restored twice. All other cases retain their exact 38-record state after the intended note update. The untouched WAL seed and canonical source are hashed after every case.
+
+All ten cases pass on the first complete run, with ten valid receipts under `.build/Results/StorageSpace.rwnpnO`; their source flags identify exactly five WAL cases. Final bounded root: `native-upgrade-0B7C499F-89B8-4E0C-AE2B-396DD7B3C0EF`. WAL verification producer/retry PIDs are 45977/45978 and readers 45979/45980. WAL selector producer/retry are 45981/45985 and readers 45988/45989. The final selector error remains Cocoa/640 at the exact selection file with underlying POSIX/28. Mainboard ejects disk34 and removes the successful image/root; the probe also removes its own temporary WAL source after every source-preservation check succeeds. Expected Core Data/SQLite full-volume diagnostics and the deliberate seed exit remain visible in the log.
+
+Only the test probe, app task's required receipt count and documentation change. The task now requires ten receipts; the existing root proxy/Actions invocation already delegates to it. Scoped native parser/formatter/SwiftLint checks pass without final rewrites. Inventory parses 261/261 files with no context issues: production remains 145 files/21,486 physical lines, tests 111/27,301 (+74), tooling five/289. V1, canonical helper/store/manifest and the independently preserved writer/reader archives retain their recorded hashes. No owner edit or shipping model, decoder, storage abstraction or app UI changes.
+
+| Final local receipt | SHA-256 |
+| --- | --- |
+| Probe source | `4393cfafa16154e00b922c33fdb6b5b9a4be42be9611a4ae727fa16d9dec0d7f` |
+| App Mainboard manifest | `aac391720967cfa1ce593954b7f5b25e93157db8aff7303a159ac7c5fdb1ab59` |
+| `.build/Results/WALSpaceFinal.log` | `285fac88385bb689b228d56ee5682a1702ecb3f1c8b864377a0b2d8394a1afa2` |
+| `StorageSpace.rwnpnO/wal-afterVerificationOpen.space.plist` | `30aaa0ca32928f0cdb1352de1a877ff8d7343d010cc6eb00a920f44c9230b2cb` |
+| `StorageSpace.rwnpnO/wal-beforeSelection.space.plist` | `21d6aaf0e2b6ddc1ba88a3ee7c54eb8946a63b76dbd464d286e5ab85b52d05c0` |
+| `StorageSpace.rwnpnO/wal-beforeReviewCommit.space.plist` | `fa828e4badeb93d5625ec63bfbf59d9581f3e4aee4a0177e7f8c27e7d2e2dad2` |
+| `.build/Results/WALSpaceLintFinal.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| `.build/Reports/WALSpaceInventoryFinal.json` | `0972501aa2b3f3d5240f6a302b9eaadf99cbdbe54f11a094b5fffd2116dbe73d` |
+
+This closes the committed-WAL variant of the existing bounded Mac space points. Native iPhone disk-full/Data Protection, earlier capture/activation combinations, actual mid-copy/inside-publication interruption, historical decoder binding before V2, real device/catalog performance and all rendered, speech, statistics, signed/watch/branding and hosted CI acceptance remain open. No new shared/app, GUI, Release, physical/signed or hosted result is claimed. The full objective remains active in [TASKS](../TASKS.md).

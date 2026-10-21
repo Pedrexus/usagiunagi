@@ -279,6 +279,10 @@
     private enum SpacePoint: String, Codable, CaseIterable, Sendable {
       case beforeMutation, beforeCommit, beforeReviewCommit
       case afterVerificationOpen, beforeSelection
+      init?(directory: URL) {
+        let name = directory.lastPathComponent
+        self.init(rawValue: name.hasPrefix("wal-") ? String(name.dropFirst(4)) : name)
+      }
       var opensStore: Bool { self == .afterVerificationOpen || self == .beforeSelection }
       var command: String {
         switch self {
@@ -320,6 +324,7 @@
       let restoredRecords: Int
       let review: ReviewSpaceEvidence?
       var opening: OpeningSpaceEvidence? = nil
+      var committedWAL = false
     }
 
     private static func spaceVolume(_ volume: URL) throws -> Int {
@@ -382,70 +387,135 @@
       let root = volume.appending(path: "native-upgrade-\(UUID())")
       try manager.createDirectory(at: root, withIntermediateDirectories: false)
       try marker.write(to: root.appending(path: ".disposable"), options: .atomic)
-      let original = try applicationSource(in: source)
+      let base = try applicationSource(in: source)
+      let walRoot = URL.temporaryDirectory.appending(path: "native-upgrade-\(UUID())")
+      try manager.createDirectory(at: walRoot, withIntermediateDirectories: false)
+      try marker.write(to: walRoot.appending(path: ".disposable"), options: .atomic)
+      let walSource = walRoot.appending(path: "wal-source")
+      try manager.createDirectory(at: walSource, withIntermediateDirectories: false)
+      for (name, bytes) in base { try bytes.write(to: walSource.appending(path: name)) }
+      let walStore = walSource.appending(path: "study.store")
+      try encode(manifest.expected, to: expectedURL(walStore))
+      try child("seed-native-upgrade-wal", store: walStore, status: 86)
+      let committedWAL = try applicationSource(in: walSource)
+      let walExpected = try PropertyListDecoder().decode(
+        NativeStoreBaseline.State.self, from: Data(contentsOf: expectedURL(walStore)))
+      try NativeStoreBaseline.require(
+        committedWAL["study.store"] == base["study.store"]
+          && committedWAL["study.store-wal"]?.isEmpty == false,
+        "Space source edit was not committed exclusively in a populated WAL")
+      try requireWALNote(walExpected, original: manifest.expected)
+      let walHashes = try hashes(in: walSource)
       log("DISPOSABLE SPACE PROBE: \(root.path)")
-      for point in SpacePoint.allCases {
-        let directory = root.appending(path: point.rawValue)
-        try manager.createDirectory(at: directory, withIntermediateDirectories: false)
-        for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
-        try encode(manifest.expected, to: directory.appendingPathExtension("expected.plist"))
-        let store = directory.appending(path: "study.store")
-        let selectorURL = directory.appending(path: "store-selection.plist")
-        if point.opensStore {
-          try child(point.command, store: store)
-          let failed = try adoptionArtifacts(in: directory)
-          let preparing = try Data(contentsOf: selectorURL)
-          let previous = try PropertyListDecoder().decode(AdoptionSelection.self, from: preparing)
+      for (kind, original, expected) in [
+        ("base", base, manifest.expected), ("wal", committedWAL, walExpected),
+      ] {
+        for point in SpacePoint.allCases {
+          let name = (kind == "wal" ? "wal-" : "") + point.rawValue
+          let directory = root.appending(path: name)
+          try manager.createDirectory(at: directory, withIntermediateDirectories: false)
+          for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+          try encode(expected, to: directory.appendingPathExtension("expected.plist"))
+          let store = directory.appending(path: "study.store")
+          let selectorURL = directory.appending(path: "store-selection.plist")
+          if point.opensStore {
+            try child(point.command, store: store)
+            let failed = try adoptionArtifacts(in: directory)
+            let preparing = try Data(contentsOf: selectorURL)
+            let previous = try PropertyListDecoder().decode(AdoptionSelection.self, from: preparing)
+            try NativeStoreBaseline.require(
+              previous.phase == "preparing" && previous.validation == nil,
+              "Full-volume opening selected an unverified writer")
+            try child("retry-opening-application-space", store: store)
+            let current = try PropertyListDecoder().decode(
+              AdoptionSelection.self, from: Data(contentsOf: selectorURL))
+            let recovered = try adoptionArtifacts(in: directory)
+            try NativeStoreBaseline.require(
+              current.phase == "selected" && current.validation?.count == 64
+                && current.candidate != previous.candidate && current.retained == previous.retained
+                && current.source == previous.source
+                && failed.allSatisfy({
+                  $0.key == "store-selection.plist" || recovered[$0.key] == $0.value
+                }),
+              "Space retry reused a failed candidate or changed an abandoned artifact")
+          } else {
+            try child("verify-application-space", store: store)
+            let before = try Data(contentsOf: selectorURL)
+            try child(point.command, store: store)
+            try NativeStoreBaseline.require(
+              Data(contentsOf: selectorURL) == before,
+              "Full-volume save changed the selected writer")
+          }
+          let selector = try Data(contentsOf: selectorURL)
+          let selection = try PropertyListDecoder().decode(AdoptionSelection.self, from: selector)
+          let retained = directory.appending(path: "generations/\(selection.retained)")
+          for _ in 0..<2 { try child("verify-application-space", store: store) }
           try NativeStoreBaseline.require(
-            previous.phase == "preparing" && previous.validation == nil,
-            "Full-volume opening selected an unverified writer")
-          try child("retry-opening-application-space", store: store)
-          let current = try PropertyListDecoder().decode(
-            AdoptionSelection.self, from: Data(contentsOf: selectorURL))
-          let recovered = try adoptionArtifacts(in: directory)
+            try applicationSource(in: directory) == original
+              && applicationSource(in: retained) == original
+              && Data(contentsOf: selectorURL) == selector && hashes(in: source) == pristine
+              && hashes(in: walSource) == walHashes,
+            "Space recovery changed original/retained data, selection or the frozen source")
+          let outcome = try PropertyListDecoder().decode(
+            SpaceOutcome.self,
+            from: Data(contentsOf: directory.appendingPathExtension("space.plist")))
           try NativeStoreBaseline.require(
-            current.phase == "selected" && current.validation?.count == 64
-              && current.candidate != previous.candidate && current.retained == previous.retained
-              && current.source == previous.source
-              && failed.allSatisfy({
-                $0.key == "store-selection.plist" || recovered[$0.key] == $0.value
-              }),
-            "Space retry reused a failed candidate or changed an abandoned artifact")
-        } else {
-          try child("verify-application-space", store: store)
-          let before = try Data(contentsOf: selectorURL)
-          try child(point.command, store: store)
-          try NativeStoreBaseline.require(
-            Data(contentsOf: selectorURL) == before, "Full-volume save changed the selected writer")
+            outcome.point == point && outcome.filledBytes > 0
+              && outcome.committedWAL == (kind == "wal")
+              && outcome.writerPID > 0
+              && outcome.writerPID != ProcessInfo.processInfo.processIdentifier
+              && outcome.restoredRecords
+                == expected.records.count + (point == .beforeReviewCommit ? 1 : 0)
+              && (point == .beforeReviewCommit ? outcome.review != nil : outcome.review == nil)
+              && (point.opensStore
+                ? outcome.opening?.producerPID != outcome.writerPID && outcome.opening != nil
+                : outcome.opening == nil && outcome.sqliteCode != nil),
+            "Missing space-failure and complete-state recovery evidence")
+          log("PASS: \(name) refused, exact recovery, retry and two fresh reopens")
         }
-        let selector = try Data(contentsOf: selectorURL)
-        let selection = try PropertyListDecoder().decode(AdoptionSelection.self, from: selector)
-        let retained = directory.appending(path: "generations/\(selection.retained)")
-        for _ in 0..<2 { try child("verify-application-space", store: store) }
-        try NativeStoreBaseline.require(
-          try applicationSource(in: directory) == original
-            && applicationSource(in: retained) == original
-            && Data(contentsOf: selectorURL) == selector && hashes(in: source) == pristine,
-          "Space recovery changed original/retained data, selection or the frozen source")
-        let outcome = try PropertyListDecoder().decode(
-          SpaceOutcome.self,
-          from: Data(contentsOf: directory.appendingPathExtension("space.plist")))
-        try NativeStoreBaseline.require(
-          outcome.point == point && outcome.filledBytes > 0
-            && outcome.writerPID > 0
-            && outcome.writerPID != ProcessInfo.processInfo.processIdentifier
-            && outcome.restoredRecords
-              == manifest.expected.records.count + (point == .beforeReviewCommit ? 1 : 0)
-            && (point == .beforeReviewCommit ? outcome.review != nil : outcome.review == nil)
-            && (point.opensStore
-              ? outcome.opening?.producerPID != outcome.writerPID && outcome.opening != nil
-              : outcome.opening == nil && outcome.sqliteCode != nil),
-          "Missing space-failure and complete-state recovery evidence")
-        log("PASS: \(point.rawValue) refused, exact recovery, retry and two fresh reopens")
       }
+      try manager.removeItem(at: walRoot)
       log(
         "SCOPE: disposable Mac APFS disk-full write/recovery; not iOS Data Protection or power loss"
       )
+    }
+
+    private static func requireWALNote(
+      _ state: NativeStoreBaseline.State, original: NativeStoreBaseline.State
+    ) throws {
+      try NativeStoreBaseline.require(
+        state.schema == original.schema && state.schemaVersion == original.schemaVersion
+          && state.records.count == original.records.count, "WAL seed changed schema or membership")
+      for before in original.records {
+        guard
+          let after = state.records.first(where: {
+            $0.model == before.model && $0.identity == before.identity
+          })
+        else { throw NativeStoreBaseline.Failure(description: "WAL seed lost a saved record") }
+        let mutable: Set<String> =
+          before.model == "MaterialRecord"
+            && before.identity == "\(NativeStoreBaseline.accounts[0])/42"
+          ? ["material", "revision", "pending"] : []
+        try NativeStoreBaseline.require(
+          after.accountID == before.accountID
+            && after.fields.filter { !mutable.contains($0.key) }
+              == before.fields.filter { !mutable.contains($0.key) },
+          "WAL seed changed an unrelated field or attempted work")
+        guard !mutable.isEmpty else { continue }
+        guard let material = before.fields["material"],
+          let oldRevision = before.fields["revision"], let newRevision = after.fields["revision"]
+        else {
+          throw NativeStoreBaseline.Failure(description: "WAL seed lost note or revision data")
+        }
+        var intended = try JSONDecoder().decode(StudyMaterial.self, from: material)
+        intended.meaningNote = "seed-native-upgrade-wal note \u{0000}猫\n "
+        try NativeStoreBaseline.require(
+          after.fields["material"] == NativeStoreBaseline.encoded(intended)
+            && after.fields["pending"] == NativeStoreBaseline.encoded(true)
+            && JSONDecoder().decode(UUID.self, from: newRevision)
+              != JSONDecoder().decode(UUID.self, from: oldRevision),
+          "WAL seed did not retain the exact pending note and a new revision")
+      }
     }
 
     private static func spaceCommand(_ command: String, url: URL) async throws {
@@ -487,7 +557,7 @@
       else { throw NativeStoreBaseline.Failure(description: "Space fixture material missing") }
       var material = saved.material
       material.meaningNote += String(repeating: "Synthetic disk-full note 日本語. ", count: 32768)
-      guard let point = SpacePoint(rawValue: directory.lastPathComponent),
+      guard let point = SpacePoint(directory: directory),
         command == point.command
           || (point.opensStore && command == "retry-opening-application-space")
       else {
@@ -510,6 +580,7 @@
         }
         try NativeStoreBaseline.require(
           rejected.point == point
+            && rejected.committedWAL == directory.lastPathComponent.hasPrefix("wal-")
             && evidence.producerPID != ProcessInfo.processInfo.processIdentifier
             && evidence.filledBytes > 0 && rejected.restoredRecords == expected.records.count,
           "Opening-space retry did not follow a different failed producer")
@@ -576,7 +647,8 @@
         SpaceOutcome(
           point: point, writerPID: ProcessInfo.processInfo.processIdentifier,
           filledBytes: filled, saveErrorDomain: failure.domain, saveErrorCode: failure.code,
-          sqliteCode: sqlite, restoredRecords: actual.records.count, review: nil, opening: opening),
+          sqliteCode: sqlite, restoredRecords: actual.records.count, review: nil, opening: opening,
+          committedWAL: directory.lastPathComponent.hasPrefix("wal-")),
         to: directory.appendingPathExtension("space.plist"))
       log("PASS: real ENOSPC save rollback preserved all records and the same revision retried")
     }
@@ -584,7 +656,7 @@
     private static func openingSpaceCommand(
       directory: URL, expected: NativeStoreBaseline.State, capacity: Int
     ) async throws {
-      guard let point = SpacePoint(rawValue: directory.lastPathComponent), point.opensStore else {
+      guard let point = SpacePoint(directory: directory), point.opensStore else {
         throw NativeStoreBaseline.Failure(description: "Unknown opening-space checkpoint")
       }
       let manager = FileManager.default
@@ -678,7 +750,8 @@
         SpaceOutcome(
           point: point, writerPID: evidence.producerPID, filledBytes: evidence.filledBytes,
           saveErrorDomain: failure.domain, saveErrorCode: failure.code, sqliteCode: sqlite,
-          restoredRecords: expected.records.count, review: nil, opening: evidence),
+          restoredRecords: expected.records.count, review: nil, opening: evidence,
+          committedWAL: directory.lastPathComponent.hasPrefix("wal-")),
         to: directory.appendingPathExtension("space.plist"))
       log(
         "PASS: \(point.rawValue) disk-full refusal retained preparing selection for a fresh retry")
@@ -880,7 +953,8 @@
           sqliteCode: sqlite, restoredRecords: actual.records.count,
           review: .init(
             saveAttempts: rejected.attempts.count, successfulSaves: rejected.successfulSaves,
-            dirtyAfterRollback: rejected.dirtyAfterRollback, submission: submission)),
+            dirtyAfterRollback: rejected.dirtyAfterRollback, submission: submission),
+          committedWAL: directory.lastPathComponent.hasPrefix("wal-")),
         to: directory.appendingPathExtension("space.plist"))
       log(
         "PASS: dirty completed review rolled back exactly; same-question retry queued one penalized answer"
