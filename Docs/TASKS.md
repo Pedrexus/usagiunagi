@@ -6,6 +6,20 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Latest keyboard/detail diagnosis:** a standalone SwiftUI form reproduces the notes
+frame warning when a keyboard-toolbar button is present, even without a sheet or spacer;
+the captured plain-form controls stay clean. This is a scoped simulator/framework
+reproduction, and no diagnostic is suppressed. The lesson-note test now shares the
+verified keyboard-readiness helper. All information moves into the fixed review tool
+strip so it is reachable without scrolling to the end of the details. Both Release
+builds, their four executable audits and all 577 shared Mac functions pass on the final
+source. The focused privacy/conflict suite finalizes with two passes, no failures/skips
+and the retained framework-pattern warning. Full lint still reports only the 30 protected
+formatter diagnostics; the inventory remains 230 findings from 98 rules. [Evidence and exact limits](Implementation/2026-10-21-adaptive-validation.md#notes-keyboard-diagnostic-follow-up--october-22).
+One unchanged-source conflict case also passes with verbose failure diagnostics disabled,
+but still takes 160 seconds; the experiment gives no useful speed benefit. Diagnostic
+defaults remain unchanged, and broad UI/accessibility acceptance stays open.
+
 **Latest iPhone navigation follow-up:** warm review/lesson/subject links, held refresh
 and all three material-conflict cases now produce passing native bundles. Drafts, hidden
 notes, exclusion state and the Stats return destination survive the exercised flows.
@@ -48,7 +62,7 @@ Source/config/test work is committed at `43266939`; the current [finish-stage re
 
 **The goal is active; the app is not yet fully accepted.** The app checkout is physically under `projects/apps/usagiunagi`; `codex/swiftui-27-curriculum` is its Git branch, not another folder. Portable settings are committed at `4771355d`; the initial separate `dataclass` source is committed in the projects repository at `88a211843`. The current visual follow-up and its exact evidence are recorded in [WaniKani design](WaniKani-Design.md#current-implementation-and-manual-evidence). Preserve the three protected owner edits. The current Mainboard pin is `b34c931`.
 
-Implemented source covers the shared SwiftUI app, SwiftData writer and historical import, voice input, charts/curriculum coverage, branding, WidgetKit, API caching, WaniKani settings and 46 portable iCloud preferences. This does not establish complete behavior or signed delivery. The prior iOS and Mac unsigned Release builds and four packaged executable paths pass the recorded audits; they predate this endpoint fix. Current shared tests cover settings changes and the endpoint fix, and the current iOS Debug build passes. Scoped formatting passes; the protected-file formatting and broader acceptance limits are explicit above. AppIntents metadata notes retain their separate scope.
+Implemented source covers the shared SwiftUI app, SwiftData writer and historical import, voice input, charts/curriculum coverage, branding, WidgetKit, API caching, WaniKani settings and 46 portable iCloud preferences. This does not establish complete behavior or signed delivery. The October 22 unsigned iOS/Mac Release builds and four packaged executable audits include the endpoint and initial sync-observation changes; the linked receipts retain the exact shared-test and UI scopes. Scoped formatting passes; the protected-file formatting, notes-keyboard warning and broader acceptance limits remain explicit above. AppIntents metadata notes retain their separate scope.
 
 | Finish order | Remaining work and completion evidence |
 | --- | --- |

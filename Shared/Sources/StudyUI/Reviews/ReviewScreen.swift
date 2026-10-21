@@ -160,6 +160,8 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         if state.phase == .details { answerActions.padding(12) }
         studyTools.padding(.horizontal, 12)
       }.frame(maxWidth: 760).frame(maxWidth: .infinity).background(.bar)
+        .accessibilityElement(children: .contain).accessibilityLabel("Study controls")
+        .accessibilityIdentifier("review.controls")
     }
     .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
     .toolbarTitleDisplayMode(.inline)
@@ -255,12 +257,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           .accessibilityIdentifier("review.previousAnswer")
       }
       details().frame(maxWidth: .infinity, alignment: .leading)
-      adaptiveControls {
-        if state.canShowAll {
-          Button("All information", systemImage: "info.circle") { action(.showAll) }
-            .keyboardShortcut(.space, modifiers: [])
-        }
-      }.font(.callout)
     } else {
       if state.phase == .answering && !state.isAnki {
         HStack(spacing: 8) {
@@ -328,6 +324,13 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         } label: {
           Label("Audio", systemImage: "speaker.wave.2").frame(minWidth: 44, minHeight: 44)
         }.accessibilityIdentifier("review.audio").keyboardShortcut("j", modifiers: [])
+      }
+      if state.phase == .details && state.canShowAll {
+        Button {
+          action(.showAll)
+        } label: {
+          Label("All information", systemImage: "info.circle").frame(minWidth: 44, minHeight: 44)
+        }.accessibilityIdentifier("review.showAll").keyboardShortcut(.space, modifiers: [])
       }
       Spacer()
       Menu {

@@ -1664,14 +1664,7 @@ extension ReviewFlowTests {
     field.tap()
     field.typeText("banana")
     XCTAssertEqual(field.value as? String, "banana")
-    let submit = app.buttons["review.submit"]
-    let ready = XCTNSPredicateExpectation(
-      predicate: NSPredicate { _, _ in
-        let keyboard = app.keyboards.firstMatch
-        return submit.isHittable && (!keyboard.exists || !keyboard.frame.intersects(submit.frame))
-      }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
-    submit.tap()
+    app.submitReviewAnswer()
     XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
     app.buttons["review.reveal"].tap()
   }
@@ -1681,14 +1674,19 @@ extension ReviewFlowTests {
     let keyboardDone = app.buttons["material.keyboardDone"]
     if keyboardDone.exists && keyboardDone.isHittable { keyboardDone.tap() }
     for _ in 0..<16 {
+      let details = app.scrollViews["subject.scroll"]
+      let form = app.descendants(matching: .any).matching(identifier: "material.form").firstMatch
+      let controls = app.descendants(matching: .any).matching(identifier: "review.controls")
+        .firstMatch
       if element.exists && element.isHittable {
         let tabs = app.tabBars.firstMatch
         let center = CGPoint(x: element.frame.midX, y: element.frame.midY)
-        if !tabs.exists || !tabs.frame.contains(center) { return }
+        let covered =
+          controls.exists && !form.exists && !details.exists
+          && element.frame.maxY > controls.frame.minY
+        if !covered && (!tabs.exists || !tabs.frame.contains(center)) { return }
       }
-      let details = app.scrollViews["subject.scroll"]
       let catalog = app.collectionViews["catalog.list"]
-      let form = app.descendants(matching: .any).matching(identifier: "material.form").firstMatch
       let home = app.collectionViews["home.dashboard"]
       if form.exists && form.isHittable {
         if element.exists && element.frame.midY < form.frame.minY {
@@ -1769,7 +1767,8 @@ extension ReviewFlowTests {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
     field.typeText("custompersonal")
-    app.buttons["review.submit"].tap()
+    XCTAssertEqual(field.value as? String, "custompersonal")
+    app.submitReviewAnswer()
     let reading = XCTNSPredicateExpectation(
       predicate: NSPredicate(format: "label CONTAINS %@", "Reading"),
       object: app.staticTexts["review.prompt"])
@@ -1788,8 +1787,10 @@ extension ReviewFlowTests {
     openMaterialEditor(in: app)
     XCTAssertFalse(app.textViews["material.readingNote"].exists)
     app.buttons["material.cancel"].tap()
-    app.buttons["All information"].tap()
-    XCTAssertTrue(reading.waitForExistence(timeout: 5))
+    let showAll = app.buttons["review.showAll"]
+    XCTAssertTrue(showAll.isHittable)
+    showAll.tap()
+    scrollTo(reading, in: app)
     let translation = app.buttons["subject.translation.0"]
     scrollTo(translation, in: app)
     let english = app.staticTexts["One, please."]
@@ -2301,6 +2302,17 @@ extension ReviewFlowTests {
 }
 
 @MainActor extension XCUIApplication {
+  func submitReviewAnswer() {
+    let submit = buttons["review.submit"]
+    let ready = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        let keyboard = self.keyboards.firstMatch
+        return submit.isHittable && (!keyboard.exists || !keyboard.frame.intersects(submit.frame))
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+    submit.tap()
+  }
+
   func openReviewTools() {
     let tools = descendants(matching: .any).matching(identifier: "review.tools").firstMatch
     XCTAssertTrue(tools.waitForExistence(timeout: 5), debugDescription)

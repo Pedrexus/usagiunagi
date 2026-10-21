@@ -398,3 +398,139 @@ signing or distribution occurs, and the overall modernization goal remains activ
 All native jobs are terminal, no fixture process remains running, the three protected
 owner edits retain their original hashes, and the frozen V1 schema SHA remains
 `538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`.
+
+## Notes keyboard diagnostic follow-up — October 22
+
+The full native case summary contains 64 call-stack records, all with address zero and
+no symbol/location. Xcode's session log reports successful symbolication, but the stored
+frames cannot identify a source line. `NotesWarning-CaseSummary-20261022.json` and
+`NotesWarning-TestDetails-20261022.json` under `.build/Reports/`, plus the exported
+`NotesWarning-Diagnostics-20261022/`, retain that limit. The app's standard error contains
+several occurrences while XCTest reports one warning; warning counts are not occurrence
+counts.
+
+The existing lesson-notes test reproduces the warning before the quiz/review view exists,
+then saves and reopens the exact note and synonym. Its quiz step fails because the native
+tap archive targets `(356, 687)` while the captured video shows the submit button above
+the keyboard (`test-e52eea12a6ac443a80a698bcf8e7359c.xcresult`,
+`NotesWarning-LessonEditor-20261022.log`, `NotesWarning-LessonFailure-20261022/`). This is
+a failed test, not accepted synonym grading. The existing readiness predicate is moved
+to one test helper and reused here; typed-value, reading-transition and conflict checks
+remain intact. The renewed helper passes parser/UI/formatter/SwiftLint checks.
+
+Mainboard compiles a standalone 56-line SwiftUI app against the installed iOS 27 simulator
+SDK, with no app module or persistence dependency. It uses `NavigationStack`, `Form`,
+`TextEditor`, a constant positive minimum height, focus state and optional public keyboard
+toolbar items. Every launch requires `--review-fixture`. Source/plist and binary hash are
+retained as `NotesWarning-Probe-20261022.*` / `NotesWarning-ProbeBinary-20261022.sha256`
+under `.build/Reports/`. Explicit `SDKROOT`, `xcrun --sdk iphonesimulator` and the Swift
+`-sdk`/simulator target are needed for the standalone cross-compile; the initial inherited
+Mac sysroot warning is retained, then a clean rebuild precedes installation. No signing
+command is used.
+
+| Standalone process | Confirmed rendered condition | Frame warnings in unified log |
+| --- | --- | --- |
+| 18845 | Direct form, keyboard visible, no toolbar | 0 |
+| 19244 | Initial sheet probe without keyboard focus | Inconclusive; not a passing keyboard check |
+| 20401 | Corrected sheet form, keyboard and caret visible, no toolbar | 0 |
+| 20698 | Sheet form with native keyboard toolbar and spacer | 1 |
+| 21758 | Same sheet toolbar with spacer removed | 1 |
+| 22204 | Direct form with one keyboard-toolbar button, no sheet or spacer | 1 |
+
+`NotesWarning-ProbeFinalUnifiedLog-20261022.json` retains 3,964 records from exactly those
+six process IDs. The warnings originate from `com.apple.runtime-issues` / `SwiftUI`, with
+SwiftUICore/SwiftUI image UUIDs and frame offsets in the log backtrace. Screenshots and
+launch/stop logs use the corresponding `NotesWarning-Probe*` names in `.build/Results/`.
+The minimal public keyboard-toolbar pattern therefore reproduces the warning on this
+simulator independently of usagiunagi's layout, grading and storage. This is a scoped
+framework reproduction, not proof of physical-device behavior or an Apple-confirmed fix.
+The native control remains functional and no diagnostic is suppressed. The temporary
+app is terminated and uninstalled; temporary sources/binary are removed after preserving
+the receipts. The probe adds no flag, dependency or helper library to the app.
+
+### Review detail access
+
+The first three-case regression finalizes as
+`test-8052f6b6e60b4c2985900a4ce2a8e0f1.xcresult`: lesson notes/synonym grading and explicit
+conflict replacement pass; the privacy case fails. It is not a passing suite. The failed
+hierarchy still contains All information at `y = 870.7` in an 874-point window, behind the
+fixed review controls; the action has not opened the reading content. The explanation
+itself also belongs to `SubjectDetailsContent`'s lazy stack. The export is retained in
+`NotesWarning-RegressionFailure-20261022/`.
+
+All information moves into the existing fixed 44-point review tool strip, using the same
+SF Symbol, action and Space shortcut. It remains conditional on revealed details and
+the existing `canShowAll` permission. No grading, store, visibility or platform branch
+changes. The privacy test now checks the real toolbar control is hittable before its
+ordinary tap, then uses the existing scroll helper to check the lazy reading explanation.
+The unanswered reading/note and hidden/revealed English assertions stay intact.
+
+Both changed Swift files pass parser/UI rules, strict formatting and SwiftLint in
+`NotesWarning-ReviewControlsLint-20261022.log`. Post-change Release builds
+`build-67f5ba27350c408eb888ad2f1a514481.xcresult` (iOS) and
+`build-a9c66386fdf94e4fb08470c2ee7e4292.xcresult` (Mac) pass with zero compiler/analyzer
+errors or warnings. `NotesWarning-ReleaseIOSBundle-20261022.json` /
+`NotesWarning-ReleaseMacBundle-20261022.json` audit three iOS/watch/widget executables and
+one Mac executable with zero violations. All 577 shared Mac functions pass again in
+`NotesWarning-SharedMac-20261022.log`. These builds precede the accessibility-group change
+below; final-source verification is recorded separately. The known native keyboard-toolbar
+warning remains visible rather than suppressed.
+
+The next three-case run, `test-42a06e34a0cc467caf60a7fd5efcba42.xcresult`, also retains
+two passes and one failure: the new info control reveals reading content, but the
+translation tap does not reveal English. Its hierarchy places Show translation at
+`y = 760.7` behind the fixed controls, while `review.scroll`'s accessibility frame still
+extends through that covered region. `isHittable` alone is insufficient here. The export
+is retained in `NotesWarning-TranslationFailure-20261022/`; this is not recorded as a
+passing suite.
+
+The fixed footer is now a named Study controls accessibility group with its own
+`review.controls` frame. The existing scroll helper requires the complete target to be
+above that frame, except while the material form or standalone subject page owns the
+interaction. It retains the tab-bar exclusion and every existing assertion. No repeat
+tap, sleep or diagnostic filter is added.
+
+### Final-source verification
+
+`test-662231196cdc491c92c048e90d57bd34.xcresult` finalizes successfully with two passes,
+zero failures or skips, zero compiler/analyzer warnings and the one retained keyboard
+runtime warning (`NotesWarning-ControlsFinal-20261022.log`). The conflict case verifies
+the exact draft replacement and retained concealed note/exclusion after actual fixture
+URL delivery. The privacy case verifies reading explanation/note concealment, explicit
+information access, and English concealment followed by its explicit reveal. The final
+source hashes are in `NotesWarning-ControlsSource-20261022.sha256`. The exported screenshot
+in `NotesWarning-ControlsCapture-20261022/` is inspected; it shows the revealed context
+sentence above the fixed controls. The lesson-note/custom-synonym quiz case already passed
+in both preceding three-case trials; those whole suites remain recorded as failures.
+
+The same source passes all 577 shared Mac functions in
+`NotesWarning-SharedMacFinal-20261022.log`. Final unsigned Release builds are
+`build-89f5903a6b0c49b58747421f59d86748.xcresult` (iOS) and
+`build-385a7ed89ac24806ba162ab376c72416.xcresult` (Mac), with zero compiler/analyzer errors
+or warnings. `NotesWarning-ReleaseIOSBundleFinal-20261022.json` and
+`NotesWarning-ReleaseMacBundleFinal-20261022.json` audit three iOS/watch/widget executables
+and one Mac executable with zero violations.
+
+`NotesWarning-FinalFullLint-20261022.log` checks 447 files without rewriting any. It still
+fails only the same 30 formatter diagnostics in the two protected owner-edited files.
+The owner-file hashes remain unchanged. `NotesWarning-FinalAllRules-20261022.log` retains
+230 findings from 98 rules; inventory exit 0 is not a passing lint gate. Scoped checks of
+both changed Swift files pass. No migration signal, assertion or runtime issue is hidden.
+Broader UI/accessibility, physical services and signed acceptance stay open.
+
+### Bounded test-diagnostics experiment
+
+The installed Xcode help documents `-collect-test-diagnostics on-failure|never`
+(`NotesWarning-XcodebuildHelp-20261022.txt`). Mainboard already passes native arguments
+through its existing `--setting` option, so no new workflow helper or setting is added.
+One unchanged-source positive conflict case runs with
+`--setting=-collect-test-diagnostics --setting=never`, retaining actual URL delivery,
+every assertion and runtime-issue reporting.
+
+`test-a8d4ca2a29174754abcd98049cf8c552.xcresult` finalizes successfully: one pass, zero
+failures/skips, zero compiler/analyzer warnings and the same runtime warning
+(`NotesWarning-DiagnosticsPolicy-20261022.log`). The case takes 160.009 seconds versus
+160.006 in the preceding final-source run; its body reaches teardown at 37.98 seconds.
+The native action takes 419.048 seconds including startup/finalization. This single
+measurement finds no useful reduction in the repeated teardown delay and does not
+establish its cause. App, Mainboard and CI diagnostic defaults remain unchanged.

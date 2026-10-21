@@ -91,3 +91,19 @@ The current Actions prerequisite is Mainboard `b34c931d776a93d502a0d53061366ae89
 now pinned by all five checkouts. `NavigationFinish-MainboardPin-20261022.log` rechecks
 GitHub and still records HTTP 422, “No commit found.” This supersedes the older pin/readiness
 checkpoint above; no hosted execution or publication is claimed.
+
+The [next diagnostic pass](../Implementation/2026-10-21-adaptive-validation.md#notes-keyboard-diagnostic-follow-up--october-22)
+reproduces the frame warning in a standalone SwiftUI form with one keyboard-toolbar
+button, without app modules, a sheet or a spacer. Its plain-form controls stay clean in
+the captured unified logs. This establishes a simulator/framework reproduction, not a
+physical-device result or an Apple-confirmed fix. The app keeps its native control.
+The same pass corrects a missed quiz-submit tap in the test harness and moves All
+information out of the scrolling content into the fixed review tool strip. The linked
+receipt retains each failed trial, source scope and final verification result.
+
+The final-source privacy/conflict suite passes both cases with no failures/skips, while
+retaining the known keyboard-toolbar runtime warning. All 577 shared Mac functions,
+both unsigned Release products and their four executable audits pass on that source.
+The fresh `NotesWarning-FinalFullLint-20261022.log` still fails only 30 protected-file
+formatter diagnostics; `NotesWarning-FinalAllRules-20261022.log` still inventories 230
+findings from 98 rules. The three owner-file hashes and frozen schema remain unchanged.

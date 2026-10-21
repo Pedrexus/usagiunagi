@@ -2,6 +2,12 @@
 
 ## Compact Tsurukame study follow-up
 
+**October 22 detail access:** All information now uses an SF Symbol in the existing fixed
+review tool strip, with the same explicit reveal action and Space shortcut. The former
+button could lie below the visible content behind the fixed review controls. Reading
+visibility and grading rules are unchanged; the 44-point action is available after
+reveal without scrolling to the end of the details.
+
 The owner's two further screenshots show a full-width purple review question with a narrow prompt/input boundary, and a short pink lesson header above dense meaning, reading, radical and mnemonic sections. The shared SwiftUI implementation removes the review card's outer padding/corners, compresses progress and prompt metadata, and places the check action beside the answer. Microphone, Ask later and the tools menu occupy a 44-point strip above the software keyboard through `safeAreaInset`; the same strip remains available with a hardware keyboard and on Mac. Quick settings, previous subject and font actions retain their existing handlers. Pronunciation remains available only after reveal, preserving the previous answer boundary. End session retains its wrap-up confirmation; native Back is restored for pause/resume, separately from explicit End.
 
 Lessons use a shorter character header, compact labeled sections, horizontal related-subject tiles, and one bottom subject/position row. Meaning/readings/components precede the explanations; reading-first review details and hidden-reading visibility retain their existing rules. Dynamic Type can expand content, the page remains scrollable, and related subjects/tools keep 44-point minimum targets. The existing UIKit input boundary is retained solely for Japanese input-mode selection, marked text and caret handling; no additional platform check, native framework bridge, dependency or persistent model is added.
