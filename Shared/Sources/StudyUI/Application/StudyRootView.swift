@@ -114,17 +114,19 @@ public struct StudyRootView: View {
       }.navigationTitle(tab == .home ? "Home" : tab == .practice ? "Practice" : "Stats")
         .navigationDestination(for: StudyDestination.self) { value in destination(value) }
         .toolbar {
-          ToolbarItemGroup(placement: .primaryAction) {
-            Button("Search", systemImage: "magnifyingglass") { path = [.search] }
-              .accessibilityIdentifier("app.search")
-            Button("Settings", systemImage: "gearshape") {
-              settingsPath = []
-              showSettings = true
-            }.accessibilityIdentifier("app.settings")
-          }
-          ToolbarItemGroup(placement: .automatic) {
-            if tab == .home { savedWorkButton }
-            if tab != .practice { refreshButton }
+          if path.isEmpty {
+            ToolbarItemGroup(placement: .primaryAction) {
+              Button("Search", systemImage: "magnifyingglass") { path = [.search] }
+                .accessibilityIdentifier("app.search")
+              Button("Settings", systemImage: "gearshape") {
+                settingsPath = []
+                showSettings = true
+              }.accessibilityIdentifier("app.settings")
+            }
+            ToolbarItemGroup(placement: .automatic) {
+              if tab == .home { savedWorkButton }
+              if tab != .practice { refreshButton }
+            }
           }
         }
     }.preferredColorScheme(appearance ?? $preferences.colorScheme)

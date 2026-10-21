@@ -187,16 +187,19 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           }
         }
       }
-      ToolbarItemGroup(placement: .primaryAction) {
+      .visibilityPriority(.low)
+      ToolbarItem(placement: .primaryAction) {
         if state.phase == .answering && !state.isAnki {
           Button("Voice answer", systemImage: "mic") { action(.voice) }
             .accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
         }
+      }.visibilityPriority(.high)
+      ToolbarItem(placement: .primaryAction) {
         if state.hasMenu {
           Button("Quick settings", systemImage: "slider.horizontal.3") { action(.settings) }
             .accessibilityIdentifier("review.settings")
         }
-      }
+      }.visibilityPriority(.low)
     }
     .confirmationDialog("Check your answer", isPresented: $state.showAssessment) {
       correctionActions

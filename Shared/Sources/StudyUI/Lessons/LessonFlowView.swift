@@ -109,13 +109,12 @@ public struct LessonFlowView<Page: View>: View {
       }
       ToolbarItem(placement: .primaryAction) {
         if index < subjects.count {
-          Button(
-            index == subjects.count - 1 ? "Start quiz" : "Next",
-            systemImage: "chevron.forward"
-          ) { index = min(subjects.count, index + 1) }
+          Button(index == subjects.count - 1 ? "Start quiz" : "Next") {
+            index = min(subjects.count, index + 1)
+          }
           .buttonStyle(.borderedProminent).accessibilityIdentifier("lesson.next")
         }
-      }
+      }.visibilityPriority(.high)
     }.toolbarTitleDisplayMode(.inline)
       .focusable(index < subjects.count).focused($keyboardFocus)
       .onAppear { keyboardFocus = index < subjects.count }
