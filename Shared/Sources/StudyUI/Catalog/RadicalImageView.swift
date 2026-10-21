@@ -12,7 +12,13 @@ public struct RadicalImageView: View {
   @Environment(\.studyRadicalImages) private var cache
   private let available: (Bool) -> Void
   @Environment(\.colorScheme) private var colorScheme
-  @State private var page: WebPage
+  @State private var page = {
+    var configuration = WebPage.Configuration()
+    configuration.websiteDataStore = .nonPersistent()
+    configuration.defaultNavigationPreferences.allowsContentJavaScript = false
+    configuration.deviceSensorAuthorization = .init(decision: .deny)
+    return WebPage(configuration: configuration)
+  }()
   @State private var error: String?
   @State private var loaded = false
   @State private var attempt = 0
@@ -22,11 +28,6 @@ public struct RadicalImageView: View {
   ) {
     self.url = url
     self.available = available
-    var configuration = WebPage.Configuration()
-    configuration.websiteDataStore = .nonPersistent()
-    configuration.defaultNavigationPreferences.allowsContentJavaScript = false
-    configuration.deviceSensorAuthorization = .init(decision: .deny)
-    _page = State(initialValue: WebPage(configuration: configuration))
   }
 
   public var body: some View {
