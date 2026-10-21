@@ -16,12 +16,24 @@ the first failed trial; the renewed heading/privacy suite then finalizes with tw
 zero failures/skips and zero reported runtime warnings. The actual greeting grows from
 57.3 to 191 points. Full accessibility and physical VoiceOver acceptance remain open.
 [Scope, native control and exact evidence](Implementation/2026-10-21-adaptive-validation.md#native-accessibility-audit--october-22).
-The next local usability work is to move the oversized fixed account header into Home's
-scrolling content and keep the review question visible while the answer keyboard is open.
-Largest-text captures expose both despite passing taps/hit regions. The lesson comparison
-now scrolls within the visible list above its fixed footer and passes its scaling check.
-The larger header/question-layout corrections remain local UI obligations, separate from
-signed/device gates.
+The [viewport follow-up](Implementation/2026-10-21-adaptive-validation.md#home-and-review-viewport-follow-up--october-22)
+moves the account/vacation header into scrolling Home content and keeps the question
+outside the answer's scroll region. Native input uses its intrinsic height; a space-based
+fallback keeps the prompt readable at very short heights. Manual isolated iPhone/iPad
+checks precede the renewed geometry/draft/grading tests. The lesson comparison also
+scrolls within the visible list above its fixed footer and passes its scaling check.
+The linked receipt records exact build/test scopes; broader signed/device gates remain.
+The newest scan contains 231 findings, including one additional explicit `UIFont` reference
+inside the retained Japanese-input adapter. The compact input now honors a standard small
+control request; Dynamic Type remains enabled. The earlier 230-finding receipts below
+retain their own source scopes. The five failed native trials remain recorded alongside
+the final retry.
+The normalized final iPhone case now passes: portrait and landscape captures are inspected,
+the draft survives Quick settings/rotation/continued typing, and runtime warnings are zero.
+Regular landscape grading, 577 shared Mac functions, both unsigned Release builds and all
+four executable audits pass within the exact scopes in the linked receipt. Full lint
+remains red for the 30 protected formatting errors, and hosted CI still cannot resolve
+Mainboard `b34c931`. The full 57-method UI and broader device/accessibility gates stay open.
 The complete phone UI gate now contains 57 test methods, including the separately driven
 URL cases; the focused passes above do not accept that full gate or iPad/Mac interaction.
 

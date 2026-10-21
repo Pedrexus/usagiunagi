@@ -667,3 +667,200 @@ and frozen V1 schema remain unchanged.
 still returns HTTP 422, No commit found. All five workflow checkouts use the same pin;
 no hosted execution, publication, signing or distribution is claimed. No probe app or
 binary is left installed, and no application dependency or platform check is introduced.
+
+## Home and review viewport follow-up — October 22
+
+The accessibility captures expose two failures that successful taps alone missed: the
+fixed account header consumes the study viewport, and focusing the answer scrolls the
+Japanese question away. The account/avatar/level and vacation information now live in
+Home's scrolling Form. Existing identifiers, learned-kanji counts and vacation actions
+remain; the duplicated vacation presentation state is removed. Sync progress and account
+recovery stay in the shared shell.
+
+During answering, the question occupies the available space outside the answer's scroll
+region. The answer panel respects the keyboard safe area and the native input's intrinsic
+height, with a 44-point minimum target. Revealed details retain their independent scroll
+and fixed Continue/grading controls. Counts and accuracy use a compact, content-fitting
+tool-strip announcement; level and SRS stage remain in Review tools. Tool symbols retain
+standard 44-point targets without imposing a fixed font on menu text. Normal layouts keep
+the prompt below the subject. Below 140 points of available height, the prompt moves
+beside the glyph so very large text and a landscape keyboard do not hide it. This uses
+space signals, without another OS branch or text-size cap.
+
+The isolated fixture's fixed debug banner is removed: its long text distorted short
+viewports. Home still identifies the synthetic account. DEBUG/explicit-launch guards,
+memory stores, fake credentials/transport and deterministic microphone-free voice remain
+unchanged. No live account, exercise, credential, microphone or signed service is used.
+
+### Manual scope before tests
+
+Device Hub inspection of the isolated iPhone 18 Pro/iOS 27 simulator verifies that the
+largest-text Home identity scrolls away, the question remains visible while entering an
+unsubmitted draft, and level/stage/Quick settings remain accessible in the native menu.
+The initial prototypes expose and correct an expanding answer field, vertically compressed
+glyph and clipped prompt. The final short-height build is
+`build-661f7b94270543b3aba12d616bab207e.xcresult`, with zero compiler/analyzer warnings or
+errors. Its largest-text landscape draft, question and prompt are inspected together.
+Default-size portrait retains the original-style large colored question above a compact
+prompt/input/tool boundary. These manual images are inline Device Hub observations;
+automated attachment exports below retain their own source scope.
+
+The immediately preceding `build-4f7a641017074a56a9056ad9f6e16d18.xcresult` also receives an
+iPad Pro 11-inch/iPadOS 27 check: at largest text the keyboard, question, prompt and tools
+remain visible, and an unsubmitted draft survives portrait-to-landscape rotation. That
+build precedes only the under-140-point fallback, which the observed iPad viewport does
+not enter; it is not claimed as an exact-source final iPad regression run. The original
+Tsurukame comparison is against the owner's screenshots and pinned `upstream/master`
+review focus/keyboard handlers, not a newly executed original binary.
+
+### Final verification
+
+The seven-file receipt is `VisibleQuestion-FinalSource-20261022.sha256`. Focused lint
+passes. All 577 shared Mac functions pass across four test targets (108/8/207/254), in
+`VisibleQuestion-SharedMac-20261022.log`. Whole-repository lint checks 447 files without
+rewriting any and still fails only the 30 protected formatter diagnostics. Mainboard
+still inventories 230 findings from 98 rules, including the same 86 migration signals;
+an inventory exit code is not a clean gate. The current GitHub pin lookup again returns
+HTTP 422 for unpublished Mainboard `b34c931` (`VisibleQuestion-MainboardPin-20261022.log`).
+Native regression, final Release verification and remaining acceptance are recorded when
+their runs finalize; pending execution is not a pass. Frozen persistence/decoder sources
+and the three owner edits remain protected.
+
+The initial `test-d984711261d246849e4f0c52e5361c91.xcresult` finishes with four passes and
+one failure, no skips or reported runtime warnings. Home's largest-text navigation,
+landscape grading/metadata/Quick-settings draft, native Back/resume and the combined
+Anki incorrect-then-correct flow pass. The renewed largest-text case passes its portrait
+geometry, draft and hit-region checks, then exposes a genuine short-height failure after
+Quick settings and rotation. A read-only Device Hub observation confirms the prompt and
+answer extending below the controls. The corresponding initial source hashes and all
+failure verdicts are retained. Inspected attachment exports are
+`VisibleQuestion-InitialCapture-20261022/`; the landscape failure itself is an inline
+Device Hub observation, not a falsely attributed exported screenshot.
+
+The correction retains the full single-line prompt width only in the inline fallback and
+removes vertical padding from the wide answer's scroll column. No visibility assertion is
+removed; failures now also attach exact element/control/keyboard/navigation frames. The
+rebuilt row is inspected manually before retrying. The new seven-file receipt is
+`VisibleQuestion-RetrySource-20261022.sha256`. Both the old and retry source receipts remain
+immutable. All 577 shared Mac functions pass again; scoped lint passes and full lint/rules
+retain exactly their earlier diagnostics (`VisibleQuestion-Retry*20261022.log`). The new
+Mac Release build `build-5ec44a53398f4821976e7d4d2f0e5b9f.xcresult` has zero compiler/analyzer
+warnings/errors. The earlier Mac build/audit and other first-trial results keep their
+earlier source scope. The two relevant native landscape cases are retried together.
+
+That retry, `test-413ff0a5e1fd4f4f981625e5372e6bcb.xcresult`, finishes with one pass and
+one failure, zero skips and no reported runtime warnings. Its exact exported geometry
+(`VisibleQuestion-RetryCapture-20261022/9DB3BDCC-6489-4FD1-9EB4-CAD30B9D9404.txt`) resolves
+the remaining cause: navigation ends at y=78 and the controls start at y=137, leaving
+59 points. The question and prompt fit in that space, but the 76.7-point native answer
+field scrolls upward to y=53.3; Submit also starts above the navigation boundary. The
+inspected failure PNG is `AC2E9789-043D-4C7C-97A3-9441DCBAA425.png` in the same export.
+The failed geometry assertion is correct and remains unchanged.
+
+The next correction requests SwiftUI's standard small control size in the short wide
+column. Both input adapters honor that signal using the semantic subheadline instead of
+title2; ordinary layouts keep title2. UIKit changes font only when needed, and Dynamic
+Type still applies. There is no new bridge, OS branch, font-size cap or input API. The
+explicit `UIFont` reference correctly adds one native-UI review signal: the latest scan
+is **231 findings / 98 rules**, with 87 migration signals and the same other 144 findings.
+The eight-file receipt is `VisibleQuestion-CompactInputSource-20261022.sha256`; scoped lint
+passes and complete lint retains the same 30 protected formatting errors. The Debug build
+`build-2165e6a9b0864ba78f5a0795ec8520d5.xcresult` passes without compiler/analyzer warnings
+or errors, and its compact row is inspected before the final native retry. All 577 shared
+Mac functions pass again; Mac Release `build-a9e356a2e11e4908823747c2693d4527.xcresult` also
+passes without compiler/analyzer warnings/errors.
+
+The subheadline trial also fails the strict largest-text boundary check, while regular
+landscape grading passes (`test-da16bd781ca0481c8bd153932b335a9f.xcresult`). Its inspected
+PNG/text exports are `VisibleQuestion-CompactInputCapture-20261022/DB888EBD-1666-4B4E-8EA8-89F51B1F3B3F.png`
+and `45FCFA5A-3870-4F4B-B00A-3410018F4288.txt`. The field is still 68.7 points tall and
+starts at y=61.3, above the y=78 navigation boundary. The visibility assertions and this
+third failed trial remain intact.
+
+The final candidate keeps an ordinary answer outside the wide column's ScrollView;
+feedback/incorrect responses retain scrolling. At short heights and accessibility sizes
+3–5, the input's standard small-control signal selects caption2. Other sizes retain
+title2. This avoids autofocus moving a plain answer upward, respects native input height,
+and retains Dynamic Type. `build-9b98d229b42e415d9538a5112d82af35.xcresult` compiles without
+compiler/analyzer warnings/errors and the revised row is inspected before regression.
+The immutable eight-file receipt is `VisibleQuestion-FitSource-20261022.sha256`.
+
+The next trial (`test-652c1a2fad1d43f6a7bff3c51981a891.xcresult`) passes regular landscape
+grading, then fails on XCTest's activation-point query for the prompt during rotation.
+This is a different failure from the earlier recorded geometry violations. The helper
+now checks existence and positive, contained frames before testing interaction, and asks
+for hittability only on the real answer/submit controls. Text still must fit fully between
+the navigation and study controls, within the window and outside the keyboard; the question
+must remain nonempty and at least 44 points tall. No geometric requirement is relaxed.
+Only test code changes for this final retry; production retains its passing shared/Mac
+scope. The new receipt is `VisibleQuestion-SettledSource-20261022.sha256`. Four failed
+trials, including this activation error, remain recorded rather than being replaced by
+the subsequent verdict.
+
+`test-acc4227a08e746e69ceef6ff0f72c451.xcresult` then passes the largest-text case, with
+zero failures/skips or reported runtime warnings. However, inspection of its two exports
+shows both starting and ending views in landscape: the first image's portrait name is
+incorrect. This verifies the layout and continued typing, not an actual orientation
+transition. Those exports are retained at `VisibleQuestion-SettledCapture-20261022/`:
+`C31DB3F3-3927-4C3D-B64B-145E7F13D970.png` (starting landscape) and
+`88B7793A-F778-4061-BF9B-C2F14E76BECB.png` (landscape, draft retained). The test now
+explicitly requests portrait and waits for a portrait window before proceeding. Only
+test setup changes; `VisibleQuestion-RotationSource-20261022.sha256` captures the final
+eight-file scope. Native rotation acceptance awaits that normalized run.
+
+The unchanged production source passes all 577 shared Mac functions in
+`VisibleQuestion-FitSharedMac-20261022.log`. Release builds
+`build-22e87f93c42e4aa5a84e2739a4fc78f5.xcresult` (Mac) and
+`build-4caedab4e5804e06b00fdbccb50c2689.xcresult` (iOS) have zero compiler/analyzer
+warnings/errors. Their final bundle audits inspect one Mac and three iOS/watch/widget
+executables without violations (`VisibleQuestion-FitReleaseMacBundle-20261022.json`,
+`VisibleQuestion-SettledReleaseIOSBundle-20261022.json`). Full lint still reports 30
+protected formatter errors from 447 files without rewriting any; the inventory is
+231 findings from 98 rules. The fresh Mainboard pin lookup still returns HTTP 422.
+All owner-file and frozen-schema hashes remain unchanged, and the old iPad-only sample
+process is terminated without uninstalling its container or touching account data.
+
+The normalized portrait-to-landscape trial (`test-dcd42ae744874567b085ff56793727d6.xcresult`)
+also fails the original container-boundary predicate. Its inspected diagnostic export is
+`VisibleQuestion-RotationCapture-20261022/F1CA451E-7A7A-4109-AFBF-0990AE9DB4F1.txt`, with PNG
+`737E3E5A-ED52-4676-97BB-5576D3EEFDE1.png`. The field starts at y=76.3; the navigation
+container ends at y=78, but its actual Back, Close and title elements end at y=68 or above.
+Thus this last 1.7-point difference is transparent container padding, not an obscured
+navigation item. The helper now uses the maximum bottom of the actual navigation controls
+and title, retaining the container fallback, full window/bottom/keyboard fences and real
+control hittability. The earlier genuinely oversized fields still fail this boundary.
+This is a test-boundary correction, not an arbitrary tolerance increase or further product
+change. The final receipt is `VisibleQuestion-NavigationSource-20261022.sha256`; normalized
+rotation is rerun without altering production. All five failed trials remain recorded.
+
+The first launch of that retry is stopped by one swift-format line-break diagnostic,
+before any native test executes. Formatting only the test file resolves it; the corrected
+source receipt is `VisibleQuestion-NavigationFinalSource-20261022.sha256` (eight unique
+Swift files). The retry retains explicit portrait normalization and the measured
+navigation-item boundary. This lint stop is not counted as an executed native failure.
+
+### Final normalized result
+
+`test-94e0a453671b4237a50ab9f6bf8395d9.xcresult` finalizes successfully: one pass, no
+failures/skips or reported runtime warnings. The unchanged geometry/input assertions,
+Quick-settings draft, hit-region audit, explicit portrait-to-landscape transition and
+continued typing all pass. Both exported images are inspected in
+`VisibleQuestion-NavigationFinalCapture-20261022/`: actual portrait
+`3E3AECF1-5535-4C11-A1E2-E2C36FB9CFAA.png`, then actual landscape
+`F42C52F5-8C36-47A2-A9ED-31840A65CEC1.png` with `draft retained`. This corrects the earlier
+capture-provenance limitation without deleting its evidence. Regular landscape grading
+passes on the same production source in the earlier final-product trial; Home, native
+Back/draft and combined Anki passes retain their separately recorded source scopes.
+
+Final full lint still checks 447 files without rewrites and fails only the same 30
+protected formatting errors (`VisibleQuestion-NavigationFinalFullLint-20261022.log`).
+The final inventory remains 231 findings from 98 rules
+(`VisibleQuestion-NavigationFinalRules-20261022.log`); scoped test/source and documentation
+lint pass. Production keeps the 577 shared Mac passes, both Release builds and four
+executable audits recorded above. The frozen schema, historical decoders/fixtures and all
+three owner edits remain unchanged. No PR, push, signing or distribution is performed.
+
+The full 57-method iPhone gate, final-source iPad/Mac interaction, physical VoiceOver/IME,
+large-font preferences and dense feedback states, real voice/audio/background behavior,
+signed iCloud/watch continuity and hosted CI remain open. These focused passes neither
+accept the earlier full accessibility audit nor mark the modernization goal complete.

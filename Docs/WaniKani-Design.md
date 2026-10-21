@@ -101,7 +101,17 @@ This is source/compiler/unit evidence. The existing denial of device/computer ac
 
 Source comparison with the same pinned original `LessonsViewController` and `LessonsPageControl` confirms its direct subject/Quiz strip, swipes and keyboard progression. The shared lesson flow preserved those routes but offered no explicit touch Next action. It now adds **Next**, changing to **Start quiz** on the final teaching page, in the native primary toolbar. The action reuses the existing page index and quiz route, clamping repeated events at the quiz boundary; it disappears for an empty lesson list and during the quiz. The study title stays inline, and the existing bottom Quiz shortcut uses a secondary bordered style. Chips, swipes, audio keys, Return/arrow keys, selection, Back and durable quiz ownership remain unchanged. This is an intentional discoverability improvement, not a claim that the original had the new button.
 
-Short/wide reviews previously applied horizontal layout twice: question beside answer, then glyph beside its prompt inside the question column. The question now always keeps its meaning/reading strip below its colored subject, matching the inspected historical screenshot. Only the existing outer layout chooses columns. This removes the nested layout and gives the subject the full question-column width without changing the input subtree, focus owner, font preferences, feedback, grading or scrolling fallback.
+Short/wide reviews keep the meaning/reading strip below the colored subject, matching the
+inspected historical screenshot. The October 22 viewport follow-up retains that arrangement
+except below 140 points of available height, where glyph and prompt share a row so neither
+disappears behind a landscape keyboard at very large text sizes. The shared input retains
+its binding and native focus behavior; the renewed regression checks draft preservation
+and question/prompt/input geometry through rotation. The account/vacation header now scrolls
+with Home instead of consuming study space. See the [exact evidence](Implementation/2026-10-21-adaptive-validation.md#home-and-review-viewport-follow-up--october-22).
+
+In that short wide column, a standard small-control request also selects a smaller semantic
+answer text style. Both native adapters still honor Dynamic Type; ordinary layouts retain
+title2. This follows the measured 59-point viewport rather than capping accessibility sizes.
 
 Two shared view files change, adding seven physical Swift lines overall. No OS check, platform utility, dependency, model or new view type is added. Mainboard's iPhone Simulator and native Mac Debug builds pass with zero native-summary compiler/analyzer warnings/errors. All **556 shared functions / 72 suites** pass (92, 8, 206 and 250 in four batches), and scoped parser/UI rules, strict formatting and SwiftLint pass with no rewrite. No tests/assertions are added or changed for these presentation edits. Earlier hosted iPhone/Mac and storage receipts retain their own source scopes; they were not rerun here.
 

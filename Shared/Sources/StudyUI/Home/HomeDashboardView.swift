@@ -14,6 +14,7 @@ public enum HomeAction: Hashable, Sendable {
 
 struct HomeDashboardView: View {
   let data: HomeDashboardData
+  let state: StudyShellState
   let action: (HomeAction) -> Void
   let refresh: () async -> Void
   var resume: (() -> Void)? = nil
@@ -21,6 +22,35 @@ struct HomeDashboardView: View {
   @FocusState private var keyboardFocus: Bool
   var body: some View {
     Form {
+      Section {
+        HStack(spacing: 12) {
+          StudyAvatarView(url: state.avatar, revision: state.avatarRevision).frame(
+            width: 42, height: 42)
+          VStack(alignment: .leading, spacing: 3) {
+            Text(state.username).font(.headline).accessibilityIdentifier("app.username")
+            Text(
+              state.level == 0
+                ? "Connect your WaniKani account"
+                : state.learnedKanji.map {
+                  "Level \(state.level) · \($0.formatted()) kanji learned"
+                }
+                  ?? "Level \(state.level)"
+            ).font(.subheadline).accessibilityIdentifier("app.level")
+          }.frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+      if data.onVacation {
+        Section {
+          Label("Vacation mode", systemImage: "pause.circle").font(.headline)
+            .accessibilityIdentifier("app.vacation")
+          Text(
+            "Your account is on vacation, so lessons and reviews are paused. Turn off vacation mode on the WaniKani website."
+          ).font(.callout)
+          Link("Open WaniKani", destination: URL(string: "https://www.wanikani.com")!)
+            .accessibilityIdentifier("app.vacation.website")
+        }
+      }
       if let notice = data.notice {
         Text(notice).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier(
           "home.notice")

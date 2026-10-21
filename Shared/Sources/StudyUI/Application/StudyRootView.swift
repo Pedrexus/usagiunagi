@@ -133,7 +133,7 @@ public struct StudyRootView: View {
                 account
               } else {
                 NativeHomeDashboardView(
-                  model: model, active: tab == .home && path.isEmpty && !showSettings
+                  model: model, state: shell, active: tab == .home && path.isEmpty && !showSettings
                 ) {
                   path = [$0]
                 }
@@ -505,7 +505,6 @@ public struct StudyRootView: View {
   private func updateHeader() {
     shell.username = model.snapshot?.username ?? appName
     shell.level = model.snapshot?.currentLevel ?? 0
-    shell.onVacation = model.snapshot?.onVacation ?? false
     if !showSettings {
       shell.avatar =
         model.snapshot?.isSample == false

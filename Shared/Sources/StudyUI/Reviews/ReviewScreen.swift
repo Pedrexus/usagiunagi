@@ -132,28 +132,45 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
 
   public var body: some View {
     GeometryReader { viewport in
-      ScrollView {
-        VStack(spacing: 0) {
-          progress.padding(.horizontal, 12).padding(.vertical, 6)
-          if let audio { AudioPlaybackNotice(library: audio) }
-          let horizontal =
-            viewport.size.width >= 560 && viewport.size.height < 420
-            && !typeSize.isAccessibilitySize
-          let layout =
-            horizontal
-            ? AnyLayout(HStackLayout(spacing: 16))
-            : AnyLayout(VStackLayout(spacing: 0))
-          layout {
-            question
-            VStack(spacing: 8) { response }.padding(12)
-              .frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: true)
+      if state.phase == .details {
+        ScrollView {
+          VStack(spacing: 0) {
+            progress.padding(.horizontal, 12).padding(.vertical, 6)
+            studyStatus
+            question()
+            VStack(spacing: 8) { response }.padding(12).frame(maxWidth: .infinity)
+          }.frame(maxWidth: 760, minHeight: viewport.size.height, alignment: .top)
+            .frame(maxWidth: .infinity)
+        }.scrollBounceBehavior(.basedOnSize).scrollDismissesKeyboard(.never)
+          .accessibilityIdentifier("review.scroll")
+      } else {
+        let horizontal = viewport.size.width >= 560 && viewport.size.height < 420
+        let layout = horizontal ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout())
+        layout {
+          VStack(spacing: 0) {
+            studyStatus
+            question(compact: viewport.size.height < 420, inline: viewport.size.height < 140)
           }
-        }.frame(maxWidth: 760, minHeight: viewport.size.height, alignment: .top)
-          .frame(maxWidth: .infinity)
+          if horizontal {
+            Group {
+              if state.phase == .answering && state.feedback.isEmpty {
+                VStack(spacing: 8) { response }
+              } else {
+                ScrollView { VStack(spacing: 8) { response } }
+                  .accessibilityIdentifier("review.answerScroll")
+              }
+            }.padding(.horizontal, 12).frame(maxWidth: .infinity)
+              .controlSize(
+                viewport.size.height < 140 && typeSize >= .accessibility3 ? .small : .regular)
+          }
+        }.frame(maxWidth: 760).frame(maxWidth: .infinity)
+          .safeAreaInset(edge: .bottom) {
+            if !horizontal {
+              VStack(spacing: 8) { response }.padding(12).frame(maxWidth: .infinity)
+                .background(.bar)
+            }
+          }
       }
-      .scrollBounceBehavior(.basedOnSize)
-      .scrollDismissesKeyboard(.never)
-      .accessibilityIdentifier("review.scroll")
     }
     .safeAreaInset(edge: .bottom) {
       VStack(spacing: 0) {
@@ -213,9 +230,15 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         value: Double(state.completed), total: Double(max(1, state.completed + state.remaining))
       )
       .accessibilityHidden(true)
+    }.accessibilityElement(children: .contain)
+  }
+
+  private var studyStatus: some View {
+    VStack(spacing: 6) {
+      if let audio { AudioPlaybackNotice(library: audio) }
       successFeedback
       if state.wrappingUp { Label("Wrapping up", systemImage: "clock").font(.caption) }
-    }.accessibilityElement(children: .contain)
+    }.padding(.horizontal, 12)
   }
 
   private var successFeedback: some View {
@@ -262,11 +285,13 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     } else {
       if state.phase == .answering && !state.isAnki {
         HStack(spacing: 8) {
-          input().disabled(!state.canAnswer).frame(minHeight: 44)
+          input().disabled(!state.canAnswer).fixedSize(horizontal: false, vertical: true)
+            .frame(minHeight: 44)
           submitButton.labelStyle(.iconOnly)
         }
       } else if !state.isAnki {
-        input().disabled(!state.canAnswer).frame(minHeight: 44)
+        input().disabled(!state.canAnswer).fixedSize(horizontal: false, vertical: true)
+          .frame(minHeight: 44)
       }
       if !state.feedback.isEmpty {
         Text(state.feedback).font(.callout).foregroundStyle(.red)
@@ -312,30 +337,39 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         Button {
           action(.voice)
         } label: {
-          Label("Voice answer", systemImage: "mic").frame(minWidth: 44, minHeight: 44)
+          toolLabel("Voice answer", systemImage: "mic")
         }.accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
       }
       Button {
         action(.deferQuestion)
       } label: {
-        Label("Ask later", systemImage: "arrow.uturn.forward").frame(minWidth: 44, minHeight: 44)
+        toolLabel("Ask later", systemImage: "arrow.uturn.forward")
       }.accessibilityIdentifier("review.defer")
       if state.canPlayAudio && state.phase == .details {
         Button {
           action(.playAudio)
         } label: {
-          Label("Audio", systemImage: "speaker.wave.2").frame(minWidth: 44, minHeight: 44)
+          toolLabel("Audio", systemImage: "speaker.wave.2")
         }.accessibilityIdentifier("review.audio").keyboardShortcut("j", modifiers: [])
       }
       if state.phase == .details && state.canShowAll {
         Button {
           action(.showAll)
         } label: {
-          Label("All information", systemImage: "info.circle").frame(minWidth: 44, minHeight: 44)
+          toolLabel("All information", systemImage: "info.circle")
         }.accessibilityIdentifier("review.showAll").keyboardShortcut(.space, modifiers: [])
       }
       Spacer()
+      if state.phase != .details { compactProgress }
       Menu {
+        if !state.level.isEmpty || !state.stage.isEmpty {
+          Section(state.subjectType.isEmpty ? "Subject" : state.subjectType) {
+            Text([state.level, state.stage].filter { !$0.isEmpty }.joined(separator: " · "))
+              .accessibilityLabel(
+                [state.level, state.stageAccessibility].filter { !$0.isEmpty }.joined(
+                  separator: ", "))
+          }
+        }
         if !state.previous.isEmpty {
           Button("Previous: " + state.previous, systemImage: "clock.arrow.circlepath") {
             action(.previous)
@@ -354,10 +388,28 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             .accessibilityIdentifier("review.settings")
         }
       } label: {
-        Label("Review tools", systemImage: "ellipsis").frame(minWidth: 44, minHeight: 44)
+        toolLabel("Review tools", systemImage: "ellipsis")
       }.accessibilityIdentifier("review.tools")
     }.labelStyle(.iconOnly).buttonStyle(.borderless).controlSize(.large)
       .frame(minHeight: 44)
+  }
+
+  private func toolLabel(_ title: LocalizedStringKey, systemImage: String) -> some View {
+    Label(title, systemImage: systemImage).font(.system(size: 20))
+      .frame(minWidth: 44, minHeight: 44)
+  }
+
+  private var compactProgress: some View {
+    let count = "\(state.completed)/\(state.completed + state.remaining)"
+    let status = "\(state.completed) completed, \(state.remaining) remaining"
+    let spoken = state.accuracy.map { "Accuracy \($0), \(status)" } ?? status
+    return ViewThatFits(in: .horizontal) {
+      if let accuracy = state.accuracy {
+        Text("\(Image(systemName: "hand.thumbsup")) \(accuracy) · \(count)")
+          .fixedSize().accessibilityLabel(spoken).accessibilityIdentifier("review.progress")
+      }
+      Text(count).fixedSize().accessibilityLabel(spoken).accessibilityIdentifier("review.progress")
+    }.font(.caption).monospacedDigit()
   }
 
   private var submitTitle: String {
@@ -367,8 +419,10 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       ? "Skip" : "Check answer"
   }
 
-  private var question: some View {
-    VStack(spacing: 0) {
+  private func question(compact: Bool = false, inline: Bool = false) -> some View {
+    let prompt = [state.subjectType, state.prompt].filter { !$0.isEmpty }.joined(separator: " ")
+    let layout = inline ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+    return layout {
       VStack(spacing: 8) {
         Group {
           if let image = state.questionImage {
@@ -383,9 +437,12 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
                   : .custom(state.questionFont, size: state.questionSize)
               )
               .minimumScaleFactor(0.25).lineLimit(1)
+              .fixedSize(horizontal: false, vertical: !inline)
           }
         }
-        .frame(maxWidth: .infinity, maxHeight: state.phase == .details ? 70 : .infinity)
+        .frame(
+          maxWidth: .infinity, minHeight: 44, maxHeight: state.phase == .details ? 70 : .infinity
+        )
         .accessibilityLabel("Japanese question")
         .accessibilityValue(state.question)
         .accessibilityIdentifier("review.question")
@@ -403,16 +460,15 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
               action(value.translation.width < 0 ? .nextFont : .previousFont)
             }
           })
-      }.padding().foregroundStyle(.white).tint(.white)
+      }.padding(.horizontal, 16).padding(.vertical, 4).foregroundStyle(.white).tint(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity).background(state.subjectColor)
-      adaptiveControls {
-        Text([state.subjectType, state.prompt].filter { !$0.isEmpty }.joined(separator: " "))
-          .font(.subheadline.weight(.semibold)).accessibilityIdentifier("review.prompt")
-        HStack {
-          if !state.level.isEmpty { Text(state.level) }
-          if !state.stage.isEmpty { Text(state.stage).accessibilityLabel(state.stageAccessibility) }
-        }.font(.caption)
-      }.padding(8).frame(maxWidth: .infinity)
+      Text(compact ? state.prompt : prompt)
+        .font(compact ? .caption : .subheadline).fontWeight(.semibold)
+        .multilineTextAlignment(.center).fixedSize(horizontal: inline, vertical: true)
+        .accessibilityLabel(prompt)
+        .accessibilityIdentifier("review.prompt")
+        .padding(.horizontal, 8).padding(.vertical, compact ? 0 : 4)
+        .frame(maxWidth: inline ? nil : .infinity)
         .foregroundStyle(state.questionKind == .reading ? Color.white : Color.primary)
         .background {
           if state.questionKind == .reading {

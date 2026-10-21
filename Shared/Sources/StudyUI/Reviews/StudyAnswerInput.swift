@@ -13,6 +13,7 @@ struct StudyAnswerInput {
   let retried: () -> Void
   var accessibilityIdentifier = "review.answer"
   #if os(macOS)
+    @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled
     @FocusState private var inputFocused: Bool
   #endif
@@ -67,7 +68,6 @@ struct StudyAnswerInput {
       field.addTarget(
         context.coordinator, action: #selector(Coordinator.changed), for: .editingChanged)
       field.borderStyle = .roundedRect
-      field.font = .preferredFont(forTextStyle: .title2)
       field.adjustsFontForContentSizeCategory = true
       field.textAlignment = .center
       field.autocapitalizationType = .none
@@ -80,6 +80,9 @@ struct StudyAnswerInput {
     }
     func updateUIView(_ field: StudyJapaneseTextField, context: Context) {
       context.coordinator.parent = self
+      let font = UIFont.preferredFont(
+        forTextStyle: context.environment.controlSize == .small ? .caption2 : .title2)
+      if field.font != font { field.font = font }
       field.placeholder = prompt
       if field.text != text && field.markedTextRange == nil { field.text = text }
       let enabled = context.environment.isEnabled
@@ -183,7 +186,8 @@ struct StudyAnswerInput {
   extension StudyAnswerInput: View {
     var body: some View {
       TextField(prompt, text: $text)
-        .textFieldStyle(.roundedBorder).font(.title2).autocorrectionDisabled()
+        .textFieldStyle(.roundedBorder).font(controlSize == .small ? .caption2 : .title2)
+        .autocorrectionDisabled()
         .disabled(!editable)
         .focused($inputFocused).onSubmit(submitted)
         .accessibilityIdentifier(accessibilityIdentifier)

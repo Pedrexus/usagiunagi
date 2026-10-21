@@ -19,7 +19,6 @@ import SwiftUI
   public var learnedKanji: Int?
   public var avatar: URL?
   public var avatarRevision = 0
-  public var onVacation = false
   public var progress: Progress?
   public init() {}
 }
@@ -47,33 +46,6 @@ public struct StudyShellView<Content: View>: View {
 
   public var body: some View {
     VStack(spacing: 0) {
-      HStack(spacing: 12) {
-        StudyAvatarView(url: state.avatar, revision: state.avatarRevision).frame(
-          width: 42, height: 42)
-        VStack(alignment: .leading, spacing: 3) {
-          Text(state.username).font(.headline).accessibilityIdentifier("app.username")
-          Text(
-            state.level == 0
-              ? "Connect your WaniKani account"
-              : state.learnedKanji.map { "Level \(state.level) · \($0.formatted()) kanji learned" }
-                ?? "Level \(state.level)"
-          )
-          .font(.subheadline).accessibilityIdentifier("app.level")
-        }.frame(maxWidth: .infinity, alignment: .leading)
-      }.padding(.horizontal, 16).padding(.vertical, 8)
-      if state.onVacation {
-        VStack(alignment: .leading, spacing: 6) {
-          Label("Vacation mode", systemImage: "pause.circle").font(.headline)
-            .accessibilityIdentifier("app.vacation")
-          Text(
-            "Your account is on vacation, so lessons and reviews are paused. Turn off vacation mode on the WaniKani website."
-          )
-          .font(.callout).foregroundStyle(.secondary)
-          Link("Open WaniKani", destination: URL(string: "https://www.wanikani.com")!)
-            .font(.callout).accessibilityIdentifier("app.vacation.website")
-        }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
-          .background(StudyPalette.kanji.opacity(0.1))
-      }
       if let progress = state.progress {
         ProgressView(progress).progressViewStyle(.linear).labelsHidden()
           .accessibilityLabel("WaniKani sync").accessibilityIdentifier("app.syncProgress")

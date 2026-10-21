@@ -23,6 +23,8 @@ final class ReviewFlowTests: XCTestCase {
       "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
     ])
     defer { app.terminate() }
+    XCTAssertTrue(app.collectionViews["home.dashboard"].staticTexts["app.username"].exists)
+    XCTAssertTrue(app.collectionViews["home.dashboard"].staticTexts["app.level"].exists)
     let reviews = app.buttons["home.reviews"]
     scrollTo(reviews, in: app)
     attachHomeScreenshot("Home study actions at largest Dynamic Type")
@@ -84,25 +86,98 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor func testReviewKeyboardToolsRemainAvailableAtLargestDynamicType() throws {
+    continueAfterFailure = false
     let app = launchNativeHome([
       "--manual-review-fixture", "--audio-fixture", "-UIPreferredContentSizeCategoryName",
       "UICTContentSizeCategoryAccessibilityXXXL",
     ])
-    defer { app.terminate() }
+    defer {
+      XCUIDevice.shared.orientation = .portrait
+      app.terminate()
+    }
     openFixture(URL(string: "usagiunagi:///reviews")!, in: app)
     XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+    XCUIDevice.shared.orientation = .portrait
+    let upright = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.windows.firstMatch.frame.height > app.windows.firstMatch.frame.width
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [upright], timeout: 5), .completed)
     XCTAssertTrue(app.buttons["review.voice"].isHittable)
     XCTAssertTrue(app.buttons["review.defer"].isHittable)
     XCTAssertTrue(app.staticTexts["review.progress"].label.contains("0 completed"))
     XCTAssertTrue(app.staticTexts["review.progress"].label.contains("remaining"))
+    let field = app.textFields["review.answer"]
+    field.tap()
+    field.typeText("draft")
+    expectReviewContentVisible(in: app)
+    attachHomeScreenshot("Largest-text portrait question with unsubmitted draft")
     app.openReviewSettings()
     app.buttons["reviewSettings.done"].tap()
     XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "draft")
     try app.performAccessibilityAudit(for: .hitRegion)
-    let image = XCTAttachment(screenshot: app.screenshot())
-    image.name = "Shared review at largest Dynamic Type"
-    image.lifetime = .keepAlways
-    add(image)
+    XCUIDevice.shared.orientation = .landscapeLeft
+    let rotated = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.windows.firstMatch.frame.width > app.windows.firstMatch.frame.height
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [rotated], timeout: 5), .completed)
+    expectReviewContentVisible(in: app)
+    XCTAssertEqual(field.value as? String, "draft")
+    field.typeText(" retained")
+    XCTAssertEqual(field.value as? String, "draft retained")
+    attachHomeScreenshot("Largest-text landscape question with unsubmitted draft")
+  }
+
+  @MainActor private func expectReviewContentVisible(
+    in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line
+  ) {
+    let question = app.staticTexts["review.question"]
+    let controls = app.descendants(matching: .any).matching(identifier: "review.controls")
+      .firstMatch
+    let content = [
+      question, app.staticTexts["review.prompt"], app.textFields["review.answer"],
+      app.buttons["review.submit"],
+    ]
+    let ready = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        let navigation = app.navigationBars.firstMatch
+        let navigationItems =
+          navigation.buttons.allElementsBoundByIndex
+          + navigation.staticTexts.allElementsBoundByIndex
+        let top = navigationItems.map(\.frame.maxY).max() ?? navigation.frame.maxY
+        let bottom = controls.frame.minY
+        return app.keyboards.firstMatch.exists
+          && content.allSatisfy {
+            guard $0.exists else { return false }
+            let frame = $0.frame
+            let window = app.windows.firstMatch.frame
+            return frame.width > 0 && frame.height > 0
+              && frame.minX >= window.minX - 1 && frame.maxX <= window.maxX + 1
+              && frame.minY >= top - 1 && frame.maxY <= bottom + 1
+              && !app.keyboards.firstMatch.frame.intersects(frame)
+          }
+          && app.textFields["review.answer"].isHittable && app.buttons["review.submit"].isHittable
+      }, object: nil)
+    let result = XCTWaiter.wait(for: [ready], timeout: 5)
+    if result != .completed {
+      let frames = content.map { "\($0.identifier): \($0.frame), hittable: \($0.isHittable)" }
+      let geometry = XCTAttachment(
+        string: ([
+          "Navigation: \(app.navigationBars.firstMatch.frame)",
+          "Controls: \(controls.frame)", "Keyboard: \(app.keyboards.firstMatch.frame)",
+        ] + frames).joined(separator: "\n") + "\n" + app.debugDescription)
+      geometry.name = "Review viewport visibility failure"
+      geometry.lifetime = .keepAlways
+      add(geometry)
+      attachHomeScreenshot("Review viewport visibility failure")
+    }
+    XCTAssertEqual(result, .completed, file: file, line: line)
+    XCTAssertFalse((question.value as? String ?? "").isEmpty, file: file, line: line)
+    XCTAssertGreaterThanOrEqual(question.frame.height, 44, file: file, line: line)
+    XCTAssertFalse(
+      question.frame.intersects(app.textFields["review.answer"].frame), file: file, line: line)
   }
 
   @MainActor private func fixtureApplication(_ arguments: [String] = []) -> XCUIApplication {
@@ -1443,7 +1518,15 @@ final class ReviewFlowTests: XCTestCase {
     field.typeText("one thing")
     XCTAssertTrue(app.buttons["review.submit"].isHittable)
     XCTAssertTrue(app.staticTexts["review.prompt"].isHittable)
-    XCTAssertTrue(app.staticTexts["Level 1"].isHittable)
+    expectReviewContentVisible(in: app)
+    app.openReviewTools()
+    let metadata = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Level 1"))
+      .firstMatch
+    XCTAssertTrue(metadata.waitForExistence(timeout: 5))
+    XCTAssertTrue(metadata.label.contains("Apprentice 3"))
+    app.openReviewSettings()
+    app.buttons["reviewSettings.done"].tap()
+    XCTAssertEqual(field.value as? String, "one thing")
     let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "SwiftUI landscape review"
     attachment.lifetime = .keepAlways

@@ -203,7 +203,6 @@
         voiceCapture: { FixtureVoiceCapture() },
         appearance: arguments.contains("--light-fixture")
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
-        notice: "Synthetic review fixture · memory only · simulated sync",
         paths: AsyncStream {
           $0.yield(true)
           $0.finish()

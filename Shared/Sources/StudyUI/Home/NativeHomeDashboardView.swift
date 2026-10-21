@@ -29,6 +29,7 @@ struct NativeHomeDashboardView: View {
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudySubjectSettings.self) private var subjectSettings
   let model: StudyAppModel
+  let state: StudyShellState
   let active: Bool
   let route: (StudyDestination) -> Void
   @State private var data: HomeDashboardData?
@@ -66,7 +67,7 @@ struct NativeHomeDashboardView: View {
     Group {
       if let data {
         HomeDashboardView(
-          data: data, action: open,
+          data: data, state: state, action: open,
           refresh: {
             await model.refresh()
             await load()
