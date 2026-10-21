@@ -73,6 +73,19 @@ public struct DeveloperSettingsView: View {
           Text("Connect to WaniKani to export saved study diagnostics.")
         }
       }
+      if let studyArchive {
+        Section {
+          ShareLink(item: studyArchive.freeLevels, preview: SharePreview("Levels 1–3")) {
+            Label("Export saved levels 1–3", systemImage: "square.and.arrow.up")
+          }.accessibilityIdentifier("developer.exportFreeLevels")
+        } header: {
+          Text("Offline sample")
+        } footer: {
+          Text(
+            "Shares saved subject content only. Your account, notes and study progress are excluded."
+          )
+        }
+      }
     }
     .formStyle(.grouped)
     .navigationTitle("Developer options")

@@ -161,6 +161,8 @@ The current native Mac UI gate could not start: both isolated attempts timed out
 
 ## Native reference catalogs
 
+Developer options also offers **Export saved levels 1–3** through native ShareLink/CoreTransferable. Its actor-bound projection exports public native subject/grading metadata and public SRS/voices, excluding account identity, notes, progress, credentials and pending work. The binary property list converts through built-in `plutil` and existing Mainboard query output to ZSTD Parquet; no Arrow runtime or app-local build driver is added. See the [format, source audit and validation](../Resources/Fixtures/README.md#native-catalog-export). A genuine complete export, fixture integration and rendered share-sheet acceptance remain open; synthetic pipeline controls are never substituted for the real bundled preview.
+
 Curriculum, levels 1–3 display references, old mnemonics and similar-kanji data ship as binary Apple property lists. One Foundation Codable loader replaces three repeated file/JSON loaders. The conversion compares every original serialized value, preserving metadata, Unicode and ordered arrays. The four catalog files shrink from 364,140 to 220,778 bytes; the mnemonic file alone grows slightly, so this is the total, not a claim that every file shrinks.
 
 Generators write binary data directly to a named file and log text summaries through Mainboard. Binary stdout cannot safely pass through text log capture. Curriculum regeneration matches the current catalog exactly. The similar-kanji generator retains its original decoded output, which already differs from the bundled historical ordering; that snapshot is preserved rather than silently refreshed. See [source procedure](../Resources/Generators/SimilarKanji/README.md).

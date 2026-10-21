@@ -57,6 +57,7 @@ public struct StudyDiagnosticArchive: Transferable, Sendable {
   private let store: StudyStore
   private let accountID: String
   private let fileName: String
+  public var freeLevels: StudyCatalogArchive { .init(store: store, accountID: accountID) }
   public init(store: StudyStore, accountID: String) {
     self.store = store
     self.accountID = accountID
