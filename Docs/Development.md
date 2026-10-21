@@ -2,6 +2,12 @@
 
 Use Xcode 27.0 / Swift 6.4; Mainboard selects the toolchain. The obsolete Swift 5.1 swiftenv pin and unused Clang-format config were retired. Use the stable iOS 27.0 runtime. Open `App/UsagiUnagi.xcworkspace`, select the `UsagiUnagi` scheme and choose an iPhone, iPad or **My Mac** destination. My Mac is a native macOS build; Catalyst and the iPad compatibility destination are disabled. `Tsurukame` remains the internal app target/module for existing callers and data compatibility. `Tsurukame` also retains the hosted unit-test scheme.
 
+## Native compiler policy
+
+The Xcode project's Debug and Release configurations now own one inherited Swift 6 language setting and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES`. Targets no longer duplicate the language setting, and the UI-test runner no longer selects Swift 5 on iOS versus Swift 6 on Mac. Its teardown directly terminates the fixture application rather than capturing the non-Sendable XCTestCase through a one-use wrapper. No assertions or fixture boundaries change.
+
+All nine Shared production/support/test targets use SwiftPM's native [`.treatAllWarnings(as: .error)`](https://developer.apple.com/documentation/packagedescription/swiftsetting/treatallwarnings(as:_:)), supported since SwiftPM 6.2. Existing concurrency/default-isolation settings retain their scopes. This covers Swift compiler warnings; it does not suppress or promote Interface Builder/metadata tool diagnostics. The archived historical writer, separate probe manifests and external package configurations are not rewritten. Mainboard continues to execute native builds and diagnostics without a second warning checker.
+
 ## Shared native scene acceptance
 
 The production app uses one SwiftUI root and native store on iPhone, iPad and Mac. `AppStoreScreenshots/NativeRootFlowTests` and ported `ReviewFlowTests` launch that scene with explicit `--review-fixture` memory-only services. The legacy DEBUG host is retired; cleanup never relaunches production. Shared Mac/iPhone tests, hosted iPhone tests and Debug/Release builds pass for the scopes in the [current checkpoint](Implementation/2026-10-20-original-flow.md#native-navigation-and-final-test-ports). Remaining UI scenarios require rendered acceptance; Reduce Motion requires a device already configured with that system setting. Earlier acceptance sections below retain their historical source scopes. Current watch lifecycle/data-continuity limits are in the [watch audit](Implementation/2026-10-20-widgetkit.md#watch-lifecycle-audit-october-21).

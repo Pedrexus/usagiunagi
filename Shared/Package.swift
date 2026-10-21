@@ -3,10 +3,12 @@ import PackageDescription
 
 // Keep domain values and persistence actor-neutral. UI declarations default to MainActor.
 // Async helpers inherit the caller unless an explicit @concurrent boundary moves the work.
-let concurrency: [SwiftSetting] = [
-  .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-  .enableUpcomingFeature("ExistentialAny"),
-]
+let warnings: [SwiftSetting] = [.treatAllWarnings(as: .error)]
+let concurrency: [SwiftSetting] =
+  warnings + [
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .enableUpcomingFeature("ExistentialAny"),
+  ]
 
 let package = Package(
   name: "StudyKit",
@@ -25,15 +27,21 @@ let package = Package(
       name: "StudyUI", dependencies: ["StudyCore", "StudySpeech", "StudyPersistence"],
       resources: [.process("Resources")],
       swiftSettings: concurrency + [.defaultIsolation(MainActor.self)]),
-    .target(name: "StudyTestSupport", dependencies: ["StudyCore"], path: "Tests/StudyTestSupport"),
+    .target(
+      name: "StudyTestSupport", dependencies: ["StudyCore"], path: "Tests/StudyTestSupport",
+      swiftSettings: warnings),
     .testTarget(
       name: "StudyPersistenceTests",
-      dependencies: ["StudyPersistence", "StudyCore", "StudyTestSupport"]),
-    .testTarget(name: "StudyCoreTests", dependencies: ["StudyCore", "StudyTestSupport"]),
-    .testTarget(name: "StudySpeechTests", dependencies: ["StudyCore", "StudySpeech"]),
+      dependencies: ["StudyPersistence", "StudyCore", "StudyTestSupport"], swiftSettings: warnings),
+    .testTarget(
+      name: "StudyCoreTests", dependencies: ["StudyCore", "StudyTestSupport"],
+      swiftSettings: warnings),
+    .testTarget(
+      name: "StudySpeechTests", dependencies: ["StudyCore", "StudySpeech"], swiftSettings: warnings),
     .testTarget(
       name: "StudyUITests",
-      dependencies: ["StudyUI", "StudyPersistence", "StudyCore", "StudyTestSupport"]),
+      dependencies: ["StudyUI", "StudyPersistence", "StudyCore", "StudyTestSupport"],
+      swiftSettings: warnings),
   ],
   swiftLanguageModes: [.v6]
 )

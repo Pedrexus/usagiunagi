@@ -239,14 +239,16 @@ struct NativeForecastView: View {
             total: cumulative.count, newReviews: new.count,
             stages: StudySRSCategory.allCases.filter { $0 != .burned }.map { category in
               .init(
-                category.name,
-                cumulative.filter { StudySRSStage(rawValue: $0.srsStage)?.category == category }
-                  .count)
+                id: category.name,
+                value: cumulative.filter {
+                  StudySRSStage(rawValue: $0.srsStage)?.category == category
+                }
+                .count)
             },
             subjects: [SubjectKind.radical, .kanji, .vocabulary].map { kind in
               .init(
-                kind == .radical ? "Radicals" : kind == .kanji ? "Kanji" : "Vocabulary",
-                cumulative.filter { $0.kind == kind }.count)
+                id: kind == .radical ? "Radicals" : kind == .kanji ? "Kanji" : "Vocabulary",
+                value: cumulative.filter { $0.kind == kind }.count)
             })
         }
         try Task.checkCancellation()

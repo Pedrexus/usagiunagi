@@ -1,37 +1,22 @@
 import SwiftUI
 
 /// Hosts supply their existing schedule; expanding an hour explains its cumulative counts.
-public struct UpcomingReviewsView: View {
-  public struct Count: Identifiable, Sendable {
-    public let id: String
-    public let value: Int
-    public init(_ name: String, _ value: Int) {
-      id = name
-      self.value = value
-    }
+struct UpcomingReviewsView: View {
+  struct Count: Identifiable, Sendable {
+    let id: String
+    let value: Int
   }
-  public struct Hour: Identifiable, Sendable {
-    public let id: Int
-    public let date: Date
-    public let total: Int
-    public let newReviews: Int
-    public let stages: [Count]
-    public let subjects: [Count]
-    public init(
-      id: Int, date: Date, total: Int, newReviews: Int, stages: [Count], subjects: [Count]
-    ) {
-      self.id = id
-      self.date = date
-      self.total = total
-      self.newReviews = newReviews
-      self.stages = stages
-      self.subjects = subjects
-    }
+  struct Hour: Identifiable, Sendable {
+    let id: Int
+    let date: Date
+    let total: Int
+    let newReviews: Int
+    let stages: [Count]
+    let subjects: [Count]
   }
-  private let hours: [Hour]
-  public init(hours: [Hour]) { self.hours = hours }
+  let hours: [Hour]
 
-  public var body: some View {
+  var body: some View {
     List {
       Section {
         ForEach(hours) { hour in

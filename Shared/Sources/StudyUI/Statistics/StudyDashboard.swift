@@ -105,7 +105,7 @@ public struct StudyDashboard: View {
           spacing: 20)
       ], alignment: .leading, spacing: 20
     ) {
-      StudyCard("SRS progress", subtitle: "Your active study stages") {
+      StudyCard(title: "SRS progress", subtitle: "Your active study stages") {
         Chart(StudySRSCategory.allCases, id: \.self) { category in
           let count = snapshot.assignments.filter {
             StudySRSStage(rawValue: $0.srsStageNumber)?.category == category
@@ -118,7 +118,8 @@ public struct StudyDashboard: View {
         }.frame(height: 190).chartXAxisLabel("Items")
         Text("A stage describes WaniKani review progress, not a test score.").studyNote()
       }
-      StudyCard("Answer accuracy", subtitle: "Lifetime answers, separated by question type") {
+      StudyCard(title: "Answer accuracy", subtitle: "Lifetime answers, separated by question type")
+      {
         let rates = [("Meaning", metrics.meaning), ("Reading", metrics.reading)]
         if rates.allSatisfy({ $0.1.fraction == nil }) {
           Text("Review items to build your answer history.").foregroundStyle(.secondary)
@@ -149,7 +150,7 @@ public struct StudyDashboard: View {
         Text("Answer-weighted accuracy from synced history. It does not measure retention.")
           .studyNote()
       }
-      StudyCard("Upcoming reviews", subtitle: "Each item's next scheduled review") {
+      StudyCard(title: "Upcoming reviews", subtitle: "Each item's next scheduled review") {
         if snapshot.onVacation || snapshot.pendingReviews > 0 {
           Label(
             "Schedule available after vacation or pending uploads are resolved.",
@@ -172,7 +173,7 @@ public struct StudyDashboard: View {
           ).studyNote()
         }
       }
-      StudyCard("Level pace", subtitle: "Days from unlocking to passing each recent level") {
+      StudyCard(title: "Level pace", subtitle: "Days from unlocking to passing each recent level") {
         if let pace = metrics.pace {
           Chart {
             ForEach(pace.history, id: \.level) { level in
@@ -239,7 +240,7 @@ public struct StudyDashboard: View {
   }
 
   private var focus: some View {
-    StudyCard("Focus next", subtitle: "Repeated errors with limited recovery") {
+    StudyCard(title: "Focus next", subtitle: "Repeated errors with limited recovery") {
       let subjects = Dictionary(
         snapshot.subjects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
       let items = metrics.focus.compactMap { item in subjects[item.subjectID].map { (item, $0) } }
@@ -284,11 +285,6 @@ struct StudyCard<Content: View>: View {
   let title: String
   let subtitle: String
   @ViewBuilder let content: Content
-  init(_ title: String, subtitle: String, @ViewBuilder content: () -> Content) {
-    self.title = title
-    self.subtitle = subtitle
-    self.content = content()
-  }
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       VStack(alignment: .leading, spacing: 4) {

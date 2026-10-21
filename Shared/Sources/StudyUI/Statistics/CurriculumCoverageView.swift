@@ -38,7 +38,7 @@ struct CurriculumCoverageView: View {
         HStack(spacing: 20) { filters }.fixedSize(horizontal: true, vertical: false)
         VStack(alignment: .leading, spacing: 12) { filters }
       }.pickerStyle(.menu)
-      StudyCard("Kanji coverage", subtitle: system.explanation) {
+      StudyCard(title: "Kanji coverage", subtitle: system.explanation) {
         Chart(coverage) { row in
           ForEach(segments(row)) { segment in
             BarMark(
@@ -178,10 +178,9 @@ private struct CoverageDetail: View {
   }
 }
 
-public struct StudySourcesView: View {
+struct StudySourcesView: View {
   let sourceDate: String
-  public init(sourceDate: String) { self.sourceDate = sourceDate }
-  public var body: some View {
+  var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       GroupBox("What coverage means") {
         VStack(alignment: .leading, spacing: 12) {

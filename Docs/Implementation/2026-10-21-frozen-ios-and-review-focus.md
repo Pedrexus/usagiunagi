@@ -699,3 +699,29 @@ A preliminary run was stopped after the compiler identified an asynchronous filt
 | `.build/Reports/IPhonePrecommitInventory.json` | `73124f4571125d6bc1009987b128828ec6a4b01d140b5d95fac649943440c957` |
 
 Parser coverage remains 261/261 files with no context issues: production 145 files/21,680 physical lines, tests 111/27,043 and tooling five/281. This adds 254 test lines; no production lines or dependencies change. Standalone Actions already invokes the same app-owned Mainboard protocol; its phase list and parent description are updated without another driver. Hosted CI/publication, historical decoder binding/V2, remaining G7 interruption/space/device cases and the other workstreams stay open in [TASKS](../TASKS.md). No GUI automation, normal account, microphone, watch delivery, signing or distribution occurs.
+
+## Native synthesis and compiler warning policy
+
+The owner asks whether Swift can eliminate constructor boilerplate like Python data classes. The current Swift 6.4 language guide confirms native memberwise struct/default initialization; synthesized public memberwise initialization is still unavailable across modules. Six internal UI helpers now use native synthesis: StudyCard's stored ViewBuilder content, StoredReviewPreferences' initialized AppStorage, StudySourcesView, UpcomingReviewsView and its Count/Hour values. Repository callers are confined to StudyUI, so these helpers lose unnecessary public visibility. Labeled memberwise arguments replace their positional forwarding calls. The view bodies, preference keys/default decoder, domain/persistent types and dependency graph are unchanged. Classes, validated/injected initialization, persistent identities and genuine public module-boundary APIs keep their constructors. No third-party macro is added.
+
+The prior unused-Bool compiler warning motivates a native enforcement change: Xcode project Debug/Release settings now supply Swift 6 and warnings-as-errors to all owned native targets, replacing target duplication and the UI runner's iOS Swift 5/Mac Swift 6 split. All nine Shared targets use SwiftPM's supported treatAllWarnings policy; their existing actor/concurrency flags keep their original scopes. The initial iPhone runner compile reveals a real non-Sendable XCTestCase capture in teardown. Direct fixture-app termination fixes the capture and replaces 29 calls to the same five-line forwarding wrapper, preserving termination order and every assertion. No unchecked Sendable conformance, warning suppression or alternate checker is introduced.
+
+Final checks run after source formatting. Both Debug build-for-testing actions pass with zero compiler/analyzer warnings/errors, compiling the UI runners without executing them. All 561 shared functions/72 suites pass on Mac (92 + 8 + 207 + 254) and iPhone (858 executions, no skips/failures). Fixture-only hosted AppTests pass on iPhone (95 functions/172 executions) and Mac (83/160), each retaining its one declared restart-protocol skip. Their native build summaries have zero errors/warnings. The generic watch simulator Debug build also succeeds; its sole warning is the existing Interface Builder empty-storyboard lifecycle deprecation, outside the Swift compiler policy. Watch lifecycle/installed-face acceptance stays open.
+
+A standalone unused-Bool negative control emits NoUsage with exit 0 normally and rejects it with exit 1 under warnings-as-errors. The final split-array/require form compiles with Apple's Testing macro plugin. This is enforcement evidence, not a standalone reproduction of the earlier overloaded asynchronous require expression. Preliminary failed build/control attempts remain separate from final receipts. No new test assertions or shipping behavior are added in this pass.
+
+Strict swift-format, SwiftLint and parser/UI rules pass on all seven changed Swift files with zero final rewrites. Mainboard parses 261/261 files with no context issues: production 145/21,661 physical lines (nineteen fewer), tests 111/27,038 (five fewer), tooling five/289 (eight more for native package policy). Xcode configuration loses twelve net lines. These are physical path counts, not target membership or logical LOC. V1, canonical baseline helper/store/manifest and both historical archives retain their recorded hashes; all three preexisting owner edits are preserved.
+
+| Final local receipt | SHA-256 |
+| --- | --- |
+| `.build/Results/SynthesisSharedMacFinal.log` | `637199aac5b0b5371e3d6f5a223a8df0c761a5b45a679b47e2cb9f9ce2d971e5` |
+| `test-14331da2080245868371f468f72a709d.tests.json` (shared iPhone) | `446045fd679e1df72ae7cc578010fdaa53ce0d9b7442917e895863ddda3988e8` |
+| `test-8da2a0ba2c2a4285ae8a5dac96fa050a.tests.json` (app iPhone) | `46f965461affc8c054334764fd662d6108d8d61b4ad3e66c43f2cb7c1818f98d` |
+| `test-e4959ec9608b40069eb84802749d6c31.tests.json` (app Mac) | `820f20d2309d623f0ed7adba8cb40c59de899e05b4f93a9ab61641d5ec2c7ca2` |
+| `build-for-testing-0ff1d146c2d84055a6ed7258de70eb8d.build.json` (iPhone) | `469fe053197c0b7cad90f98ecda0a06e005629face50e7123c864edeb911d764` |
+| `build-for-testing-4efeac89a9424c39b401c28421380f66.build.json` (Mac) | `d980737a79379be2e80a586f3238d59e5015cf2593aa4e7ebafb9dcb1cfb6840` |
+| `build-1400d5348090460fb6194d896dfe8c55.build.json` (watch) | `f24d1cadb9c8acc5aa8c855ddcea59b7effd7e03379cbea8ddcc0e8ffe67b97e` |
+| `.build/Results/SynthesisLint.log` | `5d7c56e505595eba4da2c0641f8b9591e1d5b3708071774a59e93f245107c9eb` |
+| `.build/Reports/SynthesisInventoryFinal.json` | `d8c2a1204093cb9d07923f63e95baeb2977e512cfeb6f1b35b47d4a1b489ef22` |
+
+No UI execution, normal account, Release rebuild, new persistence interruption/disk-full run, signed/physical services or hosted CI is claimed. These changes close the first constructor cleanup and native compiler-policy tasks; the broader modernization, storage and acceptance obligations remain active in [TASKS](../TASKS.md).

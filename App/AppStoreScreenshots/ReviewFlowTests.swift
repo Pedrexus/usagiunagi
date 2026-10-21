@@ -28,7 +28,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor private func fixtureApplication(_ arguments: [String] = []) -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = ["--review-fixture"] + arguments
-    addTeardownBlock { await MainActor.run { self.clearFixture(app) } }
+    addTeardownBlock { await MainActor.run { app.terminate() } }
     return app
   }
 
@@ -165,7 +165,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testNativeLoginTokenFailuresHibernationAndHomeNavigation() {
     continueAfterFailure = false
     let app = fixtureApplication(["--disconnected-fixture", "--light-fixture"])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     for token in ["rejected", "hibernating", "fixture-token"] {
       app.terminate()
       launchFixture(app)
@@ -210,7 +210,7 @@ final class ReviewFlowTests: XCTestCase {
     continueAfterFailure = false
     let app = fixtureApplication(["--disconnected-fixture", "--light-fixture"])
     launchFixture(app)
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let token = app.secureTextFields["login.token"]
     XCTAssertTrue(token.waitForExistence(timeout: 10))
     XCTAssertFalse(app.buttons["login.method"].exists)
@@ -312,7 +312,7 @@ final class ReviewFlowTests: XCTestCase {
     let app = fixtureApplication([
       "--disconnected-fixture", "--manual-review-fixture", "--light-fixture",
     ])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     openFixture(URL(string: "usagiunagi:///reviews")!, in: app)
     let token = app.secureTextFields["login.token"]
     XCTAssertTrue(token.waitForExistence(timeout: 10), app.debugDescription)
@@ -363,7 +363,7 @@ final class ReviewFlowTests: XCTestCase {
       "--home-fixture", "--held-refresh-fixture", "--fixture-event-token", token, "--light-fixture",
     ])
     launchFixture(app)
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let home = app.collectionViews["home.dashboard"]
     XCTAssertTrue(home.waitForExistence(timeout: 10))
     XCTAssertEqual(app.staticTexts["app.username"].label, "Fred")
@@ -427,7 +427,7 @@ final class ReviewFlowTests: XCTestCase {
     addTeardownBlock { await MainActor.run { XCUIDevice.shared.orientation = .portrait } }
     let app = fixtureApplication(["--home-fixture", "--home-progress-fixture", "--light-fixture"])
     launchFixture(app)
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let home = app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
     XCTAssertTrue(home.waitForExistence(timeout: 10))
     attachHomeScreenshot("SwiftUI Home study actions and forecast")
@@ -471,7 +471,7 @@ final class ReviewFlowTests: XCTestCase {
     for fixture in ["--home-empty-fixture", "--home-limit-fixture", "--home-vacation-fixture"] {
       let app = fixtureApplication(["--home-fixture", fixture, "--light-fixture"])
       launchFixture(app)
-      defer { clearFixture(app) }
+      defer { app.terminate() }
       XCTAssertTrue(
         app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
           .waitForExistence(timeout: 10))
@@ -704,7 +704,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft() {
     continueAfterFailure = false
     let app = launchFontLibrary()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let selection = app.switches["font.selection.font-ready.ttf"]
     XCTAssertTrue(selection.waitForExistence(timeout: 5))
     XCTAssertEqual(selection.value as? String, "0")
@@ -728,7 +728,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled() {
     continueAfterFailure = false
     let app = launchFontLibrary()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let held = app.buttons["font.download.font-held.ttf"]
     scrollTo(held, in: app)
     held.tap()
@@ -769,7 +769,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testFontDownloadContinuesAfterLeavingThePicker() {
     continueAfterFailure = false
     let app = launchFontLibrary()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let download = app.buttons["font.download.font-download.ttf"]
     scrollTo(download, in: app)
     download.tap()
@@ -792,7 +792,7 @@ final class ReviewFlowTests: XCTestCase {
   func testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("one thing")
@@ -837,7 +837,7 @@ final class ReviewFlowTests: XCTestCase {
         "A device with system Reduce Motion already enabled; the public SwiftUI environment value is read-only and this test never changes system preferences"
       )
     else { return }
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     app.buttons["review.submit"].tap()
     app.buttons["review.correct"].tap()
     let feedback = app.descendants(matching: .any).matching(identifier: "review.success").firstMatch
@@ -958,7 +958,7 @@ final class ReviewFlowTests: XCTestCase {
   func testSummaryShowsMissedMeaningAndOpensSubjectDetails() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("banana")
@@ -1021,7 +1021,7 @@ final class ReviewFlowTests: XCTestCase {
   func testPracticeMenuPreservesTypedReviewsAndReturns() {
     continueAfterFailure = false
     let app = launchPractice()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertEqual(app.staticTexts["review.question"].value as? String, "ア")
@@ -1051,7 +1051,7 @@ final class ReviewFlowTests: XCTestCase {
   func testPracticeMenuPreservesAnkiReadingMode() {
     continueAfterFailure = false
     let app = launchPractice(anki: true)
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     XCTAssertFalse(app.textFields["review.answer"].exists)
     XCTAssertFalse(app.buttons["review.voice"].exists)
     app.buttons["review.submit"].tap()
@@ -1075,7 +1075,7 @@ final class ReviewFlowTests: XCTestCase {
       "--sample-review-fixture", "--manual-review-fixture", "--light-fixture",
     ])
     launchFixture(app)
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     startReviews(in: app)
     let field = app.textFields["review.answer"]
     XCTAssertTrue(field.waitForExistence(timeout: 10))
@@ -1124,7 +1124,7 @@ final class ReviewFlowTests: XCTestCase {
   func testVoiceTranscriptUsesNormalGradingAndKanaFallback() {
     continueAfterFailure = false
     let app = launchNativeHome(["--manual-review-fixture", "--light-fixture"])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     startReviews(in: app)
     XCTAssertEqual(app.staticTexts["review.question"].value as? String, "一")
     XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Meaning"))
@@ -1198,15 +1198,10 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor
-  private func clearFixture(_ app: XCUIApplication) {
-    app.terminate()
-  }
-
-  @MainActor
   func testPreviousSubjectReturnRestoresTypingFocusAndPreservesDraft() {
     continueAfterFailure = false
     let app = launchNativeReview(extra: ["--review-feedback-fixture"])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     let question = app.staticTexts["review.question"]
     let prompt = app.staticTexts["review.prompt"]
@@ -1264,7 +1259,7 @@ final class ReviewFlowTests: XCTestCase {
   func testIncorrectAnswerRevealAndOverride() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("banana")
@@ -1291,7 +1286,7 @@ final class ReviewFlowTests: XCTestCase {
     let app = launchNativeReview(extra: [
       "--anki-fixture", "--combined-anki-fixture",
     ])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     XCTAssertFalse(app.buttons["review.voice"].exists)
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.buttons["review.incorrect"].waitForExistence(timeout: 5))
@@ -1329,7 +1324,7 @@ final class ReviewFlowTests: XCTestCase {
     let app = launchNativeReview()
     defer {
       XCUIDevice.shared.orientation = .portrait
-      clearFixture(app)
+      app.terminate()
     }
     XCUIDevice.shared.orientation = .landscapeLeft
     let rotated = XCTNSPredicateExpectation(
@@ -1360,7 +1355,7 @@ final class ReviewFlowTests: XCTestCase {
   func testQuickSettingsPreservesDraftAndAppliesExactMatch() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("one thng")
@@ -1402,7 +1397,7 @@ final class ReviewFlowTests: XCTestCase {
   func testWrapUpCanBeStoppedAndCompleted() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("one thing")
@@ -1432,7 +1427,7 @@ final class ReviewFlowTests: XCTestCase {
   func testFontLibraryReturnsToDraftAndUnstartedReviewCanClose() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("one thing")
@@ -1453,7 +1448,7 @@ final class ReviewFlowTests: XCTestCase {
   func testExplicitEndDiscardsOnlyTheUnfinishedSession() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("one thing")
@@ -1714,7 +1709,7 @@ extension ReviewFlowTests {
   func testReviewDetailsConcealUnansweredReadingAndBlurTranslations() {
     continueAfterFailure = false
     let app = launchNativeReview()
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     revealIncorrectMeaning(in: app)
     let reading = app.descendants(matching: .any).matching(identifier: "subject.readingExplanation")
       .firstMatch
@@ -1743,7 +1738,7 @@ extension ReviewFlowTests {
     let app = launchNativeReview(extra: [
       "--material-conflict-fixture", "--fixture-event-token", token,
     ])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     revealIncorrectMeaning(in: app)
     openMaterialEditor(in: app)
     let note = app.textViews["material.meaningNote"]
@@ -1802,7 +1797,7 @@ extension ReviewFlowTests {
     for fixture in cases {
       try XCTContext.runActivity(named: fixture.name) { _ in
         let app = launchNativeReview(extra: fixture.arguments)
-        defer { clearFixture(app) }
+        defer { app.terminate() }
         revealIncorrectMeaning(in: app)
         openMaterialEditor(in: app)
         let note = app.textViews["material.meaningNote"]
@@ -1836,7 +1831,7 @@ extension ReviewFlowTests {
       "--material-conflict-fixture", "--fixture-event-token", token,
       "--material-conflict-failure-fixture",
     ])
-    defer { clearFixture(app) }
+    defer { app.terminate() }
     revealIncorrectMeaning(in: app)
     openMaterialEditor(in: app)
     let note = app.textViews["material.meaningNote"]
