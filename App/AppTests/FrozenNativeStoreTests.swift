@@ -5,6 +5,7 @@ import Foundation
 import SQLite3
 import StudyCore
 import SwiftData
+import Synchronization
 import Testing
 
 @testable import StudyPersistence
@@ -30,7 +31,8 @@ private final class FrozenStoreBundle {}
     case seed, reopen, seedAbrupt, reopenAbrupt
     case seedVerification, reopenVerification, seedCandidate, reopenCandidate
     case seedBeforeAnswer, reopenBeforeAnswer, retryBeforeAnswer, verifyBeforeAnswer
-    case spaceAccess, spaceSave, spaceReopen, spaceVerify
+    case spaceAccess, spaceSave, spaceReview, spaceReviewWAL, spaceReopen, spaceVerify
+    case spaceMatrix, spaceMatrixReopen, spaceMatrixVerify
     var abrupt: Bool { self == .seedAbrupt || self == .reopenAbrupt }
     var seeds: Bool {
       [.seed, .seedAbrupt, .seedVerification, .seedCandidate, .seedBeforeAnswer].contains(self)
@@ -98,7 +100,18 @@ private final class FrozenStoreBundle {}
       process.environment["USAGI_NATIVE_RESTART_PHASE"].flatMap(RestartPhase.init(rawValue:)))
     let id = try #require(
       process.environment["USAGI_NATIVE_RESTART_ID"].flatMap(UUID.init(uuidString:)))
-    if [.spaceAccess, .spaceSave, .spaceReopen, .spaceVerify].contains(phase) {
+    if [.spaceMatrix, .spaceMatrixReopen, .spaceMatrixVerify].contains(phase) {
+      for scenario in [RestartPhase.spaceSave, .spaceReview, .spaceReviewWAL] {
+        let operation: RestartPhase =
+          phase == .spaceMatrix
+          ? scenario : phase == .spaceMatrixReopen ? .spaceReopen : .spaceVerify
+        try await boundedVolumeAccess(id: id, phase: operation, scenario: scenario)
+      }
+      return
+    }
+    if [.spaceAccess, .spaceSave, .spaceReview, .spaceReviewWAL, .spaceReopen, .spaceVerify]
+      .contains(phase)
+    {
       try await boundedVolumeAccess(id: id, phase: phase)
       return
     }
@@ -278,7 +291,8 @@ private final class FrozenStoreBundle {}
       Issue.record("Opening interruption phase did not use its dedicated path")
     case .seedBeforeAnswer, .reopenBeforeAnswer, .retryBeforeAnswer, .verifyBeforeAnswer:
       Issue.record("Review interruption phase did not use its dedicated path")
-    case .spaceAccess, .spaceSave, .spaceReopen, .spaceVerify:
+    case .spaceAccess, .spaceSave, .spaceReview, .spaceReviewWAL, .spaceReopen, .spaceVerify,
+      .spaceMatrix, .spaceMatrixReopen, .spaceMatrixVerify:
       Issue.record("Volume access phase did not use its dedicated path")
     }
     try #require(try family(in: frozen.deletingLastPathComponent()) == original)
@@ -298,11 +312,15 @@ private final class FrozenStoreBundle {}
     let expected: NativeStoreBaseline.State
     let selection: Data
     var readerPID: Int32?
+    var review: StudyReviewSubmission?
+    var source: [String: Data]?
   }
   // sqlite3.h's extended SQLITE_IOERR_SHMOPEN macro is not imported by Swift.
   private var fullVolumeSQLiteCodes: Set<Int32> { [SQLITE_FULL, SQLITE_IOERR | (18 << 8)] }
 
-  private func boundedVolumeAccess(id: UUID, phase: RestartPhase) async throws {
+  private func boundedVolumeAccess(
+    id: UUID, phase: RestartPhase, scenario: RestartPhase? = nil
+  ) async throws {
     let path = try #require(ProcessInfo.processInfo.environment["USAGI_NATIVE_SPACE_PATH"])
     let volume = URL(filePath: path).resolvingSymlinksInPath()
     let temporary = URL(filePath: "/private/tmp").resolvingSymlinksInPath()
@@ -325,24 +343,48 @@ private final class FrozenStoreBundle {}
       try Data(contentsOf: volume.appending(path: ".native-access-id")) == Data(id.uuidString.utf8))
     let frozen = try frozenURL()
     let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
-    let original = try family(in: frozen.deletingLastPathComponent())
-    let directory = volume.appending(path: "iPhone-access-\(id)")
-    let receiptURL = volume.appending(path: "\(id).save.plist")
-    if phase == .spaceAccess || phase == .spaceSave {
+    let frozenOriginal = try family(in: frozen.deletingLastPathComponent())
+    var original = frozenOriginal
+    var expected = manifest.expected
+    let suffix = scenario.map { "." + $0.rawValue } ?? ""
+    let directory = volume.appending(path: "iPhone-access-\(id)\(suffix)")
+    let receiptURL = volume.appending(path: "\(id)\(suffix).save.plist")
+    if [.spaceAccess, .spaceSave, .spaceReview, .spaceReviewWAL].contains(phase) {
       try #require(!FileManager.default.fileExists(atPath: directory.path))
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
       for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
     }
+    var walWriter: StudyStore?
+    if phase == .spaceReviewWAL {
+      let seeded = try await committedVolumeWAL(in: volume, id: id, frozen: frozenOriginal)
+      walWriter = seeded.writer
+      original = seeded.source
+      expected = seeded.expected
+      for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+    }
+    defer { withExtendedLifetime(walWriter) {} }
     let store = try await StudyStore.openApplication(in: directory)
     defer { withExtendedLifetime(store) {} }
     if phase == .spaceReopen || phase == .spaceVerify {
       var receipt = try PropertyListDecoder().decode(
         VolumeSaveReceipt.self, from: Data(contentsOf: receiptURL))
+      original = receipt.source ?? frozenOriginal
       let pid = ProcessInfo.processInfo.processIdentifier
       try #require(receipt.id == id && receipt.producerPID != pid)
       try #require(receipt.filledBytes > 0 && fullVolumeSQLiteCodes.contains(receipt.sqliteCode))
       try #require(try await store.nativeBaselineState() == receipt.expected)
       try #require(try selectedURLs(in: directory).selector == receipt.selection)
+      if let submission = receipt.review {
+        let account = NativeStoreBaseline.accounts[0]
+        let pending = try await store.pendingReviews(accountID: account).filter {
+          $0.subjectID == submission.subjectID
+        }
+        try #require(pending.count == 1 && pending[0].submission == submission)
+        try #require(!pending[0].attempted && pending[0].issue == nil)
+        let session = try #require(try await store.session(accountID: account))
+        try #require(session.session.completedSubmissions == [submission])
+        try #require(session.session.activeIDs.isEmpty)
+      }
       if phase == .spaceReopen {
         try #require(receipt.readerPID == nil)
         receipt.readerPID = pid
@@ -352,13 +394,27 @@ private final class FrozenStoreBundle {}
         try #require(reader != pid && reader != receipt.producerPID)
       }
       try #require(try family(in: directory) == original)
-      try #require(try family(in: frozen.deletingLastPathComponent()) == original)
-      print("NATIVE SPACE SAVE REOPENED: \(id), PID \(pid), 38 exact records")
+      try #require(try family(in: selectedURLs(in: directory).retained) == original)
+      try #require(try family(in: frozen.deletingLastPathComponent()) == frozenOriginal)
+      print(
+        "NATIVE SPACE SAVE REOPENED: \(id), PID \(pid), \(receipt.expected.records.count) exact records"
+      )
       return
     }
-    try #require(try await store.nativeBaselineState() == manifest.expected)
+    try #require(try await store.nativeBaselineState() == expected)
     try #require(try family(in: directory) == original)
-    try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+    try #require(try family(in: frozen.deletingLastPathComponent()) == frozenOriginal)
+    if phase == .spaceReview || phase == .spaceReviewWAL {
+      var receipt = try await diskFullReview(
+        store: store, id: id, directory: directory, volume: volume, capacity: capacity,
+        expected: expected)
+      if phase == .spaceReviewWAL { receipt.source = original }
+      try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
+      try #require(try family(in: directory) == original)
+      try #require(try family(in: selectedURLs(in: directory).retained) == original)
+      try #require(try family(in: frozen.deletingLastPathComponent()) == frozenOriginal)
+      return
+    }
     if phase == .spaceSave {
       let account = NativeStoreBaseline.accounts[0]
       let saved = try #require(
@@ -377,13 +433,7 @@ private final class FrozenStoreBundle {}
         _ = try await store.saveMaterial(
           material, accountID: account, expectedRevision: saved.revision)
       } catch { failure = error as NSError }
-      let rejected = try #require(failure, "The full-volume save must be refused")
-      let sqlite =
-        (rejected.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.int32Value
-        ?? (rejected.domain == "NSSQLiteErrorDomain" ? Int32(exactly: rejected.code) : nil)
-      try #require(
-        rejected.domain == NSCocoaErrorDomain || rejected.domain == "NSSQLiteErrorDomain")
-      try #require(fullVolumeSQLiteCodes.contains(try #require(sqlite)))
+      let sqlite = try fullVolumeSQLiteCode(failure)
       try FileManager.default.removeItem(at: pressure)
       try #require(try await store.nativeBaselineState() == manifest.expected)
       let revision = try await store.saveMaterial(
@@ -409,7 +459,7 @@ private final class FrozenStoreBundle {}
       try #require(result.material == material && result.pending)
       let receipt = VolumeSaveReceipt(
         id: id, producerPID: ProcessInfo.processInfo.processIdentifier, filledBytes: filled,
-        sqliteCode: try #require(sqlite), expected: actual,
+        sqliteCode: sqlite, expected: actual,
         selection: try selectedURLs(in: directory).selector)
       try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
       try #require(try family(in: directory) == original)
@@ -424,6 +474,165 @@ private final class FrozenStoreBundle {}
     try PropertyListEncoder().encode(receipt).write(
       to: volume.appending(path: "\(id).access.plist"), options: .atomic)
     print("NATIVE SPACE ACCESS VERIFIED: \(id), PID \(receipt.processID), 38 exact records")
+  }
+
+  private func committedVolumeWAL(in volume: URL, id: UUID, frozen: [String: Data]) async throws
+    -> (writer: StudyStore, source: [String: Data], expected: NativeStoreBaseline.State)
+  {
+    let directory = volume.appending(path: "iPhone-wal-seed-\(id)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+    for (name, bytes) in frozen { try bytes.write(to: directory.appending(path: name)) }
+    let writer = try await StudyStore.open(at: directory.appending(path: "study.store"))
+    let before = try await writer.nativeBaselineState()
+    let account = NativeStoreBaseline.accounts[0]
+    let saved = try #require(
+      try await writer.materials(accountID: account).first { $0.material.subjectID == 42 })
+    var material = saved.material
+    material.meaningNote += "\nCommitted only in the bounded iPhone WAL \u{0}🐰"
+    let revision = try await writer.saveMaterial(
+      material, accountID: account, expectedRevision: saved.revision)
+    let expected = try await writer.nativeBaselineState()
+    try #require(expected.records.count == before.records.count && expected != before)
+    for row in before.records
+    where row.model != "MaterialRecord" || row.identity != "\(account)/42" {
+      try #require(
+        expected.records.first { $0.model == row.model && $0.identity == row.identity } == row)
+    }
+    let actual = try #require(
+      try await writer.materials(accountID: account).first { $0.material.subjectID == 42 })
+    try #require(actual.material == material && actual.revision == revision && actual.pending)
+    let source = try family(in: directory)
+    try #require(source["study.store"] == frozen["study.store"])
+    try #require(try #require(source["study.store-wal"]).count > 0)
+    // Copy this quiet writer's committed family; its later shutdown can only change the seed.
+    return (writer, source, expected)
+  }
+
+  private func fullVolumeSQLiteCode(_ failure: NSError?) throws -> Int32 {
+    let rejected = try #require(failure, "The full-volume save must be refused")
+    let code = try #require(
+      (rejected.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.int32Value
+        ?? (rejected.domain == "NSSQLiteErrorDomain" ? Int32(exactly: rejected.code) : nil))
+    try #require(
+      rejected.domain == NSCocoaErrorDomain || rejected.domain == "NSSQLiteErrorDomain")
+    try #require(fullVolumeSQLiteCodes.contains(code))
+    return code
+  }
+
+  private func diskFullReview(
+    store: StudyStore, id: UUID, directory: URL, volume: URL, capacity: Int,
+    expected: NativeStoreBaseline.State
+  ) async throws -> VolumeSaveReceipt {
+    let account = NativeStoreBaseline.accounts[0]
+    let now = Date(timeIntervalSince1970: Double(restartTimestamp))
+    var review = try await store.openReviews(accountID: account, now: now)
+    try #require(review.subject?.id == 42 && review.saved.session.currentDecision == .incorrect)
+    review = try await store.changeReview(
+      .advance, accountID: account, expectedRevision: review.saved.revision, now: now)
+    let meaning = try #require(review.question)
+    try #require(meaning.kind == .meaning)
+    let answered = try await store.answerReview(
+      "Cat 0", question: meaning, accountID: account, expectedRevision: review.saved.revision,
+      now: now)
+    try #require(answered.grade == .precise)
+    review = answered.state
+    let question = try #require(review.question)
+    try #require(question.kind == .reading)
+    let prepared = try await store.nativeBaselineState()
+    try #require(prepared.records.count == expected.records.count)
+    for before in expected.records
+    where !(before.model == "SessionRecord" && before.accountID == account) {
+      try #require(
+        prepared.records.first { $0.model == before.model && $0.identity == before.identity }
+          == before)
+    }
+    var session = review.saved.session
+    _ = try session.mark(.correct, for: question, now: restartTimestamp)
+    _ = session.nextQuestion()
+    let submission = restartSubmission
+    try #require(session.completedSubmissions == [submission] && session.activeIDs.isEmpty)
+    try #require(session.tasksAnswered == 3 && session.tasksAnsweredCorrectly == 2)
+    var accountState = try #require(try await store.accountState(accountID: account))
+    let progress = try #require(accountState.progress.firstIndex { $0.subjectID == 42 })
+    accountState.progress[progress].lastMistakeAt = restartTimestamp
+    let expectedSession = try NativeStoreBaseline.encoded(session)
+    let expectedAccount = try NativeStoreBaseline.encoded(accountState)
+    let expectedItem = try NativeStoreBaseline.encoded(try #require(session.items[0]))
+    let revision = review.saved.revision
+    let abandoned = Mutex<[UUID]>([])
+    let pressure = volume.appending(path: "volume-pressure")
+    defer {
+      if FileManager.default.fileExists(atPath: pressure.path) {
+        try? FileManager.default.removeItem(at: pressure)
+      }
+    }
+    var failure: NSError?
+    do {
+      try await store.answerAtReviewCheckpoint(
+        "ねこ", question: question, accountID: account, expectedRevision: revision, now: now
+      ) { context in
+        try #require(context.hasChanges && context.insertedModelsArray.count == 1)
+        try #require(context.deletedModelsArray.isEmpty)
+        let queued = try #require(context.insertedModelsArray.first as? ReviewRecord)
+        let modified = context.changedModelsArray
+        let savedSession = try #require(
+          modified.compactMap { $0 as? SessionRecord }.first { $0.accountID == account })
+        let savedAccount = try #require(
+          modified.compactMap { $0 as? AccountRecord }.first { $0.accountID == account })
+        try #require(queued.accountID == account && queued.subjectID == 42)
+        try #require(queued.submission == submission && !queued.attempted && queued.issue == nil)
+        try #require(queued.originalAssignment == nil)
+        try #require(try NativeStoreBaseline.encoded(queued.originalItem) == expectedItem)
+        try #require(try NativeStoreBaseline.encoded(savedSession.session) == expectedSession)
+        try #require(savedSession.revision != revision)
+        try #require(try NativeStoreBaseline.encoded(savedAccount.state) == expectedAccount)
+        try abandoned.withLock {
+          try #require($0.isEmpty, "Exactly one dirty save must be attempted")
+          $0 = [queued.revision, savedSession.revision]
+        }
+        _ = try fillBoundedVolume(at: pressure, capacity: capacity)
+      }
+    } catch { failure = error as NSError }
+    let sqlite = try fullVolumeSQLiteCode(failure)
+    let attempted = abandoned.withLock { $0 }
+    try #require(attempted.count == 2)
+    let filled = try #require(try pressure.resourceValues(forKeys: [.fileSizeKey]).fileSize)
+    try #require(filled > 0 && filled <= capacity)
+    try FileManager.default.removeItem(at: pressure)
+    try #require(try await store.nativeBaselineState() == prepared)
+    try #require(try await store.session(accountID: account)?.revision == revision)
+    try #require(
+      try await store.pendingReviews(accountID: account).allSatisfy { $0.subjectID != 42 })
+    let retry = try await store.answerReview(
+      "ねこ", question: question, accountID: account, expectedRevision: revision, now: now)
+    try #require(retry.grade == .precise && retry.state.question == nil)
+    try #require(retry.state.success?.submission == submission)
+    try #require(try NativeStoreBaseline.encoded(retry.state.saved.session) == expectedSession)
+    try #require(retry.state.saved.revision != attempted[1])
+    try #require(
+      try NativeStoreBaseline.encoded(try await store.accountState(accountID: account))
+        == NativeStoreBaseline.encoded(Optional(accountState)))
+    let pending = try await store.pendingReviews(accountID: account).filter { $0.subjectID == 42 }
+    try #require(pending.count == 1 && pending[0].submission == submission)
+    try #require(!pending[0].attempted && pending[0].issue == nil)
+    try #require(pending[0].originalAssignment == nil && pending[0].revision != attempted[0])
+    try #require(try NativeStoreBaseline.encoded(pending[0].originalItem) == expectedItem)
+    let actual = try await store.nativeBaselineState()
+    try #require(actual.schema == prepared.schema && actual.schemaVersion == prepared.schemaVersion)
+    try #require(actual.records.count == prepared.records.count + 1)
+    for before in prepared.records
+    where
+      !(before.accountID == account && ["AccountRecord", "SessionRecord"].contains(before.model))
+    {
+      try #require(
+        actual.records.first { $0.model == before.model && $0.identity == before.identity }
+          == before)
+    }
+    print("NATIVE SPACE REVIEW VERIFIED: \(id), real ENOSPC, one penalized pending answer")
+    return VolumeSaveReceipt(
+      id: id, producerPID: ProcessInfo.processInfo.processIdentifier, filledBytes: filled,
+      sqliteCode: sqlite, expected: actual, selection: try selectedURLs(in: directory).selector,
+      review: submission)
   }
 
   private func fillBoundedVolume(at url: URL, capacity: Int) throws -> Int {

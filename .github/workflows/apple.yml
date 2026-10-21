@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
+          ref: b34c931d776a93d502a0d53061366ae898be5840
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
+          ref: b34c931d776a93d502a0d53061366ae898be5840
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -168,7 +168,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
+          ref: b34c931d776a93d502a0d53061366ae898be5840
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -198,9 +198,6 @@ jobs:
       - name: Native iPhone bounded-volume access
         if: matrix.device == 'iPhone 18 Pro'
         run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-volume-access-ios
-      - name: Native iPhone disk-full save and fresh-process recovery
-        if: matrix.device == 'iPhone 18 Pro'
-        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-space-ios
       - name: Review, lesson, settings and dashboard acceptance
         run: >-
           env -u PROTOC_PATH uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --setting=-skipPackagePluginValidation --scheme UsagiUnagi --action test
@@ -244,6 +241,35 @@ jobs:
           include-hidden-files: true
           retention-days: 7
 
+  ios-storage:
+    name: iPhone disk-full recovery
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: phvv-me/mainboard
+          ref: b34c931d776a93d502a0d53061366ae898be5840
+          path: .build/Mainboard
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      - name: Restore Mainboard's locked environment
+        run: uv sync --project .build/Mainboard --locked --no-dev --python 3.14
+      - name: Restore committed app dependencies
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action resolve --derived-data .build/Xcode/iOS --timeout 600
+      - name: Actual disk exhaustion, rollback, retry and two fresh-process reopens
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-space-ios
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: iphone-storage
+          path: .build/Results/
+          include-hidden-files: true
+          retention-days: 7
+
   mac:
     name: Native Mac acceptance
     runs-on: xcode-27
@@ -255,7 +281,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: phvv-me/mainboard
-          ref: b72cd6fdd7870842a0cd5a7517231d26e5123eff
+          ref: b34c931d776a93d502a0d53061366ae898be5840
           path: .build/Mainboard
           persist-credentials: false
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7

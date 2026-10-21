@@ -84,9 +84,9 @@ done
 '''
 native-store-space = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "mac" } }
 native-store-volume-access-ios = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "ios-access" } }
-native-store-space-ios = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "ios-save" } }
+native-store-space-ios = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "ios-matrix" } }
 native-store-volume = '''mainboard proc timeout 1500 sh -eu -c '
-case "${USAGI_NATIVE_SPACE_BACKEND:-}" in mac|ios-access|ios-save) ;; *) exit 2 ;; esac
+case "${USAGI_NATIVE_SPACE_BACKEND:-}" in mac|ios-access|ios-save|ios-review|ios-review-wal|ios-matrix) ;; *) exit 2 ;; esac
 mkdir -p .build/Results
 space_report=$(mktemp -d .build/Results/StorageSpace.XXXXXX)
 space_root=$(mktemp -d /private/tmp/usagi-disk-space.XXXXXX)
@@ -124,6 +124,12 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
   space_phases="spaceAccess"
   if [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-save ]; then
     space_phases="spaceSave spaceReopen spaceVerify"
+  elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review ]; then
+    space_phases="spaceReview spaceReopen spaceVerify"
+  elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review-wal ]; then
+    space_phases="spaceReviewWAL spaceReopen spaceVerify"
+  elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-matrix ]; then
+    space_phases="spaceMatrix spaceMatrixReopen spaceMatrixVerify"
   fi
   for space_phase in $space_phases; do
     env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 480 --only-testing "AppTests/FrozenNativeStoreTests/persistedStoreReopensInAnotherTestHost()" --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$space_phase" --setting "USAGI_NATIVE_RESTART_ID=$space_id" --setting "USAGI_NATIVE_SPACE_PATH=$space_mount" > "$space_report/$space_phase.log" 2>&1
@@ -133,10 +139,27 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
     test "$(/usr/bin/plutil -extract id raw -o - "$space_report/access.plist")" = "$space_id"
     test "$(/usr/bin/plutil -extract records raw -o - "$space_report/access.plist")" -eq 38
   else
-    cp "$space_mount/$space_id.save.plist" "$space_report/save.plist"
-    test "$(/usr/bin/plutil -extract id raw -o - "$space_report/save.plist")" = "$space_id"
-    case "$(/usr/bin/plutil -extract sqliteCode raw -o - "$space_report/save.plist")" in 13|4618) ;; *) exit 1 ;; esac
-    test "$(/usr/bin/plutil -extract filledBytes raw -o - "$space_report/save.plist")" -gt 0
+    space_saves="save"
+    if [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-matrix ]; then
+      space_saves="spaceSave spaceReview spaceReviewWAL"
+    fi
+    for space_save in $space_saves; do
+      space_suffix=""
+      if [ "$space_save" != save ]; then space_suffix=".$space_save"; fi
+      space_receipt="$space_report/$space_save.plist"
+      cp "$space_mount/$space_id$space_suffix.save.plist" "$space_receipt"
+      test "$(/usr/bin/plutil -extract id raw -o - "$space_receipt")" = "$space_id"
+      case "$(/usr/bin/plutil -extract sqliteCode raw -o - "$space_receipt")" in 13|4618) ;; *) exit 1 ;; esac
+      test "$(/usr/bin/plutil -extract filledBytes raw -o - "$space_receipt")" -gt 0
+      if [ "$space_save" = spaceReview ] || [ "$space_save" = spaceReviewWAL ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review-wal ]; then
+        test "$(/usr/bin/plutil -extract review.subjectID raw -o - "$space_receipt")" -eq 42
+        test "$(/usr/bin/plutil -extract review.meaningWrongCount raw -o - "$space_receipt")" -eq 1
+      fi
+      if [ "$space_save" = spaceReviewWAL ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review-wal ]; then
+        /usr/bin/plutil -extract source xml1 -o "$space_report/source.plist" "$space_receipt"
+        /usr/libexec/PlistBuddy -c "Print :study.store-wal" "$space_report/source.plist" > /dev/null
+      fi
+    done
   fi
   printf "IPHONE VOLUME REPORT: %s\\n" "$space_report"
   exit 0

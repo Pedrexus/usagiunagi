@@ -923,3 +923,87 @@ Final receipts: `.build/Results/PortableICloudReleaseFinalIOS.log`, `PortableICl
 Automated tests still wait until all implementation and permitted manual checks finish. The old three-display-fields-only assertion is now deliberately obsolete and must be updated with expanded allowlist/deferral/no-echo/race/permission coverage in that final phase. Signed iCloud delivery, account changes, background timing, quota/failure recovery and rendered acceptance remain open. Immutable preference history grows with edits; no unverified compaction policy is introduced.
 
 The owner's new constructor/validation request remains active. Installed SDK/source inspection confirms that the private Never initializer is a neighboring-macro workaround, not a requirement for all SwiftData models; `ModelConfiguration.validate()` checks configurations, while ModelContext save notifications are not a throwing scalar-validation interceptor. SwiftSyntax 604's MacroExpansionContext exposes syntax/locations/diagnostics/build configuration, with no general semantic type query in its inspected public interface. Next work should improve the general dataclass parser/typing and nonvalidating constructor path, inventory actual app candidates, and preserve explicit persistence/import validation and reproducible package restoration. No app macro dependency or frozen-model change is introduced here. The broad modernization goal remains active; all other recorded gates retain their scope.
+
+## Native iPhone completed-review disk-full matrix
+
+This follow-up changes test fixtures, task bindings, CI and documentation. The production
+writer, schema, historical decoders, grading and account transport are unchanged. The prior
+[code audit](../Validation/2026-10-21-code-audit.md) retains its source and result scopes.
+
+`usagi-test-storage-space-ios` now runs three independent stores inside one marked 128 MiB
+APFS image. One native iPhone producer performs real ENOSPC operations on each store, then
+two new test-host processes reopen every complete expected state. Batching the stores
+avoids six additional Xcode launches without weakening either process boundary. The
+native fixture still requires `--review-fixture`, the exact UUID marker, the local image
+volume name/mount and a 64–256 MiB capacity bound. It never fills the host filesystem.
+
+| Case | Actual pressure bytes | Refused-save SQLite code | Final records |
+| --- | ---: | ---: | ---: |
+| Large pending note | 123,166,720 | 4618 | 38 |
+| Completed review, journal-free source adoption | 120,078,336 | 13 | 39 |
+| Completed review, committed-WAL source adoption | 119,066,624 | 13 | 39 |
+
+The review observer uses public `ModelContext.willSave` in the test extension, filtered to
+the actual context. Before applying pressure it proves one inserted unattempted answer,
+the exact completed session and updated mistake date, unchanged original-item data, new
+revisions and no deletion. The prepared session retains the original wrong meaning and
+corrected meaning; completing its reading must preserve that penalty. Failure preserves
+all 38 prepared records and the original question/revision, with no new pending answer.
+After pressure removal, retrying that exact question/revision produces the expected
+session/account, one pending answer and different identities from the abandoned attempt.
+Every unrelated record, including the other account, must match exactly.
+
+The WAL source is genuine: a quiet native writer commits a Unicode/NUL note to a separate
+seed; its main database remains byte-identical to the frozen input while a nonempty WAL
+holds the change. Its complete family is copied into the adoption directory while the
+writer stays alive. Later seed shutdown can only change the seed. The production opener
+must restore the committed note, and original/retained family bytes must survive every
+operation and fresh-process read. The compact outcome retains these source bytes.
+
+The accepted matrix is `StorageSpace.2AOZYH`, UUID
+`5606FFAF-B0E4-4205-B66A-637C0F9E0334`. Producer PID **45877**, first reader **46977** and
+second reader **48431** are distinct. All three Mainboard/Xcode verdicts pass with one
+test execution each; each execution checks all three stores. Results:
+
+- Producer: `test-22a253ca6bbd4ba880080344bfd66d86.xcresult`.
+- First reader: `test-6b72289a5dad4f0b9bbac02b73d65008.xcresult`.
+- Second reader: `test-69a4e7ad2cd043068875c44b66f537c8.xcresult`.
+
+The full task exits 0, exports `spaceSave.plist`, `spaceReview.plist`,
+`spaceReviewWAL.plist` and the WAL source receipt, ejects its exact `disk34` device and
+removes `/private/tmp/usagi-disk-space.DIu6cx` and the successful backing image. Logs are
+`.build/Results/IPhoneReviewSpace-Matrix-20261021.log` and the report's three phase logs.
+The prior ordinary-only protocol also passes all three hosts at `StorageSpace.LO0rsw`;
+its image is ejected and removed. An attempted diagnostic plist-to-JSON conversion is
+not evidence: these receipts contain binary Data, which `plutil` cannot convert to JSON.
+Scalar evidence is read from the final copied property lists after image cleanup.
+
+Scoped Swift parser/SwiftUI/formatter/SwiftLint checks pass for the changed native fixture.
+All three native builds/tests use the final Swift source. Root/app manifest and workflow
+whitespace checks pass. The full current rule inventory still reports 230 findings from
+98 applied rules; it is an inventory, not a green gate. The three protected owner edits
+remain byte-identical to the earlier audit's saved hashes. Frozen V1 remains SHA-256
+`538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`.
+
+The dedicated required `ios-storage` CI job runs this same matrix separately from UI
+acceptance. It keeps the 25-minute task bound and a 45-minute job bound including dependency
+preparation. No custom script, new platform abstraction or production fault hook is added.
+
+Mainboard's onboarding review also exposed a real matcher limitation: documented
+`mainboard run --locked setup` was missed, while `setup-extra` could credit `setup`.
+Commit `b34c931d776a93d502a0d53061366ae898be5840` extracts the exact task after the four
+supported no-value environment flags. Ten regression cases plus two existing offline
+explanation cases pass in Mainboard's isolated execution gate; Ruff checks pass.
+The first attempted regression harness omitted catalog registration and failed, rather
+than silently serving no rule; the corrected final harness passes 12/12. Receipts:
+`/tmp/usagi-onboarding-guidance-final-20261021/{target.json,target.log,target.xml}`.
+On this app, the formal onboarding score now correctly credits setup/test guidance at
+40%; the remaining warning is retained. No placeholder tasks are added to inflate it.
+All five CI tool checkouts pin this tested commit. GitHub still returns HTTP 422 “No commit
+found”; publication requires separate authorization. No push or hosted run is performed.
+
+This accepts the three stated simulator cases. Earlier capture/verification/activation,
+actual mid-copy/inside-publication interruption, wider combinations, physical iPhone
+Data Protection/power-loss and signed-device services remain open. The broader UI,
+voice, statistics/calibration and delivery obligations remain in TASKS; this does not
+complete the modernization goal.
