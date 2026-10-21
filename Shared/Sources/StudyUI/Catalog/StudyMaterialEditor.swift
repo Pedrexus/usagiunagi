@@ -155,8 +155,8 @@ public struct StudyMaterialEditor<Version: Equatable & Sendable>: View {
             .accessibilityIdentifier("material.save")
             .disabled(busy || conflict != nil)
         }
-        ToolbarItemGroup(placement: .keyboard) {
-          Spacer()
+        ToolbarSpacer(placement: .keyboard)
+        ToolbarItem(placement: .keyboard) {
           Button("Done") { focusedField = nil }.accessibilityIdentifier("material.keyboardDone")
         }
       }

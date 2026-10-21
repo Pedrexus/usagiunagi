@@ -72,3 +72,22 @@ The frozen `StudySchemaV1.swift` SHA-256 remains
 Frozen writer archives/store and historical decoders are unchanged. UI usability,
 physical storage/voice/watch continuity, signed iCloud and broader acceptance remain
 tracked in [TASKS](../TASKS.md).
+
+## Navigation follow-up
+
+The later [iPhone navigation/refresh audit](../Implementation/2026-10-21-adaptive-validation.md#iphone-navigation-and-refresh-audit-follow-up)
+renews stale UI expectations and keyboard geometry, initializes observation of an
+already-active sync and adopts native keyboard-toolbar spacing. Warm links, held refresh
+and the three conflict cases finish passing native bundles. The focused lesson quiz
+also passes inside the separately recorded failed two-test trial. All 577 shared Mac
+test functions, both current unsigned Release builds and four packaged-executable audits
+pass again. A repeatable notes-keyboard `Invalid frame dimension` runtime warning remains
+unresolved; passing test booleans do not establish warning-free UI acceptance. An
+ineffective viewport-bound experiment is removed. Whole-repository lint still fails
+only its 30 protected-file formatter diagnostics; the full rule inventory remains
+230 findings from 98 rules. No migration signal or runtime warning is suppressed.
+
+The current Actions prerequisite is Mainboard `b34c931d776a93d502a0d53061366ae898be5840`,
+now pinned by all five checkouts. `NavigationFinish-MainboardPin-20261022.log` rechecks
+GitHub and still records HTTP 422, “No commit found.” This supersedes the older pin/readiness
+checkpoint above; no hosted execution or publication is claimed.

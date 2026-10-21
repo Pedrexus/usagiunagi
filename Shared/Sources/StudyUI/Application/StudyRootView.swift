@@ -220,7 +220,7 @@ public struct StudyRootView: View {
       .onChange(of: avatarEmail) { _, _ in if !showSettings { updateHeader() } }
       .onChange(of: avatarFallbacks) { _, _ in if !showSettings { updateHeader() } }
       .onChange(of: displayScale) { _, _ in if !showSettings { updateHeader() } }
-      .onChange(of: model.isSyncing) { _, active in
+      .onChange(of: model.isSyncing, initial: true) { _, active in
         shell.progress = active ? Progress(totalUnitCount: -1) : nil
       }
       .onChange(of: model.snapshot?.accountID) { previous, current in

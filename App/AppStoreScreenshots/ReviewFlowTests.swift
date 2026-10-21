@@ -394,7 +394,8 @@ final class ReviewFlowTests: XCTestCase {
     let pullEnd = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.85))
     pullStart.press(forDuration: 0.05, thenDragTo: pullEnd)
     attachHomeScreenshot("Home after pull to refresh")
-    let indicator = app.progressIndicators["app.syncProgress"]
+    let indicator = app.descendants(matching: .any).matching(identifier: "app.syncProgress")
+      .firstMatch
     XCTAssertTrue(indicator.waitForExistence(timeout: 5))
     XCTAssertEqual(indicator.label, "WaniKani sync")
     attachHomeScreenshot("Native full refresh progress")
@@ -1619,7 +1620,12 @@ extension ReviewFlowTests {
     choose.tap()
     XCTAssertTrue(app.buttons["lesson.select.10"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["lesson.select.1"].exists)
-    XCTAssertFalse(app.buttons["lesson.startSelection"].isEnabled)
+    XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "0 selected")
+    let batch = app.buttons["lesson.startSelection"]
+    XCTAssertTrue(batch.isEnabled)
+    XCTAssertEqual(batch.label, "Start a batch")
+    batch.tap()
+    XCTAssertTrue(app.buttons["lesson.quiz"].waitForExistence(timeout: 5))
   }
 
   @MainActor
@@ -1657,7 +1663,15 @@ extension ReviewFlowTests {
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("banana")
-    app.buttons["review.submit"].tap()
+    XCTAssertEqual(field.value as? String, "banana")
+    let submit = app.buttons["review.submit"]
+    let ready = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        let keyboard = app.keyboards.firstMatch
+        return submit.isHittable && (!keyboard.exists || !keyboard.frame.intersects(submit.frame))
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+    submit.tap()
     XCTAssertTrue(app.buttons["review.reveal"].waitForExistence(timeout: 5))
     app.buttons["review.reveal"].tap()
   }

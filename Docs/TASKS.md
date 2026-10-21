@@ -4,7 +4,17 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 **Primary priority: iPhone/iOS first, one adaptive app.** Develop the main study flow for iPhone and let native SwiftUI controls, available space, Dynamic Type and real service capabilities adapt it to iPad/Mac. Reduce presentation-only OS checks directly; add no platform utility framework or separate desktop feature flow. This steers the full modernization objective, without dropping data, sync, speech or acceptance obligations.
 
-## Completion audit — October 21
+## Completion audit — October 21–22
+
+**Latest iPhone navigation follow-up:** warm review/lesson/subject links, held refresh
+and all three material-conflict cases now produce passing native bundles. Drafts, hidden
+notes, exclusion state and the Stats return destination survive the exercised flows.
+The sync observer now initializes from an already-active sync; stale test expectations
+and keyboard geometry are renewed without weakening grading or conflict assertions.
+The notes keyboard uses native toolbar spacing, but still produces an unresolved
+`Invalid frame dimension` runtime warning. A failed viewport-bound experiment is removed.
+All 577 shared Mac test functions, both unsigned Release builds and their four packaged
+executables pass again. Broader UI/signed acceptance remains open. [Exact run scopes, failed trials and the retained warning](Implementation/2026-10-21-adaptive-validation.md#iphone-navigation-and-refresh-audit-follow-up).
 
 **Latest storage/rule follow-up:** the actual iPhone disk-full matrix now passes notes,
 completed reviews and completed reviews adopted from a genuine committed WAL. One producer
@@ -44,7 +54,7 @@ Implemented source covers the shared SwiftUI app, SwiftData writer and historica
 | --- | --- |
 | 1. Finish source work | Constructor/inference, ownership audit, measured pilot/adoption decision and supported single-target SwiftUI watch conversion are implemented. Retained native bridges have explicit reasons. Keep concrete-model queries and full refresh for non-subject collections until measurements/reset semantics justify changes; no speculative schema/observer abstraction. Bind historical decoders before any future stored payload/V2 change. Physical watch continuity remains stage 4. |
 | 2. Compare usability | Isolated phone/iPad/Mac manual subset and current iPhone native regressions compare pinned original source/owner screenshots. Selection actions, combined accessible progress, wide reading width and native pause are corrected. The original binary, broad high-contrast/IME/image-radical/physical accessibility and normal-account window restoration remain unaccepted. Mac UI automation times out enabling automation before app launch; manual native pause/resume preserves its exact draft. |
-| 3. Run final tests | Shared, macro/runtime, fixture app, scoped phone UI, historical-value and bounded full-volume checks run through Mainboard. The actual iPhone note/review/committed-WAL review matrix passes rollback, same-revision/question retry and two fresh-process reopens of every store. Earlier adoption and wider failure combinations stay open. The broader phone UI run is unaccepted: app termination/final reporting incurs long delays, and bounded attempts fail to finalize readable result bundles even when case assertions pass. Five URL-driven cases and wider iPad/Mac UI remain open. Reduce Motion is an explicit unconfigured-device skip. No job is left running. |
+| 3. Run final tests | Shared, macro/runtime, fixture app, scoped phone UI, historical-value and bounded full-volume checks run through Mainboard. The actual iPhone note/review/committed-WAL review matrix passes rollback, same-revision/question retry and two fresh-process reopens of every store. Earlier adoption and wider failure combinations stay open. All five URL-driven behavior cases now finalize passing bundles despite long test/reporting delays. Trace the repeatable notes-keyboard frame warning; broader phone/iPad/Mac suites remain open. Reduce Motion is an explicit unconfigured-device skip. |
 | 4. Close external acceptance | Local unsigned build/resource and identifier readiness are checked. Still required: signed iCloud/App Group/Keychain and paired-watch continuity; physical microphone/IME/audio/background/storage behavior; permitted real-catalog performance/statistics calibration and icon/device acceptance. Hosted Actions cannot resolve the unpublished `b34c931` pin. No signing, publication, push or distribution is performed. |
 
 No new feature is needed to finish this list. iPhone Duo remains deferred, the dismissed Coverage popup stays closed, Parquet is retired and read-only AI/intents remain optional. Do not replace completion work with speculative schema normalization, a new platform abstraction or another cache layer. The detailed request table and migration gates below remain authoritative for exact scope.

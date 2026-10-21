@@ -266,3 +266,135 @@ The project explicitly uses Xcode 27.0 / Swift 6.4 and its builds resolve the fu
 | Hosted Actions | All four checkouts pin `b72cd6fdd7870842a0cd5a7517231d26e5123eff`; `FinishStagesMainboardPin-20261021.log` records HTTP 422 “No commit found.” Publication/push is not authorized, so no hosted success is claimed |
 
 No PR, push, signing or distribution is performed. iPhone Duo remains deferred, Parquet remains retired and the dismissed Coverage popup is not reopened. The broader modernization goal remains active.
+
+## iPhone navigation and refresh audit follow-up
+
+The warm-link task now finishes with a readable passing result bundle:
+`test-57dd5234d5ad40fdb8f08e816d7526bb.xcresult` (one test, no failures,
+skips, runtime warnings or compiler/analyzer warnings). Mainboard delivers the actual
+review, lesson and subject URLs to the isolated fixture app. The test verifies that
+Settings and a queued subject link preserve a typed review draft, and closing each
+study/detail route returns to Stats. This run uses `c81eb0a2`; no navigation source change
+is required. `NavigationFinish-WarmLinks-20261021.log` retains the complete verdict.
+
+The next two-test run produces a readable failed suite, rather than an incomplete result:
+`test-1a52b91392874b988c17a51bc3c2a094.xcresult`. The lesson quiz passes its wrong-answer,
+completion and next-batch assertions. Its old final expectation incorrectly disabled
+the batch button when no individual items were selected despite other available lessons.
+The renewed assertion checks `0 selected`, the enabled `Start a batch` action and opening
+the next teaching page. It retains the completed-subject removal and grading assertions.
+This individual pass does not make the two-test suite green.
+
+The refresh case fails on a stale accessibility element type. Its exported screenshot
+shows the real sync indicator above the cached Home content; the hierarchy assigns
+`app.syncProgress` to an ActivityIndicator container, with an unnamed ProgressIndicator
+inside. The test now queries the identifier without assuming that container type, and
+keeps every visibility, label, interactivity and completion assertion. The root also
+initially observes `model.isSyncing`, so a scene created during an existing sync receives
+the current progress state. No additional observation abstraction or schema change is
+introduced. A newly created Mac window during sync is still a separate rendered gate.
+
+The focused refresh retry passes and finalizes:
+`test-8ff97312e0d9432e84fa78e504910ec2.xcresult` (one test, no failures, skips,
+runtime warnings or compiler/analyzer warnings). Cached content and Settings remain
+usable during the held refresh; background/foreground preserves the indicator; the
+explicit fixture URL releases the refresh; the learned count changes from 864 to 865
+and the refresh action becomes available again. `NavigationFinish-RefreshFinal-20261021.log`
+is authoritative. The changed shared source also passes all 577 Mac test functions
+across four targets (`NavigationFinish-SharedMac-20261021.log`).
+
+The fresh complete lint run exits 1 with the same 30 formatter diagnostics in the two
+protected owner-edited files; it scans 447 files, rewrites none and reports no other
+failed step. The full analysis inventory still reports 230 findings from 98 rules.
+`NavigationFinish-FullLint-20261021.log` and `NavigationFinish-AllRules-20261021.log`
+retain these non-green results. The three protected file hashes remain unchanged.
+
+The three note-conflict URL cases initially finalize as three failures, all before any
+conflict event is requested (`test-a2be0008804f4b9196ddffc545e45871.xcresult`,
+`NavigationFinish-MaterialConflicts-20261021.log`). The shared helper taps the submit
+button using stale pre-keyboard geometry. In the rejected-commit case, the native
+synthesized-event archive records `(356, 747)`, while the captured hierarchy places the
+button at `(322, 451, 68, 58)` above the keyboard. A direct read-only simulator screenshot
+also shows the unchanged typed answer. No conflict/grading pass is inferred from this
+failure. The helper now verifies the typed value and waits for a hittable button outside
+the keyboard frame before its single ordinary tap; it adds no timed sleep, retry tap or
+weakened grading assertion. The renewed two-file parser/UI/formatter/SwiftLint check
+passes (`NavigationFinish-SourceLint-20261022.log`). The incomplete early attachment
+export is recorded separately; the final export succeeds under
+`NavigationFinish-ConflictFailure-20261022/`.
+
+The three conflict cases and broader phone/iPad/Mac acceptance remain open at this
+checkpoint. The existing 120-second test/finalization delays remain observable;
+these completed bounded runs do not establish their cause or resolve the full UI suite.
+Only explicit memory-only fixtures are launched; no real account, exercises, microphone,
+normal-account window restoration, signed service or publication is used.
+
+The geometry-aware helper's focused replacement test then passes and finalizes as
+`test-6a9f0f572f8c462faa390a8caa50419b.xcresult`. Mainboard delivers the actual armed
+conflict URL, and all draft, explicit-replacement, hidden-reading and exclusion assertions
+pass. Its final report nevertheless contains one runtime warning, `Invalid frame
+dimension (negative or non-finite)`, when the notes keyboard opens. A successful test
+boolean alone is not a warning-free acceptance result. The raw native issue summary
+provides no source location; it is retained in
+`.build/Reports/NavigationFinish-ConflictRawResult-20261022.json`.
+
+The review screen supplies its raw viewport height as a minimum frame height. The
+follow-up bounds that value at zero during keyboard/presentation transitions. This is
+the suspected layout boundary, not a source location supplied by XCTest. The pending
+negative-only run is deliberately canceled before its first case begins so all three
+cases can rerun together against the bound. It exits 75 with a canceled-runner failure
+(`test-0a3344c5d36748ccbd036bfb4a84b176.xcresult`), not an app failure or accepted test
+run. Its process exits normally after cancellation; no fixture app remains running.
+All three changed Swift files pass the renewed parser/UI/formatter/SwiftLint checks.
+
+The current unsigned Mac Release build also passes with zero compiler/analyzer warnings
+or errors: `build-e4cf0075006a4e74a13d5d6c379d2c48.xcresult`, recorded in
+`NavigationFinish-ReleaseMac-20261022.log`. The renewed bundle policy passes its one
+packaged executable and localized names with no violations
+(`.build/Reports/NavigationFinish-ReleaseMacBundle-20261022.json`). This covers the
+endpoint validation and initial sync-observation source changes; it does not establish
+signed-service, normal-launch or rendered Mac acceptance.
+
+### Final behavior results and retained warning — October 22
+
+The combined conflict run finalizes as `test-e6931c8fe32c484fbbd201e88743b430.xcresult`:
+three passed, no failures or skips, and **three runtime frame warnings**. All five allowed
+URLs are actually delivered, including separate requests to the same token for the
+unarmed and missing-token scenarios. Rejected commits are not acknowledged; mismatched
+events do not alter notes; explicit replacement retains the draft, hidden reading note
+and exclusion state. The viewport bound does not remove the warning and is reverted.
+`ReviewScreen.swift` has no change from the parent commit.
+
+The editor instead adopts Apple's standard [ToolbarSpacer](https://developer.apple.com/documentation/swiftui/toolbarspacer)
+and a keyboard `ToolbarItem`, retaining the Done action/identifier and using no platform
+branch. The installed Xcode 27 interface confirms its default flexible sizing. This is
+a native toolbar cleanup, **not a claimed warning fix**: the final focused replacement
+case repeats the warning. The native issue summary gives no source location; the Apple
+forum retrieval supplies a verification page rather than usable diagnostic evidence.
+Do not attribute the warning to Apple's implementation or another app source line
+without further evidence. Its current reproducer is isolated review → incorrect meaning
+→ Reveal → Notes and synonyms → focus Meaning note. A minimal reproduction/source trace
+is still needed. No layout warning is silenced or filtered from the reports.
+
+| Final check | Receipt and exact scope |
+| --- | --- |
+| Final editor UI | `test-a94f4a0df70f4891a8e3dd917a513aa7.xcresult` / `NavigationFinish-ToolbarFinal-20261022.log`: one passed, no failures or skips, one retained frame warning; explicit conflict URL delivered, zero compiler/analyzer warnings/errors |
+| Shared Mac source | `NavigationFinish-SharedMacFinal-20261022.log`: 577 functions across four targets pass |
+| iOS Release | `build-8827992505df49c2938779a1f20d0183.xcresult`: zero compiler/analyzer errors or warnings |
+| Mac Release | `build-d64aa5eef42846d1acb867f57c265bad.xcresult`: zero compiler/analyzer errors or warnings |
+| Release bundles | `NavigationFinish-ReleaseIOSBundleFinal-20261022.json` / `NavigationFinish-ReleaseMacBundleToolbar-20261022.json` under `.build/Reports/`: three iOS/watch/widget executables and one Mac executable, zero policy violations |
+| Changed Swift | `NavigationFinish-SourceLintFinal-20261022.log`: three files pass parser/UI rules, strict formatting and SwiftLint, no rewrites |
+| Whole lint / analysis | `NavigationFinish-FullLintFinal-20261022.log`: 447 files, no rewrites, only the same 30 protected-file formatter diagnostics; `NavigationFinish-AllRulesFinal-20261022.log`: 230 findings from 98 rules, inventory only |
+| Hosted prerequisite | `NavigationFinish-MainboardPin-20261022.log`: current `b34c931` pin still returns HTTP 422; no publication is authorized |
+
+The final focused toolbar result finishes exporting and exits 0; its warning stays open.
+The negative behavior cases above precede the spacing-only editor change; they are not
+presented as rerun against that change. Warm links and held refresh retain their earlier
+source scopes. The broader phone/iPad/Mac, newly opened Mac scene during sync, accessibility,
+IME/physical voice/storage and signed-service gates remain open. Native teardown/export
+delays and internal diagnostic `simctl` lookup failures remain unexplained. The original
+account app is never launched; only explicit memory-only fixtures are used. No PR, push,
+signing or distribution occurs, and the overall modernization goal remains active.
+All native jobs are terminal, no fixture process remains running, the three protected
+owner edits retain their original hashes, and the frozen V1 schema SHA remains
+`538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`.
