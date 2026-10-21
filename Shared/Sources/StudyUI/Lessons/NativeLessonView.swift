@@ -7,6 +7,8 @@ public struct NativeLessonView: View {
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudyAudioLibrary.self) private var audio
   @StoredReviewPreferences private var preferences
+  @Environment(\.waniKaniPreferences) private var waniKaniPreferences
+  private var waniKaniSources = StudyWaniKaniSources()
   private let store: StudyStore
   private let accountID: String
   private let automaticBatchSize: Int?
@@ -46,6 +48,13 @@ public struct NativeLessonView: View {
             } else {
               self.selection = nil
               Task { await load() }
+            }
+          },
+          autoplay: { index in
+            if waniKaniSources.audio, waniKaniPreferences?.lessonsAutoplayAudio == true {
+              audio.play(
+                subject: selection.subjects[index],
+                interruptBackgroundAudio: preferences.interruptBackgroundAudio)
             }
           },
           playAudio: { index in

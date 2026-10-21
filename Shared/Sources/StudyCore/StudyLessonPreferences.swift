@@ -37,6 +37,10 @@ public struct StudyLessonPreferences: Codable, Hashable, Sendable {
     result.apprenticeLimit = max(0, apprenticeLimit)
     return result
   }
+  public func effectiveBatchSize(waniKani: WaniKaniPreferences?, followWaniKani: Bool) -> Int {
+    if followWaniKani, let size = waniKani?.lessonsBatchSize, size > 0 { return size }
+    return normalized.batchSize
+  }
   public typealias SortKey = (level: Int, kind: SubjectKind, subjectID: Int64)
   public func precedes(_ lhs: SortKey, _ rhs: SortKey) -> Bool {
     if lhs.level != rhs.level {

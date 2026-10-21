@@ -30,14 +30,17 @@ public struct StudySettingsView<Destination: Hashable, Diagnostics: View, Accoun
 {
   @Environment(\.studyCloudPreferences) private var cloudPreferences
   private let account: StudyShellState?
+  private let model: StudyAppModel?
   private let destination: (StudySettingsPage) -> Destination
   private let diagnostics: Diagnostics
   private let accountActions: AccountActions
   public init(
-    account: StudyShellState?, destination: @escaping (StudySettingsPage) -> Destination,
+    account: StudyShellState?, model: StudyAppModel? = nil,
+    destination: @escaping (StudySettingsPage) -> Destination,
     @ViewBuilder diagnostics: () -> Diagnostics, @ViewBuilder accountActions: () -> AccountActions
   ) {
     self.account = account
+    self.model = model
     self.destination = destination
     self.diagnostics = diagnostics()
     self.accountActions = accountActions()
@@ -57,7 +60,8 @@ public struct StudySettingsView<Destination: Hashable, Diagnostics: View, Accoun
           }.padding(.vertical, 8)
         }
       }
-      Section("Settings") {
+      if let model { WaniKaniSettingsSection(model: model) }
+      Section("App settings") {
         ForEach(StudySettingsPage.allCases) { page in
           NavigationLink(value: destination(page)) {
             Label(page.rawValue, systemImage: page.symbol)

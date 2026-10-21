@@ -6,6 +6,8 @@ public protocol WaniKaniAccountReader: Sendable {
 }
 
 public protocol WaniKaniService: WaniKaniAccountReader {
+  /// Nil disables persistent settings caching for an injected service without a stable origin.
+  var cacheNamespace: String? { get }
   func reconfigured(baseURL: URL) throws -> any WaniKaniService
   func download(token: String, subjects: [CatalogSubject], cursors: [String: String]) async throws
     -> StudyDownload
@@ -31,6 +33,7 @@ public enum WaniKaniServiceConfigurationError: Error, LocalizedError, Equatable,
 }
 
 extension WaniKaniService {
+  public var cacheNamespace: String? { nil }
   public func download(token: String) async throws -> StudyDownload {
     try await download(token: token, subjects: [], cursors: [:])
   }
@@ -51,6 +54,7 @@ public struct WaniKaniClient: WaniKaniService {
   public typealias Transport = @Sendable (URLRequest) async throws -> (Data, HTTPURLResponse)
   public static let defaultBaseURL = URL(string: "https://api.wanikani.com/v2")!
   private let baseURL: URL
+  public var cacheNamespace: String? { baseURL.absoluteString }
   private let transport: Transport
   public init(baseURL: URL = Self.defaultBaseURL) {
     self.baseURL = baseURL

@@ -18,6 +18,7 @@ public struct StudyRootView: View {
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(StudyFontLibrary.self) private var fonts
   @StoredReviewPreferences private var preferences
+  private var waniKaniSources = StudyWaniKaniSources()
   @AppStorage("native.apiBaseUrl") private var apiEndpoint = WaniKaniClient.defaultBaseURL
     .absoluteString
   @AppStorage("native.avatarCacheRevision") private var avatarCacheRevision = 0
@@ -72,6 +73,12 @@ public struct StudyRootView: View {
     let accountID: String?
     let savedAt: Date?
     let profile: StudyAccountProfile?
+  }
+  private struct PreferenceReadKey: Equatable {
+    let accountID: String?
+    let savedAt: Date?
+    let source: UUID
+    let phase: ScenePhase
   }
   public var body: some View {
     NavigationStack(path: $path) {
@@ -240,10 +247,18 @@ public struct StudyRootView: View {
           audio.updateCatalog(catalog)
         } catch { if !Task.isCancelled { model.error = error.localizedDescription } }
       }
+      .task(
+        id: PreferenceReadKey(
+          accountID: model.snapshot?.accountID, savedAt: model.snapshot?.savedAt,
+          source: model.preferenceSourceRevision, phase: scenePhase)
+      ) {
+        if scenePhase == .active { await model.refreshWaniKaniPreferences() }
+      }
       .sheet(isPresented: $showSettings) {
         NavigationStack(path: $settingsPath) {
           StudySettingsView(
-            account: model.snapshot == nil ? nil : shell, destination: settingsDestination
+            account: model.snapshot == nil ? nil : shell, model: model,
+            destination: settingsDestination
           ) {
             NavigationLink("Developer options", value: StudyDestination.developerSettings)
               .accessibilityIdentifier("settings.developer")
@@ -284,6 +299,7 @@ public struct StudyRootView: View {
       }
       .tint(StudyPalette.radical)
       .environment(\.studyAvatars, avatars)
+      .environment(\.waniKaniPreferences, model.effectiveWaniKaniPreferences)
   }
   private func updateSyncActivity() {
     let studying = path.contains {
@@ -369,7 +385,11 @@ public struct StudyRootView: View {
         case .lessons(let automatic):
           NativeLessonView(
             store: store, accountID: accountID,
-            automaticBatchSize: automatic ? lessonSettings.value.batchSize : nil,
+            automaticBatchSize: automatic
+              ? lessonSettings.value.effectiveBatchSize(
+                waniKani: model.effectiveWaniKaniPreferences,
+                followWaniKani: waniKaniSources.lessonBatch)
+              : nil,
             finished: finished
           )
           .userActivity(StudyActivity.lessons.rawValue) { StudyActivity.lessons.configure($0) }

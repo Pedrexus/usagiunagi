@@ -43,6 +43,8 @@ import SwiftUI
   public var successCount = 0
   public var success: StudyMarkResult?
   public var feedbackPreferences = ReviewPreferences()
+  /// Nil preserves local milestone-only behavior; WaniKani can enable all completed stages.
+  public var completedSrsChanges: Bool?
   public init() {}
 
   /// Keep UTF-16 grading ranges attached to the exact normalized answer shown to the learner.
@@ -251,7 +253,15 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         if success.subjectFinished, state.feedbackPreferences.completedItemFeedback {
           Label("+1 completed", systemImage: "plus.circle")
         }
-        if let milestone = success.estimatedMilestone,
+        if state.completedSrsChanges == true, success.subjectFinished, success.submission != nil,
+          let stage = StudySRSStage(rawValue: success.estimatedSRSStage)
+        {
+          Label(
+            "\(stage.name) (estimate)",
+            systemImage: success.didLevelUp ? "arrow.up.circle" : "arrow.down.circle"
+          )
+          .accessibilityLabel("Estimated SRS stage: \(stage.name). Sync to confirm.")
+        } else if state.completedSrsChanges == nil, let milestone = success.estimatedMilestone,
           state.feedbackPreferences.srsMilestoneFeedback
         {
           Label("\(milestone) (estimate)", systemImage: "arrow.up.circle")

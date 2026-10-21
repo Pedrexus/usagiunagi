@@ -3,6 +3,8 @@ import SwiftUI
 
 struct LessonSettingsView: View {
   @Bindable var settings: StudyLessonSettings
+  @Environment(\.waniKaniPreferences) private var waniKaniPreferences
+  private var waniKaniSources = StudyWaniKaniSources()
   private var binding: Binding<StudyLessonPreferences> {
     Binding(get: { settings.value }, set: { settings.applyChanges(from: settings.value, to: $0) })
   }
@@ -45,9 +47,22 @@ struct LessonSettingsView: View {
         } label: {
           LabeledContent("Order", value: settings.value.order.map(title).joined(separator: ", "))
         }.accessibilityIdentifier("settings.lessonOrderLink")
-        Picker("Batch size", selection: binding.batchSize) {
-          ForEach(1...10, id: \.self) { Text($0 == 1 ? "1 lesson" : "\($0) lessons").tag($0) }
-        }.accessibilityIdentifier("settings.lessonBatchSize")
+        Toggle("Use WaniKani batch size", isOn: waniKaniSources.$lessonBatch)
+        if waniKaniSources.lessonBatch {
+          LabeledContent(
+            "Batch size",
+            value:
+              "\(settings.value.effectiveBatchSize(waniKani: waniKaniPreferences, followWaniKani: waniKaniSources.lessonBatch)) lessons"
+          )
+          if waniKaniPreferences == nil {
+            Text("Using the local batch size until WaniKani settings are available.").font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        } else {
+          Picker("Batch size", selection: binding.batchSize) {
+            ForEach(1...10, id: \.self) { Text($0 == 1 ? "1 lesson" : "\($0) lessons").tag($0) }
+          }.accessibilityIdentifier("settings.lessonBatchSize")
+        }
         Toggle("Prioritize current level", isOn: binding.prioritizeCurrentLevel)
           .accessibilityIdentifier("settings.prioritizeCurrentLevel")
         Picker("Apprentice limit", selection: binding.apprenticeLimit) {

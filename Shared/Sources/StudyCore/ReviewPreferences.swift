@@ -90,4 +90,21 @@ public struct ReviewPreferences: Codable, Equatable, Sendable {
       if old[keyPath: key] != new[keyPath: key] { self[keyPath: key] = new[keyPath: key] }
     }
   }
+
+  public func reviewPolicy(waniKani: WaniKaniPreferences?, followWaniKani: Bool)
+    -> StudyReviewPolicy
+  {
+    var result = policy
+    if followWaniKani, let order = waniKani?.reviewOrder { result.order = order }
+    return result
+  }
+
+  public func autoplay(
+    in context: WaniKaniPreferences.Context, waniKani: WaniKaniPreferences?, followWaniKani: Bool
+  )
+    -> Bool
+  {
+    if followWaniKani, let waniKani { return waniKani.autoplay(in: context) }
+    return autoplayAudio
+  }
 }

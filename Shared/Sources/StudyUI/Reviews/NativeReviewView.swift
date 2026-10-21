@@ -39,6 +39,8 @@ public struct NativeReviewView: View {
   @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
   @Environment(StudySubjectSettings.self) private var subjectSettings
   @StoredReviewPreferences private var preferences
+  @Environment(\.waniKaniPreferences) private var waniKaniPreferences
+  private var waniKaniSources = StudyWaniKaniSources()
   // Only transient UI state. Submitted answers remain in the revision-checked store/outbox.
   @SceneStorage("review.draft.identity") private var draftIdentity = ""
   @SceneStorage("review.draft.answer") private var draftAnswer = ""
@@ -161,6 +163,8 @@ public struct NativeReviewView: View {
     .onChange(of: wrapUpRequested, initial: true) { _, _ in applyWrapUpRequest() }
     .onChange(of: busy) { _, _ in applyWrapUpRequest() }
     .onChange(of: preferences) { _, _ in applyPreferences() }
+    .onChange(of: waniKaniPreferences) { _, _ in applyPreferences() }
+    .onChange(of: waniKaniSources.srsFeedback) { _, _ in applyPreferences() }
     .onChange(of: lessonSettings.value.allowVocabularyExclusion) { _, _ in applyPreferences() }
     .onChange(of: fonts.selectedFiles) { _, _ in chooseFont(newSubject: false) }
     .onChange(of: screen.phase) { _, _ in applyFont() }
@@ -229,7 +233,9 @@ public struct NativeReviewView: View {
       case .reviews:
         state = try await store.openReviews(
           accountID: accountID, options: preferences.sessionOptions,
-          lessonPreferences: lessonSettings.value, policy: preferences.policy)
+          lessonPreferences: lessonSettings.value,
+          policy: preferences.reviewPolicy(
+            waniKani: waniKaniPreferences, followWaniKani: waniKaniSources.reviewOrder))
       case .lessons(let ids):
         state = try await store.openLessons(
           accountID: accountID, subjectIDs: ids, options: preferences.sessionOptions,
@@ -259,7 +265,11 @@ public struct NativeReviewView: View {
       && draftIdentity == draftKey(value)
     review = value
     if value.success != nil, let previous, let subject = previous.subject, !subject.audio.isEmpty,
-      preferences.autoplayAudio,
+      preferences.autoplay(
+        in: isLesson ? .lessons : isPractice ? .extraStudy : .reviews,
+        waniKani: waniKaniPreferences,
+        followWaniKani: waniKaniSources.audio
+      ),
       previous.question?.kind == .reading || subject.readings.isEmpty || previous.combinesAnki
     {
       audio.play(subject: subject, interruptBackgroundAudio: preferences.interruptBackgroundAudio)
@@ -507,6 +517,9 @@ public struct NativeReviewView: View {
   }
   private func applyPreferences() {
     let preferences = preferences
+    screen.completedSrsChanges =
+      !isLesson && !isPractice && waniKaniSources.srsFeedback
+      ? waniKaniPreferences?.reviewsDisplaySrsIndicator : nil
     screen.isAnki = review?.isAnki == true
     screen.feedbackPreferences = preferences
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))

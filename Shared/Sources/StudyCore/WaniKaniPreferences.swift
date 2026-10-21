@@ -2,21 +2,50 @@ import Foundation
 
 /// Server-owned preferences. Deprecated voice/lesson-order fields are deliberately not controls.
 public struct WaniKaniPreferences: Codable, Equatable, Sendable {
+  public enum Context: Sendable { case lessons, reviews, extraStudy }
   public enum ReviewOrder: String, Codable, CaseIterable, Sendable {
     case shuffled
     case lowerLevelsFirst = "lower_levels_first"
   }
-  public let extraStudyAutoplayAudio: Bool
-  public let lessonsAutoplayAudio: Bool
-  public let lessonsBatchSize: Int
-  public let reviewsAutoplayAudio: Bool
-  public let reviewsDisplaySrsIndicator: Bool
+  public var extraStudyAutoplayAudio: Bool
+  public var lessonsAutoplayAudio: Bool
+  public var lessonsBatchSize: Int
+  public var reviewsAutoplayAudio: Bool
+  public var reviewsDisplaySrsIndicator: Bool
   /// Keep unfamiliar server values readable; editing offers only documented options.
-  public let reviewsPresentationOrder: String
+  public var reviewsPresentationOrder: String
+
+  public var reviewOrder: StudyReviewOrder? {
+    switch ReviewOrder(rawValue: reviewsPresentationOrder) {
+    case .shuffled: .random
+    case .lowerLevelsFirst: .lowestLevelFirst
+    case nil: nil
+    }
+  }
+  public func autoplay(in context: Context) -> Bool {
+    switch context {
+    case .lessons: lessonsAutoplayAudio
+    case .reviews: reviewsAutoplayAudio
+    case .extraStudy: extraStudyAutoplayAudio
+    }
+  }
+
+  public func applying(_ changes: WaniKaniPreferenceChanges) -> Self {
+    var value = self
+    if let edit = changes.extraStudyAutoplayAudio { value.extraStudyAutoplayAudio = edit }
+    if let edit = changes.lessonsAutoplayAudio { value.lessonsAutoplayAudio = edit }
+    if let edit = changes.lessonsBatchSize { value.lessonsBatchSize = edit }
+    if let edit = changes.reviewsAutoplayAudio { value.reviewsAutoplayAudio = edit }
+    if let edit = changes.reviewsDisplaySrsIndicator { value.reviewsDisplaySrsIndicator = edit }
+    if let edit = changes.reviewsPresentationOrder {
+      value.reviewsPresentationOrder = edit.rawValue
+    }
+    return value
+  }
 }
 
 /// Nil fields are absent from the PUT, so one edited option cannot replace unrelated settings.
-public struct WaniKaniPreferenceChanges: Encodable, Sendable {
+public struct WaniKaniPreferenceChanges: Codable, Equatable, Sendable {
   public var extraStudyAutoplayAudio: Bool?
   public var lessonsAutoplayAudio: Bool?
   public var lessonsBatchSize: Int?
@@ -25,10 +54,38 @@ public struct WaniKaniPreferenceChanges: Encodable, Sendable {
   public var reviewsPresentationOrder: WaniKaniPreferences.ReviewOrder?
   public init() {}
 
-  var isEmpty: Bool {
+  public init(from old: WaniKaniPreferences, to new: WaniKaniPreferences) {
+    if old.extraStudyAutoplayAudio != new.extraStudyAutoplayAudio {
+      extraStudyAutoplayAudio = new.extraStudyAutoplayAudio
+    }
+    if old.lessonsAutoplayAudio != new.lessonsAutoplayAudio {
+      lessonsAutoplayAudio = new.lessonsAutoplayAudio
+    }
+    if old.lessonsBatchSize != new.lessonsBatchSize { lessonsBatchSize = new.lessonsBatchSize }
+    if old.reviewsAutoplayAudio != new.reviewsAutoplayAudio {
+      reviewsAutoplayAudio = new.reviewsAutoplayAudio
+    }
+    if old.reviewsDisplaySrsIndicator != new.reviewsDisplaySrsIndicator {
+      reviewsDisplaySrsIndicator = new.reviewsDisplaySrsIndicator
+    }
+    if old.reviewsPresentationOrder != new.reviewsPresentationOrder {
+      reviewsPresentationOrder = .init(rawValue: new.reviewsPresentationOrder)
+    }
+  }
+
+  public var isEmpty: Bool {
     extraStudyAutoplayAudio == nil && lessonsAutoplayAudio == nil && lessonsBatchSize == nil
       && reviewsAutoplayAudio == nil && reviewsDisplaySrsIndicator == nil
       && reviewsPresentationOrder == nil
+  }
+
+  public mutating func merge(_ edits: Self) {
+    if let value = edits.extraStudyAutoplayAudio { extraStudyAutoplayAudio = value }
+    if let value = edits.lessonsAutoplayAudio { lessonsAutoplayAudio = value }
+    if let value = edits.lessonsBatchSize { lessonsBatchSize = value }
+    if let value = edits.reviewsAutoplayAudio { reviewsAutoplayAudio = value }
+    if let value = edits.reviewsDisplaySrsIndicator { reviewsDisplaySrsIndicator = value }
+    if let value = edits.reviewsPresentationOrder { reviewsPresentationOrder = value }
   }
 
   func matches(_ value: WaniKaniPreferences) -> Bool {
@@ -83,7 +140,7 @@ extension WaniKaniClient {
     return try preferences(response, accountID: accountID)
   }
 
-  /// Verify identity before one explicit PUT; ambiguous writes are never automatically replayed.
+  /// Verify identity before one PUT; a read can confirm an earlier uncertain write without replay.
   public func updateUserPreferences(
     _ changes: WaniKaniPreferenceChanges, accountID: String, token: String
   ) async throws -> WaniKaniPreferences {
@@ -91,7 +148,8 @@ extension WaniKaniClient {
     guard changes.lessonsBatchSize.map({ $0 > 0 }) != false else {
       throw WaniKaniPreferenceError.invalidBatchSize
     }
-    _ = try await userPreferences(accountID: accountID, token: token)
+    let current = try await userPreferences(accountID: accountID, token: token)
+    if changes.matches(current) { return current }
     try Task.checkCancellation()
     let response: Resource<PreferenceUser> = try await request(
       endpoint("user"), token: token, method: .put,

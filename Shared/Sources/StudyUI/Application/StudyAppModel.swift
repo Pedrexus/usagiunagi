@@ -18,7 +18,24 @@ public final class StudyAppModel {
     public fileprivate(set) var acknowledged = false
   }
   public private(set) var dataRevision = UUID()
-  public private(set) var snapshot: StudySnapshot? { didSet { dataRevision = UUID() } }
+  public private(set) var snapshot: StudySnapshot? {
+    didSet {
+      dataRevision = UUID()
+      if oldValue?.accountID != snapshot?.accountID || oldValue?.isSample != snapshot?.isSample {
+        clearWaniKaniPreferences()
+      }
+    }
+  }
+  public private(set) var waniKaniPreferences: WaniKaniPreferences?
+  public private(set) var waniKaniPreferencesSavedAt: Date?
+  public private(set) var waniKaniPreferencesNotice: String?
+  public private(set) var isLoadingWaniKaniPreferences = false
+  public private(set) var preferenceSourceRevision = UUID()
+  public private(set) var pendingWaniKaniPreferences = WaniKaniPreferenceChanges()
+  public private(set) var waniKaniPreferencesNeedConfirmation = false
+  public var effectiveWaniKaniPreferences: WaniKaniPreferences? {
+    waniKaniPreferences?.applying(pendingWaniKaniPreferences)
+  }
   public private(set) var profile: StudyAccountProfile?
   public private(set) var savedWorkStore: StudyStore?
   public private(set) var syncSummary: String?
@@ -42,15 +59,22 @@ public final class StudyAppModel {
   @ObservationIgnored private let legacySnapshotURL: URL?
   @ObservationIgnored private var persistence: Task<StudyStore, any Error>?
   @ObservationIgnored private var reader: any WaniKaniService
+  @ObservationIgnored private let preferenceCacheDirectory: URL?
+  @ObservationIgnored private var preferencePersistence: Task<WaniKaniSettingsCache, any Error>?
+  @ObservationIgnored private var preferenceWrite: Task<Void, Never>?
+  @ObservationIgnored private var preferenceDebounce: Task<Void, any Error>?
+  private var preferenceEditRevision = UUID()
 
   public init(
     credentials: any StudyCredentialStore, client: any WaniKaniService = WaniKaniClient(),
     legacySnapshotURL: URL? = nil,
+    preferenceCacheDirectory: URL? = nil,
     openStore: @escaping @Sendable () async throws -> StudyStore
   ) {
     self.credentials = credentials
     reader = client
     self.legacySnapshotURL = legacySnapshotURL
+    self.preferenceCacheDirectory = preferenceCacheDirectory
     self.openStore = openStore
   }
 
@@ -274,6 +298,7 @@ public final class StudyAppModel {
       let endpoint = URL(string: normalized)
     else { throw WaniKaniServiceConfigurationError.invalidEndpoint }
     reader = try reader.reconfigured(baseURL: endpoint)
+    clearWaniKaniPreferences()
   }
   /// Read through the same fenced lane without rewriting credentials or sending pending work.
   public func refresh(accountID: String) async throws {
@@ -372,9 +397,11 @@ public final class StudyAppModel {
     guard !isDisconnecting else { return }
     restoration?.cancel()
     let connectingCredential = activeCredential
+    let account = snapshot?.accountID
     generation = UUID()
     activeRequests = 0
     activeCredential = nil
+    isLoadingWaniKaniPreferences = false
     isDisconnecting = true
     defer { isDisconnecting = false }
     do {
@@ -388,6 +415,12 @@ public final class StudyAppModel {
       error = nil
       syncSummary = nil
       accountIssue = nil
+      if let account {
+        do { try await preferenceRepository()?.remove(accountID: account) } catch {
+          self.error =
+            "Disconnected, but saved WaniKani settings could not be removed: \(error.localizedDescription)"
+        }
+      }
       for credential in Set([connectingCredential, savedCredential].compactMap({ $0 })) {
         try await cache.removeSnapshot(credentialID: credential)
       }
@@ -395,5 +428,238 @@ public final class StudyAppModel {
         try FileManager.default.removeItem(at: legacySnapshotURL)
       }
     } catch { self.error = error.localizedDescription }
+  }
+
+  private func clearWaniKaniPreferences() {
+    preferenceWrite?.cancel()
+    preferenceDebounce?.cancel()
+    preferenceDebounce = nil
+    preferenceWrite = nil
+    pendingWaniKaniPreferences = .init()
+    waniKaniPreferencesNeedConfirmation = false
+    isLoadingWaniKaniPreferences = false
+    waniKaniPreferences = nil
+    waniKaniPreferencesSavedAt = nil
+    waniKaniPreferencesNotice = nil
+    preferenceSourceRevision = UUID()
+  }
+
+  private func preferenceRepository() async throws -> WaniKaniSettingsCache? {
+    guard let preferenceCacheDirectory else { return nil }
+    let task =
+      preferencePersistence
+      ?? Task { try await WaniKaniSettingsCache.open(in: preferenceCacheDirectory) }
+    preferencePersistence = task
+    do { return try await task.value } catch {
+      preferencePersistence = nil
+      throw error
+    }
+  }
+
+  private func checkPreferencesRequest(_ epoch: UUID, account: String, credential: String) throws {
+    try checkRequest(epoch)
+    guard snapshot?.isSample == false, snapshot?.accountID == account,
+      try credentials.load().map(Self.credentialID) == credential
+    else { throw StudySignInError.accountChanged }
+  }
+
+  /// Reads never manufacture edits. A persisted, unattempted user edit may resume afterward.
+  @discardableResult public func refreshWaniKaniPreferences(force: Bool = false) async -> Bool {
+    guard preferenceWrite == nil, !isLoadingWaniKaniPreferences, !isDisconnecting,
+      snapshot?.isSample == false,
+      let account = snapshot?.accountID
+    else { return false }
+    let epoch = generation
+    let source = preferenceSourceRevision
+    isLoadingWaniKaniPreferences = true
+    defer {
+      if generation == epoch, preferenceSourceRevision == source {
+        isLoadingWaniKaniPreferences = false
+        if !pendingWaniKaniPreferences.isEmpty && !waniKaniPreferencesNeedConfirmation {
+          scheduleWaniKaniPreferencesSave()
+        }
+      }
+    }
+    do {
+      guard let token = try credentials.load() else { throw WaniKaniClient.APIError.unauthorized }
+      let credential = Self.credentialID(token)
+      try beginRequest(credential: credential)
+      defer { finishRequest(epoch) }
+      let client = reader
+      var cache: WaniKaniSettingsCache?
+      if let service = client.cacheNamespace {
+        do {
+          cache = try await preferenceRepository()
+          if waniKaniPreferences == nil,
+            let saved = try await cache?.value(accountID: account, service: service)
+          {
+            try checkPreferencesRequest(epoch, account: account, credential: credential)
+            waniKaniPreferences = saved.preferences
+            waniKaniPreferencesSavedAt = saved.savedAt
+            pendingWaniKaniPreferences = saved.pending
+            waniKaniPreferencesNeedConfirmation = saved.needsConfirmation
+          }
+        } catch {
+          try checkPreferencesRequest(epoch, account: account, credential: credential)
+          waniKaniPreferencesNotice =
+            "Saved WaniKani settings could not be read. Your study data has been kept."
+        }
+      }
+      try checkPreferencesRequest(epoch, account: account, credential: credential)
+      if !force, pendingWaniKaniPreferences.isEmpty, let saved = waniKaniPreferencesSavedAt,
+        (0..<1800).contains(Date.now.timeIntervalSince(saved))
+      {
+        return true
+      }
+      let value = try await client.userPreferences(accountID: account, token: token)
+      try checkPreferencesRequest(epoch, account: account, credential: credential)
+      guard value.lessonsBatchSize > 0 else { throw WaniKaniPreferenceError.invalidBatchSize }
+      pendingWaniKaniPreferences = .init(
+        from: value, to: value.applying(pendingWaniKaniPreferences))
+      if pendingWaniKaniPreferences.isEmpty { waniKaniPreferencesNeedConfirmation = false }
+      waniKaniPreferences = value
+      waniKaniPreferencesSavedAt = .now
+      waniKaniPreferencesNotice =
+        waniKaniPreferencesNeedConfirmation
+        ? "Saved edits still differ from WaniKani. Retry sync to apply them."
+        : cache == nil && preferenceCacheDirectory != nil && client.cacheNamespace != nil
+          ? "WaniKani settings could not be cached on this device." : nil
+      do {
+        try await persistWaniKaniPreferences(
+          cache: cache, account: account, service: client.cacheNamespace)
+      } catch {
+        try checkPreferencesRequest(epoch, account: account, credential: credential)
+        waniKaniPreferencesNotice =
+          "WaniKani settings were read, but could not be saved on this device."
+      }
+      return true
+    } catch {
+      guard generation == epoch, snapshot?.accountID == account, !(error is CancellationError)
+      else { return false }
+      waniKaniPreferencesNotice =
+        "Could not refresh WaniKani settings. \(waniKaniPreferences == nil ? "Local app choices remain available." : "Showing saved values.") \(error.localizedDescription)"
+      return false
+    }
+  }
+
+  public func editWaniKaniPreferences(_ value: WaniKaniPreferences) {
+    guard !isLoadingWaniKaniPreferences, !isDisconnecting, snapshot?.isSample == false,
+      let baseline = waniKaniPreferences, let current = effectiveWaniKaniPreferences,
+      value.lessonsBatchSize > 0, current != value
+    else { return }
+    pendingWaniKaniPreferences.merge(.init(from: current, to: value))
+    if !waniKaniPreferencesNeedConfirmation {
+      pendingWaniKaniPreferences = .init(
+        from: baseline, to: baseline.applying(pendingWaniKaniPreferences))
+    }
+    preferenceEditRevision = UUID()
+    preferenceDebounce?.cancel()
+    scheduleWaniKaniPreferencesSave()
+  }
+
+  public func retryWaniKaniPreferencesSave() {
+    guard !isLoadingWaniKaniPreferences, !pendingWaniKaniPreferences.isEmpty else { return }
+    waniKaniPreferencesNeedConfirmation = false
+    scheduleWaniKaniPreferencesSave()
+  }
+
+  private func persistWaniKaniPreferences(
+    cache: WaniKaniSettingsCache?, account: String, service: String?
+  ) async throws {
+    guard let cache, let service, let value = waniKaniPreferences,
+      let savedAt = waniKaniPreferencesSavedAt
+    else { return }
+    try await cache.save(
+      value, accountID: account, service: service, now: savedAt,
+      pending: pendingWaniKaniPreferences, needsConfirmation: waniKaniPreferencesNeedConfirmation)
+  }
+
+  /// One app-owned task persists before debouncing. Dismissing a view does not cancel it.
+  private func scheduleWaniKaniPreferencesSave() {
+    guard preferenceWrite == nil, !isLoadingWaniKaniPreferences, !isDisconnecting,
+      snapshot?.isSample == false, let account = snapshot?.accountID
+    else { return }
+    let epoch = generation
+    let source = preferenceSourceRevision
+    preferenceWrite = Task {
+      defer { if source == preferenceSourceRevision { preferenceWrite = nil } }
+      do {
+        let client = reader
+        let cache = try await preferenceRepository()
+        while true {
+          try checkRequest(epoch)
+          guard source == preferenceSourceRevision, snapshot?.accountID == account else {
+            throw CancellationError()
+          }
+          let revision = preferenceEditRevision
+          try await persistWaniKaniPreferences(
+            cache: cache, account: account, service: client.cacheNamespace)
+          try checkRequest(epoch)
+          guard source == preferenceSourceRevision, snapshot?.accountID == account else {
+            throw CancellationError()
+          }
+          if revision != preferenceEditRevision { continue }
+          guard !pendingWaniKaniPreferences.isEmpty else {
+            waniKaniPreferencesNotice = nil
+            return
+          }
+          guard !waniKaniPreferencesNeedConfirmation else { return }
+          // Only the delay is canceled by another edit. Never cancel an in-flight PUT.
+          let delay = Task { try await Task.sleep(for: .milliseconds(600)) }
+          preferenceDebounce = delay
+          _ = await delay.result
+          try Task.checkCancellation()
+          preferenceDebounce = nil
+          if revision != preferenceEditRevision { continue }
+          guard let token = try credentials.load() else {
+            throw WaniKaniClient.APIError.unauthorized
+          }
+          let credential = Self.credentialID(token)
+          try await syncWaniKaniPreferences(
+            client: client, cache: cache, account: account, token: token, credential: credential,
+            epoch: epoch)
+          return
+        }
+      } catch {
+        guard source == preferenceSourceRevision, generation == epoch, !(error is CancellationError)
+        else { return }
+        waniKaniPreferencesNotice =
+          "WaniKani settings have not synced. Your edits are kept here. \(error.localizedDescription)"
+      }
+    }
+  }
+
+  private func syncWaniKaniPreferences(
+    client: any WaniKaniService, cache: WaniKaniSettingsCache?, account: String,
+    token: String, credential: String, epoch: UUID
+  ) async throws {
+    try checkPreferencesRequest(epoch, account: account, credential: credential)
+    try beginRequest(credential: credential)
+    isLoadingWaniKaniPreferences = true
+    defer {
+      finishRequest(epoch)
+      if generation == epoch { isLoadingWaniKaniPreferences = false }
+    }
+    // Persist the attempt before transport: a restart must not blindly repeat an uncertain PUT.
+    waniKaniPreferencesNeedConfirmation = true
+    try await persistWaniKaniPreferences(
+      cache: cache, account: account, service: client.cacheNamespace)
+    try checkPreferencesRequest(epoch, account: account, credential: credential)
+    let value = try await client.updateUserPreferences(
+      pendingWaniKaniPreferences, accountID: account, token: token)
+    try checkPreferencesRequest(epoch, account: account, credential: credential)
+    waniKaniPreferences = value
+    waniKaniPreferencesSavedAt = .now
+    pendingWaniKaniPreferences = .init()
+    waniKaniPreferencesNeedConfirmation = false
+    waniKaniPreferencesNotice = nil
+    do {
+      try await persistWaniKaniPreferences(
+        cache: cache, account: account, service: client.cacheNamespace)
+    } catch {
+      try checkPreferencesRequest(epoch, account: account, credential: credential)
+      waniKaniPreferencesNotice =
+        "WaniKani saved these settings, but this device could not cache the confirmation."
+    }
   }
 }

@@ -72,11 +72,14 @@ import SwiftUI
     #endif
     let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
     let media = mediaLayout.directories(nativeRoot: directory)
+    StudyWaniKaniSources.prepare(defaults: .standard)
     return Self(
       model: StudyAppModel(
         credentials: KeychainStudyCredentialStore(service: "TsurukameNative.WaniKani"),
         client: WaniKaniClient(baseURL: baseURL),
         legacySnapshotURL: directory.appending(path: "snapshot-v1.json"),
+        preferenceCacheDirectory: URL.applicationSupportDirectory.appending(
+          path: "UsagiWaniKaniSettings"),
         openStore: { store }),
       fonts: StudyFontLibrary(
         catalog: .init(

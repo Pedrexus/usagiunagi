@@ -8,6 +8,7 @@ public struct LessonFlowView<Page: View>: View {
   private let back: () -> Void
   private let backTitle: String
   private let playAudio: (Int) -> Void
+  private let autoplay: ((Int) -> Void)?
   @State private var index = 0
   @FocusState private var keyboardFocus: Bool
 
@@ -15,6 +16,7 @@ public struct LessonFlowView<Page: View>: View {
     subjects: [CatalogSubject], initialPage: Int = 0,
     backTitle: String = "Back",
     back: @escaping () -> Void,
+    autoplay: ((Int) -> Void)? = nil,
     playAudio: @escaping (Int) -> Void, @ViewBuilder page: @escaping (Int) -> Page
   ) {
     self.subjects = subjects
@@ -22,6 +24,7 @@ public struct LessonFlowView<Page: View>: View {
     self.back = back
     self.backTitle = backTitle
     self.playAudio = playAudio
+    self.autoplay = autoplay
     self.page = page
   }
   public var body: some View {
@@ -118,6 +121,9 @@ public struct LessonFlowView<Page: View>: View {
     }.toolbarTitleDisplayMode(.inline)
       .focusable(index < subjects.count).focused($keyboardFocus)
       .onAppear { keyboardFocus = index < subjects.count }
+      .onChange(of: index, initial: true) { _, value in
+        if subjects.indices.contains(value) { autoplay?(value) }
+      }
       .onChange(of: index) { _, page in keyboardFocus = page < subjects.count }
       .onKeyPress(keys: [.leftArrow, .rightArrow, .return, .space, "a", "d", "q", "j"]) { press in
         guard index < subjects.count, press.modifiers.isEmpty else { return .ignored }
