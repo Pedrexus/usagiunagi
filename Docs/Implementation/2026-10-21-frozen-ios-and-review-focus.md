@@ -557,3 +557,37 @@ Two new Swift files pass scoped parser/UI rules, strict swift-format and SwiftLi
 Three prototype compiler failures remain separately in `FrozenValues.KnIQk0`, `FrozenValues.9z7qdF` and `FrozenValues.blCCod`: directory enumeration required a synchronous helper; today's canonical baseline helper calls a query method absent from the original writer; and the original helper predates today's manifest convenience method. The final wrapper reads that unchanged manifest directly and compiles the original archived reader instead of adapting old domain/storage types or weakening comparisons. These are harness build failures, not app crashes or passing receipts. The preceding positive run `FrozenValues.5ZCbg2` retains the same scope before moving build intermediates.
 
 This closes historical-source preservation and independent unchanged-schema Mac compilation/reopening. It does **not** implement a V2 transition or bind historical decoders into a production upgrade; that must precede any actual property change. Full historical payload-variant coverage, iPhone historical-decoder execution, remaining G7 failures, real-catalog/device performance and physical/signed/UI acceptance stay open. No normal account, exercises, GUI automation, physical capture, signing, publication or schema mutation occurred.
+
+## Completed-review disk-full transaction
+
+The existing bounded APFS task now checks a third point, **beforeReviewCommit**, through public `answerReview`. It opens an independent frozen copy, retains the original wrong meaning, advances and answers that meaning correctly, then prepares the final reading answer. A synchronous `ModelContext.willSave` observer records the actual dirty session, inserted `ReviewRecord` and changed account mistake timestamp before filling the guarded 128 MB volume. A mutex protects the notification witness; no production fault hook, replacement grader, injected save error or SQL mutation is added.
+
+Pressure generation now continues with **4 KiB writes** after the first failed 1 MiB write. The earlier large-chunk-only attempt genuinely reached `ENOSPC`, but enough residual allocation remained for the small review transaction to succeed; that attempt correctly failed the new gate. With residual blocks filled, the real save throws **`NSSQLiteErrorDomain / 13 (SQLITE_FULL)`**. The propagated direct SQLite error is accepted only when domain, code and underlying code all match; the existing note cases retain their Cocoa 256 / SQLite 4618 checks.
+
+The witness must contain exactly one dirty save attempt, one inserted unattempted answer with its original item, the exact independently advanced session and the expected account timestamp. It must observe no successful save, and the context must be clean after rollback. Once pressure is removed, every prepared record/field/revision must match exactly. Public `answerReview` then retries the **same question and expected revision**. The independently computed session and explicit submission require subject **42**, assignment **142**, one wrong meaning, zero wrong readings, timestamp **2,000,000,000**, and **3 answers / 2 correct**. Only the account state/session/revision and one new outbox record may change; all unrelated records and pending attempts stay exact. The new answer is unattempted, has no issue/original assignment, and has a fresh revision. Two new processes restore the complete **39-record** result. The parent separately compares original/retained images, selector and frozen source bytes.
+
+Final canonical `usagi-test-storage-space` exits 0 with all three receipts in `.build/Results/StorageSpace.gi3ZC8`. Verified volume capacity is **127,959,040 bytes**; `disk34` is ejected, and `/private/tmp/usagi-disk-space.flx4Zc` is absent afterward. Mainboard requires three receipts and owns build, image lifecycle, deadline and cleanup. Actions already invokes the same locked task; no workflow or dependency pin changes.
+
+| Point | Pressure bytes / writer PID | Fresh verifying PIDs | Receipt SHA-256 |
+| --- | --- | --- | --- |
+| beforeMutation | 122,904,576 / 79127 | 79129, 79130 | `5e73acdb7c9458376f10a3759f9aef44115ff4f381f37d1c0c7e4d0dc74783d1` |
+| beforeCommit | 119,914,496 / 79133 | 79137, 79138 | `5f480e77fd222407591dda835faaf7a8236269fb7a3391c40b38012f656c906d` |
+| beforeReviewCommit | 116,830,208 / 79140 | 79141, 79142 | `c3df253020eac4344df4f8fedcc54971bc6f7b21cb0a35891f4be793c2a009e1` |
+
+The full ten-phase `usagi-test-persistence` also exits 0. It initially detected that the older unchanged-schema experiment required exactly two fixture-directory files, while the independent historical-decoder gate had added three archives/checksum files. The experiment now requires the exact five known filenames, copies only the store/manifest into its two disposable source directories, and still compares all original source bytes afterward. Unexpected files and canonical journal sidecars remain refused. No frozen bytes are changed or regenerated.
+
+Scoped parser/UI rules, strict swift-format and SwiftLint pass with zero rewrites on the final source. Inventory parses **262/262** files with zero context issues: production **146 / 21,694** physical lines is unchanged, tests **111 / 26,486** (+281), tooling **five / 281** unchanged. These are path counts, not logical LOC or target-membership proof. The probe is DEBUG-only; app/watch/shared sources, V1, canonical helper/store/manifest, project membership, locks, Mainboard package and the three owner edits remain unchanged. No new app/shared/Release or rendered test pass is claimed.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `NativeStoreUpgrade.swift` | `fa99138c7edfc32263e78ccd1a878567a2e3c1eff5150bbcf0fd72dcc078e6ff` |
+| `.build/Results/CompletedReviewSpaceFinal.log` | `719ac86161dfd4c5aed53d72940eb5e4fcda86e6cf8fbeefb2ada96413b114d8` |
+| `.build/Results/CompletedReviewSpacePersistence.log` | `686adab8a000698f069b8c4df77dc446bbfe0b60fb7f61e3f7390d3968a96ab5` |
+| `.build/Results/CompletedReviewSpaceLint.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| `.build/Reports/CompletedReviewSpaceInventory.json` | `b1a08d50274cf57fc593b39b407e85c624947e0b994f656c815a3c395113e17e` |
+| `StorageSpace.gi3ZC8/attach.plist` | `ae1bf333771e68abd5e0371c23c51bba14d6c962e90b4a72bfd5bd4bb6370134` |
+| `StorageSpace.gi3ZC8/detach.log` | `070e6295f812e8293baa76a073c15d0d402c6fabb3825efbefb683d2e89dfeaf` |
+
+Prototype logs retain the initial argument-label compiler failure, the expectation correction (a finished session retains its last question token while exposing no active question), the large-chunk residual-capacity failure, and the direct SQLite error-domain check. The separate archive-layout failure is retained before the full ten-phase passing run. These are harness development failures, not app launch crashes or additional passing cases; failed images are ejected and preserved by the existing task policy.
+
+This closes the recorded **Mac completed-review disk-full save** case. Native iPhone saving, adoption/activation/final selection under disk pressure, actual abrupt pre-answer-commit/mid-copy/publication interruptions, Data Protection/power loss, real-catalog/device performance, production historical-decoder binding and wider G7 combinations remain open. Physical/signed/UI/voice/CI prerequisites and all other tasks remain in [TASKS](../TASKS.md); the overall modernization is unfinished.

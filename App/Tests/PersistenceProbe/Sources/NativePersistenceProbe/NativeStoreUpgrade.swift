@@ -6,8 +6,55 @@
   import SQLite3
   import StudyCore
   import SwiftData
+  import Synchronization
 
   @testable import StudyPersistence
+
+  private struct ReviewSpaceEvidence: Codable {
+    let saveAttempts: Int
+    let successfulSaves: Int
+    let dirtyAfterRollback: Bool
+    let submission: StudyReviewSubmission
+  }
+  private struct ReviewSpaceAttempt: Sendable {
+    let dirty: Bool
+    let insertedCount: Int
+    let deletedCount: Int
+    let reviews: [SavedReview]
+    let session: Data?
+    let sessionRevision: UUID?
+    let account: Data?
+  }
+  private struct RejectedReviewSpace: Sendable {
+    let error: (any Error)?
+    let attempts: [ReviewSpaceAttempt]
+    let successfulSaves: Int
+    let dirtyAfterRollback: Bool
+  }
+  private final class ReviewSpaceWitness: Sendable {
+    private struct Events: Sendable {
+      var attempts: [ReviewSpaceAttempt] = []
+      var successes = 0
+      var captureError: (any Error)?
+    }
+    private let events = Mutex(Events())
+    func record(_ attempt: ReviewSpaceAttempt) -> Bool {
+      events.withLock {
+        $0.attempts.append(attempt)
+        return $0.attempts.count == 1
+      }
+    }
+    func succeeded() { events.withLock { $0.successes += 1 } }
+    func failed(_ error: any Error) { events.withLock { $0.captureError = error } }
+    func result(error: (any Error)?, dirty: Bool) throws -> RejectedReviewSpace {
+      try events.withLock {
+        if let failure = $0.captureError { throw failure }
+        return .init(
+          error: error, attempts: $0.attempts, successfulSaves: $0.successes,
+          dirtyAfterRollback: dirty)
+      }
+    }
+  }
 
   // Experimental naming of the unchanged schema; no production model or migration is changed.
   private enum NativeUpgradeSchema: VersionedSchema {
@@ -38,7 +85,7 @@
       "probe-application-metadata-corruption", "inspect-application-metadata",
       "probe-application-adoption-corruption",
       "probe-application-space", "write-application-space", "commit-application-space",
-      "verify-application-space",
+      "commit-review-application-space", "verify-application-space",
     ]
     private static let marker = Data("usagi-native-upgrade-disposable-v1".utf8)
 
@@ -48,7 +95,7 @@
         return
       }
       if command == "write-application-space" || command == "commit-application-space"
-        || command == "verify-application-space"
+        || command == "commit-review-application-space" || command == "verify-application-space"
       {
         try await spaceCommand(command, url: url)
         return
@@ -142,7 +189,10 @@
       let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
       let source = frozen.deletingLastPathComponent()
       let pristine = try hashes(in: source)
-      let allowed = Set([frozen.lastPathComponent, frozen.lastPathComponent + ".baseline.plist"])
+      let storeFiles = Set([frozen.lastPathComponent, frozen.lastPathComponent + ".baseline.plist"])
+      let allowed = storeFiles.union([
+        "writer-sources.zip", "baseline-reader.zip", "writer-sources.sha256",
+      ])
       try NativeStoreBaseline.require(
         Set(pristine.keys) == allowed, "Only the pinned journal-free synthetic fixture is allowed")
       let root = URL.temporaryDirectory.appending(path: "native-upgrade-\(UUID())")
@@ -151,7 +201,10 @@
       log("DISPOSABLE: \(root.path)")
       let base = root.appending(path: "base-source")
       // No persistence API receives the original fixture. Every open/copy uses a disposable clone.
-      try manager.copyItem(at: source, to: base)
+      try manager.createDirectory(at: base, withIntermediateDirectories: false)
+      for name in storeFiles {
+        try manager.copyItem(at: source.appending(path: name), to: base.appending(path: name))
+      }
       let baseBefore = try hashes(in: base)
       let candidate = root.appending(path: "base-candidate/\(frozen.lastPathComponent)")
       try copyStore(from: base.appending(path: frozen.lastPathComponent), to: candidate)
@@ -165,7 +218,10 @@
       try verifyTwice(candidate, expected: manifest.expected)
 
       let wal = root.appending(path: "wal-source")
-      try manager.copyItem(at: source, to: wal)
+      try manager.createDirectory(at: wal, withIntermediateDirectories: false)
+      for name in storeFiles {
+        try manager.copyItem(at: source.appending(path: name), to: wal.appending(path: name))
+      }
       let walStore = wal.appending(path: frozen.lastPathComponent)
       try encode(manifest.expected, to: expectedURL(walStore))
       let walBefore = try hashes(in: wal)
@@ -212,9 +268,13 @@
     }
 
     private enum SpacePoint: String, Codable, CaseIterable {
-      case beforeMutation, beforeCommit
+      case beforeMutation, beforeCommit, beforeReviewCommit
       var command: String {
-        self == .beforeMutation ? "write-application-space" : "commit-application-space"
+        switch self {
+        case .beforeMutation: "write-application-space"
+        case .beforeCommit: "commit-application-space"
+        case .beforeReviewCommit: "commit-review-application-space"
+        }
       }
     }
     private struct SpaceOutcome: Codable {
@@ -225,6 +285,7 @@
       let saveErrorCode: Int
       let sqliteCode: Int32
       let restoredRecords: Int
+      let review: ReviewSpaceEvidence?
     }
 
     private static func spaceVolume(_ volume: URL) throws -> Int {
@@ -252,13 +313,18 @@
       guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
       defer { Darwin.close(descriptor) }
       let buffer = Data(repeating: 0xa7, count: 1024 * 1024)
+      var chunk = buffer.count
       var filled = 0
       while filled <= capacity {
-        let written = buffer.withUnsafeBytes { Darwin.write(descriptor, $0.baseAddress, $0.count) }
+        let written = buffer.withUnsafeBytes { Darwin.write(descriptor, $0.baseAddress, chunk) }
         if written < 0 {
           if errno == EINTR { continue }
           guard errno == ENOSPC else {
             throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+          }
+          if chunk > 4096 {
+            chunk = 4096
+            continue
           }
           if Darwin.fsync(descriptor) != 0 && errno != ENOSPC {
             throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
@@ -309,7 +375,9 @@
           outcome.point == point && outcome.filledBytes > 0
             && outcome.writerPID > 0
             && outcome.writerPID != ProcessInfo.processInfo.processIdentifier
-            && outcome.restoredRecords == manifest.expected.records.count,
+            && outcome.restoredRecords
+              == manifest.expected.records.count + (point == .beforeReviewCommit ? 1 : 0)
+            && (point == .beforeReviewCommit ? outcome.review != nil : outcome.review == nil),
           "Missing space-failure and complete-state recovery evidence")
         log("PASS: \(point.rawValue) save refused, exact rollback, retry and two fresh reopens")
       }
@@ -338,6 +406,11 @@
         log(
           "PASS: space fixture restored \(expected.records.count) exact records, PID \(ProcessInfo.processInfo.processIdentifier)"
         )
+        return
+      }
+      if command == "commit-review-application-space" {
+        try await reviewSpaceCommand(
+          store: store, expected: expected, directory: directory, capacity: capacity)
         return
       }
       let account = NativeStoreBaseline.accounts[0]
@@ -374,14 +447,7 @@
         log("SPACE SAVE REFUSED: \(failure.domain)/\(failure.code), \(failure)")
       }
       let filled = try pressure.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-      // sqlite3.h's extended macro is not imported by Swift.
-      let sharedMemoryOpenError = SQLITE_IOERR | (Int32(18) << 8)
-      guard failure.domain == NSCocoaErrorDomain,
-        let sqlite = (failure.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.int32Value,
-        [SQLITE_FULL, sharedMemoryOpenError].contains(sqlite)
-      else {
-        throw NativeStoreBaseline.Failure(description: "Unexpected full-volume save error")
-      }
+      let sqlite = try spaceError(failure)
       try manager.removeItem(at: pressure)
       try NativeStoreBaseline.require(
         try await store.nativeBaselineState() == expected,
@@ -419,9 +485,172 @@
         SpaceOutcome(
           point: point, writerPID: ProcessInfo.processInfo.processIdentifier,
           filledBytes: filled, saveErrorDomain: failure.domain, saveErrorCode: failure.code,
-          sqliteCode: sqlite, restoredRecords: actual.records.count),
+          sqliteCode: sqlite, restoredRecords: actual.records.count, review: nil),
         to: directory.appendingPathExtension("space.plist"))
       log("PASS: real ENOSPC save rollback preserved all records and the same revision retried")
+    }
+
+    private static func spaceError(_ failure: NSError) throws -> Int32 {
+      // sqlite3.h's extended macro is not imported by Swift.
+      let sharedMemoryOpenError = SQLITE_IOERR | (Int32(18) << 8)
+      guard let sqlite = (failure.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.int32Value,
+        (failure.domain == NSCocoaErrorDomain
+          && [SQLITE_FULL, sharedMemoryOpenError].contains(sqlite))
+          || (failure.domain == "NSSQLiteErrorDomain" && failure.code == Int(SQLITE_FULL)
+            && sqlite == SQLITE_FULL)
+      else {
+        throw NativeStoreBaseline.Failure(description: "Unexpected full-volume save error")
+      }
+      return sqlite
+    }
+
+    private static func reviewSpaceCommand(
+      store: StudyStore, expected: NativeStoreBaseline.State, directory: URL, capacity: Int
+    ) async throws {
+      let accountID = NativeStoreBaseline.accounts[0]
+      let timestamp: Int64 = 2_000_000_000
+      let now = Date(timeIntervalSince1970: Double(timestamp))
+      var review = try await store.openReviews(accountID: accountID, now: now)
+      try NativeStoreBaseline.require(
+        review.subject?.id == 42 && review.saved.session.currentDecision == .incorrect,
+        "Review space fixture lost its original wrong answer")
+      var anticipated = review.saved.session
+      let meaning = anticipated.nextQuestion()
+      try NativeStoreBaseline.require(meaning?.kind == .meaning, "Meaning retry missing")
+      review = try await store.changeReview(
+        .advance, accountID: accountID, expectedRevision: review.saved.revision, now: now)
+      try NativeStoreBaseline.require(review.question == meaning, "Meaning retry changed")
+      guard let meaning else { throw NativeStoreBaseline.Failure(description: "Meaning missing") }
+      _ = try anticipated.mark(.correct, for: meaning, now: timestamp)
+      _ = anticipated.nextQuestion()
+      let answered = try await store.answerReview(
+        "Cat 0", question: meaning, accountID: accountID,
+        expectedRevision: review.saved.revision, now: now)
+      review = answered.state
+      try NativeStoreBaseline.require(
+        answered.grade == .precise
+          && NativeStoreBaseline.encoded(review.saved.session)
+            == NativeStoreBaseline.encoded(anticipated),
+        "Preparing review changed study decisions")
+      let prepared = try await store.nativeBaselineState()
+      try requireReviewChanges(
+        before: expected, after: prepared, accountID: accountID, completed: false)
+      guard let question = review.question, question.kind == .reading,
+        var expectedAccount = try await store.accountState(accountID: accountID),
+        let progress = expectedAccount.progress.firstIndex(where: { $0.subjectID == 42 })
+      else { throw NativeStoreBaseline.Failure(description: "Reading or saved progress missing") }
+      expectedAccount.progress[progress].lastMistakeAt = 2_000_000_000
+      _ = try anticipated.mark(.correct, for: question, now: timestamp)
+      _ = anticipated.nextQuestion()
+      let submission = StudyReviewSubmission(
+        itemID: 0, subjectID: 42, assignmentID: 142, isLesson: false,
+        meaningWrong: true, readingWrong: false, meaningWrongCount: 1, readingWrongCount: 0,
+        createdAt: 2_000_000_000)
+      try NativeStoreBaseline.require(
+        anticipated.completedSubmissions == [submission] && anticipated.activeIDs.isEmpty
+          && anticipated.tasksAnswered == 3 && anticipated.tasksAnsweredCorrectly == 2,
+        "Independent completed-review expectation lost the original mistake")
+      let pressure = directory.deletingLastPathComponent().appending(path: "volume-pressure")
+      defer {
+        if FileManager.default.fileExists(atPath: pressure.path) {
+          try? FileManager.default.removeItem(at: pressure)
+        }
+      }
+      let rejected = try await store.answerReviewWhileFillingVolume(
+        "ねこ", question: question, accountID: accountID,
+        expectedRevision: review.saved.revision, now: now
+      ) { _ = try fillSpace(at: pressure, capacity: capacity) }
+      guard let failure = rejected.error as NSError? else {
+        throw NativeStoreBaseline.Failure(description: "Full-volume review unexpectedly succeeded")
+      }
+      log("REVIEW SAVE REFUSED: \(failure.domain)/\(failure.code), \(failure)")
+      let sqlite = try spaceError(failure)
+      let filled = try pressure.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+      try FileManager.default.removeItem(at: pressure)
+      guard let attempt = rejected.attempts.first, let queued = attempt.reviews.first else {
+        throw NativeStoreBaseline.Failure(description: "No dirty review save was observed")
+      }
+      try NativeStoreBaseline.require(
+        rejected.attempts.count == 1 && attempt.dirty && attempt.insertedCount == 1
+          && attempt.deletedCount == 0 && attempt.reviews.count == 1
+          && queued.accountID == accountID && queued.subjectID == 42
+          && queued.submission == submission && !queued.attempted && queued.issue == nil
+          && queued.originalAssignment == nil
+          && NativeStoreBaseline.encoded(queued.originalItem)
+            == NativeStoreBaseline.encoded(anticipated.items[0])
+          && attempt.session == NativeStoreBaseline.encoded(anticipated)
+          && attempt.sessionRevision != nil && attempt.sessionRevision != review.saved.revision
+          && attempt.account == NativeStoreBaseline.encoded(expectedAccount)
+          && rejected.successfulSaves == 0 && !rejected.dirtyAfterRollback,
+        "The failed save did not contain the complete dirty review/session/mistake transaction")
+      try NativeStoreBaseline.require(
+        try await store.nativeBaselineState() == prepared,
+        "Failed review save advanced the session, changed a revision or queued an answer")
+      let retried = try await store.answerReview(
+        "ねこ", question: question, accountID: accountID,
+        expectedRevision: review.saved.revision, now: now)
+      let actualAccount = try await store.accountState(accountID: accountID)
+      try NativeStoreBaseline.require(
+        retried.grade == .precise && retried.state.question == nil
+          && retried.state.success?.submission == submission
+          && NativeStoreBaseline.encoded(retried.state.saved.session)
+            == NativeStoreBaseline.encoded(anticipated)
+          && NativeStoreBaseline.encoded(actualAccount)
+            == NativeStoreBaseline.encoded(expectedAccount),
+        "Retrying the same question/revision lost a decision or mistake penalty")
+      let pending = try await store.pendingReviews(accountID: accountID).filter {
+        $0.subjectID == 42
+      }
+      try NativeStoreBaseline.require(
+        pending.count == 1 && pending.first?.submission == submission
+          && pending.first?.attempted == false && pending.first?.issue == nil
+          && pending.first?.accountID == accountID && pending.first?.originalAssignment == nil
+          && pending.first?.revision != queued.revision
+          && NativeStoreBaseline.encoded(pending.first?.originalItem)
+            == NativeStoreBaseline.encoded(anticipated.items[0]),
+        "Review retry lost or duplicated the unattempted outbox answer")
+      let actual = try await store.nativeBaselineState()
+      try requireReviewChanges(
+        before: prepared, after: actual, accountID: accountID, completed: true)
+      try encode(actual, to: directory.appendingPathExtension("expected.plist"))
+      try encode(
+        SpaceOutcome(
+          point: .beforeReviewCommit, writerPID: ProcessInfo.processInfo.processIdentifier,
+          filledBytes: filled, saveErrorDomain: failure.domain, saveErrorCode: failure.code,
+          sqliteCode: sqlite, restoredRecords: actual.records.count,
+          review: .init(
+            saveAttempts: rejected.attempts.count, successfulSaves: rejected.successfulSaves,
+            dirtyAfterRollback: rejected.dirtyAfterRollback, submission: submission)),
+        to: directory.appendingPathExtension("space.plist"))
+      log(
+        "PASS: dirty completed review rolled back exactly; same-question retry queued one penalized answer"
+      )
+    }
+
+    private static func requireReviewChanges(
+      before: NativeStoreBaseline.State, after: NativeStoreBaseline.State,
+      accountID: String, completed: Bool
+    ) throws {
+      try NativeStoreBaseline.require(
+        before.schema == after.schema && before.schemaVersion == after.schemaVersion
+          && after.records.count == before.records.count + (completed ? 1 : 0),
+        "Review save changed schema or unexpected record membership")
+      for old in before.records {
+        guard
+          let new = after.records.first(where: {
+            $0.model == old.model && $0.identity == old.identity
+          })
+        else { throw NativeStoreBaseline.Failure(description: "Review save lost a record") }
+        let editable: Set<String> =
+          old.accountID == accountID && old.model == "SessionRecord"
+          ? ["session", "revision"]
+          : old.accountID == accountID && old.model == "AccountRecord" && completed ? ["state"] : []
+        try NativeStoreBaseline.require(
+          old.accountID == new.accountID
+            && old.fields.filter { !editable.contains($0.key) }
+              == new.fields.filter { !editable.contains($0.key) },
+          "Review save changed an unrelated record or pending upload")
+      }
     }
 
     private static func applicationCommand(_ command: String, url: URL) async throws {
@@ -1677,6 +1906,58 @@
     }
   }
   extension StudyStore {
+    fileprivate func answerReviewWhileFillingVolume(
+      _ answer: String, question: StudyQuestion, accountID: String, expectedRevision: UUID,
+      now: Date, fill: @Sendable @escaping () throws -> Void
+    ) throws -> RejectedReviewSpace {
+      let witness = ReviewSpaceWitness()
+      let center = NotificationCenter.default
+      let willSave = center.addObserver(
+        forName: ModelContext.willSave, object: modelContext, queue: nil
+      ) { notification in
+        guard let context = notification.object as? ModelContext else { return }
+        do {
+          let modified = context.changedModelsArray + context.insertedModelsArray
+          let session = modified.compactMap { $0 as? SessionRecord }.first {
+            $0.accountID == accountID
+          }
+          let account = modified.compactMap { $0 as? AccountRecord }.first {
+            $0.accountID == accountID
+          }
+          let first = witness.record(
+            .init(
+              dirty: context.hasChanges, insertedCount: context.insertedModelsArray.count,
+              deletedCount: context.deletedModelsArray.count,
+              reviews: context.insertedModelsArray.compactMap { $0 as? ReviewRecord }.map {
+                .init(
+                  accountID: $0.accountID, subjectID: $0.subjectID, revision: $0.revision,
+                  submission: $0.submission, originalItem: $0.originalItem,
+                  originalAssignment: $0.originalAssignment, attempted: $0.attempted,
+                  issue: $0.issue)
+              },
+              session: try session.map { try NativeStoreBaseline.encoded($0.session) },
+              sessionRevision: session?.revision,
+              account: try account.map { try NativeStoreBaseline.encoded($0.state) }))
+          if first { try fill() }
+        } catch { witness.failed(error) }
+      }
+      let didSave = center.addObserver(
+        forName: ModelContext.didSave, object: modelContext, queue: nil
+      ) { _ in witness.succeeded() }
+      defer {
+        center.removeObserver(willSave)
+        center.removeObserver(didSave)
+      }
+      let failure: (any Error)?
+      do {
+        _ = try answerReview(
+          answer, question: question, accountID: accountID, expectedRevision: expectedRevision,
+          now: now)
+        failure = nil
+      } catch { failure = error }
+      return try witness.result(error: failure, dirty: modelContext.hasChanges)
+    }
+
     fileprivate func saveMaterialWhileFillingVolume(
       _ material: StudyMaterial, accountID: String, expectedRevision: UUID,
       fill: @Sendable () throws -> Void
