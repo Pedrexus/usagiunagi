@@ -94,10 +94,10 @@ public struct NativeSubjectDetailsView: View {
   }
 
   private func content(_ details: StudySubjectDetails) -> some View {
-    VStack(alignment: .leading, spacing: 16) {
+    VStack(alignment: .leading, spacing: 10) {
       if reviewQuestion == nil {
         SubjectDetailsHeader(
-          subject: details.subject, fontSize: 72 * min(2.5, max(1, preferences.fontScale)))
+          subject: details.subject, fontSize: 48 * min(2.5, max(1, preferences.fontScale)))
       }
       SubjectDetailsContent(
         subject: details.subject, material: details.material, assignment: details.assignment,

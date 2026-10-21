@@ -133,8 +133,8 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   public var body: some View {
     GeometryReader { viewport in
       ScrollView {
-        VStack(spacing: 12) {
-          progress
+        VStack(spacing: 0) {
+          progress.padding(.horizontal, 12).padding(.vertical, 6)
           if let audio { AudioPlaybackNotice(library: audio) }
           let horizontal =
             viewport.size.width >= 560 && viewport.size.height < 420
@@ -142,10 +142,10 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           let layout =
             horizontal
             ? AnyLayout(HStackLayout(spacing: 16))
-            : AnyLayout(VStackLayout(spacing: 12))
+            : AnyLayout(VStackLayout(spacing: 0))
           layout {
             question
-            VStack(spacing: 12) { response }
+            VStack(spacing: 8) { response }.padding(12)
               .frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: true)
           }
         }.frame(maxWidth: 760, minHeight: viewport.size.height, alignment: .top)
@@ -155,14 +155,15 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       .scrollDismissesKeyboard(.never)
       .accessibilityIdentifier("review.scroll")
     }
-    .padding()
     .safeAreaInset(edge: .bottom) {
-      if state.phase == .details {
-        answerActions.padding().frame(maxWidth: 760).frame(maxWidth: .infinity).background(.bar)
-      }
+      VStack(spacing: 0) {
+        if state.phase == .details { answerActions.padding(12) }
+        studyTools.padding(.horizontal, 12)
+      }.frame(maxWidth: 760).frame(maxWidth: .infinity).background(.bar)
     }
     .navigationTitle(state.title ?? (state.hasMenu ? "Reviews" : "Quiz"))
     .toolbarTitleDisplayMode(.inline)
+    .navigationBarBackButtonHidden(state.hasMenu)
     .toolbar {
       if state.hasMenu {
         ToolbarItem(placement: .cancellationAction) {
@@ -172,37 +173,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           .accessibilityIdentifier("review.close")
         }
       }
-      ToolbarItem(placement: .secondaryAction) {
-        if state.canChangeFont || !state.previous.isEmpty {
-          Menu("Review actions", systemImage: "ellipsis") {
-            if !state.previous.isEmpty {
-              Button("Previous subject") { action(.previous) }.keyboardShortcut(
-                "p", modifiers: .command)
-            }
-            if state.canChangeFont {
-              Button("Toggle question font") { action(.toggleFont) }.keyboardShortcut(
-                .tab, modifiers: .option)
-              Button("Next font") { action(.nextFont) }.keyboardShortcut(
-                .rightArrow, modifiers: [.command, .option])
-              Button("Previous font") { action(.previousFont) }.keyboardShortcut(
-                .leftArrow, modifiers: [.command, .option])
-            }
-          }
-        }
-      }
-      .visibilityPriority(.low)
-      ToolbarItem(placement: .primaryAction) {
-        if state.phase == .answering && !state.isAnki {
-          Button("Voice answer", systemImage: "mic") { action(.voice) }
-            .accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
-        }
-      }.visibilityPriority(.high)
-      ToolbarItem(placement: .primaryAction) {
-        if state.hasMenu {
-          Button("Quick settings", systemImage: "slider.horizontal.3") { action(.settings) }
-            .accessibilityIdentifier("review.settings")
-        }
-      }.visibilityPriority(.low)
     }
     .confirmationDialog("Check your answer", isPresented: $state.showAssessment) {
       correctionActions
@@ -227,20 +197,18 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   private var progress: some View {
     VStack(spacing: 6) {
       adaptiveControls {
-        Text("\(state.completed) completed · \(state.remaining) remaining")
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .accessibilityIdentifier("review.progress")
-        if let accuracy = state.accuracy { Label(accuracy, systemImage: "checkmark") }
+        if let accuracy = state.accuracy { Label(accuracy, systemImage: "hand.thumbsup") }
+        Label("\(state.completed)", systemImage: "checkmark")
+          .accessibilityLabel("\(state.completed) completed")
+        Label("\(state.remaining)", systemImage: "tray")
+          .accessibilityLabel("\(state.remaining) remaining")
       }.font(.caption).foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .accessibilityIdentifier("review.progress")
       ProgressView(
         value: Double(state.completed), total: Double(max(1, state.completed + state.remaining)))
       successFeedback
       if state.wrappingUp { Label("Wrapping up", systemImage: "clock").font(.caption) }
-      if !state.previous.isEmpty && state.phase == .answering {
-        Button("Previous: " + state.previous, systemImage: "clock.arrow.circlepath") {
-          action(.previous)
-        }.font(.caption).frame(maxWidth: .infinity, alignment: .leading)
-      }
     }.accessibilityElement(children: .contain)
   }
 
@@ -290,13 +258,16 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           Button("All information", systemImage: "info.circle") { action(.showAll) }
             .keyboardShortcut(.space, modifiers: [])
         }
-        if state.canPlayAudio {
-          Button("Audio", systemImage: "speaker.wave.2") { action(.playAudio) }
-            .keyboardShortcut("j", modifiers: [])
-        }
       }.font(.callout)
     } else {
-      if !state.isAnki { input().disabled(!state.canAnswer).frame(minHeight: 48) }
+      if state.phase == .answering && !state.isAnki {
+        HStack(spacing: 8) {
+          input().disabled(!state.canAnswer).frame(minHeight: 44)
+          submitButton.labelStyle(.iconOnly)
+        }
+      } else if !state.isAnki {
+        input().disabled(!state.canAnswer).frame(minHeight: 44)
+      }
       if !state.feedback.isEmpty {
         Text(state.feedback).font(.callout).foregroundStyle(.red)
           .accessibilityIdentifier("review.feedback")
@@ -305,18 +276,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         Text(hint).font(.title3)
           .accessibilityIdentifier("review.answerHint")
       }
-      Button {
-        action(.submit)
-      } label: {
-        Text(submitTitle).frame(maxWidth: .infinity, minHeight: 24)
-      }
-      .buttonStyle(.borderedProminent).controlSize(.large)
-      .disabled(
-        !state.canAnswer
-          || (state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty)
-      )
-      .accessibilityIdentifier("review.submit")
-      .keyboardShortcut(state.isAnki || state.phase == .incorrect ? .defaultAction : nil)
+      if state.isAnki || state.phase == .incorrect { submitButton }
       if state.phase == .incorrect {
         adaptiveControls {
           Button("Try again", systemImage: "arrow.counterclockwise") { action(.retry) }
@@ -327,6 +287,70 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         }.buttonStyle(.bordered).controlSize(.large)
       }
     }
+  }
+
+  private var submitButton: some View {
+    Button {
+      action(.submit)
+    } label: {
+      Label(submitTitle, systemImage: state.isAnki ? "eye" : "arrow.right")
+        .frame(minWidth: 44, minHeight: 44)
+    }
+    .buttonStyle(.glassProminent)
+    .disabled(
+      !state.canAnswer
+        || (state.phase == .answering && !state.isAnki && !state.canSkip && state.answer.isEmpty)
+    )
+    .accessibilityIdentifier("review.submit")
+    .keyboardShortcut(state.isAnki || state.phase == .incorrect ? .defaultAction : nil)
+  }
+
+  // The keyboard safe area also keeps these tools available with hardware keyboards and on Mac.
+  private var studyTools: some View {
+    HStack(spacing: 12) {
+      if state.phase == .answering && !state.isAnki {
+        Button {
+          action(.voice)
+        } label: {
+          Label("Voice answer", systemImage: "mic").frame(minWidth: 44, minHeight: 44)
+        }.accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
+      }
+      Button {
+        action(.deferQuestion)
+      } label: {
+        Label("Ask later", systemImage: "arrow.uturn.forward").frame(minWidth: 44, minHeight: 44)
+      }.accessibilityIdentifier("review.defer")
+      if state.canPlayAudio && state.phase == .details {
+        Button {
+          action(.playAudio)
+        } label: {
+          Label("Audio", systemImage: "speaker.wave.2").frame(minWidth: 44, minHeight: 44)
+        }.accessibilityIdentifier("review.audio").keyboardShortcut("j", modifiers: [])
+      }
+      Spacer()
+      Menu {
+        if !state.previous.isEmpty {
+          Button("Previous: " + state.previous, systemImage: "clock.arrow.circlepath") {
+            action(.previous)
+          }.keyboardShortcut("p", modifiers: .command)
+        }
+        if state.canChangeFont {
+          Button("Toggle question font") { action(.toggleFont) }
+            .keyboardShortcut(.tab, modifiers: .option)
+          Button("Next font") { action(.nextFont) }
+            .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
+          Button("Previous font") { action(.previousFont) }
+            .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
+        }
+        if state.hasMenu {
+          Button("Quick settings", systemImage: "slider.horizontal.3") { action(.settings) }
+            .accessibilityIdentifier("review.settings")
+        }
+      } label: {
+        Label("Review tools", systemImage: "ellipsis").frame(minWidth: 44, minHeight: 44)
+      }.accessibilityIdentifier("review.tools")
+    }.labelStyle(.iconOnly).buttonStyle(.borderless).controlSize(.large)
+      .frame(minHeight: 44)
   }
 
   private var submitTitle: String {
@@ -374,9 +398,9 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           })
       }.padding().foregroundStyle(.white).tint(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity).background(state.subjectColor)
-      VStack(spacing: 4) {
+      adaptiveControls {
         Text([state.subjectType, state.prompt].filter { !$0.isEmpty }.joined(separator: " "))
-          .font(.headline).accessibilityIdentifier("review.prompt")
+          .font(.subheadline.weight(.semibold)).accessibilityIdentifier("review.prompt")
         HStack {
           if !state.level.isEmpty { Text(state.level) }
           if !state.stage.isEmpty { Text(state.stage).accessibilityLabel(state.stageAccessibility) }
@@ -392,7 +416,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         }
     }
     .frame(maxWidth: .infinity, maxHeight: state.phase == .details ? nil : .infinity)
-    .clipShape(RoundedRectangle(cornerRadius: 16))
   }
 
   private func adaptiveControls<Content: View>(@ViewBuilder content: () -> Content) -> some View {

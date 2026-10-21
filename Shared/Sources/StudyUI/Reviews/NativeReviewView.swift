@@ -181,13 +181,6 @@ public struct NativeReviewView: View {
       }
     }
 
-    .toolbar {
-      if !ended && review?.question != nil {
-        ToolbarItem(placement: .secondaryAction) {
-          Button("Ask later", systemImage: "arrow.uturn.forward") { change(.deferQuestion) }
-        }
-      }
-    }
     .alert("Add synonym", isPresented: $addingSynonym) {
       TextField("Meaning", text: $synonym).autocorrectionDisabled()
       Button("Add and mark correct") { change(.addSynonym(synonym)) }

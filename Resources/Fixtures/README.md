@@ -18,6 +18,8 @@ Captured read-only on 2026-10-18 from the visible subject grids in the user's ex
 
 All 357 rows contain only level, kind, characters, displayed reading and displayed meaning. The capture's code-point FNV-1a checksum was `638ee6020e061916` before normalizing `radicals` to `radical`. No account stage, unlock status, credentials, user identity, review history or hidden page state was copied. Chrome was returned to its dashboard; no exercises were opened.
 
+Rechecked anonymously on October 21: the three official public level pages return 80, 147 and 130 unique subject links, with the same per-type counts shown above. This verifies population counts, not every display value or accepted-answer semantics. The existing plist is unchanged. The isolated iPhone preview renders the full collection and searches genuine kanji/vocabulary readings and meanings; missing assignments are shown as unassigned rather than inventing a locked account status. No private browser session, token or exercise is needed for this display-only check.
+
 These are authentic **display fields**, not complete API subjects. They lack WaniKani IDs, all accepted/auxiliary answers, alternate readings, mnemonics, component relationships, SRS rules and audio. The preview is for browsing and UI mocks; a complete review/lesson fixture still needs an authorized API catalog. WaniKani content is governed separately by [its terms](https://www.wanikani.com/terms); no broader content license is asserted.
 
 ## Retired native catalog export

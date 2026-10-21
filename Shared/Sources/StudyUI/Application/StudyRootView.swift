@@ -708,7 +708,7 @@ private struct PreviewCatalogView: View {
         items: available.subjects.filter { $0.level <= maximumLevel }.map { value in
           let status: SubjectCatalogItem.Status =
             assignments[value.id].flatMap { StudySRSStage(rawValue: $0.srsStage) }
-            .map { .studying($0, reviewAt: nil, guruAt: nil) } ?? .locked
+            .map { .studying($0, reviewAt: nil, guruAt: nil) } ?? .unassigned
           return SubjectCatalogItem(subject: value, status: status)
         }.filter { !remaining || ($0.status.stage?.rawValue ?? 0) < 5 })
       level = query.level

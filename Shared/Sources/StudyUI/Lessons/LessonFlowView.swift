@@ -46,12 +46,16 @@ public struct LessonFlowView<Page: View>: View {
         }
       }
       if !subjects.isEmpty {
-        VStack(spacing: 4) {
-          Text(index == subjects.count ? "Quiz" : "Lesson \(index + 1) of \(subjects.count)")
-            .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("lesson.position")
+        HStack(spacing: 4) {
+          Text(index == subjects.count ? "Quiz" : "\(index + 1)/\(subjects.count)")
+            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+            .accessibilityLabel(
+              index == subjects.count ? "Quiz" : "Lesson \(index + 1) of \(subjects.count)"
+            )
+            .accessibilityIdentifier("lesson.position").padding(.leading, 12)
           ScrollViewReader { proxy in
             ScrollView(.horizontal) {
-              HStack(spacing: 10) {
+              HStack(spacing: 6) {
                 ForEach(subjects.indices, id: \.self) { position in
                   Button {
                     index = position
@@ -70,7 +74,7 @@ public struct LessonFlowView<Page: View>: View {
                         )
                         .font(.title3)
                       }
-                    }.padding(.horizontal, 12).frame(minWidth: 44, minHeight: 44).foregroundStyle(
+                    }.padding(.horizontal, 8).frame(minWidth: 44, minHeight: 44).foregroundStyle(
                       .white
                     )
                     .background(
@@ -99,11 +103,11 @@ public struct LessonFlowView<Page: View>: View {
                   index == subjects.count ? "Selected" : "Not selected"
                 )
                 .accessibilityIdentifier("lesson.quiz")
-              }.padding(.horizontal, 16).padding(.vertical, 4)
+              }.padding(.horizontal, 6).padding(.vertical, 4)
             }.scrollIndicators(.hidden)
               .onChange(of: index) { _, value in proxy.scrollTo(value, anchor: .center) }
           }
-        }.padding(.vertical, 8).background(.bar)
+        }.padding(.vertical, 4).background(.bar)
       }
     }.toolbar {
       ToolbarItem(placement: .navigation) {

@@ -73,7 +73,7 @@ public struct SubjectDetailsContent: View {
     self.sentenceText = sentenceText
   }
   public var body: some View {
-    LazyVStack(alignment: .leading, spacing: 16) {
+    LazyVStack(alignment: .leading, spacing: 10) {
       if reviewQuestion == .reading {
         reading
         meaning
@@ -82,6 +82,13 @@ public struct SubjectDetailsContent: View {
         reading
       }
       related(subject.kind == .kanji ? "Radicals" : "Kanji", components)
+      if reviewQuestion == .reading {
+        readingExplanation
+        meaningExplanation
+      } else {
+        meaningExplanation
+        readingExplanation
+      }
       if let names = subject.partOfSpeechNames, !names.isEmpty {
         section("Part of speech") { Text(names.joined(separator: ", ")) }
       }
@@ -150,9 +157,6 @@ public struct SubjectDetailsContent: View {
             .foregroundStyle(StudyPalette.radical)
         }
       }
-      explanation(
-        "Meaning explanation", text: subject.meaningMnemonic, hint: subject.meaningHint,
-        note: material?.meaningNoteText, id: "meaning")
     }
   }
   @ViewBuilder private var reading: some View {
@@ -183,11 +187,20 @@ public struct SubjectDetailsContent: View {
           }
         }
       }
-      if visibility.readingExplanation {
-        explanation(
-          "Reading explanation", text: subject.readingMnemonic, hint: subject.readingHint,
-          note: material?.readingNote, id: "reading")
-      }
+    }
+  }
+  @ViewBuilder private var meaningExplanation: some View {
+    if visibility.meaning {
+      explanation(
+        "Meaning explanation", text: subject.meaningMnemonic, hint: subject.meaningHint,
+        note: material?.meaningNoteText, id: "meaning")
+    }
+  }
+  @ViewBuilder private var readingExplanation: some View {
+    if visibility.reading && visibility.readingExplanation {
+      explanation(
+        "Reading explanation", text: subject.readingMnemonic, hint: subject.readingHint,
+        note: material?.readingNote, id: "reading")
     }
   }
   private func section<Content: View>(
@@ -195,18 +208,21 @@ public struct SubjectDetailsContent: View {
   )
     -> some View
   {
-    GroupBox {
-      HStack(alignment: .top) {
-        VStack(alignment: .leading, spacing: 10, content: content).frame(
-          maxWidth: .infinity, alignment: .leading)
+    VStack(alignment: .leading, spacing: 4) {
+      HStack {
+        Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+          .accessibilityAddTraits(.isHeader)
+        Spacer()
         if let editMaterial {
           Button("Edit notes and synonyms", systemImage: "square.and.pencil", action: editMaterial)
             .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
             .accessibilityIdentifier("subject.editMaterial")
         }
       }
-    } label: {
-      Text(title).accessibilityAddTraits(.isHeader)
+      VStack(alignment: .leading, spacing: 6, content: content)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(.quaternary.opacity(0.3), in: .rect(cornerRadius: 8))
     }
   }
   @ViewBuilder private func explanation(
@@ -215,7 +231,10 @@ public struct SubjectDetailsContent: View {
     if !text.isEmpty || !hint.isEmpty || !(note ?? "").isEmpty {
       section(title) {
         if !text.isEmpty { MnemonicText(source: text) }
-        if !hint.isEmpty { MnemonicText(source: hint).foregroundStyle(.secondary) }
+        if !hint.isEmpty {
+          if !text.isEmpty { Divider() }
+          MnemonicText(source: hint).foregroundStyle(.secondary)
+        }
         if let note, !note.isEmpty { LabeledContent("Your note") { Text(note) } }
       }.accessibilityIdentifier("subject.\(id)Explanation")
     }
@@ -223,30 +242,33 @@ public struct SubjectDetailsContent: View {
   @ViewBuilder private func related(_ title: String, _ subjects: [CatalogSubject]) -> some View {
     if !subjects.isEmpty {
       section(title) {
-        ForEach(subjects) { subject in
-          Button {
-            openSubject(subject.id)
-          } label: {
-            HStack {
-              Group {
-                if subject.japanese.isEmpty, let url = URL(string: subject.characterImageURL),
-                  !subject.characterImageURL.isEmpty
-                {
-                  RadicalImageView(url: url).environment(\.colorScheme, .dark)
-                    .frame(width: 28, height: 28)
-                } else {
-                  Text(subject.japanese.isEmpty ? subject.summary.meaning : subject.japanese)
-                    .font(.title3)
-                }
-              }.padding(8).frame(minWidth: 44, minHeight: 44).foregroundStyle(.white)
-                .background(StudyPalette.color(for: subject.kind), in: .rect(cornerRadius: 8))
-              Text(subject.summary.meaning).foregroundStyle(.primary)
-              Spacer()
-              Text("Level \(subject.level)").font(.caption).foregroundStyle(.secondary)
-              Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-            }.frame(minHeight: 44).contentShape(Rectangle())
-          }.buttonStyle(.plain).accessibilityIdentifier("subject.related.\(subject.id)")
-        }
+        ScrollView(.horizontal) {
+          HStack(spacing: 12) {
+            ForEach(subjects) { subject in
+              Button {
+                openSubject(subject.id)
+              } label: {
+                HStack(spacing: 6) {
+                  Group {
+                    if subject.japanese.isEmpty, let url = URL(string: subject.characterImageURL),
+                      !subject.characterImageURL.isEmpty
+                    {
+                      RadicalImageView(url: url).environment(\.colorScheme, .dark)
+                        .frame(width: 28, height: 28)
+                    } else {
+                      Text(subject.japanese.isEmpty ? subject.summary.meaning : subject.japanese)
+                        .font(.title3)
+                    }
+                  }.padding(6).frame(minWidth: 32, minHeight: 32).foregroundStyle(.white)
+                    .background(StudyPalette.color(for: subject.kind), in: .rect(cornerRadius: 8))
+                  Text(subject.summary.meaning).foregroundStyle(.primary)
+                }.frame(minHeight: 44).contentShape(Rectangle())
+              }.buttonStyle(.plain).accessibilityIdentifier("subject.related.\(subject.id)")
+                .accessibilityLabel(
+                  "\(subject.japanese), \(subject.summary.meaning), Level \(subject.level)")
+            }
+          }
+        }.scrollIndicators(.hidden)
       }
     }
   }
@@ -255,10 +277,10 @@ public struct SubjectDetailsContent: View {
 struct SubjectDetailsHeader: View {
   let subject: CatalogSubject
   var japaneseFont: String? = nil
-  var fontSize = 72.0
+  var fontSize = 48.0
   var image: Image? = nil
   var body: some View {
-    VStack(spacing: 12) {
+    VStack(spacing: 4) {
       Group {
         if let image {
           image.resizable().scaledToFit().frame(height: fontSize)
@@ -270,9 +292,8 @@ struct SubjectDetailsHeader: View {
           ).lineLimit(1).minimumScaleFactor(0.4)
         }
       }.accessibilityIdentifier("subject.characters")
-      Text(subject.summary.meaning).font(.title2.bold())
-      Text("\(subject.kind.rawValue.capitalized) · Level \(subject.level)").font(.subheadline)
-    }.foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 24).padding(.horizontal)
+      Text("\(subject.kind.rawValue.capitalized) · Level \(subject.level)").font(.caption)
+    }.foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 12).padding(.horizontal)
       .background(StudyPalette.color(for: subject.kind))
   }
 }
