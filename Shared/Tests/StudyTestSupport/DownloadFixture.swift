@@ -1,19 +1,98 @@
 import Foundation
 import StudyCore
 
+public actor SubjectCacheFixture {
+  public enum Phase: Equatable, Sendable {
+    case full, changes, unchanged, free, pagination, failedPage, laterCategoryFailure
+    case duplicates, missingStamp, backwardsStamp, malformedStamp
+  }
+  public static let changedAt = "2026-10-17T00:00:00.000001Z"
+  private var phase = Phase.full
+  public private(set) var urls: [URL] = []
+  public var watermarks: [String?] {
+    urls.map {
+      URLComponents(url: $0, resolvingAgainstBaseURL: false)?.queryItems?
+        .first { $0.name == "updated_after" }?.value
+    }
+  }
+  public init() {}
+  public func use(_ phase: Phase) { self.phase = phase }
+  public func respond(_ request: URLRequest) throws -> (Data, HTTPURLResponse) {
+    let url = request.url!
+    if phase == .free, url.lastPathComponent == "user" {
+      var user = DownloadFixture.user
+      var data = user["data"] as! [String: Any]
+      data["subscription"] = ["active": false, "max_level_granted": 3]
+      user["data"] = data
+      return try DownloadFixture.response(request, object: user)
+    }
+    if phase == .laterCategoryFailure, url.lastPathComponent == "voice_actors" {
+      throw URLError(.networkConnectionLost)
+    }
+    guard url.lastPathComponent == "subjects" else { return try DownloadFixture.response(request) }
+    urls.append(url)
+    var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+    let second = parts.queryItems?.contains { $0.name == "page_after_id" } == true
+    var rows = DownloadFixture.rows["subjects"]!
+    var stamp: String? = DownloadFixture.date
+    var next: String?
+    var total: Int?
+    switch phase {
+    case .full, .free: break
+    case .unchanged:
+      rows = []
+      stamp = nil
+    case .pagination:
+      total = rows.count
+      if second {
+        rows = Array(rows.dropFirst(2))
+        stamp = Self.changedAt
+      } else {
+        rows = Array(rows.prefix(2))
+        parts.queryItems = [.init(name: "page_after_id", value: "2")]
+        next = parts.string
+      }
+    case .failedPage:
+      if second { throw URLError(.networkConnectionLost) }
+      rows = [DownloadFixture.subject(1, hidden: true)]
+      total = 2
+      parts.queryItems = (parts.queryItems ?? []) + [.init(name: "page_after_id", value: "1")]
+      next = parts.string
+      stamp = Self.changedAt
+    default:
+      var changed = DownloadFixture.subject(1, hidden: true)
+      var data = changed["data"] as! [String: Any]
+      data["characters"] = "更新"
+      changed["data"] = data
+      rows = [changed, DownloadFixture.subject(6)]
+      stamp = Self.changedAt
+      if phase == .duplicates { rows.append(changed) }
+      if phase == .missingStamp { stamp = nil }
+      if phase == .backwardsStamp { stamp = "2026-10-16T00:00:00.000000Z" }
+      if phase == .malformedStamp { stamp = "invalid-server-time" }
+    }
+    return try DownloadFixture.response(
+      request, object: DownloadFixture.collection(rows, next: next, total: total, updatedAt: stamp))
+  }
+}
+
 /// Documented WaniKani response shapes. Assignment level deliberately does not exist.
 public enum DownloadFixture {
   public static let date = "2026-10-17T00:00:00.000000Z"
   public static func resource(_ id: Int, _ object: String, _ data: [String: Any]) -> [String: Any] {
     ["id": id, "object": object, "data": data]
   }
-  public static func collection(_ rows: [[String: Any]], next: String? = nil, total: Int? = nil)
+  public static func collection(
+    _ rows: [[String: Any]], next: String? = nil, total: Int? = nil, updatedAt: String? = nil
+  )
     -> [String: Any]
   {
-    [
+    var value: [String: Any] = [
       "object": "collection", "total_count": total ?? rows.count,
       "pages": ["next_url": next.map { $0 as Any } ?? NSNull()], "data": rows,
     ]
+    value["data_updated_at"] = updatedAt
+    return value
   }
   public static var user: [String: Any] {
     [

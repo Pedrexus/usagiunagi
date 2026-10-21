@@ -57,7 +57,9 @@ private actor AutomaticServer: WaniKaniService {
       username: data.profile.username, level: data.profile.level,
       onVacation: data.profile.vacationStartedAt != nil, profile: data.profile)
   }
-  func download(token: String) async throws -> StudyDownload {
+  func download(token: String, subjects: [CatalogSubject], cursors: [String: String]) async throws
+    -> StudyDownload
+  {
     fullReads += 1
     if let gate = readGate {
       readGate = nil

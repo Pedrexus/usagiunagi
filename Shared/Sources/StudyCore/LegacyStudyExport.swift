@@ -67,8 +67,7 @@ public struct StudyAccountState: Codable, Sendable {
           subjectID: subject.id, voiceActorID: $0.voiceActorID, level: subject.level, url: $0.url)
       }
     }
-    // Full reads do not establish an incremental API watermark.
-    cursors = [:]
+    cursors = download.cursors
     supersededAssignments = []
   }
   public init(legacy: LegacyStudyExport) {

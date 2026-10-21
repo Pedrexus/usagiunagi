@@ -92,7 +92,11 @@ extension StudyStore {
     }
     let baseline = try refreshBaseline(accountID: identity.id)
     let download: StudyDownload
-    do { download = try await client.download(token: token) } catch {
+    let cached = try catalog(accountID: identity.id)
+    let cursors = try accountState(accountID: identity.id)?.cursors ?? [:]
+    do {
+      download = try await client.download(token: token, subjects: cached, cursors: cursors)
+    } catch {
       try checkRefresh(generation)
       try recordRateLimit(error, accountID: identity.id)
       throw error

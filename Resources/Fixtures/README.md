@@ -6,7 +6,7 @@ The native app's offline preview reads `Shared/Sources/StudyCore/Resources/free-
 
 The [official API](https://docs.api.wanikani.com/20170710/#authentication) requires a personal API token for every request, including subjects. WaniKani recommends [local subject caching](https://docs.api.wanikani.com/20170710/#caching), [conditional requests](https://docs.api.wanikani.com/20170710/#conditional-requests) and [`updated_after`](https://docs.api.wanikani.com/20170710/#leveraging-the-updated_after-filter). Subscription content limits still apply.
 
-The current client downloads complete collections, and `StudyStore.applyDownload` atomically applies them while preserving pending work. Incremental refresh remains separate work: its partial collections must merge without deleting absent rows or advancing cursors before a successful save. Fetch the needed offline study content in advance; avoid requiring a network request for each answer. Keep the existing store owner and direct model queries rather than adding another cache framework.
+The client now fetches changed subjects with server `updated_after` watermarks and merges them with saved SwiftData content. Endpoint/access-level changes, incomplete caches and weekly reconciliation force full subject reads. Other collections remain complete reads. `StudyStore.applyDownload` receives a complete merged catalog and commits cursor progress with content while preserving pending work. Offline study uses saved content; each answer does not require a fetch. No additional cache framework or stored schema is added. See the [current API checkpoint](../../Docs/Implementation/2026-10-21-frozen-ios-and-review-focus.md#api-subject-caching-and-native-networking-cleanup).
 
 Captured read-only on 2026-10-18 from the visible subject grids in the user's existing Chrome session:
 
@@ -20,15 +20,15 @@ All 357 rows contain only level, kind, characters, displayed reading and display
 
 These are authentic **display fields**, not complete API subjects. They lack WaniKani IDs, all accepted/auxiliary answers, alternate readings, mnemonics, component relationships, SRS rules and audio. The preview is for browsing and UI mocks; a complete review/lesson fixture still needs an authorized API catalog. WaniKani content is governed separately by [its terms](https://www.wanikani.com/terms); no broader content license is asserted.
 
-## Native catalog export
+## Retired native catalog export
 
-Settings → Developer options → **Export saved levels 1–3** now uses the same account-bound source as the existing diagnostics action, with a separate public-content projection. Apple's ShareLink/CoreTransferable publishes `usagiunagi-free-levels.plist`; there is no custom share controller, extra runtime dependency or export cache. No export is performed automatically.
+The development-only levels 1–3 export introduced in `d3b2a20a` is retired with the old fixture pipeline. Its document/archive/query, settings action and four feature-specific tests are removed. Normal study-diagnostic sharing is retained. The following format and receipts describe the former export, not a current app feature.
 
 `StudyCatalogDocument` format 1 contains `capturedAt` (an ISO 8601 string), `requestedLevels`, native `CatalogSubject` values, optional public SRS systems and public voice-actor metadata. The capture time describes the export, not a verified server-update time. Subjects retain IDs, meaning/reading roles, relationships, image/audio references and teaching fields. Account identity/profile, credentials, personal notes/synonyms, assignments, review history, sessions, queues, preferences, cursors and handoff receipts are excluded. A direct SwiftData model query selects this account's levels 1–3 in level/ID order; hidden subjects are omitted. Empty/sample/missing sources and inconsistent stored IDs/levels refuse export. Missing SRS metadata remains absent rather than becoming invented defaults.
 
 The file describes **saved content in the requested scope**. It does not establish completeness or an official current curriculum. Validate provenance and grading fields before using a genuine export as a test fixture. The current bundled preview remains display-only and byte-exact; its loader does not accept this different document format. No account or exercises were accessed to prepare this feature.
 
-This optional developer sharing action is independent of normal API synchronization. It is not a step users need to take to populate SwiftData or study offline.
+No manual export is required to populate SwiftData or study offline.
 
 ### Public-source check — October 21
 

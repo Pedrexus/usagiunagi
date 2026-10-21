@@ -19,7 +19,7 @@ private struct RefreshSaveAttempt: Sendable {
   let changedAssignmentStage: Int?
   let changedMaterialNote: String?
   let newAccountLevel: Int?
-  let pendingCursorsCleared: Bool
+  let newCursors: [String: String]?
   let newSnapshotLevel: Int?
 }
 
@@ -74,7 +74,8 @@ struct NativeRefreshRollbackTests {
     #expect(attempt.changedJapanese == "更新")
     #expect(attempt.changedAssignmentStage == 6)
     #expect(attempt.changedMaterialNote == "Changed server material")
-    #expect(attempt.newAccountLevel == seed.download.profile.level && attempt.pendingCursorsCleared)
+    #expect(attempt.newAccountLevel == seed.download.profile.level)
+    #expect(attempt.newCursors == seed.download.cursors)
     #expect(attempt.newSnapshotLevel == seed.download.profile.level)
     #expect(outcome.successfulSaves == 0 && !outcome.dirtyAfterRollback)
     #expect(outcome.restored == seed.state)
@@ -185,6 +186,7 @@ struct NativeRefreshRollbackTests {
         .init(id: 206, value: .init(subjectID: 6, meaningNote: "Inserted server material")),
       ],
       levels: [], statistics: [], voices: [], systems: initial.systems,
+      cursors: ["synthetic-subject-cursor": SubjectCacheFixture.changedAt],
       fetchedAt: .now.addingTimeInterval(60))
     return (writer.modelContainer.schema, baseline, state, download)
   }
@@ -223,7 +225,7 @@ extension StudyStore {
             $0.accountID == rollbackAccount && $0.subjectID == 1
           }?.material.meaningNote,
           newAccountLevel: account?.state.profile.level,
-          pendingCursorsCleared: account?.state.cursors.isEmpty == true,
+          newCursors: account?.state.cursors,
           newSnapshotLevel: modified.compactMap { $0 as? SnapshotRecord }.first {
             $0.credentialID == rollbackCredential
           }?.snapshot.currentLevel))

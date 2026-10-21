@@ -7,7 +7,8 @@ public protocol WaniKaniAccountReader: Sendable {
 
 public protocol WaniKaniService: WaniKaniAccountReader {
   func reconfigured(baseURL: URL) throws -> any WaniKaniService
-  func download(token: String) async throws -> StudyDownload
+  func download(token: String, subjects: [CatalogSubject], cursors: [String: String]) async throws
+    -> StudyDownload
   func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment?
   func material(subjectID: Int64, token: String) async throws -> WaniKaniMaterial?
   func submit(_ answer: StudyReviewSubmission, token: String, now: Date) async throws
@@ -26,6 +27,9 @@ public enum WaniKaniServiceConfigurationError: Error, LocalizedError, Equatable,
 }
 
 extension WaniKaniService {
+  public func download(token: String) async throws -> StudyDownload {
+    try await download(token: token, subjects: [], cursors: [:])
+  }
   /// A fixed injected service must never acquire the production network transport implicitly.
   public func reconfigured(baseURL: URL) throws -> any WaniKaniService {
     throw WaniKaniServiceConfigurationError.unsupportedEndpointChange
@@ -95,6 +99,7 @@ public struct WaniKaniClient: WaniKaniService {
     struct Pages: Decodable, Sendable { let nextUrl: String? }
     let object: String
     let totalCount: Int
+    let dataUpdatedAt: String?
     let pages: Pages
     let data: [Resource<Value>]
   }
@@ -120,10 +125,16 @@ public struct WaniKaniClient: WaniKaniService {
   func pages<T: Decodable & Sendable>(_ endpoint: String, token: String) async throws -> [Resource<
     T
   >] {
+    try await collection(endpoint, token: token).resources
+  }
+  func collection<T: Decodable & Sendable>(_ endpoint: String, token: String) async throws
+    -> (resources: [Resource<T>], updatedAt: String?)
+  {
     var next: URL? = self.endpoint(endpoint)
     var visited = Set<URL>()
     var result = [Resource<T>]()
     var expectedCount: Int?
+    var updatedAt: String?
     while let url = next {
       guard visited.insert(url).inserted, visited.count <= 100 else {
         throw APIError.invalidPagination
@@ -133,7 +144,11 @@ public struct WaniKaniClient: WaniKaniService {
         expectedCount == nil || expectedCount == page.totalCount,
         page.data.allSatisfy({ ($0.id ?? 0) > 0 && $0.object != nil })
       else { throw APIError.invalidResponse }
-      expectedCount = page.totalCount
+      if expectedCount == nil {
+        updatedAt = page.dataUpdatedAt
+        if let updatedAt { _ = try timestamp(updatedAt) }
+        expectedCount = page.totalCount
+      }
       result += page.data
       guard result.count <= page.totalCount else { throw APIError.invalidResponse }
       if let link = page.pages.nextUrl {
@@ -146,7 +161,7 @@ public struct WaniKaniClient: WaniKaniService {
       }
     }
     guard result.count == expectedCount else { throw APIError.invalidResponse }
-    return result
+    return (result, updatedAt)
   }
   func endpoint(_ path: String) -> URL {
     URL(

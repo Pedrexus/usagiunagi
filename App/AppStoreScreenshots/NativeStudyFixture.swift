@@ -283,7 +283,10 @@
           onVacation: data.profile.vacationStartedAt != nil, startedAt: data.profile.startedAt,
           profile: data.profile)
       }
-      func download(token: String) async throws -> StudyDownload {
+      func download(token: String, subjects: [CatalogSubject], cursors: [String: String])
+        async throws
+        -> StudyDownload
+      {
         var data = try await value(token)
         if heldRefresh, !refreshReleased {
           let id = UUID()

@@ -128,11 +128,14 @@ extension WaniKaniClient {
 
   /// Includes hidden resources so a complete refresh can remove them from study queues.
   /// It does not mutate a store or advance a sync cursor after a partial download.
-  @concurrent public func download(token: String) async throws -> StudyDownload {
+  @concurrent public func download(
+    token: String, subjects cached: [CatalogSubject], cursors: [String: String]
+  ) async throws -> StudyDownload {
     let user = try await accountData(token: token)
     guard let profile = try accountProfile(user) else { throw APIError.invalidResponse }
 
-    async let subjectPages: [Resource<SubjectData>] = pages("subjects", token: token)
+    async let subjectPages = subjectCatalog(
+      token: token, cached: cached, cursors: cursors, maxLevel: profile.maxLevelGranted)
     async let assignmentPages: [Resource<AssignmentData>] = pages("assignments", token: token)
     async let materialPages: [Resource<MaterialData>] = pages("study_materials", token: token)
     async let statisticPages: [Resource<StatisticData>] = pages("review_statistics", token: token)
@@ -144,7 +147,7 @@ extension WaniKaniClient {
       systemPages
     )
     try Task.checkCancellation()
-    let catalog = try subjects.map(subject)
+    let catalog = subjects.values
     try uniqueIDs(catalog.map(\.id))
     let fullSystems = try systems.map(system)
     try uniqueIDs(fullSystems.map(\.id))
@@ -175,7 +178,49 @@ extension WaniKaniClient {
     return StudyDownload(
       accountID: user.id, profile: profile, subjects: catalog, assignments: fullAssignments,
       materials: fullMaterials, levels: fullLevels, statistics: fullStatistics, voices: fullVoices,
-      systems: fullSystems)
+      systems: fullSystems, cursors: subjects.cursors)
+  }
+
+  /// Complete content still reaches the replacement importer; only the wire response is partial.
+  private func subjectCatalog(
+    token: String, cached: [CatalogSubject], cursors: [String: String], maxLevel: Int
+  ) async throws -> (values: [CatalogSubject], cursors: [String: String]) {
+    let key = "usagi:20170710:\(endpoint("subjects").absoluteString):\(maxLevel)"
+    let cachedIDs = cached.map(\.id)
+    let fullRead = cursors[key + ":full"].flatMap { try? Date.ISO8601FormatStyle().parse($0) }
+    let age = fullRead.map { Date.now.timeIntervalSince($0) }
+    let watermark = cursors[key]
+    let reuse =
+      !cached.isEmpty && cachedIDs.allSatisfy { $0 > 0 }
+      && Set(cachedIDs).count == cached.count && cursors[key + ":count"] == String(cached.count)
+      && watermark.flatMap { try? timestamp($0) } != nil
+      && age.map { (0..<7 * 86400).contains($0) } == true
+    var path = URLComponents()
+    path.path = "subjects"
+    if reuse, let watermark {
+      path.queryItems = [.init(name: "updated_after", value: watermark)]
+      path.percentEncodedQuery = path.percentEncodedQuery?.replacingOccurrences(
+        of: "+", with: "%2B")
+    }
+    let update: (resources: [Resource<SubjectData>], updatedAt: String?) = try await collection(
+      path.string!, token: token)
+    let changed = try update.resources.map(subject)
+    try uniqueIDs(changed.map(\.id))
+    if reuse {
+      guard changed.isEmpty || update.updatedAt != nil else { throw APIError.invalidResponse }
+      if let stamp = update.updatedAt, let watermark {
+        guard try timestamp(stamp) >= timestamp(watermark) else { throw APIError.invalidResponse }
+      }
+    }
+    var values = Dictionary(uniqueKeysWithValues: (reuse ? cached : []).map { ($0.id, $0) })
+    for subject in changed { values[subject.id] = subject }
+    var next: [String: String] = [:]
+    if let stamp = update.updatedAt ?? (reuse ? watermark : nil) {
+      next[key] = stamp
+      next[key + ":count"] = String(values.count)
+      next[key + ":full"] = reuse ? cursors[key + ":full"] : Date.now.ISO8601Format()
+    }
+    return (values.values.sorted { $0.id < $1.id }, next)
   }
 
   private func uniqueIDs(_ ids: [Int64]) throws(APIError) {

@@ -73,6 +73,74 @@ private actor RefreshServer {
 }
 
 struct NativeRefreshTests {
+  @Test func cachedSubjectRefreshSurvivesReopenPreservesPendingWorkAndKeepsFailedWatermarks()
+    async throws
+  {
+    let directory = URL.temporaryDirectory.appending(path: "subject-cache-\(UUID())")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appending(path: "study.store")
+    let accountID = "fixture-user-id"
+    let server = SubjectCacheFixture()
+    let client = WaniKaniClient { try await server.respond($0) }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    let captured:
+      (
+        cursors: [String: String], catalog: Data, pending: [SavedReview], session: UUID,
+        material: StudyMaterial
+      )
+    do {
+      let store = try await StudyStore.open(at: url)
+      _ = try await store.refresh(credentialID: "credential", token: "fixture", client: client)
+      let saved = try #require(try await store.materials(accountID: accountID).first)
+      var material = saved.material
+      material.meaningNote = "Local pending note 日本語"
+      _ = try await store.saveMaterial(
+        material, accountID: accountID, expectedRevision: saved.revision)
+      let revision = try await store.saveSession(
+        session(), accountID: accountID, expectedRevision: nil)
+      let pending = try await store.pendingReviews(accountID: accountID)
+      let initial = try await store.catalog(accountID: accountID)
+      await server.use(.changes)
+      let snapshot = try await store.refresh(
+        credentialID: "credential", token: "fixture", client: client)
+      let catalog = try await store.catalog(accountID: accountID)
+      #expect(catalog.map(\.id) == [1, 2, 3, 4, 5, 6])
+      #expect(catalog.first?.japanese == "更新" && catalog.first?.hiddenAt != nil)
+      #expect(
+        try encoder.encode(initial.filter { $0.id != 1 })
+          == encoder.encode(catalog.filter { $0.id != 1 && $0.id != 6 }))
+      #expect(snapshot.subjects.map(\.id) == [2, 3, 5, 6] && snapshot.pendingReviews == 1)
+      #expect(try await store.pendingReviews(accountID: accountID) == pending)
+      #expect(try await store.session(accountID: accountID)?.revision == revision)
+      #expect(try await store.materials(accountID: accountID).first?.material == material)
+      let state = try #require(await store.accountState(accountID: accountID))
+      #expect(state.cursors.values.contains(SubjectCacheFixture.changedAt))
+      captured = (state.cursors, try encoder.encode(catalog), pending, revision, material)
+    }
+    let reopened = try await StudyStore.open(at: url)
+    #expect(try await reopened.accountState(accountID: accountID)?.cursors == captured.cursors)
+    await server.use(.unchanged)
+    _ = try await reopened.refresh(credentialID: "credential", token: "fixture", client: client)
+    let before = try #require(await reopened.accountState(accountID: accountID))
+    #expect(before.cursors == captured.cursors)
+    #expect(try await encoder.encode(reopened.catalog(accountID: accountID)) == captured.catalog)
+    await server.use(.laterCategoryFailure)
+    await #expect(throws: URLError.self) {
+      try await reopened.refresh(credentialID: "credential", token: "fixture", client: client)
+    }
+    let after = try #require(await reopened.accountState(accountID: accountID))
+    #expect(try encoder.encode(before) == encoder.encode(after))
+    #expect(try await encoder.encode(reopened.catalog(accountID: accountID)) == captured.catalog)
+    #expect(try await reopened.pendingReviews(accountID: accountID) == captured.pending)
+    #expect(try await reopened.session(accountID: accountID)?.revision == captured.session)
+    #expect(try await reopened.materials(accountID: accountID).first?.material == captured.material)
+    #expect(
+      await server.watermarks.prefix(3) == [
+        nil, DownloadFixture.date, SubjectCacheFixture.changedAt,
+      ])
+  }
+
   private func store() async throws -> StudyStore {
     try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
   }

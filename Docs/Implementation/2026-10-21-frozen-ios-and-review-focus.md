@@ -591,3 +591,50 @@ Scoped parser/UI rules, strict swift-format and SwiftLint pass with zero rewrite
 Prototype logs retain the initial argument-label compiler failure, the expectation correction (a finished session retains its last question token while exposing no active question), the large-chunk residual-capacity failure, and the direct SQLite error-domain check. The separate archive-layout failure is retained before the full ten-phase passing run. These are harness development failures, not app launch crashes or additional passing cases; failed images are ejected and preserved by the existing task policy.
 
 This closes the recorded **Mac completed-review disk-full save** case. Native iPhone saving, adoption/activation/final selection under disk pressure, actual abrupt pre-answer-commit/mid-copy/publication interruptions, Data Protection/power loss, real-catalog/device performance, production historical-decoder binding and wider G7 combinations remain open. Physical/signed/UI/voice/CI prerequisites and all other tasks remain in [TASKS](../TASKS.md); the overall modernization is unfinished.
+
+## API subject caching and native networking cleanup
+
+The owner supersedes the earlier Parquet requirement and asks to simplify fetching with current Apple/Swift tools. `2171fd1a` removed the unused derivative. This follow-up also removes the developer catalog-export document/archive/query/action and its four feature-specific tests, which existed for that pipeline. Normal diagnostic sharing, its privacy/cancellation tests, the 357-item native display preview, grading and all stored account work remain. The preview remains display-only. No complete authorized catalog is fabricated from public display pages.
+
+WaniKani's current [authentication reference](https://docs.api.wanikani.com/20170710/#authentication) requires a personal API token for subjects as well as account endpoints. Its [cache guidance](https://docs.api.wanikani.com/20170710/#caching) recommends retaining subject content and using [`updated_after`](https://docs.api.wanikani.com/20170710/#leveraging-the-updated_after-filter); [conditional requests](https://docs.api.wanikani.com/20170710/#conditional-requests) are another supported mechanism. The app now reads saved subjects/cursors from its existing actor and passes them to the single service download requirement. A no-cache convenience call supplies empty values; there is no second implementation or cache/repository protocol.
+
+The client captures the **first collection page's server `data_updated_at`**, retaining its original microsecond string. It merges returned subjects by ID with cached values, including hidden changes and new subjects, sorts the complete result and validates its SRS/assignment relationships before publishing `StudyDownload`. The existing full-replacement importer therefore never receives a delta as if it were a complete catalog. An empty delta preserves its previous server watermark. Later pagination timestamps cannot advance past changes potentially absent from earlier pages. Invalid IDs, duplicate deltas, missing nonempty-delta timestamps, backwards/malformed timestamps, page failures and any failed category prevent publication.
+
+Cache keys scope the existing account cursor dictionary to API endpoint, revision and granted level. The saved count must match a positive, unique, nonempty subject cache. Missing/legacy/invalid scope, changed endpoint/access, empty/inconsistent data, future local expiry metadata and age of seven days force a full read. The weekly full read reconciles removals without introducing a second store or another persisted type. The local expiry timestamp is separate from the server watermark and never supplies `updated_after`. Other collections still download completely. All new cursors and the complete merged content save in the existing transaction; failure keeps the old values. Legacy cursor keys are not reused as native API progress.
+
+### Native tool choice
+
+The installed toolchain is Swift **6.4** with iOS/macOS **27** SDKs. Primary references and current source support keeping the existing native APIs:
+
+| Responsibility | Choice and reason |
+| --- | --- |
+| HTTP/auth/status/pagination | [`URLSession` async methods](https://developer.apple.com/documentation/foundation/urlsession) with `URLRequest` and typed `JSONDecoder`; request headers and write/status semantics remain explicit |
+| Fixed independent API categories | Swift [`async let`](https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html); a general request scheduler/task-group framework adds no needed behavior |
+| Transport and decoding isolation | Explicit [`@concurrent`](https://docs.swift.org/latest/documentation/diagnostics/nonisolated-nonsending-by-default/); UI stays MainActor and store operations stay on `@ModelActor` |
+| View loads and refresh | SwiftUI [`.task(id:…)`](https://developer.apple.com/documentation/swiftui/view/task(id:name:priority:file:line:_:)) and [`.refreshable`](https://developer.apple.com/documentation/swiftui/view/refreshable(action:)); shared durable sync retains its app owner rather than inheriting a disappearing view's cancellation |
+| Offline domain state | Existing SwiftData model queries and transactions; no HTTP cache framework or separate app cache store |
+| Diagnostics | Existing native Transferable/ShareLink; the one-off public catalog archive retires |
+
+Shared/Package.swift has **zero external dependencies**. The app workspace pins only Apple SwiftProtobuf **1.39.0**, required by the read-only original-install schema 9–15 importer and its generated messages. It is not the native API client. No tracked Python/Ruby/Go/shell build drivers, CocoaPods/Fastlane/Makefile remain; the project has no shell build phase. Mainboard owns execution, rules, formatting, results and CI. No dependency, lock, runner or new tool is added. Foundation's tiny redirect delegate still enforces the existing authorization/write redirect policy; removing it is not a fetch simplification.
+
+### Scoped validation
+
+Source implementation precedes the final test extensions. All **561 shared functions / 72 suites** pass on Mac (92 + 8 + 207 + 254), and all **561 / 858 executions** pass on iPhone with zero skips/failures. Four subject-cache functions cover merging/precision/empty results, ten fallback scopes, six distinct failure modes and changing pagination watermarks. One native persisted test covers new/hidden/unchanged subjects, pending answers/notes/session, actor reopen, next-request watermark reuse and whole-state preservation after another API category fails. The existing read-only dirty-save test now observes the exact proposed new cursor values before real save refusal, then verifies complete old state and a fresh actor reopen. Existing diagnostics assertions remain; only the four retired-export tests/helpers are deleted with their feature.
+
+Both non-UI app hosts pass against their explicit fixture marker: iPhone **95 functions / 172 executions**, Mac **83 / 160**, each with the existing one declared restart-task skip. Their build summaries and a separate native Mac Debug build report zero compiler/analyzer warnings/errors. No UI-test execution or normal account launch occurs. The full ten-phase persistence task and all three actual bounded APFS disk-full cases also exit 0; the new receipts are in `.build/Results/StorageSpace.9BETH4`. Its exact `disk34` device is ejected. Expected negative corruption/read-only/disk-full diagnostics remain in logs rather than being relabeled as unexpected app errors.
+
+Strict swift-format, SwiftLint and parser/UI rules pass on all 18 changed surviving Swift files with zero final rewrites. Inventory parses **261/261** files with zero context issues: production **145 / 21,675** physical lines (**one file / 19 lines fewer**), tests **111 / 26,626** (+140), tooling **five / 281** unchanged. These are path counts, not logical LOC or compiler membership. The frozen V1, canonical helper/store/manifest and archived historical sources remain byte-exact. Only the transient `StudyDownload` adds cursor metadata; the persisted account dictionary/type and every stored Codable declaration remain unchanged. No V2 or historical decoder binding is implemented.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `.build/Results/SubjectCacheSharedFinal.log` | `45231c5c83e700539f70537f0ff02dcfd285a500b5b6e5af23c2760b0dbadb7c` |
+| `test-6b45388055ca4c2d9aeca788e7a6e111.tests.json` (shared iPhone) | `fdc6ab579f47deb2071ecf79f6418ce24e93cb842c3dd42ec85e37589103ca82` |
+| `test-b300086f2feb44c98abd5e0ca39cbd9c.tests.json` (app iPhone) | `878c75fbe2abd1eeb5ff601edf42075db7fd90189ac59240b53fb90f81da656a` |
+| `test-ed5530984824412fa0d7f9a3bf447bab.tests.json` (app Mac) | `a408ba02e7fea1c2782b29ad83e02f5acc1d403f901dc4f54ed2b8ea88b84b2a` |
+| `build-9d3e033c9c3a4351bd88b1529855c83d.build.json` (Mac) | `9f9550a7ba3a46357eb0fcbcbc486964c8e510b7afa87569b069c7426d3600d8` |
+| `.build/Results/SubjectCachePersistence.log` | `00394f423df366df81fd58fa37fe8fb36c46d6f02164539ede32731ab8c00c20` |
+| `.build/Results/SubjectCacheStorageSpace.log` | `392ad948f5f0808f8b3c3f69c056f7dc91416db1bb41201e80e1df976ad81517` |
+| `.build/Results/SubjectCacheLint.log` | `f5fd963888fc90aef552649898cfb742d73f6f8c0475dc6bea66914814383995` |
+| `.build/Reports/SubjectCacheInventory.json` | `11e00566558421d6d4fe55f5f270044437ae182835e7d9ff8238479b82f1bd10` |
+
+The first shared run passed before interface/export cleanup; it is retained separately and is not the final receipt. No new Release/bundle or independent frozen-writer run is claimed for this change. Remaining work includes measured real-catalog network/memory/write performance, delta/reset handling for other account collections, real-account/offline and rendered usability, full G7/historical upgrade binding, physical/signed voice/watch/services and hosted CI publication. Conditional HTTP requests remain an optional measured improvement, not a second required cache path. All other obligations remain in [TASKS](../TASKS.md); the overall goal stays active.

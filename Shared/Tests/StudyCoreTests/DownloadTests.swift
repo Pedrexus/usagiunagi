@@ -5,6 +5,106 @@ import Testing
 @testable import StudyCore
 
 struct DownloadTests {
+  @Test func cachedSubjectsMergeChangesAndPreserveMicrosecondWatermarks() async throws {
+    let server = SubjectCacheFixture()
+    let client = WaniKaniClient { try await server.respond($0) }
+    let full = try await client.download(token: "fixture")
+    let key = try #require(full.cursors.first { $0.value == DownloadFixture.date }?.key)
+    #expect(full.subjects.count == 5 && full.cursors.count == 3)
+    await server.use(.changes)
+    let changed = try await client.download(
+      token: "fixture", subjects: full.subjects, cursors: full.cursors)
+    #expect(changed.subjects.map(\.id) == [1, 2, 3, 4, 5, 6])
+    #expect(changed.subjects.first?.japanese == "更新" && changed.subjects.first?.hiddenAt != nil)
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    #expect(
+      try encoder.encode(full.subjects.filter { $0.id != 1 })
+        == encoder.encode(changed.subjects.filter { $0.id != 1 && $0.id != 6 }))
+    #expect(changed.cursors[key] == SubjectCacheFixture.changedAt)
+    #expect(changed.cursors[key + ":full"] == full.cursors[key + ":full"])
+    await server.use(.unchanged)
+    let unchanged = try await client.download(
+      token: "fixture", subjects: changed.subjects, cursors: changed.cursors)
+    #expect(try encoder.encode(unchanged.subjects) == encoder.encode(changed.subjects))
+    #expect(unchanged.cursors == changed.cursors)
+    #expect(await server.watermarks == [nil, DownloadFixture.date, SubjectCacheFixture.changedAt])
+  }
+
+  @Test(arguments: [
+    "missing", "count", "legacy", "expired", "future", "endpoint", "grant", "empty", "duplicates",
+    "nonpositive",
+  ])
+  func invalidOrChangedCacheScopeForcesACompleteSubjectRead(_ fault: String) async throws {
+    let server = SubjectCacheFixture()
+    var client: any WaniKaniService = WaniKaniClient { try await server.respond($0) }
+    let full = try await client.download(token: "fixture")
+    let key = try #require(full.cursors.first { $0.value == DownloadFixture.date }?.key)
+    var cursors = full.cursors
+    var subjects = full.subjects
+    if fault == "missing" { cursors[key] = nil }
+    if fault == "count" { cursors[key + ":count"] = "999" }
+    if fault == "legacy" { cursors = ["subjects_updated_after": DownloadFixture.date] }
+    if fault == "expired" {
+      subjects.append(.init(id: 999, kind: .kanji))
+      cursors[key + ":count"] = String(subjects.count)
+      cursors[key + ":full"] = "2000-01-01T00:00:00Z"
+    }
+    if fault == "future" { cursors[key + ":full"] = "2999-01-01T00:00:00Z" }
+    if fault == "endpoint" {
+      client = try client.reconfigured(baseURL: URL(string: "https://fixture.example/v2")!)
+    }
+    if fault == "grant" { await server.use(.free) }
+    if fault == "empty" { subjects = [] }
+    if fault == "duplicates" {
+      subjects.append(subjects[0])
+      cursors[key + ":count"] = String(subjects.count)
+    }
+    if fault == "nonpositive" { subjects[0] = .init(id: -1, kind: .kanji) }
+    let result = try await client.download(token: "fixture", subjects: subjects, cursors: cursors)
+    #expect(await server.watermarks == [nil, nil])
+    #expect(result.subjects.map(\.id) == full.subjects.map(\.id) && result.cursors.count == 3)
+  }
+
+  @Test(arguments: [
+    SubjectCacheFixture.Phase.failedPage, .laterCategoryFailure, .duplicates, .missingStamp,
+    .backwardsStamp, .malformedStamp,
+  ])
+  func invalidPartialDownloadsNeverPublishACompleteCatalog(_ phase: SubjectCacheFixture.Phase)
+    async throws
+  {
+    let server = SubjectCacheFixture()
+    let client = WaniKaniClient { try await server.respond($0) }
+    let full = try await client.download(token: "fixture")
+    await server.use(phase)
+    do {
+      _ = try await client.download(
+        token: "fixture", subjects: full.subjects, cursors: full.cursors)
+      Issue.record("An incomplete or invalid download was published")
+    } catch let error as URLError {
+      #expect(phase == .failedPage || phase == .laterCategoryFailure)
+      #expect(error.code == .networkConnectionLost)
+    } catch let error as WaniKaniClient.APIError {
+      #expect(phase != .failedPage && phase != .laterCategoryFailure)
+      guard case .invalidResponse = error else {
+        Issue.record("Unexpected API failure: \(error)")
+        return
+      }
+    }
+  }
+
+  @Test func changingPaginationMetadataKeepsTheFirstServerWatermark() async throws {
+    let server = SubjectCacheFixture()
+    let client = WaniKaniClient { try await server.respond($0) }
+    await server.use(.pagination)
+    let full = try await client.download(token: "fixture")
+    #expect(full.subjects.count == 5 && full.cursors.values.contains(DownloadFixture.date))
+    #expect(!full.cursors.values.contains(SubjectCacheFixture.changedAt))
+    await server.use(.unchanged)
+    _ = try await client.download(token: "fixture", subjects: full.subjects, cursors: full.cursors)
+    #expect(await server.watermarks == [nil, nil, DownloadFixture.date])
+  }
+
   @Test(arguments: [
     ("2018-08-05T11:08:39.431000Z", Int64(1_533_467_319)),
     ("2018-08-05T11:08:39.431Z", 1_533_467_319),

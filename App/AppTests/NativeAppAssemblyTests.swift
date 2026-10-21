@@ -44,7 +44,9 @@ actor AssemblyServer: WaniKaniService {
       id: data.accountID, username: data.profile.username, level: data.profile.level,
       onVacation: false, profile: data.profile)
   }
-  func download(token: String) async throws -> StudyDownload {
+  func download(token: String, subjects: [CatalogSubject], cursors: [String: String]) async throws
+    -> StudyDownload
+  {
     if offline { throw URLError(.notConnectedToInternet) }
     if let downloadGate { await downloadGate.pause() }
     return data

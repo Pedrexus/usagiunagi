@@ -10,81 +10,6 @@ struct StudyDiagnosticArchiveTests {
   private let account = "diagnostic-account"
   private let sourceID = "/private/diagnostic-source"
 
-  @Test func freeLevelExportPreservesPublicMetadataWithoutPrivateWorkOrOtherLevels() async throws {
-    let store = try await populated()
-    try await store.prepareFreeLevelExportBounds(accountID: account)
-    let before = try await store.diagnosticDocument(accountID: account, generatedAt: now)
-    let archive = StudyDiagnosticArchive(store: store, accountID: account).freeLevels
-    let data = try await archive.data()
-    #expect(data.starts(with: Data("bplist00".utf8)))
-    let document = try PropertyListDecoder().decode(StudyCatalogDocument.self, from: data)
-    #expect(document.formatVersion == 1 && document.requestedLevels == [1, 2, 3])
-    #expect(!document.capturedAt.isEmpty)
-    #expect(document.subjects.map(\.id) == [1, 2, 3])
-    #expect(document.subjects.map(\.level) == [1, 2, 3])
-    let expected = before.catalog.filter { (1...3).contains($0.level) && $0.hiddenAt == nil }
-      .sorted { $0.level == $1.level ? $0.id < $1.id : $0.level < $1.level }
-    #expect(try canonical(document.subjects) == canonical(expected))
-    #expect(document.systems == before.account.systems && document.voices == before.account.voices)
-    let fixed = try await store.freeLevelCatalogDocument(accountID: account, capturedAt: now)
-    #expect(fixed.capturedAt == now.ISO8601Format())
-    let text = String(decoding: try canonical(document), as: UTF8.self)
-    for secret in [
-      account, "other-person", "other-owner-content", "outside-selection", "credential-secret",
-      "private-preference-email", sourceID, "Current 未送信 note", "Earlier pending note",
-    ] { #expect(!text.contains(secret)) }
-    for key in [
-      "accountID", "profile", "materials", "session", "reviews", "assignments", "snapshots",
-      "imports", "cursors", "credentialID",
-    ] { #expect(!text.contains("\"\(key)\":")) }
-    let after = try await store.diagnosticDocument(accountID: account, generatedAt: now)
-    #expect(try canonical(before) == canonical(after))
-  }
-
-  @Test func freeLevelExportRefusesMissingSampleAndEmptySources() async throws {
-    let store = try await populated()
-    for id in ["", "missing"] {
-      await #expect(throws: StudyStoreError.self) {
-        try await StudyDiagnosticArchive(store: store, accountID: id).freeLevels.data()
-      }
-    }
-    try await store.insertDiagnosticTestSample(
-      .init(
-        accountID: "sample", username: "sample", currentLevel: 1, assignments: [], statistics: [],
-        levels: [], subjects: [], isSample: true))
-    await #expect(throws: StudyStoreError.self) {
-      try await StudyDiagnosticArchive(store: store, accountID: "sample").freeLevels.data()
-    }
-    try await store.hideCatalogExportSubjects(accountID: account)
-    await #expect(throws: StudyCatalogArchive.Failure.empty) {
-      try await StudyDiagnosticArchive(store: store, accountID: account).freeLevels.data()
-    }
-  }
-
-  @Test func freeLevelExportCancellationLeavesTheStoreUnchanged() async throws {
-    let store = try await populated()
-    let before = try await store.diagnosticDocument(accountID: account, generatedAt: now)
-    let archive = StudyDiagnosticArchive(store: store, accountID: account).freeLevels
-    let task = Task {
-      withUnsafeCurrentTask { $0?.cancel() }
-      return try await archive.data()
-    }
-    await #expect(throws: CancellationError.self) { try await task.value }
-    let after = try await store.diagnosticDocument(accountID: account, generatedAt: now)
-    #expect(try canonical(before) == canonical(after))
-  }
-
-  @Test func freeLevelExportRefusesInconsistentStoredSubjectIdentity() async throws {
-    let store = try await populated()
-    try await store.invalidateCatalogExportIdentity(accountID: account)
-    let before = try await store.diagnosticDocument(accountID: account, generatedAt: now)
-    await #expect(throws: StudyStoreOpeningError.invalidGeneration) {
-      try await StudyDiagnosticArchive(store: store, accountID: account).freeLevels.data()
-    }
-    let after = try await store.diagnosticDocument(accountID: account, generatedAt: now)
-    #expect(try canonical(before) == canonical(after))
-  }
-
   @Test func binaryRoundTripKeepsExactAccountWorkAndExcludesPrivateBindings() async throws {
     let store = try await populated()
     let before = try await store.diagnosticDocument(accountID: account, generatedAt: now)
@@ -296,51 +221,6 @@ struct StudyDiagnosticArchiveTests {
 }
 
 extension StudyStore {
-  fileprivate func prepareFreeLevelExportBounds(accountID: String) throws {
-    try transaction {
-      for row in try CatalogRecord.fetch(in: modelContext, accountID: accountID) {
-        row.level = Int(row.subjectID)
-        var subject = row.subject
-        subject.level = row.level
-        subject.meanings += [
-          .init("feline", role: .auxiliaryWhitelist), .init("dog", role: .blacklist),
-        ]
-        subject.readings.append(.init("にゃん", isPrimary: false, kind: .kunyomi))
-        row.subject = subject
-      }
-      for (id, level, hidden) in [(Int64(4), 4, false), (5, 2, true), (6, 0, false)] {
-        var subject = CatalogSubject(id: id, kind: .kanji)
-        subject.level = level
-        subject.hiddenAt = hidden ? 1 : nil
-        subject.meanings = [.init("outside-selection", role: .primary)]
-        modelContext.insert(CatalogRecord(accountID: accountID, subject: subject))
-      }
-      for row in try CatalogRecord.fetch(in: modelContext, accountID: "diagnostic-account-other") {
-        var subject = row.subject
-        subject.meanings = [.init("other-owner-content", role: .primary)]
-        row.subject = subject
-      }
-    }
-  }
-  fileprivate func hideCatalogExportSubjects(accountID: String) throws {
-    try transaction {
-      for row in try CatalogRecord.fetch(in: modelContext, accountID: accountID) {
-        var subject = row.subject
-        subject.hiddenAt = 1
-        row.subject = subject
-      }
-    }
-  }
-  fileprivate func invalidateCatalogExportIdentity(accountID: String) throws {
-    try transaction {
-      let row = try #require(
-        try CatalogRecord.fetch(in: modelContext, accountID: accountID, subjectID: 1))
-      var subject = row.subject
-      subject.level = 4
-      row.subject = subject
-    }
-  }
-
   fileprivate func enrichDiagnosticTestFixture(accountID: String, sourceID: String, now: Date)
     throws
   {

@@ -157,7 +157,9 @@ private actor ProbeServer: WaniKaniService {
       id: accountID, username: profile.username, level: profile.level,
       onVacation: profile.vacationStartedAt != nil, startedAt: profile.startedAt, profile: profile)
   }
-  func download(token: String) throws -> StudyDownload {
+  func download(token: String, subjects: [CatalogSubject], cursors: [String: String]) throws
+    -> StudyDownload
+  {
     throw WaniKaniClient.APIError.invalidPayload
   }
   func assignment(subjectID: Int64, token: String) -> CatalogAssignment? { nil }

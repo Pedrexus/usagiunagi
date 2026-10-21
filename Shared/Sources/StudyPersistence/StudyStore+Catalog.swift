@@ -3,14 +3,6 @@ import StudyCore
 import SwiftData
 
 extension CatalogRecord {
-  static func freeLevels(in context: ModelContext, accountID: String) throws -> [CatalogRecord] {
-    try context.fetch(
-      FetchDescriptor<CatalogRecord>(
-        predicate: #Predicate { $0.accountID == accountID && $0.level >= 1 && $0.level <= 3 },
-        sortBy: [SortDescriptor(\.level), SortDescriptor(\.subjectID)])
-    )
-  }
-
   static func fetch(in context: ModelContext, accountID: String, subjectID: Int64) throws
     -> CatalogRecord?
   {

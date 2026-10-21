@@ -26,7 +26,9 @@ private struct FixedEndpointService: WaniKaniService {
   func account(token: String) async throws -> WaniKaniAccount {
     try await client.account(token: token)
   }
-  func download(token: String) async throws -> StudyDownload {
+  func download(token: String, subjects: [CatalogSubject], cursors: [String: String]) async throws
+    -> StudyDownload
+  {
     try await client.download(token: token)
   }
   func assignment(subjectID: Int64, token: String) async throws -> CatalogAssignment? {

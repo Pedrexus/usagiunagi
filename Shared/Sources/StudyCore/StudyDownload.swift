@@ -12,13 +12,16 @@ public struct StudyDownload: Sendable {
   public var statistics: [CatalogReviewStatistic]
   public var voices: [StudyVoiceActor]
   public var systems: [StudySRSSystem]?
+  /// API cache progress; save atomically with complete content. Watermarks come from the server.
+  public var cursors: [String: String]
   public let fetchedAt: Date
 
   public init(
     accountID: String, profile: StudyAccountProfile, subjects: [CatalogSubject] = [],
     assignments: [CatalogAssignment] = [], materials: [WaniKaniMaterial] = [],
     levels: [CatalogLevelProgression] = [], statistics: [CatalogReviewStatistic] = [],
-    voices: [StudyVoiceActor] = [], systems: [StudySRSSystem]? = nil, fetchedAt: Date = .now
+    voices: [StudyVoiceActor] = [], systems: [StudySRSSystem]? = nil,
+    cursors: [String: String] = [:], fetchedAt: Date = .now
   ) {
     self.accountID = accountID
     self.profile = profile
@@ -29,6 +32,7 @@ public struct StudyDownload: Sendable {
     self.statistics = statistics
     self.voices = voices
     self.systems = systems
+    self.cursors = cursors
     self.fetchedAt = fetchedAt
   }
 
