@@ -37,10 +37,22 @@
       "probe-application-payload-validation", "inspect-application-raw-payload",
       "probe-application-metadata-corruption", "inspect-application-metadata",
       "probe-application-adoption-corruption",
+      "probe-application-space", "write-application-space", "commit-application-space",
+      "verify-application-space",
     ]
     private static let marker = Data("usagi-native-upgrade-disposable-v1".utf8)
 
     static func run(_ command: String, url: URL) async throws {
+      if command == "probe-application-space" {
+        try await spaceExperiment(frozen: url)
+        return
+      }
+      if command == "write-application-space" || command == "commit-application-space"
+        || command == "verify-application-space"
+      {
+        try await spaceCommand(command, url: url)
+        return
+      }
       if command == "probe-native-upgrade" {
         try experiment(frozen: url)
         return
@@ -197,6 +209,219 @@
       log("PASS: \(walBytes)-byte WAL-only commit copied with exact durable fields")
       log("PASS: original frozen fixture filenames and SHA-256 hashes unchanged")
       log("SCOPED EXPERIMENT: no production activation, failure matrix, external-data or iOS proof")
+    }
+
+    private enum SpacePoint: String, Codable, CaseIterable {
+      case beforeMutation, beforeCommit
+      var command: String {
+        self == .beforeMutation ? "write-application-space" : "commit-application-space"
+      }
+    }
+    private struct SpaceOutcome: Codable {
+      let point: SpacePoint
+      let writerPID: Int32
+      let filledBytes: Int
+      let saveErrorDomain: String
+      let saveErrorCode: Int
+      let sqliteCode: Int32
+      let restoredRecords: Int
+    }
+
+    private static func spaceVolume(_ volume: URL) throws -> Int {
+      let path = volume.resolvingSymlinksInPath()
+      let properties = try path.resourceValues(forKeys: [
+        .volumeNameKey, .volumeTotalCapacityKey, .volumeURLKey, .volumeIsLocalKey,
+      ])
+      let temporary = URL(filePath: "/private/tmp").resolvingSymlinksInPath()
+      guard path.lastPathComponent == "volume",
+        path.deletingLastPathComponent().lastPathComponent.hasPrefix("usagi-disk-space."),
+        path.deletingLastPathComponent().deletingLastPathComponent().path == temporary.path,
+        properties.volumeName == "UsagiStorageFixture", properties.volumeIsLocal == true,
+        properties.volume?.resolvingSymlinksInPath().path == path.path,
+        let capacity = properties.volumeTotalCapacity,
+        (64 * 1024 * 1024...256 * 1024 * 1024).contains(capacity)
+      else {
+        throw NativeStoreBaseline.Failure(
+          description: "Space checks require their bounded disk image")
+      }
+      return capacity
+    }
+
+    private static func fillSpace(at url: URL, capacity: Int) throws -> Int {
+      let descriptor = Darwin.open(url.path, O_CREAT | O_EXCL | O_WRONLY | O_NOFOLLOW, 0o600)
+      guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+      defer { Darwin.close(descriptor) }
+      let buffer = Data(repeating: 0xa7, count: 1024 * 1024)
+      var filled = 0
+      while filled <= capacity {
+        let written = buffer.withUnsafeBytes { Darwin.write(descriptor, $0.baseAddress, $0.count) }
+        if written < 0 {
+          if errno == EINTR { continue }
+          guard errno == ENOSPC else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+          }
+          if Darwin.fsync(descriptor) != 0 && errno != ENOSPC {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+          }
+          log("SPACE FULL: real ENOSPC after \(filled) bounded bytes")
+          return filled
+        }
+        try NativeStoreBaseline.require(written > 0, "Pressure write made no progress")
+        filled += written
+      }
+      throw NativeStoreBaseline.Failure(description: "The bounded image did not return ENOSPC")
+    }
+
+    private static func spaceExperiment(frozen: URL) async throws {
+      let manager = FileManager.default
+      let volume = frozen.deletingLastPathComponent().deletingLastPathComponent()
+      _ = try spaceVolume(volume)
+      let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+      let source = frozen.deletingLastPathComponent()
+      let pristine = try hashes(in: source)
+      let root = volume.appending(path: "native-upgrade-\(UUID())")
+      try manager.createDirectory(at: root, withIntermediateDirectories: false)
+      try marker.write(to: root.appending(path: ".disposable"), options: .atomic)
+      let original = try applicationSource(in: source)
+      log("DISPOSABLE SPACE PROBE: \(root.path)")
+      for point in SpacePoint.allCases {
+        let directory = root.appending(path: point.rawValue)
+        try manager.createDirectory(at: directory, withIntermediateDirectories: false)
+        for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+        try encode(manifest.expected, to: directory.appendingPathExtension("expected.plist"))
+        let store = directory.appending(path: "study.store")
+        try child("verify-application-space", store: store)
+        let selectorURL = directory.appending(path: "store-selection.plist")
+        let selector = try Data(contentsOf: selectorURL)
+        let selection = try PropertyListDecoder().decode(AdoptionSelection.self, from: selector)
+        let retained = directory.appending(path: "generations/\(selection.retained)")
+        try child(point.command, store: store)
+        for _ in 0..<2 { try child("verify-application-space", store: store) }
+        try NativeStoreBaseline.require(
+          try applicationSource(in: directory) == original
+            && applicationSource(in: retained) == original
+            && Data(contentsOf: selectorURL) == selector && hashes(in: source) == pristine,
+          "Space recovery changed original/retained data, selection or the frozen source")
+        let outcome = try PropertyListDecoder().decode(
+          SpaceOutcome.self,
+          from: Data(contentsOf: directory.appendingPathExtension("space.plist")))
+        try NativeStoreBaseline.require(
+          outcome.point == point && outcome.filledBytes > 0
+            && outcome.writerPID > 0
+            && outcome.writerPID != ProcessInfo.processInfo.processIdentifier
+            && outcome.restoredRecords == manifest.expected.records.count,
+          "Missing space-failure and complete-state recovery evidence")
+        log("PASS: \(point.rawValue) save refused, exact rollback, retry and two fresh reopens")
+      }
+      log(
+        "SCOPE: disposable Mac APFS disk-full write/recovery; not iOS Data Protection or power loss"
+      )
+    }
+
+    private static func spaceCommand(_ command: String, url: URL) async throws {
+      let manager = FileManager.default
+      let directory = url.deletingLastPathComponent()
+      let root = directory.deletingLastPathComponent()
+      let capacity = try spaceVolume(root.deletingLastPathComponent())
+      try NativeStoreBaseline.require(
+        root.lastPathComponent.hasPrefix("native-upgrade-")
+          && Data(contentsOf: root.appending(path: ".disposable")) == marker,
+        "Space child commands require their marked disk-image fixture")
+      let expectedURL = directory.appendingPathExtension("expected.plist")
+      let expected = try PropertyListDecoder().decode(
+        NativeStoreBaseline.State.self, from: Data(contentsOf: expectedURL))
+      let store = try await StudyStore.openApplication(in: directory)
+      defer { withExtendedLifetime(store) {} }
+      try NativeStoreBaseline.require(
+        try await store.nativeBaselineState() == expected, "Space check lost exact saved state")
+      if command == "verify-application-space" {
+        log(
+          "PASS: space fixture restored \(expected.records.count) exact records, PID \(ProcessInfo.processInfo.processIdentifier)"
+        )
+        return
+      }
+      let account = NativeStoreBaseline.accounts[0]
+      guard
+        let saved = try await store.materials(accountID: account).first(where: {
+          $0.material.subjectID == 42
+        })
+      else { throw NativeStoreBaseline.Failure(description: "Space fixture material missing") }
+      var material = saved.material
+      material.meaningNote += String(repeating: "Synthetic disk-full note 日本語. ", count: 32768)
+      guard let point = SpacePoint.allCases.first(where: { $0.command == command }) else {
+        throw NativeStoreBaseline.Failure(description: "Unknown space failure point")
+      }
+      let pressure = root.appending(path: "volume-pressure")
+      defer {
+        if manager.fileExists(atPath: pressure.path) { try? manager.removeItem(at: pressure) }
+      }
+      let failure: NSError
+      do {
+        if point == .beforeMutation {
+          _ = try fillSpace(at: pressure, capacity: capacity)
+          _ = try await store.saveMaterial(
+            material, accountID: account, expectedRevision: saved.revision)
+        } else {
+          try await store.saveMaterialWhileFillingVolume(
+            material, accountID: account, expectedRevision: saved.revision
+          ) { _ = try fillSpace(at: pressure, capacity: capacity) }
+        }
+        throw NativeStoreBaseline.Failure(description: "Full-volume save unexpectedly succeeded")
+      } catch let error as NativeStoreBaseline.Failure {
+        throw error
+      } catch {
+        failure = error as NSError
+        log("SPACE SAVE REFUSED: \(failure.domain)/\(failure.code), \(failure)")
+      }
+      let filled = try pressure.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+      // sqlite3.h's extended macro is not imported by Swift.
+      let sharedMemoryOpenError = SQLITE_IOERR | (Int32(18) << 8)
+      guard failure.domain == NSCocoaErrorDomain,
+        let sqlite = (failure.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.int32Value,
+        [SQLITE_FULL, sharedMemoryOpenError].contains(sqlite)
+      else {
+        throw NativeStoreBaseline.Failure(description: "Unexpected full-volume save error")
+      }
+      try manager.removeItem(at: pressure)
+      try NativeStoreBaseline.require(
+        try await store.nativeBaselineState() == expected,
+        "Failed full-volume save left dirty values or lost saved work after space recovery")
+      let revision = try await store.saveMaterial(
+        material, accountID: account, expectedRevision: saved.revision)
+      let actual = try await store.nativeBaselineState()
+      try NativeStoreBaseline.require(
+        actual.schema == expected.schema && actual.schemaVersion == expected.schemaVersion
+          && actual.records.count == expected.records.count,
+        "Space retry changed schema or record membership")
+      for before in expected.records {
+        guard
+          let after = actual.records.first(where: {
+            $0.model == before.model && $0.identity == before.identity
+          })
+        else { throw NativeStoreBaseline.Failure(description: "Space retry lost a saved record") }
+        let editable: Set<String> =
+          before.model == "MaterialRecord" && before.identity == "\(account)/42"
+          ? ["revision", "material", "pending"] : []
+        try NativeStoreBaseline.require(
+          before.accountID == after.accountID
+            && before.fields.filter { !editable.contains($0.key) }
+              == after.fields.filter { !editable.contains($0.key) },
+          "Space retry changed an unrelated field or pending attempt")
+      }
+      let result = try await store.materials(accountID: account).first {
+        $0.material.subjectID == 42
+      }
+      try NativeStoreBaseline.require(
+        result?.revision == revision && result?.material == material && result?.pending == true,
+        "Space retry did not save the exact proposed note and new pending revision")
+      try encode(actual, to: expectedURL)
+      try encode(
+        SpaceOutcome(
+          point: point, writerPID: ProcessInfo.processInfo.processIdentifier,
+          filledBytes: filled, saveErrorDomain: failure.domain, saveErrorCode: failure.code,
+          sqliteCode: sqlite, restoredRecords: actual.records.count),
+        to: directory.appendingPathExtension("space.plist"))
+      log("PASS: real ENOSPC save rollback preserved all records and the same revision retried")
     }
 
     private static func applicationCommand(_ command: String, url: URL) async throws {
@@ -1449,6 +1674,19 @@
     }
     private static func log(_ message: String) {
       FileHandle.standardOutput.write(Data((message + "\n").utf8))
+    }
+  }
+  extension StudyStore {
+    fileprivate func saveMaterialWhileFillingVolume(
+      _ material: StudyMaterial, accountID: String, expectedRevision: UUID,
+      fill: @Sendable () throws -> Void
+    ) throws {
+      try transaction {
+        _ = try writeMaterial(material, accountID: accountID, expectedRevision: expectedRevision)
+        try NativeStoreBaseline.require(
+          modelContext.hasChanges, "No mutation preceded space failure")
+        try fill()
+      }
     }
   }
 #endif

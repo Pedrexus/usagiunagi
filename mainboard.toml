@@ -37,6 +37,52 @@ for phase in seed reopen seedAbrupt reopenAbrupt seedVerification reopenVerifica
 done
 '
 '''
+native-store-space = '''mainboard proc timeout 600 sh -eu -c '
+mkdir -p .build/Results
+space_report=$(mktemp -d .build/Results/StorageSpace.XXXXXX)
+space_root=$(mktemp -d /private/tmp/usagi-disk-space.XXXXXX)
+space_image="$space_root/storage.asif"
+space_mount="$space_root/volume"
+space_device=""
+cleanup() {
+  space_status=$?
+  trap - EXIT
+  if [ -n "$space_device" ]; then
+    if ! mainboard proc timeout 60 /usr/sbin/diskutil eject "$space_device" > "$space_report/detach.log" 2>&1; then
+      cat "$space_report/detach.log"
+      exit 1
+    fi
+  fi
+  if [ "$space_status" -eq 0 ]; then
+    /bin/rm "$space_image"
+    /bin/rmdir "$space_root"
+  fi
+  exit "$space_status"
+}
+trap cleanup EXIT
+trap "exit 130" INT
+trap "exit 143" TERM
+/usr/bin/xcrun swift build --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --jobs 2
+/usr/sbin/diskutil image create blank --format ASIF --size 128m --volumeName UsagiStorageFixture "$space_image" > "$space_report/create.log" 2>&1
+/usr/sbin/diskutil image attach --nobrowse --mountPoint "$space_mount" --plist "$space_image" > "$space_report/attach.plist"
+space_device=$(/usr/libexec/PlistBuddy -c "Print :system-entities:0:dev-entry" "$space_report/attach.plist")
+case "$space_device" in disk[0-9]*) ;; *) exit 1 ;; esac
+mkdir "$space_mount/frozen"
+cp App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store.baseline.plist "$space_mount/frozen/"
+space_result=0
+/usr/bin/xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe probe-application-space "$space_mount/frozen/study.store" > "$space_report/probe.log" 2>&1 || space_result=$?
+cat "$space_report/probe.log"
+test "$space_result" -eq 0
+space_outcomes=0
+for space_outcome in "$space_mount"/native-upgrade-*/*.space.plist; do
+  test -f "$space_outcome"
+  cp "$space_outcome" "$space_report/"
+  space_outcomes=$((space_outcomes + 1))
+done
+test "$space_outcomes" -eq 2
+printf "SPACE REPORT: %s\\n" "$space_report"
+'
+'''
 release-ios = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
 release-mac = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination platform=macOS --derived-data .build/Xcode/UnifiedMac --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
 audit-release-ios = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"

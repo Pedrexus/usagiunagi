@@ -137,6 +137,9 @@ jobs:
           test "$selection_status" -eq 86
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 60 xcrun swift run --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --skip-build NativePersistenceProbe read-native-selection "$report/selection.store"
 
+      - name: APFS full-volume save and recovery
+        run: uv run --project .build/Mainboard --locked --no-sync mainboard run --locked native-store-space
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
