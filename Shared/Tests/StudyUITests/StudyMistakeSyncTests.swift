@@ -6,7 +6,7 @@ import Testing
 @testable import StudyPersistence
 @testable import StudyUI
 
-@MainActor private final class MistakeCloud: StudyMistakeCloudStore {
+@MainActor private final class MistakeICloud: StudyMistakeICloudStore {
   var observedEpoch = UUID()
   var synchronizations = 0
   var available = true
@@ -16,9 +16,9 @@ import Testing
   var reads: [String] = []
   var writes: [String] = []
   var onRead: (@MainActor (String) -> Void)?
-  private var continuation: AsyncStream<StudyMistakeCloudEvent>.Continuation?
-  func changes() -> AsyncStream<StudyMistakeCloudEvent> {
-    let pair = AsyncStream<StudyMistakeCloudEvent>.makeStream()
+  private var continuation: AsyncStream<StudyMistakeICloudEvent>.Continuation?
+  func changes() -> AsyncStream<StudyMistakeICloudEvent> {
+    let pair = AsyncStream<StudyMistakeICloudEvent>.makeStream()
     continuation = pair.continuation
     return pair.stream
   }
@@ -40,11 +40,11 @@ import Testing
     values[key] = data
     emit(.server, keys: [key])
   }
-  func emit(_ reason: StudyMistakeCloudEvent.Reason, keys: Set<String>? = nil) {
+  func emit(_ reason: StudyMistakeICloudEvent.Reason, keys: Set<String>? = nil) {
     observe(reason)
     continuation?.yield(.init(reason: reason, keys: keys))
   }
-  func observe(_ reason: StudyMistakeCloudEvent.Reason) {
+  func observe(_ reason: StudyMistakeICloudEvent.Reason) {
     if reason != .server { observedEpoch = UUID() }
   }
 }
@@ -56,20 +56,20 @@ import Testing
   @Test func initialCatchUpMergesUnknownHintsWithoutUploadsAndSelfWritesSettle() async throws {
     let (model, store) = try await fixture()
     try await store.mergeMistakes([1: 100], accountID: account)
-    let cloud = MistakeCloud()
-    cloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 90, 999: 500])
+    let iCloud = MistakeICloud()
+    iCloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 90, 999: 500])
       .encoded()
-    cloud.values["testtsurukame-mistakes"] = Data("unattributed source".utf8)
+    iCloud.values["testtsurukame-mistakes"] = Data("unattributed source".utf8)
     let sync = StudyMistakeSync(
-      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+      model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
     await Task.yield()
     await sync.wake()
-    let merged = try StudyMistakeArchive(data: #require(cloud.values[try key]), accountID: account)
+    let merged = try StudyMistakeArchive(data: #require(iCloud.values[try key]), accountID: account)
     #expect(merged.values == [1: 100, 999: 500])
-    #expect(cloud.writes == [try key] && cloud.reads.count < 30)
-    #expect(!cloud.reads.contains("testtsurukame-mistakes"))
+    #expect(iCloud.writes == [try key] && iCloud.reads.count < 30)
+    #expect(!iCloud.reads.contains("testtsurukame-mistakes"))
     #expect(sync.notice == nil)
     #expect(try await store.mistakeState(accountID: account).values == [1: 100])
     #expect(try await store.pendingReviews(accountID: account).isEmpty)
@@ -94,13 +94,13 @@ import Testing
         format: .binary, options: 0),
     ] {
       let (model, store) = try await fixture()
-      let cloud = MistakeCloud()
-      cloud.values[try key] = data
+      let iCloud = MistakeICloud()
+      iCloud.values[try key] = data
       let sync = StudyMistakeSync(
-        model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+        model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_000) })
       await sync.wake()
-      let retained = cloud.values[try key]
-      #expect(cloud.writes.isEmpty && retained == data && sync.notice != nil)
+      let retained = iCloud.values[try key]
+      #expect(iCloud.writes.isEmpty && retained == data && sync.notice != nil)
       #expect(try await store.mistakeState(accountID: account).values.isEmpty)
       sync.stop()
     }
@@ -108,73 +108,73 @@ import Testing
   @Test func entitlementQuotaAndAppleAccountEventsPreserveLocalHistory() async throws {
     let (model, store) = try await fixture()
     try await store.mergeMistakes([1: 100], accountID: account)
-    let cloud = MistakeCloud()
-    cloud.canSynchronize = false
+    let iCloud = MistakeICloud()
+    iCloud.canSynchronize = false
     let sync = StudyMistakeSync(
-      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+      model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
-    #expect(cloud.reads.isEmpty && cloud.writes.isEmpty && sync.notice != nil)
-    cloud.canSynchronize = true
-    cloud.failWrites = true
+    #expect(iCloud.reads.isEmpty && iCloud.writes.isEmpty && sync.notice != nil)
+    iCloud.canSynchronize = true
+    iCloud.failWrites = true
     await sync.wake()
-    #expect(cloud.writes.isEmpty && sync.notice?.contains("full") == true)
-    cloud.failWrites = false
-    cloud.available = false
-    cloud.emit(.account)
+    #expect(iCloud.writes.isEmpty && sync.notice?.contains("full") == true)
+    iCloud.failWrites = false
+    iCloud.available = false
+    iCloud.emit(.account)
     try await requireNotice(sync, containing: "Apple account changed")
     await sync.wake()
-    #expect(cloud.writes.isEmpty)
-    cloud.available = true
-    cloud.emit(.initial, keys: [])
+    #expect(iCloud.writes.isEmpty)
+    iCloud.available = true
+    iCloud.emit(.initial, keys: [])
     try await requireNotice(sync, containing: "loading")
     await sync.wake()
     let cloudKey = try key
-    #expect(cloud.writes == [cloudKey])
-    cloud.emit(.quota)
+    #expect(iCloud.writes == [cloudKey])
+    iCloud.emit(.quota)
     try await requireNotice(sync, containing: "full")
     #expect(try await store.mistakeState(accountID: account).values == [1: 100])
     #expect(sync.notice != nil)
   }
   @Test func changedAccountDuringAReadCannotPublishAndLogoutStopsTheOldOwner() async throws {
     let (model, store) = try await fixture()
-    let cloud = MistakeCloud()
-    cloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 999]).encoded()
-    cloud.onRead = { _ in model.loadPreview() }
+    let iCloud = MistakeICloud()
+    iCloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 999]).encoded()
+    iCloud.onRead = { _ in model.loadPreview() }
     let sync = StudyMistakeSync(
-      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+      model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
-    #expect(cloud.writes.isEmpty)
+    #expect(iCloud.writes.isEmpty)
     #expect(try await store.mistakeState(accountID: account).values.isEmpty)
     await model.disconnect()
-    let reads = cloud.reads.count
-    cloud.emit(.server, keys: [try key])
+    let reads = iCloud.reads.count
+    iCloud.emit(.server, keys: [try key])
     await Task.yield()
     await sync.wake()
-    #expect(cloud.reads.count == reads && cloud.writes.isEmpty)
+    #expect(iCloud.reads.count == reads && iCloud.writes.isEmpty)
   }
   @Test func lateRemoteUpdateAndConcurrentLocalCommitKeepBothMaximums() async throws {
     let (model, store) = try await fixture()
-    let cloud = MistakeCloud()
-    cloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 100, 999: 1])
+    let iCloud = MistakeICloud()
+    iCloud.values[try key] = try StudyMistakeArchive(accountID: account, values: [1: 100, 999: 1])
       .encoded()
     let changed = try StudyMistakeArchive(accountID: account, values: [1: 200, 888: 2]).encoded()
     var firstRead = true
-    cloud.onRead = { [weak cloud] key in
+    iCloud.onRead = { [weak iCloud] key in
       if firstRead {
         firstRead = false
-        cloud?.values[key] = changed
+        iCloud?.values[key] = changed
       }
     }
     let sync = StudyMistakeSync(
-      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+      model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     async let local = store.mergeMistakes([1: 150], accountID: account)
     await sync.wake()
     _ = try await local
     await sync.wake()
-    let result = try StudyMistakeArchive(data: #require(cloud.values[try key]), accountID: account)
+    let result = try StudyMistakeArchive(data: #require(iCloud.values[try key]), accountID: account)
     #expect(result.values == [1: 200, 888: 2, 999: 1])
     #expect(try await store.mistakeState(accountID: account).values == [1: 200])
   }
@@ -206,22 +206,22 @@ import Testing
     let binding = try #require(try await store.mistakeState(accountID: account).legacyBinding)
     let model = StudyAppModel(credentials: MemoryCredentials("fixture"), openStore: { store })
     await model.restore()
-    let cloud = MistakeCloud()
+    let iCloud = MistakeICloud()
     let raw = ["1": "2026-10-20 12:00:00", "unresolved-kind": "kept verbatim"]
-    cloud.values[binding.key] = try JSONEncoder().encode(raw)
+    iCloud.values[binding.key] = try JSONEncoder().encode(raw)
     let sync = StudyMistakeSync(
-      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_792_497_602) })
+      model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_792_497_602) })
     await sync.wake()
-    #expect(cloud.reads.contains(binding.key))
+    #expect(iCloud.reads.contains(binding.key))
     #expect(sync.notice?.contains("kept unchanged") == true)
     #expect(
-      try JSONDecoder().decode([String: String].self, from: #require(cloud.values[binding.key]))
+      try JSONDecoder().decode([String: String].self, from: #require(iCloud.values[binding.key]))
         == raw)
     let previous = try #require(try await store.mistakeState(accountID: account).values[1])
     try await store.mergeMistakes([1: previous + 1], accountID: account)
     await sync.wake()
     let compatible = try JSONDecoder().decode(
-      [String: String].self, from: #require(cloud.values[binding.key]))
+      [String: String].self, from: #require(iCloud.values[binding.key]))
     #expect(
       compatible["1"] == "2026-10-20 12:00:01" && compatible["unresolved-kind"] == "kept verbatim")
     var renamed = source.profile
@@ -231,10 +231,10 @@ import Testing
         id: account, username: "renamed", level: 1,
         onVacation: false, profile: renamed), accountID: account)
     await model.reloadSavedSnapshot()
-    let legacyReads = cloud.reads.filter { $0 == binding.key }.count
-    cloud.values[binding.key] = Data("unattributed after rename".utf8)
+    let legacyReads = iCloud.reads.filter { $0 == binding.key }.count
+    iCloud.values[binding.key] = Data("unattributed after rename".utf8)
     await sync.wake()
-    #expect(cloud.reads.filter { $0 == binding.key }.count == legacyReads)
+    #expect(iCloud.reads.filter { $0 == binding.key }.count == legacyReads)
     #expect(try key == StudyMistakeArchive.key(accountID: account))
     sync.stop()
     _ = try await store.importLegacyAccount(
@@ -243,15 +243,15 @@ import Testing
     let other = StudyAppModel(credentials: MemoryCredentials("other"), openStore: { store })
     await other.restore()
     let reused = StudyMistakeSync(
-      model: other, cloud: cloud, now: { Date(timeIntervalSince1970: 1_792_497_602) })
+      model: other, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_792_497_602) })
     defer { reused.stop() }
     await reused.wake()
-    #expect(cloud.reads.filter { $0 == binding.key }.count == legacyReads)
-    #expect(cloud.values[binding.key] == Data("unattributed after rename".utf8))
+    #expect(iCloud.reads.filter { $0 == binding.key }.count == legacyReads)
+    #expect(iCloud.values[binding.key] == Data("unattributed after rename".utf8))
   }
   @Test func cloudNotificationReasonsAreTypedWithoutOpeningApplesStore() {
 
-    let reasons: [(Int, StudyMistakeCloudEvent.Reason)] = [
+    let reasons: [(Int, StudyMistakeICloudEvent.Reason)] = [
       (NSUbiquitousKeyValueStoreServerChange, .server),
       (NSUbiquitousKeyValueStoreInitialSyncChange, .initial),
       (NSUbiquitousKeyValueStoreQuotaViolationChange, .quota),
@@ -259,7 +259,7 @@ import Testing
       (99, .unknown),
     ]
     for (value, expected) in reasons {
-      let event = StudyMistakeCloudEvent(
+      let event = StudyMistakeICloudEvent(
         notification: .init(
           name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
           userInfo: [
@@ -271,22 +271,22 @@ import Testing
   }
   @Test func anObservedAccountChangeFencesAReadBeforeItsEventIsConsumed() async throws {
     let (model, store) = try await fixture()
-    let cloud = MistakeCloud()
+    let iCloud = MistakeICloud()
     let remote = try StudyMistakeArchive(accountID: account, values: [1: 999]).encoded()
-    cloud.values[try key] = remote
+    iCloud.values[try key] = remote
     // Deliberately withhold the AsyncStream event: the synchronous observation is the fence.
-    cloud.onRead = { [weak cloud] _ in cloud?.observe(.account) }
+    iCloud.onRead = { [weak iCloud] _ in iCloud?.observe(.account) }
     let sync = StudyMistakeSync(
-      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+      model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
     let cloudKey = try key
-    #expect(cloud.writes.isEmpty && cloud.values[cloudKey] == remote)
+    #expect(iCloud.writes.isEmpty && iCloud.values[cloudKey] == remote)
     #expect(try await store.mistakeState(accountID: account).values.isEmpty)
     #expect(try await store.pendingReviews(accountID: account).isEmpty)
     #expect(try await store.session(accountID: account) == nil)
-    cloud.onRead = nil
-    cloud.emit(.initial)
+    iCloud.onRead = nil
+    iCloud.emit(.initial)
     try await requireNotice(sync, containing: "loading")
     await sync.wake()
     #expect(try await store.mistakeState(accountID: account).values == [1: 999])
@@ -294,8 +294,8 @@ import Testing
   @Test func notificationCallbackAdvancesEpochSynchronouslyAndCancellationRemovesIt() async {
     let center = NotificationCenter()
     let object = NSObject()
-    let (stream, continuation) = AsyncStream<StudyMistakeCloudEvent>.makeStream()
-    let observer = StudyMistakeCloudObserver(
+    let (stream, continuation) = AsyncStream<StudyMistakeICloudEvent>.makeStream()
+    let observer = StudyMistakeICloudObserver(
       notifications: center, object: object, continuation: continuation)
     let initial = observer.epoch
     center.post(
@@ -315,7 +315,7 @@ import Testing
       ])
     #expect(observer.epoch == observed)
     continuation.finish()
-    var reasons: [StudyMistakeCloudEvent.Reason] = []
+    var reasons: [StudyMistakeICloudEvent.Reason] = []
     for await event in stream { reasons.append(event.reason) }
     #expect(reasons == [.server, .account])
   }
@@ -323,38 +323,38 @@ import Testing
   {
     let (model, store) = try await fixture()
     try await store.mergeMistakes([1: 100], accountID: account)
-    let cloud = MistakeCloud()
-    cloud.canSynchronize = false
+    let iCloud = MistakeICloud()
+    iCloud.canSynchronize = false
     let sync = StudyMistakeSync(
-      model: model, cloud: cloud, now: { Date(timeIntervalSince1970: 1_000) })
+      model: model, iCloud: iCloud, now: { Date(timeIntervalSince1970: 1_000) })
     defer { sync.stop() }
     await sync.wake()
-    #expect(cloud.synchronizations == 1 && cloud.reads.isEmpty)
+    #expect(iCloud.synchronizations == 1 && iCloud.reads.isEmpty)
     let deadline = ContinuousClock.now.advanced(by: .seconds(5))
-    while cloud.synchronizations < 2 && ContinuousClock.now < deadline {
+    while iCloud.synchronizations < 2 && ContinuousClock.now < deadline {
       try await Task.sleep(for: .milliseconds(20))
     }
-    #expect(cloud.synchronizations == 2)
+    #expect(iCloud.synchronizations == 2)
     try await Task.sleep(for: .milliseconds(2_200))
-    #expect(cloud.synchronizations == 2 && cloud.reads.isEmpty && cloud.writes.isEmpty)
-    cloud.canSynchronize = true
+    #expect(iCloud.synchronizations == 2 && iCloud.reads.isEmpty && iCloud.writes.isEmpty)
+    iCloud.canSynchronize = true
     await sync.wake()
     let cloudKey = try key
-    #expect(cloud.synchronizations == 3 && cloud.writes == [cloudKey])
+    #expect(iCloud.synchronizations == 3 && iCloud.writes == [cloudKey])
     #expect(try await store.mistakeState(accountID: account).values == [1: 100])
   }
   @Test func wireExpiryKeepsDurableHistoryAndUnknownRecentHints() async throws {
     let (model, store) = try await fixture()
     let now = Date(timeIntervalSince1970: 200_000)
     try await store.mergeMistakes([1: 100], accountID: account)
-    let cloud = MistakeCloud()
-    cloud.values[try key] = try StudyMistakeArchive(
+    let iCloud = MistakeICloud()
+    iCloud.values[try key] = try StudyMistakeArchive(
       accountID: account, values: [1: 100, 888: 113_599, 999: 113_600, 777: Int64.max]
     ).encoded()
-    let sync = StudyMistakeSync(model: model, cloud: cloud, now: { now })
+    let sync = StudyMistakeSync(model: model, iCloud: iCloud, now: { now })
     defer { sync.stop() }
     await sync.wake()
-    let wire = try StudyMistakeArchive(data: #require(cloud.values[try key]), accountID: account)
+    let wire = try StudyMistakeArchive(data: #require(iCloud.values[try key]), accountID: account)
     #expect(wire.values == [999: 113_600, 777: Int64.max])
     #expect(try await store.mistakeState(accountID: account).values == [1: 100])
     #expect(try await store.pendingReviews(accountID: account).isEmpty)

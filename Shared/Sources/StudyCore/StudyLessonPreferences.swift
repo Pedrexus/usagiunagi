@@ -73,7 +73,14 @@ public struct StudyLessonPreferences: Codable, Hashable, Sendable {
 }
 @MainActor public final class DefaultsStudyLessonPreferences: StudyLessonPreferenceStore {
   private let defaults: UserDefaults
-  public init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+  private let changed: (@MainActor (StudyLessonPreferences, StudyLessonPreferences) -> Void)?
+  public init(
+    defaults: UserDefaults = .standard,
+    changed: (@MainActor (StudyLessonPreferences, StudyLessonPreferences) -> Void)? = nil
+  ) {
+    self.defaults = defaults
+    self.changed = changed
+  }
   public var value: StudyLessonPreferences {
     get {
       guard let data = defaults.data(forKey: "native.lessonPreferences"),
@@ -82,8 +89,11 @@ public struct StudyLessonPreferences: Codable, Hashable, Sendable {
       return value.normalized
     }
     set {
+      let old = value
+      let current = newValue.normalized
       defaults.set(
-        try? JSONEncoder().encode(newValue.normalized), forKey: "native.lessonPreferences")
+        try? JSONEncoder().encode(current), forKey: "native.lessonPreferences")
+      if old != current { changed?(old, current) }
     }
   }
 }

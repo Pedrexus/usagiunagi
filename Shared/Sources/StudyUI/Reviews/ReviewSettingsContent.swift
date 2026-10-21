@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Shared preference sections for main and in-session settings.
 struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: View {
+  @Environment(\.studyICloudPreferences) private var iCloud
   private var waniKaniSources = StudyWaniKaniSources()
   @Environment(\.waniKaniPreferences) private var waniKaniPreferences
   @Binding var preferences: ReviewPreferences
@@ -45,7 +46,9 @@ struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: View {
       answers
     }
     Section("Audio") {
-      Toggle("Use WaniKani audio settings", isOn: waniKaniSources.$audio)
+      Toggle(
+        "Use WaniKani audio settings",
+        isOn: waniKaniSources.$audio.syncing(.waniKaniAudio, with: iCloud))
       if !waniKaniSources.audio {
         Toggle("Autoplay audio", isOn: $preferences.autoplayAudio)
           .accessibilityIdentifier("reviewSettings.autoplay")
@@ -68,7 +71,9 @@ struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: View {
         .accessibilityIdentifier("reviewSettings.correctAnswerFeedback")
       Toggle("Completed item +1", isOn: $preferences.completedItemFeedback)
         .accessibilityIdentifier("reviewSettings.completedItemFeedback")
-      Toggle("Use WaniKani SRS feedback", isOn: waniKaniSources.$srsFeedback)
+      Toggle(
+        "Use WaniKani SRS feedback",
+        isOn: waniKaniSources.$srsFeedback.syncing(.waniKaniSrsFeedback, with: iCloud))
       if waniKaniSources.srsFeedback {
         if let waniKaniPreferences {
           LabeledContent(
@@ -94,6 +99,7 @@ struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: View {
 
 /// The complete settings body on every host; narrow platform extras stay at the boundary.
 struct FullReviewSettingsContent<Display: View, Answers: View>: View {
+  @Environment(\.studyICloudPreferences) private var iCloud
   private var waniKaniSources = StudyWaniKaniSources()
   @Environment(\.waniKaniPreferences) private var waniKaniPreferences
   @Binding var preferences: ReviewPreferences
@@ -115,7 +121,9 @@ struct FullReviewSettingsContent<Display: View, Answers: View>: View {
           }
         }.accessibilityIdentifier("settings.reviewItemsLimit")
       }
-      Toggle("Use WaniKani review order", isOn: waniKaniSources.$reviewOrder)
+      Toggle(
+        "Use WaniKani review order",
+        isOn: waniKaniSources.$reviewOrder.syncing(.waniKaniReviewOrder, with: iCloud))
       if waniKaniSources.reviewOrder {
         LabeledContent(
           "Order",

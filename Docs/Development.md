@@ -23,7 +23,7 @@ The persistence probe additionally supports `write-native-selection` (expected a
 
 Generic Apple patterns live in Mainboard: native arguments, committed package resolution, process-tree timeout, fresh result bundles, diagnostics, test verdicts and simulator URL delivery. There is no app `Tools` folder or custom CI shell driver. Schemes, test filters, fixtures and resource generation remain app-specific.
 
-The optional cloud transport now has one [private display-preferences configuration](PrivateCloud.md). Both platform entitlements and app metadata use `USAGI_ICLOUD_CONTAINER_IDENTIFIER`; signing/container registration is still required before live sync. Existing hosted fixtures never create this owner. Shared tests use disposable local-only sidecars and defaults, so the regular Mainboard tasks require no iCloud login or network access. No cloud-schema initialization hook runs at startup.
+The optional cloud transport now has one [private display-preferences configuration](PrivateICloud.md). Both platform entitlements and app metadata use `USAGI_ICLOUD_CONTAINER_IDENTIFIER`; signing/container registration is still required before live sync. Existing hosted fixtures never create this owner. Shared tests use disposable local-only sidecars and defaults, so the regular Mainboard tasks require no iCloud login or network access. No cloud-schema initialization hook runs at startup.
 
 From the parent workspace root, use `mainboard run <task>`:
 

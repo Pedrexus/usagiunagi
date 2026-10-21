@@ -6,13 +6,13 @@ import Testing
 @testable import StudyPersistence
 @testable import StudyUI
 
-@MainActor struct CloudPreferenceTests {
+@MainActor struct ICloudPreferenceTests {
   private let key = "native.reviewPreferences"
   private typealias Change = PrivatePreferencesV1.Change
 
   @Test func openingNeverPublishesDeviceDefaults() throws {
     try fixture { store, defaults, _ in
-      #expect(store.container != nil && !store.cloudEnabled)
+      #expect(store.container != nil && !store.iCloudEnabled)
       let initial = try store.values()
       #expect(initial.isEmpty)
       #expect(defaults.data(forKey: key) == nil)
@@ -101,7 +101,7 @@ import Testing
       dark.appearance = .dark
       store.recordChanges(from: .init(), to: dark)
       let original = try store.values()
-      let reopened = StudyCloudPreferences(directory: directory, defaults: defaults)
+      let reopened = StudyICloudPreferences(directory: directory, defaults: defaults)
       #expect(try reopened.values() == original)
       let restored = try JSONDecoder().decode(
         ReviewPreferences.self, from: #require(defaults.data(forKey: key)))
@@ -170,8 +170,8 @@ import Testing
       try marker.write(to: blocked)
       let original = try JSONEncoder().encode(ReviewPreferences())
       defaults.set(original, forKey: key)
-      let unavailable = StudyCloudPreferences(directory: blocked, defaults: defaults)
-      #expect(unavailable.container == nil && !unavailable.cloudEnabled)
+      let unavailable = StudyICloudPreferences(directory: blocked, defaults: defaults)
+      #expect(unavailable.container == nil && !unavailable.iCloudEnabled)
       #expect(unavailable.notice != nil)
       #expect(defaults.data(forKey: key) == original)
       #expect(try Data(contentsOf: blocked) == marker)
@@ -183,7 +183,7 @@ import Testing
       unavailable.reconcile([Change(field: "appearance", value: "light", revision: 1).snapshot])
       #expect(defaults.data(forKey: key) == local && unavailable.notice != nil)
       try FileManager.default.removeItem(at: blocked)
-      let retry = StudyCloudPreferences(directory: blocked, defaults: defaults)
+      let retry = StudyICloudPreferences(directory: blocked, defaults: defaults)
       let saved = try retry.values()
       #expect(saved.count == 1 && saved[0].field == "appearance" && saved[0].value == "dark")
       #expect(defaults.object(forKey: "native.privateCloudPending.appearance") == nil)
@@ -201,7 +201,7 @@ import Testing
   }
 
   private func fixture(
-    _ body: (StudyCloudPreferences, UserDefaults, URL) throws -> Void
+    _ body: (StudyICloudPreferences, UserDefaults, URL) throws -> Void
   ) throws {
     let id = UUID().uuidString
     let directory = URL.temporaryDirectory.appending(path: "private-preferences-\(id)")
@@ -211,8 +211,8 @@ import Testing
       try? FileManager.default.removeItem(at: directory)
     }
     try autoreleasepool {
-      let store = StudyCloudPreferences(
-        directory: directory, cloudContainerIdentifier: "iCloud.com.pedrexus.usagiunagi.fixture",
+      let store = StudyICloudPreferences(
+        directory: directory, iCloudContainerIdentifier: "iCloud.com.pedrexus.usagiunagi.fixture",
         defaults: defaults)
       try body(store, defaults, directory)
     }

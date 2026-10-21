@@ -9,7 +9,7 @@ import SwiftUI
   let model: StudyAppModel
   let automaticSync: StudyAutomaticSync
   let mistakeSync: StudyMistakeSync?
-  let cloudPreferences: StudyCloudPreferences?
+  let iCloudPreferences: StudyICloudPreferences?
   let fonts: StudyFontLibrary
   let audio: StudyAudioLibrary
   let defaults: UserDefaults
@@ -27,25 +27,30 @@ import SwiftUI
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
     companion: StudyCompanionDelivery? = nil, avatars: LegacyAvatarCache? = nil,
     radicalImages: RadicalImageCache = .shared,
-    mistakeCloud: (any StudyMistakeCloudStore)? = nil,
-    cloudPreferences: StudyCloudPreferences? = nil,
+    mistakeICloud: (any StudyMistakeICloudStore)? = nil,
+    iCloudPreferences: StudyICloudPreferences? = nil,
     voiceCapture: @escaping @Sendable () -> any VoiceCapture = { AppleVoiceCapture() },
     appearance: ColorScheme? = nil, notice: String? = nil,
     paths: AsyncStream<Bool>? = nil
   ) {
     self.model = model
     automaticSync = StudyAutomaticSync(model: model, paths: paths)
-    mistakeSync = mistakeCloud.map { StudyMistakeSync(model: model, cloud: $0) }
-    self.cloudPreferences = cloudPreferences
+    mistakeSync = mistakeICloud.map { StudyMistakeSync(model: model, iCloud: $0) }
+    self.iCloudPreferences = iCloudPreferences
     self.fonts = fonts
     self.audio = audio
     self.defaults = defaults
     self.notifications =
       notifications
       ?? StudyNotifications(preferences: DefaultsStudyNotificationPreferences(defaults: defaults))
-    lessonSettings = StudyLessonSettings(store: DefaultsStudyLessonPreferences(defaults: defaults))
+    lessonSettings = StudyLessonSettings(
+      store: DefaultsStudyLessonPreferences(
+        defaults: defaults,
+        changed: iCloudPreferences?.recordLessonChanges))
     subjectSettings = StudySubjectSettings(
-      store: DefaultsStudySubjectPreferences(defaults: defaults))
+      store: DefaultsStudySubjectPreferences(
+        defaults: defaults,
+        changed: iCloudPreferences?.recordSubjectChanges))
     self.radicalImages = radicalImages
     self.voiceCapture = StudyVoiceCaptureFactory(voiceCapture)
     self.appearance = appearance
@@ -54,8 +59,15 @@ import SwiftUI
       avatars
       ?? LegacyAvatarCache(
         directory: URL.cachesDirectory.appending(path: "com.hpique.haneke/shared"))
+    reloadPreferences()
     if let companion { self.notifications.didRead = { companion.update($0) } }
     self.notifications.observe(model: model, lessonSettings: lessonSettings)
+  }
+  func reloadPreferences() {
+    lessonSettings.reload()
+    subjectSettings.reload()
+    fonts.reloadSelection()
+    audio.reloadPreferences()
   }
   static var isReviewFixture: Bool {
     #if DEBUG
@@ -73,6 +85,11 @@ import SwiftUI
     let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
     let media = mediaLayout.directories(nativeRoot: directory)
     StudyWaniKaniSources.prepare(defaults: .standard)
+    let iCloudPreferences = StudyICloudPreferences(
+      directory: URL.applicationSupportDirectory.appending(path: "UsagiPrivatePreferences"),
+      iCloudContainerIdentifier: Bundle.main.object(
+        forInfoDictionaryKey: "UsagiPrivateICloudContainer") as? String,
+      defaults: .standard)
     return Self(
       model: StudyAppModel(
         credentials: KeychainStudyCredentialStore(service: "TsurukameNative.WaniKani"),
@@ -85,14 +102,14 @@ import SwiftUI
         catalog: .init(
           directory: media.fonts,
           bundledFonts: mediaLayout == .legacyDocuments
-            ? Bundle.main.resourceURL?.appending(path: "fonts") : nil)),
+            ? Bundle.main.resourceURL?.appending(path: "fonts") : nil),
+        preferences: DefaultsStudyFontPreferences(
+          changed: iCloudPreferences.recordFontChanges)),
       audio: StudyAudioLibrary(
-        downloads: StudyAudioDownloads(directory: media.audio)), companion: companion,
-      mistakeCloud: AppleStudyMistakeCloudStore(store: .default),
-      cloudPreferences: StudyCloudPreferences(
-        directory: URL.applicationSupportDirectory.appending(path: "UsagiPrivatePreferences"),
-        cloudContainerIdentifier: Bundle.main.object(
-          forInfoDictionaryKey: "UsagiPrivateCloudContainer") as? String,
-        defaults: .standard))
+        downloads: StudyAudioDownloads(directory: media.audio),
+        preferences: DefaultsStudyAudioPreferences(
+          changed: iCloudPreferences.recordAudioChanges)), companion: companion,
+      mistakeICloud: AppleStudyMistakeICloudStore(store: .default),
+      iCloudPreferences: iCloudPreferences)
   }
 }

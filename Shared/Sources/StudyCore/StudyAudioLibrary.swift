@@ -14,7 +14,14 @@ public struct StudyAudioOptions: Codable, Equatable, Sendable {
 
 @MainActor public final class DefaultsStudyAudioPreferences: StudyAudioPreferences {
   private let defaults: UserDefaults
-  public init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+  private let changed: (@MainActor (StudyAudioOptions, StudyAudioOptions) -> Void)?
+  public init(
+    defaults: UserDefaults = .standard,
+    changed: (@MainActor (StudyAudioOptions, StudyAudioOptions) -> Void)? = nil
+  ) {
+    self.defaults = defaults
+    self.changed = changed
+  }
   public var options: StudyAudioOptions {
     get {
       var value = StudyAudioOptions()
@@ -26,10 +33,12 @@ public struct StudyAudioOptions: Codable, Equatable, Sendable {
       return value
     }
     set {
+      let old = options
       defaults.set(newValue.enabled, forKey: "native.offlineAudio")
       defaults.set(newValue.cellular, forKey: "native.offlineAudioCellular")
       defaults.set(
         newValue.voiceIDs.sorted().map(NSNumber.init(value:)), forKey: "native.offlineAudioVoices")
+      if old != newValue { changed?(old, newValue) }
     }
   }
 }

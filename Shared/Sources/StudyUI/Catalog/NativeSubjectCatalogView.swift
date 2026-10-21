@@ -3,6 +3,7 @@ import StudyPersistence
 import SwiftUI
 
 public struct NativeSubjectCatalogView: View {
+  @Environment(\.studyICloudPreferences) private var iCloud
   @Environment(StudySubjectSettings.self) private var subjectSettings
   @Environment(\.dismiss) private var dismiss
   private let store: StudyStore
@@ -40,7 +41,8 @@ public struct NativeSubjectCatalogView: View {
   public var body: some View {
     SubjectCatalogView(
       collection: collection, title: title, mode: mode,
-      showAnswers: $showAnswers, maximumLevel: maximumLevel,
+      showAnswers: $showAnswers.syncing(.showCatalogAnswers, with: iCloud),
+      maximumLevel: maximumLevel,
       selectedLevel: (mode == .level || mode == .remaining) ? $level : nil,
       preferences: {
         var value = subjectSettings.value

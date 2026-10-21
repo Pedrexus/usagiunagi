@@ -3,7 +3,7 @@ import Observation
 import StudyCore
 import StudyPersistence
 
-nonisolated public struct StudyMistakeCloudEvent: Sendable {
+nonisolated public struct StudyMistakeICloudEvent: Sendable {
   public enum Reason: Equatable, Sendable { case server, initial, quota, account, unknown }
   public let reason: Reason
   public let keys: Set<String>?
@@ -13,12 +13,12 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
   }
 }
 
-@MainActor public protocol StudyMistakeCloudStore: AnyObject {
+@MainActor public protocol StudyMistakeICloudStore: AnyObject {
   /// Cache access permission, not Apple-account identity or confirmed remote delivery.
   var available: Bool { get }
   /// Changes synchronously in the notification callback, before its async event is consumed.
   var observedEpoch: UUID { get }
-  func changes() -> AsyncStream<StudyMistakeCloudEvent>
+  func changes() -> AsyncStream<StudyMistakeICloudEvent>
   func synchronize() -> Bool
   func data(forKey key: String) throws -> Data?
   func set(_ data: Data, forKey key: String, observedEpoch: UUID) throws
@@ -28,10 +28,10 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
 @MainActor @Observable public final class StudyMistakeSync {
   public private(set) var notice: String?
   private let model: StudyAppModel
-  private let cloud: any StudyMistakeCloudStore
+  private let iCloud: any StudyMistakeICloudStore
   private let now: @MainActor @Sendable () -> Date
   @ObservationIgnored private var accountTask: Task<Void, Never>?
-  @ObservationIgnored private var cloudTask: Task<Void, Never>?
+  @ObservationIgnored private var iCloudTask: Task<Void, Never>?
   @ObservationIgnored private var changesTask: Task<Void, Never>?
   @ObservationIgnored private var pass: Task<Void, Never>?
   @ObservationIgnored private var retryTask: Task<Void, Never>?
@@ -39,7 +39,7 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
   private var selection: Selection?
   private var requested = false
   private var cacheAllowed = false
-  private var cloudEpoch: UUID?
+  private var iCloudEpoch: UUID?
   private var quotaBlocked = false
   private var retryAvailable = true
   private nonisolated struct Selection: Equatable, Sendable {
@@ -47,16 +47,16 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
     let username: String
   }
   public init(
-    model: StudyAppModel, cloud: any StudyMistakeCloudStore,
+    model: StudyAppModel, iCloud: any StudyMistakeICloudStore,
     now: @escaping @MainActor @Sendable () -> Date = { .now }
   ) {
     self.model = model
-    self.cloud = cloud
+    self.iCloud = iCloud
     self.now = now
   }
   deinit {
     accountTask?.cancel()
-    cloudTask?.cancel()
+    iCloudTask?.cancel()
     changesTask?.cancel()
     pass?.cancel()
     retryTask?.cancel()
@@ -64,9 +64,9 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
   public func start() {
     guard accountTask == nil else { return }
     // changes() registers synchronously, before synchronize or the first catch-up read.
-    let events = cloud.changes()
-    cloudEpoch = cloud.observedEpoch
-    cloudTask = Task { [weak self] in
+    let events = iCloud.changes()
+    iCloudEpoch = iCloud.observedEpoch
+    iCloudTask = Task { [weak self] in
       for await event in events {
         guard let self, !Task.isCancelled else { return }
         self.received(event)
@@ -89,8 +89,8 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
     generation = UUID()
     accountTask?.cancel()
     accountTask = nil
-    cloudTask?.cancel()
-    cloudTask = nil
+    iCloudTask?.cancel()
+    iCloudTask = nil
     changesTask?.cancel()
     changesTask = nil
     pass?.cancel()
@@ -100,7 +100,7 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
     selection = nil
     requested = false
     cacheAllowed = false
-    cloudEpoch = nil
+    iCloudEpoch = nil
     quotaBlocked = false
     retryAvailable = false
     notice = nil
@@ -119,8 +119,8 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
     while let pass { await pass.value }
   }
   private func synchronizeCache() {
-    let accepted = cloud.synchronize()
-    cacheAllowed = accepted && cloud.available
+    let accepted = iCloud.synchronize()
+    cacheAllowed = accepted && iCloud.available
     if cacheAllowed {
       request()
     } else {
@@ -176,11 +176,11 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
     generation == epoch && selection == account && currentSelection == account
   }
   private func currentPass(_ account: Selection, epoch: UUID, observedEpoch: UUID) -> Bool {
-    current(account, epoch: epoch) && cloud.observedEpoch == observedEpoch
-      && cacheAllowed && cloud.available && !quotaBlocked && !Task.isCancelled
+    current(account, epoch: epoch) && iCloud.observedEpoch == observedEpoch
+      && cacheAllowed && iCloud.available && !quotaBlocked && !Task.isCancelled
   }
-  private func received(_ event: StudyMistakeCloudEvent) {
-    if event.reason != .server { cloudEpoch = cloud.observedEpoch }
+  private func received(_ event: StudyMistakeICloudEvent) {
+    if event.reason != .server { iCloudEpoch = iCloud.observedEpoch }
     switch event.reason {
     case .account:
       cacheAllowed = false
@@ -207,29 +207,29 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
         : "An iCloud mistake update could not be identified. Local history has been kept."
       retry()
     case .server:
-      if retryTask == nil, !quotaBlocked { cacheAllowed = cloud.available }
+      if retryTask == nil, !quotaBlocked { cacheAllowed = iCloud.available }
       request()
     }
   }
   private func request() {
     requested = true
     guard pass == nil, selection != nil, cacheAllowed, !quotaBlocked,
-      let observedEpoch = cloudEpoch
+      let observedEpoch = iCloudEpoch
     else { return }
     let epoch = generation
     pass = Task { [weak self] in
       await self?.drain(epoch: epoch, observedEpoch: observedEpoch)
     }
   }
-  private func readCloud(accountID: String, binding: StudyLegacyMistakeBinding?) throws
+  private func readICloud(accountID: String, binding: StudyLegacyMistakeBinding?) throws
     -> (StudyMistakeArchive?, StudyLegacyMistakes?)
   {
-    let native = try cloud.data(forKey: StudyMistakeArchive.key(accountID: accountID)).map {
+    let native = try iCloud.data(forKey: StudyMistakeArchive.key(accountID: accountID)).map {
       try StudyMistakeArchive(data: $0, accountID: accountID)
     }
     guard let binding else { return (native, nil) }
     let legacy =
-      try cloud.data(forKey: binding.key).map {
+      try iCloud.data(forKey: binding.key).map {
         try StudyLegacyMistakes(data: $0, context: binding.context)
       } ?? StudyLegacyMistakes(originals: [:], context: binding.context)
     return (native, legacy)
@@ -253,7 +253,7 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
           state.username == account.username
         else { return }
         let key = try StudyMistakeArchive.key(accountID: account.accountID)
-        let (remote, legacy) = try readCloud(
+        let (remote, legacy) = try readICloud(
           accountID: account.accountID, binding: state.legacyBinding)
         guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
         let incoming = StudyMistakeArchive.merge(remote?.values ?? [:], legacy?.values ?? [:])
@@ -264,7 +264,7 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
           latest.username == account.username
         else { return }
         // Reread after suspension; whole-key KVS writes still cannot provide an atomic merge.
-        let (currentRemote, currentLegacy) = try readCloud(
+        let (currentRemote, currentLegacy) = try readICloud(
           accountID: account.accountID, binding: latest.legacyBinding)
         let currentIncoming = StudyMistakeArchive.merge(
           currentRemote?.values ?? [:], currentLegacy?.values ?? [:])
@@ -279,14 +279,14 @@ nonisolated public struct StudyMistakeCloudEvent: Sendable {
         if currentRemote != merged, currentRemote != nil || !merged.values.isEmpty {
           let data = try merged.encoded()
           guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
-          try cloud.set(data, forKey: key, observedEpoch: observedEpoch)
+          try iCloud.set(data, forKey: key, observedEpoch: observedEpoch)
         }
         guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
         if let binding = latest.legacyBinding, let currentLegacy,
           let updated = try currentLegacy.updatedData(merging: merged.values, now: date)
         {
           guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
-          try cloud.set(updated, forKey: binding.key, observedEpoch: observedEpoch)
+          try iCloud.set(updated, forKey: binding.key, observedEpoch: observedEpoch)
         }
         notice =
           latest.needsLegacyImport

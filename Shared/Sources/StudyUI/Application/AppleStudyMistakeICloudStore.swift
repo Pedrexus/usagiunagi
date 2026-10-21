@@ -3,11 +3,11 @@ import StudyCore
 import Synchronization
 
 /// The app explicitly supplies Apple's default store; tests supply a protocol fake instead.
-@MainActor public final class AppleStudyMistakeCloudStore: StudyMistakeCloudStore {
+@MainActor public final class AppleStudyMistakeICloudStore: StudyMistakeICloudStore {
   private let store: NSUbiquitousKeyValueStore
   private let notifications: NotificationCenter
   private let idleEpoch = UUID()
-  private var observer: StudyMistakeCloudObserver?
+  private var observer: StudyMistakeICloudObserver?
   /// The last local synchronization request succeeded; this does not establish account or delivery.
   public private(set) var available = false
   public var observedEpoch: UUID { observer?.epoch ?? idleEpoch }
@@ -17,9 +17,9 @@ import Synchronization
     self.store = store
     self.notifications = notifications
   }
-  public func changes() -> AsyncStream<StudyMistakeCloudEvent> {
-    let (stream, continuation) = AsyncStream<StudyMistakeCloudEvent>.makeStream()
-    let observer = StudyMistakeCloudObserver(
+  public func changes() -> AsyncStream<StudyMistakeICloudEvent> {
+    let (stream, continuation) = AsyncStream<StudyMistakeICloudEvent>.makeStream()
+    let observer = StudyMistakeICloudObserver(
       notifications: notifications, object: store, continuation: continuation)
     self.observer = observer
     let center = notifications
@@ -56,19 +56,19 @@ import Synchronization
 }
 
 /// A nil delivery queue observes the event on its posting thread, before the async consumer resumes.
-@MainActor final class StudyMistakeCloudObserver {
+@MainActor final class StudyMistakeICloudObserver {
   private nonisolated let observed = Mutex(UUID())
   private var token: (any NSObjectProtocol)?
   nonisolated var epoch: UUID { observed.withLock { $0 } }
   init(
     notifications: NotificationCenter, object: AnyObject,
-    continuation: AsyncStream<StudyMistakeCloudEvent>.Continuation
+    continuation: AsyncStream<StudyMistakeICloudEvent>.Continuation
   ) {
     token = notifications.addObserver(
       forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
       object: object, queue: nil
     ) { [self] notification in
-      let event = StudyMistakeCloudEvent(notification: notification)
+      let event = StudyMistakeICloudEvent(notification: notification)
       if event.reason != .server { observed.withLock { $0 = UUID() } }
       continuation.yield(event)
     }
@@ -79,7 +79,7 @@ import Synchronization
   }
 }
 
-extension StudyMistakeCloudEvent {
+extension StudyMistakeICloudEvent {
   nonisolated init(notification: Notification) {
     let reason: Reason
     switch notification.userInfo?[NSUbiquitousKeyValueStoreChangeReasonKey] as? Int {

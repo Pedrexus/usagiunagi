@@ -149,7 +149,10 @@ struct StudyApplicationWindow: View {
         .environment(\.studyVoiceCapture, services.voiceCapture)
         .environment(services.lessonSettings).environment(services.subjectSettings)
         .defaultAppStorage(services.defaults)
-        .studyCloudPreferences(services.cloudPreferences)
+        .studyICloudPreferences(services.iCloudPreferences)
+        .onChange(of: services.iCloudPreferences?.revision) { _, _ in
+          services.reloadPreferences()
+        }
       } else if let failure = owner.failure {
         VStack(spacing: 16) {
           ContentUnavailableView(

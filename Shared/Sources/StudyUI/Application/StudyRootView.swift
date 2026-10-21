@@ -5,6 +5,7 @@ import SwiftUI
 
 /// Shared navigation and screens. The host supplies identity and narrow platform appearance.
 public struct StudyRootView: View {
+  @Environment(\.studyICloudPreferences) private var iCloud
   @Bindable private var model: StudyAppModel
   private let appName: String
   private let automaticSync: StudyAutomaticSync
@@ -181,7 +182,10 @@ public struct StudyRootView: View {
         updateSyncActivity()
         updateAccountIssue()
       }
-      .onDisappear { automaticSync.removeScene(sceneID) }
+      .onDisappear {
+        automaticSync.removeScene(sceneID)
+        iCloud?.updateScene(sceneID, studying: false)
+      }
       .onChange(of: scenePhase) { _, phase in
         updateSyncActivity()
         updateAccountIssue()
@@ -309,6 +313,7 @@ public struct StudyRootView: View {
       }
     }
     automaticSync.updateScene(sceneID, active: scenePhase == .active, studying: studying)
+    iCloud?.updateScene(sceneID, studying: studying)
   }
   private var reviewBinding: Binding<ReviewPreferences> {
     Binding(
@@ -347,7 +352,8 @@ public struct StudyRootView: View {
     case .lessonSettings: LessonSettingsView(settings: lessonSettings)
     case .appearanceSettings:
       AppearanceSettingsView(
-        appearance: reviewBinding.appearance, email: $avatarEmail,
+        appearance: reviewBinding.appearance,
+        email: $avatarEmail.syncing(.avatarEmail, with: iCloud),
         notifications: notifications)
     case .subjectSettings:
       SubjectSettingsView(
@@ -362,8 +368,11 @@ public struct StudyRootView: View {
           fonts: { settingsPath.append(.fonts) },
           offlineAudio: { settingsPath.append(.offlineAudio) }
         ) {
-          Toggle("Show minutes for next level-up review", isOn: $showMinutes)
-            .accessibilityIdentifier("settings.showMinutesForNextLevelUpReview")
+          Toggle(
+            "Show minutes for next level-up review",
+            isOn: $showMinutes.syncing(.showMinutes, with: iCloud)
+          )
+          .accessibilityIdentifier("settings.showMinutesForNextLevelUpReview")
         } answers: {
           #if os(iOS)
             StudyInputSettings(automaticJapanese: $automaticJapanese)

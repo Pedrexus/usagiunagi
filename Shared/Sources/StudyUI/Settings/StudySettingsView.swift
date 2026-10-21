@@ -28,7 +28,7 @@ public enum StudySettingsPage: String, Hashable, CaseIterable, Identifiable, Sen
 public struct StudySettingsView<Destination: Hashable, Diagnostics: View, AccountActions: View>:
   View
 {
-  @Environment(\.studyCloudPreferences) private var cloudPreferences
+  @Environment(\.studyICloudPreferences) private var iCloudPreferences
   private let account: StudyShellState?
   private let model: StudyAppModel?
   private let destination: (StudySettingsPage) -> Destination
@@ -69,16 +69,20 @@ public struct StudySettingsView<Destination: Hashable, Diagnostics: View, Accoun
           .accessibilityIdentifier("settings.page.\(page.identifier)")
         }
       }
-      if let cloudPreferences {
-        Section("iCloud display settings") {
+      if let iCloudPreferences {
+        Section("iCloud app settings") {
           Label(
-            cloudPreferences.cloudEnabled ? "Private iCloud enabled" : "Saved on this device",
-            systemImage: cloudPreferences.cloudEnabled ? "icloud" : "icloud.slash")
+            iCloudPreferences.iCloudEnabled ? "Private iCloud enabled" : "Saved on this device",
+            systemImage: iCloudPreferences.iCloudEnabled ? "icloud" : "icloud.slash")
           Text(
-            "Appearance, Japanese font size and SRS indicator. WaniKani remains the source of truth for study progress."
+            "App preferences and selected fonts and voices. Permissions and downloaded files stay on each device. WaniKani remains the source of truth for study progress."
           )
           .font(.caption).foregroundStyle(.secondary)
-          if let notice = cloudPreferences.notice {
+          if iCloudPreferences.hasDeferredLearningChanges {
+            Text("Learning preferences from iCloud will apply after this study session.")
+              .font(.caption).foregroundStyle(.secondary)
+          }
+          if let notice = iCloudPreferences.notice {
             Text(notice).font(.caption).foregroundStyle(.secondary)
           }
         }

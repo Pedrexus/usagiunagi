@@ -4,6 +4,7 @@ import SwiftUI
 struct LessonSettingsView: View {
   @Bindable var settings: StudyLessonSettings
   @Environment(\.waniKaniPreferences) private var waniKaniPreferences
+  @Environment(\.studyICloudPreferences) private var iCloud
   private var waniKaniSources = StudyWaniKaniSources()
   private var binding: Binding<StudyLessonPreferences> {
     Binding(get: { settings.value }, set: { settings.applyChanges(from: settings.value, to: $0) })
@@ -47,7 +48,9 @@ struct LessonSettingsView: View {
         } label: {
           LabeledContent("Order", value: settings.value.order.map(title).joined(separator: ", "))
         }.accessibilityIdentifier("settings.lessonOrderLink")
-        Toggle("Use WaniKani batch size", isOn: waniKaniSources.$lessonBatch)
+        Toggle(
+          "Use WaniKani batch size",
+          isOn: waniKaniSources.$lessonBatch.syncing(.waniKaniLessonBatch, with: iCloud))
         if waniKaniSources.lessonBatch {
           LabeledContent(
             "Batch size",

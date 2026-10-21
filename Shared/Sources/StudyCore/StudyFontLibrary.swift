@@ -8,13 +8,22 @@ import Observation
 @MainActor public final class DefaultsStudyFontPreferences: StudyFontPreferences {
   private let defaults: UserDefaults
   private let key: String
-  public init(defaults: UserDefaults = .standard, key: String = "native.selectedFonts") {
+  private let changed: (@MainActor (Set<String>, Set<String>) -> Void)?
+  public init(
+    defaults: UserDefaults = .standard, key: String = "native.selectedFonts",
+    changed: (@MainActor (Set<String>, Set<String>) -> Void)? = nil
+  ) {
     self.defaults = defaults
     self.key = key
+    self.changed = changed
   }
   public var selectedFiles: Set<String> {
     get { Set(defaults.stringArray(forKey: key) ?? []) }
-    set { defaults.set(newValue.sorted(), forKey: key) }
+    set {
+      let old = selectedFiles
+      defaults.set(newValue.sorted(), forKey: key)
+      if old != newValue { changed?(old, newValue) }
+    }
   }
 }
 
