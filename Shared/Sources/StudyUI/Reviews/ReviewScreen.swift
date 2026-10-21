@@ -94,36 +94,34 @@ public enum ReviewScreenAction {
   case synonym, previous, toggleFont, nextFont, previousFont, showAll, playAudio, focus
 }
 
-/// Shared review layout; native input and rich details are supplied by each host during migration.
+/// Shared review layout; hosts supply native input and rich subject details.
 public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.dynamicTypeSize) private var typeSize
   @State private var confirmEnd = false
   @Bindable private var state: ReviewScreenState
-  private let audio: StudyAudioLibrary?
   private let action: (ReviewScreenAction) -> Void
   private let input: () -> Input
   private let details: () -> Details
   private let questionContent: () -> QuestionContent
 
   public init(
-    state: ReviewScreenState, audio: StudyAudioLibrary? = nil,
+    state: ReviewScreenState,
     action: @escaping (ReviewScreenAction) -> Void,
     @ViewBuilder input: @escaping () -> Input, @ViewBuilder details: @escaping () -> Details
   ) where QuestionContent == EmptyView {
     self.init(
-      state: state, audio: audio, action: action, question: { EmptyView() }, input: input,
+      state: state, action: action, question: { EmptyView() }, input: input,
       details: details)
   }
 
   public init(
-    state: ReviewScreenState, audio: StudyAudioLibrary? = nil,
+    state: ReviewScreenState,
     action: @escaping (ReviewScreenAction) -> Void,
     @ViewBuilder question: @escaping () -> QuestionContent,
     @ViewBuilder input: @escaping () -> Input, @ViewBuilder details: @escaping () -> Details
   ) {
     self.state = state
-    self.audio = audio
     self.action = action
     self.input = input
     self.details = details
@@ -136,7 +134,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         ScrollView {
           VStack(spacing: 0) {
             progress.padding(.horizontal, 12).padding(.vertical, 6)
-            studyStatus
+            studyStatus()
             question()
             VStack(spacing: 8) { response }.padding(12).frame(maxWidth: .infinity)
           }.frame(maxWidth: 760, minHeight: viewport.size.height, alignment: .top)
@@ -145,12 +143,19 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           .accessibilityIdentifier("review.scroll")
       } else {
         let horizontal = viewport.size.width >= 560 && viewport.size.height < 420
+        let inline = viewport.size.height < 140
         let layout =
           horizontal ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 0))
+        let questionLayout =
+          inline ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
         layout {
-          VStack(spacing: 0) {
-            studyStatus
-            question(compact: viewport.size.height < 420, inline: viewport.size.height < 140)
+          questionLayout {
+            if inline {
+              studyStatus(inline: true).labelStyle(.iconOnly).fixedSize()
+            } else {
+              studyStatus()
+            }
+            question(compact: viewport.size.height < 420, inline: inline)
           }
           Group {
             if state.phase == .answering && state.feedback.isEmpty {
@@ -162,7 +167,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           }.padding(.horizontal, 12).padding(.vertical, horizontal ? 0 : 12)
             .frame(maxWidth: .infinity).background(.bar)
             .controlSize(
-              horizontal && viewport.size.height < 140 && typeSize >= .accessibility3
+              horizontal && inline && typeSize >= .accessibility3
                 ? .small : .regular)
         }.frame(maxWidth: 760, maxHeight: .infinity).frame(maxWidth: .infinity)
       }
@@ -228,37 +233,57 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     }.accessibilityElement(children: .contain)
   }
 
-  private var studyStatus: some View {
-    VStack(spacing: 6) {
-      if let audio { AudioPlaybackNotice(library: audio) }
-      successFeedback
+  private func studyStatus(inline: Bool = false) -> some View {
+    let layout =
+      inline ? AnyLayout(HStackLayout(spacing: 6)) : AnyLayout(VStackLayout(spacing: 6))
+    return layout {
+      successFeedback(inline: inline)
       if state.wrappingUp { Label("Wrapping up", systemImage: "clock").font(.caption) }
-    }.padding(.horizontal, 12)
+    }.padding(.horizontal, inline ? 0 : 12)
   }
 
-  private var successFeedback: some View {
-    adaptiveControls {
-      if let success = state.success {
-        if state.feedbackPreferences.correctAnswerFeedback {
-          Label("Correct", systemImage: "checkmark.circle")
-            .accessibilityLabel("Previous answer correct")
-        }
-        if success.subjectFinished, state.feedbackPreferences.completedItemFeedback {
-          Label("+1 completed", systemImage: "plus.circle")
-        }
-        if state.completedSrsChanges == true, success.subjectFinished, success.submission != nil,
-          let stage = StudySRSStage(rawValue: success.estimatedSRSStage)
-        {
-          Label(
-            "\(stage.name) (estimate)",
-            systemImage: success.didLevelUp ? "arrow.up.circle" : "arrow.down.circle"
-          )
-          .accessibilityLabel("Estimated SRS stage: \(stage.name). Sync to confirm.")
-        } else if state.completedSrsChanges == nil, let milestone = success.estimatedMilestone,
-          state.feedbackPreferences.srsMilestoneFeedback
-        {
-          Label("\(milestone) (estimate)", systemImage: "arrow.up.circle")
-            .accessibilityLabel("Estimated SRS stage: \(milestone). Sync to confirm.")
+  private typealias SuccessNotice = (title: String, symbol: String, spoken: String)
+
+  private var successNotices: [SuccessNotice] {
+    guard let success = state.success else { return [] }
+    var notices: [SuccessNotice] = []
+    if state.feedbackPreferences.correctAnswerFeedback {
+      notices.append(("Correct", "checkmark.circle", "Previous answer correct"))
+    }
+    if success.subjectFinished, state.feedbackPreferences.completedItemFeedback {
+      notices.append(("+1 completed", "plus.circle", "+1 completed"))
+    }
+    if state.completedSrsChanges == true, success.subjectFinished, success.submission != nil,
+      let stage = StudySRSStage(rawValue: success.estimatedSRSStage)
+    {
+      notices.append(
+        (
+          "\(stage.name) (estimate)", success.didLevelUp ? "arrow.up.circle" : "arrow.down.circle",
+          "Estimated SRS stage: \(stage.name). Sync to confirm."
+        ))
+    } else if state.completedSrsChanges == nil, let milestone = success.estimatedMilestone,
+      state.feedbackPreferences.srsMilestoneFeedback
+    {
+      notices.append(
+        (
+          "\(milestone) (estimate)", "arrow.up.circle",
+          "Estimated SRS stage: \(milestone). Sync to confirm."
+        ))
+    }
+    return notices
+  }
+
+  private func successFeedback(inline: Bool) -> some View {
+    let notices = successNotices
+    return Group {
+      if inline, let summary = notices.last {
+        Label(notices.map { $0.title }.joined(separator: " · "), systemImage: summary.symbol)
+          .accessibilityLabel(notices.map { $0.spoken }.joined(separator: ", "))
+      } else {
+        adaptiveControls {
+          ForEach(Array(notices.enumerated()), id: \.offset) { _, notice in
+            Label(notice.title, systemImage: notice.symbol).accessibilityLabel(notice.spoken)
+          }
         }
       }
     }
@@ -432,7 +457,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
                   : .custom(state.questionFont, size: state.questionSize)
               )
               .minimumScaleFactor(0.25).lineLimit(1)
-              .fixedSize(horizontal: false, vertical: !inline)
           }
         }
         .frame(

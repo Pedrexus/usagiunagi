@@ -115,6 +115,13 @@ In that short wide column, a standard small-control request also selects a small
 answer text style. Both native adapters still honor Dynamic Type; ordinary layouts retain
 title2. This follows the measured 59-point viewport rather than capping accessibility sizes.
 
+In that tight row, correct/completed/SRS feedback uses one summary SF Symbol with a
+combined spoken label, leaving room for the question. Ordinary layouts keep each notice's
+text. Both presentations use one local typed notice collection, and the unused optional
+audio path is removed from the shared review shell. Question text scales within its
+proposed height, including the revealed header. The [dense-feedback receipt](Validation/2026-10-21-code-audit.md#dense-review-feedback--october-22)
+records the failed zero-width trial and the renewed grading/settings/250% checks.
+
 Two shared view files change, adding seven physical Swift lines overall. No OS check, platform utility, dependency, model or new view type is added. Mainboard's iPhone Simulator and native Mac Debug builds pass with zero native-summary compiler/analyzer warnings/errors. All **556 shared functions / 72 suites** pass (92, 8, 206 and 250 in four batches), and scoped parser/UI rules, strict formatting and SwiftLint pass with no rewrite. No tests/assertions are added or changed for these presentation edits. Earlier hosted iPhone/Mac and storage receipts retain their own source scopes; they were not rerun here.
 
 Inventory parses **261/261** files without context issues: production **145 / 21,608** physical lines; test **111 / 26,085** and tooling **five / 281** are unchanged. Receipts under `.build/Results/` and `.build/Reports/`:

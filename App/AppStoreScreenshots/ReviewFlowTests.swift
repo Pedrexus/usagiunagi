@@ -88,7 +88,8 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testReviewKeyboardToolsRemainAvailableAtLargestDynamicType() throws {
     continueAfterFailure = false
     let app = launchNativeHome([
-      "--manual-review-fixture", "--audio-fixture", "-UIPreferredContentSizeCategoryName",
+      "--manual-review-fixture", "--audio-fixture", "--review-feedback-fixture",
+      "-UIPreferredContentSizeCategoryName",
       "UICTContentSizeCategoryAccessibilityXXXL",
     ])
     defer {
@@ -113,9 +114,15 @@ final class ReviewFlowTests: XCTestCase {
     expectReviewContentVisible(in: app)
     attachHomeScreenshot("Largest-text portrait question with unsubmitted draft")
     app.openReviewSettings()
+    let fontSize = app.buttons["reviewSettings.fontSize"]
+    scrollTo(fontSize, in: app)
+    fontSize.tap()
+    app.buttons["250%"].tap()
     app.buttons["reviewSettings.done"].tap()
     XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
     XCTAssertEqual(field.value as? String, "draft")
+    expectReviewContentVisible(in: app)
+    attachHomeScreenshot("Largest-font portrait question with unsubmitted draft")
     try app.performAccessibilityAudit(for: .hitRegion)
     XCUIDevice.shared.orientation = .landscapeLeft
     let rotated = XCTNSPredicateExpectation(
@@ -128,6 +135,45 @@ final class ReviewFlowTests: XCTestCase {
     field.typeText(" retained")
     XCTAssertEqual(field.value as? String, "draft retained")
     attachHomeScreenshot("Largest-text landscape question with unsubmitted draft")
+    let answers = ["一つ": ("one thing", "hitotsu"), "二つ": ("two things", "futatsu")]
+    let question = app.staticTexts["review.question"].value as? String ?? ""
+    guard let answer = answers[question] else {
+      XCTFail("Unexpected fixture question: \(question)")
+      return
+    }
+    field.typeText(
+      String(repeating: XCUIKeyboardKey.delete.rawValue, count: "draft retained".count))
+    let prompt = app.staticTexts["review.prompt"]
+    let feedback = app.descendants(matching: .any).matching(identifier: "review.success").firstMatch
+    for value in [answer.0, answer.1] {
+      let previousPrompt = prompt.label
+      field.typeText(value)
+      app.submitReviewAnswer()
+      let advanced = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "label != %@", previousPrompt), object: prompt)
+      XCTAssertEqual(XCTWaiter.wait(for: [advanced], timeout: 5), .completed)
+      XCTAssertTrue(feedback.label.contains("Previous answer correct"))
+      expectReviewContentVisible(in: app)
+      attachHomeScreenshot("Largest-font feedback after \(previousPrompt)")
+    }
+    XCTAssertTrue(feedback.label.contains("+1 completed"))
+    XCTAssertTrue(feedback.label.contains("Estimated SRS stage: Guru"))
+    XCTAssertTrue(app.staticTexts["review.progress"].label.contains("1 completed"))
+    XCUIDevice.shared.orientation = .portrait
+    let returned = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.windows.firstMatch.frame.height > app.windows.firstMatch.frame.width
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
+    expectReviewContentVisible(in: app)
+    attachHomeScreenshot("Largest-font portrait completion feedback")
+    field.typeText("banana")
+    app.submitReviewAnswer()
+    let reveal = app.buttons["review.reveal"]
+    XCTAssertTrue(reveal.waitForExistence(timeout: 5))
+    reveal.tap()
+    XCTAssertTrue(app.buttons["review.submit"].isHittable)
+    attachHomeScreenshot("Largest-font revealed subject details")
   }
 
   @MainActor private func expectReviewContentVisible(
@@ -136,10 +182,14 @@ final class ReviewFlowTests: XCTestCase {
     let question = app.staticTexts["review.question"]
     let controls = app.descendants(matching: .any).matching(identifier: "review.controls")
       .firstMatch
-    let content = [
-      question, app.staticTexts["review.prompt"], app.textFields["review.answer"],
-      app.buttons["review.submit"],
-    ]
+    let feedback = app.descendants(matching: .any).matching(identifier: "review.success").firstMatch
+    let content =
+      [
+        question, app.staticTexts["review.prompt"], app.textFields["review.answer"],
+        app.buttons["review.submit"],
+      ]
+      + (feedback.exists && !feedback.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        ? [feedback] : [])
     let ready = XCTNSPredicateExpectation(
       predicate: NSPredicate { _, _ in
         let navigation = app.navigationBars.firstMatch

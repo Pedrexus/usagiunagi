@@ -170,7 +170,60 @@ failed and successful runs; both remain retained. Source hashes are recorded in
 `.build/Reports/StableInput-KeyboardProofSource-20261022.sha256`.
 
 The protected owner-file hashes, frozen V1 schema, historical writer archives/store and
-decoders remain unchanged. The whole 57-method phone gate, final-source iPad/Mac
+decoders remain unchanged. The whole 57-method review gate, final-source iPad/Mac
 interaction, physical accessibility/IME/voice, signed iCloud/watch continuity, real-data
 performance/calibration and the other [tracked gates](../TASKS.md) stay open. No normal
 account, real exercise, microphone permission, PR, push, signing or distribution is used.
+
+## Dense review feedback — October 22
+
+Starting at `93b12956`, isolated manual grading with the onscreen keyboard and largest
+Dynamic Type finds the Correct banner pushing the next question beneath the controls
+in short landscape. Moving its symbols beside the question fixes that first state, but
+the expanded native trial catches three simultaneous notices squeezing the question to
+zero width at 250% question size. Preserve `test-1a3c2f14138c48e8ac8983bf146df1f5.xcresult`
+and `DenseReview-CandidateCapture-20261022/262C3027-0997-43C8-BE93-910C976F1B4F.txt`:
+the question width is 0, while feedback occupies 159.7 points. Its PNG
+`2F98EE8C-B7A6-49FB-A944-A0ECE6250739.png` and Device Hub observation agree. The run stops
+at that failure; it does not verify the later portrait/revealed states.
+
+Tight layouts now show one summary SF Symbol, retaining every enabled notice in one
+spoken label. Ordinary layouts retain the individual notices. One private typed tuple
+collection supplies both presentations, preserving the preference and SRS-estimate
+conditions. Question text honors the proposed height instead of forcing its preferred
+height. The unused optional audio-notice parameter/path is removed after checking both
+callers; active audio notices remain in the native review host. Only one production
+view changes, adding 24 net Swift lines; this is a usability correction, not LOC savings.
+No persistent schema, grading, dependency or platform branch changes.
+
+The renewed `test-4eb54532ebd94ce3aed103b8b4109952.xcresult` passes all three selected cases,
+with no failures/skips or reported runtime warnings: regular landscape grading, independent
+feedback settings with draft preservation, and the expanded largest-text journey. The
+latter selects 250% through the real settings picker, retains the draft, grades meaning
+and reading, verifies completion/milestone labels and geometry in both orientations, and
+opens the revealed header with Continue reachable. Inspected exports under
+`DenseReview-SummaryCapture-20261022/` include landscape completion
+`5BBFD719-5B74-40A2-A613-1B10642706FB.png`, portrait completion
+`AAD88884-580B-4473-A49B-E344EAF9F6B4.png`, and revealed header
+`11B8C471-7097-4437-87B9-6E84167112A1.png`. The keyboard and question remain visible in
+the answering captures; the revealed glyph scales within its header. This does not
+accept all large-type detail scrolling or the complete accessibility gate.
+
+All paths below are under `.build/Results/` unless stated otherwise.
+
+| Check | Result and receipt |
+| --- | --- |
+| Shared Mac tests | 577 functions, all pass; `DenseReview-SharedMac-20261022.log` |
+| Unsigned Release products | Mac `build-dcee5cb7f4874a79a7858f0989913fac.xcresult`; iOS `build-df6b7223813c4af8ae5a6babdb649f7a.xcresult`; zero compiler/analyzer warnings/errors |
+| Bundle audits | `DenseReview-ReleaseMacBundle-20261022.json`, `DenseReview-ReleaseIOSBundle-20261022.json`; four executable audits, zero violations |
+| Full lint | 447 files, no rewrites; only 30 protected formatter errors; `DenseReview-SummaryFullLint-20261022.log` |
+| Rules | 230 findings / 98 rules; one fewer `ALL-FUNC0008` signal (74, previously 75); 87 Swift migration signals remain; `DenseReview-SummaryRules-20261022.log` |
+| Exact Swift scope | `.build/Reports/DenseReview-SummarySource-20261022.sha256`; owner hashes and frozen V1 remain unchanged |
+| Hosted prerequisite | `DenseReview-MainboardPin-20261022.log` still returns HTTP 422 for unpublished Mainboard `b34c931` |
+
+The full declared phone gate contains 66 methods: 57 review methods and nine native-root
+methods, with five review methods covered by separate URL-event lanes. Earlier 57-method
+wording counted only the review class; these focused passes accept neither complete gate
+nor final-source iPad/Mac interaction. Physical accessibility/IME/voice, signed services,
+watch continuity, real-data calibration and storage acceptance remain tracked in TASKS.
+No real account/exercise, microphone permission, signing, PR, push or distribution is used.

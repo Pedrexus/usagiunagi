@@ -6,6 +6,19 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Dense feedback follow-up:** manual onscreen-keyboard grading finds the Correct banner
+clipping the next question in short landscape. A first native trial also records a
+zero-width question when three notices compete at 250% question size; that failure stays
+retained. Tight layouts now use one summary symbol with every notice in its spoken label;
+ordinary layouts retain their full text. Question text honors its proposed height, and
+an unused audio-notice API is removed. The renewed three-case native run passes without
+failures/skips or reported runtime warnings. Inspected captures cover maximum question
+size, both orientations, correct/completed/milestone feedback and the revealed header.
+All 577 shared Mac functions, both unsigned Release builds and four executable audits
+pass. Full lint retains the 30 protected errors; the inventory is 230 findings / 98 rules,
+with one fewer long-function signal. [Exact source scope, failed trial and captures](Validation/2026-10-21-code-audit.md#dense-review-feedback--october-22).
+The complete 66-method phone gate and the broader acceptance work below remain open.
+
 **Review layout and keyboard verification:** answering keeps the question and response
 as the same two `AnyLayout` children across orientation, and portrait feedback gains
 scrolling recovery actions. Production falls five Swift lines. All 577 shared Mac
@@ -47,9 +60,11 @@ the draft survives Quick settings/rotation/continued typing, and runtime warning
 Regular landscape grading, 577 shared Mac functions, both unsigned Release builds and all
 four executable audits pass within the exact scopes in the linked receipt. Full lint
 remains red for the 30 protected formatting errors, and hosted CI still cannot resolve
-Mainboard `b34c931`. The full 57-method UI and broader device/accessibility gates stay open.
-The complete phone UI gate now contains 57 test methods, including the separately driven
-URL cases; the focused passes above do not accept that full gate or iPad/Mac interaction.
+Mainboard `b34c931`. The full review UI and broader device/accessibility gates stay open.
+The complete phone gate declares **66 methods**: 57 `ReviewFlowTests` and nine
+`NativeRootFlowTests`. Five review methods need the separate URL-event driver lanes.
+The earlier 57-method wording counted only the review class; focused passes do not
+accept the complete gate or iPad/Mac interaction.
 
 **Latest keyboard/detail diagnosis:** a standalone SwiftUI form reproduces the notes
 frame warning when a keyboard-toolbar button is present, even without a sheet or spacer;
