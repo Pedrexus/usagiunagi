@@ -3,13 +3,12 @@ import StudyPersistence
 import SwiftUI
 
 /// Shared native recovery UI. The host owns credentials and synchronization lifetime.
-public struct SavedWorkView: View {
-  private let store: StudyStore
-  private let accountID: String
-  private let isSyncing: Bool
-  private let synchronize: @MainActor () async throws -> Void
-  private let compareSavedWork:
-    @MainActor (StudyRecoveryRequest) async throws -> StudyRecoveryComparison
+struct SavedWorkView: View {
+  let store: StudyStore
+  let accountID: String
+  let isSyncing: Bool
+  let compareSavedWork: @MainActor (StudyRecoveryRequest) async throws -> StudyRecoveryComparison
+  let synchronize: @MainActor () async throws -> Void
   @State private var work: SavedStudyWork?
   @State private var error: String?
   @State private var performingAction = false
@@ -17,20 +16,7 @@ public struct SavedWorkView: View {
   @State private var resolution: StudyMaterialResolution?
   @State private var confirmArchive = false
 
-  public init(
-    store: StudyStore, accountID: String, isSyncing: Bool,
-    compareSavedWork:
-      @escaping @MainActor (StudyRecoveryRequest) async throws -> StudyRecoveryComparison,
-    synchronize: @escaping @MainActor () async throws -> Void
-  ) {
-    self.store = store
-    self.accountID = accountID
-    self.isSyncing = isSyncing
-    self.synchronize = synchronize
-    self.compareSavedWork = compareSavedWork
-  }
-
-  public var body: some View {
+  var body: some View {
     Form {
       Section {
         Text("Completed answers and note edits stay on this device until WaniKani accepts them.")

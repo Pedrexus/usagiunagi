@@ -13,19 +13,11 @@ struct StudyAppearancePicker: View {
   }
 }
 
-public struct AppearanceSettingsView: View {
-  @Binding private var appearance: ReviewPreferences.Appearance
-  @Binding private var email: String
-  private let notifications: StudyNotifications?
-  public init(
-    appearance: Binding<ReviewPreferences.Appearance>, email: Binding<String>,
-    notifications: StudyNotifications?
-  ) {
-    _appearance = appearance
-    _email = email
-    self.notifications = notifications
-  }
-  public var body: some View {
+struct AppearanceSettingsView: View {
+  @Binding var appearance: ReviewPreferences.Appearance
+  @Binding var email: String
+  let notifications: StudyNotifications?
+  var body: some View {
     Form {
       Section("UI appearance") {
         StudyAppearancePicker(title: "Interface style", selection: $appearance)

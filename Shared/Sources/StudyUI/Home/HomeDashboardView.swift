@@ -10,23 +10,14 @@ public enum HomeAction: Hashable, Sendable {
   case stage(Int)
 }
 
-public struct HomeDashboardView: View {
+struct HomeDashboardView: View {
   let data: HomeDashboardData
   let action: (HomeAction) -> Void
   let refresh: () async -> Void
-  let resume: (() -> Void)?
+  var resume: (() -> Void)? = nil
   @Environment(\.isEnabled) private var isEnabled
   @FocusState private var keyboardFocus: Bool
-  public init(
-    data: HomeDashboardData, action: @escaping (HomeAction) -> Void,
-    refresh: @escaping () async -> Void, resume: (() -> Void)? = nil
-  ) {
-    self.data = data
-    self.action = action
-    self.refresh = refresh
-    self.resume = resume
-  }
-  public var body: some View {
+  var body: some View {
     List {
       if let notice = data.notice {
         Text(notice).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier(

@@ -14,6 +14,7 @@ only_rules:
   - nsobject_prefer_isequal
   - private_swiftui_state
   - redundant_sendable
+  - unneeded_synthesized_initializer
   - unowned_variable_capture
   - weak_delegate
 excluded:

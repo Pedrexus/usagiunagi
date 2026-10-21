@@ -1,7 +1,7 @@
 import StudyCore
 import SwiftUI
 
-public struct OfflineAudioView: View {
+struct OfflineAudioView: View {
   let enabled: Bool
   let cellular: Bool
   let selectedVoices: Set<Int64>
@@ -10,19 +10,7 @@ public struct OfflineAudioView: View {
   let action: (OfflineAudioAction) -> Void
   @State private var confirmingDeletion = false
 
-  public init(
-    enabled: Bool, cellular: Bool, selectedVoices: Set<Int64>, voices: [StudyVoiceActor],
-    downloads: StudyAudioDownloads, action: @escaping (OfflineAudioAction) -> Void
-  ) {
-    self.enabled = enabled
-    self.cellular = cellular
-    self.selectedVoices = selectedVoices
-    self.voices = voices
-    self.downloads = downloads
-    self.action = action
-  }
-
-  public var body: some View {
+  var body: some View {
     Form {
       Section {
         Toggle(

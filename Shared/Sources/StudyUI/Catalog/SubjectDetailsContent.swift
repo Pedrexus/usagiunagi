@@ -242,20 +242,12 @@ public struct SubjectDetailsContent: View {
   }
 }
 
-public struct SubjectDetailsHeader: View {
-  private let subject: CatalogSubject
-  private let japaneseFont: String?
-  private let fontSize: Double
-  private let image: Image?
-  public init(
-    subject: CatalogSubject, japaneseFont: String? = nil, fontSize: Double = 72, image: Image? = nil
-  ) {
-    self.subject = subject
-    self.japaneseFont = japaneseFont
-    self.fontSize = fontSize
-    self.image = image
-  }
-  public var body: some View {
+struct SubjectDetailsHeader: View {
+  let subject: CatalogSubject
+  var japaneseFont: String? = nil
+  var fontSize = 72.0
+  var image: Image? = nil
+  var body: some View {
     VStack(spacing: 12) {
       Group {
         if let image {

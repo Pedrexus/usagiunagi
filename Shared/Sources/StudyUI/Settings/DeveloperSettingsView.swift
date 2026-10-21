@@ -2,11 +2,11 @@ import StudyCore
 import StudyPersistence
 import SwiftUI
 
-public struct DeveloperSettingsView: View {
+struct DeveloperSettingsView: View {
   @Binding var endpoint: String
   let defaultEndpoint: String
-  let studyArchive: StudyDiagnosticArchive?
-  let applyEndpoint: (@MainActor (String) throws -> Void)?
+  var studyArchive: StudyDiagnosticArchive? = nil
+  var applyEndpoint: (@MainActor (String) throws -> Void)? = nil
   @State private var endpointError: String?
   let clearAvatarCache: @MainActor () async throws -> Void
   @State private var editingEndpoint = false
@@ -16,19 +16,7 @@ public struct DeveloperSettingsView: View {
   @State private var clearingCache = false
   @State private var cacheError: String?
 
-  public init(
-    endpoint: Binding<String>, defaultEndpoint: String,
-    studyArchive: StudyDiagnosticArchive? = nil,
-    applyEndpoint: (@MainActor (String) throws -> Void)? = nil,
-    clearAvatarCache: @escaping @MainActor () async throws -> Void
-  ) {
-    self._endpoint = endpoint
-    self.defaultEndpoint = defaultEndpoint
-    self.studyArchive = studyArchive
-    self.applyEndpoint = applyEndpoint
-    self.clearAvatarCache = clearAvatarCache
-  }
-  public var body: some View {
+  var body: some View {
     Form {
       Section("WaniKani API") {
         Button {

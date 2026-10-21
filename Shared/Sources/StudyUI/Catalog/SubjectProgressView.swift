@@ -1,14 +1,10 @@
 import StudyCore
 import SwiftUI
 
-public struct SubjectProgressView: View {
-  private let assignment: CatalogAssignment
-  private let level: Int
-  public init(assignment: CatalogAssignment, level: Int) {
-    self.assignment = assignment
-    self.level = level
-  }
-  public var body: some View {
+struct SubjectProgressView: View {
+  let assignment: CatalogAssignment
+  let level: Int
+  var body: some View {
     GroupBox("Stats") {
       VStack(spacing: 10) {
         LabeledContent("WaniKani level", value: String(level))

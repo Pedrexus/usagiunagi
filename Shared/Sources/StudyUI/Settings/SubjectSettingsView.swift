@@ -2,13 +2,9 @@ import StudyCore
 import SwiftUI
 
 /// Display choices share one owner; skipping readings stays with the review-session policy.
-public struct SubjectSettingsView: View {
-  private let settings: StudySubjectSettings
-  @Binding private var skipKanjiReadings: Bool
-  public init(settings: StudySubjectSettings, skipKanjiReadings: Binding<Bool>) {
-    self.settings = settings
-    _skipKanjiReadings = skipKanjiReadings
-  }
+struct SubjectSettingsView: View {
+  let settings: StudySubjectSettings
+  @Binding var skipKanjiReadings: Bool
   private func binding(_ key: WritableKeyPath<SubjectDetailsPreferences, Bool>) -> Binding<Bool> {
     Binding(
       get: { settings.value[keyPath: key] },
@@ -19,7 +15,7 @@ public struct SubjectSettingsView: View {
         settings.applyChanges(from: old, to: new)
       })
   }
-  public var body: some View {
+  var body: some View {
     Form {
       Section("Readings") {
         choice(

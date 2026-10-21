@@ -2,11 +2,10 @@ import Foundation
 import StudyCore
 import SwiftUI
 
-public struct FontLibraryView: View {
-  @Bindable private var library: StudyFontLibrary
+struct FontLibraryView: View {
+  @Bindable var library: StudyFontLibrary
   @State private var confirmingDeletion = false
-  public init(library: StudyFontLibrary) { self.library = library }
-  public var body: some View {
+  var body: some View {
     Form {
       Section {
         Text(

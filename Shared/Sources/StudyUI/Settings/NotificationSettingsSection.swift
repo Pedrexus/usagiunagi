@@ -7,14 +7,13 @@ import SwiftUI
   import AppKit
 #endif
 
-public struct NotificationSettingsSection: View {
-  @Bindable private var notifications: StudyNotifications
+struct NotificationSettingsSection: View {
+  @Bindable var notifications: StudyNotifications
   @State private var notice: StudyNotifications.Notice?
   @State private var awaitingSettings: NotificationPermissionRequest?
   @Environment(\.scenePhase) private var scenePhase
   @Environment(\.openURL) private var openURL
-  public init(notifications: StudyNotifications) { self.notifications = notifications }
-  public var body: some View {
+  var body: some View {
     Section("Notifications") {
       ForEach(NotificationPreference.allCases) { option in
         Toggle(

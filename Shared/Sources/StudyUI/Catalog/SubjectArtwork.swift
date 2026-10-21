@@ -14,10 +14,9 @@
 
 import SwiftUI
 
-public struct SubjectArtwork: View {
+struct SubjectArtwork: View {
   let url: URL?
-  public init(url: URL?) { self.url = url }
-  public var body: some View {
+  var body: some View {
     if let url {
       AsyncImage(request: URLRequest(url: url, cachePolicy: .useProtocolCachePolicy)) { phase in
         switch phase {

@@ -2,29 +2,15 @@ import StudyCore
 import SwiftUI
 
 /// Read-only results; hosts supply cached images and retain subject navigation during migration.
-public struct SessionSummaryView: View {
-  private let title: String
-  private let message: String?
-  private let summary: StudySessionSummary
-  private let japaneseFont: String
-  private let imageURL: (Int) -> URL?
-  private let image: (Int) -> Image?
-  private let openSubject: (Int) -> Void
-  public init(
-    summary: StudySessionSummary, title: String = "Session complete", message: String? = nil,
-    japaneseFont: String = "",
-    imageURL: @escaping (Int) -> URL? = { _ in nil },
-    image: @escaping (Int) -> Image? = { _ in nil }, openSubject: @escaping (Int) -> Void
-  ) {
-    self.title = title
-    self.message = message
-    self.summary = summary
-    self.japaneseFont = japaneseFont
-    self.imageURL = imageURL
-    self.image = image
-    self.openSubject = openSubject
-  }
-  public var body: some View {
+struct SessionSummaryView: View {
+  let summary: StudySessionSummary
+  var title = "Session complete"
+  var message: String? = nil
+  var japaneseFont = ""
+  var imageURL: (Int) -> URL? = { _ in nil }
+  var image: (Int) -> Image? = { _ in nil }
+  let openSubject: (Int) -> Void
+  var body: some View {
     List {
       Section {
         Label(title, systemImage: "checkmark.circle")

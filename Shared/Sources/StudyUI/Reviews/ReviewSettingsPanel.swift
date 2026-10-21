@@ -2,7 +2,7 @@ import StudyCore
 import SwiftUI
 
 /// Native review preferences. The host handles persistence and the font library.
-public struct ReviewSettingsPanel: View {
+struct ReviewSettingsPanel: View {
   @State private var preferences: ReviewPreferences
   private let sourcePreferences: ReviewPreferences
   private let changed: (ReviewPreferences, ReviewPreferences) -> Void
@@ -10,7 +10,7 @@ public struct ReviewSettingsPanel: View {
   private let offlineAudio: (() -> Void)?
   private let done: (() -> Void)?
 
-  public init(
+  init(
     preferences: ReviewPreferences,
     changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
     fonts: (() -> Void)? = nil, offlineAudio: (() -> Void)? = nil,
@@ -34,7 +34,7 @@ public struct ReviewSettingsPanel: View {
       })
   }
 
-  public var body: some View {
+  var body: some View {
     Form {
       ReviewSettingsContent(
         preferences: binding, fonts: fonts,
@@ -61,26 +61,15 @@ public struct ReviewSettingsPanel: View {
 }
 
 /// In-session preferences and media stay in one sheet; queue choices live in main settings.
-public struct ReviewSettingsSheet: View {
+struct ReviewSettingsSheet: View {
   private enum Page: Hashable { case fonts, offlineAudio }
-  private let preferences: ReviewPreferences
-  private let changed: (ReviewPreferences, ReviewPreferences) -> Void
-  private let fonts: StudyFontLibrary
-  private let audio: StudyAudioLibrary?
-  private let done: () -> Void
+  let preferences: ReviewPreferences
+  let changed: (ReviewPreferences, ReviewPreferences) -> Void
+  let fonts: StudyFontLibrary
+  var audio: StudyAudioLibrary? = nil
+  let done: () -> Void
   @State private var path: [Page] = []
-  public init(
-    preferences: ReviewPreferences,
-    changed: @escaping (ReviewPreferences, ReviewPreferences) -> Void,
-    fonts: StudyFontLibrary, audio: StudyAudioLibrary? = nil, done: @escaping () -> Void
-  ) {
-    self.preferences = preferences
-    self.changed = changed
-    self.fonts = fonts
-    self.audio = audio
-    self.done = done
-  }
-  public var body: some View {
+  var body: some View {
     NavigationStack(path: $path) {
       ReviewSettingsPanel(
         preferences: preferences, changed: changed,

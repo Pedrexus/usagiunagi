@@ -2,25 +2,14 @@ import StudyCore
 import SwiftUI
 
 /// Shared preference sections for main and in-session settings.
-public struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: View {
-  @Binding private var preferences: ReviewPreferences
-  private let fonts: (() -> Void)?
-  private let display: Display
-  private let answers: Answers
-  private let audio: Audio
+struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: View {
+  @Binding var preferences: ReviewPreferences
+  var fonts: (() -> Void)? = nil
+  @ViewBuilder let display: Display
+  @ViewBuilder let answers: Answers
+  @ViewBuilder let audio: Audio
 
-  public init(
-    preferences: Binding<ReviewPreferences>, fonts: (() -> Void)? = nil,
-    @ViewBuilder display: () -> Display,
-    @ViewBuilder answers: () -> Answers, @ViewBuilder audio: () -> Audio
-  ) {
-    _preferences = preferences
-    self.fonts = fonts
-    self.display = display()
-    self.answers = answers()
-    self.audio = audio()
-  }
-  public var body: some View {
+  var body: some View {
     Section("Display") {
       StudyAppearancePicker(selection: $preferences.appearance).accessibilityIdentifier(
         "reviewSettings.appearance")
@@ -80,24 +69,13 @@ public struct ReviewSettingsContent<Display: View, Answers: View, Audio: View>: 
 }
 
 /// The complete settings body on every host; narrow platform extras stay at the boundary.
-public struct FullReviewSettingsContent<Display: View, Answers: View>: View {
-  @Binding private var preferences: ReviewPreferences
-  private let fonts: (() -> Void)?
-  private let offlineAudio: (() -> Void)?
-  private let display: Display
-  private let answers: Answers
-  public init(
-    preferences: Binding<ReviewPreferences>, fonts: (() -> Void)? = nil,
-    offlineAudio: (() -> Void)? = nil, @ViewBuilder display: () -> Display,
-    @ViewBuilder answers: () -> Answers
-  ) {
-    _preferences = preferences
-    self.fonts = fonts
-    self.offlineAudio = offlineAudio
-    self.display = display()
-    self.answers = answers()
-  }
-  public var body: some View {
+struct FullReviewSettingsContent<Display: View, Answers: View>: View {
+  @Binding var preferences: ReviewPreferences
+  var fonts: (() -> Void)? = nil
+  var offlineAudio: (() -> Void)? = nil
+  @ViewBuilder let display: Display
+  @ViewBuilder let answers: Answers
+  var body: some View {
     Section {
       Toggle("Review items in batches", isOn: $preferences.policy.limitEnabled)
         .accessibilityIdentifier("settings.reviewItemsLimitEnabled")

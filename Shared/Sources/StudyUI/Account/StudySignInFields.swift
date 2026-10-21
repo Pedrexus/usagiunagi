@@ -1,10 +1,9 @@
 import StudyCore
 import SwiftUI
 
-public struct StudyTokenEntry: View {
+struct StudyTokenEntry: View {
   @Binding var token: String
-  public init(token: Binding<String>) { self._token = token }
-  public var body: some View {
+  var body: some View {
     HStack {
       SecureField("API token", text: $token)
         .autocorrectionDisabled().submitLabel(.go).privacySensitive()
@@ -25,20 +24,13 @@ public struct StudyTokenEntry: View {
   }
 }
 
-/// Shared fields for the standalone iOS sign-in and native account form.
+/// Account fields share the same sign-in owner on every platform.
 /// The host cancels the owner when its entire form disappears, not when rows scroll away.
-public struct StudySignInFields: View {
+struct StudySignInFields: View {
   @Bindable var model: StudySignIn
-  let submitTitle: String
+  var submitTitle = "Sign in"
   let signedIn: (String) -> Void
-  public init(
-    model: StudySignIn, submitTitle: String = "Sign in", signedIn: @escaping (String) -> Void
-  ) {
-    self.model = model
-    self.submitTitle = submitTitle
-    self.signedIn = signedIn
-  }
-  public var body: some View {
+  var body: some View {
     Section("WaniKani account") {
       if let email = model.forcedEmail {
         Text("Reconnecting \(email)").foregroundStyle(.secondary).accessibilityIdentifier(
@@ -76,25 +68,5 @@ public struct StudySignInFields: View {
   }
   private func submit() {
     Task { if let token = await model.submit() { signedIn(token) } }
-  }
-}
-
-public struct StudySignInView: View {
-  let appName: String
-  let model: StudySignIn
-  let signedIn: (String) -> Void
-  public init(appName: String, model: StudySignIn, signedIn: @escaping (String) -> Void) {
-    self.appName = appName
-    self.model = model
-    self.signedIn = signedIn
-  }
-  public var body: some View {
-    Form {
-      Section {
-        Text(appName).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
-        Text("Sign in to your WaniKani account").foregroundStyle(.secondary)
-      }
-      StudySignInFields(model: model, signedIn: signedIn)
-    }.formStyle(.grouped).tint(StudyPalette.radical).onDisappear { model.cancel() }
   }
 }

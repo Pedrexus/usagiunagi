@@ -3,10 +3,9 @@ import StudySpeech
 import SwiftUI
 
 /// The shared practice destination uses the same saved study options on every platform.
-public struct KatakanaPracticeMenu: View {
-  private let start: () -> Void
-  public init(start: @escaping () -> Void) { self.start = start }
-  public var body: some View {
+struct KatakanaPracticeMenu: View {
+  let start: () -> Void
+  var body: some View {
     Form {
       Section {
         Button("Katakana characters", systemImage: "character.ja", action: start)

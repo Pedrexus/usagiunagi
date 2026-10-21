@@ -2,11 +2,11 @@ import StudyCore
 import SwiftUI
 
 /// The original level/type grid, with native selection and host-owned lesson validation.
-public struct LessonPickerView: View {
-  private let items: [CatalogSubject]
-  private let start: @MainActor ([Int64]) async throws -> Void
+struct LessonPickerView: View {
+  let items: [CatalogSubject]
+  var selection: Binding<Set<Int64>>? = nil
+  let start: @MainActor ([Int64]) async throws -> Void
   @State private var localSelection: Set<Int64> = []
-  private let selection: Binding<Set<Int64>>?
   private var selected: Set<Int64> {
     get { selection?.wrappedValue ?? localSelection }
     nonmutating set {
@@ -18,14 +18,6 @@ public struct LessonPickerView: View {
   @Environment(\.dynamicTypeSize) private var typeSize
   @ScaledMetric(relativeTo: .title2) private var glyphSize = 28
 
-  public init(
-    items: [CatalogSubject], selection: Binding<Set<Int64>>? = nil,
-    start: @escaping @MainActor ([Int64]) async throws -> Void
-  ) {
-    self.items = items
-    self.selection = selection
-    self.start = start
-  }
   private struct LessonGroup: Identifiable {
     let id: String
     let title: String
@@ -43,7 +35,7 @@ public struct LessonPickerView: View {
       }
     }
   }
-  public var body: some View {
+  var body: some View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: 16) {
         if let error { Text(error).foregroundStyle(.red) }

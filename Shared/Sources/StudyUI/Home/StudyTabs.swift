@@ -3,22 +3,12 @@ import SwiftUI
 public enum StudyTab: Hashable, Sendable { case home, practice, statistics }
 
 /// iPhone tabs adapt through the system's larger-window navigation.
-public struct StudyTabs<Home: View, Practice: View, Statistics: View>: View {
-  @Binding private var selection: StudyTab
-  private let home: Home
-  private let practice: Practice
-  private let statistics: Statistics
-  public init(
-    selection: Binding<StudyTab>,
-    @ViewBuilder home: () -> Home, @ViewBuilder practice: () -> Practice,
-    @ViewBuilder statistics: () -> Statistics
-  ) {
-    _selection = selection
-    self.home = home()
-    self.practice = practice()
-    self.statistics = statistics()
-  }
-  public var body: some View {
+struct StudyTabs<Home: View, Practice: View, Statistics: View>: View {
+  @Binding var selection: StudyTab
+  @ViewBuilder let home: Home
+  @ViewBuilder let practice: Practice
+  @ViewBuilder let statistics: Statistics
+  var body: some View {
     TabView(selection: $selection) {
       Tab(value: StudyTab.home) {
         home

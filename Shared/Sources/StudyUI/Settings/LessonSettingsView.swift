@@ -1,9 +1,8 @@
 import StudyCore
 import SwiftUI
 
-public struct LessonSettingsView: View {
-  @Bindable private var settings: StudyLessonSettings
-  public init(settings: StudyLessonSettings) { self.settings = settings }
+struct LessonSettingsView: View {
+  @Bindable var settings: StudyLessonSettings
   private var binding: Binding<StudyLessonPreferences> {
     Binding(get: { settings.value }, set: { settings.applyChanges(from: settings.value, to: $0) })
   }
@@ -14,7 +13,7 @@ public struct LessonSettingsView: View {
     case .vocabulary: "Vocabulary"
     }
   }
-  public var body: some View {
+  var body: some View {
     Form {
       Section {
         NavigationLink {

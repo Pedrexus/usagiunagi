@@ -5,7 +5,7 @@ extension EnvironmentValues {
   @Entry public var studyAvatars: LegacyAvatarCache? = nil
 }
 
-public struct StudyAvatarView: View {
+struct StudyAvatarView: View {
   let url: URL?
   let revision: Int
   @Environment(\.studyAvatars) private var cache
@@ -15,11 +15,7 @@ public struct StudyAvatarView: View {
     let revision: Int
     let cacheID: ObjectIdentifier?
   }
-  public init(url: URL?, revision: Int = 0) {
-    self.url = url
-    self.revision = revision
-  }
-  public var body: some View {
+  var body: some View {
     let request = Request(url: url, revision: revision, cacheID: cache.map(ObjectIdentifier.init))
     Group {
       if let loaded, loaded.request == request {
