@@ -1,5 +1,15 @@
 # Reusable Swift helpers
 
+## Owner-authorized dataclass package
+
+The owner subsequently requested our own `dataclass` implementation. It now lives in the projects workspace at `packages/dataclass`, separate from Patos and this app. Its `Dataclass` macro/runtime generates validated struct/final-class initialization, strict/open native Codable and explicit revalidation. `DataclassSwiftData` adds `ModelContext.saveValidated()` without replacing SwiftData storage. Mainboard owns its native build, formatting and disposable CLI showcase tasks.
+
+Swift 6.4 compiler evidence found an important composition limit: Apple's `@Model` cannot see a neighboring member macro's initializer, even in the reverse order or with all property defaults. The package therefore documents one private, uncallable source initializer taking `Never`; generated memberwise construction remains validated. It preserves native backing storage and identities. Explicit saves cannot validate autosave, batch operations, CloudKit imports or materialization automatically. MainActor classes need correctly isolated conformances, not suppressed diagnostics.
+
+The standalone manual showcase builds and demonstrates aggregate validation, missing-only defaults, strict/open payload handling, a corrected native-store reopen with stable UUID, and a background `@ModelActor` save. App integration, historical decoder/schema adoption and automated tests remain open. Tests stay at the end under the owner's latest instruction. No `Dataclass` dependency or frozen model rewrite has been introduced into this app. Read the package README and STATUS before choosing a small nonpersistent pilot; existing native synthesis is still preferred where sufficient.
+
+The earlier alternatives and sketch below retain their research context. The new owner request supersedes the recommendation to defer a package until another consumer appears; it does not authorize changing frozen study schemas or claim that the entire app modernization is complete.
+
 The owner wants the same small, reusable patterns that Patos supplies in Python. The useful Swift equivalents are native synthesis, narrowly applied compile-time macros, and typed validation shared by construction and decoding. This does not require a new application base class, ORM or runtime dependency-injection framework.
 
 ## Existing packages before another compiler plugin
