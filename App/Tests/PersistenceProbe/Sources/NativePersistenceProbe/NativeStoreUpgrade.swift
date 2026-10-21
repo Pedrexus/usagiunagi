@@ -85,6 +85,7 @@
       "probe-application-opening", "initialize-application-opening",
       "verify-application-opening", "write-application-opening", "lease-application-opening",
       "interrupt-review-application-opening", "retry-review-application-opening",
+      "hold-application-opening",
       "refuse-application-opening",
       "probe-application-payload-corruption", "inspect-application-payload",
       "probe-application-payload-validation", "inspect-application-raw-payload",
@@ -736,6 +737,12 @@
       }
       let store = try await StudyStore.openApplication(in: directory)
       defer { withExtendedLifetime(store) {} }
+      if command == "hold-application-opening" {
+        // The parent kills this disposable child after observing atomic selection publication.
+        // After opening, keep the owner alive without further account access or cleanup.
+        try await Task.sleep(for: .seconds(15))
+        throw NativeStoreBaseline.Failure(description: "Selection interruption parent did not kill")
+      }
       let actual = try await store.nativeBaselineState()
       let expectedFile = directory.appendingPathExtension("expected.plist")
       if command == "initialize-application-opening" {
@@ -824,6 +831,8 @@
         ("wal-application", walSource, walExpected),
         ("base-review", source, manifest.expected),
         ("wal-review", walSource, walExpected),
+        ("base-publication", source, manifest.expected),
+        ("wal-publication", walSource, walExpected),
       ] {
         let directory = root.appending(path: name)
         try manager.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -831,8 +840,22 @@
         for (name, data) in bytes { try data.write(to: directory.appending(path: name)) }
         try encode(expected, to: directory.appendingPathExtension("expected.plist"))
         let url = directory.appending(path: "study.store")
-        try child("verify-application-opening", store: url)
-        let selection = try Data(contentsOf: directory.appending(path: "store-selection.plist"))
+        let selection: Data
+        if name.hasSuffix("-publication") {
+          selection = try interruptPublishedSelection(store: url)
+          try child("verify-application-opening", store: url)
+        } else {
+          try child("verify-application-opening", store: url)
+          selection = try Data(contentsOf: directory.appending(path: "store-selection.plist"))
+        }
+        let fields =
+          try PropertyListSerialization.propertyList(from: selection, format: nil)
+          as? [String: Any]
+        guard let retained = fields?["retained"] as? String, UUID(uuidString: retained) != nil
+        else {
+          throw NativeStoreBaseline.Failure(
+            description: "Retained generation missing from selection")
+        }
         try child("verify-application-opening", store: url)
         try child("lease-application-opening", store: url)
         if name.hasSuffix("-review") {
@@ -851,8 +874,9 @@
         for _ in 0..<2 { try child("verify-application-opening", store: url) }
         try NativeStoreBaseline.require(
           try applicationSource(in: directory) == bytes
+            && applicationSource(in: directory.appending(path: "generations/\(retained)")) == bytes
             && Data(contentsOf: directory.appending(path: "store-selection.plist")) == selection,
-          "Reopen/write changed the original source image or selected a different generation")
+          "Reopen/write changed the original/retained source or selected a different generation")
         log("PASS: \(name) exact adoption, lease, transaction and fresh-process recovery")
       }
 
@@ -868,6 +892,52 @@
         "Fresh reopen created an unselected store, or the pinned fixture changed")
       log("PASS: original frozen filenames/SHA-256 unchanged; no real account or network")
       log("SCOPE: production Mac opener/restarts, not mid-copy interruption, disk-full, V2 or iOS")
+    }
+
+    private static func interruptPublishedSelection(store: URL) throws -> Data {
+      try requireDisposable(store)
+      let selection = store.deletingLastPathComponent().appending(path: "store-selection.plist")
+      try NativeStoreBaseline.require(
+        !FileManager.default.fileExists(atPath: selection.path),
+        "Publication interruption requires an unselected disposable source")
+      let process = Process()
+      process.executableURL = Bundle.main.executableURL
+      process.arguments = ["hold-application-opening", store.path]
+      process.standardOutput = FileHandle.standardOutput
+      process.standardError = FileHandle.standardError
+      try process.run()
+      defer {
+        if process.isRunning {
+          Darwin.kill(process.processIdentifier, SIGKILL)
+          process.waitUntilExit()
+        }
+      }
+      let deadline = Date.now.addingTimeInterval(10)
+      while process.isRunning && Date.now < deadline {
+        if FileManager.default.fileExists(atPath: selection.path) {
+          let bytes = try Data(contentsOf: selection)
+          let value =
+            try PropertyListSerialization.propertyList(from: bytes, format: nil)
+            as? [String: Any]
+          if value?["phase"] as? String == "selected" {
+            try NativeStoreBaseline.require(
+              Darwin.kill(process.processIdentifier, SIGKILL) == 0,
+              "Could not interrupt the publication child")
+            process.waitUntilExit()
+            try NativeStoreBaseline.require(
+              process.terminationReason == .uncaughtSignal && process.terminationStatus == SIGKILL
+                && Data(contentsOf: selection) == bytes,
+              "Publication child did not stop by SIGKILL with the observed selection")
+            log(
+              "CHECKPOINT: selected generation visible before first app write; SIGKILL PID \(process.processIdentifier)"
+            )
+            return bytes
+          }
+        }
+        Thread.sleep(forTimeInterval: 0.001)
+      }
+      throw NativeStoreBaseline.Failure(
+        description: "No selected generation observed within the 10-second publication bound")
     }
 
     private enum PayloadField: String, CaseIterable {

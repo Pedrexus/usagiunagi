@@ -660,3 +660,20 @@ Final application root: `native-upgrade-09C6585E-0B31-41A5-AC87-571D573EA71F`. B
 Mainboard parses 261/261 files with no context issues: production 145 files/21,680 physical lines, tests 111/26,719 and tooling five/281. This change adds 93 test lines and no shipping lines or files. It strengthens a required transaction check rather than reducing production LOC. Documentation lint passes on all three changed documents.
 
 The shipping schema, baseline writer, canonical store/manifest and historical archives retain their recorded hashes. No app-owned shipping source, dependency or workflow configuration changes. The existing Mainboard/Actions opening phase automatically includes these cases; a hosted run is not claimed. Actual mid-copy/final-publication interruption, native iPhone pre-commit saving, Data Protection/power loss, historical decoder binding/V2, measured device performance and every other open workstream remain pending in [TASKS](../TASKS.md). This closes only the Mac completed-review pre-commit case.
+
+## Published-selection process interruption
+
+The same opening phase now has ordinary/WAL-source publication cases in addition to its committed-write and pre-answer-commit cases. Each starts with no selection file. A disposable child calls the actual production opener and, if it returns, holds the owner for at most fifteen seconds without further account access or cleanup. The parent polls the atomic selection file for at most ten seconds, then sends SIGKILL as soon as a complete `selected` value is observed. It requires signal termination/status 9 and unchanged observed selector bytes. Timeout/error cleanup kills only the spawned child and retains the disposable files for diagnosis.
+
+This is an externally observed publication boundary. The process may still be inside publication synchronization or may already be holding the returned owner; the check does not claim an instruction inside rename/fsync. Two fresh processes must restore the full original 38-record state. Lease refusal then passes, the first answer/outbox and note write commits before abrupt exit 86, and two more readers restore exactly 39 records. Both source images and the observed selection stay unchanged across recovery and writing. The canonical fixture is never passed to a persistence opener.
+
+The existing Mainboard ten-phase workflow and standalone Actions phase own these additional cases, with no new task, dependency or production fault hook. Mid-copy/inside-publication interruption, filesystem power loss, native iPhone failure combinations, historical decoder binding/V2 and other remaining acceptance stay open. The changed code is test-only; production schema, source, storage abstractions and UI are unchanged.
+
+The final application root is `native-upgrade-17BEB6AD-4071-431D-8EA6-EF368DABD9B0`; publication children are PIDs `4614` and `4623`. All ten persistence phases pass, including the six source-adoption cases (ordinary/WAL committed writes, pre-answer interruption and visible publication), fresh installation and the existing corruption/refusal matrices. All six adoption cases now explicitly compare the retained generation's DB/WAL/SHM bytes with the original image after their writes and reopens. Focused parser/format/SwiftLint checks pass; Mainboard parses 261/261 files with no context issues. Production remains 145 files/21,680 physical lines, tests 111/26,789 and tooling five/281: seventy test lines added, no shipping lines. No hosted, iPhone, Release or new disk-full run is claimed for this probe-only change.
+
+| Final local receipt | SHA-256 |
+| --- | --- |
+| Probe source | `9a3684bd5a34cd07023d72efc1215e97f8b9bd0f56fb49903f0d28de61d4a572` |
+| `.build/Results/PublicationPersistenceFinal.log` | `2a3975bb26143da168ef42f17d269d4c20172e84a872a0f8acb05842b53a1f92` |
+| `.build/Results/PublicationLintFinal.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| `.build/Reports/PublicationInventory.json` | `b821a35aa7c66cfb68ffdb05a86845e11d71f56d955eb7a06465181c451b4310` |
