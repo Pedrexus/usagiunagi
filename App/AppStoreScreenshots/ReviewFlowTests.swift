@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import UIKit
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
   @MainActor func testLessonGroupSelectionAndClearRemainAccessibleButtons() {
     let app = fixtureApplication(["--lesson-fixture", "--lesson-settings-fixture"])
+    defer { app.terminate() }
     launchFixture(app)
     app.buttons["home.chooseLessons"].tap()
     let group = app.buttons["lesson.selectGroup.1-radical"]
@@ -35,6 +37,7 @@ final class ReviewFlowTests: XCTestCase {
       "--manual-review-fixture", "--audio-fixture", "-UIPreferredContentSizeCategoryName",
       "UICTContentSizeCategoryAccessibilityXXXL",
     ])
+    defer { app.terminate() }
     openFixture(URL(string: "usagiunagi:///reviews")!, in: app)
     XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["review.voice"].isHittable)
@@ -49,29 +52,10 @@ final class ReviewFlowTests: XCTestCase {
     add(image)
   }
 
-  override func setUp() async throws {
-    try await super.setUp()
-    await MainActor.run { XCUIDevice.shared.orientation = .portrait }
-  }
-
-  override func tearDown() async throws {
-    await MainActor.run { XCUIDevice.shared.orientation = .portrait }
-    try await super.tearDown()
-  }
-
   @MainActor private func fixtureApplication(_ arguments: [String] = []) -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = ["--review-fixture"] + arguments
-    addTeardownBlock { await MainActor.run { app.terminate() } }
     return app
-  }
-
-  @MainActor private func unavailableNativeFixture(
-    _ scenario: String, file: StaticString = #filePath, line: UInt = #line
-  ) -> XCUIApplication? {
-    XCTFail(
-      "Missing isolated native fixture: \(scenario). No app was launched.", file: file, line: line)
-    return nil
   }
 
   @MainActor private func launchFixture(
@@ -117,6 +101,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testAccountExpiryUsesNativeReauthenticationAndPreservesForcedEmail() {
     continueAfterFailure = false
     let app = fixtureApplication(["--expired-account-fixture", "--light-fixture"])
+    defer { app.terminate() }
     launchFixture(app)
     let warning = app.alerts["Logged out"]
     XCTAssertTrue(warning.waitForExistence(timeout: 10))
@@ -154,6 +139,7 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor func testHibernationWarningStaysDismissedAcrossNativeTabChanges() {
     continueAfterFailure = false
     let app = fixtureApplication(["--hibernating-account-fixture", "--light-fixture"])
+    defer { app.terminate() }
     launchFixture(app)
     let warning = app.alerts["Account is Hibernating"]
     XCTAssertTrue(warning.waitForExistence(timeout: 10))
@@ -174,6 +160,7 @@ final class ReviewFlowTests: XCTestCase {
     let app = launchNativeHome([
       "--deferred-account-fixture", "--manual-review-fixture", "--light-fixture",
     ])
+    defer { app.terminate() }
     let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start reviews"))
       .firstMatch
     XCTAssertTrue(start.waitForExistence(timeout: 5))
@@ -457,11 +444,13 @@ final class ReviewFlowTests: XCTestCase {
   }
   @MainActor func testHomeProgressCountsChartsAndRefreshSurviveRotation() {
     continueAfterFailure = false
-    XCUIDevice.shared.orientation = .portrait
-    addTeardownBlock { await MainActor.run { XCUIDevice.shared.orientation = .portrait } }
     let app = fixtureApplication(["--home-fixture", "--home-progress-fixture", "--light-fixture"])
     launchFixture(app)
-    defer { app.terminate() }
+    XCUIDevice.shared.orientation = .portrait
+    defer {
+      XCUIDevice.shared.orientation = .portrait
+      app.terminate()
+    }
     let home = app.descendants(matching: .any).matching(identifier: "home.dashboard").firstMatch
     XCTAssertTrue(home.waitForExistence(timeout: 10))
     attachHomeScreenshot("SwiftUI Home study actions and forecast")
@@ -864,13 +853,15 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor
-  func testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion() {
+  func testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion() throws {
     continueAfterFailure = false
-    guard
-      let app = unavailableNativeFixture(
-        "A device with system Reduce Motion already enabled; the public SwiftUI environment value is read-only and this test never changes system preferences"
-      )
-    else { return }
+    try XCTSkipUnless(
+      UIAccessibility.isReduceMotionEnabled,
+      "Requires an isolated device with system Reduce Motion enabled; no system preference is changed. This acceptance gate remains open when skipped."
+    )
+    let app = launchNativeReview(extra: [
+      "--anki-fixture", "--combined-anki-fixture", "--review-feedback-fixture",
+    ])
     defer { app.terminate() }
     app.buttons["review.submit"].tap()
     app.buttons["review.correct"].tap()
@@ -964,8 +955,8 @@ final class ReviewFlowTests: XCTestCase {
   @MainActor
   func testUpcomingReviewsShowsStageAndSubjectCountsAndReturns() throws {
     continueAfterFailure = false
-    XCUIDevice.shared.orientation = .portrait
     let app = launchNativeHome(["--light-fixture"])
+    XCUIDevice.shared.orientation = .portrait
     defer { app.terminate() }
     let forecast = app.descendants(matching: .any).matching(identifier: "home.forecast").firstMatch
     scrollTo(forecast, in: app)
@@ -1235,6 +1226,7 @@ final class ReviewFlowTests: XCTestCase {
   func testNativeBackPausesTheReviewAndRestoresTypingDraft() {
     continueAfterFailure = false
     let app = launchNativeReview()
+    defer { app.terminate() }
     let field = app.textFields["review.answer"]
     field.tap()
     field.typeText("unfinished")
@@ -1675,7 +1667,11 @@ extension ReviewFlowTests {
     let keyboardDone = app.buttons["material.keyboardDone"]
     if keyboardDone.exists && keyboardDone.isHittable { keyboardDone.tap() }
     for _ in 0..<16 {
-      if element.exists && element.isHittable { return }
+      if element.exists && element.isHittable {
+        let tabs = app.tabBars.firstMatch
+        let center = CGPoint(x: element.frame.midX, y: element.frame.midY)
+        if !tabs.exists || !tabs.frame.contains(center) { return }
+      }
       let details = app.scrollViews["subject.scroll"]
       let catalog = app.collectionViews["catalog.list"]
       let form = app.descendants(matching: .any).matching(identifier: "material.form").firstMatch
@@ -1686,15 +1682,15 @@ extension ReviewFlowTests {
         } else {
           form.swipeUp(velocity: .slow)
         }
-      } else if details.exists && details.isHittable || catalog.exists && catalog.isHittable {
-        let content = details.exists && details.isHittable ? details : catalog
+      } else if details.exists || catalog.exists {
+        let content = details.exists ? details : catalog
         let down = towardTop || element.exists && element.frame.midY < content.frame.minY
         let start = content.coordinate(
           withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.3 : 0.7))
         let end = content.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.6 : 0.4))
         start.press(
           forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.15)
-      } else if home.exists && home.isHittable {
+      } else if home.exists {
         // Keep drags clear of the floating tab bar, which covers the center in landscape.
         let down = towardTop || element.exists && element.frame.midY < home.frame.minY
         let start = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.25 : 0.7))
