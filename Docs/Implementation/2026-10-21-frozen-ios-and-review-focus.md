@@ -638,3 +638,25 @@ Strict swift-format, SwiftLint and parser/UI rules pass on all 18 changed surviv
 | `.build/Reports/SubjectCacheInventory.json` | `11e00566558421d6d4fe55f5f270044437ae182835e7d9ff8238479b82f1bd10` |
 
 The first shared run passed before interface/export cleanup; it is retained separately and is not the final receipt. No new Release/bundle or independent frozen-writer run is claimed for this change. Remaining work includes measured real-catalog network/memory/write performance, delta/reset handling for other account collections, real-account/offline and rendered usability, full G7/historical upgrade binding, physical/signed voice/watch/services and hosted CI publication. Conditional HTTP requests remain an optional measured improvement, not a second required cache path. All other obligations remain in [TASKS](../TASKS.md); the overall goal stays active.
+
+## Completed-review pre-commit interruption
+
+The existing production-opening phase now includes two independent review copies: one from the pinned journal-free source and one containing the earlier committed WAL-only material edit. Both use the production generation opener. The public review operations advance the original incorrect meaning, save its correct retry and leave the reading pending. The complete prepared 38-record state becomes the restart expectation before the final answer begins.
+
+The probe's existing ModelContext.willSave observer is shared with the disk-full case. It observes one inserted pending review, no deleted models, the completed session/new revision, the original wrong-meaning penalty and the account's new mistake timestamp. Exact encoded session/account/item values must match the independently calculated expectation. Only after these assertions and a typed witness write does the child call `_exit(87)` inside the actual save notification. This is an abrupt process interruption before save, not an injected thrown error or an orderly owner release. The app has no fault hook; all commands require marked disposable copies.
+
+Two fresh processes restore all 38 prepared records and their exact revisions/fields, excluding the dirty outbox/session/mistake changes. A third process retries the same saved reading using its existing revision. It must yield one precise completion, exactly one unattempted pending answer, no issue/original assignment, the same original item and wrong-meaning count of one, and the expected mistake timestamp. Its outbox/session revisions must differ from the abandoned dirty revisions. Two more fresh processes restore all 39 records. Original/retained source bytes and the selection file stay unchanged; unrelated records, uncertain uploads and the second account remain exact.
+
+Final application root: `native-upgrade-09C6585E-0B31-41A5-AC87-571D573EA71F`. Base interruption PID `99966` is followed by pre-retry readers `99967/99968` and post-retry readers `99970/99971`; WAL interruption PID `99978` by `99979/99980` and `99986/99990`. The original base/WAL committed-write, lease and fresh-install checks still pass. All ten canonical persistence phases pass. The refactored observer's three real APFS exhaustion points also pass, including exact completed-review rollback and retry; the bounded image is ejected and removed by Mainboard (`StorageSpace.XeWt5R`). A formatting-only first follow-up corrected the associated-value enum's case declaration; final scoped lint passes.
+
+| Final local receipt | SHA-256 |
+| --- | --- |
+| Probe source | `f5d1118edd7dd0d9173fa294122e863c5b1f758ec257ce3c3e9352c6779b9530` |
+| `.build/Results/PrecommitPersistenceFinal.log` | `ba3b31a96b05fa1bc1d16b0b80a6c0c00dc1ba1d2ab277985068c22e7121f0c5` |
+| `.build/Results/PrecommitLintFinal.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| `.build/Results/PrecommitStorageSpaceFinal.log` | `2d43773d4c919508b4b5f700acab8d8497051011b4218e69afca2c0a6ed55485` |
+| `.build/Reports/PrecommitInventory.json` | `09be6075b22d18e62f8b65d99250ee06df8a304a796912bc561d8745e2e706d7` |
+
+Mainboard parses 261/261 files with no context issues: production 145 files/21,680 physical lines, tests 111/26,719 and tooling five/281. This change adds 93 test lines and no shipping lines or files. It strengthens a required transaction check rather than reducing production LOC. Documentation lint passes on all three changed documents.
+
+The shipping schema, baseline writer, canonical store/manifest and historical archives retain their recorded hashes. No app-owned shipping source, dependency or workflow configuration changes. The existing Mainboard/Actions opening phase automatically includes these cases; a hosted run is not claimed. Actual mid-copy/final-publication interruption, native iPhone pre-commit saving, Data Protection/power loss, historical decoder binding/V2, measured device performance and every other open workstream remain pending in [TASKS](../TASKS.md). This closes only the Mac completed-review pre-commit case.
