@@ -15,6 +15,7 @@
       <EnvironmentVariable key="SWIFT_TESTING_XCTEST_INTEROP_MODE" value="complete" isEnabled="YES"/>
       <EnvironmentVariable key="USAGI_NATIVE_RESTART_PHASE" value="$(USAGI_NATIVE_RESTART_PHASE)" isEnabled="YES"/>
       <EnvironmentVariable key="USAGI_NATIVE_RESTART_ID" value="$(USAGI_NATIVE_RESTART_ID)" isEnabled="YES"/>
+      <EnvironmentVariable key="USAGI_NATIVE_SPACE_PATH" value="$(USAGI_NATIVE_SPACE_PATH)" isEnabled="YES"/>
     </EnvironmentVariables>
     <MacroExpansion>
       <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="630FD6121FC45BDF00D21C1F" BuildableName="Tsurukame.app" BlueprintName="Tsurukame" ReferencedContainer="container:UsagiUnagi.xcodeproj"/>

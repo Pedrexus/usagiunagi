@@ -75,7 +75,10 @@ for phase in seed reopen seedAbrupt reopenAbrupt seedVerification reopenVerifica
 done
 '
 '''
-native-store-space = '''mainboard proc timeout 600 sh -eu -c '
+native-store-space = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "mac" } }
+native-store-volume-access-ios = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "ios-access" } }
+native-store-volume = '''mainboard proc timeout 600 sh -eu -c '
+case "${USAGI_NATIVE_SPACE_BACKEND:-}" in mac|ios-access) ;; *) exit 2 ;; esac
 mkdir -p .build/Results
 space_report=$(mktemp -d .build/Results/StorageSpace.XXXXXX)
 space_root=$(mktemp -d /private/tmp/usagi-disk-space.XXXXXX)
@@ -100,11 +103,23 @@ cleanup() {
 trap cleanup EXIT
 trap "exit 130" INT
 trap "exit 143" TERM
-/usr/bin/xcrun swift build --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --jobs 2
+if [ "$USAGI_NATIVE_SPACE_BACKEND" = mac ]; then
+  /usr/bin/xcrun swift build --package-path App/Tests/PersistenceProbe --scratch-path .build/Probe --jobs 2
+fi
 /usr/sbin/diskutil image create blank --format ASIF --size 128m --volumeName UsagiStorageFixture "$space_image" > "$space_report/create.log" 2>&1
 /usr/sbin/diskutil image attach --nobrowse --mountPoint "$space_mount" --plist "$space_image" > "$space_report/attach.plist"
 space_device=$(/usr/libexec/PlistBuddy -c "Print :system-entities:0:dev-entry" "$space_report/attach.plist")
 case "$space_device" in disk[0-9]*) ;; *) exit 1 ;; esac
+if [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-access ]; then
+  space_id=$(/usr/bin/uuidgen)
+  printf "%s" "$space_id" > "$space_mount/.native-access-id"
+  env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 480 --only-testing "AppTests/FrozenNativeStoreTests/persistedStoreReopensInAnotherTestHost()" --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO --setting USAGI_NATIVE_RESTART_PHASE=spaceAccess --setting "USAGI_NATIVE_RESTART_ID=$space_id" --setting "USAGI_NATIVE_SPACE_PATH=$space_mount" > "$space_report/test.log" 2>&1
+  cp "$space_mount/$space_id.access.plist" "$space_report/access.plist"
+  test "$(/usr/bin/plutil -extract id raw -o - "$space_report/access.plist")" = "$space_id"
+  test "$(/usr/bin/plutil -extract records raw -o - "$space_report/access.plist")" -eq 38
+  printf "IPHONE VOLUME REPORT: %s\\n" "$space_report"
+  exit 0
+fi
 mkdir "$space_mount/frozen"
 cp App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3/study.store.baseline.plist "$space_mount/frozen/"
 space_result=0

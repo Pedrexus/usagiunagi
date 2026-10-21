@@ -30,6 +30,7 @@ private final class FrozenStoreBundle {}
     case seed, reopen, seedAbrupt, reopenAbrupt
     case seedVerification, reopenVerification, seedCandidate, reopenCandidate
     case seedBeforeAnswer, reopenBeforeAnswer, retryBeforeAnswer, verifyBeforeAnswer
+    case spaceAccess
     var abrupt: Bool { self == .seedAbrupt || self == .reopenAbrupt }
     var seeds: Bool {
       [.seed, .seedAbrupt, .seedVerification, .seedCandidate, .seedBeforeAnswer].contains(self)
@@ -89,7 +90,7 @@ private final class FrozenStoreBundle {}
   @Test(
     .enabled(
       if: ProcessInfo.processInfo.environment["USAGI_NATIVE_RESTART_PHASE"] != nil,
-      "Requires Mainboard's two-process native-store-restart task"))
+      "Requires Mainboard's native-store fixture tasks"))
   func persistedStoreReopensInAnotherTestHost() async throws {
     let process = ProcessInfo.processInfo
     try #require(process.arguments.contains("--review-fixture"))
@@ -97,6 +98,10 @@ private final class FrozenStoreBundle {}
       process.environment["USAGI_NATIVE_RESTART_PHASE"].flatMap(RestartPhase.init(rawValue:)))
     let id = try #require(
       process.environment["USAGI_NATIVE_RESTART_ID"].flatMap(UUID.init(uuidString:)))
+    if phase == .spaceAccess {
+      try await boundedVolumeAccess(id: id)
+      return
+    }
     let manager = FileManager.default
     let root = URL.applicationSupportDirectory.appending(path: "NativeStoreRestartFixtures")
     if phase.seeds {
@@ -273,8 +278,57 @@ private final class FrozenStoreBundle {}
       Issue.record("Opening interruption phase did not use its dedicated path")
     case .seedBeforeAnswer, .reopenBeforeAnswer, .retryBeforeAnswer, .verifyBeforeAnswer:
       Issue.record("Review interruption phase did not use its dedicated path")
+    case .spaceAccess:
+      Issue.record("Volume access phase did not use its dedicated path")
     }
     try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+  }
+
+  private struct VolumeAccessReceipt: Encodable {
+    let id: UUID
+    let processID: Int32
+    let capacity: Int
+    let records: Int
+  }
+  private func boundedVolumeAccess(id: UUID) async throws {
+    let path = try #require(ProcessInfo.processInfo.environment["USAGI_NATIVE_SPACE_PATH"])
+    let volume = URL(filePath: path).resolvingSymlinksInPath()
+    let temporary = URL(filePath: "/private/tmp").resolvingSymlinksInPath()
+    try #require(
+      volume.lastPathComponent == "volume"
+        && volume.deletingLastPathComponent().lastPathComponent.hasPrefix("usagi-disk-space.")
+        && volume.deletingLastPathComponent().deletingLastPathComponent().path == temporary.path)
+    let properties = try volume.resourceValues(forKeys: [
+      .volumeNameKey, .volumeTotalCapacityKey, .volumeURLKey, .volumeIsLocalKey,
+    ])
+    print(
+      "NATIVE SPACE ACCESS: \(properties.volumeName ?? "missing"), \(properties.volumeTotalCapacity ?? -1) bytes, \(properties.volume?.path ?? "missing")"
+    )
+    let capacity = try #require(properties.volumeTotalCapacity)
+    try #require(
+      properties.volumeName == "UsagiStorageFixture" && properties.volumeIsLocal == true
+        && properties.volume?.resolvingSymlinksInPath().path == volume.path
+        && (64 * 1024 * 1024...256 * 1024 * 1024).contains(capacity))
+    try #require(
+      try Data(contentsOf: volume.appending(path: ".native-access-id")) == Data(id.uuidString.utf8))
+    let frozen = try frozenURL()
+    let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
+    let original = try family(in: frozen.deletingLastPathComponent())
+    let directory = volume.appending(path: "iPhone-access-\(id)")
+    try #require(!FileManager.default.fileExists(atPath: directory.path))
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+    for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+    let store = try await StudyStore.openApplication(in: directory)
+    try #require(try await store.nativeBaselineState() == manifest.expected)
+    try #require(try family(in: directory) == original)
+    try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+    let receipt = VolumeAccessReceipt(
+      id: id, processID: ProcessInfo.processInfo.processIdentifier, capacity: capacity,
+      records: manifest.expected.records.count)
+    try PropertyListEncoder().encode(receipt).write(
+      to: volume.appending(path: "\(id).access.plist"), options: .atomic)
+    print("NATIVE SPACE ACCESS VERIFIED: \(id), PID \(receipt.processID), 38 exact records")
+    withExtendedLifetime(store) {}
   }
 
   private func interruptedReview(

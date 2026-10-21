@@ -32,6 +32,7 @@ From the parent workspace root, use `mainboard run <task>`:
 | `usagi-test-ios` | Shared-package iOS tests |
 | `usagi-test-app-ios`, `usagi-test-app-mac` | One shared non-UI `AppTests` target in isolated iPhone/native Mac hosts; `usagi-test-app` delegates to the iPhone task |
 | `usagi-test-storage-space` | Ten cases: five bounded Mac APFS disk-full points for journal-free and committed-WAL sources; note/review saves, native adoption/selection, exact recovery, fresh retry and process reopens |
+| `usagi-test-volume-access-ios` | Fixture-only iPhone simulator access to the same bounded APFS image; production adoption compares all 38 baseline records. Access preflight only, without disk exhaustion |
 | `usagi-test-native-v1-values` | Independently compile the frozen writer/reader archives; exact historical values in fresh Mac processes, with changed/extra-source refusal |
 | `usagi-test-ui`, `usagi-test-ui-ipad` | Full iPhone/iPad acceptance except host-driven warm links |
 | `usagi-test-warm-links`, `usagi-test-warm-links-ipad` | Actual custom URL delivery into an already running synthetic app |

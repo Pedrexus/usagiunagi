@@ -825,3 +825,28 @@ Only the test probe, app task's required receipt count and documentation change.
 | `.build/Reports/WALSpaceInventoryFinal.json` | `0972501aa2b3f3d5240f6a302b9eaadf99cbdbe54f11a094b5fffd2116dbe73d` |
 
 This closes the committed-WAL variant of the existing bounded Mac space points. Native iPhone disk-full/Data Protection, earlier capture/activation combinations, actual mid-copy/inside-publication interruption, historical decoder binding before V2, real device/catalog performance and all rendered, speech, statistics, signed/watch/branding and hosted CI acceptance remain open. No new shared/app, GUI, Release, physical/signed or hosted result is claimed. The full objective remains active in [TASKS](../TASKS.md).
+
+## iPhone bounded-volume access preflight
+
+The fixture-only native iPhone host can access Mainboard's disposable 128 MB APFS image. The existing image lifecycle is now one internal `native-store-volume` task with explicit Mac and iPhone-access aliases. Each alias fixes its backend in its task environment; both pass even when the invoking shell supplies the opposite backend. The common lifecycle keeps its exact-device eject, success-only image removal and failed-image diagnostics. No app-local driver, new dependency or Mainboard package change is introduced. Root proxies and the iPhone Actions lane invoke these same tasks; the twelve restart phases and ten Mac pressure points remain separate.
+
+The existing fixture-gated Swift Testing function gains an access phase, so ordinary app suites retain their single declared protocol skip. It requires `--review-fixture`, a matching UUID marker, the canonical private temporary-root shape and the expected local mount name/capacity. It copies only the frozen store family to a new owned directory, opens it through the production `StudyStore.openApplication` path and compares every field of all 38 baseline records across both accounts. Original copied and bundled DB/WAL/SHM bytes must remain exact. A typed receipt records the UUID, host PID, volume capacity and record count. No pressure file or app-account data is involved.
+
+Final root task: `usagi-test-volume-access-ios`, report `.build/Results/StorageSpace.X63mcF`, fixture UUID `28F361C8-EA89-4FEC-959E-60C5D86F54CA`, PID 55890, capacity 127,959,040 bytes. Its sole function/execution passes without skips or native compiler/analyzer warnings/errors. The exact disk34 device is ejected; `/private/tmp/usagi-disk-space.B5liTz` is removed. A preliminary prototype rejects equivalent URL directory hints before opening; canonical filesystem-path comparison fixes that assertion. The corrected prototype also passes, but the final declared task supplies the reproducible receipt.
+
+The refactored Mac alias independently passes all ten existing space cases, with ten receipts in `StorageSpace.54Dscn`; disk34 is ejected and `/private/tmp/usagi-disk-space.82X52r` removed. Regular fixture-only AppTests passes again on iPhone (95 functions/172 executions) and Mac (83/160), each retaining exactly one declared restart-task skip, with zero native compiler/analyzer warnings/errors. Scoped parser, SwiftUI, formatter, SwiftLint, TOML and workflow checks pass with no rewrites. Inventory parses all 261 files without context issues: production stays 145 files/21,486 physical lines, tests 111/27,355 (+54), tooling five/289. V1, the canonical helper/store/manifest and historical archives retain their recorded hashes; all three owner edits remain untouched.
+
+| Final local receipt | SHA-256 |
+| --- | --- |
+| App test source | `f111c7158f7f0a5581cafd7183722dcf316b6edad3a85dc75d08dd9ada0aaa23` |
+| App Mainboard manifest | `169f1ce80b0e7bc7647cf48e787441089d60fc19a1455215a4022abb10fe961a` |
+| `StorageSpace.X63mcF/access.plist` | `a08fb8c14b1cdc0c817ad8ca4022dda99b185a2a8dd552dacdfc0f0665ae9575` |
+| `.build/Results/IPhoneVolumeTaskFinal.log` | `4131149e5eacccc65f54ee491689449c8204183a62a046b58d14169757226626` |
+| `.build/Results/IPhoneVolumeMacProtocolFinal.log` | `62253a9a7498e82965775ee7681a03efd3ed286b0be40ad92b76709632ff43a3` |
+| `test-b18cd70a3c984de2a60c1190a3b81fee.tests.json` (iPhone access) | `e30efbd59e7dcb10391883c981b01d20e4a1143de8e8d1af121010d327a2652b` |
+| `test-c135738ae915496b9913625a60303a1b.tests.json` (iPhone regression) | `3f959bfa8541f39ee8e0c33cf1a6501501a1d8c0839e9c7fd911e2b6e8f37df3` |
+| `test-7008cdf50b9944fcb3159e1a7b3a69cd.tests.json` (Mac regression) | `2d6ddbc22665ec93fb3a83d61b3f5ce1a13c16b358ea9252aa4bc5d3e2d6911b` |
+| `.build/Results/IPhoneVolumeAllLintFinal.log` | `a980dafcb72209be5775de86db7d114911651eb490bb750603e0682b7b0d309b` |
+| `.build/Reports/IPhoneVolumeInventoryFinal.json` | `28ef8a6fd02dcbab1e632ce63c4e280e3be4f4b4fe7639960550bbb02aa52bda` |
+
+This establishes simulator access/isolation and production adoption on that volume, not native iPhone disk exhaustion or recovery. Those cases, physical Data Protection/power loss, the other migration/device/performance gates and all rendered, speech, statistics, signed/watch/branding acceptance remain open. The unchanged twelve-phase restart protocol keeps its previous source scope; no new shared-suite, Release, GUI, physical/signed or hosted CI execution is claimed. Mainboard's pinned commit is still unpublished, so the Actions step is configuration only. The modernization goal remains active.
