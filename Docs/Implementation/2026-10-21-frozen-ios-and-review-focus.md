@@ -677,3 +677,25 @@ The final application root is `native-upgrade-17BEB6AD-4071-431D-8EA6-EF368DABD9
 | `.build/Results/PublicationPersistenceFinal.log` | `2a3975bb26143da168ef42f17d269d4c20172e84a872a0f8acb05842b53a1f92` |
 | `.build/Results/PublicationLintFinal.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
 | `.build/Reports/PublicationInventory.json` | `b821a35aa7c66cfb68ffdb05a86845e11d71f56d955eb7a06465181c451b4310` |
+
+## iPhone pre-answer-commit interruption
+
+The existing fixture-only NativeStoreRestart scheme now runs twelve phases, retaining its original eight and adding four for the last reading of the pinned mistaken review. The test uses public review operations to retry the meaning, saves the complete 38-record prepared state, and independently derives the completed session/account values and original wrong-meaning penalty. Its test-only ModelContext.willSave observer requires one inserted review, no deletions, the exact original item, unattempted/no-issue status, the completed session/new revision and expected mistake timestamp before writing a typed receipt and exiting 86. An observer assertion error exits 87 and cannot pass the Mainboard checkpoint guard. There is no production hook or schema change.
+
+The next host restores all 38 prepared records, the same pending reading/session revision and no outbox answer for that subject. A third host verifies that state again and retries once. It requires one precise completed submission, one unattempted answer with the original wrong-meaning count of one, expected account/session values, different revisions from the abandoned dirty ones, and exact unrelated records/two-account data. The fourth host verifies all 39 committed records through two separately opened actors, without changing the session or selecting another generation. Every phase preserves the source, retained image, original bundled fixture and selection bytes. Successful final verification removes only the UUID-bound test image/receipt.
+
+All twelve phases pass their protocol contracts for fixture ID `0903BA43-21EB-4AAA-9407-8C1408928D31`: producer PID `10192`, read-only reader `10313`, retry writer `10417` and committed verifier `10538`. Four intentional producer exits appear as Xcode code-86 runner failures; Mainboard requires the exact marker, exactly one such failure and zero skipped/expected failures. The other eight phases pass normally. All twelve build reports have zero compiler/analyzer errors or warnings. This is iPhone 18 Pro / iOS 27 simulator evidence, not physical-device Data Protection, power loss, signed upgrades or UI/keyboard acceptance.
+
+A preliminary run was stopped after the compiler identified an asynchronous filter expression selecting the optional-value overload of `#require` and leaving its Boolean unused. The final source first binds the pending array, then requires `isEmpty`. No assertion is removed or relaxed. Preliminary fixture ID `82644149-A763-4905-A9B6-8CD2D977BEA2` and its log are retained separately; they are not a completed protocol result. Final Mac hosted regression also passes: 83 functions/160 executions and the existing one declared restart skip, zero compiler/analyzer errors or warnings, bundle `test-bab1c45f80a344a79748758983d49cd6`.
+
+| Final local receipt | SHA-256 |
+| --- | --- |
+| `App/AppTests/FrozenNativeStoreTests.swift` | `efc7bec6e714ed61d01b271ad236b3d98e613ceb9b1dc8ba02c74e3eb0bd5029` |
+| App `mainboard.toml` | `3ca5ea16fc10af6513cfc3c95f4bef1d305223d9cba57a1dcf9f0abbb2e37aa8` |
+| `.build/Results/IPhonePrecommitRestartFinal.log` | `4a26051d6f291061c3b9f1a0222179af6b5081974d630b5d8b8069ca72c14cf8` |
+| `.build/Results/IPhonePrecommitMacRegressionFinal.log` | `ea6a32ba4991a76605a9251ce02a226d8a5bb42c9fb855b702a5d2c7f65c57c8` |
+| Mac tests report | `caef5d8d70dab8177767fd5372dc56b3e5e4a0c12740404d6e4d41b30d9a0f02` |
+| `.build/Results/IPhonePrecommitLintFinal.log` | `c5c20f840921c551f511eba744b327c5e1024749779178f9601582491ddca01f` |
+| `.build/Reports/IPhonePrecommitInventory.json` | `73124f4571125d6bc1009987b128828ec6a4b01d140b5d95fac649943440c957` |
+
+Parser coverage remains 261/261 files with no context issues: production 145 files/21,680 physical lines, tests 111/27,043 and tooling five/281. This adds 254 test lines; no production lines or dependencies change. Standalone Actions already invokes the same app-owned Mainboard protocol; its phase list and parent description are updated without another driver. Hosted CI/publication, historical decoder binding/V2, remaining G7 interruption/space/device cases and the other workstreams stay open in [TASKS](../TASKS.md). No GUI automation, normal account, microphone, watch delivery, signing or distribution occurs.

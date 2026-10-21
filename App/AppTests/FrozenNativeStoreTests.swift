@@ -4,13 +4,14 @@ import Darwin
 import Foundation
 import SQLite3
 import StudyCore
+import SwiftData
 import Testing
 
 @testable import StudyPersistence
 
 private final class FrozenStoreBundle {}
 
-@Suite(.timeLimit(.minutes(1))) struct FrozenNativeStoreTests {
+@Suite(.timeLimit(.minutes(1))) struct FrozenNativeStoreTests: Sendable {
   enum AdoptionCase: String, CaseIterable, Sendable {
     case control, payloadMalformed, cacheMissing, metadataMalformed
   }
@@ -28,8 +29,15 @@ private final class FrozenStoreBundle {}
   private enum RestartPhase: String {
     case seed, reopen, seedAbrupt, reopenAbrupt
     case seedVerification, reopenVerification, seedCandidate, reopenCandidate
+    case seedBeforeAnswer, reopenBeforeAnswer, retryBeforeAnswer, verifyBeforeAnswer
     var abrupt: Bool { self == .seedAbrupt || self == .reopenAbrupt }
-    var seeds: Bool { [.seed, .seedAbrupt, .seedVerification, .seedCandidate].contains(self) }
+    var seeds: Bool {
+      [.seed, .seedAbrupt, .seedVerification, .seedCandidate, .seedBeforeAnswer].contains(self)
+    }
+    var beforeAnswer: Bool {
+      [.seedBeforeAnswer, .reopenBeforeAnswer, .retryBeforeAnswer, .verifyBeforeAnswer].contains(
+        self)
+    }
     var opening: OpeningPoint? {
       switch self {
       case .seedVerification, .reopenVerification: .verification
@@ -54,6 +62,21 @@ private final class FrozenStoreBundle {}
     let selection: Data
     let main: Data?
     let wal: Data?
+  }
+  private struct ReviewRestartReceipt: Codable {
+    let id: UUID
+    let producerPID: Int32
+    var readerPID: Int32?
+    var retryPID: Int32?
+    let prepared: NativeStoreBaseline.State
+    var completed: NativeStoreBaseline.State?
+    let session: StudySession
+    let account: StudyAccountState
+    let question: StudyQuestion
+    let revision: UUID
+    let selection: Data
+    let abandonedReview: UUID
+    let abandonedSession: UUID
   }
   private let restartTimestamp: Int64 = 2_000_000_000
   private var restartSubmission: StudyReviewSubmission {
@@ -87,6 +110,13 @@ private final class FrozenStoreBundle {}
     let frozen = try frozenURL()
     let manifest = try NativeStoreBaseline.frozenManifest(at: frozen)
     let original = try family(in: frozen.deletingLastPathComponent())
+    if phase.beforeAnswer {
+      try await interruptedReview(
+        phase, id: id, directory: directory, receiptURL: receiptURL,
+        original: original, expected: manifest.expected)
+      try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+      return
+    }
     if let point = phase.opening {
       try await interruptedOpening(
         point, seeds: phase.seeds, id: id, directory: directory, receiptURL: receiptURL,
@@ -241,8 +271,210 @@ private final class FrozenStoreBundle {}
       try manager.removeItem(at: receiptURL)
     case .seedVerification, .reopenVerification, .seedCandidate, .reopenCandidate:
       Issue.record("Opening interruption phase did not use its dedicated path")
+    case .seedBeforeAnswer, .reopenBeforeAnswer, .retryBeforeAnswer, .verifyBeforeAnswer:
+      Issue.record("Review interruption phase did not use its dedicated path")
     }
     try #require(try family(in: frozen.deletingLastPathComponent()) == original)
+  }
+
+  private func interruptedReview(
+    _ phase: RestartPhase, id: UUID, directory: URL, receiptURL: URL,
+    original: [String: Data], expected: NativeStoreBaseline.State
+  ) async throws {
+    let manager = FileManager.default
+    let process = ProcessInfo.processInfo
+    let accountID = NativeStoreBaseline.accounts[0]
+    let now = Date(timeIntervalSince1970: Double(restartTimestamp))
+    if phase == .seedBeforeAnswer {
+      try #require(
+        !manager.fileExists(atPath: directory.path) && !manager.fileExists(atPath: receiptURL.path))
+      try manager.createDirectory(at: directory, withIntermediateDirectories: false)
+      for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+      let opened = try await StudyStore.openApplication(in: directory)
+      try #require(try await opened.nativeBaselineState() == expected)
+      let locations = try selectedURLs(in: directory)
+      var review = try await opened.openReviews(accountID: accountID, now: now)
+      try #require(review.subject?.id == 42 && review.saved.session.currentDecision == .incorrect)
+      review = try await opened.changeReview(
+        .advance, accountID: accountID, expectedRevision: review.saved.revision, now: now)
+      let meaning = try #require(review.question)
+      try #require(meaning.kind == .meaning)
+      let answered = try await opened.answerReview(
+        "Cat 0", question: meaning, accountID: accountID,
+        expectedRevision: review.saved.revision, now: now)
+      try #require(answered.grade == .precise)
+      review = answered.state
+      let question = try #require(review.question)
+      try #require(question.kind == .reading)
+      let prepared = try await opened.nativeBaselineState()
+      try #require(
+        prepared.schema == expected.schema && prepared.schemaVersion == expected.schemaVersion)
+      try #require(prepared.records.count == expected.records.count)
+      for before in expected.records
+      where !(before.model == "SessionRecord" && before.accountID == accountID) {
+        try #require(
+          prepared.records.first { $0.model == before.model && $0.identity == before.identity }
+            == before)
+      }
+      var session = review.saved.session
+      _ = try session.mark(.correct, for: question, now: restartTimestamp)
+      _ = session.nextQuestion()
+      try #require(session.completedSubmissions == [restartSubmission] && session.activeIDs.isEmpty)
+      try #require(session.tasksAnswered == 3 && session.tasksAnsweredCorrectly == 2)
+      var account = try #require(try await opened.accountState(accountID: accountID))
+      let progress = try #require(account.progress.firstIndex { $0.subjectID == 42 })
+      account.progress[progress].lastMistakeAt = restartTimestamp
+      let expectedSession = try NativeStoreBaseline.encoded(session)
+      let expectedAccount = try NativeStoreBaseline.encoded(account)
+      let item = try #require(session.items[0])
+      let expectedItem = try NativeStoreBaseline.encoded(item)
+      let revision = review.saved.revision
+      let submission = restartSubmission
+      let completedSession = session
+      let completedAccount = account
+      try await opened.answerAtReviewCheckpoint(
+        "ねこ", question: question, accountID: accountID, expectedRevision: revision, now: now
+      ) { context in
+        try #require(
+          context.hasChanges && context.insertedModelsArray.count == 1
+            && context.deletedModelsArray.isEmpty)
+        let queued = try #require(context.insertedModelsArray.first as? ReviewRecord)
+        let modified = context.changedModelsArray
+        let savedSession = try #require(
+          modified.compactMap { $0 as? SessionRecord }.first { $0.accountID == accountID })
+        let savedAccount = try #require(
+          modified.compactMap { $0 as? AccountRecord }.first { $0.accountID == accountID })
+        try #require(
+          queued.accountID == accountID && queued.subjectID == 42 && queued.submission == submission
+        )
+        try #require(!queued.attempted && queued.issue == nil && queued.originalAssignment == nil)
+        try #require(try NativeStoreBaseline.encoded(queued.originalItem) == expectedItem)
+        try #require(try NativeStoreBaseline.encoded(savedSession.session) == expectedSession)
+        try #require(savedSession.revision != revision)
+        try #require(try NativeStoreBaseline.encoded(savedAccount.state) == expectedAccount)
+        try #require(
+          try family(in: directory) == original && family(in: locations.retained) == original)
+        let receipt = ReviewRestartReceipt(
+          id: id, producerPID: process.processIdentifier, prepared: prepared,
+          session: completedSession, account: completedAccount, question: question,
+          revision: revision,
+          selection: locations.selector, abandonedReview: queued.revision,
+          abandonedSession: savedSession.revision)
+        try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
+        let message =
+          "NATIVE REVIEW READY FOR ABRUPT EXIT: \(id), PID \(process.processIdentifier)\n"
+        try FileHandle.standardError.write(contentsOf: Data(message.utf8))
+        _exit(86)
+      }
+      Issue.record("Completed review did not stop at its real save boundary")
+      return
+    }
+    let info = try receiptURL.resourceValues(forKeys: [
+      .isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey,
+    ])
+    try #require(info.isRegularFile == true && info.isSymbolicLink == false)
+    try #require((info.fileSize ?? 0) > 0 && (info.fileSize ?? 0) <= 16 * 1024 * 1024)
+    var receipt = try PropertyListDecoder().decode(
+      ReviewRestartReceipt.self, from: Data(contentsOf: receiptURL))
+    try #require(
+      receipt.id == id && receipt.producerPID > 0
+        && receipt.producerPID != process.processIdentifier)
+    let locations = try selectedURLs(in: directory)
+    try #require(locations.selector == receipt.selection)
+    try #require(
+      try family(in: directory) == original && family(in: locations.retained) == original)
+    if phase == .verifyBeforeAnswer {
+      let completed = try #require(receipt.completed)
+      let retryPID = try #require(receipt.retryPID)
+      try #require(retryPID > 0 && retryPID != process.processIdentifier)
+      for _ in 0..<2 {
+        let reopened = try await StudyStore.openApplication(in: directory)
+        try #require(try await reopened.nativeBaselineState() == completed)
+        let review = try await reopened.openReviews(accountID: accountID, now: now)
+        try #require(
+          review.question == nil && review.saved.session.completedSubmissions == [restartSubmission]
+        )
+        try #require(try await reopened.nativeBaselineState() == completed)
+      }
+      print(
+        "NATIVE REVIEW RETRY VERIFIED: \(id), PID \(retryPID) → \(process.processIdentifier), 39 exact records"
+      )
+      try #require(try selectedURLs(in: directory).selector == receipt.selection)
+      try #require(
+        try family(in: directory) == original && family(in: locations.retained) == original)
+      remove(directory)
+      try #require(!manager.fileExists(atPath: directory.path))
+      try manager.removeItem(at: receiptURL)
+      return
+    }
+    let opened = try await StudyStore.openApplication(in: directory)
+    try #require(try await opened.nativeBaselineState() == receipt.prepared)
+    let review = try await opened.openReviews(accountID: accountID, now: now)
+    try #require(review.question == receipt.question && review.saved.revision == receipt.revision)
+    let pendingBefore = try await opened.pendingReviews(accountID: accountID).filter {
+      $0.subjectID == 42
+    }
+    try #require(pendingBefore.isEmpty)
+    try #require(receipt.completed == nil && receipt.retryPID == nil)
+    if phase == .reopenBeforeAnswer {
+      try #require(receipt.readerPID == nil)
+      receipt.readerPID = process.processIdentifier
+      print(
+        "NATIVE REVIEW PREPARED REOPENED: \(id), PID \(receipt.producerPID) → \(process.processIdentifier), 38 exact records"
+      )
+    } else {
+      try #require(phase == .retryBeforeAnswer)
+      let readerPID = try #require(receipt.readerPID)
+      try #require(readerPID > 0 && readerPID != process.processIdentifier)
+      let answer = try await opened.answerReview(
+        "ねこ", question: receipt.question, accountID: accountID, expectedRevision: receipt.revision,
+        now: now)
+      try #require(answer.grade == .precise && answer.state.question == nil)
+      try #require(answer.state.success?.submission == restartSubmission)
+      try #require(
+        try NativeStoreBaseline.encoded(answer.state.saved.session)
+          == NativeStoreBaseline.encoded(receipt.session))
+      try #require(answer.state.saved.revision != receipt.abandonedSession)
+      let actualAccount = try await opened.accountState(accountID: accountID)
+      try #require(
+        try NativeStoreBaseline.encoded(actualAccount)
+          == NativeStoreBaseline.encoded(Optional(receipt.account)))
+      let pending = try await opened.pendingReviews(accountID: accountID).filter {
+        $0.subjectID == 42
+      }
+      let queued = try #require(pending.first)
+      try #require(
+        pending.count == 1 && queued.submission == restartSubmission && !queued.attempted)
+      try #require(
+        queued.issue == nil && queued.originalAssignment == nil
+          && queued.revision != receipt.abandonedReview)
+      try #require(
+        try NativeStoreBaseline.encoded(queued.originalItem)
+          == NativeStoreBaseline.encoded(receipt.session.items[0]))
+      let completed = try await opened.nativeBaselineState()
+      try #require(
+        completed.schema == receipt.prepared.schema
+          && completed.schemaVersion == receipt.prepared.schemaVersion)
+      try #require(completed.records.count == receipt.prepared.records.count + 1)
+      for before in receipt.prepared.records
+      where
+        !(before.accountID == accountID
+        && ["AccountRecord", "SessionRecord"].contains(before.model))
+      {
+        try #require(
+          completed.records.first { $0.model == before.model && $0.identity == before.identity }
+            == before)
+      }
+      receipt.completed = completed
+      receipt.retryPID = process.processIdentifier
+      print(
+        "NATIVE REVIEW RETRIED: \(id), PID \(process.processIdentifier), one penalized pending answer"
+      )
+    }
+    try #require(try selectedURLs(in: directory).selector == receipt.selection)
+    try #require(
+      try family(in: directory) == original && family(in: locations.retained) == original)
+    try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
   }
 
   private func interruptedOpening(
@@ -1061,5 +1293,27 @@ private final class FrozenStoreBundle {}
       }
     }
     try? manager.removeItem(at: directory)
+  }
+}
+
+extension StudyStore {
+  fileprivate func answerAtReviewCheckpoint(
+    _ answer: String, question: StudyQuestion, accountID: String, expectedRevision: UUID, now: Date,
+    checkpoint: @Sendable @escaping (ModelContext) throws -> Void
+  ) throws {
+    let center = NotificationCenter.default
+    let observer = center.addObserver(
+      forName: ModelContext.willSave, object: modelContext, queue: nil
+    ) { event in
+      do { try checkpoint(try #require(event.object as? ModelContext)) } catch {
+        let message = "NATIVE REVIEW CHECKPOINT FAILED: \(error)\n"
+        try? FileHandle.standardError.write(contentsOf: Data(message.utf8))
+        _exit(87)
+      }
+    }
+    defer { center.removeObserver(observer) }
+    _ = try answerReview(
+      answer, question: question, accountID: accountID, expectedRevision: expectedRevision, now: now
+    )
   }
 }
