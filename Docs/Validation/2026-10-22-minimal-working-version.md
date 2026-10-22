@@ -526,3 +526,19 @@ No unproven framework-level cause is asserted.
 native Mac build succeeds with zero compiler/analyzer warnings. The iPhone full run is still
 active in session 17816, testing its original products, so its endpoint failure cannot verify
 this repair. A focused iPhone endpoint and pending-coverage rerun is required after it ends.
+
+### Audio acceptance and local cache cleanup
+
+`OfflineAudio-iPad-20261022.log`, bundle `test-7125445fe296445e9113e0517f7a83df`,
+passes all three native offline-audio journeys: download/Keep/explicit deletion, visible failures
+and retry, and persistent voice/cellular choices. No audio production code changed. The full
+pre-fix iPhone run has an unresolved download-test enable-toggle assertion failure; the other
+two audio tests pass there. A focused iPhone rerun remains required before classifying that
+failure or claiming complete audio acceptance.
+
+Removed seven ignored, unused generated build directories after checking current task/workflow
+references and live xcodebuild processes: LegacyPackageReconcile, NativeCanonicalMac,
+NativeCatalogsMac, NativePackageReconcile, ProtobufPackageUpgrade, ProtobufPluginUpgrade and
+SubjectsShared. Their reported total was approximately 2.6 GiB. Current iOS/iPad/UnifiedMac/
+Watch directories, validation reports and frozen source/data fixtures remain. No tracked
+source or shared/global cache was removed by this operation.
