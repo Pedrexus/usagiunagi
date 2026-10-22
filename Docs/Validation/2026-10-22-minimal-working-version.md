@@ -134,3 +134,50 @@ no runtime, persisted field, bridge or feature is deleted in this audit.
 
 `Adaptive-BoundaryLint-20261022.log` exits zero. Physical IME, paired Watch, signed iCloud,
 and broad window-resizing/keyboard/accessibility acceptance remain open.
+
+## Full hosted regression and test-selection safeguard
+
+`Regression-HostedIOS-20261022.log` passes 85 test functions (154 parameterized
+executions), with one deliberate separate-process restart skip. The corresponding
+Mac log passes 67 functions (134 executions), with the same skip. Neither suite
+reports runtime warnings. These are isolated fixtures, not physical-device acceptance.
+
+Mainboard commit `fa467e0` now rejects a native passing result when an explicitly
+selected exact test method is absent. It preserves Xcode's summary and reports
+`missing_selectors`, accounting for skipped cases, explicit exclusions and parameter
+labels. All 85 Apple integration checks pass; the isolated package type check reports
+zero diagnostics with its two existing suppressions. Initial failing trials remain
+in Mainboard's `build/apple-selectors-20261022` and temporary type-check receipts.
+
+The remote lookup for the workflow's `b34c931` pin still returns HTTP 422. The published
+remote revision lacks the required Apple tooling, so substituting it would break the
+workflow. No tooling or app commits were pushed; hosted CI remains unverified.
+
+## Further dead-code audit
+
+Removed the unused duplicate `Tsurukame Complication (Complication)` scheme. Its build
+references duplicated the maintained Watch scheme; the only execution distinction was
+an old complication launch substyle. The current Watch app and WidgetKit extension,
+maintained Watch scheme and CI references remain intact.
+
+The declaration/reference scan found no orphaned UI or persistence functions beyond
+framework entry points and protocol callbacks. Frozen receipt fields that appear only
+in declarations are Codable storage contracts, not dead settings; they remain intact.
+
+The Core audit also removes `UploadCoordinator.swift` (82 lines) and its isolated
+`UploadCoordinatorTests.swift` (128 lines). All four obsolete types were referenced only
+inside those two files. Production uploads already run through `StudyStore.uploadPending`,
+with durable SwiftData acknowledgements and account/run cancellation guards. Its active
+persistence regression suites remain. The removed test count must not be presented as
+lost coverage of the current upload path.
+
+`Cleanup-WatchBuild-20261022.log` passes after the scheme removal with zero compiler or
+analyzer warnings. This precedes the dead coordinator removal; final shared verification
+is recorded separately below.
+
+Final `Cleanup-SharedTests-20261022.log` passes all remaining shared suites after
+removal. `Cleanup-Lint-20261022.log` checks 437 files, rewrites none and reports no
+failures. The frozen V1 schema retains SHA256
+`538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`;
+all five frozen writer/baseline checksums verify. This cleanup deletes 304 code/config/
+test lines and does not remove any active UI, grading or upload path.

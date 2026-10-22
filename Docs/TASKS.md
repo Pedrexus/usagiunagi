@@ -353,3 +353,17 @@ The [migration specification](Migration.md) retains M1–M8, P0–P8 and G1–G1
 - [Typed diagnostics and parity](Validation/2026-10-20-native-diagnostics-and-parity.json): 508/69 shared scope, dirty-save rollback/reopen and native sharing/audio acceptance with exact limits.
 - [Catalog and persistence rules](Validation/2026-10-20-native-catalog-and-persistence-rules.json): 513/71 scope and earlier native catalog results/failures; warnings remain scoped.
 - [Last accepted checkpoint](Validation/2026-10-20-native-practice-parser-and-upgrade-probe.json): 523/72 shared scope, final native catalog/practice/settings evidence, parser/Release/disposable upgrade experiment. It accepts neither current deletion nor the new persistence/cloud implementation.
+
+## Latest cleanup checkpoint — October 22
+
+Full hosted iPhone/Mac regressions and the exact-method Mainboard execution safeguard
+are recorded in [the current validation receipt](Validation/2026-10-22-minimal-working-version.md#full-hosted-regression-and-test-selection-safeguard).
+The duplicate historical complication scheme is removed. Continue auditing unused
+runtime declarations; preserve frozen Codable/store contracts and live native bridges.
+Physical paired Watch voice, signed iCloud synchronization, broader accessibility and
+hosted CI publication/acceptance remain open. No push or distribution was performed.
+The follow-up Core audit removes the unreferenced upload coordinator and its private
+regression suite; the active SwiftData upload tests remain and pass. Final shared tests
+and all configured Mainboard lint checks pass after removal. Frozen schema and fixture
+checksums are unchanged. Remaining historical Codable identities are required by existing
+native stores, and are not candidates for unversioned deletion.
