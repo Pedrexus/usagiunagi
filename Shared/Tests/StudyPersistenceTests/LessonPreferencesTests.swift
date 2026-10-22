@@ -9,7 +9,7 @@ struct LessonPreferencesTests {
     var profile = StudyAccountProfile(username: "Lesson fixture")
     profile.level = 2
     profile.maxLevelGranted = 3
-    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var source = NativeStoreFixture(profile: profile)
     for id in 1...4 {
       var subject = CatalogSubject(
         id: Int64(id), kind: id == 1 ? .radical : id == 2 ? .kanji : .vocabulary)
@@ -31,9 +31,7 @@ struct LessonPreferencesTests {
       source.subjects.append(subject)
       source.assignments.append(assignment)
     }
-    _ = try await store.importLegacyAccount(
-      source, sourceID: "lessons", verifiedAccountID: "account",
-      verifiedUsername: profile.username, credentialID: "credential")
+    try await store.seedFixture(source, accountID: "account", credentialID: "credential")
     return store
   }
   @Test func lessonSelectionUsesTheSameOrderAndKanaChoiceAsHome() async throws {

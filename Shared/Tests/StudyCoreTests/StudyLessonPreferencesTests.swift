@@ -72,7 +72,7 @@ import Testing
     var profile = StudyAccountProfile(username: "Fixture")
     profile.level = 2
     profile.maxLevelGranted = 3
-    let account = StudyAccountState(legacy: .init(schemaVersion: 15, profile: profile))
+    let account = StudyAccountState(download: .init(accountID: "fixture", profile: profile))
     let subjects = (1...5).map { id in
       var item = CatalogSubject(
         id: Int64(id), kind: id == 1 ? .radical : id == 2 ? .kanji : .vocabulary)

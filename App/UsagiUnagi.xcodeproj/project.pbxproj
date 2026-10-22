@@ -17,13 +17,10 @@
 		326C7AFEFEC1146179A2AFA0 /* ReviewSessionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */; };
 		3D096CD2C178F453FEF79064 /* MacReviewModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */; platformFilter = macos; };
 		5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
-		5B1A927DDEFE977E32C2EC84 /* LegacyStudyImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */; };
 		5E08C809E1400FA7702A85B4 /* NativeStudyFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42EAD31B1612979F2E9C72DB /* NativeStudyFixture.swift */; };
 		60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 23A08FB0407E2600C582ED6F /* StudyUI */; };
 		62E97290C5F91A414D8D0AA4 /* ReviewFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D10B2D3D08A158BC522063 /* ReviewFlowTests.swift */; platformFilter = ios; };
 		631CAD67234AF962008CEA73 /* AnswerCheckerTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 631CAD66234AF962008CEA73 /* AnswerCheckerTest.swift */; };
-		637CA18725D7F5A10082580E /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; productRef = 637CA18625D7F5A10082580E /* SwiftProtobuf */; };
-		63A702152C2920D500AB0504 /* WaniKaniAPI in Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; productRef = 63A702142C2920D500AB0504 /* WaniKaniAPI */; };
 		63A711E42BBBF6C40047436A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 63A711E32BBBF6C40047436A /* PrivacyInfo.xcprivacy */; platformFilter = ios; };
 		63A711E72BBBF87B0047436A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 63A711E52BBBF8190047436A /* PrivacyInfo.xcprivacy */; };
 		6DF440FA84D10AC573496F61 /* StudyAppAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5FAA8DC32D15C9C3AEAA7C /* StudyAppAssembly.swift */; };
@@ -44,10 +41,6 @@
 		A27B00000000000000000001 /* NotificationFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27B00000000000000000002 /* NotificationFixture.swift */; };
 		A28000000000000000000001 /* StudyApplicationOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28000000000000000000002 /* StudyApplicationOwner.swift */; };
 		A28100000000000000000001 /* NativeRootFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28100000000000000000002 /* NativeRootFlowTests.swift */; platformFilter = ios; };
-		A28500000000000000000003 /* LegacyPreferenceImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000001 /* LegacyPreferenceImporter.swift */; platformFilter = ios; };
-		A28500000000000000000004 /* LegacyPreferenceSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000002 /* LegacyPreferenceSchema.swift */; platformFilter = ios; };
-		A28500000000000000000005 /* LegacyPreferenceImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000001 /* LegacyPreferenceImporter.swift */; };
-		A28500000000000000000006 /* LegacyPreferenceSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28500000000000000000002 /* LegacyPreferenceSchema.swift */; };
 		A2860000000000000000000E /* StudyComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2860000000000000000000D /* StudyComplication.swift */; };
 		A2860000000000000000000F /* WatchCompanionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */; };
 		A28600000000000000000010 /* WatchWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A28600000000000000000002 /* WatchWidgets.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -56,17 +49,13 @@
 		A28700000000000000000001 /* WatchCompanionCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28700000000000000000002 /* WatchCompanionCacheTests.swift */; };
 		A28700000000000000000003 /* WatchCompanionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */; };
 		A28800000000000000000001 /* FrozenNativeStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28800000000000000000002 /* FrozenNativeStoreTests.swift */; };
-		A28800000000000000000003 /* NativeStoreBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28800000000000000000004 /* NativeStoreBaseline.swift */; };
+		A28800000000000000000003 /* NativeStoreSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28800000000000000000004 /* NativeStoreSnapshot.swift */; };
 		A28800000000000000000005 /* native-v0-186c1cc3 in Resources */ = {isa = PBXBuildFile; fileRef = A28800000000000000000006 /* native-v0-186c1cc3 */; };
-		A28900000000000000000001 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 637CA18625D7F5A10082580E /* SwiftProtobuf */; };
-		A28900000000000000000002 /* WaniKaniAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 63A702142C2920D500AB0504 /* WaniKaniAPI */; };
 		A7AC4D2FC92ED19AAC0BA475 /* LessonPreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */; };
 		A97D950983A67C19E13A899F /* MacStatisticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */; platformFilter = macos; };
-		B8046F54DB4F1D8BAF0E4C80 /* LegacyStudyImporterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */; };
 		BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 46D1D93DB77B42DE86804E5F /* InfoPlist.strings */; };
 		C87EB1EE32148A9CC8342DFB /* MacLessonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B881D213C2680BC8C542CEEE /* MacLessonTests.swift */; platformFilter = macos; };
 		C90846C0237F1C790068A272 /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90846BF237F1C790068A272 /* WatchApp.swift */; };
-		C90846C2237F1C790068A272 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90846C1237F1C790068A272 /* ComplicationController.swift */; };
 		C90846C8237F1C790068A272 /* Tsurukame Complication.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = C90846AC237F1C770068A272 /* Tsurukame Complication.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C92AB96F237F280300F79904 /* WatchHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB96E237F280300F79904 /* WatchHelper.swift */; platformFilter = ios; };
 		C92AB970237F2DB600F79904 /* WatchHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92AB96E237F280300F79904 /* WatchHelper.swift */; };
@@ -75,7 +64,6 @@
 		CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */; platformFilter = ios; };
 		DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */; };
 		F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */; };
-		FFDC4714E0B50FC1EF60E822 /* LegacyStudyImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */; platformFilter = ios; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,7 +126,6 @@
 		A29A00000000000000000010 /* WatchReviewMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReviewMessage.swift; sourceTree = "<group>"; };
 		A29A00000000000000000011 /* WatchReviewHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReviewHost.swift; sourceTree = "<group>"; };
 		A29A00000000000000000012 /* WatchVoiceReview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVoiceReview.swift; sourceTree = "<group>"; };
-		0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegacyStudyImporter.swift; sourceTree = "<group>"; };
 		27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
 		28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LessonPreferenceTests.swift; sourceTree = "<group>"; };
 		2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacReviewModeTests.swift; path = AppStoreScreenshots/MacReviewModeTests.swift; sourceTree = "<group>"; };
@@ -146,7 +133,6 @@
 		36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsagiUnagiApp.swift; sourceTree = "<group>"; };
 		3756F7F4B1B96F207317CD15 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacStatisticsTests.swift; path = AppStoreScreenshots/MacStatisticsTests.swift; sourceTree = "<group>"; };
-		3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegacyStudyImporterTest.swift; sourceTree = "<group>"; };
 		3F5FAA8DC32D15C9C3AEAA7C /* StudyAppAssembly.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StudyAppAssembly.swift; path = Application/StudyAppAssembly.swift; sourceTree = "<group>"; };
 		42EAD31B1612979F2E9C72DB /* NativeStudyFixture.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeStudyFixture.swift; sourceTree = "<group>"; };
 		46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyStatisticsTest.swift; sourceTree = "<group>"; };
@@ -154,15 +140,12 @@
 		55D8D2CA6860CA263F708E85 /* Debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Configuration/Debug.xcconfig; sourceTree = "<group>"; };
 		61D10B2D3D08A158BC522063 /* ReviewFlowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReviewFlowTests.swift; sourceTree = "<group>"; };
 		6319C9B520441DE200C31F87 /* Tsurukame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tsurukame.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		631CAD62234AD5FC008CEA73 /* AnswerChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerChecker.swift; sourceTree = "<group>"; };
 		631CAD66234AF962008CEA73 /* AnswerCheckerTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerCheckerTest.swift; sourceTree = "<group>"; };
-		633252872727E8A700ABBA04 /* LegacyCatalogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LegacyCatalogViewController.swift; path = Features/Catalog/LegacyCatalogViewController.swift; sourceTree = "<group>"; };
 		6335B46223CF0C820071671E /* AppStoreScreenshots.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppStoreScreenshots.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6335B46623CF0C820071671E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6356E7821FDFF0E3009CE7C1 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		63A711E32BBBF6C40047436A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		63A711E52BBBF8190047436A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		63E1386727E59F4100AC4706 /* FullRefreshOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullRefreshOverlayView.swift; sourceTree = "<group>"; };
 		63EEFEC21FC45CB10070C05F /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6C85812902528942C1AAB9B5 /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Localizations/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		791B8B602D659106000C8142 /* RecentMistakesTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentMistakesTest.swift; sourceTree = "<group>"; };
@@ -178,8 +161,6 @@
 		A27B00000000000000000002 /* NotificationFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationFixture.swift; sourceTree = "<group>"; };
 		A28000000000000000000002 /* StudyApplicationOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyApplicationOwner.swift; path = Application/StudyApplicationOwner.swift; sourceTree = "<group>"; };
 		A28100000000000000000002 /* NativeRootFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRootFlowTests.swift; sourceTree = "<group>"; };
-		A28500000000000000000001 /* LegacyPreferenceImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LegacyPreferenceImporter.swift; path = Application/LegacyPreferenceImporter.swift; sourceTree = "<group>"; };
-		A28500000000000000000002 /* LegacyPreferenceSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LegacyPreferenceSchema.swift; path = Application/LegacyPreferenceSchema.swift; sourceTree = "<group>"; };
 		A28600000000000000000002 /* WatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2860000000000000000000D /* StudyComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyComplication.swift; sourceTree = "<group>"; };
 		A28600000000000000000011 /* WatchShared.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WatchShared.entitlements; sourceTree = "<group>"; };
@@ -188,7 +169,7 @@
 		A28600000000000000000014 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A28700000000000000000002 /* WatchCompanionCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCompanionCacheTests.swift; sourceTree = "<group>"; };
 		A28800000000000000000002 /* FrozenNativeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrozenNativeStoreTests.swift; sourceTree = "<group>"; };
-		A28800000000000000000004 /* NativeStoreBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeStoreBaseline.swift; path = ../Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreBaseline.swift; sourceTree = "<group>"; };
+		A28800000000000000000004 /* NativeStoreSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeStoreSnapshot.swift; path = ../Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreSnapshot.swift; sourceTree = "<group>"; };
 		A28800000000000000000006 /* native-v0-186c1cc3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-v0-186c1cc3"; path = "../Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3"; sourceTree = "<group>"; };
 		B881D213C2680BC8C542CEEE /* MacLessonTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacLessonTests.swift; path = AppStoreScreenshots/MacLessonTests.swift; sourceTree = "<group>"; };
 		B8DA01B76750F7A065DA04D3 /* Release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Configuration/Release.xcconfig; sourceTree = "<group>"; };
@@ -196,7 +177,6 @@
 		C90846AC237F1C770068A272 /* Tsurukame Complication.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tsurukame Complication.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C90846B3237F1C780068A272 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C90846BF237F1C790068A272 /* WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchApp.swift; sourceTree = "<group>"; };
-		C90846C1237F1C790068A272 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		C92AB96E237F280300F79904 /* WatchHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHelper.swift; sourceTree = "<group>"; };
 		C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCompanionCache.swift; sourceTree = "<group>"; };
 		C943D5AF2380D59A004A7969 /* WatchSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSettingsView.swift; sourceTree = "<group>"; };
@@ -212,8 +192,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63A702152C2920D500AB0504 /* WaniKaniAPI in Frameworks */,
-				637CA18725D7F5A10082580E /* SwiftProtobuf in Frameworks */,
 				047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */,
 				60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */,
 				0833BA0BAAC68D162D964D99 /* StudySpeech in Frameworks */,
@@ -239,8 +217,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A28900000000000000000001 /* SwiftProtobuf in Frameworks */,
-				A28900000000000000000002 /* WaniKaniAPI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,24 +246,18 @@
 			isa = PBXGroup;
 			children = (
 				A27000000000000000000003 /* AppTests.xctest */,
-				631CAD62234AD5FC008CEA73 /* AnswerChecker.swift */,
 				6335B46323CF0C820071671E /* AppStoreScreenshots */,
 				6335B46223CF0C820071671E /* AppStoreScreenshots.xctest */,
 				C90846AD237F1C770068A272 /* Watch */,
 				63CAAB0F1FD7FAC500E09DA1 /* Frameworks */,
-				63E1386727E59F4100AC4706 /* FullRefreshOverlayView.swift */,
 				63EEFEC21FC45CB10070C05F /* Info.plist */,
 				41897D922372287F00F6A0B7 /* Resources */,
-				A28500000000000000000001 /* LegacyPreferenceImporter.swift */,
-				A28500000000000000000002 /* LegacyPreferenceSchema.swift */,
-				633252872727E8A700ABBA04 /* LegacyCatalogViewController.swift */,
 				63E9A8DB21199C2600418CE1 /* AppTests */,
 				6319C9B520441DE200C31F87 /* Tsurukame.app */,
 				C90846AC237F1C770068A272 /* Tsurukame Complication.app */,
 				A28600000000000000000002 /* WatchWidgets.appex */,
 				C92AB96E237F280300F79904 /* WatchHelper.swift */,
 				FD13A2CE121FE15697154013 /* Branding */,
-				0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */,
 				36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */,
 				3F5FAA8DC32D15C9C3AEAA7C /* StudyAppAssembly.swift */,
 				A28000000000000000000002 /* StudyApplicationOwner.swift */,
@@ -331,7 +301,6 @@
 				46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */,
 				E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */,
 				E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */,
-				3C0E3FA04E4BEA47BC7B2EAB /* LegacyStudyImporterTest.swift */,
 				A27100000000000000000002 /* FontLibraryTests.swift */,
 				A27700000000000000000002 /* StudyShellStateTests.swift */,
 				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
@@ -342,7 +311,7 @@
 				28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */,
 				2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */,
 				CDCF339AD753BED5324CE83C /* SubjectPreferenceArchiveTests.swift */,
-				A28800000000000000000004 /* NativeStoreBaseline.swift */,
+				A28800000000000000000004 /* NativeStoreSnapshot.swift */,
 				A28800000000000000000006 /* native-v0-186c1cc3 */,
 			);
 			path = AppTests;
@@ -368,7 +337,6 @@
 				A29A00000000000000000010 /* WatchReviewMessage.swift */,
 				A29A00000000000000000011 /* WatchReviewHost.swift */,
 				A29A00000000000000000012 /* WatchVoiceReview.swift */,
-				C90846C1237F1C790068A272 /* ComplicationController.swift */,
 				A28600000000000000000011 /* WatchShared.entitlements */,
 				A2860000000000000000000C /* WatchWidgets */,
 			);
@@ -405,8 +373,6 @@
 			);
 			name = Tsurukame;
 			packageProductDependencies = (
-				637CA18625D7F5A10082580E /* SwiftProtobuf */,
-				63A702142C2920D500AB0504 /* WaniKaniAPI */,
 				3B5F84B9E7F40CE19F2FDE97 /* StudyCore */,
 				23A08FB0407E2600C582ED6F /* StudyUI */,
 				5E2663408318DBE16C356C9A /* StudySpeech */,
@@ -449,8 +415,6 @@
 			);
 			name = AppTests;
 			packageProductDependencies = (
-				637CA18625D7F5A10082580E /* SwiftProtobuf */,
-				63A702142C2920D500AB0504 /* WaniKaniAPI */,
 			);
 			productName = AppTests;
 			productReference = A27000000000000000000003 /* AppTests.xctest */;
@@ -545,8 +509,6 @@
 			);
 			mainGroup = 630FD60A1FC45BDF00D21C1F;
 			packageReferences = (
-				637CA18525D7F5A10082580E /* XCRemoteSwiftPackageReference "swift-protobuf" */,
-				63A702132C2920D500AB0504 /* XCLocalSwiftPackageReference "WaniKaniAPI" */,
 				4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "../Shared" */,
 			);
 			productRefGroup = 630FD60A1FC45BDF00D21C1F;
@@ -616,13 +578,10 @@
 				A27100000000000000000004 /* FontFixture.swift in Sources */,
 				A27B00000000000000000001 /* NotificationFixture.swift in Sources */,
 				A27200000000000000000001 /* AudioFixture.swift in Sources */,
-				A28500000000000000000003 /* LegacyPreferenceImporter.swift in Sources */,
-				A28500000000000000000004 /* LegacyPreferenceSchema.swift in Sources */,
 				C92AB96F237F280300F79904 /* WatchHelper.swift in Sources */,
 				A29A00000000000000000001 /* WatchReviewMessage.swift in Sources */,
 				A29A00000000000000000003 /* WatchReviewHost.swift in Sources */,
 				90F5517AFA8C466B4B73DC91 /* AppIdentity.swift in Sources */,
-				FFDC4714E0B50FC1EF60E822 /* LegacyStudyImporter.swift in Sources */,
 				6F5E06F1F9BD785F9E3BDC4E /* UsagiUnagiApp.swift in Sources */,
 				6DF440FA84D10AC573496F61 /* StudyAppAssembly.swift in Sources */,
 				A28000000000000000000001 /* StudyApplicationOwner.swift in Sources */,
@@ -653,16 +612,12 @@
 				A28700000000000000000001 /* WatchCompanionCacheTests.swift in Sources */,
 				A28700000000000000000003 /* WatchCompanionCache.swift in Sources */,
 				A28800000000000000000001 /* FrozenNativeStoreTests.swift in Sources */,
-				A28800000000000000000003 /* NativeStoreBaseline.swift in Sources */,
-				A28500000000000000000005 /* LegacyPreferenceImporter.swift in Sources */,
-				A28500000000000000000006 /* LegacyPreferenceSchema.swift in Sources */,
+				A28800000000000000000003 /* NativeStoreSnapshot.swift in Sources */,
 				791B8B612D659106000C8142 /* RecentMistakesTest.swift in Sources */,
 				631CAD67234AF962008CEA73 /* AnswerCheckerTest.swift in Sources */,
 				DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */,
 				CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */,
 				326C7AFEFEC1146179A2AFA0 /* ReviewSessionTest.swift in Sources */,
-				5B1A927DDEFE977E32C2EC84 /* LegacyStudyImporter.swift in Sources */,
-				B8046F54DB4F1D8BAF0E4C80 /* LegacyStudyImporterTest.swift in Sources */,
 				A27000000000000000000001 /* NotificationPreferencesTests.swift in Sources */,
 				F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */,
 				A7AC4D2FC92ED19AAC0BA475 /* LessonPreferenceTests.swift in Sources */,
@@ -684,7 +639,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C90846C0237F1C790068A272 /* WatchApp.swift in Sources */,
-				C90846C2237F1C790068A272 /* ComplicationController.swift in Sources */,
 				C943D5B02380D59B004A7969 /* WatchSettingsView.swift in Sources */,
 				C92AB972237F2E8200F79904 /* WatchCompanionCache.swift in Sources */,
 				C92AB970237F2DB600F79904 /* WatchHelper.swift in Sources */,
@@ -1259,22 +1213,7 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../Shared;
 		};
-		63A702132C2920D500AB0504 /* XCLocalSwiftPackageReference "WaniKaniAPI" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = WaniKaniAPI;
-		};
 /* End XCLocalSwiftPackageReference section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		637CA18525D7F5A10082580E /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-protobuf";
-			requirement = {
-				kind = exactVersion;
-				version = 1.39.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		19C915BF6736A5F43D155E73 /* StudyPersistence */ = {
@@ -1296,16 +1235,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "../Shared" */;
 			productName = StudySpeech;
-		};
-		637CA18625D7F5A10082580E /* SwiftProtobuf */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 637CA18525D7F5A10082580E /* XCRemoteSwiftPackageReference "swift-protobuf" */;
-			productName = SwiftProtobuf;
-		};
-		63A702142C2920D500AB0504 /* WaniKaniAPI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 63A702132C2920D500AB0504 /* XCLocalSwiftPackageReference "WaniKaniAPI" */;
-			productName = WaniKaniAPI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

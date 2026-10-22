@@ -10,5 +10,6 @@ let package = Package(
       dependencies: [
         .product(name: "StudyPersistence", package: "Shared"),
         .product(name: "StudyCore", package: "Shared"),
-      ])
+      ],
+      exclude: ["NativeStoreBaseline.swift"])
   ], swiftLanguageModes: [.v6])

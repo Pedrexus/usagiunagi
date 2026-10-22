@@ -92,7 +92,7 @@ struct ReviewRecoveryTests {
     other.availableAt = 100
     other.startedAt = 1
     other.unlockedAt = 1
-    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var source = NativeStoreFixture(profile: profile)
     source.subjects = [subject, second]
     source.assignments = [first, other]
     source.progress = [
@@ -102,12 +102,9 @@ struct ReviewRecoveryTests {
     ]
     source.materials = [
       .init(
-        serverID: 202, value: .init(subjectID: 2, meaningNote: "Unrelated note"), pending: false,
-        legacyRevision: 0)
+        serverID: 202, value: .init(subjectID: 2, meaningNote: "Unrelated note"), pending: false)
     ]
-    _ = try await store.importLegacyAccount(
-      source, sourceID: "recovery-fixture", verifiedAccountID: accountID,
-      verifiedUsername: "fixture", credentialID: "credential")
+    try await store.seedFixture(source, accountID: accountID, credentialID: "credential")
     var items = [
       StudySessionItem(
         id: 0, subjectID: 1, assignmentID: 101, srsStage: first.srsStage,

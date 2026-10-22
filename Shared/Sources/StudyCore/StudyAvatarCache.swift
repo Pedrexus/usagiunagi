@@ -1,26 +1,22 @@
-import CryptoKit
 import Foundation
 import ImageIO
 
-/// Loads public avatars and imports the former Haneke cache without its Objective-C dependency.
-public actor LegacyAvatarCache {
+/// Decodes bounded avatar images using the shared HTTP cache.
+public actor StudyAvatarCache {
   public typealias Transport = @Sendable (URLRequest) async throws -> (Data, URLResponse)
-  private let directory: URL
   private let cache: URLCache
   private let transport: Transport
   private var generation = UUID()
   public init(
-    directory: URL, cache: URLCache = .shared,
-    transport: @escaping Transport = LegacyAvatarCache.download
+    cache: URLCache = .shared,
+    transport: @escaping Transport = StudyAvatarCache.download
   ) {
-    self.directory = directory
     self.cache = cache
     self.transport = transport
   }
 
   public func image(at url: URL) async throws -> CGImage {
     try Task.checkCancellation()
-    restore(url)
     let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
     if let cached = cache.cachedResponse(for: request), let decoded = Self.decode(cached.data) {
       return decoded.image
@@ -38,49 +34,6 @@ public actor LegacyAvatarCache {
       cache.storeCachedResponse(CachedURLResponse(response: response, data: data), for: request)
     }
     return decoded.image
-  }
-
-  @discardableResult public func restore(_ url: URL) -> Bool {
-    let request = URLRequest(url: url)
-    guard cache.cachedResponse(for: request) == nil else { return false }
-    let digest = Insecure.MD5.hash(data: Data(url.absoluteString.utf8)).map {
-      String(format: "%02x", $0)
-    }.joined()
-    let manager = FileManager.default
-    let keys: Set<URLResourceKey> = [.isRegularFileKey, .fileSizeKey, .contentModificationDateKey]
-    let formats =
-      (try? manager.contentsOfDirectory(
-        at: directory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
-    let files: [URL] = formats.flatMap { format in
-      (try? manager.contentsOfDirectory(
-        at: format, includingPropertiesForKeys: Array(keys), options: .skipsHiddenFiles)) ?? []
-    }
-    let matches = files.filter { file in
-      file.lastPathComponent.removingPercentEncoding == url.absoluteString
-        || file.deletingPathExtension().lastPathComponent == digest
-    }
-    let candidates = matches.sorted { left, right in
-      let leftDate =
-        (try? left.resourceValues(forKeys: keys).contentModificationDate) ?? Date.distantPast
-      let rightDate =
-        (try? right.resourceValues(forKeys: keys).contentModificationDate) ?? Date.distantPast
-      return leftDate > rightDate
-    }
-    for file in candidates {
-      guard !Task.isCancelled,
-        let metadata = try? file.resourceValues(forKeys: keys), metadata.isRegularFile == true,
-        let size = metadata.fileSize, (1...5_000_000).contains(size),
-        let data = try? Data(contentsOf: file), data.count <= 5_000_000,
-        let decoded = Self.decode(data), ["public.png", "public.jpeg"].contains(decoded.type),
-        let response = HTTPURLResponse(
-          url: url, statusCode: 200, httpVersion: "HTTP/1.1",
-          headerFields: ["Content-Type": decoded.type == "public.png" ? "image/png" : "image/jpeg"])
-      else { continue }
-      guard !Task.isCancelled, cache.cachedResponse(for: request) == nil else { return false }
-      cache.storeCachedResponse(CachedURLResponse(response: response, data: data), for: request)
-      return true
-    }
-    return false
   }
 
   private static func decode(_ data: Data) -> (image: CGImage, type: String)? {
@@ -116,9 +69,8 @@ public actor LegacyAvatarCache {
     try await session.data(for: request)
   }
 
-  public func clear() throws {
+  public func clear() {
     generation = UUID()
     cache.removeAllCachedResponses()
-    do { try FileManager.default.removeItem(at: directory) } catch CocoaError.fileNoSuchFile {}
   }
 }

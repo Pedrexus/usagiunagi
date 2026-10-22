@@ -122,20 +122,6 @@ import SwiftUI
       else { throw StudyStoreOpeningError.alreadyOpen }
     #endif
     let store = try await StudyStore.openApplication(in: directory)
-    var media = StudyMediaLayout.native
-    #if os(iOS)
-      let bootstrap = StudyLegacyBootstrap(
-        store: store, sourceID: "ios-main",
-        credentials: KeychainStudyCredentialStore(service: "TsurukameNative.WaniKani"),
-        preferences: .init(defaults: .standard),
-        readLegacy: {
-          try LegacyStudyImporter.source(
-            database: LegacyStudyImporter.databaseURL, defaults: .standard)
-        })
-      media = try await bootstrap.prepareApplication(legacyToken: {
-        try LegacyPreferenceImporter.token(defaults: .standard)
-      })
-    #endif
     let endpoint =
       UserDefaults.standard.string(forKey: "native.apiBaseUrl")
       ?? WaniKaniClient.defaultBaseURL.absoluteString
@@ -143,8 +129,8 @@ import SwiftUI
       let normalized = DeveloperEndpoint.normalized(
         endpoint,
         defaultURL: WaniKaniClient.defaultBaseURL.absoluteString), let url = URL(string: normalized)
-    else { throw StudyPreferenceImportError.invalidDestination("native.apiBaseUrl") }
-    return .make(mediaLayout: media, baseURL: url, store: store)
+    else { throw StudySignInError.message("The saved WaniKani API address is invalid.") }
+    return .make(baseURL: url, store: store)
   }
 }
 

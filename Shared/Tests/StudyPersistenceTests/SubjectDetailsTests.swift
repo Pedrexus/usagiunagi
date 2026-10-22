@@ -58,11 +58,9 @@ struct SubjectDetailsTests {
     locked.level = 4
     var available = CatalogSubject(id: 3, kind: .radical)
     available.level = 2
-    var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var fixture = NativeStoreFixture(profile: profile)
     fixture.subjects = [allowed, locked, available]
-    _ = try await store.importLegacyAccount(
-      fixture, sourceID: "limited", verifiedAccountID: account,
-      verifiedUsername: profile.username, credentialID: "limited")
+    try await store.seedFixture(fixture, accountID: account, credentialID: "limited")
     let details = try await store.subjectDetails(subjectID: 1, accountID: account)
     #expect(details.components.map(\.id) == [3])
     #expect(details.unavailableRelatedCount == 2)
@@ -78,7 +76,7 @@ extension SubjectDetailsTests {
     var profile = StudyAccountProfile(username: "Exclusion fixture")
     profile.level = 1
     profile.maxLevelGranted = 3
-    var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var fixture = NativeStoreFixture(profile: profile)
     for id in 1...5 {
       var subject = CatalogSubject(id: Int64(id), kind: id == 3 ? .kanji : .vocabulary)
       subject.level = id == 5 ? 4 : 1
@@ -104,11 +102,9 @@ extension SubjectDetailsTests {
         serverID: 71,
         value: .init(
           subjectID: 1, meaningNote: " \nSaved note 🐰\n", readingNote: "reading",
-          meaningSynonyms: ["Single"]), pending: false, legacyRevision: 0)
+          meaningSynonyms: ["Single"]), pending: false)
     ]
-    _ = try await store.importLegacyAccount(
-      fixture, sourceID: "exclusion", verifiedAccountID: account,
-      verifiedUsername: profile.username, credentialID: "fixture")
+    try await store.seedFixture(fixture, accountID: account, credentialID: "fixture")
     return store
   }
   @Test func exclusionUsesTheLatestNotesAndPreservesServerIdentityAndSelectionRules() async throws {

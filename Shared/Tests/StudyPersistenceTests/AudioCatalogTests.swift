@@ -9,7 +9,7 @@ struct AudioCatalogTests {
     var profile = StudyAccountProfile(username: "Audio fixture")
     profile.level = 2
     profile.maxLevelGranted = 3
-    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var source = NativeStoreFixture(profile: profile)
     source.voices = [StudyVoiceActor(id: 7)]
     source.subjects = (1...4).map { id in
       var subject = CatalogSubject(id: Int64(id), kind: .vocabulary)
@@ -18,9 +18,7 @@ struct AudioCatalogTests {
       if id == 2 { subject.hiddenAt = 1 }
       return subject
     }
-    _ = try await store.importLegacyAccount(
-      source, sourceID: "audio", verifiedAccountID: "account",
-      verifiedUsername: profile.username, credentialID: "credential")
+    try await store.seedFixture(source, accountID: "account", credentialID: "credential")
     let catalog = try await store.audioCatalog(accountID: "account")
     #expect(catalog.audio.map(\.subjectID) == [1, 3])
     #expect(catalog.voices.map(\.id) == [7] && catalog.currentLevel == 2)

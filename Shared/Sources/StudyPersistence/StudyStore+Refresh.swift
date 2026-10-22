@@ -210,15 +210,10 @@ extension StudyStore {
           legacyRevision: previousProgress[assignment.subjectID]?.legacyRevision ?? 0,
           lastMistakeAt: previousProgress[assignment.subjectID]?.lastMistakeAt)
       }
-      // Imported pending subjects need not have an available assignment row.
+      // Pending subjects need not have an available assignment row.
       let progressIDs = Set(progress.map(\.subjectID))
       progress += previousProgress.values.filter {
         pendingIDs.contains($0.subjectID) && !progressIDs.contains($0.subjectID)
-      }
-      for (receipt, handoff) in try legacyMistakeRevocations(
-        accountID: accountID, username: download.profile.username)
-      {
-        receipt.handoff = handoff
       }
       var state = StudyAccountState(download: download, progress: progress)
       state.systems = download.systems ?? stateRow?.state.systems

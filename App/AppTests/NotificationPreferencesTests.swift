@@ -32,24 +32,18 @@ struct NotificationPreferencesTests {
     #expect(await server.writes == 0 && spy.requests == 0)
   }
 
-  @Test func commonNotificationChoicesPreserveTheOriginalArchivedSettings() throws {
+  @Test func commonNotificationChoicesPersistInNativeDefaults() throws {
     try PreferenceTestValues.withDefaults { defaults in
-      let options = NotificationPreference.allCases
-      for option in options {
-        try PreferenceTestValues.archive(true, key: option.key, in: defaults)
-      }
-      let originals = options.map { defaults.data(forKey: $0.key) }
-      let source = try LegacyPreferenceImporter.read(defaults: defaults)
-      try StudyPreferenceImport(defaults: defaults).apply(source, accountID: "fixture")
+      defaults.set("keep", forKey: "unrelated")
       let preferences = DefaultsStudyNotificationPreferences(defaults: defaults)
-      for option in options {
-        #expect(preferences.value(for: option))
+      for option in NotificationPreference.allCases {
+        preferences.set(true, for: option)
+        #expect(DefaultsStudyNotificationPreferences(defaults: defaults).value(for: option))
         preferences.set(false, for: option)
         #expect(!preferences.value(for: option))
         #expect(defaults.object(forKey: "native.\(option.key)") is Bool)
       }
-      #expect(options.map { defaults.data(forKey: $0.key) } == originals)
-      #expect(originals.allSatisfy { $0 != nil })
+      #expect(defaults.string(forKey: "unrelated") == "keep")
     }
   }
   #if os(iOS)

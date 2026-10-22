@@ -58,13 +58,12 @@ public struct StudyAvailability: Sendable {
   public let lessonPreferences: StudyLessonPreferences
   public let now: Date
   private let byID: [Int64: CatalogSubject]
-  private let calendar: Calendar
   private let leechThreshold: Double
 
   public init(
     account: StudyAccountState, subjects: [CatalogSubject], assignments: [CatalogAssignment],
     pending: Set<Int64> = [], excluded: Set<Int64> = [], now: Date = .now,
-    calendar: Calendar = .current, leechThreshold: Double = 1,
+    leechThreshold: Double = 1,
     lessonPreferences: StudyLessonPreferences = .init()
   ) {
     self.lessonPreferences = lessonPreferences.normalized
@@ -74,7 +73,6 @@ public struct StudyAvailability: Sendable {
     self.pending = pending
     self.excluded = excluded
     self.now = now
-    self.calendar = calendar
     self.leechThreshold = leechThreshold.isFinite && leechThreshold > 0 ? leechThreshold : 1
     byID = Dictionary(subjects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
   }
@@ -150,21 +148,8 @@ public struct StudyAvailability: Sendable {
     }.sorted { $0.subjectID < $1.subjectID }
   }
   private func recentMistake(_ progress: SubjectProgress) -> Bool {
-    let date: Date?
-    if let epoch = progress.lastMistakeAt {
-      date = Date(timeIntervalSince1970: Double(epoch))
-    } else if let text = progress.lastMistakeLocalTime {
-      let formatter = DateFormatter()
-      formatter.locale = Locale(identifier: "en_US_POSIX")
-      formatter.calendar = Calendar(identifier: .gregorian)
-      formatter.timeZone = calendar.timeZone
-      formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-      formatter.isLenient = false
-      date = formatter.date(from: text)
-    } else {
-      date = nil
-    }
-    guard let date else { return false }
+    guard let epoch = progress.lastMistakeAt else { return false }
+    let date = Date(timeIntervalSince1970: Double(epoch))
     return date <= now && date >= now.addingTimeInterval(-86400)
   }
   public var hourlyReviews: [Int] {

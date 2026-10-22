@@ -3,8 +3,9 @@
 
 import Foundation
 import StudyCore
-import StudyPersistence
 import Testing
+
+@testable import StudyPersistence
 
 struct ReviewSessionTest {
   private let account = "native-review-adapter-fixture"
@@ -20,7 +21,7 @@ struct ReviewSessionTest {
     var profile = StudyAccountProfile(username: "Review adapter fixture")
     profile.level = 1
     profile.maxLevelGranted = 3
-    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var download = StudyDownload(accountID: account, profile: profile)
     var subject = CatalogSubject(id: 42, kind: .kanji)
     subject.level = 1
     subject.japanese = "一"
@@ -32,19 +33,18 @@ struct ReviewSessionTest {
     assignment.unlockedAt = 1
     assignment.startedAt = 1
     assignment.availableAt = 10
-    source.subjects = [subject]
-    source.assignments = [assignment]
-    source.materials = [
+    download.subjects = [subject]
+    download.assignments = [assignment]
+    download.materials = [
       .init(
-        serverID: 99,
+        id: 99,
         value: .init(
           subjectID: 42, meaningNote: "Before review",
-          readingNote: "Hidden reading note", meaningSynonyms: ["Single"]),
-        pending: false, legacyRevision: 7)
+          readingNote: "Hidden reading note", meaningSynonyms: ["Single"]))
     ]
-    _ = try await store.importLegacyAccount(
-      source, sourceID: "native-review-adapter", verifiedAccountID: account,
-      verifiedUsername: profile.username, credentialID: "native-review-adapter")
+    _ = try await store.applyDownload(
+      download, credentialID: "native-review-adapter",
+      baseline: .init(assignments: [:], materials: [:]))
     return store
   }
   @Test func testOverrideAndReadingCreditReachTheDurableSubmission() async throws {

@@ -1,8 +1,0 @@
-{
-  "invocations": [
-    {
-      "protoFiles": ["wanikani_api.proto"],
-      "visibility": "Public"
-    }
-  ]
-}

@@ -18,14 +18,6 @@ public struct WaniKaniAccount: Sendable {
     self.startedAt = startedAt
     self.profile = profile
   }
-  /// Older caches have no API UUID. Match all identity metadata they actually retain.
-  public func requireLegacyAccount(_ expected: StudyAccountProfile) throws(StudySignInError) {
-    guard !expected.username.isEmpty, username == expected.username,
-      expected.startedAt == nil || startedAt == expected.startedAt
-    else {
-      throw .accountMismatch
-    }
-  }
 }
 
 public struct WaniKaniMaterial: Codable, Equatable, Sendable {

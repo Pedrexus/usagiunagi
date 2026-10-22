@@ -18,14 +18,14 @@ import SwiftUI
   let subjectSettings: StudySubjectSettings
   let appearance: ColorScheme?
   let notice: String?
-  let avatars: LegacyAvatarCache
+  let avatars: StudyAvatarCache
   let radicalImages: RadicalImageCache
   let voiceCapture: StudyVoiceCaptureFactory
 
   init(
     model: StudyAppModel, fonts: StudyFontLibrary, audio: StudyAudioLibrary,
     defaults: UserDefaults = .standard, notifications: StudyNotifications? = nil,
-    companion: StudyCompanionDelivery? = nil, avatars: LegacyAvatarCache? = nil,
+    companion: StudyCompanionDelivery? = nil, avatars: StudyAvatarCache? = nil,
     radicalImages: RadicalImageCache = .shared,
     mistakeICloud: (any StudyMistakeICloudStore)? = nil,
     iCloudPreferences: StudyICloudPreferences? = nil,
@@ -55,10 +55,7 @@ import SwiftUI
     self.voiceCapture = StudyVoiceCaptureFactory(voiceCapture)
     self.appearance = appearance
     self.notice = notice
-    self.avatars =
-      avatars
-      ?? LegacyAvatarCache(
-        directory: URL.cachesDirectory.appending(path: "com.hpique.haneke/shared"))
+    self.avatars = avatars ?? StudyAvatarCache()
     reloadPreferences()
     if let companion { self.notifications.didRead = { companion.update($0) } }
     self.notifications.observe(model: model, lessonSettings: lessonSettings)
@@ -76,14 +73,13 @@ import SwiftUI
       false
     #endif
   }
-  static func make(mediaLayout: StudyMediaLayout, baseURL: URL, store: StudyStore) -> Self {
+  static func make(baseURL: URL, store: StudyStore) -> Self {
     #if os(iOS)
       let companion: StudyCompanionDelivery? = WatchHelper.sharedInstance.companion
     #else
       let companion: StudyCompanionDelivery? = nil
     #endif
     let directory = URL.applicationSupportDirectory.appending(path: "TsurukameNative")
-    let media = mediaLayout.directories(nativeRoot: directory)
     StudyWaniKaniSources.prepare(defaults: .standard)
     let iCloudPreferences = StudyICloudPreferences(
       directory: URL.applicationSupportDirectory.appending(path: "UsagiPrivatePreferences"),
@@ -94,19 +90,15 @@ import SwiftUI
       model: StudyAppModel(
         credentials: KeychainStudyCredentialStore(service: "TsurukameNative.WaniKani"),
         client: WaniKaniClient(baseURL: baseURL),
-        legacySnapshotURL: directory.appending(path: "snapshot-v1.json"),
         preferenceCacheDirectory: URL.applicationSupportDirectory.appending(
           path: "UsagiWaniKaniSettings"),
         openStore: { store }),
       fonts: StudyFontLibrary(
-        catalog: .init(
-          directory: media.fonts,
-          bundledFonts: mediaLayout == .legacyDocuments
-            ? Bundle.main.resourceURL?.appending(path: "fonts") : nil),
+        catalog: .init(directory: directory.appending(path: "fonts")),
         preferences: DefaultsStudyFontPreferences(
           changed: iCloudPreferences.recordFontChanges)),
       audio: StudyAudioLibrary(
-        downloads: StudyAudioDownloads(directory: media.audio),
+        downloads: StudyAudioDownloads(directory: directory.appending(path: "audio")),
         preferences: DefaultsStudyAudioPreferences(
           changed: iCloudPreferences.recordAudioChanges)), companion: companion,
       mistakeICloud: AppleStudyMistakeICloudStore(store: .default),

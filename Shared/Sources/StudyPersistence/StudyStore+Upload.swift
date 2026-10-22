@@ -64,14 +64,6 @@ extension StudyStore {
         (profile.vacationStartedAt != nil) == identity.onVacation
       else { throw WaniKaniClient.APIError.invalidResponse }
       try applyVerifiedProfile(profile, accountID: accountID)
-    } else {
-      let revocations = try legacyMistakeRevocations(
-        accountID: accountID, username: identity.username)
-      if !revocations.isEmpty {
-        try transaction {
-          for (receipt, handoff) in revocations { receipt.handoff = handoff }
-        }
-      }
     }
   }
 
@@ -83,16 +75,14 @@ extension StudyStore {
     let snapshots = try modelContext.fetch(FetchDescriptor<SnapshotRecord>()).filter {
       $0.snapshot.accountID == accountID
     }
-    let revocations = try legacyMistakeRevocations(accountID: accountID, username: profile.username)
     guard
-      row.state.profile != profile || !revocations.isEmpty
+      row.state.profile != profile
         || snapshots.contains(where: {
           $0.snapshot.username != profile.username || $0.snapshot.currentLevel != profile.level
             || $0.snapshot.onVacation != (profile.vacationStartedAt != nil)
         })
     else { return }
     try transaction {
-      for (receipt, handoff) in revocations { receipt.handoff = handoff }
       row.state.profile = profile
       for record in snapshots {
         let old = record.snapshot

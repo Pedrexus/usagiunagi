@@ -6,8 +6,7 @@ struct StudyComplicationEntry: TimelineEntry {
   let state: WatchCompanionState
 
   var snapshot: WatchCompanionSnapshot? {
-    guard state.source != .legacyCharacter, let value = state.snapshot,
-      date < value.expiresAt
+    guard let value = state.snapshot, date < value.expiresAt
     else { return nil }
     return value
   }
@@ -20,7 +19,6 @@ struct StudyComplicationEntry: TimelineEntry {
     return snapshot.reviewCounts(at: date).map { String($0.due) } ?? "—"
   }
   var detail: String {
-    if state.source == .legacyCharacter { return "Choose Reviews or Level on your watch" }
     guard let snapshot else { return "Open the phone app to update" }
     if isLevel { return "\(snapshot.remaining) remaining" }
     guard let counts = snapshot.reviewCounts(at: date) else { return "Data unavailable" }
@@ -61,11 +59,7 @@ struct StudyComplicationView: View {
   let entry: StudyComplicationEntry
 
   var body: some View {
-    if #available(watchOS 10.0, *) {
-      content.containerBackground(.fill.tertiary, for: .widget)
-    } else {
-      content
-    }
+    content.containerBackground(.fill.tertiary, for: .widget)
   }
 
   private var content: some View {

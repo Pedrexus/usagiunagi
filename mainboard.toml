@@ -8,10 +8,10 @@ platforms = ["osx-arm64"]
 setup = "mainboard binary sync"
 lint = "mainboard proc timeout 600 mainboard lint --check ."
 test = "mainboard proc timeout 900 /usr/bin/xcrun swift test --package-path Shared --scratch-path .build/Shared --jobs 4"
-build = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Debug --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
+build = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Debug --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting CODE_SIGNING_ALLOWED=NO"
 # Native compilation includes type checking; use the same product and toolchain.
 typecheck = "mainboard run --locked build"
-build-watch = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme 'Tsurukame Complication' --action build --configuration Debug --destination 'generic/platform=watchOS Simulator' --derived-data .build/Xcode/Watch --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
+build-watch = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme 'Tsurukame Complication' --action build --configuration Debug --destination 'generic/platform=watchOS Simulator' --derived-data .build/Xcode/Watch --timeout 900 --setting CODE_SIGNING_ALLOWED=NO"
 native-v1-values = '''mainboard proc timeout 600 sh -eu -c '
 frozen_fixture=App/Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3
 /usr/bin/shasum -a 256 -c "$frozen_fixture/writer-sources.sha256"
@@ -49,8 +49,8 @@ printf "PASS: changed source and expanded compiler closure refused before store 
 printf "FROZEN VALUES REPORT: %s\n" "$frozen_report"
 '
 '''
-test-app-ios = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme Tsurukame --action test --destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' --derived-data .build/Xcode/iOS --timeout 900 --only-testing AppTests --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
-test-app-mac = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme Tsurukame --action test --destination platform=macOS --derived-data .build/Xcode/UnifiedMac --timeout 900 --only-testing AppTests --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
+test-app-ios = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme Tsurukame --action test --destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' --derived-data .build/Xcode/iOS --timeout 900 --only-testing AppTests --setting CODE_SIGNING_ALLOWED=NO"
+test-app-mac = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme Tsurukame --action test --destination platform=macOS --derived-data .build/Xcode/UnifiedMac --timeout 900 --only-testing AppTests --setting CODE_SIGNING_ALLOWED=NO"
 native-store-restart = '''mainboard proc timeout 2500 sh -eu -c '
 restart_fixture_id=$(/usr/bin/uuidgen)
 mkdir -p .build/Results
@@ -63,7 +63,7 @@ for phase in seed reopen seedAbrupt reopenAbrupt seedVerification reopenVerifica
       test_scope="$test_scope/persistedStoreReopensInAnotherTestHost()" ;;
   esac
   phase_status=0
-  env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 600 --only-testing "$test_scope" --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$phase" --setting "USAGI_NATIVE_RESTART_ID=$restart_fixture_id" > "$phase_log" 2>&1 || phase_status=$?
+  mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 600 --only-testing "$test_scope" --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$phase" --setting "USAGI_NATIVE_RESTART_ID=$restart_fixture_id" > "$phase_log" 2>&1 || phase_status=$?
   cat "$phase_log"
   if [ "$phase" = seedAbrupt ] || [ "$phase" = seedVerification ] || [ "$phase" = seedCandidate ] || [ "$phase" = seedBeforeAnswer ]; then
     test "$phase_status" -eq 65
@@ -132,7 +132,7 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
     space_phases="spaceMatrix spaceMatrixReopen spaceMatrixVerify"
   fi
   for space_phase in $space_phases; do
-    env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 480 --only-testing "AppTests/FrozenNativeStoreTests/persistedStoreReopensInAnotherTestHost()" --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$space_phase" --setting "USAGI_NATIVE_RESTART_ID=$space_id" --setting "USAGI_NATIVE_SPACE_PATH=$space_mount" > "$space_report/$space_phase.log" 2>&1
+    mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 480 --only-testing "AppTests/FrozenNativeStoreTests/persistedStoreReopensInAnotherTestHost()" --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$space_phase" --setting "USAGI_NATIVE_RESTART_ID=$space_id" --setting "USAGI_NATIVE_SPACE_PATH=$space_mount" > "$space_report/$space_phase.log" 2>&1
   done
   if [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-access ]; then
     cp "$space_mount/$space_id.access.plist" "$space_report/access.plist"
@@ -180,8 +180,8 @@ test "$space_outcomes" -eq 10
 printf "SPACE REPORT: %s\\n" "$space_report"
 '
 '''
-release-ios = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
-release-mac = "env -u PROTOC_PATH mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination platform=macOS --derived-data .build/Xcode/UnifiedMac --timeout 900 --setting=-skipPackagePluginValidation --setting CODE_SIGNING_ALLOWED=NO"
+release-ios = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting CODE_SIGNING_ALLOWED=NO"
+release-mac = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Release --destination platform=macOS --derived-data .build/Xcode/UnifiedMac --timeout 900 --setting CODE_SIGNING_ALLOWED=NO"
 audit-release-ios = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
 audit-release-mac = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/UnifiedMac/Build/Products/Release/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
 
@@ -194,21 +194,21 @@ DEVELOPER_DIR = "{{ env('DEVELOPER_DIR', '/Applications/Xcode.app/Contents/Devel
 swiftlint = { version = "0.65.1", url = "https://github.com/realm/SwiftLint/releases/download/0.65.1/portable_swiftlint.zip", sha256 = "c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0", member = "swiftlint" }
 
 [lint]
-exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/.mainboard/**", "**/Vendor/**"]
+exclude = ["**/.build/**", "**/.mainboard/**"]
 
 # Parse every kept first-party Swift file independently of gradual style adoption.
 # Native checks activate the declared environment without installing tools or resolving deps.
 [lint.tools.swift-parse]
 check = "mainboard run --locked --no-install mainboard analyze gate --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
-exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/.mainboard/**", "**/Vendor/**"]
+exclude = ["**/.build/**", "**/.mainboard/**"]
 serial = true
 timeout = 600
 
 [lint.tools.swift-ui]
 check = "mainboard run --locked --no-install mainboard analyze gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
-exclude = ["**/Pods/**", "**/Generated/**", "**/.build/**", "**/Vendor/**"]
+exclude = ["**/.build/**", "**/.mainboard/**"]
 serial = true
 timeout = 600
 

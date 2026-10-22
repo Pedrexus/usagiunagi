@@ -4,7 +4,7 @@ import SwiftData
 
 extension StudyStore {
   public func availability(
-    accountID: String, now: Date = .now, calendar: Calendar = .current,
+    accountID: String, now: Date = .now,
     leechThreshold: Double = 1, lessonPreferences: StudyLessonPreferences = .init()
   ) throws -> StudyAvailability {
     try requireAccount(accountID)
@@ -19,7 +19,7 @@ extension StudyStore {
         materials(accountID: accountID).filter { $0.material.isExcluded }.map {
           $0.material.subjectID
         }),
-      now: now, calendar: calendar, leechThreshold: leechThreshold,
+      now: now, leechThreshold: leechThreshold,
       lessonPreferences: lessonPreferences)
   }
 
@@ -32,7 +32,7 @@ extension StudyStore {
     -> HomeDashboardData
   {
     let available = try availability(
-      accountID: accountID, now: now, calendar: calendar,
+      accountID: accountID, now: now,
       leechThreshold: policy.normalized.leechThreshold, lessonPreferences: lessonPreferences)
     let snapshot = try snapshotForHome(accountID)
     var data = HomeDashboardData()

@@ -56,7 +56,6 @@ public final class StudyAppModel {
   @ObservationIgnored private var restoration: Task<Void, Never>?
   @ObservationIgnored private let credentials: any StudyCredentialStore
   @ObservationIgnored private let openStore: @Sendable () async throws -> StudyStore
-  @ObservationIgnored private let legacySnapshotURL: URL?
   @ObservationIgnored private var persistence: Task<StudyStore, any Error>?
   @ObservationIgnored private var reader: any WaniKaniService
   @ObservationIgnored private let preferenceCacheDirectory: URL?
@@ -68,13 +67,11 @@ public final class StudyAppModel {
 
   public init(
     credentials: any StudyCredentialStore, client: any WaniKaniService = WaniKaniClient(),
-    legacySnapshotURL: URL? = nil,
     preferenceCacheDirectory: URL? = nil,
     openStore: @escaping @Sendable () async throws -> StudyStore
   ) {
     self.credentials = credentials
     reader = client
-    self.legacySnapshotURL = legacySnapshotURL
     self.preferenceCacheDirectory = preferenceCacheDirectory
     self.openStore = openStore
   }
@@ -163,11 +160,6 @@ public final class StudyAppModel {
         let cache = try await repository()
         let credential = Self.credentialID(token)
         try checkRequest(epoch)
-        let cached = try await cache.snapshot(credentialID: credential)
-        try checkRequest(epoch)
-        if cached == nil, let legacySnapshotURL {
-          try await cache.importLegacySnapshot(at: legacySnapshotURL, credentialID: credential)
-        }
         let restoredSnapshot = try await cache.snapshot(credentialID: credential)
         let restoredProfile: StudyAccountProfile?
         if let accountID = restoredSnapshot?.accountID {
@@ -426,9 +418,6 @@ public final class StudyAppModel {
       }
       for credential in Set([connectingCredential, savedCredential].compactMap({ $0 })) {
         try await cache.removeSnapshot(credentialID: credential)
-      }
-      if let legacySnapshotURL, FileManager.default.fileExists(atPath: legacySnapshotURL.path) {
-        try FileManager.default.removeItem(at: legacySnapshotURL)
       }
     } catch { self.error = error.localizedDescription }
   }

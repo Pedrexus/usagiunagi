@@ -2,7 +2,7 @@ import StudyCore
 import SwiftUI
 
 extension EnvironmentValues {
-  @Entry public var studyAvatars: LegacyAvatarCache? = nil
+  @Entry public var studyAvatars: StudyAvatarCache? = nil
 }
 
 struct StudyAvatarView: View {

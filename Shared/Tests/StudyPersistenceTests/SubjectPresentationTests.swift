@@ -11,7 +11,7 @@ struct SubjectPresentationTests {
     var profile = StudyAccountProfile(username: "Subject presentation fixture")
     profile.level = 2
     profile.maxLevelGranted = 3
-    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var source = NativeStoreFixture(profile: profile)
     for (id, text, level, kind) in [
       (Int64(1), "一", 1, SubjectKind.kanji), (2, "二", 2, .kanji),
       (3, "三", 3, .kanji), (4, "外", 4, .kanji), (5, "隠", 1, .kanji), (6, "二", 1, .vocabulary),
@@ -36,9 +36,7 @@ struct SubjectPresentationTests {
         source.assignments.append(assignment)
       }
     }
-    _ = try await store.importLegacyAccount(
-      source, sourceID: "presentation", verifiedAccountID: account,
-      verifiedUsername: profile.username, credentialID: "presentation")
+    try await store.seedFixture(source, accountID: account, credentialID: "presentation")
     return store
   }
   @Test func presentationIncludesSavedProgressAndResolvesOnlyAccessibleSimilarKanji() async throws {

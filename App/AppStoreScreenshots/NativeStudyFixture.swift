@@ -1,7 +1,7 @@
 #if DEBUG
   import CoreText
   import StudyCore
-  import StudyPersistence
+  @testable import StudyPersistence
   import StudySpeech
   import StudyUI
   import SwiftUI
@@ -177,8 +177,7 @@
         notifications: StudyNotifications(
           preferences: DefaultsStudyNotificationPreferences(defaults: defaults),
           client: NotificationFixture.client),
-        avatars: LegacyAvatarCache(
-          directory: URL.temporaryDirectory.appending(path: "native-avatar-fixture-\(UUID())"),
+        avatars: StudyAvatarCache(
           cache: URLCache(memoryCapacity: 1_048_576, diskCapacity: 0),
           transport: { request in
             guard let url = request.url,
@@ -781,7 +780,8 @@
         assignment.availableAt = nil
         assignment.unlockedAt = 1
       }
-      var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+      var pendingReview: StudyReviewSubmission?
+      var fixture = StudyDownload(accountID: "review-fixture", profile: profile)
       if ProcessInfo.processInfo.arguments.contains("--audio-fixture") {
         fixture.voices = [Int64(1), 2].map { id in
           var voice = StudyVoiceActor(id: id)
@@ -789,10 +789,7 @@
           voice.description = "Tokyo accent"
           return voice
         }
-        fixture.audio = subject.audio.map {
-          .init(
-            subjectID: subject.id, voiceActorID: $0.voiceActorID, level: subject.level, url: $0.url)
-        }
+
       }
       if subject.kind == .kanji {
         if ProcessInfo.processInfo.arguments.contains("--subject-display-fixture") {
@@ -818,12 +815,12 @@
         fixture.subjects = [subject, component, vocabulary]
         fixture.materials = [
           .init(
-            serverID: 0,
+            id: 201,
             value: .init(
               subjectID: subject.id,
               meaningNote: ProcessInfo.processInfo.arguments.contains("--lesson-fixture")
                 ? "" : "A saved synthetic note.",
-              meaningSynonyms: ["Single"]), pending: false, legacyRevision: 0)
+              meaningSynonyms: ["Single"]))
         ]
       } else {
         fixture.subjects = [subject]
@@ -831,11 +828,10 @@
       if ProcessInfo.processInfo.arguments.contains("--material-recovery-fixture") {
         fixture.materials = [
           .init(
-            serverID: 201,
+            id: 201,
             value: .init(
               subjectID: 1, meaningNote: "Local saved note. 🐰\nSecond line.",
-              readingNote: "いち", meaningSynonyms: ["Local synonym"]), pending: true,
-            legacyRevision: 0)
+              readingNote: "いち", meaningSynonyms: ["Local synonym"]))
         ]
       }
       fixture.assignments = [assignment]
@@ -898,15 +894,10 @@
 
       if ProcessInfo.processInfo.arguments.contains("--review-recovery-fixture") {
         let lesson = ProcessInfo.processInfo.arguments.contains("--lesson-recovery-fixture")
-        fixture.pendingReviews = [
-          .init(
-            assignment: assignment,
-            submission: .init(
-              itemID: 0,
-              subjectID: subject.id, assignmentID: assignment.id, isLesson: lesson,
-              meaningWrong: !lesson, readingWrong: false, meaningWrongCount: lesson ? 0 : 1,
-              readingWrongCount: 0, createdAt: 100))
-        ]
+        pendingReview = .init(
+          itemID: 0, subjectID: subject.id, assignmentID: assignment.id, isLesson: lesson,
+          meaningWrong: !lesson, readingWrong: false, meaningWrongCount: lesson ? 0 : 1,
+          readingWrongCount: 0, createdAt: 100)
       }
       if statistics {
         var start = Date.now.addingTimeInterval(-95 * 86400)
@@ -945,13 +936,12 @@
         }
         fixture.materials = [
           .init(
-            serverID: 0, value: .init(subjectID: 3864, meaningNote: StudyMaterial.exclusionMarker),
-            pending: false, legacyRevision: 0)
+            id: 201, value: .init(subjectID: 3864, meaningNote: StudyMaterial.exclusionMarker))
         ]
       }
       if arguments.contains("--sample-review-fixture") {
         profile.level = 8
-        fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+        fixture = StudyDownload(accountID: "review-fixture", profile: profile)
         let readings: [Int64: String] = [923: "し", 578: "じ", 689: "しん"]
         fixture.subjects = catalogFixtureSubjects().filter {
           [3864, 923, 578, 689].contains($0.id)
@@ -977,7 +967,7 @@
         profile.username = "Fred"
         profile.level = 24
         if arguments.contains("--home-vacation-fixture") { profile.vacationStartedAt = 42 }
-        fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+        fixture = StudyDownload(accountID: "review-fixture", profile: profile)
         func appendSubject(id: Int64, kind: SubjectKind, level: Int, stage: Int?) {
           var value = CatalogSubject(id: id, kind: kind)
           value.level = level
@@ -1016,14 +1006,10 @@
           }
         }
       }
-      _ = try await cache.importLegacyAccount(
-        fixture, sourceID: "review-fixture", verifiedAccountID: "review-fixture",
-        verifiedUsername: profile.username, credentialID: StudyAppModel.credentialID("fixture"))
-      var remote = StudyDownload(
-        accountID: "review-fixture", profile: fixture.profile,
-        subjects: fixture.subjects, assignments: fixture.assignments,
-        materials: fixture.materials.map { .init(id: max(201, $0.serverID), value: $0.value) },
-        levels: fixture.levels, statistics: fixture.statistics, voices: fixture.voices)
+      try await cache.installPreview(
+        fixture, pendingReview: pendingReview,
+        pendingMaterial: arguments.contains("--material-recovery-fixture"))
+      var remote = fixture
       if ProcessInfo.processInfo.arguments.contains("--material-recovery-fixture") {
         remote.materials = [
           .init(
@@ -1042,4 +1028,40 @@
       return (cache, remote)
     }
   }
+  extension StudyStore {
+    /// Synthetic acceptance data enters through the same native download transaction as refresh.
+    fileprivate func installPreview(
+      _ download: StudyDownload, pendingReview: StudyReviewSubmission?, pendingMaterial: Bool
+    ) throws {
+      let accountID = download.accountID
+      _ = try applyDownload(
+        download, credentialID: StudyAppModel.credentialID("fixture"),
+        baseline: refreshBaseline(accountID: accountID))
+      try transaction {
+        if let pendingReview,
+          let assignment = download.assignments.first(where: {
+            $0.subjectID == pendingReview.subjectID
+          })
+        {
+          let row = ReviewRecord(
+            accountID: accountID, submission: pendingReview,
+            originalItem: assignment.sessionItem(
+              id: pendingReview.itemID, isLesson: pendingReview.isLesson))
+          row.originalAssignment = assignment
+          row.attempted = true
+          row.issue = .init(
+            reason: .uncertain, httpStatus: nil, serverAssignment: nil, detectedAt: .now)
+          modelContext.insert(row)
+        }
+        if pendingMaterial {
+          for row in try MaterialRecord.fetch(in: modelContext, accountID: accountID) {
+            row.pending = true
+            row.issue = .init(
+              reason: .uncertain, httpStatus: nil, serverAssignment: nil, detectedAt: .now)
+          }
+        }
+      }
+    }
+  }
+
 #endif

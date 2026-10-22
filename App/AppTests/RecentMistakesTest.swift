@@ -13,11 +13,6 @@ struct RecentMistakesTest {
     let expected: [Int64: Int]
   }
   private let now = Date(timeIntervalSince1970: 1_792_195_200)
-  private var context: StudyLegacyMistakeContext {
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-    return .init(locale: Locale(identifier: "en_US_POSIX"), calendar: calendar)
-  }
   private func dates(_ hours: [Int64: Int]) -> [Int64: Int64] {
     hours.mapValues { Int64(now.timeIntervalSince1970) + Int64($0) * 3600 }
   }
@@ -47,34 +42,5 @@ struct RecentMistakesTest {
         StudyMistakeArchive.recentValues(merged, now: now) == dates(value.expected), "\(value.name)"
       )
     }
-  }
-  @Test func oldCloudArchiveSkipsOnlyInvalidEntries() throws {
-    let originals = [
-      "42": "2026-10-17 12:34:56", "bad-id": "2026-10-17 12:34:56",
-      "2147483648": "2026-10-17 12:34:56", "43": "invalid date",
-    ]
-    let bytes = try JSONEncoder().encode(originals)
-    let source = try StudyLegacyMistakes(data: bytes, context: context)
-    #expect(source.values == [42: 1_792_240_496])
-    #expect(source.originals == originals)
-    #expect(source.unresolvedKeys == ["bad-id", "2147483648", "43"])
-    #expect(try JSONDecoder().decode([String: String].self, from: bytes) == originals)
-  }
-  @Test func newCloudArchiveRemainsReadableByTheOriginalJSONFormat() throws {
-    let source = StudyLegacyMistakes(originals: [:], context: context)
-    let updated = try source.updatedData(merging: [42: Int64(now.timeIntervalSince1970)], now: now)
-    let bytes = try #require(updated)
-    #expect(
-      try JSONDecoder().decode([String: String].self, from: bytes) == ["42": "2026-10-17 00:00:00"])
-    let reopened = try StudyLegacyMistakes(data: bytes, context: context)
-    #expect(reopened.values == [42: Int64(now.timeIntervalSince1970)])
-    #expect(try reopened.updatedData(merging: reopened.values, now: now) == nil)
-    #expect(try reopened.updatedData(merging: [:], now: now) == nil)
-  }
-  @Test(arguments: ["not JSON", "[]", "{\"42\":123}"])
-  func unreadableCloudArchiveDoesNotInventOrRewriteMistakes(json: String) {
-    let bytes = Data(json.utf8)
-    #expect(throws: (any Error).self) { try StudyLegacyMistakes(data: bytes, context: context) }
-    #expect(bytes == Data(json.utf8))
   }
 }

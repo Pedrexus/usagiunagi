@@ -4,12 +4,5 @@
 **/.build/
 **/build/
 **/xcuserdata/
-/App/Pods/
 /App/*.ipa
 /App/*.dSYM.zip
-/App/gc_keys.json
-/App/SwiftFormatTools/*
-!/App/SwiftFormatTools/*.swift
-/data
-/data.bin
-/workspace

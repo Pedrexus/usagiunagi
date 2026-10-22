@@ -23,7 +23,7 @@ struct StudyAvailabilityTests {
     var profile = StudyAccountProfile(username: "fixture")
     profile.level = 1
     profile.maxLevelGranted = 3
-    return .init(legacy: .init(schemaVersion: 15, profile: profile))
+    return .init(download: .init(accountID: "fixture", profile: profile))
   }
   @Test func notificationProjectionRetainsExactDatesAndOmitsMissingContent() {
     var item = assignment(1)
@@ -78,28 +78,17 @@ struct StudyAvailabilityTests {
     #expect(available.practice(.apprentice).map(\.subjectID) == [2])
     #expect(available.practice(.burned).map(\.subjectID) == [3])
   }
-  @Test func recentMistakesUseEpochOrTheOriginalLocalTimeWithAnExactDayBoundary() {
+  @Test func recentMistakesUseEpochWithAnExactDayBoundary() {
     var account = account
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = TimeZone(secondsFromGMT: 9 * 3600)!
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = calendar.timeZone
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-    let offsets: [Int64] = [0, -86400, -86401, 1]
+    let offsets: [Int64] = [0, -86400, -86401, 1, -3600]
     account.progress = (1...5).map { id in
-      let localTime: String? = id == 5 ? formatter.string(from: now.addingTimeInterval(-3600)) : nil
-      let epoch: Int64? = id == 5 ? nil : Int64(now.timeIntervalSince1970) + offsets[id - 1]
-      return
-        SubjectProgress(
-          subjectID: Int64(id), level: 1, srsStage: 3, kind: .kanji,
-          lastMistakeLocalTime: localTime,
-          legacyRevision: 0,
-          lastMistakeAt: epoch)
+      SubjectProgress(
+        subjectID: Int64(id), level: 1, srsStage: 3, kind: .kanji,
+        lastMistakeAt: Int64(now.timeIntervalSince1970) + offsets[id - 1])
     }
     let available = StudyAvailability(
       account: account, subjects: (1...5).map { subject(Int64($0)) },
-      assignments: (1...5).map { assignment(Int64($0)) }, now: now, calendar: calendar)
+      assignments: (1...5).map { assignment(Int64($0)) }, now: now)
     #expect(available.practice(.recentMistakes).map(\.subjectID) == [1, 2, 5])
   }
   @Test func leechesNeedPassedItemsAndUseOnlyMeaningStatisticsForRadicals() {
@@ -149,7 +138,7 @@ struct StudyAvailabilityTests {
     #expect(available.hourlyReviews[23] == 1 && available.hourlyReviews[24] == 2)
     #expect(available.hourlyReviews.reduce(0, +) == 8 && available.scheduledFuture.count == 9)
   }
-  @Test func newOptionalSessionAndMistakeFieldsKeepExistingSavedDataReadable() throws {
+  @Test func optionalSessionAndMistakeFieldsRoundTrip() throws {
     var session = try StudySession(items: [assignment(1).sessionItem(id: 0, isLesson: false)])
     session.nextQuestion()
     let encoder = JSONEncoder()
@@ -161,7 +150,7 @@ struct StudyAvailabilityTests {
     #expect(decoded.practiceScope == nil && decoded.question == session.question)
     let progress = SubjectProgress(
       subjectID: 1, level: 1, srsStage: 3, kind: .kanji,
-      lastMistakeLocalTime: "2026-10-17 10:00:00", legacyRevision: 4)
+      lastMistakeAt: nil)
     let bytes = try encoder.encode(progress)
     #expect(!String(decoding: bytes, as: UTF8.self).contains("lastMistakeAt"))
     #expect(try JSONDecoder().decode(SubjectProgress.self, from: bytes).lastMistakeAt == nil)

@@ -16,7 +16,7 @@ struct ReviewExclusionTests {
     var profile = StudyAccountProfile(username: "Review exclusion fixture")
     profile.level = 1
     profile.maxLevelGranted = 3
-    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var source = NativeStoreFixture(profile: profile)
     for id in 1...count {
       var subject = CatalogSubject(id: Int64(id), kind: kind)
       subject.level = 1
@@ -44,12 +44,10 @@ struct ReviewExclusionTests {
           serverID: 701,
           value: .init(
             subjectID: 1, meaningNote: "  Saved 🐰\n ", readingNote: "Keep reading",
-            meaningSynonyms: ["Single"]), pending: false, legacyRevision: 0)
+            meaningSynonyms: ["Single"]), pending: false)
       ]
     }
-    _ = try await store.importLegacyAccount(
-      source, sourceID: "review-exclusion", verifiedAccountID: account,
-      verifiedUsername: profile.username, credentialID: credential)
+    try await store.seedFixture(source, accountID: account, credentialID: credential)
     return store
   }
   private var grouped: StudySessionOptions {

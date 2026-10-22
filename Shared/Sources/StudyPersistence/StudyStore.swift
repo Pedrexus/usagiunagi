@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import StudyCore
 import SwiftData
@@ -166,40 +165,8 @@ public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requires
     }
   }
 
-  /// One-time import of the former Mac JSON cache. Original file is retained for rollback.
-  /// A receipt prevents an explicitly removed snapshot from returning on the next launch.
-  @discardableResult public func importLegacySnapshot(at url: URL, credentialID: String) throws
-    -> Bool
-  {
-    let sourceID = url.standardizedFileURL.path + ":" + credentialID
-    guard
-      try modelContext.fetchCount(
-        FetchDescriptor<ImportReceipt>(
-          predicate:
-            #Predicate { $0.sourceID == sourceID })) == 0
-    else { return false }
-    guard FileManager.default.fileExists(atPath: url.path) else { return false }
-    struct Legacy: Decodable {
-      let snapshot: StudySnapshot
-      let credentialID: String?
-    }
-    let data = try Data(contentsOf: url)
-    let legacy = try JSONDecoder().decode(Legacy.self, from: data)
-    guard !credentialID.isEmpty, legacy.credentialID == credentialID else { return false }
-    guard !legacy.snapshot.isSample else { throw StudyStoreError.sampleData }
-    let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-    try transaction {
-      if try snapshot(credentialID: credentialID) == nil {
-        modelContext.insert(SnapshotRecord(legacy.snapshot, credentialID: credentialID))
-      }
-      modelContext.insert(ImportReceipt(sourceID: sourceID, digest: digest))
-    }
-    return true
-  }
-
   func requireAccount(_ accountID: String) throws {
     guard !accountID.isEmpty else { throw StudyStoreError.invalidIdentity }
-    // Legacy snapshots remain readable offline, but cannot authorize new study writes.
     guard
       try modelContext.fetch(FetchDescriptor<SnapshotRecord>()).contains(where: {
         $0.snapshot.accountID == accountID && !$0.snapshot.isSample

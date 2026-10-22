@@ -340,12 +340,10 @@ extension NativeReviewTests {
     assignment.srsStage = 3
     assignment.startedAt = 1
     assignment.availableAt = 1
-    var fixture = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var fixture = NativeStoreFixture(profile: profile)
     fixture.subjects = [subject]
     fixture.assignments = [assignment]
-    _ = try await store.importLegacyAccount(
-      fixture, sourceID: "radical-fixture", verifiedAccountID: account,
-      verifiedUsername: profile.username, credentialID: "radical-fixture")
+    try await store.seedFixture(fixture, accountID: account, credentialID: "radical-fixture")
     let opened = try await store.openReviews(accountID: account, now: now)
     let question = try #require(opened.question)
     #expect(question.kind == .meaning && opened.subject?.japanese == "")

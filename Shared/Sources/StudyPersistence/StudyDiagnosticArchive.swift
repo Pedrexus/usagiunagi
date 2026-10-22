@@ -114,7 +114,9 @@ extension StudyStore {
       guard let handoff = row.handoff, handoff.accountID == accountID else {
         return nil
       }
-      guard row.sourceID == handoff.receiptID else { throw StudyBootstrapError.invalidState }
+      guard row.sourceID == handoff.receiptID else {
+        throw StudyStoreOpeningError.invalidGeneration
+      }
       return StudyDiagnosticDocument.Import(sourceDigest: row.digest, activated: handoff.activated)
     }.sorted { $0.sourceDigest < $1.sourceDigest }
     let retryAt = try modelContext.fetch(

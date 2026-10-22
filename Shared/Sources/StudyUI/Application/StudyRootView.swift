@@ -12,7 +12,7 @@ public struct StudyRootView: View {
   private let appearance: ColorScheme?
   private let notice: String?
   private let notifications: StudyNotifications?
-  private let avatars: LegacyAvatarCache
+  private let avatars: StudyAvatarCache
   @Environment(\.scenePhase) private var scenePhase
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudySubjectSettings.self) private var subjectSettings
@@ -47,7 +47,7 @@ public struct StudyRootView: View {
     model: StudyAppModel, automaticSync: StudyAutomaticSync, appName: String,
     appearance: ColorScheme? = nil, notice: String? = nil,
     notifications: StudyNotifications? = nil,
-    avatars: LegacyAvatarCache,
+    avatars: StudyAvatarCache,
     links: StudyLinkInbox = .init()
   ) {
     self.model = model
@@ -349,7 +349,7 @@ public struct StudyRootView: View {
           try model.setAPIEndpoint(url)
         },
         clearAvatarCache: {
-          try await avatars.clear()
+          await avatars.clear()
           avatarCacheRevision += 1
         })
     case .lessonSettings: LessonSettingsView(settings: lessonSettings)

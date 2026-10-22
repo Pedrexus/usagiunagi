@@ -182,7 +182,7 @@ public struct SubjectProgress: Codable, Sendable {
   public var legacyRevision: Int64
   public init(
     subjectID: Int64, level: Int, srsStage: Int, kind: SubjectKind,
-    lastMistakeLocalTime: String?, legacyRevision: Int64, lastMistakeAt: Int64? = nil
+    lastMistakeLocalTime: String? = nil, legacyRevision: Int64 = 0, lastMistakeAt: Int64? = nil
   ) {
     self.subjectID = subjectID
     self.level = level

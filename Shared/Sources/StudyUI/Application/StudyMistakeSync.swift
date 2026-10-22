@@ -221,18 +221,10 @@ nonisolated public struct StudyMistakeICloudEvent: Sendable {
       await self?.drain(epoch: epoch, observedEpoch: observedEpoch)
     }
   }
-  private func readICloud(accountID: String, binding: StudyLegacyMistakeBinding?) throws
-    -> (StudyMistakeArchive?, StudyLegacyMistakes?)
-  {
-    let native = try iCloud.data(forKey: StudyMistakeArchive.key(accountID: accountID)).map {
+  private func readICloud(accountID: String) throws -> StudyMistakeArchive? {
+    try iCloud.data(forKey: StudyMistakeArchive.key(accountID: accountID)).map {
       try StudyMistakeArchive(data: $0, accountID: accountID)
     }
-    guard let binding else { return (native, nil) }
-    let legacy =
-      try iCloud.data(forKey: binding.key).map {
-        try StudyLegacyMistakes(data: $0, context: binding.context)
-      } ?? StudyLegacyMistakes(originals: [:], context: binding.context)
-    return (native, legacy)
   }
   private func drain(epoch: UUID, observedEpoch: UUID) async {
     defer {
@@ -253,10 +245,9 @@ nonisolated public struct StudyMistakeICloudEvent: Sendable {
           state.username == account.username
         else { return }
         let key = try StudyMistakeArchive.key(accountID: account.accountID)
-        let (remote, legacy) = try readICloud(
-          accountID: account.accountID, binding: state.legacyBinding)
+        let remote = try readICloud(accountID: account.accountID)
         guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
-        let incoming = StudyMistakeArchive.merge(remote?.values ?? [:], legacy?.values ?? [:])
+        let incoming = remote?.values ?? [:]
         _ = try await store.mergeMistakes(incoming, accountID: account.accountID)
         guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
         let latest = try await store.mistakeState(accountID: account.accountID)
@@ -264,10 +255,8 @@ nonisolated public struct StudyMistakeICloudEvent: Sendable {
           latest.username == account.username
         else { return }
         // Reread after suspension; whole-key KVS writes still cannot provide an atomic merge.
-        let (currentRemote, currentLegacy) = try readICloud(
-          accountID: account.accountID, binding: latest.legacyBinding)
-        let currentIncoming = StudyMistakeArchive.merge(
-          currentRemote?.values ?? [:], currentLegacy?.values ?? [:])
+        let currentRemote = try readICloud(accountID: account.accountID)
+        let currentIncoming = currentRemote?.values ?? [:]
         if currentIncoming != incoming { requested = true }
         let date = now()
         let merged = try StudyMistakeArchive(
@@ -282,18 +271,7 @@ nonisolated public struct StudyMistakeICloudEvent: Sendable {
           try iCloud.set(data, forKey: key, observedEpoch: observedEpoch)
         }
         guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
-        if let binding = latest.legacyBinding, let currentLegacy,
-          let updated = try currentLegacy.updatedData(merging: merged.values, now: date)
-        {
-          guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
-          try iCloud.set(updated, forKey: binding.key, observedEpoch: observedEpoch)
-        }
-        notice =
-          latest.needsLegacyImport
-          ? "Older username-based mistake history needs a verified import before it can sync."
-          : currentLegacy?.unresolvedKeys.isEmpty == false
-            ? "Some older mistake timestamps could not be interpreted and have been kept unchanged."
-            : nil
+        notice = nil
       } catch is CancellationError { return } catch {
         guard generation == epoch else { return }
         notice = error.localizedDescription

@@ -88,7 +88,7 @@ struct NativeRefreshRollbackTests {
   ) {
     let initial = try await WaniKaniClient(transport: DownloadFixture.response).download(
       token: "fixture")
-    var source = LegacyStudyExport(schemaVersion: 15, profile: initial.profile)
+    var source = NativeStoreFixture(profile: initial.profile)
     source.subjects = initial.subjects
     source.assignments = initial.assignments
     for id: Int64 in [2, 3, 5] {
@@ -118,17 +118,15 @@ struct NativeRefreshRollbackTests {
         serverID: 201,
         value: .init(
           subjectID: 1, meaningNote: "Original server material",
-          readingNote: "いち\nExact", meaningSynonyms: ["Single", "一"]), pending: false,
-        legacyRevision: 9),
+          readingNote: "いち\nExact", meaningSynonyms: ["Single", "一"]), pending: false),
       .init(
         serverID: 203, value: .init(subjectID: 3, meaningNote: "Clean material to prune"),
-        pending: false, legacyRevision: 3),
+        pending: false),
       .init(
         serverID: 205,
         value: .init(
           subjectID: 5, meaningNote: "Pending 🐰\nExact whitespace  ",
-          readingNote: "Hidden reading", meaningSynonyms: ["Pending", "一つ"]), pending: true,
-        legacyRevision: 8),
+          readingNote: "Hidden reading", meaningSynonyms: ["Pending", "一つ"]), pending: true),
     ]
     source.levels = initial.levels
     source.statistics = initial.statistics
@@ -142,16 +140,12 @@ struct NativeRefreshRollbackTests {
       "review_stats_updated_after": "old-statistics-cursor",
     ]
     let writer = try await StudyStore.open(at: url)
-    _ = try await writer.importLegacyAccount(
-      source, sourceID: "rollback-primary",
-      verifiedAccountID: rollbackAccount, verifiedUsername: source.profile.username,
-      credentialID: rollbackCredential)
+    try await writer.seedFixture(
+      source, accountID: rollbackAccount, credentialID: rollbackCredential)
     var other = source
     other.profile.username = "Other synthetic account"
-    _ = try await writer.importLegacyAccount(
-      other, sourceID: "rollback-other",
-      verifiedAccountID: rollbackOtherAccount, verifiedUsername: other.profile.username,
-      credentialID: "rollback-other")
+    try await writer.seedFixture(
+      other, accountID: rollbackOtherAccount, credentialID: "rollback-other")
     let item = try #require(source.assignments.first { $0.subjectID == 5 })
     var session = try StudySession(items: [item.sessionItem(id: 0, isLesson: false)], seed: 1)
     let nextQuestion = session.nextQuestion()

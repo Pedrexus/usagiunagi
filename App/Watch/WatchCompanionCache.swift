@@ -17,7 +17,6 @@ import Foundation
 enum ComplicationDataSource: Int, Codable, Sendable {
   case reviews = 0
   case level = 1
-  case legacyCharacter = 2
 }
 
 /// The original phone packet; decoding never turns missing data into a verified zero.

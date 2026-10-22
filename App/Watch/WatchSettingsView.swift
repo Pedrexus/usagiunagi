@@ -28,15 +28,6 @@ struct WatchSettingsView: View {
           Picker("Show", selection: selection) {
             Text("Review Counts").tag(ComplicationDataSource.reviews.rawValue)
             Text("Level").tag(ComplicationDataSource.level.rawValue)
-            if source == ComplicationDataSource.legacyCharacter.rawValue {
-              Text("Kanji — unavailable")
-                .tag(ComplicationDataSource.legacyCharacter.rawValue)
-                .disabled(true)
-            }
-          }
-          if source == ComplicationDataSource.legacyCharacter.rawValue {
-            Text("Choose Review Counts or Level to show your study data.")
-              .font(.footnote)
           }
         }
         Section("Last Updated") {

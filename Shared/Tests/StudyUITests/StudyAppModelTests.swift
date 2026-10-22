@@ -699,32 +699,6 @@ private actor ModelRepository {
     #expect(model.accountIssue?.reason == .unauthorized)
     return (cache, model, server, credentials)
   }
-  @Test func oldJSONStatisticsRestoreOfflineWithoutChangingTheSource() async throws {
-    let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let url = directory.appending(path: "snapshot-v1.json")
-    let legacy = StudySnapshot(
-      username: "Cached learner", currentLevel: 5,
-      assignments: [], statistics: [], levels: [], subjects: [])
-    let snapshot = try JSONSerialization.jsonObject(with: JSONEncoder().encode(legacy))
-    let original = try JSONSerialization.data(withJSONObject: [
-      "snapshot": snapshot, "credentialID": credential,
-    ])
-    try original.write(to: url)
-    let cache = try await store()
-    let server = ModelServer()
-    let model = StudyAppModel(
-      credentials: MemoryCredentials("fixture"), client: await server.client,
-      legacySnapshotURL: url, openStore: { cache })
-    await model.restore()
-    #expect(model.snapshot?.username == "Cached learner" && model.snapshot?.currentLevel == 5)
-    #expect(model.profile == nil && !model.contentAccessVerified && model.maximumContentLevel == 3)
-    #expect(try Data(contentsOf: url) == original)
-    #expect(try await cache.snapshot(credentialID: credential)?.username == "Cached learner")
-    #expect(await server.reads == 0)
-  }
-
   @Test func aFailedCredentialRemovalKeepsTheAccountAndCacheUntilRetry() async throws {
     let cache = try await store(pendingNote: true)
     let credentials = MemoryCredentials("fixture")

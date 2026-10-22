@@ -514,7 +514,7 @@ extension NativeRefreshTests {
   {
     let store = try await store()
     var value = try await download()
-    var source = LegacyStudyExport(schemaVersion: 15, profile: value.profile)
+    var source = NativeStoreFixture(profile: value.profile)
     source.subjects = value.subjects
     for id: Int64 in [1, 2, 3] {
       let kind = try #require(value.subjects.first { $0.id == id }).kind
@@ -535,9 +535,7 @@ extension NativeRefreshTests {
       meaningWrong: true, readingWrong: false, meaningWrongCount: 2, readingWrongCount: 0,
       createdAt: 200)
     source.pendingReviews = [.init(assignment: source.assignments[0], submission: queued)]
-    _ = try await store.importLegacyAccount(
-      source, sourceID: "mixed-progress", verifiedAccountID: value.accountID,
-      verifiedUsername: value.profile.username, credentialID: "credential")
+    try await store.seedFixture(source, accountID: value.accountID, credentialID: "credential")
     let pending = try await store.pendingReviews(accountID: value.accountID)
     var changed = CatalogAssignment(id: 202, subjectID: 2, kind: source.assignments[1].kind)
     changed.level = 1

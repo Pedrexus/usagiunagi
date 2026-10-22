@@ -3,26 +3,15 @@ import StudyCore
 import Testing
 
 struct StudyMistakeArchiveTests {
-  @Test func cloudWindowExpiresOnlyInterpretableOldHintsAtTheExactBoundary() throws {
-    let context = context(zone: "UTC")
+  @Test func cloudWindowExpiresOnlyOldHintsAtTheExactBoundary() {
     let now = Date(timeIntervalSince1970: 1_792_497_600)
-    let original = [
-      "1": "2026-10-19 11:59:59", "2": "2026-10-19 12:00:00",
-      "3": "2026-10-20 12:00:01", "unresolved": "kept verbatim",
+    let values: [Int64: Int64] = [
+      1: 1_792_411_199, 2: 1_792_411_200, 3: 1_792_497_601, 4: Int64.max,
     ]
-    let legacy = StudyLegacyMistakes(originals: original, context: context)
-    let values = legacy.values.merging([4: Int64.max], uniquingKeysWith: max)
     #expect(
       StudyMistakeArchive.recentValues(values, now: now) == [
         2: 1_792_411_200, 3: 1_792_497_601, 4: Int64.max,
       ])
-    let encoded = try #require(try legacy.updatedData(merging: values, now: now))
-    let published = try JSONDecoder().decode([String: String].self, from: encoded)
-    #expect(published == ["2": original["2"]!, "3": original["3"]!, "unresolved": "kept verbatim"])
-    #expect(legacy.originals == original && legacy.values[1] == 1_792_411_199)
-    #expect(
-      try StudyLegacyMistakes(data: encoded, context: context).updatedData(
-        merging: values, now: now) == nil)
   }
   @Test func nativeRoundTripUsesStableIdentityAndCanonicalMaximums() throws {
     let values: [Int64: Int64] = [2: 2_000_000_000, 1: 1_999_999_999, 999_999: Int64.max]
@@ -96,54 +85,10 @@ struct StudyMistakeArchiveTests {
       fromPropertyList: valid, format: .binary, options: 0)
     #expect(try StudyMistakeArchive(data: data, accountID: "a").values == [1: 10])
   }
-  @Test func legacyInterpretationKeepsTimeZoneCalendarAndUnresolvedSourceTextExplicit() throws {
-
-    let text = "2026-10-20 12:00:00"
-    let utc = context(zone: "UTC")
-    let tokyo = context(zone: "Asia/Tokyo")
-    let a = StudyLegacyMistakes(originals: ["1": text], context: utc)
-    let b = StudyLegacyMistakes(originals: ["1": text], context: tokyo)
-    #expect(try #require(a.values[1]) - #require(b.values[1]) == 9 * 3600)
-    var buddhist = Calendar(identifier: .buddhist)
-    buddhist.timeZone = TimeZone(secondsFromGMT: 0)!
-    let old = StudyLegacyMistakes(
-      originals: ["1": "2569-10-20 12:00:00"],
-      context: .init(locale: Locale(identifier: "en_US"), calendar: buddhist))
-    #expect(old.values == a.values)
-    let raw = ["1": "not a date", "future-kind": text, "2147483648": text]
-    let unresolved = StudyLegacyMistakes(originals: raw, context: utc)
-    #expect(unresolved.originals == raw && unresolved.unresolvedKeys.count == 3)
-    let updated = try #require(
-      try unresolved.updatedData(
-        merging: [1: 2_000_000_000, 2: 2_000_000_000],
-        now: Date(timeIntervalSince1970: 2_000_000_001)))
-    let restored = try StudyLegacyMistakes(data: updated, context: utc)
-    #expect(restored.originals["1"] == "not a date" && restored.originals["future-kind"] == text)
-    #expect(restored.originals["2147483648"] == text && restored.values[2] == 2_000_000_000)
-    #expect(throws: (any Error).self) {
-      try StudyLegacyMistakes(data: Data("broken".utf8), context: utc)
-    }
-  }
-  @Test func sameSecondTiesDSTAndFutureHintsDoNotBecomeFreshMistakes() throws {
-    let utc = context(zone: "UTC")
-    let legacy = StudyLegacyMistakes(originals: ["1": "2026-10-20 12:00:00"], context: utc)
-    #expect(
-      try legacy.updatedData(
-        merging: legacy.values,
-        now: Date(timeIntervalSince1970: Double(try #require(legacy.values[1])))) == nil)
-    #expect(
-      try legacy.updatedData(
-        merging: [1: Int64.max],
-        now: Date(timeIntervalSince1970: Double(try #require(legacy.values[1])))) == nil)
-    let gap = StudyLegacyMistakes(
-      originals: ["1": "2026-03-08 02:30:00"], context: context(zone: "America/New_York"))
-    #expect(gap.unresolvedKeys == ["1"])
-    let fold = StudyLegacyMistakes(
-      originals: ["1": "2026-11-01 01:30:00"], context: context(zone: "America/New_York"))
-    #expect(fold.originals["1"] == "2026-11-01 01:30:00")
-    #expect(fold.values[1] != nil)
+  @Test func futureEpochsAndClockRollbackDoNotBecomeFreshMistakes() {
     let now = Date(timeIntervalSince1970: 2_000_000_000)
-    var source = LegacyStudyExport(schemaVersion: 15, profile: .init(username: "fixture"))
+    var source = StudyDownload(accountID: "fixture", profile: .init(username: "fixture"))
+    var progress: [SubjectProgress] = []
     source.profile.level = 1
     source.profile.maxLevelGranted = 3
     for (id, timestamp) in [
@@ -157,25 +102,18 @@ struct StudyMistakeArchiveTests {
       assignment.srsStage = 3
       source.subjects.append(subject)
       source.assignments.append(assignment)
-      source.progress.append(
+      progress.append(
         .init(
           subjectID: id, level: 1, srsStage: 3, kind: .kanji,
-          lastMistakeLocalTime: nil, legacyRevision: 0, lastMistakeAt: timestamp))
+          lastMistakeAt: timestamp))
     }
-    for zone in ["UTC", "America/New_York", "Asia/Tokyo"] {
-      let availability = StudyAvailability(
-        account: .init(legacy: source), subjects: source.subjects,
-        assignments: source.assignments, now: now, calendar: context(zone: zone).calendar)
-      #expect(availability.practice(.recentMistakes).map(\.subjectID) == [1])
-    }
+    let availability = StudyAvailability(
+      account: .init(download: source, progress: progress), subjects: source.subjects,
+      assignments: source.assignments, now: now)
+    #expect(availability.practice(.recentMistakes).map(\.subjectID) == [1])
     let rollback = StudyAvailability(
-      account: .init(legacy: source), subjects: source.subjects,
+      account: .init(download: source, progress: progress), subjects: source.subjects,
       assignments: source.assignments, now: now.addingTimeInterval(-172_800))
     #expect(rollback.practice(.recentMistakes).isEmpty)
-  }
-  private func context(zone: String) -> StudyLegacyMistakeContext {
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = TimeZone(identifier: zone)!
-    return .init(locale: Locale(identifier: "en_US_POSIX"), calendar: calendar)
   }
 }

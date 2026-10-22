@@ -25,7 +25,7 @@ struct StudyHomeTimingTests {
     var profile = StudyAccountProfile(username: "timing fixture")
     profile.level = 12
     profile.maxLevelGranted = 60
-    return .init(legacy: .init(schemaVersion: 15, profile: profile))
+    return .init(download: .init(accountID: "fixture", profile: profile))
   }
   @Test func nextReviewAndMinimumGuruTimeUseTheActualDueDate() throws {
     let rows = try StudyAvailability(

@@ -46,36 +46,6 @@ private actor TokenServer {
 }
 
 struct TokenClientTests {
-  @Test(arguments: [true, false])
-  func reauthenticationAcceptsTheCachedIdentityDespiteProgressChanges(hasDate: Bool) async throws {
-    let server = TokenServer()
-    let account = try await server.client("https://fixture.example.test/v2").account(
-      token: "new-token")
-    var cached = StudyAccountProfile(username: "test")
-    cached.startedAt = hasDate ? 1_792_195_200 : nil
-    cached.level = 1
-    cached.maxLevelGranted = 3
-    cached.subscribed = false
-    try account.requireLegacyAccount(cached)
-    #expect(account.level == 12 && account.id == "fixture-user-id")
-  }
-  @Test(arguments: ["other learner", "", "Test"])
-  func reauthenticationRejectsAnotherOrUnidentifiableCachedAccount(username: String) async throws {
-    let server = TokenServer()
-    let account = try await server.client("https://fixture.example.test/v2").account(
-      token: "new-token")
-    let cached = StudyAccountProfile(username: username)
-    #expect(throws: StudySignInError.accountMismatch) { try account.requireLegacyAccount(cached) }
-  }
-  @Test(arguments: [nil, "2026-10-18T00:00:00.000000Z"] as [String?])
-  func reauthenticationRejectsMissingOrChangedSignupDate(startedAt: String?) async throws {
-    let server = TokenServer(startedAt: startedAt)
-    let account = try await server.client("https://fixture.example.test/v2").account(
-      token: "new-token")
-    var cached = StudyAccountProfile(username: "test")
-    cached.startedAt = 1_792_195_200
-    #expect(throws: StudySignInError.accountMismatch) { try account.requireLegacyAccount(cached) }
-  }
   @Test func invalidSignupDateCannotBecomeAValidatedToken() async {
     let server = TokenServer(startedAt: "not a timestamp")
     await #expect(throws: WaniKaniClient.APIError.self) {

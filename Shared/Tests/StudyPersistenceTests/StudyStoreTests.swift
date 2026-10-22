@@ -178,56 +178,6 @@ struct StudyStoreTests {
     #expect(try await store.pendingReviews(accountID: "account-a").isEmpty)
   }
 
-  @Test func legacyImportIsAccountBoundAndCannotResurrectRemovedSnapshot() async throws {
-    let dir = try folder()
-    defer { try? FileManager.default.removeItem(at: dir) }
-    let file = dir.appending(path: "snapshot-v1.json")
-    let database = dir.appending(path: "study.store")
-    struct Legacy: Encodable {
-      let snapshot: StudySnapshot
-      let credentialID: String
-    }
-    let data = try JSONEncoder().encode(Legacy(snapshot: snapshot(account: nil), credentialID: "a"))
-    try data.write(to: file)
-    do {
-      let store = try await StudyStore.open(at: database)
-      #expect(try await !store.importLegacySnapshot(at: file, credentialID: "b"))
-      #expect(try await store.importLegacySnapshot(at: file, credentialID: "a"))
-      let restored = try #require(await store.snapshot(credentialID: "a"))
-      #expect(restored.accountID == nil && restored.subjects.first?.characters == "猫")
-      await #expect(throws: StudyStoreError.self) {
-        try await store.saveSession(session(), accountID: "account-a", expectedRevision: nil)
-      }
-      try await store.removeSnapshot(credentialID: "a")
-    }
-    let reopened = try await StudyStore.open(at: database)
-    #expect(try await !reopened.importLegacySnapshot(at: file, credentialID: "a"))
-    #expect(try await reopened.snapshot(credentialID: "a") == nil)
-    #expect(try Data(contentsOf: file) == data)
-  }
-
-  @Test func oldImportNeverOverwritesFreshSnapshotAndCorruptionLeavesSource() async throws {
-    let dir = try folder()
-    defer { try? FileManager.default.removeItem(at: dir) }
-    let file = dir.appending(path: "legacy.json")
-    struct Legacy: Encodable {
-      let snapshot: StudySnapshot
-      let credentialID: String
-    }
-    let store = try await StudyStore.open(at: dir.appending(path: "study.store"))
-    try await store.saveSnapshot(snapshot(level: 12), credentialID: "a")
-    try JSONEncoder().encode(Legacy(snapshot: snapshot(account: nil), credentialID: "a")).write(
-      to: file)
-    try await store.importLegacySnapshot(at: file, credentialID: "a")
-    #expect(try await store.snapshot(credentialID: "a")?.currentLevel == 12)
-    let corrupt = dir.appending(path: "bad.json")
-    try Data("incomplete".utf8).write(to: corrupt)
-    await #expect(throws: (any Error).self) {
-      try await store.importLegacySnapshot(at: corrupt, credentialID: "a")
-    }
-    #expect(try String(contentsOf: corrupt, encoding: .utf8) == "incomplete")
-  }
-
   @Test func sampleAndDifferentAccountCannotOverwriteCredentialBinding() async throws {
     let store = try await StudyStore.open(at: URL(filePath: "/unused"), inMemory: true)
     try await store.saveSnapshot(snapshot(), credentialID: "a")

@@ -2,8 +2,6 @@ import Foundation
 import StudyCore
 import Testing
 
-@testable import Tsurukame
-
 @Suite(.serialized) @MainActor
 struct FontLibraryTests {
   private func sources() throws -> URL {
@@ -21,24 +19,21 @@ struct FontLibraryTests {
     #expect(noto.canRender("𠮟"))
     #expect(!noto.canRender("\u{10FFFF}"))
   }
-  @Test func sharedSelectionKeepsTheExistingArchivedPreferenceFormat() throws {
+  @Test func sharedSelectionPersistsInNativeDefaults() throws {
     try PreferenceTestValues.withDefaults { defaults in
-      try PreferenceTestValues.archive(Set(["old.ttf"]), key: "selectedFonts", in: defaults)
-      let original = try #require(defaults.data(forKey: "selectedFonts"))
-      let source = try LegacyPreferenceImporter.read(defaults: defaults)
-      try StudyPreferenceImport(defaults: defaults).apply(source, accountID: "fixture")
+      defaults.set("keep", forKey: "unrelated")
       let preferences = DefaultsStudyFontPreferences(defaults: defaults)
-      #expect(preferences.selectedFiles == ["old.ttf"])
+      preferences.selectedFiles = ["old.ttf"]
+      #expect(DefaultsStudyFontPreferences(defaults: defaults).selectedFiles == ["old.ttf"])
       preferences.selectedFiles = ["new.ttf", "another.ttf"]
       #expect(
         DefaultsStudyFontPreferences(defaults: defaults).selectedFiles == [
           "new.ttf", "another.ttf",
         ])
       #expect(defaults.stringArray(forKey: "native.selectedFonts") == ["another.ttf", "new.ttf"])
-      #expect(defaults.data(forKey: "selectedFonts") == original)
+      #expect(defaults.string(forKey: "unrelated") == "keep")
     }
   }
-
 }
 
 private final class FontFixtureBundle: NSObject {}

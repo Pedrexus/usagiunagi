@@ -22,9 +22,8 @@ struct StudyStoreOpeningTests {
     let writer = try await StudyStore.open(at: seed.appending(path: "study.store"))
     defer { withExtendedLifetime(writer) {} }
     for account in ["first", "second"] {
-      _ = try await writer.importLegacyAccount(
-        source(username: account), sourceID: "source-\(account)", verifiedAccountID: account,
-        verifiedUsername: account, credentialID: "credential-\(account)")
+      try await writer.seedFixture(
+        source(username: account), accountID: account, credentialID: "credential-\(account)")
     }
     let expected = try await writer.generationSnapshot()
     let original = try family(in: seed)
@@ -56,9 +55,8 @@ struct StudyStoreOpeningTests {
     let writer = try await StudyStore.open(at: seedFolder.appending(path: "study.store"))
     defer { withExtendedLifetime(writer) {} }
     for account in ["first", "second"] {
-      _ = try await writer.importLegacyAccount(
-        source(username: account), sourceID: "source-\(account)", verifiedAccountID: account,
-        verifiedUsername: account, credentialID: "credential-\(account)")
+      try await writer.seedFixture(
+        source(username: account), accountID: account, credentialID: "credential-\(account)")
     }
     let expected = try await writer.generationSnapshot()
     let original = try family(in: seedFolder)
@@ -158,9 +156,8 @@ struct StudyStoreOpeningTests {
     let writer = try await StudyStore.open(at: folder.appending(path: "study.store"))
     defer { withExtendedLifetime(writer) {} }
     for account in ["first", "second"] {
-      _ = try await writer.importLegacyAccount(
-        source(username: account), sourceID: "source-\(account)", verifiedAccountID: account,
-        verifiedUsername: account, credentialID: "credential-\(account)")
+      try await writer.seedFixture(
+        source(username: account), accountID: account, credentialID: "credential-\(account)")
     }
     let expected = try await writer.generationSnapshot()
     let original = try family(in: folder)
@@ -204,9 +201,8 @@ struct StudyStoreOpeningTests {
         _ = try await StudyStore.openApplication(in: folder)
         Issue.record("A second application owner acquired the same store lease")
       } catch StudyStoreOpeningError.alreadyOpen {}
-      _ = try await first.importLegacyAccount(
-        source(username: "first"), sourceID: "first-source", verifiedAccountID: "first",
-        verifiedUsername: "first", credentialID: "first-credential")
+      try await first.seedFixture(
+        source(username: "first"), accountID: "first", credentialID: "first-credential")
       expected = try await first.generationSnapshot()
       selectedBytes = try Data(contentsOf: folder.appending(path: "store-selection.plist"))
       #expect(!FileManager.default.fileExists(atPath: folder.appending(path: "study.store").path))
@@ -266,9 +262,8 @@ struct StudyStoreOpeningTests {
     let writer = try await StudyStore.open(at: seedFolder.appending(path: "study.store"))
     defer { withExtendedLifetime(writer) {} }
     for account in ["first", "second"] {
-      _ = try await writer.importLegacyAccount(
-        source(username: account), sourceID: "source-\(account)", verifiedAccountID: account,
-        verifiedUsername: account, credentialID: "credential-\(account)")
+      try await writer.seedFixture(
+        source(username: account), accountID: account, credentialID: "credential-\(account)")
     }
     let expected = try await writer.generationSnapshot()
     var originalReviews: [String: [SavedReview]] = [:]
@@ -376,9 +371,8 @@ struct StudyStoreOpeningTests {
     }
     let source = try await StudyStore.openApplication(in: sourceFolder)
     defer { withExtendedLifetime(source) {} }
-    _ = try await source.importLegacyAccount(
-      self.source(username: "first"), sourceID: "source", verifiedAccountID: "first",
-      verifiedUsername: "first", credentialID: "credential")
+    try await source.seedFixture(
+      self.source(username: "first"), accountID: "first", credentialID: "credential")
     // Damage a never-opened image; releasing a setup container can checkpoint its WAL asynchronously.
     let seed = try files(in: sourceFolder)
     try FileManager.default.copyItem(at: sourceFolder, to: folder)
@@ -412,8 +406,8 @@ struct StudyStoreOpeningTests {
     #expect(!FileManager.default.fileExists(atPath: folder.appending(path: "study.store").path))
   }
 
-  private func source(username: String) -> LegacyStudyExport {
-    var source = LegacyStudyExport(schemaVersion: 15, profile: .init(username: username))
+  private func source(username: String) -> NativeStoreFixture {
+    var source = NativeStoreFixture(profile: .init(username: username))
     source.profile.level = 1
     source.profile.maxLevelGranted = 3
     var subject = CatalogSubject(id: 47, kind: .kanji)
@@ -434,8 +428,7 @@ struct StudyStoreOpeningTests {
     ]
     source.materials = [
       .init(
-        serverID: 947, value: .init(subjectID: 47, meaningNote: "Private 日本\u{0}ÿ"), pending: true,
-        legacyRevision: 17)
+        serverID: 947, value: .init(subjectID: 47, meaningNote: "Private 日本\u{0}ÿ"), pending: true)
     ]
     return source
   }

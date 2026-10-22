@@ -18,17 +18,14 @@ only_rules:
   - unowned_variable_capture
   - weak_delegate
 excluded:
-  - App/Pods
-  - App/Generated
   - .build
   - Shared/.build
-  - Vendor
 allow_zero_lintable_files: false
 check_for_updates: false
 reporter: xcode
 
-# Match the shipping Xcode/SwiftPM deployment floors; watch remains on its existing target.
+# Match the shipping Xcode/SwiftPM deployment floors.
 deployment_target:
   iOS_deployment_target: 27.0
   macOS_deployment_target: 27.0
-  watchOS_deployment_target: 9.0
+  watchOS_deployment_target: 27.0

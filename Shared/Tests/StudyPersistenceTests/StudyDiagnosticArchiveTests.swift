@@ -91,7 +91,7 @@ struct StudyDiagnosticArchiveTests {
       let data = try await StudyDiagnosticArchive(store: store, accountID: account).data()
       let document = try PropertyListDecoder().decode(StudyDiagnosticDocument.self, from: data)
       let progress = try #require(document.account.progress.first)
-      #expect(document.materials[0].value.meaningNote == String(progress.legacyRevision))
+      #expect(document.materials[0].value.meaningNote == progress.lastMistakeAt.map(String.init))
       #expect(document.reviews[0].attempted && document.materials[1].pending)
       await Task.yield()
     }
@@ -131,7 +131,7 @@ struct StudyDiagnosticArchiveTests {
       StudyDiagnosticDocument.self, from: await selected.data())
     #expect(document.accountID == account && document.account.profile.username == "person")
     #expect(document.imports.count == 1)
-    await #expect(throws: StudyBootstrapError.self) {
+    await #expect(throws: StudyStoreOpeningError.self) {
       try await StudyDiagnosticArchive(store: store, accountID: "diagnostic-account-other").data()
     }
   }
@@ -145,19 +145,18 @@ struct StudyDiagnosticArchiveTests {
   private func populated(at url: URL? = nil) async throws -> StudyStore {
     let store = try await StudyStore.open(at: url ?? URL(filePath: "/unused"), inMemory: url == nil)
     for (id, name) in [(account, "person"), ("diagnostic-account-other", "other-person")] {
-      _ = try await store.importLegacyAccount(
-        fixture(username: name), sourceID: sourceID, verifiedAccountID: id,
-        verifiedUsername: name, credentialID: "credential-secret-\(id)")
+      try await store.seedFixture(
+        fixture(username: name), accountID: id, credentialID: "credential-secret-\(id)")
       try await store.enrichDiagnosticTestFixture(accountID: id, sourceID: sourceID, now: now)
     }
-    try await store.selectNativeApplication(sourceID: "global-private-source")
+    try await store.insertDiagnosticTestUnboundReceipt()
     return store
   }
-  private func fixture(username: String) -> LegacyStudyExport {
+  private func fixture(username: String) -> NativeStoreFixture {
     var profile = StudyAccountProfile(username: username)
     profile.level = 1
     profile.maxLevelGranted = 3
-    var source = LegacyStudyExport(schemaVersion: 15, profile: profile)
+    var source = NativeStoreFixture(profile: profile)
     for id in Int64(1)...3 {
       var subject = CatalogSubject(id: id, kind: .vocabulary)
       subject.level = 1
@@ -176,7 +175,7 @@ struct StudyDiagnosticArchiveTests {
         .init(
           serverID: id + 200,
           value: .init(subjectID: id, meaningNote: id == 2 ? "Current 未送信 note" : "Note"),
-          pending: true, legacyRevision: id))
+          pending: true))
       source.progress.append(
         .init(
           subjectID: id, level: 1, srsStage: 3, kind: .vocabulary,
@@ -269,13 +268,11 @@ extension StudyStore {
       var preferences = LegacyStudyPreferences()
       preferences.customAvatarEmail = "private-preference-email"
       let receiptID = "ios:" + accountID + ":" + sourceID
-      let receipt = try #require(
-        try modelContext.fetch(
-          FetchDescriptor<ImportReceipt>(predicate: #Predicate { $0.sourceID == receiptID })
-        ).first)
+      let receipt = ImportReceipt(sourceID: receiptID, digest: "historical-digest")
       receipt.handoff = .init(
         sourceID: sourceID, accountID: accountID,
         credentialID: "credential-secret-\(accountID)", preferences: preferences)
+      modelContext.insert(receipt)
       let unbound = "unbound-secret-" + accountID
       modelContext.insert(ImportReceipt(sourceID: unbound, digest: "unbound-secret"))
       var session = try StudySession(
@@ -294,7 +291,7 @@ extension StudyStore {
         try modelContext.fetch(
           FetchDescriptor<AccountRecord>(predicate: #Predicate { $0.accountID == accountID })
         ).first)
-      account.state.progress[0].legacyRevision = Int64(value)
+      account.state.progress[0].lastMistakeAt = Int64(value)
       let material = try #require(
         try MaterialRecord.fetch(in: modelContext, accountID: accountID).first {
           $0.subjectID == 1
@@ -305,6 +302,12 @@ extension StudyStore {
   }
   fileprivate func insertDiagnosticTestSample(_ snapshot: StudySnapshot) throws {
     try transaction { modelContext.insert(SnapshotRecord(snapshot, credentialID: "sample")) }
+  }
+  fileprivate func insertDiagnosticTestUnboundReceipt() throws {
+    try transaction {
+      modelContext.insert(
+        ImportReceipt(sourceID: "native-application:global-private-source", digest: "historical"))
+    }
   }
   fileprivate func injectInvalidDiagnosticReceipt(accountID: String) throws {
     try transaction {

@@ -119,7 +119,7 @@ struct NativeHomeDashboardView: View {
     var profile = StudyAccountProfile(username: snapshot.username)
     profile.level = snapshot.currentLevel
     profile.maxLevelGranted = 60
-    let account = StudyAccountState(legacy: .init(schemaVersion: 15, profile: profile))
+    let account = StudyAccountState(download: .init(accountID: "sample", profile: profile))
     let subjects = snapshot.subjects.map { value in
       var subject = CatalogSubject(id: value.id, kind: value.kind)
       subject.japanese = value.characters

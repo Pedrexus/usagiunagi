@@ -22,8 +22,6 @@
 	<string>1.37</string>
 	<key>CFBundleVersion</key>
 	<string>1165</string>
-	<key>CLKComplicationPrincipalClass</key>
-	<string>$(PRODUCT_MODULE_NAME).ComplicationController</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -31,8 +29,6 @@
 	</array>
 	<key>UsagiUnagiWatchAppGroup</key>
 	<string>$(USAGI_WATCH_APP_GROUP)</string>
-	<key>UsagiUnagiWatchWidgetBundleIdentifier</key>
-	<string>$(USAGI_WATCH_WIDGET_BUNDLE_IDENTIFIER)</string>
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>
