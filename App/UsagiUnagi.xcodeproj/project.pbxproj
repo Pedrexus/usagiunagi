@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AFAC00000000000000000001 /* StudyAudioLibrary.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000011 /* StudyAudioLibrary.swift */; };
+		AFAC00000000000000000002 /* StudyAudioDownloads.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000012 /* StudyAudioDownloads.swift */; };
+		AFAC00000000000000000003 /* AppleStudyAudioPlayback.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000013 /* AppleStudyAudioPlayback.swift */; };
+		AFAC00000000000000000004 /* StudyAudioLibraryTests.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000014 /* StudyAudioLibraryTests.swift */; };
+		AFAC00000000000000000005 /* StudyAudioDownloadsTests.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000015 /* StudyAudioDownloadsTests.swift */; };
+		AFAC00000000000000000006 /* AppleAudioPlaybackTests.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000016 /* AppleAudioPlaybackTests.swift */; };
 		AFAB00000000000000000001 /* StudyFontCatalog.swift */ = {isa = PBXBuildFile; fileRef = AFAB00000000000000000011 /* StudyFontCatalog.swift */; };
 		AFAB00000000000000000002 /* StudyFontLibrary.swift */ = {isa = PBXBuildFile; fileRef = AFAB00000000000000000012 /* StudyFontLibrary.swift */; };
 		AFAB00000000000000000003 /* StudyFontLibraryTests.swift */ = {isa = PBXBuildFile; fileRef = AFAB00000000000000000013 /* StudyFontLibraryTests.swift */; };
@@ -203,6 +209,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AFAC00000000000000000011 /* StudyAudioLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAudioLibrary.swift; path = Shared/StudyAudioLibrary.swift; sourceTree = SOURCE_ROOT; };
+		AFAC00000000000000000012 /* StudyAudioDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAudioDownloads.swift; path = Shared/StudyAudioDownloads.swift; sourceTree = SOURCE_ROOT; };
+		AFAC00000000000000000013 /* AppleStudyAudioPlayback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppleStudyAudioPlayback.swift; path = Shared/AppleStudyAudioPlayback.swift; sourceTree = SOURCE_ROOT; };
+		AFAC00000000000000000014 /* StudyAudioLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAudioLibraryTests.swift; path = Tests/Unit/StudyAudioLibraryTests.swift; sourceTree = SOURCE_ROOT; };
+		AFAC00000000000000000015 /* StudyAudioDownloadsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAudioDownloadsTests.swift; path = Tests/Unit/StudyAudioDownloadsTests.swift; sourceTree = SOURCE_ROOT; };
+		AFAC00000000000000000016 /* AppleAudioPlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppleAudioPlaybackTests.swift; path = Tests/Unit/AppleAudioPlaybackTests.swift; sourceTree = SOURCE_ROOT; };
 		AFAB00000000000000000011 /* StudyFontCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyFontCatalog.swift; path = Settings/StudyFontCatalog.swift; sourceTree = SOURCE_ROOT; };
 		AFAB00000000000000000012 /* StudyFontLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyFontLibrary.swift; path = Settings/StudyFontLibrary.swift; sourceTree = SOURCE_ROOT; };
 		AFAB00000000000000000013 /* StudyFontLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyFontLibraryTests.swift; path = Tests/Unit/StudyFontLibraryTests.swift; sourceTree = SOURCE_ROOT; };
@@ -497,6 +509,9 @@
 				E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */,
 				A27100000000000000000002 /* FontLibraryTests.swift */,
 				AFAB00000000000000000013 /* StudyFontLibraryTests.swift */,
+				AFAC00000000000000000014 /* StudyAudioLibraryTests.swift */,
+				AFAC00000000000000000015 /* StudyAudioDownloadsTests.swift */,
+				AFAC00000000000000000016 /* AppleAudioPlaybackTests.swift */,
 				A27700000000000000000002 /* StudyShellStateTests.swift */,
 				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
 				A27900000000000000000002 /* NativeAppAssemblyTests.swift */,
@@ -673,6 +688,9 @@
 			isa = PBXGroup;
 			children = (
 				662DB68B76CEE7ADF230FC09 /* StudyAvatarView.swift */,
+				AFAC00000000000000000011 /* StudyAudioLibrary.swift */,
+				AFAC00000000000000000012 /* StudyAudioDownloads.swift */,
+				AFAC00000000000000000013 /* AppleStudyAudioPlayback.swift */,
 				AFAB00000000000000000011 /* StudyFontCatalog.swift */,
 				AFAB00000000000000000012 /* StudyFontLibrary.swift */,
 				AFAA00000000000000000011 /* StudyAvatar.swift */,
@@ -968,6 +986,9 @@
 				24E79875E2EDF7ED5A21604C /* SubjectSettingsView.swift */,
 				384E6445B9D95F102FC98D97 /* WaniKaniSettingsSection.swift */,
 				98C99174C1C26C504FB96A81 /* StudyAvatarView.swift */,
+				AFAC00000000000000000001 /* StudyAudioLibrary.swift */,
+				AFAC00000000000000000002 /* StudyAudioDownloads.swift */,
+				AFAC00000000000000000003 /* AppleStudyAudioPlayback.swift */,
 				AFAB00000000000000000001 /* StudyFontCatalog.swift */,
 				AFAB00000000000000000002 /* StudyFontLibrary.swift */,
 				AFAA00000000000000000001 /* StudyAvatar.swift */,
@@ -1022,6 +1043,9 @@
 				31112FA5D89FF842E5A7C77A /* StudyTaskGate.swift */,
 				A27100000000000000000001 /* FontLibraryTests.swift in Sources */,
 				AFAB00000000000000000003 /* StudyFontLibraryTests.swift */,
+				AFAC00000000000000000004 /* StudyAudioLibraryTests.swift */,
+				AFAC00000000000000000005 /* StudyAudioDownloadsTests.swift */,
+				AFAC00000000000000000006 /* AppleAudioPlaybackTests.swift */,
 				A27700000000000000000001 /* StudyShellStateTests.swift in Sources */,
 				A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */,
 				A27900000000000000000001 /* NativeAppAssemblyTests.swift in Sources */,

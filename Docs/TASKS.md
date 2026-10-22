@@ -38,6 +38,22 @@ iPhone Duo remains deferred. Optional AI/AppIntents and wider macro adoption rem
 
 ## Completion audit — October 21–22
 
+**App-owned audio consolidation:** pronunciation playback, the observable library/defaults
+adapter and offline downloads now live in `App/Shared`, alongside their three existing test
+suites in `App/Tests/Unit`. `StudyAudioOptions` and `StudyAudioCatalog` retain byte-identical
+declarations and their StudyCore module identity in `StudyAudioCatalog.swift`; the former
+is referenced by historical preferences and the latter by the storage actor. The V1 schema
+is unchanged. StudyCore no longer imports AVFoundation, CoreText or ImageIO after the media
+service moves. iOS build `build-02472651945c421290a0e7b023fb45df` and Mac receipt
+`test-fdf15f9a35074e8b94e3e6b5a7972bb1` pass (35 functions / 53 executions, no failures,
+skips or runtime warnings). This includes a real silent WAV playback lifecycle, download
+failures/cancellation, settings and voice-controller ownership. Scoped Mainboard lint passes
+all nine changed Swift files. Logs use `.build/Results/Audio-App-*-20261022.log`; physical
+microphone/route/interruption acceptance remains separate.
+The iPhone UI receipt `test-84ed37ef694d4dd1a4bc04f662199ab7` passes both offline-audio
+settings persistence and continuous voice answering both sides without further taps. The
+voice source is synthetic; no real WaniKani exercise or live microphone claim follows.
+
 **App-owned font consolidation:** the catalog and observable download/selection owner now
 live in `App/Settings`, with the existing download tests in `App/Tests/Unit`. No schema,
 stored selection, URLSession staging or cancellation behavior changed. Explicit nonisolated

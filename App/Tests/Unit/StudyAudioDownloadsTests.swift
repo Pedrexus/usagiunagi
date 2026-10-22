@@ -3,6 +3,7 @@ import Synchronization
 import Testing
 
 @testable import StudyCore
+@testable import Tsurukame
 
 @MainActor struct StudyAudioDownloadsTests {
   private func withDownloads(_ body: (StudyAudioDownloads, AudioDownloadStub) async throws -> Void)

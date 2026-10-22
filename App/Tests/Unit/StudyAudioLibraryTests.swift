@@ -3,6 +3,8 @@ import Observation
 import StudyCore
 import Testing
 
+@testable import Tsurukame
+
 @Suite(.serialized) @MainActor struct StudyAudioLibraryTests {
   private func subject(
     _ urls: [String] = ["https://audio.example.test/1.mp3", "https://audio.example.test/2.mp3"]

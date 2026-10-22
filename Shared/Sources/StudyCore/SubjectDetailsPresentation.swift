@@ -1,7 +1,5 @@
 import Foundation
 
-public enum SubjectAudioState: Sendable { case idle, loading, playing }
-
 /// Original app defaults; presentation choices never change the grader's accepted answers.
 public struct SubjectDetailsPreferences: Codable, Hashable, Sendable {
   public var primaryKanjiReadingsOnly = true

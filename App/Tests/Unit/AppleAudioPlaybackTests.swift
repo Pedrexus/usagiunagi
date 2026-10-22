@@ -1,6 +1,7 @@
 import Foundation
-import StudyCore
 import Testing
+
+@testable import Tsurukame
 
 @MainActor struct AppleAudioPlaybackTests {
   private func wait(_ predicate: () -> Bool) async throws {

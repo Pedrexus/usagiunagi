@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import StudyCore
 
 /// File downloads owned by the app, with the legacy subject/voice cache names.
 @MainActor @Observable public final class StudyAudioDownloads {

@@ -2,6 +2,8 @@ import AVFoundation
 import Foundation
 import Observation
 
+nonisolated public enum SubjectAudioState: Sendable { case idle, loading, playing }
+
 @MainActor public protocol StudyAudioPlayback: AnyObject, Observable {
   var state: SubjectAudioState { get }
   var error: String? { get }
