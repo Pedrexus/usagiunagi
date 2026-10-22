@@ -830,3 +830,21 @@ The new test requires the future row to disappear, the current count to become o
 its Kanji breakdown to remain accessible. `Forecast-Clock-Lint-20261022.log` passes all
 436 files. These iPhone simulator checks establish the local-clock behavior, not real-account
 forecast calibration, physical-device performance or every forecast error-recovery path.
+
+### Hosted workflow includes the test-selection safeguard
+
+All five Mainboard checkouts in `.github/workflows/apple.yml` now pin
+`fa467e07a71b26876f48b2dd3c273b5e3f14c1fd`, the version already used locally. The prior
+`b34c931` pin omitted its direct successor's exact-test selection guard: a nominally green
+native result must fail if an explicitly requested method is absent from the result tree.
+The change aligns hosted configuration with local verdict behavior; no checks are removed.
+
+The current Mainboard worktree is clean at that commit on `codex/apple-development`.
+Its isolated `integration/test_apple.py` gate passes all 85 cases:
+`packages/mainboard/build/apple-pin-20261022/target.log`, `target.xml`, `outcomes.json` and
+`target.json` (exit 0, imported source path recorded). App-wide lint passes 436 files in
+`Workflow-Mainboard-Pin-Lint-20261022.log`.
+
+`Workflow-Mainboard-CurrentPin-20261022.log` records HTTP 422 for the new exact SHA too.
+Publication is therefore still required; neither this local pin edit nor the test gate is
+hosted CI acceptance. No branch was pushed, PR created, app signed or app distributed.
