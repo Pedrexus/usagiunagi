@@ -162,6 +162,10 @@
           configuration: audioConfiguration),
         preferences: DefaultsStudyAudioPreferences(defaults: defaults),
         playback: SampleAudioPlayback())
+      let voice = FixtureVoiceCapture(
+        audio: audio, continuous: arguments.contains("--continuous-voice-fixture"),
+        mistake: arguments.contains("--voice-mistake-fixture"),
+        repeatReading: arguments.contains("--voice-repeat-fixture"))
       return StudyAppAssembly(
         model: model,
         fonts: StudyFontLibrary(
@@ -201,7 +205,7 @@
                 .utf8)
             return (bytes, response)
           }),
-        voiceCapture: { FixtureVoiceCapture(audio: audio) },
+        voiceCapture: { voice },
         appearance: arguments.contains("--light-fixture")
           ? .light : arguments.contains("--dark-fixture") ? .dark : nil,
         paths: AsyncStream {
@@ -212,10 +216,20 @@
     /// Deterministic transcription; acceptance fixtures never start microphones or Speech APIs.
     private actor FixtureVoiceCapture: VoiceCapture {
       private let audio: StudyAudioLibrary
+      private let continuous: Bool
+      private let mistake: Bool
+      private let repeatReading: Bool
+      private var meanings = 0
+      private var readings = 0
       private var callback: VoiceCaptureReport?
       private var recordingID: UUID?
       private var transcript = ""
-      init(audio: StudyAudioLibrary) { self.audio = audio }
+      init(audio: StudyAudioLibrary, continuous: Bool, mistake: Bool, repeatReading: Bool) {
+        self.audio = audio
+        self.continuous = continuous
+        self.mistake = mistake
+        self.repeatReading = repeatReading
+      }
       func start(
         id: UUID, locale: Locale, downloadModel _: Bool,
         report: @escaping VoiceCaptureReport
@@ -226,12 +240,25 @@
         }
         recordingID = id
         callback = report
-        transcript = locale.identifier.hasPrefix("ja") ? "一" : "one"
+        if locale.identifier.hasPrefix("ja") {
+          readings += 1
+          transcript = "一"
+        } else {
+          meanings += 1
+          transcript = mistake && meanings == 1 ? "two" : "one"
+        }
         await report(.listening)
+        if continuous {
+          await report(.segment(text: transcript, start: 0, end: 1, isFinal: false))
+        }
       }
       func finish(id: UUID) async {
         guard recordingID == id else { return }
-        await callback?(.segment(text: transcript, start: 0, end: 1, isFinal: true))
+        await callback?(
+          .segment(
+            text: transcript, start: 0, end: 1, isFinal: true,
+            alternatives: continuous && transcript == "一" && (!repeatReading || readings > 1)
+              ? ["いち"] : []))
         guard recordingID == id else { return }
         await callback?(.finished)
       }

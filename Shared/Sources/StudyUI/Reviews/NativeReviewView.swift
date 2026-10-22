@@ -25,7 +25,7 @@ public struct NativeReviewView: View {
   @State private var error: String?
   @State private var summarySubjectID: Int64?
   @State private var readyImage: String?
-  @State private var voiceRequest: VoiceAnswerRequest?
+  @Environment(\.scenePhase) private var scenePhase
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudyAudioLibrary.self) private var audio
   @Environment(\.studyVoiceCapture) private var voiceCapture
@@ -120,16 +120,33 @@ public struct NativeReviewView: View {
               }
             }
           ) {
-            StudyAnswerInput(
-              prompt: screen.prompt, text: $screen.answer,
-              focused: $answerFocused,
-              reading: screen.questionKind == .reading, automaticJapanese: automaticJapanese,
-              editable: screen.phase == .answering,
-              alphabet: subjectSettings.value.useKatakanaForOnyomi
-                && subject.readings.first(where: \.isPrimary)?.kind == .onyomi
-                ? .katakana : .hiragana,
-              submitted: { act(.submit) }, retried: { act(.retry) }
-            ).frame(minHeight: 44)
+            if screen.voiceEnabled, screen.phase == .answering, let question = review.question {
+              if !settings && !busy && error == nil && screen.canAnswer {
+                VoiceAnswerControls(
+                  model: VoiceReviewController(question: question, capture: voiceCapture()),
+                  automaticallySubmit: true,
+                  startDelay: screen.success == nil ? .zero : .milliseconds(650),
+                  submit: { text in
+                    guard self.review?.question == question, screen.voiceEnabled, !busy else {
+                      return
+                    }
+                    screen.answer = text
+                    submit(convertRomaji: false)
+                  }, cancel: { screen.voiceEnabled = false }
+                ).id(question)
+              }
+            } else {
+              StudyAnswerInput(
+                prompt: screen.prompt, text: $screen.answer,
+                focused: $answerFocused,
+                reading: screen.questionKind == .reading, automaticJapanese: automaticJapanese,
+                editable: screen.phase == .answering,
+                alphabet: subjectSettings.value.useKatakanaForOnyomi
+                  && subject.readings.first(where: \.isPrimary)?.kind == .onyomi
+                  ? .katakana : .hiragana,
+                submitted: { act(.submit) }, retried: { act(.retry) }
+              ).frame(minHeight: 44)
+            }
           } details: {
             NativeSubjectDetailsView(
               store: store, accountID: accountID, subjectID: subject.id,
@@ -160,6 +177,12 @@ public struct NativeReviewView: View {
     .onChange(of: screen.answer) { _, _ in rememberDraft() }
     .onChange(of: screen.phase) { _, _ in rememberDraft() }
     .onChange(of: screen.feedback) { _, _ in rememberDraft() }
+    .onChange(of: screen.voiceEnabled) { _, enabled in
+      answerFocused = !enabled && screen.phase == .answering && !screen.isAnki
+    }
+    .onChange(of: scenePhase) { _, phase in
+      if phase != .active { screen.voiceEnabled = false }
+    }
     .onChange(of: wrapUpRequested, initial: true) { _, _ in applyWrapUpRequest() }
     .onChange(of: busy) { _, _ in applyWrapUpRequest() }
     .onChange(of: preferences) { _, _ in applyPreferences() }
@@ -171,7 +194,7 @@ public struct NativeReviewView: View {
     .sheet(
       isPresented: $settings,
       onDismiss: {
-        answerFocused = screen.phase != .details && !screen.isAnki
+        answerFocused = screen.phase != .details && !screen.isAnki && !screen.voiceEnabled
       }
     ) {
       ReviewSettingsSheet(
@@ -195,27 +218,23 @@ public struct NativeReviewView: View {
     }
     .onChange(of: summarySubjectID) { previous, current in
       guard previous != nil, current == nil, !ended, review?.question != nil,
-        screen.phase != .details, !screen.isAnki
+        screen.phase != .details, !screen.isAnki, !screen.voiceEnabled
       else { return }
       answerFocused = true
     }
-    .sheet(
-      item: $voiceRequest,
-      onDismiss: { answerFocused = screen.phase != .details && !screen.isAnki }
-    ) { request in
-      VoiceAnswerPanel(
-        model: VoiceReviewController(question: request.question, capture: voiceCapture())
-      ) { text in
-        voiceRequest = nil
-        guard review?.question == request.question else { return }
-        screen.answer = text
-        submit(convertRomaji: false)
-      } cancel: {
-        voiceRequest = nil
-      }
-      .presentationSizing(.form)
+    .task(id: voiceCorrectionRevision) {
+      guard let revision = voiceCorrectionRevision else { return }
+      do { try await Task.sleep(for: .seconds(3)) } catch { return }
+      guard voiceCorrectionRevision == revision, scenePhase == .active else { return }
+      change(.advance)
     }
     .task(id: accountID) { if review == nil { load() } }
+  }
+
+  private var voiceCorrectionRevision: UUID? {
+    screen.voiceEnabled && !busy && !settings && error == nil
+      && screen.phase != .answering
+      && review?.saved.session.currentDecision == .incorrect ? review?.saved.revision : nil
   }
 
   private func load() {
@@ -246,7 +265,10 @@ public struct NativeReviewView: View {
     error = nil
     Task {
       defer { busy = false }
-      do { try await operation() } catch { self.error = error.localizedDescription }
+      do { try await operation() } catch {
+        screen.voiceEnabled = false
+        self.error = error.localizedDescription
+      }
     }
   }
   private func present(_ value: NativeReviewState) {
@@ -256,7 +278,8 @@ public struct NativeReviewView: View {
       previous == nil && value.question != nil && !value.isAnki
       && draftIdentity == draftKey(value)
     review = value
-    if value.success != nil, let previous, let subject = previous.subject, !subject.audio.isEmpty,
+    if !screen.voiceEnabled, value.success != nil, let previous, let subject = previous.subject,
+      !subject.audio.isEmpty,
       preferences.autoplay(
         in: isLesson ? .lessons : isPractice ? .extraStudy : .reviews,
         waniKani: waniKaniPreferences,
@@ -318,7 +341,7 @@ public struct NativeReviewView: View {
     screen.success = nil
     if let success = value.success { screen.recordSuccess(success) }
     chooseFont(newSubject: newSubject)
-    answerFocused = !value.isAnki
+    answerFocused = !value.isAnki && !screen.voiceEnabled
   }
   private func draftKey(_ state: NativeReviewState) -> String {
     accountID + ":" + state.saved.revision.uuidString
@@ -394,6 +417,13 @@ public struct NativeReviewView: View {
       }
       if result.state.question == question { screen.answer = result.normalized }
       screen.showAnswerHint(result.grade, exactMatch: exactMatch)
+      if screen.voiceEnabled, result.grade == .incorrect, let subject = review.subject {
+        let expected =
+          question.kind == .reading
+          ? subject.readings.filter(\.isPrimary).map(\.text)
+          : subject.meanings.filter { $0.role != .blacklist }.map(\.text)
+        screen.feedback = "Incorrect. Answer: " + expected.joined(separator: ", ")
+      }
     }
   }
   private func act(_ action: ReviewScreenAction) {
@@ -408,7 +438,9 @@ public struct NativeReviewView: View {
       } else {
         submit()
       }
-    case .reveal: screen.phase = .details
+    case .reveal:
+      screen.voiceEnabled = false
+      screen.phase = .details
     case .showAll:
       fullDetails = true
       screen.canShowAll = false
@@ -416,7 +448,7 @@ public struct NativeReviewView: View {
       screen.phase = .answering
       screen.answer = ""
       screen.feedback = ""
-      answerFocused = true
+      answerFocused = !screen.voiceEnabled
     case .correct:
       if screen.isAnki { assessAnki(true) } else if screen.canOverride { change(.overrideCorrect) }
     case .incorrect:
@@ -427,6 +459,7 @@ public struct NativeReviewView: View {
       synonym = screen.answer
       addingSynonym = true
     case .previous:
+      screen.voiceEnabled = false
       if let session = review?.saved.session, let id = session.completedIDs.last {
         summarySubjectID = session.items[id]?.subjectID
       }
@@ -439,7 +472,7 @@ public struct NativeReviewView: View {
     case .voice:
       answerFocused = false
       audio.stop()
-      voiceRequest = review?.question.map { VoiceAnswerRequest(question: $0) }
+      screen.voiceEnabled.toggle()
     case .focus: answerFocused = true
     case .settings:
       answerFocused = false
@@ -451,7 +484,7 @@ public struct NativeReviewView: View {
       run {
         try await store.endReviews(accountID: accountID, expectedRevision: review.saved.revision)
         answerFocused = false
-        voiceRequest = nil
+        screen.voiceEnabled = false
         draftIdentity = ""
         if review.saved.session.completedIDs.isEmpty {
           self.review = nil
@@ -514,6 +547,7 @@ public struct NativeReviewView: View {
       !isLesson && !isPractice && waniKaniSources.srsFeedback
       ? waniKaniPreferences?.reviewsDisplaySrsIndicator : nil
     screen.isAnki = review?.isAnki == true
+    if screen.isAnki { screen.voiceEnabled = false }
     screen.feedbackPreferences = preferences
     screen.questionSize = 72 * min(2.5, max(1, preferences.fontScale))
     screen.canSkip = preferences.allowSkipping

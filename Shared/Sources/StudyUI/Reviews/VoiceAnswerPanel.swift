@@ -19,20 +19,15 @@ extension EnvironmentValues {
   @Entry public var studyVoiceCapture = StudyVoiceCaptureFactory.system
 }
 
-/// Bind sheet presentation to its captured question so first presentation cannot be empty.
+/// Practice sheets retain the exact question captured at presentation.
 struct VoiceAnswerRequest: Identifiable {
   let question: StudyQuestion
   var id: StudyQuestion { question }
 }
 
-/// Shared native voice controls; hosts validate the captured question again before grading.
+/// Practice can still confirm one transcript; reviews use the same controls inline.
 public struct VoiceAnswerPanel: View {
   @State private var model: VoiceReviewController
-  @Environment(\.scenePhase) private var scenePhase
-  @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
-  @State private var transcriptFocused = false
-  @Environment(StudyAudioLibrary.self) private var audio
-  @State private var audioLease: UUID?
   private let submit: (String) -> Void
   private let cancel: () -> Void
 
@@ -54,86 +49,12 @@ public struct VoiceAnswerPanel: View {
             .foregroundStyle(.secondary)
         }
         Section {
-          switch model.phase {
-          case .idle:
-            Button("Start listening", systemImage: "mic.fill") { model.start() }
-              .accessibilityIdentifier("voice.start")
-          case .preparing, .downloading:
-            ProgressView(
-              model.phase == .downloading ? "Downloading speech model…" : "Preparing voice input…")
-          case .needsModel:
-            Text(
-              "Download the \(model.languageName) speech model to use voice answers on this device."
-            )
-            Button("Download model", systemImage: "arrow.down.circle") {
-              model.start(downloadModel: true)
-            }
-          case .listening:
-            Label("Listening…", systemImage: "mic.fill")
-              .accessibilityIdentifier("voice.listening")
-            Button("Stop listening", systemImage: "stop.fill") { model.stop() }
-              .accessibilityIdentifier("voice.stop")
-          case .finishing:
-            ProgressView("Finishing transcription…")
-          case .reviewing:
-            if model.question.kind == .reading {
-              StudyAnswerInput(
-                prompt: "Your answer", text: $model.text, focused: $transcriptFocused,
-                reading: true, automaticJapanese: automaticJapanese, editable: true,
-                alphabet: .hiragana,
-                submitted: { transcriptFocused = false }, retried: {},
-                accessibilityIdentifier: "voice.transcript"
-              ).frame(minHeight: 44)
-              if !model.readingSuggestions.isEmpty {
-                Menu("Other interpretations", systemImage: "text.bubble") {
-                  ForEach(model.readingSuggestions, id: \.self) { suggestion in
-                    Button(suggestion) {
-                      model.text = suggestion
-                      transcriptFocused = false
-                    }
-                  }
-                }
-                .accessibilityIdentifier("voice.readings")
-              }
-            } else {
-              TextField("Your answer", text: $model.text, axis: .vertical)
-                .lineLimit(1...4)
-                .autocorrectionDisabled()
-                .accessibilityIdentifier("voice.transcript")
-            }
-            if model.needsKanaCorrection {
-              Text("Use kana for the reading before submitting.")
-                .font(.callout).foregroundStyle(.secondary)
-            }
-            Button("Check answer", systemImage: "checkmark") {
-              if let answer = model.answer(for: model.question) {
-                // A reviewable transcript follows capture completion; release before grading/autoplay.
-                if let audioLease {
-                  audio.endVoiceInput(audioLease)
-                  self.audioLease = nil
-                }
-                submit(answer)
-              }
-            }
-            .disabled(!model.canSubmit)
-            .accessibilityIdentifier("voice.submit")
-            Button("Try again", systemImage: "arrow.counterclockwise") { model.start() }
-          case .failed(let message):
-            Label(message, systemImage: "mic.slash")
-              .accessibilityIdentifier("voice.error")
-            Button("Try again", systemImage: "arrow.counterclockwise") { model.start() }
-          }
+          VoiceAnswerControls(
+            model: model, automaticallySubmit: false, submit: submit, cancel: cancel)
         } footer: {
           Text(
             "Audio is processed on your device and isn’t saved by the app. Speech models are downloaded from Apple when needed."
           )
-        }
-        Section {
-          Button("Use keyboard", systemImage: "keyboard") {
-            model.cancel()
-            cancel()
-          }
-          .accessibilityIdentifier("voice.keyboard")
         }
       }
       .navigationTitle("Voice answer")
@@ -147,23 +68,172 @@ public struct VoiceAnswerPanel: View {
         }
       }
     }
-    .onChange(of: scenePhase) { _, phase in if phase == .background { model.cancel() } }
+  }
+}
+
+/// One recording per question. Only finished text reaches the host's ordinary grader.
+struct VoiceAnswerControls: View {
+  @State private var model: VoiceReviewController
+  private let automaticallySubmit: Bool
+  private let startDelay: Duration
+  private let submit: (String) -> Void
+  private let cancel: () -> Void
+  @Environment(\.scenePhase) private var scenePhase
+  @Environment(StudyAudioLibrary.self) private var audio
+  @AppStorage("native.autoSwitchKeyboard") private var automaticJapanese = false
+  @State private var transcriptFocused = false
+  @State private var audioLease: UUID?
+  @State private var submission: Task<Void, Never>?
+  @State private var sending = false
+
+  init(
+    model: VoiceReviewController, automaticallySubmit: Bool, startDelay: Duration = .zero,
+    submit: @escaping (String) -> Void, cancel: @escaping () -> Void
+  ) {
+    _model = State(initialValue: model)
+    self.automaticallySubmit = automaticallySubmit
+    self.startDelay = startDelay
+    self.submit = submit
+    self.cancel = cancel
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      captureControls
+      Button("Use keyboard", systemImage: "keyboard") { cancel() }
+        .accessibilityIdentifier("voice.keyboard")
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .disabled(sending)
+    .task {
+      do { try await Task.sleep(for: startDelay) } catch { return }
+      guard scenePhase == .active else { return }
+      start()
+    }
+    .onChange(of: scenePhase) { _, phase in
+      if phase != .active {
+        submission?.cancel()
+        releaseCapture()
+      }
+    }
     .onChange(of: model.phase) { _, phase in
       if phase != .reviewing { transcriptFocused = false }
-    }
-    .onAppear {
-      if audioLease == nil { audioLease = audio.beginVoiceInput() }
-      if model.phase == .idle { model.start() }
+      guard automaticallySubmit else { return }
+      if phase == .reviewing {
+        if model.answer(for: model.question, usingSingleKanaInterpretation: true) != nil {
+          checkAnswer()
+        } else {
+          repeatAnswer()
+        }
+      } else if model.shouldRepeat {
+        repeatAnswer()
+      }
     }
     .onDisappear {
-      let cleanup = model.cancel()
-      if let audioLease {
-        self.audioLease = nil
-        Task {
-          await cleanup?.value
-          audio.endVoiceInput(audioLease)
-        }
+      submission?.cancel()
+      releaseCapture()
+    }
+  }
+
+  @ViewBuilder private var captureControls: some View {
+    switch model.phase {
+    case .idle:
+      Button("Start listening", systemImage: "mic.fill") { start() }
+        .accessibilityIdentifier("voice.start")
+    case .preparing, .downloading:
+      ProgressView(
+        model.phase == .downloading ? "Downloading speech model…" : "Preparing voice input…")
+    case .needsModel:
+      Text("Download the \(model.languageName) speech model to use voice answers on this device.")
+      Button("Download model", systemImage: "arrow.down.circle") { start(downloadModel: true) }
+    case .listening:
+      HStack {
+        Label("Listening in \(model.languageName)…", systemImage: "mic.fill")
+          .accessibilityIdentifier("voice.listening")
+        Spacer()
+        Button("Finish answer", systemImage: "stop.fill") { model.stop() }
+          .labelStyle(.iconOnly).accessibilityIdentifier("voice.stop")
       }
+      Text(model.liveText.isEmpty ? "Speak, then pause to check your answer." : model.liveText)
+        .foregroundStyle(.secondary).accessibilityIdentifier("voice.heard")
+    case .finishing:
+      ProgressView("Checking what was heard…")
+    case .reviewing:
+      if automaticallySubmit {
+        Text(model.text).accessibilityValue(model.text).accessibilityIdentifier("voice.transcript")
+        if !model.canSubmit {
+          Text("I couldn’t get a clear kana reading. Say it again when listening resumes.")
+            .font(.callout).foregroundStyle(.secondary)
+        }
+      } else if model.question.kind == .reading {
+        StudyAnswerInput(
+          prompt: "Your answer", text: $model.text, focused: $transcriptFocused,
+          reading: true, automaticJapanese: automaticJapanese, editable: true,
+          alphabet: .hiragana, submitted: { checkAnswer() }, retried: {},
+          accessibilityIdentifier: "voice.transcript"
+        ).fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+        if !model.readingSuggestions.isEmpty {
+          Menu("Other interpretations", systemImage: "text.bubble") {
+            ForEach(model.readingSuggestions, id: \.self) { suggestion in
+              Button(suggestion) {
+                model.text = suggestion
+                transcriptFocused = false
+              }
+            }
+          }.accessibilityIdentifier("voice.readings")
+        }
+      } else {
+        TextField("Your answer", text: $model.text, axis: .vertical)
+          .lineLimit(1...4).autocorrectionDisabled().accessibilityIdentifier("voice.transcript")
+      }
+      if model.needsKanaCorrection {
+        Text("Use kana for the reading before submitting.").font(.callout).foregroundStyle(
+          .secondary)
+      }
+      Button("Check answer", systemImage: "checkmark") { checkAnswer() }
+        .disabled(!model.canSubmit).accessibilityIdentifier("voice.submit")
+      Button("Try again", systemImage: "arrow.counterclockwise") { start() }
+    case .failed(let message):
+      Label(message, systemImage: "mic.slash").accessibilityIdentifier("voice.error")
+      Button("Try again", systemImage: "arrow.counterclockwise") { start() }
+    }
+  }
+
+  private func start(downloadModel: Bool = false) {
+    submission?.cancel()
+    submission = nil
+    if audioLease == nil { audioLease = audio.beginVoiceInput() }
+    model.start(downloadModel: downloadModel)
+  }
+
+  @discardableResult private func releaseCapture() -> Task<Void, Never> {
+    let cleanup = model.cancel()
+    let lease = audioLease
+    audioLease = nil
+    return Task {
+      await cleanup?.value
+      if let lease { audio.endVoiceInput(lease) }
+    }
+  }
+
+  private func checkAnswer() {
+    guard !sending, let answer = model.answer(for: model.question) else { return }
+    sending = true
+    let cleanup = releaseCapture()
+    submission = Task {
+      defer { sending = false }
+      await cleanup.value
+      guard !Task.isCancelled, scenePhase == .active else { return }
+      submit(answer)
+    }
+  }
+
+  private func repeatAnswer() {
+    submission?.cancel()
+    submission = Task {
+      do { try await Task.sleep(for: .seconds(3)) } catch { return }
+      guard scenePhase == .active else { return }
+      start()
     }
   }
 }

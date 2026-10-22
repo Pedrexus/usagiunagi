@@ -31,6 +31,7 @@ import SwiftUI
   public var canWrapUp = false
   public var activeCount = 0
   public var isAnki = false
+  public var voiceEnabled = false
   public var canSkip = false
   public var canOverride = false
   public var canExclude = false
@@ -186,6 +187,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       if state.hasMenu {
         ToolbarItem(placement: .cancellationAction) {
           Button("End session", systemImage: "xmark") {
+            state.voiceEnabled = false
             if state.canWrapUp { confirmEnd = true } else { action(.end) }
           }
           .accessibilityIdentifier("review.close")
@@ -304,10 +306,14 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
       details().frame(maxWidth: .infinity, alignment: .leading)
     } else {
       if state.phase == .answering && !state.isAnki {
-        HStack(spacing: 8) {
-          input().disabled(!state.canAnswer).fixedSize(horizontal: false, vertical: true)
-            .frame(minHeight: 44)
-          submitButton.labelStyle(.iconOnly)
+        if state.voiceEnabled {
+          input().disabled(!state.canAnswer)
+        } else {
+          HStack(spacing: 8) {
+            input().disabled(!state.canAnswer).fixedSize(horizontal: false, vertical: true)
+              .frame(minHeight: 44)
+            submitButton.labelStyle(.iconOnly)
+          }
         }
       } else if !state.isAnki {
         input().disabled(!state.canAnswer).fixedSize(horizontal: false, vertical: true)
@@ -353,11 +359,13 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
   // The keyboard safe area also keeps these tools available with hardware keyboards and on Mac.
   private var studyTools: some View {
     HStack(spacing: 12) {
-      if state.phase == .answering && !state.isAnki {
+      if (state.phase == .answering || state.voiceEnabled) && !state.isAnki {
         Button {
           action(.voice)
         } label: {
-          toolLabel("Voice answer", systemImage: "mic")
+          toolLabel(
+            state.voiceEnabled ? "Pause voice review" : "Voice review",
+            systemImage: state.voiceEnabled ? "mic.slash" : "mic")
         }.accessibilityIdentifier("review.voice").disabled(!state.canAnswer)
       }
       Button {

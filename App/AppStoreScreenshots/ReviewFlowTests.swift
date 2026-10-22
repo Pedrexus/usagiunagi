@@ -1342,23 +1342,27 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any)["voice.listening"].exists)
     app.buttons["voice.stop"].tap()
-    XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
-    let transcript = app.descendants(matching: .any).matching(identifier: "voice.transcript")
-      .firstMatch
-    XCTAssertEqual(transcript.value as? String, "one")
-    XCTAssertTrue(app.buttons["voice.submit"].isEnabled)
-    app.buttons["voice.submit"].tap()
     let prompt = app.staticTexts["review.prompt"]
     let reading = XCTNSPredicateExpectation(
       predicate: NSPredicate { _, _ in
         prompt.exists && prompt.label.contains("Reading")
       }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+    // The same voice run starts the reading without another microphone tap or sheet.
+    XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+    app.buttons["review.close"].tap()
+    XCTAssertTrue(app.buttons["End review session"].waitForExistence(timeout: 5))
+    app.buttons["Cancel"].firstMatch.tap()
+    XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["voice.stop"].exists)
     app.buttons["review.voice"].tap()
     XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
     app.buttons["voice.stop"].tap()
     XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
+    let transcript = app.descendants(matching: .any).matching(identifier: "voice.transcript")
+      .firstMatch
     XCTAssertEqual(transcript.value as? String, "一")
+    XCTAssertLessThan(transcript.frame.height, 90, "Kana correction must stay compact inline")
     XCTAssertFalse(
       app.buttons["voice.submit"]
         .isEnabled)  // Kanji transcription is not a reading answer.
@@ -1374,6 +1378,68 @@ final class ReviewFlowTests: XCTestCase {
     field.typeText("ichi")
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  func testContinuousVoiceAnswersBothSidesWithoutFurtherTaps() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--manual-review-fixture", "--continuous-voice-fixture", "--light-fixture",
+    ])
+    defer { app.terminate() }
+    startReviews(in: app)
+    app.buttons["review.voice"].tap()
+    let prompt = app.staticTexts["review.prompt"]
+    let reading = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in prompt.exists && prompt.label.contains("Reading") },
+      object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 10), .completed)
+    XCTAssertFalse(app.buttons["review.submit"].exists)
+    XCTAssertFalse(app.navigationBars["Voice answer"].exists)
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = "Continuous voice reading inline"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    // The recognizer fixture emits tentative text; normal finalization and grading must follow.
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
+  }
+
+  @MainActor
+  func testContinuousVoiceShowsAMistakeAndContinuesWithoutTaps() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--manual-review-fixture", "--continuous-voice-fixture", "--voice-mistake-fixture",
+      "--light-fixture",
+    ])
+    defer { app.terminate() }
+    startReviews(in: app)
+    app.buttons["review.voice"].tap()
+    XCTAssertTrue(app.staticTexts["review.feedback"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["review.feedback"].label.contains("Incorrect"))
+    XCTAssertTrue(app.staticTexts["review.feedback"].label.contains("one"))
+    XCTAssertFalse(app.buttons["voice.stop"].exists)
+    XCTAssertFalse(app.staticTexts["Review session saved"].exists)
+    XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Meaning"))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 20))
+    XCTAssertTrue(app.staticTexts["0/1"].exists, "The spoken mistake must keep its normal penalty")
+  }
+
+  @MainActor
+  func testContinuousVoiceRepeatsUnclearKanaWithoutGradingOrTaps() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--manual-review-fixture", "--continuous-voice-fixture", "--voice-repeat-fixture",
+      "--light-fixture",
+    ])
+    defer { app.terminate() }
+    startReviews(in: app)
+    app.buttons["review.voice"].tap()
+    XCTAssertTrue(
+      app.staticTexts["Use kana for the reading before submitting."].waitForExistence(timeout: 10))
+    XCTAssertFalse(app.buttons["voice.submit"].isEnabled)
+    // The second spoken attempt supplies a kana alternative; no correction button is tapped.
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 15))
+    XCTAssertTrue(app.staticTexts["100%"].exists, "Unclear recognition must not count as a mistake")
   }
 
   @MainActor private func launchNativeReview(extra: [String] = []) -> XCUIApplication {

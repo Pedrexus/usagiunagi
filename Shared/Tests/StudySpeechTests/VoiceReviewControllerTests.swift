@@ -7,30 +7,41 @@ private actor FakeCapture: VoiceCapture {
   var callbacks: [UUID: VoiceCaptureReport] = [:]
   var ids: [UUID] = []
   var cancelled: [UUID] = []
+  var finishes = 0
+  var locales: [String] = []
   let cancelDelay: Duration
   let transcript: String
   let alternatives: [String]
   let needsModel: Bool
   let startError: VoiceCaptureError?
+  let partialBeforeListening: Bool
   init(
     transcript: String = "One.", needsModel: Bool = false, startError: VoiceCaptureError? = nil,
-    cancelDelay: Duration = .zero, alternatives: [String] = []
+    cancelDelay: Duration = .zero, alternatives: [String] = [], partialBeforeListening: Bool = false
   ) {
     self.transcript = transcript
     self.alternatives = alternatives
     self.needsModel = needsModel
     self.startError = startError
     self.cancelDelay = cancelDelay
+    self.partialBeforeListening = partialBeforeListening
   }
   func start(id: UUID, locale: Locale, downloadModel: Bool, report: @escaping VoiceCaptureReport)
     async throws
   {
     if let startError { throw startError }
     ids.append(id)
+    locales.append(locale.identifier)
     callbacks[id] = report
-    if needsModel && !downloadModel { await report(.needsModel) } else { await report(.listening) }
+    if needsModel && !downloadModel {
+      await report(.needsModel)
+    } else {
+      if partialBeforeListening { await partial(id: id, text: "One") }
+      await report(.listening)
+    }
   }
   func finish(id: UUID) async {
+    finishes += 1
     await callbacks[id]?(.segment(text: "interim error", start: 0, end: 1, isFinal: false))
     await callbacks[id]?(
       .segment(text: transcript, start: 0, end: 1, isFinal: true, alternatives: alternatives))
@@ -41,6 +52,9 @@ private actor FakeCapture: VoiceCapture {
     cancelled.append(id)
   }  // Keep callbacks so tests can inject a late result after cancellation.
   func fail(id: UUID) async { await callbacks[id]?(.failed("Recording interrupted")) }
+  func partial(id: UUID, text: String) async {
+    await callbacks[id]?(.segment(text: text, start: 0, end: 1, isFinal: false))
+  }
   func lateResult(id: UUID) async {
     await callbacks[id]?(
       .segment(text: "Late", start: 0, end: 1, isFinal: true, alternatives: ["おそい"]))
@@ -167,6 +181,113 @@ private actor FakeCapture: VoiceCapture {
     #expect(model.phase == .idle && model.text.isEmpty)
     await cleanup?.value
     #expect(await capture.cancelled == ids)
+  }
+
+  @Test func aPauseFinishesOnceAndUsesFinalTextInsteadOfTheLivePreview() async throws {
+    let capture = FakeCapture()
+    let question = try question()
+    let model = VoiceReviewController(question: question, capture: capture)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    let id = try #require(await capture.ids.first)
+    await capture.partial(id: id, text: "Won")
+    #expect(model.liveText == "Won" && model.text.isEmpty && !model.canSubmit)
+    try await Task.sleep(for: .milliseconds(700))
+    await capture.partial(id: id, text: "Single")
+    try await Task.sleep(for: .milliseconds(700))
+    #expect(model.phase == .listening && model.answer(for: question) == nil)
+    try await waitFor { model.phase == .reviewing }
+    #expect(model.answer(for: question) == "One")
+    #expect(await capture.finishes == 1)
+    await model.cancel()?.value
+  }
+
+  @Test func anExplicitFinishCancelsThePendingPause() async throws {
+    let capture = FakeCapture()
+    let model = VoiceReviewController(question: try question(), capture: capture)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    let id = try #require(await capture.ids.first)
+    await capture.partial(id: id, text: "One")
+    model.stop()
+    try await waitFor { model.phase == .reviewing }
+    try await Task.sleep(for: .milliseconds(1300))
+    #expect(await capture.finishes == 1)
+    await model.cancel()?.value
+  }
+
+  @Test func aCanceledPauseCannotFinishTheNextRecording() async throws {
+    let capture = FakeCapture()
+    let model = VoiceReviewController(question: try question(), capture: capture)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    let id = try #require(await capture.ids.first)
+    await capture.partial(id: id, text: "One")
+    await model.cancel()?.value
+    model.start()
+    try await waitFor { model.phase == .listening }
+    await capture.partial(id: id, text: "Late")
+    try await Task.sleep(for: .milliseconds(1300))
+    #expect(model.phase == .listening && model.liveText.isEmpty)
+    #expect(await capture.finishes == 0)
+    await model.cancel()?.value
+  }
+
+  @Test func anEmptyFinalResultCannotSubmitAnEarlierPartial() async throws {
+    let capture = FakeCapture(transcript: "")
+    let question = try question()
+    let model = VoiceReviewController(question: question, capture: capture)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    let id = try #require(await capture.ids.first)
+    await capture.partial(id: id, text: "One")
+    try await waitFor {
+      model.phase == .failed("No speech was recognized. Try again or type your answer.")
+    }
+    #expect(!model.canSubmit && model.answer(for: question) == nil)
+    #expect(model.shouldRepeat)
+    await model.cancel()?.value
+    #expect(!model.shouldRepeat)
+  }
+
+  @Test func speechArrivingDuringPreparationStillFinishesAfterAPause() async throws {
+    let capture = FakeCapture(partialBeforeListening: true)
+    let question = try question()
+    let model = VoiceReviewController(question: question, capture: capture)
+    model.start()
+    try await waitFor { model.phase == .reviewing }
+    #expect(model.answer(for: question) == "One")
+    #expect(await capture.finishes == 1)
+    await model.cancel()?.value
+  }
+
+  @Test(arguments: [["いち"], ["いち", "ひと"]])
+  func continuousVoiceOnlySelectsOneUnambiguousRecognizerKanaAlternative(
+    alternatives: [String]
+  ) async throws {
+    let question = try question(reading: true)
+    let model = VoiceReviewController(
+      question: question, capture: FakeCapture(transcript: "一", alternatives: alternatives))
+    model.start()
+    try await waitFor { model.phase == .listening }
+    model.stop()
+    try await waitFor { model.phase == .reviewing }
+    #expect(model.answer(for: question) == nil && model.text == "一")
+    #expect(model.answer(for: try self.question(), usingSingleKanaInterpretation: true) == nil)
+    #expect(model.text == "一")
+    let answer = model.answer(for: question, usingSingleKanaInterpretation: true)
+    #expect(answer == (alternatives.count == 1 ? "いち" : nil))
+    await model.cancel()?.value
+  }
+
+  @Test(arguments: [false, true])
+  func theQuestionSelectsEnglishOrJapaneseWithoutAnotherUserChoice(reading: Bool) async throws {
+    let capture = FakeCapture()
+    let model = VoiceReviewController(question: try question(reading: reading), capture: capture)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    #expect(await capture.locales == [reading ? "ja-JP" : "en-US"])
+    await model.cancel()?.value
   }
 
   @Test func aKanaAlternativeRequiresExplicitSelectionAndCannotSurviveRestart() async throws {

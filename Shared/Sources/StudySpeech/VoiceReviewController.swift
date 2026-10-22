@@ -10,6 +10,8 @@ public final class VoiceReviewController {
   }
   public private(set) var phase = Phase.idle
   public var text = ""
+  public private(set) var liveText = ""
+  public private(set) var shouldRepeat = false
   public let question: StudyQuestion
   public var languageName: String { question.kind == .reading ? "Japanese" : "English" }
   public var needsKanaCorrection: Bool {
@@ -25,6 +27,7 @@ public final class VoiceReviewController {
   @ObservationIgnored private var draft: VoiceAnswerDraft?
   @ObservationIgnored private var operation: Task<Void, Never>?
   @ObservationIgnored private var timeout: Task<Void, Never>?
+  @ObservationIgnored private var endOfAnswer: Task<Void, Never>?
 
   public init(question: StudyQuestion, capture: any VoiceCapture = AppleVoiceCapture()) {
     self.question = question
@@ -33,7 +36,7 @@ public final class VoiceReviewController {
 
   public func start(downloadModel: Bool = false) {
     let previous = operation
-    cancel()
+    let cleanup = cancel()
     let id = UUID()
     draft = VoiceAnswerDraft(question: question, recordingID: id)
     text = ""
@@ -43,6 +46,7 @@ public final class VoiceReviewController {
     operation = Task { [weak self] in
       do {
         await previous?.value
+        await cleanup?.value
         try Task.checkCancellation()
         try await capture.start(id: id, locale: locale, downloadModel: downloadModel) {
           [weak self] event in
@@ -57,6 +61,8 @@ public final class VoiceReviewController {
 
   public func stop() {
     guard phase == .listening, let id = draft?.recordingID else { return }
+    endOfAnswer?.cancel()
+    endOfAnswer = nil
     phase = .finishing
     let capture = capture
     operation = Task { [weak self] in
@@ -81,6 +87,8 @@ public final class VoiceReviewController {
     operation = nil
     timeout?.cancel()
     timeout = nil
+    endOfAnswer?.cancel()
+    endOfAnswer = nil
     if let id = draft?.recordingID {
       let capture = capture
       let previous = cleanup
@@ -92,13 +100,21 @@ public final class VoiceReviewController {
     draft?.cancel()
     draft = nil
     text = ""
+    liveText = ""
+    shouldRepeat = false
     phase = .idle
     return cleanup
   }
 
   /// Requires both a finished recording and the same current question at the submission boundary.
-  public func answer(for currentQuestion: StudyQuestion) -> String? {
-    guard canSubmit, draft?.answer(for: currentQuestion) != nil else { return nil }
+  public func answer(
+    for currentQuestion: StudyQuestion, usingSingleKanaInterpretation: Bool = false
+  ) -> String? {
+    guard phase == .reviewing, draft?.answer(for: currentQuestion) != nil else { return nil }
+    if usingSingleKanaInterpretation, needsKanaCorrection, readingSuggestions.count == 1 {
+      text = readingSuggestions[0]
+    }
+    guard canSubmit else { return nil }
     return VoiceAnswerDraft.cleanTranscript(text)
   }
 
@@ -112,7 +128,9 @@ public final class VoiceReviewController {
     switch event {
     case .needsModel: phase = .needsModel
     case .downloading: phase = .downloading
-    case .listening: phase = .listening
+    case .listening:
+      phase = .listening
+      if !liveText.isEmpty { finishAfterPause(id: id) }
     case .segment(let text, let start, let end, let isFinal, let alternatives):
       if draft?.receive(
         text: text, start: start, end: end, isFinal: isFinal,
@@ -120,19 +138,37 @@ public final class VoiceReviewController {
       {
         self.text = draft?.transcript ?? ""
       }
+      guard start.isFinite, end.isFinite, end >= start,
+        !VoiceAnswerDraft.cleanTranscript(text).isEmpty
+      else { return }
+      liveText = isFinal ? self.text : text
+      if phase == .listening { finishAfterPause(id: id) }
     case .finished:
       draft?.finish(recordingID: id, question: question)
       timeout?.cancel()
       timeout = nil
+      endOfAnswer?.cancel()
+      endOfAnswer = nil
       text = draft?.answer(for: question) ?? ""
+      shouldRepeat = text.isEmpty
       phase =
         text.isEmpty
         ? .failed("No speech was recognized. Try again or type your answer.") : .reviewing
     case .failed(let message):
       timeout?.cancel()
+      endOfAnswer?.cancel()
       let capture = capture
       Task { await capture.cancel(id: id) }
       phase = .failed(message)
+    }
+  }
+
+  private func finishAfterPause(id: UUID) {
+    endOfAnswer?.cancel()
+    endOfAnswer = Task { [weak self] in
+      do { try await Task.sleep(for: .milliseconds(1200)) } catch { return }
+      guard let self, self.draft?.recordingID == id else { return }
+      self.stop()
     }
   }
 }

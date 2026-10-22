@@ -25,99 +25,124 @@ public actor AppleVoiceCapture: VoiceCapture {
     if let activeID { await cancel(id: activeID) }
     activeID = id
     do {
-      guard SpeechTranscriber.isAvailable else { throw VoiceCaptureError.unavailable }
-      guard let supported = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
+      if SpeechTranscriber.isAvailable,
+        let supported = await SpeechTranscriber.supportedLocale(equivalentTo: locale)
+      {
+        let transcriber = SpeechTranscriber(
+          locale: supported, transcriptionOptions: [],
+          reportingOptions: supported.language.languageCode == .japanese
+            ? [.volatileResults, .alternativeTranscriptions] : [.volatileResults],
+          attributeOptions: [])
+        try await record(
+          id: id, module: transcriber, downloadModel: downloadModel, report: report,
+          results: transcriber.results.map { result in
+            VoiceCaptureEvent.segment(
+              text: String(result.text.characters), start: result.range.start.seconds,
+              end: result.range.end.seconds, isFinal: result.isFinal,
+              alternatives: result.alternatives.map { String($0.characters) })
+          })
+      } else if let supported = await DictationTranscriber.supportedLocale(equivalentTo: locale) {
+        let transcriber = DictationTranscriber(
+          locale: supported, contentHints: [.shortForm], transcriptionOptions: [],
+          reportingOptions: [.volatileResults, .alternativeTranscriptions], attributeOptions: [])
+        try await record(
+          id: id, module: transcriber, downloadModel: downloadModel, report: report,
+          results: transcriber.results.map { result in
+            VoiceCaptureEvent.segment(
+              text: String(result.text.characters), start: result.range.start.seconds,
+              end: result.range.end.seconds, isFinal: result.isFinal,
+              alternatives: result.alternatives.map { String($0.characters) })
+          })
+      } else {
         throw VoiceCaptureError.languageUnavailable
       }
-      try check(id)
-      let transcriber = SpeechTranscriber(
-        locale: supported,
-        preset: supported.language.languageCode == .japanese
-          ? .transcriptionWithAlternatives : .transcription)
-      let status = await AssetInventory.status(forModules: [transcriber])
-      try check(id)
-      guard status != .unsupported else { throw VoiceCaptureError.languageUnavailable }
-      let installation = try await AssetInventory.assetInstallationRequest(
-        supporting: [transcriber])
-      try check(id)
-      if let installation {
-        guard downloadModel else {
-          await report(.needsModel)
-          return
-        }
-        await report(.downloading)
-        try check(id)
-        try await installation.downloadAndInstall()
-        try check(id)
-      }
-      guard await AVCaptureDevice.requestAccess(for: .audio) else {
-        throw VoiceCaptureError.microphoneDenied
-      }
-      try check(id)
-      guard let device = AVCaptureDevice.default(for: .audio) else {
-        throw VoiceCaptureError.noMicrophone
-      }
-      let session = AVCaptureSession()
-      #if os(iOS)
-        session.automaticallyConfiguresApplicationAudioSession = false
-      #endif
-      let capture = try await CaptureInputSequenceProvider.provider(
-        from: device, in: session, compatibleWith: [transcriber])
-      try check(id)
-      #if os(iOS)
-        let audio = AVAudioSession.sharedInstance()
-        priorAudio = (audio.category, audio.mode, audio.categoryOptions)
-        try audio.setCategory(
-          .playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
-        try audio.setActive(true)
-      #endif
-      provider = capture
-      let analyzer = SpeechAnalyzer(modules: [transcriber])
-      self.analyzer = analyzer
-      resultTask = Task { [weak self] in
-        do {
-          for try await result in transcriber.results {
-            guard let self, await self.isActive(id) else { return }
-            await report(
-              .segment(
-                text: String(result.text.characters), start: result.range.start.seconds,
-                end: result.range.end.seconds, isFinal: result.isFinal,
-                alternatives: result.alternatives.map { String($0.characters) }))
-          }
-          if let self, await self.isActive(id) {
-            await self.stopAfterResults(id: id)
-            await report(.finished)
-          }
-        } catch {
-          guard let self, await self.isActive(id), !Task.isCancelled else { return }
-          await report(.failed(error.localizedDescription))
-          await self.cancel(id: id)
-        }
-      }
-      try await analyzer.start(inputSequence: capture.analyzerInputs)
-      try check(id)
-      capture.captureSession.startRunning()
-      guard capture.captureSession.isRunning else { throw VoiceCaptureError.interrupted }
-      for name in [
-        AVCaptureSession.wasInterruptedNotification, AVCaptureSession.runtimeErrorNotification,
-      ] {
-        let notifications = NotificationCenter.default.notifications(
-          named: name, object: capture.captureSession)
-        interruptionTasks.append(
-          Task { [weak self] in
-            for await _ in notifications {
-              guard let self, await self.isActive(id), !Task.isCancelled else { return }
-              await report(.failed(VoiceCaptureError.interrupted.localizedDescription))
-              await self.cancel(id: id)
-              return
-            }
-          })
-      }
-      await report(.listening)
     } catch {
       await cancel(id: id)
       throw error
     }
+  }
+
+  private func record<Results: AsyncSequence & Sendable>(
+    id: UUID, module: any SpeechModule, downloadModel: Bool,
+    report: @escaping VoiceCaptureReport, results: Results
+  ) async throws where Results.Element == VoiceCaptureEvent {
+    try check(id)
+    let status = await AssetInventory.status(forModules: [module])
+    try check(id)
+    guard status != .unsupported else { throw VoiceCaptureError.languageUnavailable }
+    let installation = try await AssetInventory.assetInstallationRequest(
+      supporting: [module])
+    try check(id)
+    if let installation {
+      guard downloadModel else {
+        await report(.needsModel)
+        return
+      }
+      await report(.downloading)
+      try check(id)
+      try await installation.downloadAndInstall()
+      try check(id)
+    }
+    guard await AVCaptureDevice.requestAccess(for: .audio) else {
+      throw VoiceCaptureError.microphoneDenied
+    }
+    try check(id)
+    guard let device = AVCaptureDevice.default(for: .audio) else {
+      throw VoiceCaptureError.noMicrophone
+    }
+    let session = AVCaptureSession()
+    #if os(iOS)
+      session.automaticallyConfiguresApplicationAudioSession = false
+    #endif
+    let capture = try await CaptureInputSequenceProvider.provider(
+      from: device, in: session, compatibleWith: [module])
+    try check(id)
+    #if os(iOS)
+      let audio = AVAudioSession.sharedInstance()
+      priorAudio = (audio.category, audio.mode, audio.categoryOptions)
+      try audio.setCategory(
+        .playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
+      try audio.setActive(true)
+    #endif
+    provider = capture
+    let analyzer = SpeechAnalyzer(modules: [module])
+    self.analyzer = analyzer
+    resultTask = Task { [weak self] in
+      do {
+        for try await event in results {
+          guard let self, await self.isActive(id) else { return }
+          await report(event)
+        }
+        if let self, await self.isActive(id) {
+          await self.stopAfterResults(id: id)
+          await report(.finished)
+        }
+      } catch {
+        guard let self, await self.isActive(id), !Task.isCancelled else { return }
+        await report(.failed(error.localizedDescription))
+        await self.cancel(id: id)
+      }
+    }
+    try await analyzer.start(inputSequence: capture.analyzerInputs)
+    try check(id)
+    capture.captureSession.startRunning()
+    guard capture.captureSession.isRunning else { throw VoiceCaptureError.interrupted }
+    for name in [
+      AVCaptureSession.wasInterruptedNotification, AVCaptureSession.runtimeErrorNotification,
+    ] {
+      let notifications = NotificationCenter.default.notifications(
+        named: name, object: capture.captureSession)
+      interruptionTasks.append(
+        Task { [weak self] in
+          for await _ in notifications {
+            guard let self, await self.isActive(id), !Task.isCancelled else { return }
+            await report(.failed(VoiceCaptureError.interrupted.localizedDescription))
+            await self.cancel(id: id)
+            return
+          }
+        })
+    }
+    await report(.listening)
   }
 
   public func finish(id: UUID) async throws {

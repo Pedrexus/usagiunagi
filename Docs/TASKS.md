@@ -6,6 +6,28 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Continuous voice review:** one microphone tap now enables inline voice across questions.
+Tentative speech is visible, a 1.2-second pause in recognizer updates requests finalization,
+and only finalized text goes through the unchanged revision-checked grader/store. Correct
+answers start the next capture after a short feedback interval. Following the owner's
+no-tap clarification, mistakes show the correction and advance with their penalty intact;
+unclear readings repeat automatically, and a single recognizer-supplied kana interpretation
+needs no selection tap. Setup/permission and fatal errors still pause. Keyboard use,
+end-session dialogs and backgrounding stop the run. Pronunciation autoplay pauses during
+voice review. Manual isolated phone checks reach the saved summary without further taps,
+retain a deliberate mistake's penalty and verify
+correction/typing recovery. Both unsigned Release builds, their packaged-app audits,
+scoped formatting and 587 shared Mac test functions pass before the latest instruction.
+**The owner now explicitly defers further automated tests until the end; the in-flight
+phone lane is canceled, not accepted as a completed gate.** Real-microphone timing remains
+unaccepted. Full formatting retains 30 protected-file errors; the rule inventory is
+231 findings / 98 rules, including one new nesting advisory in the shared voice controls.
+The earlier 61-method old-build run is explicitly canceled after three passes to prioritize this
+requested flow; its fourth case records cancellation, not a completed regression gate.
+[Behavior, research and validation](Validation/2026-10-22-continuous-voice.md).
+The current phone gate declares 69 methods, including the three new voice journeys;
+earlier 66-method receipts retain their historical source scope.
+
 **Ownership bugs repaired:** katakana voice uses the mandatory shared audio environment,
 and WaniKani settings reads belong to one app-owned task. A canceled-view regression fails
 before the repair and passes afterward; overlapping callers, explicit refresh and late
@@ -17,8 +39,9 @@ voice journey passes with its grading/fallback assertions retained. Full lint re
 30 protected formatting errors and 230 signals / 98 rules. Five inactive build caches are
 removed, recovering about 2 GiB; reports and frozen fixtures stay retained.
 [Exact receipts and limits](Validation/2026-10-21-code-audit.md#ownership-audit--october-22).
-Next is the ordinary 61-method phone lane; the five URL-driven methods remain separate.
-The full 66-method phone gate and broader acceptance are still open.
+The planned ordinary 61-method phone lane was canceled as recorded above; the five
+URL-driven methods remain separate. The current gate has 69 methods after the voice
+additions. Full phone regression and broader acceptance are deferred until the final stage.
 
 **Dense feedback follow-up:** manual onscreen-keyboard grading finds the Correct banner
 clipping the next question in short landscape. A first native trial also records a
@@ -253,7 +276,7 @@ The [iPhone adoption and review-focus checkpoint](Implementation/2026-10-21-froz
 
 1. Finish production source/config/dependency changes and the reviewed persistence decision. Update the removal manifest with exact replacements and retained responsibilities. Automated tests stay deferred; the owner's current isolated iPhone screenshot/manual request is permitted for this visual pass.
 2. Compare the completed app with original Tsurukame's pinned source/usability baseline. Preserve the quick lesson/review rhythm and WaniKani visual language; record intentional native adaptations and fix regressions. Use only isolated fixtures, never real exercises.
-3. Continue final gates after the accepted native test ports: native Mac/iPhone/iPad flows, Swift Testing, cold import/restarts, cloud compatibility, full-source parser/rules/format, Debug/Release/resources/linkage and reproducible dependency restoration. Serialize GUI jobs. Record new receipts against exact sources; historical passes are not substitutes.
+3. The owner reiterates on October 22: leave automated tests for the end. Cancel the current phone lane and do not start more test jobs during implementation/manual review. At the final stage, complete native Mac/iPhone/iPad flows, Swift Testing, cold import/restarts, cloud compatibility, full-source parser/rules/format, Debug/Release/resources/linkage and reproducible dependency restoration. Serialize GUI jobs. Record new receipts against exact sources; historical passes are not substitutes.
 4. Commit final work to the existing branches. Physical/signed/full-account gates and unpublished CI prerequisites remain explicit if they cannot run locally. Do not mark the whole modernization complete while required evidence remains.
 
 The [migration specification](Migration.md) retains M1–M8, P0–P8 and G1–G12 contracts, frozen fixtures, nineteen writer mappings and historical parity IDs. Its older tests-before-deletion sequence is superseded by the owner's latest implementation-first order, not by a claim of successful acceptance.
