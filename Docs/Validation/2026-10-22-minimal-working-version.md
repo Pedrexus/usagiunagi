@@ -377,3 +377,44 @@ incorrect and ask-later actions, whereas exclusion is available through the spli
 Do not infer dialog feature parity from the passing menu tests. Investigate the conditional
 advanced actions and native dialog rendering before closing that UI requirement. The review
 and lesson grading/outbox paths remain unchanged; all execution uses isolated fixtures.
+
+### Adaptive assessment repair
+
+Replaced the assessment-only confirmation dialog with one SwiftUI popover attached to the
+assessment control. It uses the existing shared action body, adapts to a sheet in compact
+layouts and dismisses before forwarding an action. There is no new platform conditional,
+framework or grading path. Cancel remains an explicit no-credit exit; exclusion and synonym
+editing are available alongside correct, incorrect and ask-later actions.
+
+The original native Mac dialog omitted advanced actions even when its construction received
+both capability flags as true. Explicit presentation data and a data-driven action-list trial
+did not fix the rendered omission; both were removed. Temporary boolean-only diagnostics
+were also removed. The exact framework cause is unproven; no undocumented action limit is
+assumed. Apple's [confirmation-dialog contract](https://developer.apple.com/documentation/swiftui/view/confirmationdialog(_:ispresented:titlevisibility:actions:))
+does not describe this omission. The retained presentation follows Apple's
+[popover guidance](https://developer.apple.com/design/human-interface-guidelines/popovers)
+for a few related tasks, with automatic compact adaptation and a control-relative anchor.
+
+Current evidence:
+
+- Mac `AdaptiveAssessment-MacComplete-20261022.log`,
+  `test-8ed822c6074c4bd9903126aed80d0e61.xcresult`: all five actions visible, cancel returns
+  without assessment, synonym alert opens after dismissal, canceling it permits reassessment,
+  and exclusion finishes with `0/0` credit. One test passes without skips/failures.
+- iPhone `AdaptiveAssessment-iPhone-20261022.log`,
+  `test-fd05d4ae16ec4ed9952287bdeb32894d.xcresult`: existing combined-Anki cancellation,
+  incorrect assessment and eventual correct completion passes without skips/failures.
+- iPad `AdaptiveAssessment-iPad-20261022.log`,
+  `test-bdab793419f7453588cec8c06c8f6f3d.xcresult`: the same flow passes in the wider presentation.
+- `AdaptiveAssessment-FinalLint-20261022.log`: 436 files, no rewrites/failures.
+- The earlier `AdaptiveAssessment-MacVerified` run also passes the separate native menu path.
+  The captured Mac assessment was visually inspected: all actions fit and the arrow points to
+  the assessment control. The capture comes from `MacFinal`, whose later test failure was an
+  ambiguous Cancel query matching both the alert and Touch Bar; the final test scopes that query.
+
+Prior failed dialog trials (`MacAssessmentData`, `MacAssessmentCapabilities`,
+`MacAssessmentActions`, `MacAssessmentActionList`, `AdaptiveAssessment-Mac`, `MacFinal`)
+remain in ignored results. The first `AdaptiveAssessment-Mac` compile failure came from an
+incomplete edit, not a runtime regression. Final source contains no diagnostic print or
+experimental action metadata. This closes the observed advanced-action presentation issue;
+physical VoiceOver, larger-text presentation and broader app acceptance remain separate.

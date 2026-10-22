@@ -430,3 +430,12 @@ Mixed earlier suite failures remain recorded in the current validation receipt.
 Open: Mac primary assessment confirmation dialog omits advanced exclusion/synonym actions
 in the observed hierarchy, while the native split-button menu provides exclusion. Investigate
 this UI difference; passing menu tests do not establish parity of the primary dialog.
+
+### 2026-10-22 — Assessment presentation repaired
+
+Closed the Mac primary-assessment action omission above. A single shared SwiftUI presentation
+now shows all available actions, adapts to compact sheets and anchors to the control on wider
+layouts. Mac cancellation/synonym/exclusion and iPhone/iPad incorrect-then-correct journeys
+pass; exclusion still awards zero credit. Mainboard lint passes and the Mac capture is reviewed.
+No platform branch, storage change or grading change was introduced. See the adaptive
+assessment section of the current validation receipt for the retained failed trials and limits.

@@ -194,9 +194,6 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         }
       }
     }
-    .confirmationDialog("Check your answer", isPresented: $state.showAssessment) {
-      correctionActions
-    }
     .confirmationDialog(
       state.endTitle + "?", isPresented: $confirmEnd, titleVisibility: .visible
     ) {
@@ -549,24 +546,41 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
             Menu("Correct answer", systemImage: "ellipsis") { correctionActions }
           }
         }.accessibilityIdentifier("review.corrections")
+          .popover(isPresented: $state.showAssessment, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 12) {
+              Text("Check your answer").font(.headline)
+              correctionActions
+              Button("Cancel", role: .cancel) { state.showAssessment = false }
+            }.padding().buttonStyle(.bordered)
+              .accessibilityElement(children: .contain)
+              .accessibilityIdentifier("review.assessment")
+              .presentationDetents([.medium])
+          }
       }
     }.buttonStyle(.bordered).controlSize(.large)
   }
 
+  private func performCorrection(_ value: ReviewScreenAction) {
+    state.showAssessment = false
+    action(value)
+  }
+
   @ViewBuilder private var correctionActions: some View {
     // Preserve standard Copy/Select All; grading shortcuts use Control.
-    Button("My answer was correct") { action(.correct) }
+    Button("My answer was correct") { performCorrection(.correct) }
       .keyboardShortcut("c", modifiers: .control)
     Button(state.isAnki ? "My answer was incorrect" : "Keep answer incorrect") {
-      action(.incorrect)
+      performCorrection(.incorrect)
     }.keyboardShortcut("i", modifiers: .control)
-    Button("Ask again later") { action(.deferQuestion) }
+    Button("Ask again later") { performCorrection(.deferQuestion) }
       .keyboardShortcut("a", modifiers: .control)
     if state.canExclude {
-      Button("Exclude this item") { action(.exclude) }.accessibilityIdentifier("review.exclude")
+      Button("Exclude this item") { performCorrection(.exclude) }.accessibilityIdentifier(
+        "review.exclude")
     }
     if state.canAddSynonym {
-      Button("Add synonym") { action(.synonym) }.keyboardShortcut("s", modifiers: .command)
+      Button("Add synonym") { performCorrection(.synonym) }.keyboardShortcut(
+        "s", modifiers: .command)
     }
   }
 }

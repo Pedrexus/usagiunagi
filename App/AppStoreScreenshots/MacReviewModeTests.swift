@@ -856,6 +856,41 @@
       showAnswer(in: app)
       excludeCurrentReview(in: app, lesson: true)
     }
+    func testAnkiAssessmentDialogIncludesAdvancedActionsWithoutCrediting() {
+      let app = launch(["--audio-fixture", "--anki-fixture", "--combined-anki-fixture"])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      showAnswer(in: app)
+      app.popUpButtons["review.corrections"].buttons["Assess answer"].click()
+      let dialog = app.descendants(matching: .any).matching(identifier: "review.assessment")
+        .firstMatch
+      XCTAssertTrue(dialog.waitForExistence(timeout: 5), app.debugDescription)
+      XCTAssertTrue(dialog.buttons["My answer was correct"].exists)
+      XCTAssertTrue(dialog.buttons["My answer was incorrect"].exists)
+      XCTAssertTrue(dialog.buttons["Ask again later"].exists)
+      XCTAssertTrue(dialog.buttons["Add synonym"].exists, app.debugDescription)
+      let capture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      capture.name = "Adaptive Mac assessment actions"
+      capture.lifetime = .keepAlways
+      add(capture)
+      dialog.buttons["Cancel"].click()
+      XCTAssertTrue(dialog.waitForNonExistence(timeout: 5))
+      XCTAssertTrue(app.buttons["review.correct"].exists)
+      app.popUpButtons["review.corrections"].buttons["Assess answer"].click()
+      XCTAssertTrue(dialog.waitForExistence(timeout: 5))
+      dialog.buttons["Add synonym"].click()
+      XCTAssertTrue(
+        app.buttons["Add and mark correct"].waitForExistence(timeout: 5), app.debugDescription)
+      XCTAssertTrue(dialog.waitForNonExistence(timeout: 5))
+      app.sheets.firstMatch.buttons["Cancel"].click()
+      app.popUpButtons["review.corrections"].buttons["Assess answer"].click()
+      XCTAssertTrue(dialog.waitForExistence(timeout: 5))
+      let exclude = dialog.buttons["Exclude this item"]
+      XCTAssertTrue(exclude.exists, app.debugDescription)
+      exclude.click()
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
+      app.assertSummaryValue("0/0", for: "correct")
+    }
     private func excludeCurrentReview(in app: XCUIApplication, lesson: Bool = false) {
       let popup = app.popUpButtons["review.corrections"]
       let menu = popup.exists ? popup.menuButtons.firstMatch : app.menuButtons["review.corrections"]
