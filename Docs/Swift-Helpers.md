@@ -8,7 +8,7 @@ The October 21 source follow-up adds a nonthrowing `@Memberwise` constructor-onl
 
 The current ownership audit retains weak captures where the owner stores a task, callback, delegate or observation token. Automatic/mistake sync and notification workers are long-lived streams cancelled on teardown/account changes; promoting self only inside each iteration avoids holding the service through the next suspension. Speech capture/reporting and completion deadlines use recording identities and cancellation. Audio/player monitoring, download callbacks and font transfers must not keep their owners alive indefinitely. Store-stream termination must not retain the store through its own continuation. Japanese input configuration uses weak fields because responder changes are deferred beyond view updates and teardown. Watch connectivity callbacks avoid a helper/handler or observation cycle while the helper strongly retains the weak system delegate. Finite task completion does not justify removing those lifetime boundaries. No blanket weak-reference ban or unchecked ownership annotation is introduced; final cancellation/deallocation regressions remain required.
 
-The owner asks for a deeper modern-Swift review of the macro composition workaround, inferred/domain validation, simpler models and other forwarding-only constructors. This remains an active implementation workstream after portable preferences; it is not closed by the existing initial package. Preserve the native-first rule and do not introduce a local-only app package path that cannot be restored from the standalone GitHub checkout. The general package currently lives outside this repository and has not been published.
+The constructor/inference follow-up and measured nonpersistent pilot are implemented and have the scoped compiler, showcase and Mac test evidence below. App adoption remains conditional on a larger measured saving and reproducible package publication; it is not an unimplemented requirement to add the macro regardless of cost. Preserve the native-first rule and do not introduce a local-only app package path that cannot be restored from the standalone GitHub checkout. The general package currently lives outside this repository and has not been published.
 
 The private `Never` initializer is a workaround for **our macro composed with `@Model`**, not a general SwiftData requirement. Ordinary SwiftData models can use ordinary initializers. The installed Xcode 27/Swift 6.4 interface still exposes `@Model` as a member/member-attribute/extension macro. Its `@Attribute` signature has schema options, original name and hash modifier, not arbitrary scalar range/nonblank rules. `ModelConfiguration.validate()` validates a store configuration, not each row. `ModelContext` provides save/transaction, autosave and notifications; [willSave/didSave are notifications](https://developer.apple.com/documentation/swiftdata/modelcontext), not a throwing validation interceptor. Keep explicit validation before local saves and when applying imported data. Native constraints can handle the constraints they actually express; they cannot infer domain-specific valid values or authorize schema changes.
 
@@ -51,7 +51,7 @@ public struct ReviewTotals: Sendable {
 }
 ```
 
-This example is a proposed pilot, not an installed dependency or a compiled application change. The next implementation should select actual nonpersistent forwarding initializers, record their line savings and expanded interfaces, and check build/dependency cost before making the macro a shared default. Do not replace native synthesis that already works. Keep the current SwiftLint rule, adjusting it only if a real macro expansion produces a false positive.
+This earlier third-party example is research context, not an installed dependency or a compiled application change. The subsequent house-package pilot above supplies the measured constructor comparison; it does not justify a shared application dependency. Do not replace native synthesis that already works. Keep the current SwiftLint rule, adjusting it only if a real macro expansion produces a false positive.
 
 ## Patos Swift shape
 
@@ -89,11 +89,11 @@ The sketch and two concrete rules (quarter-step font sizes and nonempty text) ty
 
 Keep persistence identities stable and validation errors explicit. Neither a macro nor a wrapper can decide whether an ID is server-owned, locally generated or immutable after insertion. Codable defaults must distinguish missing input from invalid input. Frozen study schemas and nested decoders are outside a mechanical initializer replacement.
 
-## Sequence and current status
+## Current disposition
 
-1. Finish settings ownership against the documented WaniKani preferences and extend app-only private sync.
-2. Inventory forwarding public constructors and duplicate validation; choose the smallest real macro/helper pilot.
-3. Review source, macro expansions, generated interfaces, manual build behavior and dependency cost.
-4. Run automated tests only at the end, after implementation and permitted manual checks, following the owner's latest instruction.
+- Portable settings ownership, the constructor/inference follow-up, generated-source review and the measured constructor pilot are implemented. Their evidence retains the platform and fixture limits stated above.
+- The package's final Mac test phase passes 12 runtime/persistence functions and four macro functions after implementation/manual checks. The earlier sketch's tests-deferred note describes that sketch's original checkpoint, not the current package status.
+- The application keeps native construction: the measured three-line saving does not justify its first compiler-plugin dependency. Package publication, broader toolchain/platform qualification and any future app integration remain separate work.
+- Frozen SwiftData models and historical decoders must not be mechanically rewritten. Model adoption requires a justified schema change with its corresponding migration evidence.
 
-No macro dependency, CocoaPods setup, Patos source change or SwiftData constructor rewrite is introduced by this research. Existing native synthesis remains active. This decision prevents a new general framework from getting ahead of actual application needs.
+No CocoaPods setup, Patos source change or new application model hierarchy is required by the current decision. The general-purpose library exists; using it in the app is conditional on demonstrating a net simplification.
