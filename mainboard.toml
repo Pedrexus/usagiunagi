@@ -10,6 +10,7 @@ lint = "mainboard proc timeout 600 mainboard lint --check ."
 test = "mainboard proc timeout 900 /usr/bin/xcrun swift test --package-path Shared --scratch-path .build/Shared --jobs 4"
 # Simulator launches need ad-hoc signing for Keychain access; no developer identity is required.
 build = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action build --configuration Debug --destination 'generic/platform=iOS Simulator' --derived-data .build/Xcode/iOS --timeout 900 --setting CODE_SIGNING_ALLOWED=YES --setting CODE_SIGN_IDENTITY=-"
+run = { run = "mainboard apple launch .build/Xcode/iOS/Build/Products/Debug-iphonesimulator/Tsurukame.app --simulator 'iPhone 18 Pro' --os-version 27.0 --timeout 180", depends = ["build"], description = "Build and open the iPhone app in Xcode Device Hub" }
 # Native compilation includes type checking; use the same product and toolchain.
 typecheck = "mainboard run --locked build"
 build-watch = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme 'Tsurukame Complication' --action build --configuration Debug --destination 'generic/platform=watchOS Simulator' --derived-data .build/Xcode/Watch --timeout 900 --setting CODE_SIGNING_ALLOWED=NO"

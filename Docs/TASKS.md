@@ -739,11 +739,26 @@ signing configuration. The actual `mainboard run --locked --no-install build` ta
 passes with zero errors/warnings in `build-e8be9ebcbb0841f9a0161a93ff6b413c.xcresult`.
 This proves unauthenticated startup, not authenticated sync.
 
-This Xcode installation lacks the traditional Simulator.app; DeviceHub opens successfully,
-but its simulator viewing route remains unverified. Mainboard's generic launch helper is
-being checked separately before adding a dependable app run task.
+Xcode 27 uses Device Hub for the simulator window. The device URL route is verified by an
+actual window capture (`/tmp/usagi-devicehub-window.png`) showing the selected iPhone and
+normal app. Mainboard's generic launcher also completed successfully; receipt:
+`.build/Results/DeviceHub-Launch-20261022.log`. The new app `run` task depends on the signed
+build and invokes this launcher. Mainboard commits through `895f74b` remain local.
+The final timeout also bounds simulator discovery/tool lookup; 125 focused Apple/runner
+tests pass. No new tool push is authorized or performed.
 
-Consolidate app-owned StudyUI and StudySpeech into feature folders in App. A separate-module
-populated preference-store probe is in progress before moving `PrivatePreferencesV1.Change`.
-Do not rename frozen main-store model/Codable identities without migration evidence. The
-goal is fewer modules, not a new service abstraction or loss of saved preferences.
+StudyUI and StudySpeech now compile directly in App feature folders. The separate-module
+populated preference-store probe passed before moving `PrivatePreferencesV1.Change`:
+values and persistent identities are unchanged. Frozen main-store model/Codable identities
+remain in Core/Persistence. See the [consolidation receipt](Validation/2026-10-22-app-module-consolidation.md)
+for transferred tests and remaining signed iCloud qualification.
+
+The integrated `run` task builds and opens Device Hub, but the first consolidated app then
+crashed in `WatchConnectionServerDelegate.session(_:activationDidCompleteWith:error:)`:
+the new app-wide MainActor default incorrectly isolated Apple's background callback.
+Crash receipt: `Tsurukame-2026-10-22-213902.ips` in the host DiagnosticReports directory.
+Both Watch delegates and their packet types now explicitly remain nonisolated, retaining
+their existing hops to MainActor. The corrected integrated task succeeded, and a screenshot
+shows normal Home/sign-in; the process remained alive after activation. Receipt:
+`.build/Results/App-Run-DelegateFixed-20261022.log`, `/tmp/usagi-consolidated-fixed.png`.
+A successful launch PID and compiled hosted tests alone are insufficient.

@@ -24,9 +24,14 @@ The persistence probe additionally supports `write-native-selection` (expected a
 From this app checkout, `mainboard run --locked setup` installs the pinned correctness tool,
 `mainboard run --locked lint` checks the full repository without changing files,
 `mainboard run --locked test` runs the shared Mac Swift Testing suites, and
-`mainboard run --locked build` compiles the unsigned iOS simulator Debug app. `typecheck`
+`mainboard run --locked build` compiles the ad-hoc-signed iOS simulator Debug app. `typecheck`
 delegates to that same native build. Hosted app/UI, iOS shared, watch and recovery checks
 remain separate required tasks; `test` alone does not establish full acceptance.
+`mainboard run --locked run` builds, installs and opens the app on iPhone 18 Pro (iOS 27)
+in Xcode's Device Hub. Ad-hoc signing enables the normal Keychain startup path without
+requiring a developer identity. This task requires Mainboard `895f74b` or newer, currently
+committed locally on `codex/apple-development`; the published CI pin does not include the
+launcher yet. CI does not invoke this interactive task.
 The complete lint command intentionally reports formatting in protected owner edits rather
 than excluding them or claiming a green result. CI's gradually adopted style scope is explicit.
 
