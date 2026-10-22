@@ -12,14 +12,14 @@ Open reviews, lessons or a subject using `usagiunagi:///reviews`, `usagiunagi://
 
 | Folder | Purpose |
 | --- | --- |
-| `App` | One multiplatform app/project, system adapters and app integration tests |
-| `Shared` | One Swift package: domain, persistence, speech, SwiftUI and unit tests |
+| `App` | One multiplatform app: SwiftUI features, voice, system adapters and hosted tests |
+| `Shared` | Stored domain values and SwiftData persistence, retaining saved-data identities, plus their unit tests |
 | `Resources` | Layered kanji icon, names, hosted assets and Swift resource generators |
 | `Docs` | Current workflow/tasks, statistics definitions and historical evidence |
 
 ## Build and test
 
-Use Xcode 27 and open **`App/UsagiUnagi.xcworkspace`** for iPhone, iPad and native Mac. There is one `UsagiUnagi` app scheme and SwiftUI entry point. The app uses its local shared Swift package and Apple frameworks; CocoaPods and SwiftProtobuf are removed. Historical internal target/module and bundle names preserve compatibility. Set your own signing team and identifiers for devices.
+Use Xcode 27 and open **`App/UsagiUnagi.xcworkspace`** for iPhone, iPad and native Mac. There is one `UsagiUnagi` app scheme and SwiftUI entry point. SwiftUI and speech compile directly in the app. Only domain and persistence remain in the local package to preserve saved-data identities. The app uses Apple frameworks; CocoaPods and SwiftProtobuf are removed. Historical internal target/module and bundle names preserve compatibility. Set your own signing team and identifiers for devices.
 
 [GitHub Actions](.github/workflows/apple.yml) uses Mainboard for bounded native builds/tests and result evidence. Mainboard is development infrastructure; it is not linked into the app. A standalone fork uses the public tool with its committed lock and does not need the parent workspace. See [development and CI](Docs/Development.md) for the published tool revision and remaining hosted validation.
 

@@ -2,9 +2,9 @@ import Foundation
 import Observation
 import StudyCore
 import StudyPersistence
-import StudyTestSupport
-import StudyUI
 import Testing
+
+@testable import Tsurukame
 
 private actor AutomaticServer: WaniKaniService {
   enum Fault: Equatable { case none, offline, lostReply, unauthorized, throttled }

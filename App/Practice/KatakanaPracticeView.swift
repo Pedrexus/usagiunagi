@@ -1,5 +1,4 @@
 import StudyCore
-import StudySpeech
 import SwiftUI
 
 /// The shared practice destination uses the same saved study options on every platform.

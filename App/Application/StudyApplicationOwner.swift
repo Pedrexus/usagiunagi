@@ -2,7 +2,6 @@ import Foundation
 import Observation
 import StudyCore
 import StudyPersistence
-import StudyUI
 import SwiftUI
 
 #if os(macOS)

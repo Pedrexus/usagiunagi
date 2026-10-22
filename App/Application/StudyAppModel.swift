@@ -176,7 +176,7 @@ public final class StudyAppModel {
     } catch {
       if generation == epoch {
         restored = false
-        self.error = "Couldn't read saved statistics: \(error.localizedDescription)"
+        self.error = "Couldn't restore your saved account: \(error.localizedDescription)"
       }
     }
   }

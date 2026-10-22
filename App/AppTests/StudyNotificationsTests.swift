@@ -1,9 +1,9 @@
 import Foundation
 import StudyCore
-import StudyTestSupport
-import StudyUI
 import Testing
 import UserNotifications
+
+@testable import Tsurukame
 
 @MainActor private final class NotificationPreferences: StudyNotificationPreferences {
   var values: [NotificationPreference: Bool] = [:]

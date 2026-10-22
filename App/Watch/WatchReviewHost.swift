@@ -2,8 +2,6 @@
   import Foundation
   import StudyCore
   import StudyPersistence
-  import StudySpeech
-  import StudyUI
 
   /// The phone remains the sole review writer; Watch is another revision-checked input.
   @MainActor final class WatchReviewHost {

@@ -1,8 +1,9 @@
 import Foundation
 import ImageIO
 import StudyCore
-import StudyUI
 import Testing
+
+@testable import Tsurukame
 
 @MainActor @Suite(.timeLimit(.minutes(1)))
 struct RadicalImageExportTests {

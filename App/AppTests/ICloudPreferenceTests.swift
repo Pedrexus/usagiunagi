@@ -4,7 +4,7 @@ import SwiftData
 import Testing
 
 @testable import StudyPersistence
-@testable import StudyUI
+@testable import Tsurukame
 
 @MainActor struct ICloudPreferenceTests {
   private let key = "native.reviewPreferences"

@@ -1,6 +1,5 @@
 #if DEBUG
   import StudyCore
-  import StudyUI
 
   /// UI fixtures never prompt, schedule system alerts or change the app badge.
   @MainActor enum NotificationFixture {

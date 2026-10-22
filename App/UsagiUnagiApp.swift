@@ -1,4 +1,3 @@
-import StudyUI
 import SwiftUI
 
 /// One native SwiftUI app and service graph for iPhone, iPad and Mac.

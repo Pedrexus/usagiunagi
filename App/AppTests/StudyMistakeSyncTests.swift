@@ -1,10 +1,9 @@
 import Foundation
 import StudyCore
-import StudyTestSupport
 import Testing
 
 @testable import StudyPersistence
-@testable import StudyUI
+@testable import Tsurukame
 
 @MainActor private final class MistakeICloud: StudyMistakeICloudStore {
   var observedEpoch = UUID()

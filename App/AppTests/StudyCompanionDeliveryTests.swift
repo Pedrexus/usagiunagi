@@ -1,7 +1,8 @@
 import Foundation
 import StudyCore
-import StudyUI
 import Testing
+
+@testable import Tsurukame
 
 @MainActor private final class CompanionProbe {
   var active = true

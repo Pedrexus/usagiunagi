@@ -2,7 +2,6 @@
   import Foundation
   import StudyCore
   import StudyPersistence
-  import StudySpeech
   import Testing
 
   @testable import Tsurukame

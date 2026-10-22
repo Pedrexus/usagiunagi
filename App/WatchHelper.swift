@@ -18,7 +18,6 @@ import os
 
 #if os(iOS)
   import StudyCore
-  import StudyUI
 #endif
 
 #if os(watchOS)
@@ -33,7 +32,7 @@ typealias EpochTimeInt = Int64
 
 /// WatchConnectivity calls on its own queue; the immutable callback returns to the UI actor.
 #if os(iOS)
-  final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable {
+  nonisolated final class WatchConnectionServerDelegate: NSObject, WCSessionDelegate, Sendable {
     private let activated: @MainActor @Sendable () -> Void
     private let review: @MainActor @Sendable (WatchReviewRequest) async -> WatchReviewResponse
     init(
@@ -54,7 +53,7 @@ typealias EpochTimeInt = Int64
       }
     }
     func session(
-      _: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?
+      _: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: (any Error)?
     ) {
       guard state == .activated, error == nil else { return }
       Task { @MainActor [activated] in activated() }
@@ -65,7 +64,7 @@ typealias EpochTimeInt = Int64
 #endif
 
 #if os(watchOS)
-  final class WatchConnectionClientDelegate: NSObject, WCSessionDelegate, Sendable {
+  nonisolated final class WatchConnectionClientDelegate: NSObject, WCSessionDelegate, Sendable {
     private let callback: ClientDelegateCallback
     private let packetCallbacks = DispatchGroup()
 

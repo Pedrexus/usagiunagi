@@ -1,7 +1,5 @@
 import StudyCore
 import StudyPersistence
-import StudySpeech
-import StudyUI
 import SwiftUI
 
 /// App-owned services. Feature views receive these same owners on every route.

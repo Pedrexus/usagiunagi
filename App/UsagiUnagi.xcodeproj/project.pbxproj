@@ -14,13 +14,11 @@
 		A29A00000000000000000003 /* WatchReviewHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000011 /* WatchReviewHost.swift */; platformFilter = ios; };
 		A29A00000000000000000004 /* WatchVoiceReview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000012 /* WatchVoiceReview.swift */; };
 		047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5F84B9E7F40CE19F2FDE97 /* StudyCore */; };
-		0833BA0BAAC68D162D964D99 /* StudySpeech in Frameworks */ = {isa = PBXBuildFile; productRef = 5E2663408318DBE16C356C9A /* StudySpeech */; };
 		137DFD51681E0F8E31C6B995 /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
 		326C7AFEFEC1146179A2AFA0 /* ReviewSessionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */; };
 		3D096CD2C178F453FEF79064 /* MacReviewModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */; platformFilter = macos; };
 		5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
 		5E08C809E1400FA7702A85B4 /* NativeStudyFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42EAD31B1612979F2E9C72DB /* NativeStudyFixture.swift */; };
-		60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 23A08FB0407E2600C582ED6F /* StudyUI */; };
 		62E97290C5F91A414D8D0AA4 /* ReviewFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D10B2D3D08A158BC522063 /* ReviewFlowTests.swift */; platformFilter = ios; };
 		631CAD67234AF962008CEA73 /* AnswerCheckerTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 631CAD66234AF962008CEA73 /* AnswerCheckerTest.swift */; };
 		63A711E42BBBF6C40047436A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 63A711E32BBBF6C40047436A /* PrivacyInfo.xcprivacy */; platformFilter = ios; };
@@ -66,6 +64,79 @@
 		CD7A2970A9C7F9745DDA7A01 /* TKMKanaInputTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */; platformFilter = ios; };
 		DEA76ACC14C85768DD0F5BC7 /* StudyStatisticsTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */; };
 		F2132D089384588D4E462C7A /* AudioLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */; };
+		32F983A195BD71F4445CFD2E /* StudySignInFields.swift */ = {isa = PBXBuildFile; fileRef = 6844ADBF46B7EF986EDC4976 /* StudySignInFields.swift */; };
+		CE5DDA1B753B6B4007A28823 /* AppleStudyMistakeICloudStore.swift */ = {isa = PBXBuildFile; fileRef = 09F42A7C488571F570E663EB /* AppleStudyMistakeICloudStore.swift */; };
+		DACCBB41C87727231DDC9288 /* StudyActivity.swift */ = {isa = PBXBuildFile; fileRef = A0BA0DD5B38E62C28915C324 /* StudyActivity.swift */; };
+		C232F9E02B64F5691D84250C /* StudyAppModel.swift */ = {isa = PBXBuildFile; fileRef = 5433E31148BF8AAAE29D71E1 /* StudyAppModel.swift */; };
+		E461FCD8A4BC58FED6C5F78B /* StudyAutomaticSync.swift */ = {isa = PBXBuildFile; fileRef = C4EC902BE7DBDBCE71C48214 /* StudyAutomaticSync.swift */; };
+		BE099753680C5C842DE814F6 /* StudyICloudPreferences.swift */ = {isa = PBXBuildFile; fileRef = ACBA34A52C5A0F474128FEDB /* StudyICloudPreferences.swift */; };
+		62D0DB249F18BDE39A5C4AF7 /* StudyLinkInbox.swift */ = {isa = PBXBuildFile; fileRef = 7BE6B105BAA62EC0EBEF9389 /* StudyLinkInbox.swift */; };
+		638D5F6217882F9C7C3D5BDC /* StudyMistakeSync.swift */ = {isa = PBXBuildFile; fileRef = 78A16A6BE3EC6EA0A4943E4D /* StudyMistakeSync.swift */; };
+		4407FA07F3E29E43872C36D9 /* StudyPortablePreferences.swift */ = {isa = PBXBuildFile; fileRef = F85E73049755DBF224D805CD /* StudyPortablePreferences.swift */; };
+		2D8CB1DABEE97DCC655E0770 /* StudyRootView.swift */ = {isa = PBXBuildFile; fileRef = B78AC546DA346C3AEB077571 /* StudyRootView.swift */; };
+		9096497B61381A916DF77167 /* NativeSubjectCatalogView.swift */ = {isa = PBXBuildFile; fileRef = 6F00D338B7CDCAE2E8D4B5B0 /* NativeSubjectCatalogView.swift */; };
+		E3676CEE07F735BD235CFBAD /* NativeSubjectDetailsView.swift */ = {isa = PBXBuildFile; fileRef = 8920AC2DD6AB2558EC474EFE /* NativeSubjectDetailsView.swift */; };
+		4EC7BD602512537FD0391034 /* RadicalImageView.swift */ = {isa = PBXBuildFile; fileRef = F08940BA6F3E62641B645F0B /* RadicalImageView.swift */; };
+		EFC51A1B9C0CE5683B556477 /* StudyMaterialEditor.swift */ = {isa = PBXBuildFile; fileRef = C033A4181F43E7A5283F86B5 /* StudyMaterialEditor.swift */; };
+		3D0597303FA6C3E4C8EE360C /* SubjectArtwork.swift */ = {isa = PBXBuildFile; fileRef = 5DA7390194AD4A09F2D8FAD6 /* SubjectArtwork.swift */; };
+		864FCDC4CA358AAE88DEF198 /* SubjectCatalogView.swift */ = {isa = PBXBuildFile; fileRef = F3DDA67A4DC70A8429D4C177 /* SubjectCatalogView.swift */; };
+		CBD7CC302FC5D5A54BAF0F3E /* SubjectDetailsContent.swift */ = {isa = PBXBuildFile; fileRef = 4E6FD87FFFFCA14401638713 /* SubjectDetailsContent.swift */; };
+		75C6AA346983B5AE8C546BAB /* SubjectExclusionControl.swift */ = {isa = PBXBuildFile; fileRef = 24EC40185D03C8F158C6C2C2 /* SubjectExclusionControl.swift */; };
+		974509B1ECB9B7059974BB46 /* SubjectProgressView.swift */ = {isa = PBXBuildFile; fileRef = A368886077D9D8D3213ADB2A /* SubjectProgressView.swift */; };
+		C1771BA5D1082A03F4BA1C09 /* HomeDashboardView.swift */ = {isa = PBXBuildFile; fileRef = 74C5B5CE7E002288567F5C97 /* HomeDashboardView.swift */; };
+		6732520A3D5AE847BC3B95FB /* NativeHomeDashboardView.swift */ = {isa = PBXBuildFile; fileRef = 295BE739ED59767F8E72EC74 /* NativeHomeDashboardView.swift */; };
+		981CFB2C13BD8D6489D80EB8 /* StudyShellView.swift */ = {isa = PBXBuildFile; fileRef = 28013E4E5785383C6BA418A6 /* StudyShellView.swift */; };
+		9A6C0492BD3E97B2B30D907C /* StudyTabs.swift */ = {isa = PBXBuildFile; fileRef = 5017CC79D86C0AF500ED44E3 /* StudyTabs.swift */; };
+		D01FA853B5583151F05B7E93 /* LessonFlowView.swift */ = {isa = PBXBuildFile; fileRef = EE4DABE186C7DE661961F4C3 /* LessonFlowView.swift */; };
+		314A5EC96D083EEFE608E438 /* LessonPickerView.swift */ = {isa = PBXBuildFile; fileRef = E028B491F0DCD74BE6CA43D4 /* LessonPickerView.swift */; };
+		7801B4E3EB8CBE93C202C0B8 /* NativeLessonView.swift */ = {isa = PBXBuildFile; fileRef = D50FA3E17976CCD5987C19F9 /* NativeLessonView.swift */; };
+		AC984E942F5B2F8AE6288224 /* KatakanaPracticeView.swift */ = {isa = PBXBuildFile; fileRef = DF5AB553192D309212642BC2 /* KatakanaPracticeView.swift */; };
+		B297C76A00DB94C75848ED4A /* ArchivedReviewTransfer.swift */ = {isa = PBXBuildFile; fileRef = B92F5C3A86A22F44E98416D5 /* ArchivedReviewTransfer.swift */; };
+		3B4452085151A1C0650DFE76 /* SavedWorkView.swift */ = {isa = PBXBuildFile; fileRef = 36C5729795DDB522334B83A5 /* SavedWorkView.swift */; };
+		085BF30CE72D1E52F7365DF9 /* AudioPlaybackNotice.swift */ = {isa = PBXBuildFile; fileRef = EFA41ADF0D6A7EA4834978BD /* AudioPlaybackNotice.swift */; };
+		E41474EA01C3DEC5CCE11410 /* NativeReviewView.swift */ = {isa = PBXBuildFile; fileRef = E923ECF2638BD80CCCB79657 /* NativeReviewView.swift */; };
+		EE7319FAAAEEBB480546C16A /* ReviewScreen.swift */ = {isa = PBXBuildFile; fileRef = A2158912F0ED4AFAF9495222 /* ReviewScreen.swift */; };
+		0EB4315F9DFC2178AC1F60DF /* ReviewSettingsContent.swift */ = {isa = PBXBuildFile; fileRef = 9AD65A1B81652FFD5794A19D /* ReviewSettingsContent.swift */; };
+		184D8A9690B33D0E82330193 /* ReviewSettingsPanel.swift */ = {isa = PBXBuildFile; fileRef = 053A59457BA82208BBC24018 /* ReviewSettingsPanel.swift */; };
+		AE0D658BC28EB02F5DD75684 /* SessionSummaryView.swift */ = {isa = PBXBuildFile; fileRef = C0AF14DD501CAC8FBD1DCC7F /* SessionSummaryView.swift */; };
+		916AE0322928252C965EF6FB /* StoredReviewPreferences.swift */ = {isa = PBXBuildFile; fileRef = 9FFE1C080A176CA156652F18 /* StoredReviewPreferences.swift */; };
+		7BF8E28AD2C245276C7C7C0E /* StudyAnswerInput.swift */ = {isa = PBXBuildFile; fileRef = 8BE2855DD9360931DCAA6EBE /* StudyAnswerInput.swift */; };
+		B8D2F36247519F1D7796E1FF /* StudySessionSettingsContent.swift */ = {isa = PBXBuildFile; fileRef = FBB8355306C079717408BDE8 /* StudySessionSettingsContent.swift */; };
+		5D5BCEDEC4C252F905CA76E0 /* AppleVoiceCapture.swift */ = {isa = PBXBuildFile; fileRef = 0BE6451D00D8B5EEEEAA5096 /* AppleVoiceCapture.swift */; };
+		34453DFC67049B0DC3201DAC /* VoiceCapture.swift */ = {isa = PBXBuildFile; fileRef = C468D03FD844174A11723CA6 /* VoiceCapture.swift */; };
+		53187FA889031D614A98250B /* VoiceReviewController.swift */ = {isa = PBXBuildFile; fileRef = 28A3386B4C8732F331FFEB1B /* VoiceReviewController.swift */; };
+		FB3047C1ED2BDD0106A6EC1D /* VoiceAnswerPanel.swift */ = {isa = PBXBuildFile; fileRef = 2F8002B9821B75BD4017F1E0 /* VoiceAnswerPanel.swift */; };
+		AA194C76A3BA1898B4866614 /* AppearanceSettingsView.swift */ = {isa = PBXBuildFile; fileRef = 15EBA773F7E0A1D808E605BD /* AppearanceSettingsView.swift */; };
+		9E3C861A904FC4000B61C1FF /* AudioLibraryView.swift */ = {isa = PBXBuildFile; fileRef = A01B176FC262C887D9098576 /* AudioLibraryView.swift */; };
+		73A61393B4B37ED1F098756A /* DeveloperSettingsView.swift */ = {isa = PBXBuildFile; fileRef = 9E0FAE2F2ABD2D4EEB32698F /* DeveloperSettingsView.swift */; };
+		EA0559E3ACC6644D4C0E7F99 /* FontLibraryView.swift */ = {isa = PBXBuildFile; fileRef = 2D4AB6FE0C22DF56FA2943AB /* FontLibraryView.swift */; };
+		92ABC755EF8E63F0C7A71001 /* LessonSettingsView.swift */ = {isa = PBXBuildFile; fileRef = 250105E1017F19BECBE5C9C1 /* LessonSettingsView.swift */; };
+		5D897225C04A82792EB7AC3F /* NotificationSettingsSection.swift */ = {isa = PBXBuildFile; fileRef = CB4CF0ED7CBD8B54A9209A84 /* NotificationSettingsSection.swift */; };
+		94BA39EAC533AA61F24BAF5B /* OfflineAudioView.swift */ = {isa = PBXBuildFile; fileRef = DF1855FDBB658A88E4BC8560 /* OfflineAudioView.swift */; };
+		36E5F5AA656144E87BA01CBF /* StudyCompanionDelivery.swift */ = {isa = PBXBuildFile; fileRef = 28F93A9B37117534B9F21A9B /* StudyCompanionDelivery.swift */; };
+		BB830312D913357E9D87BA10 /* StudyNotifications.swift */ = {isa = PBXBuildFile; fileRef = E30C702153989D97F42323A6 /* StudyNotifications.swift */; };
+		4C7293DE2A503B6B012DCFFD /* StudySettingsView.swift */ = {isa = PBXBuildFile; fileRef = 07EBE2FA7BC95CB5AF9CE93F /* StudySettingsView.swift */; };
+		0279C5C27A0352E068DEFF5F /* StudyWaniKaniSources.swift */ = {isa = PBXBuildFile; fileRef = EAC15D2A71A3C6722F2192E5 /* StudyWaniKaniSources.swift */; };
+		24E79875E2EDF7ED5A21604C /* SubjectSettingsView.swift */ = {isa = PBXBuildFile; fileRef = 19EC7E77D3D9D2AD81807A87 /* SubjectSettingsView.swift */; };
+		384E6445B9D95F102FC98D97 /* WaniKaniSettingsSection.swift */ = {isa = PBXBuildFile; fileRef = BD8E3A293B8BF771AECA7B36 /* WaniKaniSettingsSection.swift */; };
+		98C99174C1C26C504FB96A81 /* StudyAvatarView.swift */ = {isa = PBXBuildFile; fileRef = 662DB68B76CEE7ADF230FC09 /* StudyAvatarView.swift */; };
+		BBA0DB66A029B95B8C9C0E95 /* StudyPalette.swift */ = {isa = PBXBuildFile; fileRef = 8C9BC7B2A17BAAE18DF4132A /* StudyPalette.swift */; };
+		48C8B9FE6A33EBAF3DA77386 /* CurriculumCoverageView.swift */ = {isa = PBXBuildFile; fileRef = FAFFBAF3F2398FDE652D5C28 /* CurriculumCoverageView.swift */; };
+		B262C3C8A3B557F35DEEF221 /* StudyDashboard.swift */ = {isa = PBXBuildFile; fileRef = 1343161A77285BB09951D955 /* StudyDashboard.swift */; };
+		6F111A931F3E3C3E8329D1EB /* UpcomingReviewsView.swift */ = {isa = PBXBuildFile; fileRef = B2B55D7CA9BD858AEEEA5362 /* UpcomingReviewsView.swift */; };
+		9C40AE50BAB09C487B3AA0F6 /* AutomaticSyncTests.swift */ = {isa = PBXBuildFile; fileRef = 65EB93267C765D6AF23EADC3 /* AutomaticSyncTests.swift */; };
+		870E3192467FD959C7171367 /* ICloudPreferenceTests.swift */ = {isa = PBXBuildFile; fileRef = DB1D7FBA4D9B8355C4683C62 /* ICloudPreferenceTests.swift */; };
+		FF28C7F00ACA3B9D6DF9C095 /* NativeServiceOwnerTests.swift */ = {isa = PBXBuildFile; fileRef = D78E966C2077960BA0DED2B8 /* NativeServiceOwnerTests.swift */; };
+		CA53872EFD4E77B35E0D32A2 /* StudyAppModelTests.swift */ = {isa = PBXBuildFile; fileRef = 2C11276F8B700A9CFA0011CB /* StudyAppModelTests.swift */; };
+		584C2E64C95BEDBEA236E60A /* StudyCompanionDeliveryTests.swift */ = {isa = PBXBuildFile; fileRef = 3DBCA9576F4A868AD07C80D8 /* StudyCompanionDeliveryTests.swift */; };
+		08CB079FA005CC6FE6E68925 /* StudyEndpointSettingsTests.swift */ = {isa = PBXBuildFile; fileRef = C96A34F69D17EBCECDB8FC83 /* StudyEndpointSettingsTests.swift */; };
+		DBC3B89919C75BDD8440E458 /* StudyMistakeSyncTests.swift */ = {isa = PBXBuildFile; fileRef = FAFD6C63097AC8D641A558F8 /* StudyMistakeSyncTests.swift */; };
+		A2FA5BE7D9FFA0DB82F254EA /* StudyNotificationsTests.swift */ = {isa = PBXBuildFile; fileRef = E964699590376F7A5B801E47 /* StudyNotificationsTests.swift */; };
+		2BB6D9414690AB80302AF344 /* VoiceReviewControllerTests.swift */ = {isa = PBXBuildFile; fileRef = ACBDB13F831A8C6817FF5AAE /* VoiceReviewControllerTests.swift */; };
+		DC7450CD9AB000F10A052BF3 /* DownloadFixture.swift */ = {isa = PBXBuildFile; fileRef = E42F89167F869D296CB7BFB5 /* DownloadFixture.swift */; };
+		FCEC0F4F23E5CD961675A8E8 /* SampleSnapshot.swift */ = {isa = PBXBuildFile; fileRef = A2D3D345055885D0DEEE0607 /* SampleSnapshot.swift */; };
+		31112FA5D89FF842E5A7C77A /* StudyTaskGate.swift */ = {isa = PBXBuildFile; fileRef = 7F17B6AA1400EB8B84EA9668 /* StudyTaskGate.swift */; };
+		0E54AB86DBEE3B56E334B54A /* FontPreviews.xcassets */ = {isa = PBXBuildFile; fileRef = 0E33B94EA56BE38BB2DB95C7 /* FontPreviews.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -189,6 +260,79 @@
 		E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TKMKanaInputTest.swift; sourceTree = "<group>"; };
 		EEC184263840AFA4B962719B /* AppIdentity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		FA1B55C18893D5E681F97EAC /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = Localizations/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		6844ADBF46B7EF986EDC4976 /* StudySignInFields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudySignInFields.swift"; path = "Account/StudySignInFields.swift"; sourceTree = SOURCE_ROOT; };
+		09F42A7C488571F570E663EB /* AppleStudyMistakeICloudStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AppleStudyMistakeICloudStore.swift"; path = "Application/AppleStudyMistakeICloudStore.swift"; sourceTree = SOURCE_ROOT; };
+		A0BA0DD5B38E62C28915C324 /* StudyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyActivity.swift"; path = "Application/StudyActivity.swift"; sourceTree = SOURCE_ROOT; };
+		5433E31148BF8AAAE29D71E1 /* StudyAppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyAppModel.swift"; path = "Application/StudyAppModel.swift"; sourceTree = SOURCE_ROOT; };
+		C4EC902BE7DBDBCE71C48214 /* StudyAutomaticSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyAutomaticSync.swift"; path = "Application/StudyAutomaticSync.swift"; sourceTree = SOURCE_ROOT; };
+		ACBA34A52C5A0F474128FEDB /* StudyICloudPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyICloudPreferences.swift"; path = "Application/StudyICloudPreferences.swift"; sourceTree = SOURCE_ROOT; };
+		7BE6B105BAA62EC0EBEF9389 /* StudyLinkInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyLinkInbox.swift"; path = "Application/StudyLinkInbox.swift"; sourceTree = SOURCE_ROOT; };
+		78A16A6BE3EC6EA0A4943E4D /* StudyMistakeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyMistakeSync.swift"; path = "Application/StudyMistakeSync.swift"; sourceTree = SOURCE_ROOT; };
+		F85E73049755DBF224D805CD /* StudyPortablePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyPortablePreferences.swift"; path = "Application/StudyPortablePreferences.swift"; sourceTree = SOURCE_ROOT; };
+		B78AC546DA346C3AEB077571 /* StudyRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyRootView.swift"; path = "Application/StudyRootView.swift"; sourceTree = SOURCE_ROOT; };
+		6F00D338B7CDCAE2E8D4B5B0 /* NativeSubjectCatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeSubjectCatalogView.swift"; path = "Catalog/NativeSubjectCatalogView.swift"; sourceTree = SOURCE_ROOT; };
+		8920AC2DD6AB2558EC474EFE /* NativeSubjectDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeSubjectDetailsView.swift"; path = "Catalog/NativeSubjectDetailsView.swift"; sourceTree = SOURCE_ROOT; };
+		F08940BA6F3E62641B645F0B /* RadicalImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "RadicalImageView.swift"; path = "Catalog/RadicalImageView.swift"; sourceTree = SOURCE_ROOT; };
+		C033A4181F43E7A5283F86B5 /* StudyMaterialEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyMaterialEditor.swift"; path = "Catalog/StudyMaterialEditor.swift"; sourceTree = SOURCE_ROOT; };
+		5DA7390194AD4A09F2D8FAD6 /* SubjectArtwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SubjectArtwork.swift"; path = "Catalog/SubjectArtwork.swift"; sourceTree = SOURCE_ROOT; };
+		F3DDA67A4DC70A8429D4C177 /* SubjectCatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SubjectCatalogView.swift"; path = "Catalog/SubjectCatalogView.swift"; sourceTree = SOURCE_ROOT; };
+		4E6FD87FFFFCA14401638713 /* SubjectDetailsContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SubjectDetailsContent.swift"; path = "Catalog/SubjectDetailsContent.swift"; sourceTree = SOURCE_ROOT; };
+		24EC40185D03C8F158C6C2C2 /* SubjectExclusionControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SubjectExclusionControl.swift"; path = "Catalog/SubjectExclusionControl.swift"; sourceTree = SOURCE_ROOT; };
+		A368886077D9D8D3213ADB2A /* SubjectProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SubjectProgressView.swift"; path = "Catalog/SubjectProgressView.swift"; sourceTree = SOURCE_ROOT; };
+		74C5B5CE7E002288567F5C97 /* HomeDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "HomeDashboardView.swift"; path = "Home/HomeDashboardView.swift"; sourceTree = SOURCE_ROOT; };
+		295BE739ED59767F8E72EC74 /* NativeHomeDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeHomeDashboardView.swift"; path = "Home/NativeHomeDashboardView.swift"; sourceTree = SOURCE_ROOT; };
+		28013E4E5785383C6BA418A6 /* StudyShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyShellView.swift"; path = "Home/StudyShellView.swift"; sourceTree = SOURCE_ROOT; };
+		5017CC79D86C0AF500ED44E3 /* StudyTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyTabs.swift"; path = "Home/StudyTabs.swift"; sourceTree = SOURCE_ROOT; };
+		EE4DABE186C7DE661961F4C3 /* LessonFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LessonFlowView.swift"; path = "Lessons/LessonFlowView.swift"; sourceTree = SOURCE_ROOT; };
+		E028B491F0DCD74BE6CA43D4 /* LessonPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LessonPickerView.swift"; path = "Lessons/LessonPickerView.swift"; sourceTree = SOURCE_ROOT; };
+		D50FA3E17976CCD5987C19F9 /* NativeLessonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeLessonView.swift"; path = "Lessons/NativeLessonView.swift"; sourceTree = SOURCE_ROOT; };
+		DF5AB553192D309212642BC2 /* KatakanaPracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "KatakanaPracticeView.swift"; path = "Practice/KatakanaPracticeView.swift"; sourceTree = SOURCE_ROOT; };
+		B92F5C3A86A22F44E98416D5 /* ArchivedReviewTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ArchivedReviewTransfer.swift"; path = "Recovery/ArchivedReviewTransfer.swift"; sourceTree = SOURCE_ROOT; };
+		36C5729795DDB522334B83A5 /* SavedWorkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SavedWorkView.swift"; path = "Recovery/SavedWorkView.swift"; sourceTree = SOURCE_ROOT; };
+		EFA41ADF0D6A7EA4834978BD /* AudioPlaybackNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AudioPlaybackNotice.swift"; path = "Reviews/AudioPlaybackNotice.swift"; sourceTree = SOURCE_ROOT; };
+		E923ECF2638BD80CCCB79657 /* NativeReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeReviewView.swift"; path = "Reviews/NativeReviewView.swift"; sourceTree = SOURCE_ROOT; };
+		A2158912F0ED4AFAF9495222 /* ReviewScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ReviewScreen.swift"; path = "Reviews/ReviewScreen.swift"; sourceTree = SOURCE_ROOT; };
+		9AD65A1B81652FFD5794A19D /* ReviewSettingsContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ReviewSettingsContent.swift"; path = "Reviews/ReviewSettingsContent.swift"; sourceTree = SOURCE_ROOT; };
+		053A59457BA82208BBC24018 /* ReviewSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ReviewSettingsPanel.swift"; path = "Reviews/ReviewSettingsPanel.swift"; sourceTree = SOURCE_ROOT; };
+		C0AF14DD501CAC8FBD1DCC7F /* SessionSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SessionSummaryView.swift"; path = "Reviews/SessionSummaryView.swift"; sourceTree = SOURCE_ROOT; };
+		9FFE1C080A176CA156652F18 /* StoredReviewPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StoredReviewPreferences.swift"; path = "Reviews/StoredReviewPreferences.swift"; sourceTree = SOURCE_ROOT; };
+		8BE2855DD9360931DCAA6EBE /* StudyAnswerInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyAnswerInput.swift"; path = "Reviews/StudyAnswerInput.swift"; sourceTree = SOURCE_ROOT; };
+		FBB8355306C079717408BDE8 /* StudySessionSettingsContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudySessionSettingsContent.swift"; path = "Reviews/StudySessionSettingsContent.swift"; sourceTree = SOURCE_ROOT; };
+		0BE6451D00D8B5EEEEAA5096 /* AppleVoiceCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AppleVoiceCapture.swift"; path = "Reviews/Voice/AppleVoiceCapture.swift"; sourceTree = SOURCE_ROOT; };
+		C468D03FD844174A11723CA6 /* VoiceCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "VoiceCapture.swift"; path = "Reviews/Voice/VoiceCapture.swift"; sourceTree = SOURCE_ROOT; };
+		28A3386B4C8732F331FFEB1B /* VoiceReviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "VoiceReviewController.swift"; path = "Reviews/Voice/VoiceReviewController.swift"; sourceTree = SOURCE_ROOT; };
+		2F8002B9821B75BD4017F1E0 /* VoiceAnswerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "VoiceAnswerPanel.swift"; path = "Reviews/VoiceAnswerPanel.swift"; sourceTree = SOURCE_ROOT; };
+		15EBA773F7E0A1D808E605BD /* AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AppearanceSettingsView.swift"; path = "Settings/AppearanceSettingsView.swift"; sourceTree = SOURCE_ROOT; };
+		A01B176FC262C887D9098576 /* AudioLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AudioLibraryView.swift"; path = "Settings/AudioLibraryView.swift"; sourceTree = SOURCE_ROOT; };
+		9E0FAE2F2ABD2D4EEB32698F /* DeveloperSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DeveloperSettingsView.swift"; path = "Settings/DeveloperSettingsView.swift"; sourceTree = SOURCE_ROOT; };
+		2D4AB6FE0C22DF56FA2943AB /* FontLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "FontLibraryView.swift"; path = "Settings/FontLibraryView.swift"; sourceTree = SOURCE_ROOT; };
+		250105E1017F19BECBE5C9C1 /* LessonSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LessonSettingsView.swift"; path = "Settings/LessonSettingsView.swift"; sourceTree = SOURCE_ROOT; };
+		CB4CF0ED7CBD8B54A9209A84 /* NotificationSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NotificationSettingsSection.swift"; path = "Settings/NotificationSettingsSection.swift"; sourceTree = SOURCE_ROOT; };
+		DF1855FDBB658A88E4BC8560 /* OfflineAudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "OfflineAudioView.swift"; path = "Settings/OfflineAudioView.swift"; sourceTree = SOURCE_ROOT; };
+		28F93A9B37117534B9F21A9B /* StudyCompanionDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyCompanionDelivery.swift"; path = "Settings/StudyCompanionDelivery.swift"; sourceTree = SOURCE_ROOT; };
+		E30C702153989D97F42323A6 /* StudyNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyNotifications.swift"; path = "Settings/StudyNotifications.swift"; sourceTree = SOURCE_ROOT; };
+		07EBE2FA7BC95CB5AF9CE93F /* StudySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudySettingsView.swift"; path = "Settings/StudySettingsView.swift"; sourceTree = SOURCE_ROOT; };
+		EAC15D2A71A3C6722F2192E5 /* StudyWaniKaniSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyWaniKaniSources.swift"; path = "Settings/StudyWaniKaniSources.swift"; sourceTree = SOURCE_ROOT; };
+		19EC7E77D3D9D2AD81807A87 /* SubjectSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SubjectSettingsView.swift"; path = "Settings/SubjectSettingsView.swift"; sourceTree = SOURCE_ROOT; };
+		BD8E3A293B8BF771AECA7B36 /* WaniKaniSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "WaniKaniSettingsSection.swift"; path = "Settings/WaniKaniSettingsSection.swift"; sourceTree = SOURCE_ROOT; };
+		662DB68B76CEE7ADF230FC09 /* StudyAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyAvatarView.swift"; path = "Shared/StudyAvatarView.swift"; sourceTree = SOURCE_ROOT; };
+		8C9BC7B2A17BAAE18DF4132A /* StudyPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyPalette.swift"; path = "Shared/StudyPalette.swift"; sourceTree = SOURCE_ROOT; };
+		FAFFBAF3F2398FDE652D5C28 /* CurriculumCoverageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CurriculumCoverageView.swift"; path = "Statistics/CurriculumCoverageView.swift"; sourceTree = SOURCE_ROOT; };
+		1343161A77285BB09951D955 /* StudyDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyDashboard.swift"; path = "Statistics/StudyDashboard.swift"; sourceTree = SOURCE_ROOT; };
+		B2B55D7CA9BD858AEEEA5362 /* UpcomingReviewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UpcomingReviewsView.swift"; path = "Statistics/UpcomingReviewsView.swift"; sourceTree = SOURCE_ROOT; };
+		65EB93267C765D6AF23EADC3 /* AutomaticSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AutomaticSyncTests.swift"; path = "AppTests/AutomaticSyncTests.swift"; sourceTree = SOURCE_ROOT; };
+		DB1D7FBA4D9B8355C4683C62 /* ICloudPreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ICloudPreferenceTests.swift"; path = "AppTests/ICloudPreferenceTests.swift"; sourceTree = SOURCE_ROOT; };
+		D78E966C2077960BA0DED2B8 /* NativeServiceOwnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeServiceOwnerTests.swift"; path = "AppTests/NativeServiceOwnerTests.swift"; sourceTree = SOURCE_ROOT; };
+		2C11276F8B700A9CFA0011CB /* StudyAppModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyAppModelTests.swift"; path = "AppTests/StudyAppModelTests.swift"; sourceTree = SOURCE_ROOT; };
+		3DBCA9576F4A868AD07C80D8 /* StudyCompanionDeliveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyCompanionDeliveryTests.swift"; path = "AppTests/StudyCompanionDeliveryTests.swift"; sourceTree = SOURCE_ROOT; };
+		C96A34F69D17EBCECDB8FC83 /* StudyEndpointSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyEndpointSettingsTests.swift"; path = "AppTests/StudyEndpointSettingsTests.swift"; sourceTree = SOURCE_ROOT; };
+		FAFD6C63097AC8D641A558F8 /* StudyMistakeSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyMistakeSyncTests.swift"; path = "AppTests/StudyMistakeSyncTests.swift"; sourceTree = SOURCE_ROOT; };
+		E964699590376F7A5B801E47 /* StudyNotificationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyNotificationsTests.swift"; path = "AppTests/StudyNotificationsTests.swift"; sourceTree = SOURCE_ROOT; };
+		ACBDB13F831A8C6817FF5AAE /* VoiceReviewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "VoiceReviewControllerTests.swift"; path = "AppTests/VoiceReviewControllerTests.swift"; sourceTree = SOURCE_ROOT; };
+		E42F89167F869D296CB7BFB5 /* DownloadFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DownloadFixture.swift"; path = "../Shared/Tests/StudyTestSupport/DownloadFixture.swift"; sourceTree = SOURCE_ROOT; };
+		A2D3D345055885D0DEEE0607 /* SampleSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SampleSnapshot.swift"; path = "../Shared/Tests/StudyTestSupport/SampleSnapshot.swift"; sourceTree = SOURCE_ROOT; };
+		7F17B6AA1400EB8B84EA9668 /* StudyTaskGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyTaskGate.swift"; path = "../Shared/Tests/StudyTestSupport/StudyTaskGate.swift"; sourceTree = SOURCE_ROOT; };
+		0E33B94EA56BE38BB2DB95C7 /* FontPreviews.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "FontPreviews.xcassets"; path = "Resources/FontPreviews.xcassets"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -197,8 +341,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */,
-				60766181EAAA8ED0E1090A01 /* StudyUI in Frameworks */,
-				0833BA0BAAC68D162D964D99 /* StudySpeech in Frameworks */,
 				7FFBA02C9B4D7DAA24592B25 /* StudyPersistence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -239,6 +381,7 @@
 		41897D922372287F00F6A0B7 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				0E33B94EA56BE38BB2DB95C7 /* FontPreviews.xcassets */,
 				BB2909A5217FAF8B00B1816F /* fonts */,
 				63A711E32BBBF6C40047436A /* PrivacyInfo.xcprivacy */,
 				489894D423670CB000A20AF8 /* Tsurukame.entitlements */,
@@ -249,6 +392,17 @@
 		630FD60A1FC45BDF00D21C1F = {
 			isa = PBXGroup;
 			children = (
+				AF2F51B5330C9701FF13D23C /* Statistics */,
+				BE31EF4A164855D18470C8DA /* Shared */,
+				3EBCA63A681F67AF7923D0BA /* Settings */,
+				1D03EF0224D874F1F734E034 /* Reviews */,
+				296AA42658F4C8AF1E954A87 /* Recovery */,
+				178EDEA9CCEF0C3AF3FABA42 /* Practice */,
+				0F0F11386B9C9AEB9120C826 /* Lessons */,
+				B54BF86CB65892604837A0ED /* Home */,
+				C1C82FC3FE2AC3883B607711 /* Catalog */,
+				BA5DA0C0205ED5441A139A19 /* Application */,
+				9C113540BB5F82DA81F36478 /* Account */,
 				A27000000000000000000003 /* AppTests.xctest */,
 				6335B46323CF0C820071671E /* AppStoreScreenshots */,
 				6335B46223CF0C820071671E /* AppStoreScreenshots.xctest */,
@@ -300,6 +454,18 @@
 		63E9A8DB21199C2600418CE1 /* AppTests */ = {
 			isa = PBXGroup;
 			children = (
+				65EB93267C765D6AF23EADC3 /* AutomaticSyncTests.swift */,
+				DB1D7FBA4D9B8355C4683C62 /* ICloudPreferenceTests.swift */,
+				D78E966C2077960BA0DED2B8 /* NativeServiceOwnerTests.swift */,
+				2C11276F8B700A9CFA0011CB /* StudyAppModelTests.swift */,
+				3DBCA9576F4A868AD07C80D8 /* StudyCompanionDeliveryTests.swift */,
+				C96A34F69D17EBCECDB8FC83 /* StudyEndpointSettingsTests.swift */,
+				FAFD6C63097AC8D641A558F8 /* StudyMistakeSyncTests.swift */,
+				E964699590376F7A5B801E47 /* StudyNotificationsTests.swift */,
+				ACBDB13F831A8C6817FF5AAE /* VoiceReviewControllerTests.swift */,
+				E42F89167F869D296CB7BFB5 /* DownloadFixture.swift */,
+				A2D3D345055885D0DEEE0607 /* SampleSnapshot.swift */,
+				7F17B6AA1400EB8B84EA9668 /* StudyTaskGate.swift */,
 				631CAD66234AF962008CEA73 /* AnswerCheckerTest.swift */,
 				791B8B602D659106000C8142 /* RecentMistakesTest.swift */,
 				46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */,
@@ -360,6 +526,143 @@
 			path = ../Resources;
 			sourceTree = "<group>";
 		};
+		9C113540BB5F82DA81F36478 /* Account */ = {
+			isa = PBXGroup;
+			children = (
+				6844ADBF46B7EF986EDC4976 /* StudySignInFields.swift */,
+			);
+			name = Account;
+			sourceTree = "<group>";
+		};
+		BA5DA0C0205ED5441A139A19 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				09F42A7C488571F570E663EB /* AppleStudyMistakeICloudStore.swift */,
+				A0BA0DD5B38E62C28915C324 /* StudyActivity.swift */,
+				5433E31148BF8AAAE29D71E1 /* StudyAppModel.swift */,
+				C4EC902BE7DBDBCE71C48214 /* StudyAutomaticSync.swift */,
+				ACBA34A52C5A0F474128FEDB /* StudyICloudPreferences.swift */,
+				7BE6B105BAA62EC0EBEF9389 /* StudyLinkInbox.swift */,
+				78A16A6BE3EC6EA0A4943E4D /* StudyMistakeSync.swift */,
+				F85E73049755DBF224D805CD /* StudyPortablePreferences.swift */,
+				B78AC546DA346C3AEB077571 /* StudyRootView.swift */,
+			);
+			name = Application;
+			sourceTree = "<group>";
+		};
+		C1C82FC3FE2AC3883B607711 /* Catalog */ = {
+			isa = PBXGroup;
+			children = (
+				6F00D338B7CDCAE2E8D4B5B0 /* NativeSubjectCatalogView.swift */,
+				8920AC2DD6AB2558EC474EFE /* NativeSubjectDetailsView.swift */,
+				F08940BA6F3E62641B645F0B /* RadicalImageView.swift */,
+				C033A4181F43E7A5283F86B5 /* StudyMaterialEditor.swift */,
+				5DA7390194AD4A09F2D8FAD6 /* SubjectArtwork.swift */,
+				F3DDA67A4DC70A8429D4C177 /* SubjectCatalogView.swift */,
+				4E6FD87FFFFCA14401638713 /* SubjectDetailsContent.swift */,
+				24EC40185D03C8F158C6C2C2 /* SubjectExclusionControl.swift */,
+				A368886077D9D8D3213ADB2A /* SubjectProgressView.swift */,
+			);
+			name = Catalog;
+			sourceTree = "<group>";
+		};
+		B54BF86CB65892604837A0ED /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				74C5B5CE7E002288567F5C97 /* HomeDashboardView.swift */,
+				295BE739ED59767F8E72EC74 /* NativeHomeDashboardView.swift */,
+				28013E4E5785383C6BA418A6 /* StudyShellView.swift */,
+				5017CC79D86C0AF500ED44E3 /* StudyTabs.swift */,
+			);
+			name = Home;
+			sourceTree = "<group>";
+		};
+		0F0F11386B9C9AEB9120C826 /* Lessons */ = {
+			isa = PBXGroup;
+			children = (
+				EE4DABE186C7DE661961F4C3 /* LessonFlowView.swift */,
+				E028B491F0DCD74BE6CA43D4 /* LessonPickerView.swift */,
+				D50FA3E17976CCD5987C19F9 /* NativeLessonView.swift */,
+			);
+			name = Lessons;
+			sourceTree = "<group>";
+		};
+		178EDEA9CCEF0C3AF3FABA42 /* Practice */ = {
+			isa = PBXGroup;
+			children = (
+				DF5AB553192D309212642BC2 /* KatakanaPracticeView.swift */,
+			);
+			name = Practice;
+			sourceTree = "<group>";
+		};
+		296AA42658F4C8AF1E954A87 /* Recovery */ = {
+			isa = PBXGroup;
+			children = (
+				B92F5C3A86A22F44E98416D5 /* ArchivedReviewTransfer.swift */,
+				36C5729795DDB522334B83A5 /* SavedWorkView.swift */,
+			);
+			name = Recovery;
+			sourceTree = "<group>";
+		};
+		1D03EF0224D874F1F734E034 /* Reviews */ = {
+			isa = PBXGroup;
+			children = (
+				EFA41ADF0D6A7EA4834978BD /* AudioPlaybackNotice.swift */,
+				E923ECF2638BD80CCCB79657 /* NativeReviewView.swift */,
+				A2158912F0ED4AFAF9495222 /* ReviewScreen.swift */,
+				9AD65A1B81652FFD5794A19D /* ReviewSettingsContent.swift */,
+				053A59457BA82208BBC24018 /* ReviewSettingsPanel.swift */,
+				C0AF14DD501CAC8FBD1DCC7F /* SessionSummaryView.swift */,
+				9FFE1C080A176CA156652F18 /* StoredReviewPreferences.swift */,
+				8BE2855DD9360931DCAA6EBE /* StudyAnswerInput.swift */,
+				FBB8355306C079717408BDE8 /* StudySessionSettingsContent.swift */,
+				0BE6451D00D8B5EEEEAA5096 /* AppleVoiceCapture.swift */,
+				C468D03FD844174A11723CA6 /* VoiceCapture.swift */,
+				28A3386B4C8732F331FFEB1B /* VoiceReviewController.swift */,
+				2F8002B9821B75BD4017F1E0 /* VoiceAnswerPanel.swift */,
+			);
+			name = Reviews;
+			sourceTree = "<group>";
+		};
+		3EBCA63A681F67AF7923D0BA /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				15EBA773F7E0A1D808E605BD /* AppearanceSettingsView.swift */,
+				A01B176FC262C887D9098576 /* AudioLibraryView.swift */,
+				9E0FAE2F2ABD2D4EEB32698F /* DeveloperSettingsView.swift */,
+				2D4AB6FE0C22DF56FA2943AB /* FontLibraryView.swift */,
+				250105E1017F19BECBE5C9C1 /* LessonSettingsView.swift */,
+				CB4CF0ED7CBD8B54A9209A84 /* NotificationSettingsSection.swift */,
+				DF1855FDBB658A88E4BC8560 /* OfflineAudioView.swift */,
+				28F93A9B37117534B9F21A9B /* StudyCompanionDelivery.swift */,
+				E30C702153989D97F42323A6 /* StudyNotifications.swift */,
+				07EBE2FA7BC95CB5AF9CE93F /* StudySettingsView.swift */,
+				EAC15D2A71A3C6722F2192E5 /* StudyWaniKaniSources.swift */,
+				19EC7E77D3D9D2AD81807A87 /* SubjectSettingsView.swift */,
+				BD8E3A293B8BF771AECA7B36 /* WaniKaniSettingsSection.swift */,
+			);
+			name = Settings;
+			sourceTree = "<group>";
+		};
+		BE31EF4A164855D18470C8DA /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				662DB68B76CEE7ADF230FC09 /* StudyAvatarView.swift */,
+				8C9BC7B2A17BAAE18DF4132A /* StudyPalette.swift */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		AF2F51B5330C9701FF13D23C /* Statistics */ = {
+			isa = PBXGroup;
+			children = (
+				FAFFBAF3F2398FDE652D5C28 /* CurriculumCoverageView.swift */,
+				1343161A77285BB09951D955 /* StudyDashboard.swift */,
+				B2B55D7CA9BD858AEEEA5362 /* UpcomingReviewsView.swift */,
+			);
+			name = Statistics;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -380,8 +683,6 @@
 			name = Tsurukame;
 			packageProductDependencies = (
 				3B5F84B9E7F40CE19F2FDE97 /* StudyCore */,
-				23A08FB0407E2600C582ED6F /* StudyUI */,
-				5E2663408318DBE16C356C9A /* StudySpeech */,
 				19C915BF6736A5F43D155E73 /* StudyPersistence */,
 			);
 			productName = wk;
@@ -535,6 +836,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E54AB86DBEE3B56E334B54A /* FontPreviews.xcassets */,
 				63A711E42BBBF6C40047436A /* PrivacyInfo.xcprivacy in Resources */,
 				BDE1A22E051EEACACE51B2BB /* InfoPlist.strings in Resources */,
 				5124041D34DCDBEC2939380C /* UsagiUnagi.icon in Resources */,
@@ -581,6 +883,66 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32F983A195BD71F4445CFD2E /* StudySignInFields.swift */,
+				CE5DDA1B753B6B4007A28823 /* AppleStudyMistakeICloudStore.swift */,
+				DACCBB41C87727231DDC9288 /* StudyActivity.swift */,
+				C232F9E02B64F5691D84250C /* StudyAppModel.swift */,
+				E461FCD8A4BC58FED6C5F78B /* StudyAutomaticSync.swift */,
+				BE099753680C5C842DE814F6 /* StudyICloudPreferences.swift */,
+				62D0DB249F18BDE39A5C4AF7 /* StudyLinkInbox.swift */,
+				638D5F6217882F9C7C3D5BDC /* StudyMistakeSync.swift */,
+				4407FA07F3E29E43872C36D9 /* StudyPortablePreferences.swift */,
+				2D8CB1DABEE97DCC655E0770 /* StudyRootView.swift */,
+				9096497B61381A916DF77167 /* NativeSubjectCatalogView.swift */,
+				E3676CEE07F735BD235CFBAD /* NativeSubjectDetailsView.swift */,
+				4EC7BD602512537FD0391034 /* RadicalImageView.swift */,
+				EFC51A1B9C0CE5683B556477 /* StudyMaterialEditor.swift */,
+				3D0597303FA6C3E4C8EE360C /* SubjectArtwork.swift */,
+				864FCDC4CA358AAE88DEF198 /* SubjectCatalogView.swift */,
+				CBD7CC302FC5D5A54BAF0F3E /* SubjectDetailsContent.swift */,
+				75C6AA346983B5AE8C546BAB /* SubjectExclusionControl.swift */,
+				974509B1ECB9B7059974BB46 /* SubjectProgressView.swift */,
+				C1771BA5D1082A03F4BA1C09 /* HomeDashboardView.swift */,
+				6732520A3D5AE847BC3B95FB /* NativeHomeDashboardView.swift */,
+				981CFB2C13BD8D6489D80EB8 /* StudyShellView.swift */,
+				9A6C0492BD3E97B2B30D907C /* StudyTabs.swift */,
+				D01FA853B5583151F05B7E93 /* LessonFlowView.swift */,
+				314A5EC96D083EEFE608E438 /* LessonPickerView.swift */,
+				7801B4E3EB8CBE93C202C0B8 /* NativeLessonView.swift */,
+				AC984E942F5B2F8AE6288224 /* KatakanaPracticeView.swift */,
+				B297C76A00DB94C75848ED4A /* ArchivedReviewTransfer.swift */,
+				3B4452085151A1C0650DFE76 /* SavedWorkView.swift */,
+				085BF30CE72D1E52F7365DF9 /* AudioPlaybackNotice.swift */,
+				E41474EA01C3DEC5CCE11410 /* NativeReviewView.swift */,
+				EE7319FAAAEEBB480546C16A /* ReviewScreen.swift */,
+				0EB4315F9DFC2178AC1F60DF /* ReviewSettingsContent.swift */,
+				184D8A9690B33D0E82330193 /* ReviewSettingsPanel.swift */,
+				AE0D658BC28EB02F5DD75684 /* SessionSummaryView.swift */,
+				916AE0322928252C965EF6FB /* StoredReviewPreferences.swift */,
+				7BF8E28AD2C245276C7C7C0E /* StudyAnswerInput.swift */,
+				B8D2F36247519F1D7796E1FF /* StudySessionSettingsContent.swift */,
+				5D5BCEDEC4C252F905CA76E0 /* AppleVoiceCapture.swift */,
+				34453DFC67049B0DC3201DAC /* VoiceCapture.swift */,
+				53187FA889031D614A98250B /* VoiceReviewController.swift */,
+				FB3047C1ED2BDD0106A6EC1D /* VoiceAnswerPanel.swift */,
+				AA194C76A3BA1898B4866614 /* AppearanceSettingsView.swift */,
+				9E3C861A904FC4000B61C1FF /* AudioLibraryView.swift */,
+				73A61393B4B37ED1F098756A /* DeveloperSettingsView.swift */,
+				EA0559E3ACC6644D4C0E7F99 /* FontLibraryView.swift */,
+				92ABC755EF8E63F0C7A71001 /* LessonSettingsView.swift */,
+				5D897225C04A82792EB7AC3F /* NotificationSettingsSection.swift */,
+				94BA39EAC533AA61F24BAF5B /* OfflineAudioView.swift */,
+				36E5F5AA656144E87BA01CBF /* StudyCompanionDelivery.swift */,
+				BB830312D913357E9D87BA10 /* StudyNotifications.swift */,
+				4C7293DE2A503B6B012DCFFD /* StudySettingsView.swift */,
+				0279C5C27A0352E068DEFF5F /* StudyWaniKaniSources.swift */,
+				24E79875E2EDF7ED5A21604C /* SubjectSettingsView.swift */,
+				384E6445B9D95F102FC98D97 /* WaniKaniSettingsSection.swift */,
+				98C99174C1C26C504FB96A81 /* StudyAvatarView.swift */,
+				BBA0DB66A029B95B8C9C0E95 /* StudyPalette.swift */,
+				48C8B9FE6A33EBAF3DA77386 /* CurriculumCoverageView.swift */,
+				B262C3C8A3B557F35DEEF221 /* StudyDashboard.swift */,
+				6F111A931F3E3C3E8329D1EB /* UpcomingReviewsView.swift */,
 				A27100000000000000000004 /* FontFixture.swift in Sources */,
 				A27B00000000000000000001 /* NotificationFixture.swift in Sources */,
 				A27200000000000000000001 /* AudioFixture.swift in Sources */,
@@ -611,6 +973,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C40AE50BAB09C487B3AA0F6 /* AutomaticSyncTests.swift */,
+				870E3192467FD959C7171367 /* ICloudPreferenceTests.swift */,
+				FF28C7F00ACA3B9D6DF9C095 /* NativeServiceOwnerTests.swift */,
+				CA53872EFD4E77B35E0D32A2 /* StudyAppModelTests.swift */,
+				584C2E64C95BEDBEA236E60A /* StudyCompanionDeliveryTests.swift */,
+				08CB079FA005CC6FE6E68925 /* StudyEndpointSettingsTests.swift */,
+				DBC3B89919C75BDD8440E458 /* StudyMistakeSyncTests.swift */,
+				A2FA5BE7D9FFA0DB82F254EA /* StudyNotificationsTests.swift */,
+				2BB6D9414690AB80302AF344 /* VoiceReviewControllerTests.swift */,
+				DC7450CD9AB000F10A052BF3 /* DownloadFixture.swift */,
+				FCEC0F4F23E5CD961675A8E8 /* SampleSnapshot.swift */,
+				31112FA5D89FF842E5A7C77A /* StudyTaskGate.swift */,
 				A27100000000000000000001 /* FontLibraryTests.swift in Sources */,
 				A27700000000000000000001 /* StudyShellStateTests.swift in Sources */,
 				A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */,
@@ -831,6 +1205,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 55D8D2CA6860CA263F708E85 /* Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_UPCOMING_FEATURE_NONISOLATED_NONSENDING_BY_DEFAULT = YES;
+				SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
@@ -881,6 +1258,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B8DA01B76750F7A065DA04D3 /* Release.xcconfig */;
 			buildSettings = {
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_UPCOMING_FEATURE_NONISOLATED_NONSENDING_BY_DEFAULT = YES;
+				SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = UsagiUnagi;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
@@ -1225,20 +1605,10 @@
 			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "../Shared" */;
 			productName = StudyPersistence;
 		};
-		23A08FB0407E2600C582ED6F /* StudyUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "../Shared" */;
-			productName = StudyUI;
-		};
 		3B5F84B9E7F40CE19F2FDE97 /* StudyCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "../Shared" */;
 			productName = StudyCore;
-		};
-		5E2663408318DBE16C356C9A /* StudySpeech */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4DEF084D7DFD36CFAEFF7819 /* XCLocalSwiftPackageReference "../Shared" */;
-			productName = StudySpeech;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

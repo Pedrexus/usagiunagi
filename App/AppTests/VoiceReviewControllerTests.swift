@@ -1,7 +1,8 @@
 import Foundation
 import StudyCore
-import StudySpeech
 import Testing
+
+@testable import Tsurukame
 
 private actor FakeCapture: VoiceCapture {
   var callbacks: [UUID: VoiceCaptureReport] = [:]

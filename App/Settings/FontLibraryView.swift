@@ -52,7 +52,7 @@ struct FontLibraryView: View {
               } else if let name = StudyFont.definitions.first(where: { $0.fileName == font.id })?
                 .fontName
               {
-                Image(name, bundle: .module).resizable().renderingMode(.template).scaledToFit()
+                Image(name).resizable().renderingMode(.template).scaledToFit()
                   .foregroundStyle(.primary).frame(maxHeight: 100)
               }
             }.accessibilityHidden(true)

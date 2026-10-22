@@ -1,7 +1,7 @@
 import Foundation
 
 /// Paired-device messages carry a bounded answer, never credentials or an answer key.
-struct WatchReviewRequest: Codable, Sendable {
+nonisolated struct WatchReviewRequest: Codable, Sendable {
   enum Action: String, Codable { case start, answer, advance, refresh, pause }
   static let maximumAudioBytes = 48_000
   static let maximumMessageBytes = 56_000
@@ -13,7 +13,7 @@ struct WatchReviewRequest: Codable, Sendable {
   var audio: Data?
 }
 
-struct WatchReviewResponse: Codable, Sendable {
+nonisolated struct WatchReviewResponse: Codable, Sendable {
   enum Outcome: String, Codable {
     case ready, correct, incorrect, repeatAnswer, finished, paused, unavailable
   }

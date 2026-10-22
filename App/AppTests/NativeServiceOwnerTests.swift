@@ -1,11 +1,10 @@
 import Foundation
 import Observation
 import StudyCore
-import StudyTestSupport
-import StudyUI
 import Testing
 
 @testable import StudyPersistence
+@testable import Tsurukame
 
 actor ServiceStoreOpening {
   let store: StudyStore

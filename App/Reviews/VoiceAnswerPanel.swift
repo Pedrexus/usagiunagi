@@ -1,5 +1,4 @@
 import StudyCore
-import StudySpeech
 import SwiftUI
 
 /// Stable environment identity; each question still receives its own capture actor.

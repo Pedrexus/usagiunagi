@@ -85,7 +85,7 @@ jobs:
           uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 mainboard lint --check --only swift-parse . 2>&1 | tee .build/Results/SwiftParser.log
       - name: Swift format and correctness
         run: |
-          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App/Application App/UsagiUnagiApp.swift App/WatchHelper.swift App/Watch
+          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App
           uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swiftlint App Shared/Sources
       - name: SwiftUI and storage migration inventory
         run: |

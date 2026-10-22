@@ -1,6 +1,7 @@
 import Foundation
-import StudyUI
 import Testing
+
+@testable import Tsurukame
 
 @Suite @MainActor struct StudyShellStateTests {
   @Test func repeatedAccountReportsDoNotReplaceOrReopenADismissedWarning() {

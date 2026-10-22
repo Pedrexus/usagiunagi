@@ -1,7 +1,6 @@
 import Foundation
 import StudyCore
 import StudyPersistence
-import StudyUI
 import Testing
 
 @testable import Tsurukame

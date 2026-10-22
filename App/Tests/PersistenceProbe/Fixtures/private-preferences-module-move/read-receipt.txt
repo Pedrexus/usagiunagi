@@ -1,0 +1,1 @@
+PASS read Tsurukame.PrivatePreferencesV1.Change {"implementation":{"isTemporary":false,"primaryKey":"p1","entityName":"Change","storeIdentifier":"BADA72F4-8DDD-4AAA-897E-0035EF383B9C","uriRepresentation":"x-coredata:\/\/BADA72F4-8DDD-4AAA-897E-0035EF383B9C\/Change\/p1"}}

@@ -1,9 +1,9 @@
 import Foundation
 import StudyCore
 import StudyPersistence
-import StudyTestSupport
-import StudyUI
 import Testing
+
+@testable import Tsurukame
 
 private actor EndpointModelTransport {
   private(set) var urls: [URL] = []

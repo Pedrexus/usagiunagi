@@ -1,10 +1,9 @@
 import Foundation
-import StudyTestSupport
-import StudyUI
 import Testing
 
 @testable import StudyCore
 @testable import StudyPersistence
+@testable import Tsurukame
 
 @MainActor final class MemoryCredentials: StudyCredentialStore {
   var token: String?

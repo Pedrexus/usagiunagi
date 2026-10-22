@@ -12,16 +12,16 @@ Automated validation has passed within the scopes recorded in [current tasks](TA
 | --- | --- |
 | `Shared/Sources/StudyCore` | Sendable domain values, grading, kana conversion, session policy, preferences, API transport, immutable reference catalogs, coverage and forecast calculations |
 | `Shared/Sources/StudyPersistence` | One SwiftData actor, transactions, account isolation, sessions, durable upload outbox, recovery and refresh |
-| `Shared/Sources/StudySpeech` | Actor-owned Apple capture, on-device transcription, model availability and confirmed transcripts |
-| `Shared/Sources/StudyUI` | Shared SwiftUI navigation/screens, Charts, observable feature owners and small Apple service adapters |
-| `App/Application` | App composition, startup, scene/background ownership and cold archived-preference conversion |
+| `App/Reviews/Voice` | Actor-owned Apple capture, on-device transcription, model availability and confirmed transcripts |
+| `App` feature folders | Shared SwiftUI navigation/screens, Charts, observable feature owners and small Apple service adapters |
+| `App/Application` | App composition, account model, startup, scene/background ownership and app preference sync |
 | `App/Configuration` | Platform entitlements and project configuration |
 | `Resources` | One shared Icon Composer document/SVG mark, display-name localizations, listing preparation and content generators |
 | `App/Watch`, `App/WatchHelper.swift` | SwiftUI voice reviews using the paired phone's grader, settings, WidgetKit status, native packet ownership and installed-face migration |
 
 ## Native initialization and synthesis
 
-Use Swift's synthesized struct initializers and stored-property defaults for internal values and views. Six forwarding/default constructors are removed from `StudyCard`, `StoredReviewPreferences`, `StudySourcesView`, `UpcomingReviewsView` and its `Count`/`Hour` values. Their only callers are inside StudyUI, so these helpers no longer expose unnecessary public APIs. A stored `@ViewBuilder` content property supplies StudyCard's generated builder initializer. These changes remove nineteen physical production lines without changing the view bodies, stored preferences or data models.
+Use Swift's synthesized struct initializers and stored-property defaults for internal values and views. Six forwarding/default constructors are removed from `StudyCard`, `StoredReviewPreferences`, `StudySourcesView`, `UpcomingReviewsView` and its `Count`/`Hour` values. Their only callers are inside the app module, so these helpers no longer expose unnecessary public APIs. A stored `@ViewBuilder` content property supplies StudyCard's generated builder initializer. These changes remove nineteen physical production lines without changing the view bodies, stored preferences or data models.
 
 The [Swift 6.4 initialization guide](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/initialization/) documents memberwise struct initialization, default arguments from property defaults and the default initializer when every stored property has a default. This is native language synthesis; no memberwise macro package or new abstraction is required. Codable, Equatable and Hashable synthesis already cover many existing domain values where their requirements hold.
 

@@ -1,12 +1,12 @@
-// Copyright David Sansome
-// Licensed under the Apache License, Version 2.0. See LICENSE for terms.
-
 import SwiftUI
 import Testing
 import UIKit
 
 @testable import StudyCore
-@testable import StudyUI
+@testable import Tsurukame
+
+// Copyright David Sansome
+// Licensed under the Apache License, Version 2.0. See LICENSE for terms.
 
 @MainActor struct TKMKanaInputTest {
   private final class MarkedTextField: UITextField {

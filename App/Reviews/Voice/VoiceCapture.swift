@@ -1,6 +1,6 @@
 import Foundation
 
-public enum VoiceCaptureEvent: Sendable {
+nonisolated public enum VoiceCaptureEvent: Sendable {
   case needsModel, downloading, listening
   case segment(
     text: String, start: Double, end: Double, isFinal: Bool, alternatives: [String] = [])
@@ -19,7 +19,7 @@ public protocol VoiceCapture: Actor {
   func cancel(id: UUID) async
 }
 
-public enum VoiceCaptureError: LocalizedError {
+nonisolated public enum VoiceCaptureError: LocalizedError {
   case unavailable, languageUnavailable, microphoneDenied, noMicrophone, interrupted
   public var errorDescription: String? {
     switch self {

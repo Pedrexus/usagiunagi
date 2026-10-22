@@ -2,8 +2,6 @@
   import CoreText
   import StudyCore
   @testable import StudyPersistence
-  import StudySpeech
-  import StudyUI
   import SwiftUI
 
   /// Isolated UI acceptance data. Never used by a release build or a live account.

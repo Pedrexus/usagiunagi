@@ -1,6 +1,5 @@
 import StudyCore
 import StudyPersistence
-import StudySpeech
 import SwiftUI
 
 public enum NativeStudyMode: Hashable, Sendable {
