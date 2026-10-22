@@ -116,3 +116,21 @@ show Japanese input beneath the answer and tools.
 `Accessibility-FontActions-20261022.log` passes the actual download/cancel/retry/deletion
 cancellation journey and exact contextual accessibility labels, using isolated font fixtures.
 These checks do not close full VoiceOver, Reduce Motion, contrast or physical-device gates.
+
+## Shared app and iPad follow-up
+
+`Adaptive-iPadCore-20261022.log` passes three native iPad Pro 11-inch (M5), iPadOS 27
+journeys: lesson teaching/quiz with automatic upload, typed reviews with automatic upload,
+and contextual group selection/clear. These use the same production views and isolated
+fixture transports as iPhone; they submit no real WaniKani exercises. This supplements
+the earlier six iPad voice journeys, rather than substituting for them.
+
+The current-source search across `Shared/Sources`, `App/Application` and `App/Watch`
+finds one view representable (`StudyAnswerInput`) and no controller representable.
+The [boundary inventory](../Implementation/2026-10-22-legacy-removal.md#current-platform-boundaries)
+records remaining UIKit/AppKit and native service uses, their concrete owners and the
+behavior required before replacement. Two obsolete legacy-host comments are corrected;
+no runtime, persisted field, bridge or feature is deleted in this audit.
+
+`Adaptive-BoundaryLint-20261022.log` exits zero. Physical IME, paired Watch, signed iCloud,
+and broad window-resizing/keyboard/accessibility acceptance remain open.

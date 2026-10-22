@@ -51,6 +51,27 @@ Grading, kana conversion, subject colors, lesson ordering, native media and adap
 remain in their current owners. Narrow UIKit IME/settings-service adapters are current platform
 boundaries and remain; no storyboard/controller host is restored.
 
+## Current platform boundaries
+
+Source audit after `99d5477d`: app-owned screens share SwiftUI. The following current
+boundaries are retained for behavior, not as alternate legacy screens. This inventory
+describes the checked implementation; it does not claim that future SDKs cannot replace them.
+
+| Boundary | Current owner and reason | What removal must preserve |
+| --- | --- | --- |
+| UIKit text entry | `Shared/Sources/StudyUI/Reviews/StudyAnswerInput.swift`: one `UIViewRepresentable`/`UITextField` adapter and one Objective-C target action for text changes | Japanese keyboard choice, marked-text composition, caret-safe romaji conversion, paste/cut and retry-on-delete. Mac uses native SwiftUI input. |
+| System notification settings | `Shared/Sources/StudyUI/Settings/NotificationSettingsSection.swift`: UIKit settings URL on iOS; AppKit application lookup/open on Mac | Permission recovery and resuming the original request after returning. The notification form itself is shared SwiftUI. |
+| Mac competing-process guard | `App/Application/StudyApplicationOwner.swift`: `NSWorkspace.runningApplications` before opening the native store | Refusal while another known app process owns the data. The older bundle identifier here is a safety check, not an importer. |
+| Audio and background execution | `AppleStudyAudioPlayback`, `AppleVoiceCapture`, `StudyApplicationOwner`: iOS audio-session and BackgroundTasks branches | Interruption/mixing policy and background refresh. These service capabilities differ from presentation and should not become a generic layout switch. |
+| Paired Watch transport | `App/Watch`: WatchConnectivity and bounded recording; phone owns recognition, grading and writes | Account/revision fences, pause, microphone exclusivity and delivery limits. Watch views are SwiftUI; complication views use WidgetKit. Physical continuity remains unaccepted. |
+| Native-store protection | `Shared/Sources/StudyPersistence/StudyStoreGeneration.swift`: Core Data metadata/store-file coordination underneath SwiftData generations | Store validation, durable generation publication and recovery. Feature queries and transactions remain SwiftData; this is not FMDB or a SQL feature path. |
+
+Other iOS-only UI modifiers configure keyboard type/capitalization or expose settings whose
+service exists only on that platform. Removing those guards without equivalent behavior
+would hide a platform difference rather than unify it. No retained bridge requires disabling
+a feature under the owner's “replace first; preserve functionality” instruction. Any future
+replacement must pass the existing input, storage and service checks before deletion.
+
 ## Intentional compatibility retirements
 
 An old original-app database or JSON snapshot no longer imports automatically. A fresh

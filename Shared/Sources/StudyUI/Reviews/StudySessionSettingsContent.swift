@@ -1,7 +1,7 @@
 import StudyCore
 import SwiftUI
 
-/// The same session controls on the native and legacy hosts.
+/// Shared session controls for main and in-session settings.
 struct StudySessionSettingsContent: View {
   @Binding var options: StudySessionOptions
   var body: some View {

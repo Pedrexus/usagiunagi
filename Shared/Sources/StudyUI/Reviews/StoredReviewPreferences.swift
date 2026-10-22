@@ -1,7 +1,7 @@
 import StudyCore
 import SwiftUI
 
-/// Native hosts share AppStorage observation without replacing legacy iOS preference keys.
+/// Shared AppStorage observation and change tracking for private iCloud preferences.
 @propertyWrapper struct StoredReviewPreferences: DynamicProperty {
   @AppStorage("native.reviewPreferences") private var data = Data()
   @Environment(\.studyICloudPreferences) private var iCloud

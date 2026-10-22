@@ -6,6 +6,14 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Shared app / iPad follow-up:** current iPad lesson teaching/quiz/upload, typed review/upload
+and contextual group-selection checks all pass. The active source contains one view
+representable, the Japanese input adapter, and no controller representable. Current system
+boundaries and their preservation requirements are now listed together in the
+[bridge inventory](Implementation/2026-10-22-legacy-removal.md#current-platform-boundaries).
+No platform service or feature was disabled to reduce source counts. Physical IME/Watch/
+iCloud and full adaptive-window acceptance remain open.
+
 **Accessibility follow-up:** lesson group actions now speak their level/type, and font
 download/retry/cancel actions speak the font name. Current largest-text Home and lesson
 checks pass. The review geometry test now accepts the selected keyboard's actual first
