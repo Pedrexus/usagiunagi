@@ -270,3 +270,29 @@ and unlock the paired phone and identify the intended Apple Developer team. No d
 installation, signing changes, normal-account launch or iCloud write was attempted.
 The project still has the original phone team ID and no Mac team. These prerequisites
 remain pending while independent local work continues.
+
+## Broader visible Home contrast
+
+The light-mode Recent mistakes/Extra study/current-level headings and explanatory text
+now use explicit adaptive primary text. The broader audit then identified dark-mode
+Radicals text as insufficiently contrasted. Subject names now use primary text while
+icons and progress bars retain the WaniKani blue/pink/purple palette.
+
+The two narrow tests are consolidated into `testHomeContentContrastAcrossAppearances`.
+It audits every reported element fully inside the content rectangle between navigation
+and tab bars, at the initial position and after scrolling to forecast/level progress.
+Unknown or empty-frame findings fail rather than being discarded. Findings outside the
+unobscured viewport are retained with their exact frame and viewport; there is no label
+whitelist. The timing row must be fully clear of both bars.
+
+`Accessibility-HomeVisibleContrast-20261022.log` retains the real dark-mode Radicals
+failure. `Accessibility-HomeVisibleContrast-Labels-20261022.log` passes the same expanded
+audit after the text fix, with zero skips. Its bundle is
+`test-9cda9ebc7e8f4c4f9d8709141a36f763.xcresult`.
+`Accessibility-HomeVisibleContrast-Lint-20261022.log` passes all 437 configured files.
+
+Both scrolled light/dark captures in `Accessibility-HomeVisibleContrast-Captures-20261022`
+were inspected: headings, explanations and subject names remain legible; colored icons
+and bars, compact rows and native glass navigation remain. This accepts these two Home
+viewports, not the lower Home sections, every page, glass-obscured content, Reduce Motion,
+or physical VoiceOver. No account data or grading/storage code changed.

@@ -81,17 +81,19 @@ struct HomeDashboardView: View {
               "Review recent mistakes", count: data.recentMistakes, action: .recentMistakes)
           } else if data.studyUnavailableMessage == nil {
             Label("No recent mistakes to review", systemImage: "checkmark.seal")
-              .foregroundStyle(.secondary)
+              .foregroundStyle(Color.primary)
           }
         } header: {
-          Label("Recent mistakes", systemImage: "arrow.counterclockwise")
+          Label("Recent mistakes", systemImage: "arrow.counterclockwise").foregroundStyle(
+            Color.primary)
         } footer: {
-          Text("Revisit items you answered incorrectly in the last 24 hours.")
+          Text("Revisit items you answered incorrectly in the last 24 hours.").foregroundStyle(
+            Color.primary)
         }
         if data.apprenticePractice + data.recentLessons + data.leeches > 0 {
-          Section("Extra study") {
+          Section {
             Text("Additional practice outside your scheduled reviews.")
-              .font(.caption).foregroundStyle(.secondary)
+              .font(.caption).foregroundStyle(Color.primary)
             if data.apprenticePractice > 0 {
               countButton(
                 "Extra practice", count: data.apprenticePractice, action: .apprenticePractice)
@@ -103,25 +105,25 @@ struct HomeDashboardView: View {
             if data.leeches > 0 {
               countButton("Review all leeches", count: data.leeches, action: .leeches)
             }
+          } header: {
+            Text("Extra study").foregroundStyle(Color.primary)
           }
         }
       }
       ForEach(data.levels) { level in
-        Section(
-          data.levels.count > 1 && level.id != data.levels.last?.id
-            ? "Previous level (\(level.id))" : "Current level (\(level.id))"
-        ) {
+        Section {
           ForEach(level.progress) { row in
             Button {
               action(.levelSubjects(level.id, row.kind))
             } label: {
               VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                  Label(
-                    title(row.kind),
-                    systemImage: row.kind == .radical ? "square.grid.2x2" : "character"
-                  )
-                  .foregroundStyle(StudyPalette.color(for: row.kind))
+                  Label {
+                    Text(title(row.kind)).foregroundStyle(Color.primary)
+                  } icon: {
+                    Image(systemName: row.kind == .radical ? "square.grid.2x2" : "character")
+                      .foregroundStyle(StudyPalette.color(for: row.kind))
+                  }
                   Spacer()
                   Text("\(row.guru) / \(row.total)").monospacedDigit()
                   Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
@@ -148,6 +150,11 @@ struct HomeDashboardView: View {
           navigationButton(
             "Show remaining", id: "home.remaining.\(level.id)", action: .remaining(level.id))
           navigationButton("Show all", id: "home.catalog.\(level.id)", action: .catalog(level.id))
+        } header: {
+          Text(
+            data.levels.count > 1 && level.id != data.levels.last?.id
+              ? "Previous level (\(level.id))" : "Current level (\(level.id))"
+          ).foregroundStyle(Color.primary)
         }
       }
       Section("Item spread · All levels") {

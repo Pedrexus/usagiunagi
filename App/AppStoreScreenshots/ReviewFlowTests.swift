@@ -16,57 +16,51 @@ import UIKit
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
-  @MainActor func testHomeTimingContrastWhenScrolledClearOfTabBar() throws {
+  @MainActor func testHomeContentContrastAcrossAppearances() throws {
     continueAfterFailure = false
     for appearance in ["--light-fixture", "--dark-fixture"] {
       let app = launchNativeHome([
         "--home-fixture", "--home-progress-fixture", "--manual-review-fixture", appearance,
       ])
       defer { app.terminate() }
-      let timing = app.staticTexts["Next level-up review"]
-      app.collectionViews["home.dashboard"].swipeUp()
-      XCTAssertTrue(timing.exists)
-      XCTAssertGreaterThan(timing.frame.minY, app.navigationBars.firstMatch.frame.maxY)
-      let tabs = app.tabBars.firstMatch
-      XCTAssertTrue(tabs.exists)
-      XCTAssertLessThan(timing.frame.maxY, tabs.frame.minY)
-      attachHomeScreenshot("Home timing clear of tab bar " + appearance)
-      try app.performAccessibilityAudit(for: .contrast) { issue in
-        if issue.element?.label == "Next level-up review" { return false }
-        let evidence = XCTAttachment(string: issue.detailedDescription)
-        evidence.name = "Contrast finding outside timing-label scope: " + appearance
-        evidence.lifetime = .keepAlways
-        self.add(evidence)
-        return true
-      }
-    }
-  }
-
-  @MainActor func testHomeStudyActionsHaveReadableContrastInBothAppearances() throws {
-    continueAfterFailure = false
-    for appearance in ["--light-fixture", "--dark-fixture"] {
-      let app = launchNativeHome([
-        "--home-fixture", "--home-progress-fixture", "--manual-review-fixture", appearance,
-      ])
-      defer { app.terminate() }
-      XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 10))
-      attachHomeScreenshot("Home contrast " + appearance)
-      let targets = [
+      for identifier in [
         "home.lessons", "home.reviews", "home.availableHeading", "home.forecastHeading",
-      ]
-      for identifier in targets {
+      ] {
         XCTAssertTrue(
           app.descendants(matching: .any).matching(identifier: identifier).firstMatch.exists)
       }
-      try app.performAccessibilityAudit(for: .contrast) { issue in
-        if let identifier = issue.element?.identifier, targets.contains(identifier) { return false }
-        let evidence = XCTAttachment(string: issue.detailedDescription)
-        evidence.name = "Contrast finding outside study-action scope: " + appearance
-        evidence.lifetime = .keepAlways
-        self.add(evidence)
-        return true
+      attachHomeScreenshot("Home study actions " + appearance)
+      try auditVisibleHomeContrast(in: app, appearance: appearance)
+      app.collectionViews["home.dashboard"].swipeUp()
+      let timing = app.staticTexts["Next level-up review"]
+      XCTAssertTrue(timing.exists)
+      XCTAssertGreaterThan(timing.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+      XCTAssertLessThan(timing.frame.maxY, app.tabBars.firstMatch.frame.minY)
+      attachHomeScreenshot("Home forecast and progress " + appearance)
+      try auditVisibleHomeContrast(in: app, appearance: appearance)
+    }
+  }
+
+  @MainActor private func auditVisibleHomeContrast(in app: XCUIApplication, appearance: String)
+    throws
+  {
+    XCTAssertTrue(app.navigationBars.firstMatch.exists)
+    XCTAssertTrue(app.tabBars.firstMatch.exists)
+    let top = app.navigationBars.firstMatch.frame.maxY
+    let bottom = app.tabBars.firstMatch.frame.minY
+    let viewport = CGRect(x: app.frame.minX, y: top, width: app.frame.width, height: bottom - top)
+    XCTAssertGreaterThan(viewport.height, 0)
+    try app.performAccessibilityAudit(for: .contrast) { issue in
+      guard let element = issue.element, element.exists, !element.frame.isEmpty else {
+        return false
       }
-      attachHomeScreenshot("Home contrast after audit " + appearance)
+      if viewport.contains(element.frame) { return false }
+      let evidence = XCTAttachment(
+        string: issue.detailedDescription + "\nFrame: \(element.frame)\nViewport: \(viewport)")
+      evidence.name = "Contrast finding outside unobscured Home content: " + appearance
+      evidence.lifetime = .keepAlways
+      self.add(evidence)
+      return true
     }
   }
 

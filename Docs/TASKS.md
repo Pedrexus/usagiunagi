@@ -379,3 +379,10 @@ with full-frame checks above the tab bar. Wider Home contrast findings remain op
 prioritize visible light-mode section headings and explanatory text, then distinguish
 lower controls from glass overlap. Physical iPhone remains unavailable; owner connection
 and developer-team questions are pending. No signed/device/iCloud acceptance is claimed.
+
+Visible Home contrast follow-up: corrected faint light-mode headings/help text and dark-mode
+subject names while retaining WaniKani icon/bar colors. One consolidated audit now rejects
+all contrast findings fully inside the unobscured initial/scrolled Home viewports; unknown
+frames fail and outside-frame findings are recorded. It passes both appearances and Mainboard
+checks. Lower Home sections, other pages, Reduce Motion and physical VoiceOver remain open.
+[Current evidence](Validation/2026-10-22-minimal-working-version.md#broader-visible-home-contrast).
