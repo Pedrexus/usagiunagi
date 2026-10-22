@@ -296,3 +296,19 @@ were inspected: headings, explanations and subject names remain legible; colored
 and bars, compact rows and native glass navigation remain. This accepts these two Home
 viewports, not the lower Home sections, every page, glass-obscured content, Reduce Motion,
 or physical VoiceOver. No account data or grading/storage code changed.
+
+### Complete Home contrast sweep
+
+Extended the existing contrast audit through the final community link in both light and dark
+appearances. Lower section headings, counts, empty-state text and the community label use
+adaptive primary text. Final lower-page captures were visually inspected. The native test
+passes (one test, no skips or failures) in `test-defa1130a1184c7f9b884bc332cecd3e.xcresult`;
+`Accessibility-HomeFullContrast-Final-20261022.log` and
+`Accessibility-HomeFullContrast-FinalLint-20261022.log` retain the results (437 files, no failures).
+
+The audit records exceptions for content outside the unobscured viewport and text contained
+in runtime-verified disabled buttons (Master and Enlightened with zero items). Unknown issue
+frames still fail. This follows the inactive-control exception in the W3C contrast-minimum
+criteria; it is not a claim of full accessibility conformance. Intermediate contrast failures
+and a native audit timeout remain in the local logs. Scope is the normal-size synthetic Home
+fixture; other pages, VoiceOver, Reduce Motion and physical-device acceptance remain open.

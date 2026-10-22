@@ -386,3 +386,10 @@ all contrast findings fully inside the unobscured initial/scrolled Home viewport
 frames fail and outside-frame findings are recorded. It passes both appearances and Mainboard
 checks. Lower Home sections, other pages, Reduce Motion and physical VoiceOver remain open.
 [Current evidence](Validation/2026-10-22-minimal-working-version.md#broader-visible-home-contrast).
+
+### 2026-10-22 — Home lower-page acceptance
+
+Completed the light/dark Home contrast sweep through the community link, including lower
+SRS and recent-activity sections. Native audit and Mainboard lint pass; final captures reviewed.
+See the minimal-working-version receipt for explicit disabled/occluded-control exceptions.
+This supersedes the open lower-Home contrast check for this fixture only.

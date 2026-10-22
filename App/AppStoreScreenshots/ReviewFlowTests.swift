@@ -17,7 +17,7 @@ import XCTest
 
 final class ReviewFlowTests: XCTestCase {
   @MainActor func testHomeContentContrastAcrossAppearances() throws {
-    continueAfterFailure = false
+    continueAfterFailure = true
     for appearance in ["--light-fixture", "--dark-fixture"] {
       let app = launchNativeHome([
         "--home-fixture", "--home-progress-fixture", "--manual-review-fixture", appearance,
@@ -38,6 +38,22 @@ final class ReviewFlowTests: XCTestCase {
       XCTAssertLessThan(timing.frame.maxY, app.tabBars.firstMatch.frame.minY)
       attachHomeScreenshot("Home forecast and progress " + appearance)
       try auditVisibleHomeContrast(in: app, appearance: appearance)
+      let community = app.descendants(matching: .any).matching(identifier: "home.community")
+        .firstMatch
+      var reachedEnd = false
+      for page in 1...6 {
+        app.collectionViews["home.dashboard"].swipeUp()
+        attachHomeScreenshot("Home lower section \(page) " + appearance)
+        try auditVisibleHomeContrast(in: app, appearance: appearance)
+        if community.exists, community.isHittable,
+          community.frame.minY > app.navigationBars.firstMatch.frame.maxY,
+          community.frame.maxY < app.tabBars.firstMatch.frame.minY
+        {
+          reachedEnd = true
+          break
+        }
+      }
+      XCTAssertTrue(reachedEnd, "The final community link must be reachable above the tab bar")
     }
   }
 
@@ -50,14 +66,26 @@ final class ReviewFlowTests: XCTestCase {
     let bottom = app.tabBars.firstMatch.frame.minY
     let viewport = CGRect(x: app.frame.minX, y: top, width: app.frame.width, height: bottom - top)
     XCTAssertGreaterThan(viewport.height, 0)
+    let disabledButtons = app.buttons.allElementsBoundByIndex.compactMap {
+      button -> (frame: CGRect, label: String)? in
+      guard !button.isEnabled else { return nil }
+      let frame = button.frame
+      guard !frame.isEmpty else { return nil }
+      return (frame, button.identifier + " " + button.label)
+    }
     try app.performAccessibilityAudit(for: .contrast) { issue in
       guard let element = issue.element, element.exists, !element.frame.isEmpty else {
         return false
       }
-      if viewport.contains(element.frame) { return false }
+      let inactive = disabledButtons.first { $0.frame.contains(element.frame) }
+      if viewport.contains(element.frame), inactive == nil { return false }
+      let reason =
+        inactive.map { "Inactive control: " + $0.label }
+        ?? "Outside unobscured Home content"
       let evidence = XCTAttachment(
-        string: issue.detailedDescription + "\nFrame: \(element.frame)\nViewport: \(viewport)")
-      evidence.name = "Contrast finding outside unobscured Home content: " + appearance
+        string: reason + "\n" + issue.detailedDescription
+          + "\nFrame: \(element.frame)\nViewport: \(viewport)")
+      evidence.name = "Contrast exception: " + appearance
       evidence.lifetime = .keepAlways
       self.add(evidence)
       return true

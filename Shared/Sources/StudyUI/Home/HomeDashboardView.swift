@@ -157,7 +157,7 @@ struct HomeDashboardView: View {
           ).foregroundStyle(Color.primary)
         }
       }
-      Section("Item spread · All levels") {
+      Section {
         if let message = data.progressUnavailableMessage {
           Text(message).foregroundStyle(.secondary)
         } else {
@@ -177,7 +177,7 @@ struct HomeDashboardView: View {
                   .foregroundStyle(StudyPalette.color(for: category)).frame(width: 24)
                 Text(category.name).foregroundStyle(.primary)
                 Spacer()
-                Text(count.formatted()).foregroundStyle(.secondary)
+                Text(count.formatted()).foregroundStyle(Color.primary)
                 if count > 0 {
                   Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
                 }
@@ -192,6 +192,8 @@ struct HomeDashboardView: View {
         if data.excluded > 0 {
           countButton("Excluded items", count: data.excluded, action: .excluded)
         }
+      } header: {
+        Text("Item spread · All levels").foregroundStyle(Color.primary)
       }
       if data.progressUnavailableMessage == nil && data.studyUnavailableMessage == nil {
         recentSubjects("Recently unlocked", symbol: "lock.open", subjects: data.recentlyUnlocked)
@@ -200,7 +202,8 @@ struct HomeDashboardView: View {
       Section {
         Link(destination: URL(string: "https://community.wanikani.com")!) {
           Label("WaniKani community", systemImage: "bubble.left.and.bubble.right")
-        }
+            .foregroundStyle(Color.primary)
+        }.accessibilityIdentifier("home.community")
       }
     }
     .formStyle(.grouped)
@@ -216,7 +219,7 @@ struct HomeDashboardView: View {
   {
     Section {
       if subjects.isEmpty {
-        Text("No items in the last 30 days.").foregroundStyle(.secondary)
+        Text("No items in the last 30 days.").foregroundStyle(Color.primary)
       } else {
         ScrollView(.horizontal) {
           LazyHStack(spacing: 8) {
@@ -236,9 +239,9 @@ struct HomeDashboardView: View {
         }.scrollIndicators(.hidden)
       }
     } header: {
-      Label("\(title) · \(subjects.count)", systemImage: symbol)
+      Label("\(title) · \(subjects.count)", systemImage: symbol).foregroundStyle(Color.primary)
     } footer: {
-      Text("Confirmed WaniKani activity in the last 30 days.")
+      Text("Confirmed WaniKani activity in the last 30 days.").foregroundStyle(Color.primary)
     }
   }
   private var forecast: some View {
