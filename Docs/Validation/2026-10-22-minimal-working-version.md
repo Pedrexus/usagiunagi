@@ -715,3 +715,37 @@ input, submit action, controls and keyboard geometry before capture. The exporte
 `Landscape-iPad-Settled-Captures-20261022/2A9A2211-EF7F-45E0-A244-9F7E379706EB.png`
 was inspected: side-by-side subject/input remain above the fully presented keyboard,
 with the preserved draft and review tools visible. The fixture then completes normally.
+
+### Expanded iPhone opening disk-full matrix
+
+`OpeningSpace-FullMatrix-iPhone-20261022.log` exits successfully. Mainboard report
+`StorageSpace.NKZTwA` contains all seven passing process phases, with no skips/failures:
+
+| Phase | Result bundle |
+| --- | --- |
+| save matrix | `test-6846a120c4cf4e3ab3410e95ff14315e.xcresult` |
+| saved-state reopen | `test-2a277fc177194936a6395760a34d4dbc.xcresult` |
+| saved-state verification | `test-ba7cfd418f8041ac8e8175717c7f793b.xcresult` |
+| opening refusal | `test-181fa39fbf9b4970b8d074cca5b97c40.xcresult` |
+| opening retry | `test-aa23b74ecaf7422f8eee2b21edb566bd.xcresult` |
+| opening reopen | `test-b8679fca01fa4d5bb929c24c0f6b9561.xcresult` |
+| opening verification | `test-d899d60f59d84ba69b0335132b1658a7.xcresult` |
+
+The existing four opening phases now each cover verification attachment and final
+selection publication with both journal-free and real committed-WAL sources. Each case
+fills only the bounded APFS image, requires a genuine out-of-space error, preserves exact
+source/retained/abandoned artifacts, retries with a different candidate, writes the exact
+pending note and verifies it through two further process reopens. Mainboard checks all
+seven receipts, positive pressure-byte counts, four distinct opening-process IDs, exact
+publication error codes and nonempty committed-WAL sources.
+
+The image was ejected (`disk34`) and `/private/tmp/usagi-disk-space.rXts7C/storage.asif`
+was removed. The frozen schema SHA-256 remains
+`538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`;
+all five pinned writer/reader/store checksums pass. No production storage or model changes.
+Earlier capture pressure, physical devices, Data Protection and interruption inside file
+publication remain open. This simulator matrix does not establish those cases.
+
+Final repository-wide Mainboard lint passes all 436 files without rewrites or failures
+(`OpeningSpace-FullMatrix-FullLint-20261022.log`). The initial changed-file lint also passes;
+it is not counted as the repository-wide gate.

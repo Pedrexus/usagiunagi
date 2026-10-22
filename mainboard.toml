@@ -143,9 +143,9 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
   else
     space_saves="save"
     if [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-matrix ]; then
-      space_saves="spaceSave spaceReview spaceReviewWAL spaceOpening"
+      space_saves="spaceSave spaceReview spaceReviewWAL spaceOpening spaceVerification spaceOpeningWAL spaceVerificationWAL"
     elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-opening ]; then
-      space_saves="spaceOpening"
+      space_saves="spaceOpening spaceVerification spaceOpeningWAL spaceVerificationWAL"
     fi
     for space_save in $space_saves; do
       space_suffix=""
@@ -153,9 +153,18 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
       space_receipt="$space_report/$space_save.plist"
       cp "$space_mount/$space_id$space_suffix.save.plist" "$space_receipt"
       test "$(/usr/bin/plutil -extract id raw -o - "$space_receipt")" = "$space_id"
-      if [ "$space_save" = spaceOpening ]; then
-        test "$(/usr/bin/plutil -extract errorDomain raw -o - "$space_receipt")" = NSCocoaErrorDomain
-        test "$(/usr/bin/plutil -extract errorCode raw -o - "$space_receipt")" -eq 640
+      case "$space_save" in
+      spaceOpening*|spaceVerification*)
+        space_error=$(/usr/bin/plutil -extract errorDomain raw -o - "$space_receipt")
+        space_code=$(/usr/bin/plutil -extract errorCode raw -o - "$space_receipt")
+        case "$space_save" in
+          spaceOpening*) test "$space_error:$space_code" = NSCocoaErrorDomain:640 ;;
+          *)
+            case "$space_error:$space_code" in
+              NSCocoaErrorDomain:640|NSPOSIXErrorDomain:28) ;;
+              *) case "$(/usr/bin/plutil -extract sqliteCode raw -o - "$space_receipt")" in 13|4618) ;; *) exit 1 ;; esac ;;
+            esac ;;
+        esac
         space_pids=" "
         for space_role in producerPID retryPID readerPID verifierPID; do
           space_pid=$(/usr/bin/plutil -extract "$space_role" raw -o - "$space_receipt")
@@ -163,18 +172,22 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
           case "$space_pids" in *" $space_pid "*) exit 1 ;; esac
           space_pids="$space_pids$space_pid "
         done
-      else
+        ;;
+      *)
         case "$(/usr/bin/plutil -extract sqliteCode raw -o - "$space_receipt")" in 13|4618) ;; *) exit 1 ;; esac
-      fi
+        ;;
+      esac
       test "$(/usr/bin/plutil -extract filledBytes raw -o - "$space_receipt")" -gt 0
       if [ "$space_save" = spaceReview ] || [ "$space_save" = spaceReviewWAL ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review-wal ]; then
         test "$(/usr/bin/plutil -extract review.subjectID raw -o - "$space_receipt")" -eq 42
         test "$(/usr/bin/plutil -extract review.meaningWrongCount raw -o - "$space_receipt")" -eq 1
       fi
-      if [ "$space_save" = spaceReviewWAL ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review-wal ]; then
-        /usr/bin/plutil -extract source xml1 -o "$space_report/source.plist" "$space_receipt"
-        /usr/libexec/PlistBuddy -c "Print :study.store-wal" "$space_report/source.plist" > /dev/null
-      fi
+      case "$space_save:$USAGI_NATIVE_SPACE_BACKEND" in
+        spaceReviewWAL:*|spaceOpeningWAL:*|spaceVerificationWAL:*|*:ios-review-wal)
+          /usr/bin/plutil -extract source xml1 -o "$space_report/$space_save.source.plist" "$space_receipt"
+          /usr/libexec/PlistBuddy -c "Print :study.store-wal" "$space_report/$space_save.source.plist" > /dev/null
+          ;;
+      esac
     done
   fi
   printf "IPHONE VOLUME REPORT: %s\\n" "$space_report"
