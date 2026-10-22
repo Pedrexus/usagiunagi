@@ -29,22 +29,11 @@ public struct StudySettingsView<Destination: Hashable, Diagnostics: View, Accoun
   View
 {
   @Environment(\.studyICloudPreferences) private var iCloudPreferences
-  private let account: StudyShellState?
-  private let model: StudyAppModel?
-  private let destination: (StudySettingsPage) -> Destination
-  private let diagnostics: Diagnostics
-  private let accountActions: AccountActions
-  public init(
-    account: StudyShellState?, model: StudyAppModel? = nil,
-    destination: @escaping (StudySettingsPage) -> Destination,
-    @ViewBuilder diagnostics: () -> Diagnostics, @ViewBuilder accountActions: () -> AccountActions
-  ) {
-    self.account = account
-    self.model = model
-    self.destination = destination
-    self.diagnostics = diagnostics()
-    self.accountActions = accountActions()
-  }
+  let account: StudyShellState?
+  var model: StudyAppModel?
+  let destination: (StudySettingsPage) -> Destination
+  @ViewBuilder let diagnostics: Diagnostics
+  @ViewBuilder let accountActions: AccountActions
   public var body: some View {
     Form {
       if let account {

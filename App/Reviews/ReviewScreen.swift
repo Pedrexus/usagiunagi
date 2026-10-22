@@ -47,7 +47,6 @@ import SwiftUI
   public var feedbackPreferences = ReviewPreferences()
   /// Nil preserves local milestone-only behavior; WaniKani can enable all completed stages.
   public var completedSrsChanges: Bool?
-  public init() {}
 
   /// Keep UTF-16 grading ranges attached to the exact normalized answer shown to the learner.
   public func showAnswerHint(_ grade: AnswerGrade, exactMatch: Bool = false) {

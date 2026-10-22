@@ -10,9 +10,9 @@ extension EnvironmentValues {
 
 /// SVG stays inside an image context. Web content cannot run scripts or fetch other resources.
 public struct RadicalImageView: View {
-  private let url: URL
+  let url: URL
   @Environment(\.studyRadicalImages) private var cache
-  private let available: (Bool) -> Void
+  var available: (Bool) -> Void = { _ in }
   @Environment(\.colorScheme) private var colorScheme
   @State private var page = makePage()
 
@@ -26,13 +26,6 @@ public struct RadicalImageView: View {
   @State private var error: String?
   @State private var loaded = false
   @State private var attempt = 0
-
-  public init(
-    url: URL, available: @escaping (Bool) -> Void = { _ in }
-  ) {
-    self.url = url
-    self.available = available
-  }
 
   public var body: some View {
     ZStack {

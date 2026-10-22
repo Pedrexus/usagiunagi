@@ -20,7 +20,6 @@ import SwiftUI
   public var avatar: URL?
   public var avatarRevision = 0
   public var progress: Progress?
-  public init() {}
 }
 
 public struct StudyShellView<Content: View>: View {
@@ -30,19 +29,7 @@ public struct StudyShellView<Content: View>: View {
   let acknowledgeAccountIssue: () -> Void
   @State private var isVisible = false
   @Environment(\.openURL) private var openURL
-  let content: Content
-
-  public init(
-    state: StudyShellState, signIn: @escaping () -> Void, manageToken: (() -> Void)?,
-    acknowledgeAccountIssue: @escaping () -> Void,
-    @ViewBuilder content: () -> Content
-  ) {
-    self.state = state
-    self.signIn = signIn
-    self.manageToken = manageToken
-    self.acknowledgeAccountIssue = acknowledgeAccountIssue
-    self.content = content()
-  }
+  @ViewBuilder let content: Content
 
   public var body: some View {
     VStack(spacing: 0) {

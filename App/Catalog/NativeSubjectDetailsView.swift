@@ -3,11 +3,11 @@ import StudyPersistence
 import SwiftUI
 
 public struct NativeSubjectDetailsView: View {
-  private let store: StudyStore
-  private let accountID: String
-  private let subjectID: Int64
-  private let reviewQuestion: StudyQuestionKind?
-  private let visibleQuestions: Set<StudyQuestionKind>
+  let store: StudyStore
+  let accountID: String
+  let subjectID: Int64
+  var reviewQuestion: StudyQuestionKind?
+  var visibleQuestions: Set<StudyQuestionKind> = [.meaning, .reading]
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudySubjectSettings.self) private var subjectSettings
   @State private var savingExclusion = false
@@ -19,17 +19,6 @@ public struct NativeSubjectDetailsView: View {
   @State private var refreshID = UUID()
   @State private var relatedSubject: Int64?
 
-  public init(
-    store: StudyStore, accountID: String, subjectID: Int64,
-    reviewQuestion: StudyQuestionKind? = nil,
-    visibleQuestions: Set<StudyQuestionKind> = [.meaning, .reading]
-  ) {
-    self.store = store
-    self.accountID = accountID
-    self.subjectID = subjectID
-    self.reviewQuestion = reviewQuestion
-    self.visibleQuestions = visibleQuestions
-  }
   private func setExcluded(_ excluded: Bool) async {
     guard !savingExclusion else { return }
     savingExclusion = true

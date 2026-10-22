@@ -17,21 +17,6 @@ public struct StudyNotificationClient {
   public var remove: @MainActor ([String]) -> Void
   public var badge: @MainActor (Int) async throws -> Void
   public var add: @MainActor (UNNotificationRequest) async throws -> Void
-  public init(
-    status: @escaping @MainActor () async -> StudyNotificationAuthorization,
-    request: @escaping @MainActor () async throws -> Void,
-    pending: @escaping @MainActor () async -> [String],
-    remove: @escaping @MainActor ([String]) -> Void,
-    badge: @escaping @MainActor (Int) async throws -> Void,
-    add: @escaping @MainActor (UNNotificationRequest) async throws -> Void
-  ) {
-    self.status = status
-    self.request = request
-    self.pending = pending
-    self.remove = remove
-    self.badge = badge
-    self.add = add
-  }
   public static var system: Self {
     let center = UNUserNotificationCenter.current()
     return .init(

@@ -762,3 +762,14 @@ their existing hops to MainActor. The corrected integrated task succeeded, and a
 shows normal Home/sign-in; the process remained alive after activation. Receipt:
 `.build/Results/App-Run-DelegateFixed-20261022.log`, `/tmp/usagi-consolidated-fixed.png`.
 A successful launch PID and compiled hosted tests alone are insufficient.
+
+### App-only initializer cleanup
+
+Eight forwarding/default initializers now use Swift synthesis: five structs (including
+stored view builders) and three fully initialized observable classes. Net reduction:
+59 production lines, without a new dependency or persisted-model edit. Stateful/service
+initializers remain explicit. iPhone build `build-894f2301326d46d3b5d21d038f257e18` and
+Mac hosted-test compilation `build-for-testing-6e8e1c51f0c04de9ba1899bd6a0782c2` pass with
+zero warnings/errors; all eight changed Swift files pass Mainboard lint. Normal launch
+through the `run` task shows Home/sign-in (`/tmp/usagi-synthesis-normal.png`), with receipt
+`.build/Results/App-Synthesis-Run-20261022.log`. No exercise or UI automation was performed.

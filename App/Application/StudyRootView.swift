@@ -43,7 +43,7 @@ public struct StudyRootView: View {
   @State private var confirmDisconnect = false
   @Environment(\.openURL) private var openURL
   @Environment(\.appearsActive) private var appearsActive
-  public init(
+  init(
     model: StudyAppModel, automaticSync: StudyAutomaticSync, appName: String,
     appearance: ColorScheme? = nil, notice: String? = nil,
     notifications: StudyNotifications? = nil,
