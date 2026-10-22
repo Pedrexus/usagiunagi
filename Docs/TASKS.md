@@ -38,6 +38,20 @@ iPhone Duo remains deferred. Optional AI/AppIntents and wider macro adoption rem
 
 ## Completion audit — October 21–22
 
+**App-owned font consolidation:** the catalog and observable download/selection owner now
+live in `App/Settings`, with the existing download tests in `App/Tests/Unit`. No schema,
+stored selection, URLSession staging or cancellation behavior changed. Explicit nonisolated
+value/error declarations preserve the former package isolation under the app's default
+MainActor setting. The iOS build `build-0c13d63f70954ff1ad9813f2b28f534c` passes;
+Mac receipt `test-252d42bfb47748949e663b38a71dad70` passes all 8 functions / 10 executions,
+including original font activation, UTF-16 glyphs, selection, failed-download retry and
+cancellation races. Scoped Mainboard lint passes all four changed Swift files. Logs use
+`.build/Results/Fonts-App-*-20261022.log`. The first UI invocation used the unit-test scheme
+and executed no UI tests; it is not passing evidence. The corrected ReviewValidation run
+`test-036d6e7bcf8b4648b813656fff70e910` passes the iPhone journey: font selection persists
+across reopening the picker and the unsubmitted review draft is unchanged. No real review
+was submitted.
+
 **App-owned avatar consolidation:** URL generation and the image-cache actor moved from
 StudyCore to `App/Shared`; both existing test suites moved to `App/Tests/Unit` and the common
 hosted target. No stored types or cache behavior changed. The signed iOS build
@@ -53,6 +67,10 @@ was discarded without committed changes: the installed Foundation header require
 FileManager instance for delegated operations. The existing ten-case disk-space matrix stays
 unchanged. A future bounded reserve-space experiment must demonstrate actual ENOSPC at the
 capture-copy destination before this outstanding recovery boundary can be considered covered.
+The subsequent five-size experiment completed without reaching that boundary: smaller reserves
+failed before capture, while 256 KiB passed capture and failed verification opening. Both
+disposable images were ejected and the experimental code removed. See the
+[probe evidence](../App/Tests/PersistenceProbe/README.md#source-capture-pressure-boundary-still-open).
 
 **Shared app / iPad follow-up:** current iPad lesson teaching/quiz/upload, typed review/upload
 and contextual group-selection checks all pass. The active source contains one view

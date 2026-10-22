@@ -15,7 +15,7 @@
 import CoreText
 import Foundation
 
-public struct StudyFontDefinition: Sendable {
+nonisolated public struct StudyFontDefinition: Sendable {
   public let fontName: String
   public let fileName: String
   public let displayName: String

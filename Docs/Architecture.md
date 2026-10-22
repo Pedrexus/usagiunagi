@@ -16,6 +16,7 @@ Automated validation has passed within the scopes recorded in [current tasks](TA
 | `App` feature folders | Shared SwiftUI navigation/screens, Charts, observable feature owners and small Apple service adapters |
 | `App/Application` | App composition, account model, startup, scene/background ownership and app preference sync |
 | `App/Shared` | App-wide presentation helpers, including avatar URL generation and bounded image caching |
+| `App/Settings` | Settings screens and app-owned font catalog, download lifecycle and selection |
 | `App/Tests` | Hosted unit tests in `Unit`, interface tests/fixtures in `UI`, and existing persistence probes |
 | `App/Configuration` | Platform entitlements and project configuration |
 | `Resources` | One shared Icon Composer document/SVG mark, display-name localizations, listing preparation and content generators |
@@ -24,6 +25,8 @@ Automated validation has passed within the scopes recorded in [current tasks](TA
 ## Native initialization and synthesis
 
 Avatar URL generation and its image-cache actor now belong to the app alongside the avatar view. Neither is a persisted model or used by the storage package. Their existing tests belong to the shared hosted app target. The URL helper explicitly remains nonisolated when compiled with the app's default MainActor setting; the cache retains its own actor isolation. This is a source-ownership change, with the existing HTTP cache, image bounds, cancellation and account-clear behavior preserved.
+
+The font catalog and observable download owner also live in the app. Settings and review views use the same owner; preferences retain their existing string-based file selections. Value types and download errors explicitly remain nonisolated, while the catalog and download owner keep their existing MainActor isolation. Download callback staging remains synchronous before its actor hop because URLSession removes the temporary file when the callback returns. Weak captures here preserve cancellation on owner release and are not removed merely to shorten the implementation.
 
 Use Swift's synthesized struct initializers and stored-property defaults for internal values and views. Six forwarding/default constructors are removed from `StudyCard`, `StoredReviewPreferences`, `StudySourcesView`, `UpcomingReviewsView` and its `Count`/`Hour` values. Their only callers are inside the app module, so these helpers no longer expose unnecessary public APIs. A stored `@ViewBuilder` content property supplies StudyCard's generated builder initializer. These changes remove nineteen physical production lines without changing the view bodies, stored preferences or data models.
 

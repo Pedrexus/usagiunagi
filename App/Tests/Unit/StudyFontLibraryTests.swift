@@ -1,8 +1,9 @@
 import CoreText
 import Foundation
-import StudyCore
 import Synchronization
 import Testing
+
+@testable import Tsurukame
 
 @Suite(.serialized) @MainActor
 struct StudyFontLibraryTests {

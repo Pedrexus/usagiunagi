@@ -27,7 +27,7 @@ import Observation
   }
 }
 
-public struct StudyFontOption: Identifiable {
+nonisolated public struct StudyFontOption: Identifiable {
   public let id: String
   public let title: String
   public let previewText: String
@@ -37,7 +37,7 @@ public struct StudyFontOption: Identifiable {
   public let error: String?
 }
 
-public enum FontLibraryAction: Sendable {
+nonisolated public enum FontLibraryAction: Sendable {
   case download(String)
   case cancel(String)
   case select(String, Bool)
@@ -180,7 +180,7 @@ public enum FontLibraryAction: Sendable {
   }
 }
 
-private enum FontLibraryFailure: LocalizedError {
+nonisolated private enum FontLibraryFailure: LocalizedError {
   case invalidFont
   case http(Int)
   var errorDescription: String? {

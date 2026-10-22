@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AFAB00000000000000000001 /* StudyFontCatalog.swift */ = {isa = PBXBuildFile; fileRef = AFAB00000000000000000011 /* StudyFontCatalog.swift */; };
+		AFAB00000000000000000002 /* StudyFontLibrary.swift */ = {isa = PBXBuildFile; fileRef = AFAB00000000000000000012 /* StudyFontLibrary.swift */; };
+		AFAB00000000000000000003 /* StudyFontLibraryTests.swift */ = {isa = PBXBuildFile; fileRef = AFAB00000000000000000013 /* StudyFontLibraryTests.swift */; };
 		AFAA00000000000000000001 /* StudyAvatar.swift */ = {isa = PBXBuildFile; fileRef = AFAA00000000000000000011 /* StudyAvatar.swift */; };
 		AFAA00000000000000000002 /* StudyAvatarCache.swift */ = {isa = PBXBuildFile; fileRef = AFAA00000000000000000012 /* StudyAvatarCache.swift */; };
 		AFAA00000000000000000003 /* StudyAvatarTests.swift */ = {isa = PBXBuildFile; fileRef = AFAA00000000000000000013 /* StudyAvatarTests.swift */; };
@@ -200,6 +203,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AFAB00000000000000000011 /* StudyFontCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyFontCatalog.swift; path = Settings/StudyFontCatalog.swift; sourceTree = SOURCE_ROOT; };
+		AFAB00000000000000000012 /* StudyFontLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyFontLibrary.swift; path = Settings/StudyFontLibrary.swift; sourceTree = SOURCE_ROOT; };
+		AFAB00000000000000000013 /* StudyFontLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyFontLibraryTests.swift; path = Tests/Unit/StudyFontLibraryTests.swift; sourceTree = SOURCE_ROOT; };
 		AFAA00000000000000000011 /* StudyAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAvatar.swift; path = Shared/StudyAvatar.swift; sourceTree = SOURCE_ROOT; };
 		AFAA00000000000000000012 /* StudyAvatarCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAvatarCache.swift; path = Shared/StudyAvatarCache.swift; sourceTree = SOURCE_ROOT; };
 		AFAA00000000000000000013 /* StudyAvatarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAvatarTests.swift; path = Tests/Unit/StudyAvatarTests.swift; sourceTree = SOURCE_ROOT; };
@@ -490,6 +496,7 @@
 				E8C66A241A6A88AC348C1D51 /* TKMKanaInputTest.swift */,
 				E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */,
 				A27100000000000000000002 /* FontLibraryTests.swift */,
+				AFAB00000000000000000013 /* StudyFontLibraryTests.swift */,
 				A27700000000000000000002 /* StudyShellStateTests.swift */,
 				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
 				A27900000000000000000002 /* NativeAppAssemblyTests.swift */,
@@ -666,6 +673,8 @@
 			isa = PBXGroup;
 			children = (
 				662DB68B76CEE7ADF230FC09 /* StudyAvatarView.swift */,
+				AFAB00000000000000000011 /* StudyFontCatalog.swift */,
+				AFAB00000000000000000012 /* StudyFontLibrary.swift */,
 				AFAA00000000000000000011 /* StudyAvatar.swift */,
 				AFAA00000000000000000012 /* StudyAvatarCache.swift */,
 				8C9BC7B2A17BAAE18DF4132A /* StudyPalette.swift */,
@@ -959,6 +968,8 @@
 				24E79875E2EDF7ED5A21604C /* SubjectSettingsView.swift */,
 				384E6445B9D95F102FC98D97 /* WaniKaniSettingsSection.swift */,
 				98C99174C1C26C504FB96A81 /* StudyAvatarView.swift */,
+				AFAB00000000000000000001 /* StudyFontCatalog.swift */,
+				AFAB00000000000000000002 /* StudyFontLibrary.swift */,
 				AFAA00000000000000000001 /* StudyAvatar.swift */,
 				AFAA00000000000000000002 /* StudyAvatarCache.swift */,
 				BBA0DB66A029B95B8C9C0E95 /* StudyPalette.swift */,
@@ -1010,6 +1021,7 @@
 				FCEC0F4F23E5CD961675A8E8 /* SampleSnapshot.swift */,
 				31112FA5D89FF842E5A7C77A /* StudyTaskGate.swift */,
 				A27100000000000000000001 /* FontLibraryTests.swift in Sources */,
+				AFAB00000000000000000003 /* StudyFontLibraryTests.swift */,
 				A27700000000000000000001 /* StudyShellStateTests.swift in Sources */,
 				A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */,
 				A27900000000000000000001 /* NativeAppAssemblyTests.swift in Sources */,
