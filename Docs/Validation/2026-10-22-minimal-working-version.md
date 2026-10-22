@@ -485,3 +485,12 @@ item above is now satisfied for this correction; rendered coverage acceptance re
 The pre-correction full iPhone lane continues in session 17816. Reduce Motion acceptance is
 explicitly skipped because the simulator system preference is not enabled; that requirement is
 still open rather than counted as a pass. No final full-suite result exists yet.
+
+### Pending coverage visual check prepared
+
+Each curriculum target now also shows its nonzero awaiting-sync count as text. This makes a single
+pending kanji visible without relying on its very small bar segment. The new iPhone native-root
+regression reuses `--review-recovery-fixture`, checks N5 reports one awaiting sync with zero of 79
+confirmed, expands all 79 remaining kanji, and retains a screenshot. It does not answer a review.
+`PendingCoverage-Visual-Lint-20261022.log` passes 436 files with no rewrites/failures. The new UI
+regression is pending execution after the existing suite finishes; no visual pass is claimed.

@@ -461,3 +461,9 @@ Pending-coverage historical verification now passes at `60d2ab59`: exact 38-reco
 baseline and named-schema fresh-process/WAL preservation probes. Rendered coverage verification
 remains next after the running iPhone suite. Its Reduce Motion test explicitly skipped because
 the simulator setting is disabled; this does not satisfy real Reduce Motion acceptance.
+
+Prepared the pending-coverage rendered regression in
+`NativeRootFlowTests/testPendingReviewCoverageShowsAwaitingSyncInsteadOfNotStarted`, reusing the
+existing uncertain-review fixture. Each target now states its awaiting-sync count explicitly,
+so tiny chart segments are not the only indication. Mainboard lint passes. This new UI test
+has not run: serialize it after session 17816 completes, then inspect its retained screenshot.

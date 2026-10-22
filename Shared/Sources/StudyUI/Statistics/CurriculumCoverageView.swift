@@ -77,6 +77,10 @@ struct CurriculumCoverageView: View {
                 Text(
                   "\(row.reached) / \(row.total) at \(thresholdName) · \(row.outsideCatalog) outside synced catalog"
                 ).font(.caption).foregroundStyle(.secondary)
+                if row.awaitingSync > 0 {
+                  Text("\(row.awaitingSync) awaiting sync").font(.caption).foregroundStyle(
+                    .secondary)
+                }
               }
               Spacer()
               Text(row.fraction.formatted(.percent.precision(.fractionLength(0)))).monospacedDigit()

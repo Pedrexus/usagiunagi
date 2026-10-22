@@ -292,7 +292,29 @@
       requireEmptyOutbox(app)
     }
 
+    @MainActor func testPendingReviewCoverageShowsAwaitingSyncInsteadOfNotStarted() {
+      let app = launch(["--statistics-fixture", "--review-recovery-fixture"])
+      defer { app.terminate() }
+      tab("Stats", in: app)
+      XCTAssertTrue(app.segmentedControls.buttons["Coverage"].waitForExistence(timeout: 10))
+      app.segmentedControls.buttons["Coverage"].tap()
+      let target = app.buttons["coverage.target.N5"]
+      scrollTo(target, in: app)
+      XCTAssertTrue(target.label.contains("1 awaiting sync"), app.debugDescription)
+      XCTAssertTrue(target.label.contains("0 / 79"), target.label)
+      target.tap()
+      let remaining = app.staticTexts["coverage.remaining.N5"]
+      XCTAssertTrue(remaining.waitForExistence(timeout: 5))
+      XCTAssertTrue(remaining.label.contains("79"), remaining.label)
+      XCTAssertEqual(app.sheets.count, 0)
+      let picture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      picture.name = "Pending kanji coverage with explicit awaiting-sync count"
+      picture.lifetime = .keepAlways
+      add(picture)
+    }
+
     @MainActor func testNativeStatisticsCoverageStaysInline() {
+
       let app = launch(["--statistics-fixture"])
       defer { app.terminate() }
       tab("Stats", in: app)
