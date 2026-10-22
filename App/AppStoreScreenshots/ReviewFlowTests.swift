@@ -34,8 +34,7 @@ final class ReviewFlowTests: XCTestCase {
       app.collectionViews["home.dashboard"].swipeUp()
       let timing = app.staticTexts["Next level-up review"]
       XCTAssertTrue(timing.exists)
-      XCTAssertGreaterThan(timing.frame.minY, app.navigationBars.firstMatch.frame.maxY)
-      XCTAssertLessThan(timing.frame.maxY, app.tabBars.firstMatch.frame.minY)
+      XCTAssertTrue(homeContentViewport(in: app).contains(timing.frame))
       attachHomeScreenshot("Home forecast and progress " + appearance)
       try auditVisibleHomeContrast(in: app, appearance: appearance)
       let community = app.descendants(matching: .any).matching(identifier: "home.community")
@@ -46,8 +45,7 @@ final class ReviewFlowTests: XCTestCase {
         attachHomeScreenshot("Home lower section \(page) " + appearance)
         try auditVisibleHomeContrast(in: app, appearance: appearance)
         if community.exists, community.isHittable,
-          community.frame.minY > app.navigationBars.firstMatch.frame.maxY,
-          community.frame.maxY < app.tabBars.firstMatch.frame.minY
+          homeContentViewport(in: app).contains(community.frame)
         {
           reachedEnd = true
           break
@@ -57,15 +55,26 @@ final class ReviewFlowTests: XCTestCase {
     }
   }
 
+  @MainActor private func homeContentViewport(in app: XCUIApplication) -> CGRect {
+    let dashboard = app.collectionViews["home.dashboard"]
+    XCTAssertTrue(dashboard.exists)
+    XCTAssertTrue(app.navigationBars.firstMatch.exists)
+    let bounds = dashboard.frame.intersection(app.frame)
+    let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)
+    let bottom = app.tabBars.allElementsBoundByIndex.reduce(bounds.maxY) { edge, bar in
+      let frame = bar.frame
+      return frame.minY > bounds.midY && frame.intersects(bounds) ? min(edge, frame.minY) : edge
+    }
+    let viewport = CGRect(x: bounds.minX, y: top, width: bounds.width, height: bottom - top)
+    XCTAssertGreaterThan(viewport.width, 0)
+    XCTAssertGreaterThan(viewport.height, 0)
+    return viewport
+  }
+
   @MainActor private func auditVisibleHomeContrast(in app: XCUIApplication, appearance: String)
     throws
   {
-    XCTAssertTrue(app.navigationBars.firstMatch.exists)
-    XCTAssertTrue(app.tabBars.firstMatch.exists)
-    let top = app.navigationBars.firstMatch.frame.maxY
-    let bottom = app.tabBars.firstMatch.frame.minY
-    let viewport = CGRect(x: app.frame.minX, y: top, width: app.frame.width, height: bottom - top)
-    XCTAssertGreaterThan(viewport.height, 0)
+    let viewport = homeContentViewport(in: app)
     let disabledButtons = app.buttons.allElementsBoundByIndex.compactMap {
       button -> (frame: CGRect, label: String)? in
       guard !button.isEnabled else { return nil }

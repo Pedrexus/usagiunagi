@@ -559,3 +559,11 @@ an unresolved spoken kanji answer, keyboard fallback and a 100% completed summar
 Mainboard lint passes 436 files. [Exact scope and receipts](Validation/2026-10-22-voice-devices.md#current-source-mac-interruption-and-keyboard-fallback).
 No production change; physical microphone/Watch, signed services and termination/window
 restoration remain open.
+
+### iPad Home light/dark contrast acceptance
+
+The Home contrast audit now uses native content/navigation geometry instead of requiring
+an iPhone bottom tab bar. iPad and iPhone both pass the full light/dark sweep through the
+community link. The lower iPad captures are visually checked; full lint passes. Production
+UI is unchanged. [Failure, repair and exact scope](Validation/2026-10-22-minimal-working-version.md#adaptive-ipadiphone-home-contrast-audit).
+Other screens, high-contrast settings, landscape, VoiceOver and Reduce Motion remain open.

@@ -779,3 +779,31 @@ Read-only access checks after commit `0faee1a3`:
 No signing, push, distribution, normal-account exercise or device installation was attempted.
 The current task table now reflects the already-passing iPhone/iPad endpoint journeys and
 Mac keyboard fallback. Historical checkpoint paragraphs retain their original chronology.
+
+### Adaptive iPad/iPhone Home contrast audit
+
+The initial iPad run failed before auditing content because the test unconditionally required
+an iPhone-style bottom tab bar. `HomeContrast-iPad-20261022.log` and
+`test-2d689f6646284f05a62231a8b68cd6f0.xcresult` retain that failure. Its capture confirms the
+native iPad navigation controls appear at the top.
+
+The existing audit now derives its viewport from the Home collection intersected with the
+app frame, the navigation bar and any intersecting bottom tab bar. It requires a positive
+viewport and fully contained forecast/community elements. The contrast policy is unchanged:
+visible active content must pass; only recorded off-viewport and verified disabled-control
+exceptions are accepted. No platform check, color change or suppression was added.
+
+- iPad: `HomeContrast-iPad-Adaptive-20261022.log`,
+  `test-005bfb4600264dc09dd7bbdc5a6a1f74.xcresult`, one pass, no skips/failures, 45.153 s.
+- iPhone: `HomeContrast-iPhone-Adaptive-20261022.log`,
+  `test-8fa3d4bfad44483585e68ff9e62a74ac.xcresult`, one pass, no skips/failures, 53.479 s.
+- `HomeContrast-Adaptive-Lint-20261022.log`: 436 files pass without rewrites.
+
+Both runs sweep light and dark Home content through the final community link. The iPad
+lower-section captures were inspected in
+`HomeContrast-iPad-Adaptive-Captures-20261022`: light
+`0A35E076-732F-4E44-8685-D12F7DCEAB56.png`, dark
+`BCBC54C7-2CCF-4838-A805-D77BC1E975D3.png`. Level rows, item-spread counts, recent-item
+empty states and the community link remain readable and reachable. This covers normal-size
+portrait Home in the synthetic fixture, not full accessibility, higher-contrast settings,
+VoiceOver, Reduce Motion, landscape or other pages.
