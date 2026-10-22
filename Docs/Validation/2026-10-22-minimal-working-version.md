@@ -312,3 +312,18 @@ frames still fail. This follows the inactive-control exception in the W3C contra
 criteria; it is not a claim of full accessibility conformance. Intermediate contrast failures
 and a native audit timeout remain in the local logs. Scope is the normal-size synthetic Home
 fixture; other pages, VoiceOver, Reduce Motion and physical-device acceptance remain open.
+
+### iPhone foreground reopening
+
+Extended the existing romaji/draft/settings/pause journey with two real Home-button background
+transitions and app activation. The test requires the app to reach the background state,
+preserves the unsubmitted `いち` reading on return, and preserves an open review-settings sheet
+through a second background transition. Closing settings and pausing/resuming still retain the
+draft. This uses injected memory-only fixture services, with no real account or exercises.
+
+Current native execution passes one test with no skips/failures in
+`test-c19628ebe97b45809ccd93c0d38b2dcc.xcresult`, retained in
+`ReviewReopen-20261022.log`. Build summaries report no compiler/analyzer warnings; the separate
+AppIntents metadata extraction notice remains. Mainboard lint passes in
+`ReviewReopen-Lint-20261022.log`. This is foreground lifecycle evidence on iPhone 18 Pro/iOS 27
+Simulator, not process-death restoration, Mac window reopening or physical-device acceptance.
