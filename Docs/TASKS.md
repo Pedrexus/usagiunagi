@@ -467,3 +467,14 @@ Prepared the pending-coverage rendered regression in
 existing uncertain-review fixture. Each target now states its awaiting-sync count explicitly,
 so tiny chart segments are not the only indication. Mainboard lint passes. This new UI test
 has not run: serialize it after session 17816 completes, then inspect its retained screenshot.
+
+### Current acceptance follow-up — October 22
+
+- Pending coverage passes the new iPad regression and inspected screenshot; compact iPhone
+  verification remains open.
+- The ongoing pre-fix full iPhone suite exposed an API endpoint editor that did not close on
+  Cancel. The final SwiftUI form-sheet replacement passes cancel/validation/save/persistence/reset
+  on iPad, and compiles on Mac with zero warnings. Mainboard lint passes. Failed alert approaches
+  are not retained. The UI helper now scrolls the visible Settings form rather than disabled Home.
+- After session 17816 finishes, collect its full result and run the repaired developer endpoint
+  and pending-coverage tests on iPhone. The suite's Reduce Motion skip remains unaccepted.

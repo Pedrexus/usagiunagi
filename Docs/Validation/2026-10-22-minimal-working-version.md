@@ -494,3 +494,35 @@ regression reuses `--review-recovery-fixture`, checks N5 reports one awaiting sy
 confirmed, expands all 79 remaining kanji, and retains a screenshot. It does not answer a review.
 `PendingCoverage-Visual-Lint-20261022.log` passes 436 files with no rewrites/failures. The new UI
 regression is pending execution after the existing suite finishes; no visual pass is claimed.
+
+### Pending coverage rendered iPad acceptance
+
+`PendingCoverage-iPad-20261022.log`, bundle `test-757d8e89f3fc42dfa01d0eef433ba9b0`,
+passes the new pending-coverage regression on the independent iPad M5 simulator (one test,
+no skips). The retained screenshot was inspected: all five legend labels fit, the pending
+segment is separate, N5 states “1 awaiting sync” and zero confirmed of 79, and expansion
+shows the remaining kanji inline without a modal. Screenshot:
+`.build/Results/PendingCoverage-iPad-Captures-20261022/B7737AB8-CC3C-4367-B7B8-C75E98A65921.png`.
+This used separate iPad derived data and device while the original iPhone suite continued;
+it does not replace iPhone compact rendering verification.
+
+### Developer endpoint editor regression and repair
+
+The ongoing full iPhone suite at `9cfb5ead` reports a failure: Cancel leaves the API URL alert
+visible. A five-second dismissal wait reproduces the same failure on iPad after fixing an
+independent test helper issue: Settings is a floating form there, and the helper had been
+scrolling disabled Home behind it. It now scrolls the enabled foreground collection.
+
+Explicit alert-state dismissal and moving the alert to the initiating button both fail; those
+trial implementations are removed. The final URL editor is a native SwiftUI form sheet with
+Cancel/Save toolbar actions and a Reset row, retaining URL normalization and parent error
+reporting. The complete existing iPad edit/cancel/invalid/save/reopen/reset journey passes:
+`DeveloperEndpoint-iPad-Sheet-20261022.log`, bundle `test-e82c7d1a355d4abab83ef21fcf43bf7f`.
+Failed trial logs remain `DeveloperEndpoint-iPad`, `-Foreground`, `-Dismiss`, and `-Scoped`.
+No unproven framework-level cause is asserted.
+
+`DeveloperEndpoint-FinalLint-20261022.log`: 436 files, no rewrites/failures.
+`DeveloperEndpoint-MacBuild-20261022.log`, bundle `build-c9141653b7d94f4d8b1cfe76bf489a7b`:
+native Mac build succeeds with zero compiler/analyzer warnings. The iPhone full run is still
+active in session 17816, testing its original products, so its endpoint failure cannot verify
+this repair. A focused iPhone endpoint and pending-coverage rerun is required after it ends.

@@ -29,6 +29,44 @@ struct DeveloperSettingsView: View {
             Text(endpoint).font(.caption).foregroundStyle(.secondary).lineLimit(2)
           }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityIdentifier("developer.endpoint")
+          .sheet(isPresented: $editingEndpoint) {
+            NavigationStack {
+              Form {
+                Section {
+                  TextField("API base URL", text: $draft)
+                    #if os(iOS)
+                      .keyboardType(.URL).textInputAutocapitalization(.never)
+                    #endif
+                    .autocorrectionDisabled().accessibilityIdentifier("developer.endpoint.draft")
+                  Button("Reset to default", role: .destructive) {
+                    editingEndpoint = false
+                    saveEndpoint(defaultEndpoint)
+                  }
+                } footer: {
+                  Text("Default: \(defaultEndpoint)")
+                }
+              }
+              .navigationTitle("API base URL")
+              .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                  Button("Cancel", role: .cancel) { editingEndpoint = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                  Button("Save") {
+                    editingEndpoint = false
+                    if let value = DeveloperEndpoint.normalized(draft, defaultURL: defaultEndpoint)
+                    {
+                      saveEndpoint(value)
+                    } else {
+                      invalidEndpoint = true
+                    }
+                  }
+                }
+              }
+            }
+            .presentationDetents([.medium, .large])
+          }
+
         if invalidEndpoint {
           Text("Enter a valid http or https URL.").foregroundStyle(.red).accessibilityIdentifier(
             "developer.endpoint.error")
@@ -64,24 +102,6 @@ struct DeveloperSettingsView: View {
     }
     .formStyle(.grouped)
     .navigationTitle("Developer options")
-    .alert("API base URL", isPresented: $editingEndpoint) {
-      TextField("API base URL", text: $draft)
-        #if os(iOS)
-          .keyboardType(.URL).textInputAutocapitalization(.never)
-        #endif
-        .autocorrectionDisabled().accessibilityIdentifier("developer.endpoint.draft")
-      Button("Save") {
-        if let value = DeveloperEndpoint.normalized(draft, defaultURL: defaultEndpoint) {
-          saveEndpoint(value)
-        } else {
-          invalidEndpoint = true
-        }
-      }
-      Button("Reset to default", role: .destructive) { saveEndpoint(defaultEndpoint) }
-      Button("Cancel", role: .cancel) {}
-    } message: {
-      Text("Default: \(defaultEndpoint)")
-    }
     .alert(
       "Could not change API URL",
       isPresented: Binding(

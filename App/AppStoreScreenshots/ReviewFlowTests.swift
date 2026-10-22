@@ -800,14 +800,15 @@ final class ReviewFlowTests: XCTestCase {
     _ value: String, in app: XCUIApplication, action: String
   ) {
     app.buttons["developer.endpoint"].tap()
-    let alert = app.alerts["API base URL"]
+    let alert = app.navigationBars["API base URL"]
     XCTAssertTrue(alert.waitForExistence(timeout: 5))
-    let field = alert.textFields.firstMatch
+    let field = app.textFields["developer.endpoint.draft"]
+    field.tap()
     let current = field.value as? String ?? ""
     field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + value)
     XCTAssertEqual(field.value as? String, value)
     alert.buttons[action].tap()
-    XCTAssertFalse(alert.exists)
+    XCTAssertTrue(alert.waitForNonExistence(timeout: 5), app.debugDescription)
   }
 
   @MainActor func testDeveloperEndpointCancelValidationPersistenceAndReset() {
@@ -833,7 +834,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(endpoint.waitForExistence(timeout: 5))
     XCTAssertTrue(endpoint.label.contains("http://localhost:8080/api"))
     endpoint.tap()
-    app.alerts["API base URL"].buttons["Reset to default"].tap()
+    app.buttons["Reset to default"].tap()
     XCTAssertTrue(endpoint.label.contains(standard))
   }
 
@@ -2139,7 +2140,16 @@ extension ReviewFlowTests {
           CGVector(dx: content.frame.width * 0.5, dy: height * (down ? 0.8 : 0.2)))
         start.press(
           forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.15)
-      } else if home.exists {
+      } else if let foregroundForm = app.collectionViews.allElementsBoundByIndex.first(where: {
+        $0.identifier != "home.dashboard" && $0.isEnabled && $0.isHittable
+      }) {
+        if towardTop {
+          foregroundForm.swipeDown(velocity: .slow)
+        } else {
+          foregroundForm.swipeUp(velocity: .slow)
+        }
+      } else if home.exists && home.isEnabled {
+
         // Keep drags clear of the floating tab bar, which covers the center in landscape.
         let down = towardTop || element.exists && element.frame.midY < home.frame.minY
         let start = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.25 : 0.7))
