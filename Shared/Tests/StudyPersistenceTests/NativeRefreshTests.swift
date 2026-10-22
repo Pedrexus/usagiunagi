@@ -307,7 +307,10 @@ struct NativeRefreshTests {
   }
 
   @Test func fullReplacementRemovesStaleRowsButRetainsPendingRecoveryContent() async throws {
-    let store = try await store()
+    let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: folder) }
+    let url = folder.appending(path: "study.store")
+    let store = try await StudyStore.open(at: url)
     let initial = try await download()
     _ = try await store.applyDownload(
       initial, credentialID: "credential",
@@ -326,12 +329,13 @@ struct NativeRefreshTests {
     _ = try await store.applyDownload(
       empty, credentialID: "credential",
       baseline: store.refreshBaseline(accountID: initial.accountID))
-    let catalog = try await store.catalog(accountID: initial.accountID)
+    let reopened = try await StudyStore.open(at: url)
+    let catalog = try await reopened.catalog(accountID: initial.accountID)
     #expect(catalog.count == 1 && catalog.first?.id == 1 && catalog.first?.hiddenAt != nil)
-    #expect(try await store.materials(accountID: initial.accountID).isEmpty)
-    #expect(try await store.pendingReviews(accountID: initial.accountID).count == 1)
-    #expect(try await store.snapshot(credentialID: "credential")?.subjects.isEmpty == true)
-    let accountState = try #require(await store.accountState(accountID: initial.accountID))
+    #expect(try await reopened.materials(accountID: initial.accountID).isEmpty)
+    #expect(try await reopened.pendingReviews(accountID: initial.accountID).count == 1)
+    #expect(try await reopened.snapshot(credentialID: "credential")?.subjects.isEmpty == true)
+    let accountState = try #require(await reopened.accountState(accountID: initial.accountID))
     #expect(
       accountState.voices.isEmpty && accountState.statistics.isEmpty && accountState.audio.isEmpty
         && accountState.levels.isEmpty)

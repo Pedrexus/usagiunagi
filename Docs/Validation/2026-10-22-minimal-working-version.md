@@ -749,3 +749,33 @@ publication remain open. This simulator matrix does not establish those cases.
 Final repository-wide Mainboard lint passes all 436 files without rewrites or failures
 (`OpeningSpace-FullMatrix-FullLint-20261022.log`). The initial changed-file lint also passes;
 it is not counted as the repository-wide gate.
+
+### Full-refresh reconciliation and current external gates
+
+The API-cache audit confirms that only subjects use incremental wire responses. Assignments,
+materials, statistics, level history, voices and SRS systems use complete collections.
+`applyDownload` replaces account state and removes absent rows while preserving pending
+answers, notes and active-session recovery content. Additional cursors are not required to
+provide reset reconciliation and would add a separate deletion-reconciliation obligation.
+
+`fullReplacementRemovesStaleRowsButRetainsPendingRecoveryContent` now uses an on-disk store
+and checks its existing assertions through a newly opened actor. Removed subjects disappear
+except the hidden pending-recovery subject; notes, statistics, voices, audio, level history and
+cursors are cleared, while the pending review survives. This is actor/container reopening in
+the same process, not a process-crash or real-account reset claim.
+`FullRefresh-Reopen-20261022.log` passes all 12 NativeRefreshTests and 13 DownloadTests
+functions. `FullRefresh-Reopen-Lint-20261022.log` passes 436 files without rewrites/failures.
+Production behavior and frozen schemas remain unchanged; one stale importer comment is corrected.
+
+Read-only access checks after commit `0faee1a3`:
+
+- `Acceptance-Devices-20261022.txt`: the physical iPhone remains offline; the Mac and
+  simulators do not substitute for paired-device acceptance.
+- `Acceptance-Signing-20261022.txt`: zero valid signing identities.
+- `Acceptance-Mainboard-Pin-20261022.txt`: GitHub returns HTTP 422 for the exact Mainboard
+  commit referenced by all five Actions checkouts. The local workflow cannot establish a
+  successful hosted run until its required tool commit is published.
+
+No signing, push, distribution, normal-account exercise or device installation was attempted.
+The current task table now reflects the already-passing iPhone/iPad endpoint journeys and
+Mac keyboard fallback. Historical checkpoint paragraphs retain their original chronology.

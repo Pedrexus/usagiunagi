@@ -181,7 +181,7 @@ extension WaniKaniClient {
       systems: fullSystems, cursors: subjects.cursors)
   }
 
-  /// Complete content still reaches the replacement importer; only the wire response is partial.
+  /// The store receives a complete catalog; only the subject wire response is partial.
   private func subjectCatalog(
     token: String, cached: [CatalogSubject], cursors: [String: String], maxLevel: Int
   ) async throws -> (values: [CatalogSubject], cursors: [String: String]) {
