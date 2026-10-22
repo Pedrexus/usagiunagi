@@ -373,3 +373,9 @@ The scoped light/dark audit passes and a negative control reproduces the origina
 failure. Wider contrast, the timing row under the translucent tab bar, inconsistent captures
 around native contrast auditing, and system-enabled Reduce Motion remain open; see the
 [contrast receipt](Validation/2026-10-22-minimal-working-version.md#home-study-action-contrast).
+
+Timing-row follow-up: native contrast passes after normal scrolling in both appearances,
+with full-frame checks above the tab bar. Wider Home contrast findings remain open;
+prioritize visible light-mode section headings and explanatory text, then distinguish
+lower controls from glass overlap. Physical iPhone remains unavailable; owner connection
+and developer-team questions are pending. No signed/device/iCloud acceptance is claimed.

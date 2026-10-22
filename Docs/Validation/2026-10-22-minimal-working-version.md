@@ -247,3 +247,26 @@ describes inherited effects; the current modifier sits inside the bounce modifie
 source/documentation evidence, not executed Reduce Motion acceptance. The installed simctl
 UI controls expose appearance, contrast and content size, but no Reduce Motion switch.
 Physical VoiceOver and a genuinely enabled Reduce Motion run remain required.
+
+## Timing-row viewport and device prerequisites
+
+`Accessibility-HomeTimingContrast-Viewport-20261022.log` passes the timing-label
+contrast audit in both light and dark appearances after a normal upward swipe. Frame
+assertions require the complete label between the navigation bar and tab bar. This
+shows the earlier initial-viewport issue does not persist when the row is scrolled into
+its reading position; it does not accept content legibility beneath glass.
+
+The initial `Accessibility-HomeTimingContrast-20261022.log` fails before auditing because
+the generic scroll helper requires a static label to be hittable. The renewed test uses
+normal scrolling and reading-frame assertions instead. Broader native findings remain
+attached: in light mode, Recent mistakes/Extra study/Current level headings and explanatory
+text; lower level controls also appear in both modes. Their visibility and contrast need
+individual inspection before dismissal or correction. The new test only accepts the timing
+label and explicitly retains all other issues.
+
+A fresh `devicectl list devices` shows the physical iPhone 16 Pro Max unavailable; all
+connected iPhone/iPad/Watch entries are simulators. The owner has been asked to connect
+and unlock the paired phone and identify the intended Apple Developer team. No device
+installation, signing changes, normal-account launch or iCloud write was attempted.
+The project still has the original phone team ID and no Mac team. These prerequisites
+remain pending while independent local work continues.

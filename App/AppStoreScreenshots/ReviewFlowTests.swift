@@ -16,6 +16,32 @@ import UIKit
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor func testHomeTimingContrastWhenScrolledClearOfTabBar() throws {
+    continueAfterFailure = false
+    for appearance in ["--light-fixture", "--dark-fixture"] {
+      let app = launchNativeHome([
+        "--home-fixture", "--home-progress-fixture", "--manual-review-fixture", appearance,
+      ])
+      defer { app.terminate() }
+      let timing = app.staticTexts["Next level-up review"]
+      app.collectionViews["home.dashboard"].swipeUp()
+      XCTAssertTrue(timing.exists)
+      XCTAssertGreaterThan(timing.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+      let tabs = app.tabBars.firstMatch
+      XCTAssertTrue(tabs.exists)
+      XCTAssertLessThan(timing.frame.maxY, tabs.frame.minY)
+      attachHomeScreenshot("Home timing clear of tab bar " + appearance)
+      try app.performAccessibilityAudit(for: .contrast) { issue in
+        if issue.element?.label == "Next level-up review" { return false }
+        let evidence = XCTAttachment(string: issue.detailedDescription)
+        evidence.name = "Contrast finding outside timing-label scope: " + appearance
+        evidence.lifetime = .keepAlways
+        self.add(evidence)
+        return true
+      }
+    }
+  }
+
   @MainActor func testHomeStudyActionsHaveReadableContrastInBothAppearances() throws {
     continueAfterFailure = false
     for appearance in ["--light-fixture", "--dark-fixture"] {
