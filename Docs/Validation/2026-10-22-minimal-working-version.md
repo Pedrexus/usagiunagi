@@ -606,3 +606,31 @@ The existing note/review/WAL save cases still pass. Both temporary APFS images w
 and removed. Mainboard lint passes all 436 files; production V1 and frozen fixture hashes
 are unchanged. [Exact protocols and bundles](../Implementation/2026-10-21-frozen-ios-and-review-focus.md#iphone-final-selection-publication-disk-full).
 Earlier capture/verification, committed-WAL opening and physical failure gates remain open.
+
+### iPad review-summary recovery after simulator restart
+
+The previously stalled process identified in the AX log was the simulator's `druid`
+(DragUI service), not the app. Restarted only the iPad simulator without erasing data.
+The unchanged summary test then passed in 29.772 s; no assertions, waits, app code or
+animation settings were changed. The service's AX warning still appears in the successful
+run, so that warning alone does not establish the cause of the earlier timeout.
+
+`Summary-iPad-Reboot-20261022.log` and
+`test-8579a73a2f9c45b9b3480eadfe170efa.xcresult`: one pass, no skips/failures,
+zero compiler/analyzer warnings/errors. The test completes a deliberately missed meaning,
+verifies no reading miss, opens subject details, returns and finishes at Home.
+The exported screenshot
+`Summary-iPad-Reboot-Captures-20261022/01CAB140-38A1-4988-958B-FB2A7F3BAE97.png`
+was visually inspected: saved-state explanation, 0%/0-of-1 subject accuracy, current-level
+missed heading, 一つ/ひとつ and Meaning missed are visible without clipping; native Back
+and Done remain accessible. This is portrait/default-text/light appearance, not broad
+adaptive or accessibility acceptance. The earlier timed-out bundle remains retained.
+
+The original two-test sequence also completes after the restart on source `2f8b5102`:
+`EndpointSummary-iPad-Reboot-20261022.log`, bundle
+`test-5f9082edd67e420ba760f5016e8a55ca.xcresult`. API endpoint Cancel/validation/persistence/
+reset passes in 54.149 s; missed-subject summary/details/finish passes in 27.841 s.
+Two passes, no skips/failures; zero compiler/analyzer warnings/errors. This closes the
+specific iPad endpoint/summary acceptance gap. No production change or test relaxation
+was necessary. Simulator restart recovery is evidence about this run, not proof of the
+precise cause or a guarantee against future simulator stalls.
