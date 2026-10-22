@@ -136,3 +136,21 @@ No runtime code or dependencies changed in this follow-up. Prior removals includ
 UploadCoordinator and its isolated tests, plus the duplicate Watch scheme (`e7a606ca`).
 Required native callbacks, Japanese IME integration, Codable identities and frozen SwiftData
 validation fixtures remain; age or a historical name alone is not evidence that code is dead.
+
+## Final linker/reference cleanup
+
+Removed the unused explicit `-lcompression` link and `HEADER_SEARCH_PATHS = .` from
+both project configurations. No current source imports Compression or uses local C headers.
+Corrected catalog, SRS and vocabulary comments that still described the deleted importer.
+The SRS fallback remains active for existing offline caches; persisted field names, mnemonic
+content, framework callbacks and the Japanese IME bridge remain required.
+
+Repeated tracked Swift declaration/reference and resource checks found no further confirmed
+unused implementation. This is not a whole-program proof of absence. No tracked Objective-C,
+Go, Python, Ruby or protobuf sources remain. Historical SwiftData readers and fixtures are
+retained to verify saved-data compatibility, not shipped as runtime implementations.
+
+Mainboard lint passes for all 436 files. The generic iOS simulator build passes with zero
+warnings/errors (`build-8d56a981775f4358bc61900f83f731d6.xcresult`).
+Native Mac build also passes with zero warnings/errors
+(`build-c3bf675ed5a7413b9c2b7160ac6f2932.xcresult`). No runtime code changed in this pass.

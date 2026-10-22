@@ -585,3 +585,13 @@ No drag implementation was changed solely to satisfy a failed test.
 endpoint/summary run is still active in session 79517 with a 600-second bound; endpoint passed
 but summary has long automation-idle waits. Do not count its entire run as accepted or restart
 it while its handle is live.
+
+### iPad endpoint/summary follow-up
+
+`EndpointSummary-iPad-20261022.log` records the endpoint editing flow passing in 53.959 s.
+The summary journey encountered repeated accessibility-server and animation-idle waits;
+the bounded run exited 124 at 600 seconds. The bundle
+`test-27425c45959047ffbc95b441753d70de.xcresult` lacks Info.plist and is incomplete.
+This is not a completed passing suite. The read-only live screenshot
+`iPad-Summary-Idle-20261022.png` confirms review feedback rendering only. The completed
+iPhone endpoint/summary receipt remains valid for its own platform and source scope.

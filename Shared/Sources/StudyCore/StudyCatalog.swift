@@ -1,6 +1,6 @@
 import Foundation
 
-/// Full study content, independent of the legacy protobuf and network representations.
+/// Full study content, independent of the network representation.
 public struct CatalogSubject: Codable, Sendable, Identifiable {
   public struct Meaning: Codable, Sendable {
     public enum Role: Int, Codable, Sendable {

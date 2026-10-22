@@ -496,3 +496,12 @@ suite. Keep the failed/interrupted evidence. CI limits are now 40 minutes per ma
 The new coverage chart is rendered and inspected on iPhone/iPad; full accessibility remains open.
 Audio and lesson-order retests pass without production changes. The iPad endpoint/summary run
 (session 79517) still needs its final result; it has long idle waits. See the validation receipt.
+
+### 2026-10-22 — Final obsolete build-setting cleanup
+
+Removed unused explicit compression linking and local C-header search paths from Debug and
+Release; corrected stale importer comments. Current declaration/resource checks found no
+additional safely removable implementation. Required offline behavior, saved-data identities,
+IME integration and historical verification fixtures remain. Mainboard lint and generic iOS
+simulator build pass; see the legacy-removal receipt. The iPad endpoint follow-up passed in
+its log, but summary automation timed out with an incomplete bundle; retain that acceptance gap.

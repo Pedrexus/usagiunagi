@@ -70,7 +70,7 @@ public enum VocabularyHighlighter {
     return "(?:" + patterns.joined(separator: "|") + ")"
   }
 
-  // These wire values are retained in CatalogSubject by both native downloads and legacy import.
+  // These persisted values are populated by native catalog downloads.
   fileprivate enum Inflection: Int {
     case ichidanVerb = 4
     case godanVerb = 7

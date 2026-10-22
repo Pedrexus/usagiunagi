@@ -53,7 +53,7 @@ public struct StudySRSSystem: Codable, Equatable, Identifiable, Sendable {
     {
       return interval
     }
-    // Older imported subjects lack a system ID; old native caches only knew the two defaults.
+    // Existing cached subjects can lack a system ID or cached server definitions.
     if subject.spacedRepetitionSystemID == nil
       || (systems == nil && [1, 2].contains(subject.spacedRepetitionSystemID))
     {
@@ -69,7 +69,7 @@ public struct StudySRSSystem: Codable, Equatable, Identifiable, Sendable {
       "Refresh WaniKani to load the SRS definitions needed for this review order."
     }
   }
-  /// Compatibility for the original protobuf catalog, which did not retain SRS system IDs.
+  /// Offline defaults for cached subjects without SRS system definitions.
   public static func legacyInterval(stage: Int, accelerated: Bool) -> TimeInterval {
     switch stage {
     case 1: accelerated ? 7200 : 14400
