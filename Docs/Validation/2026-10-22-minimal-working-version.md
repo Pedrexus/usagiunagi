@@ -937,3 +937,23 @@ font hiccup and long animation-idle waits did not reproduce in this focused run;
 cause is not proven. Ten ordinary methods after the stalled feedback test still need this
 acceptance pass, in addition to the five separately owned URL-event lanes and actual-system
 Reduce Motion gate. Earlier broad-run passes remain log evidence without a finalized bundle.
+
+### Remaining ten ordinary iPhone journeys
+
+At `ef586537`, session `85239` completes all ten methods that the earlier broad run never
+started. `test-e8633e8b05da412fbfa96ba18dcf46ee.xcresult` reports ten passed, zero failed,
+zero skipped and no runtime warnings. Log: `iPhone-Acceptance-Remaining-20261022.log`.
+The run takes about six minutes within its 1200-second bound; no source changes or simulator
+reset occur during it.
+
+Coverage: keyboard tools at largest Dynamic Type; cold review/lesson/subject links; upcoming
+review stage/subject breakdown and return; missed-answer summary with subject navigation;
+voice transcript grading and kana fallback; stopping and completing wrap-up; persisted lesson
+choices and reorder; review-setting dependencies and download navigation; notification
+preferences without system prompts; appearance/email/subject preferences and safe logout
+cancellation. Tests use isolated fixtures, not real WaniKani exercises or physical speech.
+
+This closes the ten previously unstarted ordinary cases. The 57 logged broad-run passes
+still lack that run's finalized bundle; obtain finalized coverage for them in bounded groups.
+The five separate URL-event methods and actual-system Reduce Motion gate remain explicitly
+separate. These results do not establish full physical/cross-platform acceptance.

@@ -677,3 +677,12 @@ wrap-up, lesson settings/reorder, review dependencies/download navigation, notif
 settings and appearance/email/subject/logout cancellation. Run these as a bounded group,
 then finish finalized coverage of the earlier broad methods; keep the separate URL-event
 and actual Reduce Motion gates explicit.
+
+### Remaining iPhone cases now passed
+
+The ten ordinary methods listed above all pass at `ef586537` in finalized bundle
+`test-e8633e8b05da412fbfa96ba18dcf46ee.xcresult` (session `85239`, terminal success,
+no skips/runtime warnings). [Coverage and receipt](Validation/2026-10-22-minimal-working-version.md#remaining-ten-ordinary-iphone-journeys).
+No production or test changes were needed. Next: obtain finalized bounded-group coverage
+for the 57 earlier broad-run passes; keep URL-event receipts, actual Reduce Motion, physical
+voice/Watch, signed iCloud, hosted publication and real-account calibration separate.
