@@ -67,7 +67,8 @@ struct HomeDashboardView: View {
             "Choose lessons", id: "home.chooseLessons", action: .chooseLessons
           ).disabled(lessonsUnavailable)
         } header: {
-          Text("Available now")
+          Text("Available now").foregroundStyle(Color.primary)
+            .accessibilityIdentifier("home.availableHeading")
         } footer: {
           if let message = data.studyUnavailableMessage ?? data.lessonsDisabledMessage {
             Text(message).font(.callout).foregroundStyle(.secondary)
@@ -234,7 +235,7 @@ struct HomeDashboardView: View {
     }
   }
   private var forecast: some View {
-    Section("Upcoming reviews") {
+    Section {
       if let message = data.scheduleUnavailableMessage {
         Text(message).foregroundStyle(.secondary).accessibilityIdentifier(
           "home.scheduleUnavailable")
@@ -280,6 +281,9 @@ struct HomeDashboardView: View {
           .accessibilityAddTraits(.isButton)
       }
       if let next = data.timing.first { LabeledContent(next.id, value: next.value) }
+    } header: {
+      Text("Upcoming reviews").foregroundStyle(Color.primary)
+        .accessibilityIdentifier("home.forecastHeading")
     }
   }
   private func openStudy(_ press: KeyPress) -> KeyPress.Result {

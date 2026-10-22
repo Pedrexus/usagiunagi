@@ -367,3 +367,9 @@ regression suite; the active SwiftData upload tests remain and pass. Final share
 and all configured Mainboard lint checks pass after removal. Frozen schema and fixture
 checksums are unchanged. Remaining historical Codable identities are required by existing
 native stores, and are not candidates for unversioned deletion.
+
+Home study-action contrast: explicit adaptive primary text fixes two faint section headings.
+The scoped light/dark audit passes and a negative control reproduces the original heading
+failure. Wider contrast, the timing row under the translucent tab bar, inconsistent captures
+around native contrast auditing, and system-enabled Reduce Motion remain open; see the
+[contrast receipt](Validation/2026-10-22-minimal-working-version.md#home-study-action-contrast).

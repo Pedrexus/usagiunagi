@@ -16,6 +16,34 @@ import UIKit
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor func testHomeStudyActionsHaveReadableContrastInBothAppearances() throws {
+    continueAfterFailure = false
+    for appearance in ["--light-fixture", "--dark-fixture"] {
+      let app = launchNativeHome([
+        "--home-fixture", "--home-progress-fixture", "--manual-review-fixture", appearance,
+      ])
+      defer { app.terminate() }
+      XCTAssertTrue(app.buttons["home.reviews"].waitForExistence(timeout: 10))
+      attachHomeScreenshot("Home contrast " + appearance)
+      let targets = [
+        "home.lessons", "home.reviews", "home.availableHeading", "home.forecastHeading",
+      ]
+      for identifier in targets {
+        XCTAssertTrue(
+          app.descendants(matching: .any).matching(identifier: identifier).firstMatch.exists)
+      }
+      try app.performAccessibilityAudit(for: .contrast) { issue in
+        if let identifier = issue.element?.identifier, targets.contains(identifier) { return false }
+        let evidence = XCTAttachment(string: issue.detailedDescription)
+        evidence.name = "Contrast finding outside study-action scope: " + appearance
+        evidence.lifetime = .keepAlways
+        self.add(evidence)
+        return true
+      }
+      attachHomeScreenshot("Home contrast after audit " + appearance)
+    }
+  }
+
   @MainActor func testHomeActionsAndProgressRemainReachableAtLargestDynamicType() {
     continueAfterFailure = false
     let app = launchNativeHome([

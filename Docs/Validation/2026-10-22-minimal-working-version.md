@@ -214,3 +214,36 @@ No policy was weakened and no signing, push, hosted CI or distribution was perfo
 The preceding three-journey iPhone receipt includes `missing_selectors: []`: the local
 Mainboard `fa467e0` safeguard is active. Compact console output omits the empty list;
 the durable JSON contains it. No environment replacement was needed.
+
+## Home study-action contrast
+
+Native contrast inspection found the small Available now heading too faint in light mode.
+Using hierarchical `.primary` retained the inherited section gray; explicit `Color.primary`
+corrects it. Available now and Upcoming reviews now use that adaptive semantic color.
+The WaniKani card colors, typography and layout are unchanged.
+
+- `Accessibility-HomeContrast-20261022.log` and `...-Fixed-20261022.log` retain the
+  original heading failure and ineffective hierarchical-style attempt.
+- `Accessibility-HomeContrast-Semantic-20261022.log` clears that heading and then reports
+  Next level-up review beneath the translucent tab bar. That broader finding remains open.
+- `Accessibility-HomeStudyContrast-20261022.log` and `...-Final-20261022.log` pass the
+  explicitly scoped native audit for both study buttons and both headings in light/dark
+  appearances. Other findings are retained as attachments rather than counted as passing.
+- `Accessibility-HomeStudyContrast-Negative-20261022.log` restores the old heading color
+  temporarily and fails specifically on `home.availableHeading`; the source is restored
+  automatically. This proves the scoped issue handler does not ignore the original bug.
+- `Accessibility-HomeStudyContrast-FormattedLint-20261022.log` checks 437 files and passes.
+  The only edit after the final native run is formatter line wrapping in the new test.
+
+Final captures are in `Accessibility-HomeStudyContrast-FinalCaptures-20261022`. The light
+post-audit and dark pre-audit captures show both readable headings and complete study cards.
+Some other captures around native contrast auditing omit the white card content; those
+captures are retained, not treated as complete visual acceptance. Further capture/rendering
+investigation and the separate tab-bar overlap finding remain open.
+
+The Reduce Motion source audit leaves the existing suppression unchanged. Apple's
+[symbolEffectsRemoved documentation](https://developer.apple.com/documentation/swiftui/view/symboleffectsremoved(_:))
+describes inherited effects; the current modifier sits inside the bounce modifier. This is
+source/documentation evidence, not executed Reduce Motion acceptance. The installed simctl
+UI controls expose appearance, contrast and content size, but no Reduce Motion switch.
+Physical VoiceOver and a genuinely enabled Reduce Motion run remain required.
