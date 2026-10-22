@@ -102,7 +102,7 @@ public struct StudyDashboard: View {
         GridItem(
           .adaptive(
             minimum: min(max(240, availableWidth - 32), typeSize.isAccessibilitySize ? 600 : 340)),
-          spacing: 20)
+          spacing: 20, alignment: .top)
       ], alignment: .leading, spacing: 20
     ) {
       StudyCard(title: "SRS progress", subtitle: "Your active study stages") {
@@ -159,15 +159,20 @@ public struct StudyDashboard: View {
         } else {
           Text("\(metrics.dueNow) due now").font(.title2.bold()).foregroundStyle(
             StudyPalette.radical)
-          Chart(metrics.scheduledDays, id: \.date) { day in
-            BarMark(x: .value("Day", day.date, unit: .day), y: .value("Items", day.count))
-              .foregroundStyle(StudyPalette.radical)
-          }.frame(height: 180)
-            .chartXAxis {
-              AxisMarks(values: .stride(by: .day)) {
-                AxisValueLabel(format: .dateTime.weekday(.narrow))
+          if metrics.scheduledDays.contains(where: { $0.count > 0 }) {
+            Chart(metrics.scheduledDays, id: \.date) { day in
+              BarMark(x: .value("Day", day.date, unit: .day), y: .value("Items", day.count))
+                .foregroundStyle(StudyPalette.radical)
+            }.frame(height: 180)
+              .chartXAxis {
+                AxisMarks(values: .stride(by: .day)) {
+                  AxisValueLabel(format: .dateTime.weekday(.narrow))
+                }
               }
-            }
+          } else {
+            Text("No additional reviews scheduled in the next 7 days.")
+              .foregroundStyle(.secondary)
+          }
           Text(
             "Local calendar days. Repeat reviews, new lessons and mistakes add work beyond these counts."
           ).studyNote()

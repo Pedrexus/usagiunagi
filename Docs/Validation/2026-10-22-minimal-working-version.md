@@ -64,3 +64,29 @@ and was discarded. Passing lesson picker/teaching/draft screenshots are retained
   remaining advisory-rule cleanup. Local success does not close these tasks.
 - Hosted GitHub Actions depends on the separately tracked unpublished Mainboard revision;
   this checkpoint does not publish dependencies, push a branch or create a PR.
+
+## Statistics rendered follow-up
+
+After `2ed3b434`, a current Mac screenshot exposed a blank future-schedule chart when all
+seven days have zero additional reviews, plus vertically centered cards in the adaptive
+grid. The shared dashboard now displays an empty-schedule explanation and aligns cards
+at their top edges. Scheduled data still uses the existing chart; calculations are unchanged.
+
+- `Statistics-MacAcceptance-20261022.log`: one pace comparison journey passes. The two
+  other requested selectors belonged to `MacCatalogTests`, not `MacStatisticsTests`, so
+  this receipt is counted as one test only.
+- `Statistics-MacCoverageSchedule-20261022.log`: both correctly scoped coverage and
+  schedule journeys pass, including filters, tab restoration, source disclosure and
+  expanded stage/subject counts. No modal reopens.
+- `Statistics-MacLayout-20261022.log`: the pace journey passes after the layout change.
+  Its fresh screenshot in `Statistics-MacLayoutCaptures-20261022` was visually inspected
+  against `Statistics-MacPaceCaptures-20261022`: the empty plot is gone, cards align,
+  and the comparison chart, legend and explanation remain legible.
+- `Statistics-IOSBuild-20261022.log` and `Statistics-Lint-20261022.log` exit zero.
+  Lint checks 440 files without rewriting or failures.
+
+These are isolated synthetic accounts. The pace implementation excludes future outcomes
+from historical training, and the UI explicitly distinguishes kanji coverage from exam
+readiness. This review does not provide full-account calibration, physical accessibility
+acceptance, or an exam-success prediction. Older Mac automation timeouts in the task ledger
+remain historical; these specific native journeys now run successfully.

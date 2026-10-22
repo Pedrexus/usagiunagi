@@ -6,6 +6,13 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Statistics rendered follow-up:** current Mac pace comparison, inline curriculum filtering/
+tab restoration and schedule stage/subject breakdown journeys pass. Fresh before/after
+captures exposed and verify a small shared dashboard fix: top-aligned cards and an explicit
+empty schedule message instead of a blank seven-day plot. iPhone build and enforced lint
+pass. This closes that specific layout issue, not real-account calibration or broad
+accessibility acceptance. [Receipts](Validation/2026-10-22-minimal-working-version.md#statistics-rendered-follow-up).
+
 **Voice device check and kana conversion:** exclusive microphone ownership,
 failure/retry cleanup, same-question hint restart, Watch pause/account/revision fences and
 native Watch radical images are repaired. Japanese conversion now normalizes kana/numerals
