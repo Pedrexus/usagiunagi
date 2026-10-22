@@ -45,7 +45,7 @@
       let prompt = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
       let input = app.textFields["review.answer"]
       input.click()
-      input.typeText(prompt == "Reading" ? "ichi" : "one")
+      input.typeText(prompt.hasSuffix("Reading") ? "ichi" : "one")
       app.buttons["review.submit"].click()
     }
     func testTeachingQuizPauseResumeAndFinish() throws {
@@ -58,9 +58,10 @@
         object: app.staticTexts["review.prompt"])
       XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
       let input = app.textFields["review.answer"]
-      let draft = initialPrompt == "Reading" ? "one" : "ichi"
+      let draft = initialPrompt.hasSuffix("Reading") ? "one" : "ichi"
       input.click()
       input.typeText(draft)
+      app.buttons["lesson.back"].click()
       app.pauseStudyAndReturn()
       XCTAssertTrue(input.waitForExistence(timeout: 5), app.debugDescription)
       XCTAssertNotEqual(app.staticTexts["review.prompt"].value as? String, initialPrompt)

@@ -418,3 +418,15 @@ window before normal pause/submit/completion; cold subject/review/lesson links e
 window. Replaced the wrong-bundle process precondition with the tested app's stopped state,
 and updated the stale prompt expectation. Mainboard lint passes. Actual saved-window
 restoration after termination remains open; fixture cold links intentionally ignore saved state.
+
+### 2026-10-22 — Mac study parity and assessment follow-up
+
+Eight fixture journeys now have passing evidence across retained runs: discard, retry draft,
+extra study, wrap-up, lesson teaching/quiz/pause/completion, typed exclusion, Anki review
+exclusion and Anki lesson exclusion. Native split-button menu selectors and contextual prompt
+expectations are corrected; exclusion explicitly asserts zero credit. Mainboard lint passes.
+Mixed earlier suite failures remain recorded in the current validation receipt.
+
+Open: Mac primary assessment confirmation dialog omits advanced exclusion/synonym actions
+in the observed hierarchy, while the native split-button menu provides exclusion. Investigate
+this UI difference; passing menu tests do not establish parity of the primary dialog.

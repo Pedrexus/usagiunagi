@@ -348,3 +348,32 @@ Both native tests pass, without skips/failures, in
 `MacReopen-FinalLint-20261022.log` passes 436 files without rewrites. These are isolated
 fixture-account journeys. Cold links deliberately ignore saved window state; they do not
 prove real-account window restoration after termination or physical iCloud/Watch behavior.
+
+### Mac lesson, draft and exclusion parity
+
+Updated remaining bare Reading comparisons to account for subject-qualified prompts. Lesson
+pause now takes the actual Choose lessons action before returning Home. Exclusion checks use
+the current saved-summary title and explicitly require `0/0` credit. Mac Anki exposes a native
+split PopUpButton, so the helper opens its nested menu button; typed correction uses its
+ordinary menu. No production source changed.
+
+Eight distinct fixture journeys have passing results across retained runs (not one all-green
+combined suite):
+
+- `MacStudyParity-20261022.log`, `test-7353b1646375418f9d4ff679e73a8fb2.xcresult`:
+  discard, extra study without scheduled-review changes, retry draft and wrap-up pass; lesson
+  navigation and the stale exclusion summary expectation fail in that initial run.
+- `MacStudyParity-Final-20261022.log`, `test-cc76e381f14b4160adff6c20533f21b5.xcresult`:
+  corrected lesson teaching/quiz/pause/resume/completion and typed exclusion pass; Anki
+  selectors fail. Those suite failures remain recorded.
+- `MacStudyParity-AnkiMenu-20261022.log`, `test-9c297c9e34e84af6962777a4e83454f9.xcresult`:
+  Anki lesson and review exclusion pass, no skips/failures, with zero completed-answer credit.
+  Native compiler/analyzer summaries report no warnings.
+- `MacStudyParity-MenuLint-20261022.log`: 436 files, no rewrites or failures.
+
+Intermediate `Anki` and `AnkiSplit` logs retain failed selector/dialog trials. The latter reveals
+an unresolved UI difference: the Mac primary assessment confirmation dialog shows only correct,
+incorrect and ask-later actions, whereas exclusion is available through the split-button menu.
+Do not infer dialog feature parity from the passing menu tests. Investigate the conditional
+advanced actions and native dialog rendering before closing that UI requirement. The review
+and lesson grading/outbox paths remain unchanged; all execution uses isolated fixtures.

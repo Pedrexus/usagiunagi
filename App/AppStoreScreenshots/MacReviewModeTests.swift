@@ -154,7 +154,7 @@
         XCTAssertTrue(input.waitForExistence(timeout: 5), app.debugDescription)
         let prompt = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
         input.click()
-        input.typeText(prompt == "Reading" ? "ichi" : "one")
+        input.typeText(prompt.hasSuffix("Reading") ? "ichi" : "one")
         app.buttons["review.submit"].click()
       }
       XCTAssertTrue(app.staticTexts["Practice complete"].waitForExistence(timeout: 5))
@@ -316,7 +316,7 @@
       XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
     }
 
-    func testRetryKeepsItsDraftAndAnsweringStateWhenResumed() {
+    func testRetryKeepsItsDraftAndAnsweringStateWhenResumed() throws {
       let app = launch([])
       defer { app.terminate() }
       app.buttons["home.reviews"].click()
@@ -328,7 +328,8 @@
       XCTAssertEqual((autoreveal.value as? NSNumber)?.boolValue, true)
       autoreveal.click()
       app.buttons["Done"].click()
-      let reading = app.staticTexts["review.prompt"].value as? String == "Reading"
+      let reading = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
+        .hasSuffix("Reading")
       input.click()
       input.typeText(reading ? "inu" : "wrong")
       app.buttons["review.submit"].click()
@@ -441,7 +442,7 @@
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       let first = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
       input.click()
-      input.typeText(first == "Reading" ? "ichi" : "one")
+      input.typeText(first.hasSuffix("Reading") ? "ichi" : "one")
       app.buttons["review.submit"].click()
       let changed = XCTNSPredicateExpectation(
         predicate: NSPredicate(format: "value != %@", first),
@@ -457,7 +458,7 @@
         app.staticTexts["Wrapping up"].waitForExistence(timeout: 5), app.debugDescription)
       XCTAssertFalse(app.staticTexts["Review session saved"].exists)
       input.click()
-      input.typeText(first == "Reading" ? "one" : "ichi")
+      input.typeText(first.hasSuffix("Reading") ? "one" : "ichi")
       app.buttons["review.submit"].click()
       XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
     }
@@ -814,14 +815,15 @@
       stop.click()
       XCTAssertFalse(stop.exists)
     }
-    func testTypedReviewMenuExcludesWithoutCreditingTheSubject() {
+    func testTypedReviewMenuExcludesWithoutCreditingTheSubject() throws {
       let app = launch(["--audio-fixture"])
       defer { app.terminate() }
       app.buttons["home.reviews"].click()
       let input = app.textFields["review.answer"]
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       input.click()
-      let reading = app.staticTexts["review.prompt"].value as? String == "Reading"
+      let reading = try XCTUnwrap(app.staticTexts["review.prompt"].value as? String)
+        .hasSuffix("Reading")
       input.typeText(reading ? "bananatsu" : "banana")
       app.buttons["review.submit"].click()
       XCTAssertTrue(
@@ -855,10 +857,15 @@
       excludeCurrentReview(in: app, lesson: true)
     }
     private func excludeCurrentReview(in app: XCUIApplication, lesson: Bool = false) {
-      app.menuButtons["review.corrections"].click()
+      let popup = app.popUpButtons["review.corrections"]
+      let menu = popup.exists ? popup.menuButtons.firstMatch : app.menuButtons["review.corrections"]
+      XCTAssertTrue(menu.waitForExistence(timeout: 5), app.debugDescription)
+      menu.click()
       app.menuItems["Exclude this item"].click()
       XCTAssertTrue(
-        app.staticTexts["Session complete"].waitForExistence(timeout: 5), app.debugDescription)
+        app.staticTexts[lesson ? "Lesson quiz saved" : "Review session saved"]
+          .waitForExistence(timeout: 5), app.debugDescription)
+      app.assertSummaryValue("0/0", for: "correct")
       let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
       image.name = "Native review-menu exclusion"
       image.lifetime = .keepAlways
