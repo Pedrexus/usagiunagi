@@ -567,3 +567,12 @@ an iPhone bottom tab bar. iPad and iPhone both pass the full light/dark sweep th
 community link. The lower iPad captures are visually checked; full lint passes. Production
 UI is unchanged. [Failure, repair and exact scope](Validation/2026-10-22-minimal-working-version.md#adaptive-ipadiphone-home-contrast-audit).
 Other screens, high-contrast settings, landscape, VoiceOver and Reduce Motion remain open.
+
+### Upcoming reviews local-clock repair
+
+Fixed the detailed forecast retaining future-hour counts after a review becomes due.
+The shared view now refreshes its local availability calculation each minute and on the
+existing snapshot data revision, clearing stale errors after successful loads. An unchanged
+regression fails before the fix and passes afterward; the existing breakdown/Back journey
+also passes. Full lint passes. [Exact evidence](Validation/2026-10-22-minimal-working-version.md#detailed-forecast-follows-local-time).
+No persistent schema, API request or grading change. Full-account calibration remains open.

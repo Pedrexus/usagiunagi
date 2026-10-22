@@ -807,3 +807,26 @@ lower-section captures were inspected in
 empty states and the community link remain readable and reachable. This covers normal-size
 portrait Home in the synthetic fixture, not full accessibility, higher-contrast settings,
 VoiceOver, Reduce Motion, landscape or other pages.
+
+### Detailed forecast follows local time
+
+A source audit found that Upcoming reviews reloaded only for account/snapshot timestamp or
+lesson-preference changes. Unlike Home and Stats, it did not advance while left open.
+The regression uses the existing fixture assignment due 30 seconds after launch, requires
+current-hour zero and future-hour one, then waits without interacting or refreshing.
+
+Before repair, `Forecast-Clock-Before-20261022.log` and
+`test-ea971edadd92482bbfa89cbb7f1d3e26.xcresult` fail after the 100-second predicate timeout:
+zero/current and one/future remain. The shared view now uses `TimelineView(.everyMinute)`
+and the model's existing data revision in its request identity. This also observes snapshot
+changes that retain the saved timestamp. Successful calculation clears a previous error.
+All reads still use the existing availability query; vacation/pending-work guards and
+cancellation checks remain. No network request, persistent model or timer service is added.
+
+After repair, `Forecast-Clock-After-20261022.log` and
+`test-4ad3e5a9aa7d422186acbc09ed2289f1.xcresult` pass both the new regression (56.051 s)
+and existing per-hour stage/subject breakdown and Back journey (16.007 s), no skips/failures.
+The new test requires the future row to disappear, the current count to become one and
+its Kanji breakdown to remain accessible. `Forecast-Clock-Lint-20261022.log` passes all
+436 files. These iPhone simulator checks establish the local-clock behavior, not real-account
+forecast calibration, physical-device performance or every forecast error-recovery path.

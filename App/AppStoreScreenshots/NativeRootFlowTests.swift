@@ -313,6 +313,31 @@
       add(picture)
     }
 
+    @MainActor func testUpcomingReviewsMovesDueWorkIntoTheCurrentHourWithoutRefresh() {
+      let app = launch(["--statistics-clock-fixture"])
+      defer { app.terminate() }
+      let forecast = app.buttons["home.forecast"]
+      scrollTo(forecast, in: app)
+      forecast.tap()
+      XCTAssertTrue(app.navigationBars["Upcoming reviews"].waitForExistence(timeout: 5))
+      let current = app.descendants(matching: .any).matching(identifier: "schedule.hour.0")
+        .firstMatch
+      let future = app.descendants(matching: .any).matching(identifier: "schedule.hour.1")
+        .firstMatch
+      XCTAssertTrue(current.waitForExistence(timeout: 5))
+      XCTAssertTrue(future.exists)
+      let empty = app.staticTexts["0 reviews · +0 this hour"]
+      XCTAssertTrue(empty.exists)
+      let advanced = XCTNSPredicateExpectation(
+        predicate: NSPredicate { _, _ in !empty.exists && !future.exists }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [advanced], timeout: 100), .completed)
+      XCTAssertTrue(current.exists)
+      XCTAssertTrue(app.staticTexts["1 reviews · +1 this hour"].exists)
+      XCTAssertTrue(app.navigationBars["Upcoming reviews"].exists)
+      current.tap()
+      XCTAssertTrue(app.staticTexts["Kanji"].waitForExistence(timeout: 5))
+    }
+
     @MainActor func testStatisticsUpdatesDueCountWithoutRefreshingSnapshot() {
       let app = launch(["--statistics-fixture", "--statistics-clock-fixture"])
       defer { app.terminate() }

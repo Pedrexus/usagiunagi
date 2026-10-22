@@ -70,3 +70,9 @@ local midnight even without a download. This changes derived presentation only: 
 fetch, submit reviews, rewrite the cached snapshot or advance the displayed snapshot timestamp.
 Assignment/status changes still come from the normal WaniKani synchronization path. Counts
 can lag the exact due instant by up to one minute while the screen remains open.
+
+The detailed Upcoming reviews page also reloads its existing local availability calculation
+on the minute and whenever the snapshot's data revision changes. A newly due review moves
+from its future bucket into the current hour without leaving the page. Successful loading
+clears a prior forecast error. This remains a read of saved SwiftData content, not a network
+refresh; pending-work and vacation guards still apply.

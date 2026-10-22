@@ -197,72 +197,77 @@ struct NativeForecastView: View {
   @State private var hours: [UpcomingReviewsView.Hour]?
   @State private var error: String?
   private struct Request: Hashable {
-    let account: String?
-    let savedAt: Date?
+    let revision: UUID
+    let minute: Int
     let preferences: StudyLessonPreferences
   }
   var body: some View {
-    Group {
-      if let error {
-        ContentUnavailableView(
-          "Forecast unavailable", systemImage: "calendar", description: Text(error))
-      } else if let hours {
-        UpcomingReviewsView(hours: hours)
-      } else {
-        ProgressView("Loading saved forecast")
+    TimelineView(.everyMinute) { context in
+      Group {
+        if let error {
+          ContentUnavailableView(
+            "Forecast unavailable", systemImage: "calendar", description: Text(error))
+        } else if let hours {
+          UpcomingReviewsView(hours: hours)
+        } else {
+          ProgressView("Loading saved forecast")
+        }
+      }.navigationTitle("Upcoming reviews").task(
+        id: Request(
+          revision: model.dataRevision, minute: Int(context.date.timeIntervalSince1970 / 60),
+          preferences: lessonSettings.value)
+      ) {
+        do {
+          guard let snapshot = model.snapshot else { return }
+          guard !snapshot.requiresAssignmentRefresh, snapshot.pendingReviews == 0,
+            !snapshot.onVacation
+          else {
+            error =
+              snapshot.onVacation
+              ? "Reviews are paused during vacation."
+              : "Refresh and sync saved work to update the forecast."
+            return
+          }
+          let available =
+            if let accountID = snapshot.accountID, let store = model.savedWorkStore,
+              !snapshot.isSample
+            {
+              try await store.availability(
+                accountID: accountID, lessonPreferences: lessonSettings.value)
+            } else { NativeHomeDashboardView.preview(snapshot) }
+          let groups = Dictionary(grouping: available.scheduledFuture) { item in
+            Int(
+              ceil(
+                max(0, Double(item.availableAt ?? 0) - available.now.timeIntervalSince1970) / 3600)
+            )
+          }
+          var cumulative: [CatalogAssignment] = []
+          let values: [UpcomingReviewsView.Hour] = Set(groups.keys).union([0]).sorted().map {
+            hour in
+            let new = groups[hour] ?? []
+            cumulative += new
+            return .init(
+              id: hour, date: available.now.addingTimeInterval(Double(hour) * 3600),
+              total: cumulative.count, newReviews: new.count,
+              stages: StudySRSCategory.allCases.filter { $0 != .burned }.map { category in
+                .init(
+                  id: category.name,
+                  value: cumulative.filter {
+                    StudySRSStage(rawValue: $0.srsStage)?.category == category
+                  }
+                  .count)
+              },
+              subjects: [SubjectKind.radical, .kanji, .vocabulary].map { kind in
+                .init(
+                  id: kind == .radical ? "Radicals" : kind == .kanji ? "Kanji" : "Vocabulary",
+                  value: cumulative.filter { $0.kind == kind }.count)
+              })
+          }
+          try Task.checkCancellation()
+          error = nil
+          hours = values
+        } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
       }
-    }.navigationTitle("Upcoming reviews").task(
-      id: Request(
-        account: model.snapshot?.accountID, savedAt: model.snapshot?.savedAt,
-        preferences: lessonSettings.value)
-    ) {
-      do {
-        guard let snapshot = model.snapshot else { return }
-        guard !snapshot.requiresAssignmentRefresh, snapshot.pendingReviews == 0,
-          !snapshot.onVacation
-        else {
-          error =
-            snapshot.onVacation
-            ? "Reviews are paused during vacation."
-            : "Refresh and sync saved work to update the forecast."
-          return
-        }
-        let available =
-          if let accountID = snapshot.accountID, let store = model.savedWorkStore,
-            !snapshot.isSample
-          {
-            try await store.availability(
-              accountID: accountID, lessonPreferences: lessonSettings.value)
-          } else { NativeHomeDashboardView.preview(snapshot) }
-        let groups = Dictionary(grouping: available.scheduledFuture) { item in
-          Int(
-            ceil(max(0, Double(item.availableAt ?? 0) - available.now.timeIntervalSince1970) / 3600)
-          )
-        }
-        var cumulative: [CatalogAssignment] = []
-        let values: [UpcomingReviewsView.Hour] = Set(groups.keys).union([0]).sorted().map { hour in
-          let new = groups[hour] ?? []
-          cumulative += new
-          return .init(
-            id: hour, date: available.now.addingTimeInterval(Double(hour) * 3600),
-            total: cumulative.count, newReviews: new.count,
-            stages: StudySRSCategory.allCases.filter { $0 != .burned }.map { category in
-              .init(
-                id: category.name,
-                value: cumulative.filter {
-                  StudySRSStage(rawValue: $0.srsStage)?.category == category
-                }
-                .count)
-            },
-            subjects: [SubjectKind.radical, .kanji, .vocabulary].map { kind in
-              .init(
-                id: kind == .radical ? "Radicals" : kind == .kanji ? "Kanji" : "Vocabulary",
-                value: cumulative.filter { $0.kind == kind }.count)
-            })
-        }
-        try Task.checkCancellation()
-        hours = values
-      } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
     }
   }
 }
