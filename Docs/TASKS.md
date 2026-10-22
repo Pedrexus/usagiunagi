@@ -6,6 +6,13 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Accessibility follow-up:** lesson group actions now speak their level/type, and font
+download/retry/cancel actions speak the font name. Current largest-text Home and lesson
+checks pass. The review geometry test now accepts the selected keyboard's actual first
+key instead of requiring an English `a`; the renewed largest-text review journey and
+hit-region audit pass with Japanese input selected. Physical VoiceOver and broader audit
+coverage remain open. [Scope](Validation/2026-10-22-minimal-working-version.md#accessibility-follow-up).
+
 **Statistics rendered follow-up:** current Mac pace comparison, inline curriculum filtering/
 tab restoration and schedule stage/subject breakdown journeys pass. Fresh before/after
 captures exposed and verify a small shared dashboard fix: top-aligned cards and an explicit

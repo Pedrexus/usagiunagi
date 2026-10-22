@@ -30,10 +30,14 @@ struct FontLibraryView: View {
                 Spacer()
                 if font.progress != nil {
                   Button("Cancel", systemImage: "xmark.circle") { library.send(.cancel(font.id)) }
+                    .accessibilityLabel("Cancel download of \(font.title)")
                     .accessibilityIdentifier("font.cancel.\(font.id)")
                 } else {
                   Button(font.error == nil ? "Download" : "Retry", systemImage: "arrow.down.circle")
                   { library.send(.download(font.id)) }
+                  .accessibilityLabel(
+                    "\(font.error == nil ? "Download" : "Retry download of") \(font.title)"
+                  )
                   .accessibilityIdentifier("font.download.\(font.id)")
                 }
               }

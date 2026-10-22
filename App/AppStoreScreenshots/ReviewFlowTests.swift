@@ -77,10 +77,10 @@ final class ReviewFlowTests: XCTestCase {
     let group = app.buttons["lesson.selectGroup.1-radical"]
     XCTAssertTrue(group.waitForExistence(timeout: 5), app.debugDescription)
     group.tap()
-    XCTAssertEqual(group.label, "Clear")
+    XCTAssertEqual(group.label, "Clear Level 1 · Radicals")
     XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "2 selected")
     group.tap()
-    XCTAssertEqual(group.label, "Select all")
+    XCTAssertEqual(group.label, "Select all Level 1 · Radicals")
     XCTAssertEqual(app.staticTexts["lesson.selectionCount"].label, "0 selected")
     XCTAssertTrue(app.buttons["lesson.startSelection"].isEnabled)
   }
@@ -200,7 +200,7 @@ final class ReviewFlowTests: XCTestCase {
         let bottom = controls.frame.minY
         let window = app.windows.firstMatch.frame
         let keyboard = app.keyboards.firstMatch
-        let key = keyboard.keys["a"]
+        let key = keyboard.keys.firstMatch
         return keyboard.exists && !keyboard.frame.isEmpty
           && key.exists && !key.frame.isEmpty && window.contains(key.frame)
           && content.allSatisfy {
@@ -220,7 +220,7 @@ final class ReviewFlowTests: XCTestCase {
         "Window: \(app.windows.firstMatch.frame)",
         "Navigation: \(app.navigationBars.firstMatch.frame)",
         "Controls: \(controls.frame)", "Keyboard: \(app.keyboards.firstMatch.frame)",
-        "A key: \(app.keyboards.firstMatch.keys["a"].frame)",
+        "First key: \(app.keyboards.firstMatch.keys.firstMatch.frame)",
       ] + frames).joined(separator: "\n") + "\n" + app.debugDescription)
     geometry.name = "Review viewport visibility \(result == .completed ? "verified" : "failure")"
     geometry.lifetime = .keepAlways
@@ -938,9 +938,11 @@ final class ReviewFlowTests: XCTestCase {
     defer { app.terminate() }
     let held = app.buttons["font.download.font-held.ttf"]
     scrollTo(held, in: app)
+    XCTAssertEqual(held.label, "Download Held font fixture")
     held.tap()
     let cancel = app.buttons["font.cancel.font-held.ttf"]
     XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+    XCTAssertEqual(cancel.label, "Cancel download of Held font fixture")
     cancel.tap()
     XCTAssertTrue(held.waitForExistence(timeout: 5))
     XCTAssertFalse(app.staticTexts["font.error.font-held.ttf"].exists)
@@ -950,7 +952,7 @@ final class ReviewFlowTests: XCTestCase {
     let error = app.staticTexts["font.error.font-failed.ttf"]
     XCTAssertTrue(error.waitForExistence(timeout: 5))
     XCTAssertTrue(error.label.contains("503"))
-    XCTAssertTrue(failed.label.contains("Retry"))
+    XCTAssertEqual(failed.label, "Retry download of Failed font fixture")
     failed.tap()
     XCTAssertTrue(error.waitForExistence(timeout: 5))
     let deletion = app.buttons["fonts.deleteAll"]

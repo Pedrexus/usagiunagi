@@ -47,6 +47,8 @@ struct LessonPickerView: View {
             description: Text("Refresh your account to check for new lessons."))
         }
         ForEach(groups) { group in
+          let selectionAction =
+            group.items.allSatisfy { selected.contains($0.id) } ? "Clear" : "Select all"
           GroupBox {
             VStack(alignment: .leading, spacing: 8) {
               HStack {
@@ -60,9 +62,10 @@ struct LessonPickerView: View {
                     selected.formUnion(ids)
                   }
                 } label: {
-                  Text(group.items.allSatisfy { selected.contains($0.id) } ? "Clear" : "Select all")
+                  Text(selectionAction)
                     .frame(minHeight: 44)
                 }.font(.callout).accessibilityIdentifier("lesson.selectGroup.\(group.id)")
+                  .accessibilityLabel("\(selectionAction) \(group.title)")
               }
               LazyVGrid(
                 columns: [

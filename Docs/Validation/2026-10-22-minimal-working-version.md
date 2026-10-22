@@ -90,3 +90,29 @@ from historical training, and the UI explicitly distinguishes kanji coverage fro
 readiness. This review does not provide full-account calibration, physical accessibility
 acceptance, or an exam-success prediction. Older Mac automation timeouts in the task ledger
 remain historical; these specific native journeys now run successfully.
+
+## Accessibility follow-up
+
+After `699953a6`, source inspection found two context-free button labels: repeated font
+Download/Retry/Cancel actions and repeated lesson-group Select all/Clear actions. Their
+spoken labels now include the font or level/type group; visible titles remain compact.
+
+`Accessibility-Phone-20261022.log` passes largest-text Home actions/progress and lesson
+heading/footer checks. Its review check fails while trying to inspect an English `a` key
+on the selected Japanese keyboard. The helper now checks the keyboard's actual first key
+using the same existence, nonempty-frame, containment and nonoverlap assertions.
+`Accessibility-Phone-Renewed-20261022.log` passes both group-selection labels and the full
+largest-text review journey: 250% question font, draft preservation through settings,
+portrait/landscape geometry, continued typing, grading feedback, reveal and native
+hit-region audit. The first failed receipt is retained.
+
+Fresh captures live in `Accessibility-Captures-20261022`. The landscape draft and portrait
+completion feedback were inspected. The landscape app capture does not display the
+system keyboard; its keyboard geometry assertions must not be treated as a screenshot
+of that keyboard or as physical keyboard/VoiceOver acceptance. The portrait capture does
+show Japanese input beneath the answer and tools.
+
+`Accessibility-MacBuild-20261022.log` and `Accessibility-Lint-20261022.log` exit zero.
+`Accessibility-FontActions-20261022.log` passes the actual download/cancel/retry/deletion
+cancellation journey and exact contextual accessibility labels, using isolated font fixtures.
+These checks do not close full VoiceOver, Reduce Motion, contrast or physical-device gates.
