@@ -120,3 +120,19 @@ app/shared runtime and the retired package manifest, excluding fixtures, tests a
 Verification Swift changes are 579 added / 2,723 deleted lines; native assertions remain while
 importer-only suites retire. These are physical diff lines against `7378c120`, not an executed
 coverage or behavioral-equivalence claim. Frozen sources and evidence are excluded from savings.
+
+## Follow-up reference audit
+
+Rechecked tracked production Swift method/type references after the earlier removals. Methods
+with no direct source call sites are system protocol/delegate callbacks or `callAsFunction`;
+none establishes another safe deletion. This lexical check is an audit aid, not whole-program
+reachability proof. Resource generators and their source data are still referenced by documented
+regeneration workflows and are retained. There are no tracked Go, Ruby, Python, Objective-C or
+protobuf source files in the current checkout.
+
+Removed the workspace's obsolete `IDEDidComputeMac32BitWarning` acknowledgment metadata and
+replaced stale current-development instructions for already deleted importer/protobuf targets.
+No runtime code or dependencies changed in this follow-up. Prior removals include the unused
+UploadCoordinator and its isolated tests, plus the duplicate Watch scheme (`e7a606ca`).
+Required native callbacks, Japanese IME integration, Codable identities and frozen SwiftData
+validation fixtures remain; age or a historical name alone is not evidence that code is dead.

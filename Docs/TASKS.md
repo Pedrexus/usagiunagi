@@ -393,3 +393,11 @@ Completed the light/dark Home contrast sweep through the community link, includi
 SRS and recent-activity sections. Native audit and Mainboard lint pass; final captures reviewed.
 See the minimal-working-version receipt for explicit disabled/occluded-control exceptions.
 This supersedes the open lower-Home contrast check for this fixture only.
+
+### 2026-10-22 — Additional dead-code/reference audit
+
+Rechecked production method/type references and resource generation inputs. No additional
+unused production subsystem established after the previous legacy and UploadCoordinator removals.
+Removed obsolete Mac 32-bit Xcode warning metadata; corrected current development instructions
+that still described deleted protobuf/importer targets. Retained required platform callbacks,
+IME support, native-store fixtures and resource generators. Runtime behavior unchanged.
