@@ -1022,6 +1022,43 @@
         app.buttons["review.stopAudio"].waitForExistence(timeout: 5), app.debugDescription)
     }
 
+    func testVoiceReadingCanResumeAfterHidingAndFallBackToTyping() {
+      let app = launch(["--manual-review-fixture", "--light-fixture"])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+      app.buttons["review.voice"].click()
+      XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+      app.buttons["voice.stop"].click()
+      let prompt = app.staticTexts["review.prompt"]
+      let reading = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value CONTAINS %@", "Reading"), object: prompt)
+      XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+      XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+      app.typeKey("h", modifierFlags: .command)
+      XCTAssertTrue(app.wait(for: .runningBackground, timeout: 5))
+      app.activate()
+      let input = app.textFields["review.answer"]
+      XCTAssertTrue(input.waitForExistence(timeout: 5))
+      XCTAssertEqual(prompt.value as? String, "Kanji Reading")
+      XCTAssertFalse(app.buttons["voice.stop"].exists)
+      app.buttons["review.voice"].click()
+      XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+      app.buttons["voice.stop"].click()
+      XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
+      XCTAssertFalse(app.buttons["voice.submit"].isEnabled)
+      XCTAssertTrue(app.staticTexts["Use kana for the reading before submitting."].exists)
+      XCTAssertFalse(app.staticTexts["Review session saved"].exists)
+      app.buttons["voice.keyboard"].click()
+      XCTAssertTrue(input.waitForExistence(timeout: 5))
+      input.click()
+      input.typeText("ichi")
+      app.buttons["review.submit"].click()
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
+      app.assertSummaryValue("100%", for: "accuracy")
+      XCTAssertFalse(app.staticTexts["voice.busy"].exists)
+    }
+
     func testContinuousVoiceAnswersBothSidesWithoutFurtherTaps() {
       let app = launch([
         "--manual-review-fixture", "--continuous-voice-fixture", "--light-fixture",

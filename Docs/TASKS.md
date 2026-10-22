@@ -550,3 +550,12 @@ stronger post-settings keyboard-visibility assertion; that final landscape check
 and its stable capture was inspected. No extra delay or platform branch was introduced.
 These are scoped local checks; real-account calibration, VoiceOver/Reduce Motion and physical
 services remain open. Exact source scopes and bundles are in the current validation receipt.
+
+### Mac voice fallback acceptance
+
+All five current continuous Mac voice journeys pass together after cleanup. A new sixth
+case verifies hide/reactivate during listening, the unchanged reading question, refusal of
+an unresolved spoken kanji answer, keyboard fallback and a 100% completed summary. Full
+Mainboard lint passes 436 files. [Exact scope and receipts](Validation/2026-10-22-voice-devices.md#current-source-mac-interruption-and-keyboard-fallback).
+No production change; physical microphone/Watch, signed services and termination/window
+restoration remain open.

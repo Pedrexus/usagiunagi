@@ -104,3 +104,24 @@ recognition because the installed watchOS SDK has no public SpeechAnalyzer/Trans
 The full app regression, accessibility/IME, iCloud/WaniKani conflict acceptance, original-app
 usability comparison and hosted CI dependency publication remain tracked in `Docs/TASKS.md`.
 Frozen V1 and historical fixture writer bytes remain unchanged.
+
+## Current-source Mac interruption and keyboard fallback
+
+After the runtime cleanup, `ContinuousVoice-Mac-Final-20261022.log` passes the five
+continuous Mac journeys together in one run, no skips/failures:
+`test-8846ebc01f5a4113aa0edf8edf2e1f3e.xcresult`. This includes bilingual progression,
+mistake penalties, unresolved-kana repeats, exact-meaning retries and slow capture cleanup.
+
+The new `testVoiceReadingCanResumeAfterHidingAndFallBackToTyping` closes the missing
+Mac fallback transition. After accepting the spoken meaning, it hides the app while the
+reading is listening, verifies background state, reactivates and requires the same Kanji
+Reading question with typed input and no active capture. Restarting voice returns an
+unresolved kanji transcript, which cannot submit or complete the session. Switching to
+typing and answering `ichi` completes at 100%, without a busy-microphone message.
+
+`VoiceFallback-Mac-20261022.log` and
+`test-dd22813d6120433eaddc3f68bb46bdc2.xcresult` pass this case (24.313 seconds), no skips
+or failures. `VoiceFallback-Mac-Lint-20261022.log` passes all 436 files without rewrites.
+Production code is unchanged. These checks use the existing isolated capture fixture;
+they do not establish live microphone timing, real permissions or paired-Watch delivery.
+Hide/reactivate is not process termination or saved-window restoration.
