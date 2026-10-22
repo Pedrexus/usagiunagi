@@ -6,6 +6,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>usagiunagi</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Use your Watch microphone to answer reviews. Short recordings are sent only to your paired iPhone for on-device recognition and are then deleted.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

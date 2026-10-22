@@ -195,7 +195,7 @@ nonisolated enum PrivatePreferencesV1: VersionedSchema {
     }
   }
 
-  func updateScene(_ id: UUID, studying: Bool) {
+  public func updateScene(_ id: UUID, studying: Bool) {
     let wasStudying = !studyingScenes.isEmpty
     if studying { studyingScenes.insert(id) } else { studyingScenes.remove(id) }
     if wasStudying, studyingScenes.isEmpty {

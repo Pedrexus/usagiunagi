@@ -1,5 +1,13 @@
 # WidgetKit implementation checkpoint
 
+**October 22 correction:** the [Watch voice follow-up](2026-10-22-watch-voice.md) performs
+the first Series 12 simulator install. The installer rejects the earlier unpublished
+`.watchapp.c.widgets` child under the unified `.watchapp` host. The valid child is now
+`com.davidsansome.wanikani.watchapp.widgets`, used consistently by the target and installed
+face migrator. Shipping phone/Watch identities and App Group are preserved. Watch targets
+now require watchOS 27. The identifiers/deployment wording below describes its historical
+source scope; signed registration, upgrade/face migration and delivery remain unaccepted.
+
 Base: `ed45cfe0d45dd38f3fc336d09948fe5cd1aa8836`, branch `codex/swiftui-27-curriculum`. Mainboard: `a2e0e20933b5fda48e4b7402b4f1e6d88d8872b3`. This is production implementation/compiler evidence; no tests, app launches or live exercises occurred. The original-app usability comparison remains deferred until production changes finish.
 
 ## Production change
@@ -75,7 +83,7 @@ This stage keeps the `.watchapp.c` executable and private-defaults identity stru
 
 The smallest final conversion would convert the existing watch-app target in place into a normal watch application, move the extension's sources/privacy resource and required configuration into it, use an `@main App` with [`WKApplicationDelegateAdaptor`](https://developer.apple.com/documentation/swiftui/wkapplicationdelegateadaptor) and `WKApplicationDelegate`, and remove the old extension target and storyboard host. Move the widget dependency/embedding from the extension to the watch app. Move the ClockKit principal-class and custom group/widget identifiers to the application configuration, retain its migration-only implementation, and apply the authorized App Group entitlement to the actual writer and widget reader. The iOS embed and existing watch-app scheme can continue to reference the retained watch-app target; their built products and launch behavior still require verification.
 
-Keep the iOS `com.davidsansome.wanikani`, watch app `com.davidsansome.wanikani.watchapp`, and widget `com.davidsansome.wanikani.watchapp.c.widgets` identities unless the owner approves a separate change. The `.watchapp.c` extension necessarily ceases to be an active executable if that target is removed. Preserving its historical data is therefore a separate requirement; retaining every old executable bundle identity and removing that executable are not the same operation. Changing the surviving watch app's identifier to `.watchapp.c` must not be used as a shortcut without explicit approval and installed-upgrade proof.
+Keep the shipping iOS `com.davidsansome.wanikani` and Watch app `com.davidsansome.wanikani.watchapp` identities unless the owner approves a separate change. The new unpublished widget uses the installer-valid `com.davidsansome.wanikani.watchapp.widgets` child, as corrected above. The `.watchapp.c` extension necessarily ceases to be an active executable if that target is removed. Preserving its historical data is therefore a separate requirement; retaining every old executable bundle identity and removing that executable are not the same operation. Changing the surviving Watch app's identifier to `.watchapp.c` must not be used as a shortcut without explicit approval and installed-upgrade proof. Signed registration/publication and installed-upgrade acceptance still require their separate gates.
 
 Retain the existing one-time startup guard, WatchConnectivity receiver and background-task completion semantics during the lifecycle conversion. A separate adoption of SwiftUI's newer background-task modifiers is unnecessary for the minimal migration and must not create a second completion owner. Keep the wire keys, packet validation, projections, WidgetKit kind and migration widget identifier stable.
 

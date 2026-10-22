@@ -19,6 +19,28 @@ import SwiftUI
   private(set) var services: StudyAppAssembly?
   private(set) var failure: String?
   @ObservationIgnored private var preparation: Task<Void, Never>?
+  #if os(iOS)
+    @ObservationIgnored private var watchReviews: WatchReviewHost?
+
+    func receiveWatchReview(_ request: WatchReviewRequest) async -> WatchReviewResponse {
+      guard !StudyAppAssembly.isReviewFixture else {
+        return .init(
+          runID: request.runID, outcome: .unavailable,
+          feedback: "The phone is showing an isolated preview. Open your account first.")
+      }
+      await prepare()
+      guard let services else {
+        return .init(
+          runID: request.runID, outcome: .unavailable,
+          feedback:
+            "Unlock your iPhone and open usagiunagi, then resume here. Your saved progress is kept."
+        )
+      }
+      let host = watchReviews ?? WatchReviewHost(services: services)
+      watchReviews = host
+      return await host.receive(request)
+    }
+  #endif
   @ObservationIgnored private let factory: @MainActor () async throws -> StudyAppAssembly
   init(factory: @escaping @MainActor () async throws -> StudyAppAssembly = production) {
     self.factory = factory

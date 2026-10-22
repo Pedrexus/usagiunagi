@@ -11,12 +11,13 @@ public actor AppleVoiceCapture: VoiceCapture {
   private var analyzer: SpeechAnalyzer?
   private var resultTask: Task<Void, Never>?
   private var interruptionTasks: [Task<Void, Never>] = []
+  private let recording: URL?
   #if os(iOS)
     private var priorAudio:
       (AVAudioSession.Category, AVAudioSession.Mode, AVAudioSession.CategoryOptions)?
   #endif
 
-  public init() {}
+  public init(recording: URL? = nil) { self.recording = recording }
 
   public func start(
     id: UUID, locale: Locale, downloadModel: Bool,
@@ -83,6 +84,16 @@ public actor AppleVoiceCapture: VoiceCapture {
       try await installation.downloadAndInstall()
       try check(id)
     }
+    if let recording {
+      let file = try AVAudioFile(forReading: recording)
+      let analyzer = SpeechAnalyzer(modules: [module])
+      self.analyzer = analyzer
+      observeResults(id: id, results: results, report: report)
+      try await analyzer.start(inputAudioFile: file, finishAfterFile: true)
+      await resultTask?.value
+      try check(id)
+      return
+    }
     guard await AVCaptureDevice.requestAccess(for: .audio) else {
       throw VoiceCaptureError.microphoneDenied
     }
@@ -107,22 +118,7 @@ public actor AppleVoiceCapture: VoiceCapture {
     provider = capture
     let analyzer = SpeechAnalyzer(modules: [module])
     self.analyzer = analyzer
-    resultTask = Task { [weak self] in
-      do {
-        for try await event in results {
-          guard let self, await self.isActive(id) else { return }
-          await report(event)
-        }
-        if let self, await self.isActive(id) {
-          await self.stopAfterResults(id: id)
-          await report(.finished)
-        }
-      } catch {
-        guard let self, await self.isActive(id), !Task.isCancelled else { return }
-        await report(.failed(error.localizedDescription))
-        await self.cancel(id: id)
-      }
-    }
+    observeResults(id: id, results: results, report: report)
     try await analyzer.start(inputSequence: capture.analyzerInputs)
     try check(id)
     capture.captureSession.startRunning()
@@ -143,6 +139,27 @@ public actor AppleVoiceCapture: VoiceCapture {
         })
     }
     await report(.listening)
+  }
+
+  private func observeResults<Results: AsyncSequence & Sendable>(
+    id: UUID, results: Results, report: @escaping VoiceCaptureReport
+  ) where Results.Element == VoiceCaptureEvent {
+    resultTask = Task { [weak self] in
+      do {
+        for try await event in results {
+          guard let self, await self.isActive(id) else { return }
+          await report(event)
+        }
+        if let self, await self.isActive(id) {
+          await self.stopAfterResults(id: id)
+          await report(.finished)
+        }
+      } catch {
+        guard let self, await self.isActive(id), !Task.isCancelled else { return }
+        await report(.failed(error.localizedDescription))
+        await self.cancel(id: id)
+      }
+    }
   }
 
   public func finish(id: UUID) async throws {

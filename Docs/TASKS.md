@@ -6,6 +6,19 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Apple Watch voice reviews:** the primary Watch screen now runs continuous voice through
+the paired iPhone's on-device recognition, shared grader and revision-checked SwiftData/
+outbox. One Start action precedes haptics, automatic progression and unclear-answer
+repeats; Pause stays in the toolbar. Recording is foreground-only and bounded. No separate
+Watch credentials/store or server ASR is added. Series 12's system Audio Intelligence
+is researched separately from app APIs. The first manual install catches the unpublished
+widget's invalid child identifier; it is corrected without changing shipping phone/Watch
+identities. Watch/iPhone Debug, shared Mac Release and scoped checks pass. Manual Series 12
+install/launch, visible Start and Settings/return pass; no microphone or review is started.
+The inventory is 234 findings / 98 rules with three additional complexity advisories.
+Automated tests remain deferred until the end; signed paired-device/audio acceptance
+stays open. [Behavior, platform limits and receipts](Implementation/2026-10-22-watch-voice.md).
+
 **Continuous voice review:** one microphone tap now enables inline voice across questions.
 Tentative speech is visible, a 1.2-second pause in recognizer updates requests finalization,
 and only finalized text goes through the unchanged revision-checked grader/store. Correct

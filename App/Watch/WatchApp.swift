@@ -20,7 +20,7 @@ import WatchKit
 struct WatchApp: App {
   @WKApplicationDelegateAdaptor(WatchAppDelegate.self) private var delegate
 
-  var body: some Scene { WindowGroup { WatchSettingsView() } }
+  var body: some Scene { WindowGroup { WatchReviewView() } }
 }
 
 final class WatchAppDelegate: NSObject, WKApplicationDelegate {

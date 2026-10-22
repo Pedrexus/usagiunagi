@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A29A00000000000000000001 /* WatchReviewMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000010 /* WatchReviewMessage.swift */; platformFilter = ios; };
+		A29A00000000000000000002 /* WatchReviewMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000010 /* WatchReviewMessage.swift */; };
+		A29A00000000000000000003 /* WatchReviewHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000011 /* WatchReviewHost.swift */; platformFilter = ios; };
+		A29A00000000000000000004 /* WatchVoiceReview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000012 /* WatchVoiceReview.swift */; };
 		047AE3FDBC6A133AB2172C33 /* StudyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5F84B9E7F40CE19F2FDE97 /* StudyCore */; };
 		0833BA0BAAC68D162D964D99 /* StudySpeech in Frameworks */ = {isa = PBXBuildFile; productRef = 5E2663408318DBE16C356C9A /* StudySpeech */; };
 		137DFD51681E0F8E31C6B995 /* UsagiUnagi.icon in Resources */ = {isa = PBXBuildFile; fileRef = 27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */; };
@@ -131,6 +135,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A29A00000000000000000010 /* WatchReviewMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReviewMessage.swift; sourceTree = "<group>"; };
+		A29A00000000000000000011 /* WatchReviewHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReviewHost.swift; sourceTree = "<group>"; };
+		A29A00000000000000000012 /* WatchVoiceReview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVoiceReview.swift; sourceTree = "<group>"; };
 		0823C6E3CB1F545FDAAC7A41 /* LegacyStudyImporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegacyStudyImporter.swift; sourceTree = "<group>"; };
 		27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
 		28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LessonPreferenceTests.swift; sourceTree = "<group>"; };
@@ -358,6 +365,9 @@
 				C92AB971237F2E8200F79904 /* WatchCompanionCache.swift */,
 				C943D5AF2380D59A004A7969 /* WatchSettingsView.swift */,
 				C90846BF237F1C790068A272 /* WatchApp.swift */,
+				A29A00000000000000000010 /* WatchReviewMessage.swift */,
+				A29A00000000000000000011 /* WatchReviewHost.swift */,
+				A29A00000000000000000012 /* WatchVoiceReview.swift */,
 				C90846C1237F1C790068A272 /* ComplicationController.swift */,
 				A28600000000000000000011 /* WatchShared.entitlements */,
 				A2860000000000000000000C /* WatchWidgets */,
@@ -609,6 +619,8 @@
 				A28500000000000000000003 /* LegacyPreferenceImporter.swift in Sources */,
 				A28500000000000000000004 /* LegacyPreferenceSchema.swift in Sources */,
 				C92AB96F237F280300F79904 /* WatchHelper.swift in Sources */,
+				A29A00000000000000000001 /* WatchReviewMessage.swift in Sources */,
+				A29A00000000000000000003 /* WatchReviewHost.swift in Sources */,
 				90F5517AFA8C466B4B73DC91 /* AppIdentity.swift in Sources */,
 				FFDC4714E0B50FC1EF60E822 /* LegacyStudyImporter.swift in Sources */,
 				6F5E06F1F9BD785F9E3BDC4E /* UsagiUnagiApp.swift in Sources */,
@@ -676,6 +688,8 @@
 				C943D5B02380D59B004A7969 /* WatchSettingsView.swift in Sources */,
 				C92AB972237F2E8200F79904 /* WatchCompanionCache.swift in Sources */,
 				C92AB970237F2DB600F79904 /* WatchHelper.swift in Sources */,
+				A29A00000000000000000002 /* WatchReviewMessage.swift in Sources */,
+				A29A00000000000000000004 /* WatchVoiceReview.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -786,7 +800,7 @@
 				SWIFT_VERSION = 6.0;
 				USAGI_ICLOUD_CONTAINER_IDENTIFIER = iCloud.com.pedrexus.usagiunagi;
 				USAGI_WATCH_APP_GROUP = group.com.pedrexus.usagiunagi.watch;
-				USAGI_WATCH_WIDGET_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.watchapp.c.widgets;
+				USAGI_WATCH_WIDGET_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.watchapp.widgets;
 			};
 			name = Debug;
 		};
@@ -850,7 +864,7 @@
 				SWIFT_VERSION = 6.0;
 				USAGI_ICLOUD_CONTAINER_IDENTIFIER = iCloud.com.pedrexus.usagiunagi;
 				USAGI_WATCH_APP_GROUP = group.com.pedrexus.usagiunagi.watch;
-				USAGI_WATCH_WIDGET_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.watchapp.c.widgets;
+				USAGI_WATCH_WIDGET_BUNDLE_IDENTIFIER = com.davidsansome.wanikani.watchapp.widgets;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1089,7 +1103,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Debug;
 		};
@@ -1116,7 +1130,7 @@
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Release;
 		};
@@ -1147,7 +1161,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Debug;
 		};
@@ -1177,7 +1191,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Release;
 		};

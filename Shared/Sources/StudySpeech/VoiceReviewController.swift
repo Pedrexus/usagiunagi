@@ -34,7 +34,7 @@ public final class VoiceReviewController {
     self.capture = capture
   }
 
-  public func start(downloadModel: Bool = false) {
+  @discardableResult public func start(downloadModel: Bool = false) -> Task<Void, Never> {
     let previous = operation
     let cleanup = cancel()
     let id = UUID()
@@ -43,7 +43,7 @@ public final class VoiceReviewController {
     phase = .preparing
     let capture = capture
     let locale = Locale(identifier: question.kind == .reading ? "ja-JP" : "en-US")
-    operation = Task { [weak self] in
+    let operation = Task { [weak self] in
       do {
         await previous?.value
         await cleanup?.value
@@ -57,6 +57,8 @@ public final class VoiceReviewController {
         self.phase = .failed(error.localizedDescription)
       }
     }
+    self.operation = operation
+    return operation
   }
 
   public func stop() {

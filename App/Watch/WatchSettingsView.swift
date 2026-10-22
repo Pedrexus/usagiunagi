@@ -22,40 +22,38 @@ struct WatchSettingsView: View {
   @State private var clockStart = Date.now
 
   var body: some View {
-    NavigationStack {
-      TimelineView(.periodic(from: clockStart, by: 60)) { context in
-        Form {
-          Section("Data Source") {
-            Picker("Show", selection: selection) {
-              Text("Review Counts").tag(ComplicationDataSource.reviews.rawValue)
-              Text("Level").tag(ComplicationDataSource.level.rawValue)
-              if source == ComplicationDataSource.legacyCharacter.rawValue {
-                Text("Kanji — unavailable")
-                  .tag(ComplicationDataSource.legacyCharacter.rawValue)
-                  .disabled(true)
-              }
-            }
+    TimelineView(.periodic(from: clockStart, by: 60)) { context in
+      Form {
+        Section("Data Source") {
+          Picker("Show", selection: selection) {
+            Text("Review Counts").tag(ComplicationDataSource.reviews.rawValue)
+            Text("Level").tag(ComplicationDataSource.level.rawValue)
             if source == ComplicationDataSource.legacyCharacter.rawValue {
-              Text("Choose Review Counts or Level to show your study data.")
-                .font(.footnote)
+              Text("Kanji — unavailable")
+                .tag(ComplicationDataSource.legacyCharacter.rawValue)
+                .disabled(true)
             }
           }
-          Section("Last Updated") {
-            if let snapshot {
-              Text(snapshot.sentAt, style: .relative)
-              if context.date >= snapshot.expiresAt {
-                Label(
-                  "The data on this watch is stale. Open the app on your phone to update.",
-                  systemImage: "exclamationmark.triangle")
-              }
-            } else {
-              Text("No data. Open the app on your phone to update.")
+          if source == ComplicationDataSource.legacyCharacter.rawValue {
+            Text("Choose Review Counts or Level to show your study data.")
+              .font(.footnote)
+          }
+        }
+        Section("Last Updated") {
+          if let snapshot {
+            Text(snapshot.sentAt, style: .relative)
+            if context.date >= snapshot.expiresAt {
+              Label(
+                "The data on this watch is stale. Open the app on your phone to update.",
+                systemImage: "exclamationmark.triangle")
             }
+          } else {
+            Text("No data. Open the app on your phone to update.")
           }
         }
       }
-      .navigationTitle("Settings")
     }
+    .navigationTitle("Settings")
     .task {
       snapshot = WatchCompanionCache.sharedInstance.state.snapshot
       for await _ in NotificationCenter.default.notifications(

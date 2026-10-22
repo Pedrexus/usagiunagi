@@ -4,7 +4,21 @@ import SwiftUI
 /// One native SwiftUI app and service graph for iPhone, iPad and Mac.
 @main struct UsagiUnagiApp: App {
   @Environment(\.scenePhase) private var scenePhase
-  @State private var owner = StudyApplicationOwner()
+  @State private var owner: StudyApplicationOwner
+  init() {
+    let owner = StudyApplicationOwner()
+    _owner = State(initialValue: owner)
+    #if os(iOS)
+      if !StudyAppAssembly.isReviewFixture {
+        WatchHelper.sharedInstance.reviewRequest = { [weak owner] request in
+          await owner?.receiveWatchReview(request)
+            ?? .init(
+              runID: request.runID, outcome: .unavailable,
+              feedback: "Open the app on your iPhone first.")
+        }
+      }
+    #endif
+  }
   var body: some Scene {
     WindowGroup(id: "study") {
       StudyApplicationWindow(owner: owner)
