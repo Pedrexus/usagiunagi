@@ -881,3 +881,26 @@ behavior changed. Logs: `Media-Diagnostics-Mac-Final-20261022.log` and
 `Media-Mac-Retry-Label-20261022.log`. Mainboard lint passes all 436 files in
 `Media-Acceptance-Lint-20261022.log`. These isolated fixtures do not establish hosted font
 server availability, physical-device accessibility or the pending iPhone popup behavior.
+
+## Mac notification settings and final-answer audio
+
+`Settings-Audio-Mac-Final-20261022.log` / `test-70ffc3136cdf4e228c11af6d40b39671.xcresult`
+passes offline-audio settings without changing an unsubmitted review draft (22.509 seconds).
+Its notification and autoplay cases fail because they click switches outside the visible
+settings form. Exported screen recordings confirm the controls sit below the sheet viewport;
+they are not evidence of failed persistence. A bounded test helper now scrolls each setting
+fully into the visible form before interaction, with a failure screenshot if it remains hidden.
+
+Notification preferences, dark appearance and the custom avatar email survive closing and
+reopening Settings with one app window in `test-dc9d9fc837e149bc941a903b92411f3a.xcresult`
+(33.626 seconds). That run exposes a second stale autoplay assertion expecting `Meaning`
+instead of the current `Vocabulary Meaning` prompt. After correcting that exact expectation,
+`test-cb1d7ca0772c4f74abd1ea8e30b6e149.xcresult` passes the complete typed meaning/reading
+journey and verifies playback remains stoppable after the final answer (24.298 seconds).
+Logs: `Settings-Audio-Mac-VisibleControls-20261022.log`, `Autoplay-Mac-Final-20261022.log`.
+Full lint passes 436 files in `Settings-Audio-Acceptance-Lint-20261022.log`.
+
+No production UI, notification permission policy or audio behavior changed. The fixture
+notification client never schedules real alerts. These checks do not prove real notification
+delivery or physical audio routing. The first run also retains an internal QoS runtime warning;
+it is not suppressed or treated as resolved by these passing behavioral checks.

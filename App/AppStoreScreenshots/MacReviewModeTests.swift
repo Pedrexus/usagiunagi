@@ -15,6 +15,21 @@
           .waitForExistence(timeout: 10), app.debugDescription)
       return app
     }
+    private func revealSetting(_ control: XCUIElement, in app: XCUIApplication) {
+      let content = app.sheets.firstMatch.scrollViews.firstMatch
+      XCTAssertTrue(content.waitForExistence(timeout: 5))
+      for _ in 0..<12 {
+        let viewport = content.frame.insetBy(dx: 0, dy: 12)
+        if control.exists && control.isHittable && viewport.contains(control.frame) { return }
+        let upward = control.exists && control.frame.midY < viewport.minY
+        content.scroll(byDeltaX: 0, deltaY: upward ? 200 : -200)
+      }
+      let capture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      capture.name = "Unreachable Mac setting"
+      capture.lifetime = .keepAlways
+      add(capture)
+      XCTFail("Setting remains outside the visible form: \(control.debugDescription)")
+    }
     private func showAnswer(in app: XCUIApplication) {
       let show = app.buttons["review.submit"]
       XCTAssertTrue(show.waitForExistence(timeout: 5), app.debugDescription)
@@ -611,6 +626,7 @@
       for (id, enabled) in choices {
         let toggle = app.switches[id]
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        revealSetting(toggle, in: app)
         if (toggle.value as? NSNumber)?.boolValue != enabled { toggle.click() }
         XCTAssertEqual((toggle.value as? NSNumber)?.boolValue, enabled)
       }
@@ -626,6 +642,7 @@
       for (id, enabled) in choices {
         let toggle = app.switches[id]
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        revealSetting(toggle, in: app)
         XCTAssertEqual((toggle.value as? NSNumber)?.boolValue, enabled)
       }
       XCTAssertFalse(app.alerts.firstMatch.exists)
@@ -790,16 +807,18 @@
       app.buttons["settings.page.reviews"].click()
       let paired = app.switches["reviewSettings.groupMeaningReading"]
       XCTAssertTrue(paired.waitForExistence(timeout: 5))
+      revealSetting(paired, in: app)
       paired.click()
       XCTAssertEqual((paired.value as? NSNumber)?.intValue, 1)
       let autoplay = app.switches["reviewSettings.autoplay"]
       XCTAssertTrue(autoplay.waitForExistence(timeout: 5))
+      revealSetting(autoplay, in: app)
       autoplay.click()
       app.buttons["Done"].click()
       app.buttons["home.reviews"].click()
       let input = app.textFields["review.answer"]
       XCTAssertTrue(input.waitForExistence(timeout: 5))
-      XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Meaning")
+      XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Vocabulary Meaning")
       input.click()
       input.typeText("one thing")
       app.buttons["review.submit"].click()

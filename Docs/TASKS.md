@@ -637,3 +637,11 @@ cancellation/failure/deletion journey then passes on rerun. Full lint passes 436
 [Exact failures and passing receipts](Validation/2026-10-22-minimal-working-version.md#mac-font-and-diagnostic-acceptance).
 The broad iPhone run remains live; its separate font popup and settings assertions are not
 accepted by these Mac results. No production behavior changed in this test correction.
+
+### Mac notification/audio acceptance
+
+The native Mac offline-audio draft, notification/appearance persistence and final-answer
+autoplay/Stop journeys now pass. Corrected test clicks on offscreen settings and an obsolete
+generic Meaning prompt expectation after inspecting the recordings. Production behavior is
+unchanged; real notification delivery and physical audio routing remain open. Full lint passes.
+[Failures, captures and passing receipts](Validation/2026-10-22-minimal-working-version.md#mac-notification-settings-and-final-answer-audio).
