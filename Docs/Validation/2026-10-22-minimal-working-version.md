@@ -418,3 +418,30 @@ remain in ignored results. The first `AdaptiveAssessment-Mac` compile failure ca
 incomplete edit, not a runtime regression. Final source contains no diagnostic print or
 experimental action metadata. This closes the observed advanced-action presentation issue;
 physical VoiceOver, larger-text presentation and broader app acceptance remain separate.
+
+### Assessment at largest Dynamic Type
+
+A new native iPhone journey exposed clipped assessment text and an unreachable Cancel action
+at Accessibility XXXL. The fixed medium-height, non-scrolling view could not recover the last
+action. The shared presentation now scrolls, gives action labels their intrinsic vertical size,
+uses native borderless buttons with minimum 44-point height, and allows medium/large sheet
+heights. Ideal popover dimensions guide layout without fixing its size. No platform branch
+or grading change is added.
+
+`AssessmentLargeText-Scrolled-20261022.log` and
+`test-fd8c2b7d6cf04b4881698e1a28dbc9dc.xcresult` retain the actual Cancel failure and before
+capture. An earlier `AssessmentLargeText` run failed before review entry because the lazy Home
+list had not loaded the button; the final test explicitly scrolls Home as a user would.
+
+`AssessmentLargeText-Final-20261022.log`,
+`test-c0d3b079d0274174be85451a244f595c.xcresult`: two tests pass without skips/failures. Every
+assessment action becomes hittable and fully inside the window at the largest category;
+Cancel preserves the question/progress. The ordinary combined-Anki incorrect/correct flow
+also passes. Opening and final-action screenshots were inspected: full labels wrap, the sheet
+expands, and Cancel is visible. Captures live in `AssessmentLargeText-After-20261022`.
+
+`AssessmentScroll-Mac-20261022.log`,
+`test-7c31a34cac7b4bd194ed62f40eafe3a6.xcresult`: the Mac action/cancel/synonym/exclusion
+regression passes with the scrolling view and zero exclusion credit. Mainboard lint passes
+436 files in `AssessmentLargeText-Lint-20261022.log`. These scoped runs do not establish
+physical VoiceOver, every window dimension or all app-wide accessibility requirements.

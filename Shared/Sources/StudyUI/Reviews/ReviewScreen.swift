@@ -547,14 +547,21 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
           }
         }.accessibilityIdentifier("review.corrections")
           .popover(isPresented: $state.showAssessment, arrowEdge: .bottom) {
-            VStack(alignment: .leading, spacing: 12) {
-              Text("Check your answer").font(.headline)
-              correctionActions
-              Button("Cancel", role: .cancel) { state.showAssessment = false }
-            }.padding().buttonStyle(.bordered)
+            ScrollView {
+              VStack(alignment: .leading, spacing: 12) {
+                Text("Check your answer").font(.headline)
+                Group {
+                  correctionActions
+                  Button("Cancel", role: .cancel) { state.showAssessment = false }
+                }.buttonStyle(.borderless)
+                  .fixedSize(horizontal: false, vertical: true)
+                  .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+              }.padding()
+            }.scrollBounceBehavior(.basedOnSize)
+              .frame(idealWidth: 320, idealHeight: 360)
               .accessibilityElement(children: .contain)
               .accessibilityIdentifier("review.assessment")
-              .presentationDetents([.medium])
+              .presentationDetents([.medium, .large])
           }
       }
     }.buttonStyle(.bordered).controlSize(.large)

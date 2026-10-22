@@ -439,3 +439,11 @@ layouts. Mac cancellation/synonym/exclusion and iPhone/iPad incorrect-then-corre
 pass; exclusion still awards zero credit. Mainboard lint passes and the Mac capture is reviewed.
 No platform branch, storage change or grading change was introduced. See the adaptive
 assessment section of the current validation receipt for the retained failed trials and limits.
+
+### 2026-10-22 — Largest-text assessment accessibility
+
+Fixed a reproduced iPhone accessibility issue: assessment labels clipped and Cancel could
+not be reached at Accessibility XXXL. The shared view now scrolls, wraps labels and supports
+expanded sheets. Native largest-text reachability/cancellation and ordinary grading pass;
+the Mac synonym/exclusion regression also passes. Before/after captures inspected and
+Mainboard lint passes. Broader physical VoiceOver and adaptive-window acceptance remain open.

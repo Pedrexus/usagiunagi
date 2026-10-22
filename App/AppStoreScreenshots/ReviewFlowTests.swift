@@ -1700,6 +1700,50 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor
+  func testAssessmentActionsRemainReachableAtLargestDynamicType() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--manual-review-fixture", "--audio-fixture", "--light-fixture",
+      "--anki-fixture", "--combined-anki-fixture",
+      "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
+    ])
+    defer { app.terminate() }
+    let reviews = app.buttons["home.reviews"]
+    scrollTo(reviews, in: app)
+    reviews.tap()
+    XCTAssertTrue(app.buttons["review.submit"].waitForExistence(timeout: 5))
+    app.buttons["review.submit"].tap()
+    XCTAssertTrue(app.buttons["review.corrections"].waitForExistence(timeout: 5))
+    let question = app.staticTexts["review.question"].value as? String
+    let progress = app.staticTexts["review.progress"].label
+    app.buttons["review.corrections"].tap()
+    let assessment = app.descendants(matching: .any).matching(identifier: "review.assessment")
+      .firstMatch
+    XCTAssertTrue(assessment.waitForExistence(timeout: 5))
+    attachHomeScreenshot("Largest-text assessment opening")
+    for title in [
+      "My answer was correct", "My answer was incorrect", "Ask again later",
+      "Exclude this item", "Add synonym", "Cancel",
+    ] {
+      let button = assessment.buttons[title]
+      for _ in 0..<5 {
+        if button.exists && button.isHittable && app.windows.firstMatch.frame.contains(button.frame)
+        {
+          break
+        }
+        assessment.swipeUp()
+      }
+      XCTAssertTrue(button.exists && button.isHittable, title)
+      XCTAssertTrue(app.windows.firstMatch.frame.contains(button.frame), title)
+    }
+    attachHomeScreenshot("Largest-text assessment final actions")
+    assessment.buttons["Cancel"].tap()
+    XCTAssertTrue(assessment.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(app.staticTexts["review.question"].value as? String, question)
+    XCTAssertEqual(app.staticTexts["review.progress"].label, progress)
+  }
+
+  @MainActor
   func testCombinedAnkiIncorrectThenCorrectCompletesOneSubject() {
     continueAfterFailure = false
     let app = launchNativeReview(extra: [
