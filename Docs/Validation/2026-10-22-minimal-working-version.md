@@ -904,3 +904,36 @@ No production UI, notification permission policy or audio behavior changed. The 
 notification client never schedules real alerts. These checks do not prove real notification
 delivery or physical audio routing. The first run also retains an internal QoS runtime warning;
 it is not suppressed or treated as resolved by these passing behavioral checks.
+
+## Bounded broad iPhone acceptance did not finalize
+
+The `88ff3ed5` broad UI run ends at its configured 2400-second bound with exit 124.
+`iPhone-Acceptance-Final-20261022.log` records 57 passes, two failures and one explicit
+Reduce Motion skip. `test-24db96a26e95402ea900f4e8eeac4304.xcresult` lacks its final
+Info.plist; Mainboard correctly refuses to call the incomplete bundle accepted. The
+feedback-settings test incurs repeated 60-second animation-idle waits. A read-only simulator
+capture (`iPhone-Acceptance-IdleWait-20261022.png`) shows the settings form rendered with the
+expected changed toggle and Done available; this does not identify the underlying cause.
+
+The two logged failures concern the already-corrected settings sheet assertion and font
+button hittability after dismissing its popup. The former correction remains pending focused
+verification; the latter needs a finalized focused screenshot/recording. After confirming
+no test runner remained, the simulator was restarted without erasing data (successful
+`iPhone-Acceptance-Reboot-20261022.log`). No global animation settings or application
+assertions were disabled. Full acceptance remains open.
+
+### Focused iPhone recovery after simulator restart
+
+Session `61809` completed successfully, producing
+`test-8830307936fe444baab93fbbeb86e0b2.xcresult` with three passes and no skips or runtime
+warnings (`iPhone-Acceptance-Focused-20261022.log`). Main settings verifies the native API
+URL form's title, draft field and Cancel dismissal, followed by diagnostic sharing (36.165s).
+The font cancellation/retry/deletion-cancellation test passes unchanged (58.257s). The
+feedback-setting/draft-preservation test also passes unchanged (36.722s). Neither application
+animation behavior nor test assertions were disabled; the simulator restart did not erase data.
+
+These finalized results accept those three journeys, not the interrupted broad suite. The
+font hiccup and long animation-idle waits did not reproduce in this focused run; their root
+cause is not proven. Ten ordinary methods after the stalled feedback test still need this
+acceptance pass, in addition to the five separately owned URL-event lanes and actual-system
+Reduce Motion gate. Earlier broad-run passes remain log evidence without a finalized bundle.

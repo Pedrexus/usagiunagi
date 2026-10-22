@@ -161,9 +161,11 @@
       scrollTo(app.buttons["settings.developer"], in: app)
       app.buttons["settings.developer"].tap()
       app.buttons["developer.endpoint"].tap()
-      XCTAssertTrue(app.alerts["API base URL"].waitForExistence(timeout: 5))
-      app.alerts.buttons["Cancel"].tap()
-      XCTAssertFalse(app.alerts.firstMatch.exists)
+      let editor = app.navigationBars["API base URL"]
+      XCTAssertTrue(editor.waitForExistence(timeout: 5))
+      XCTAssertTrue(app.textFields["developer.endpoint.draft"].exists)
+      editor.buttons["Cancel"].tap()
+      XCTAssertTrue(editor.waitForNonExistence(timeout: 5))
       let export = app.buttons["developer.export"]
       scrollTo(export, in: app)
       XCTAssertEqual(export.label, "Export study diagnostics")

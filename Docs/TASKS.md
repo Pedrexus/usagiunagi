@@ -645,3 +645,35 @@ autoplay/Stop journeys now pass. Corrected test clicks on offscreen settings and
 generic Meaning prompt expectation after inspecting the recordings. Production behavior is
 unchanged; real notification delivery and physical audio routing remain open. Full lint passes.
 [Failures, captures and passing receipts](Validation/2026-10-22-minimal-working-version.md#mac-notification-settings-and-final-answer-audio).
+
+### iPhone broad run terminal; focused acceptance running
+
+Session `2185` ended with exit 124 at its 2400-second bound on October 22, 15:58 JST.
+This supersedes the earlier live-run entries. No test runner remained after termination.
+The log contains 57 passed cases, two failed cases and one Reduce Motion skip, but the result
+bundle did not finalize (missing Info.plist), so this is not a passing suite or a complete
+acceptance receipt. The feedback-settings case repeatedly waited 60 seconds for animations;
+a read-only capture shows the rendered settings page with the expected feedback toggle off.
+Capture: `.build/Results/iPhone-Acceptance-IdleWait-20261022.png`.
+
+The isolated iPhone simulator was restarted without erasure and boot readiness succeeded.
+The corrected main-settings case, original font-popup case and feedback-settings case now
+run under session `61809`, bounded to 900 seconds. Log:
+`.build/Results/iPhone-Acceptance-Focused-20261022.log`. No production behavior or assertions
+were disabled to bypass the idle waits. Inspect this handle before any further iPhone run.
+
+### Focused iPhone acceptance completed
+
+Session `61809` is now terminal success. All three targeted journeys pass in finalized bundle
+`test-8830307936fe444baab93fbbeb86e0b2.xcresult`, with no skips or runtime warnings.
+The main-settings sheet assertion correction is verified. Font-popup cancellation and
+feedback/draft preservation pass unchanged after the non-erasing simulator restart; the
+underlying broad-run idle-wait cause remains unproven. This supersedes the pending focused
+run entry, but does not establish broad acceptance.
+
+Ten ordinary methods never started before the broad timeout: review keyboard largest text,
+cold shell links, upcoming-review breakdown, missed-answer summary, voice transcript/fallback,
+wrap-up, lesson settings/reorder, review dependencies/download navigation, notification
+settings and appearance/email/subject/logout cancellation. Run these as a bounded group,
+then finish finalized coverage of the earlier broad methods; keep the separate URL-event
+and actual Reduce Motion gates explicit.
