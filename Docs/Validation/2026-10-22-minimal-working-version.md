@@ -848,3 +848,18 @@ Its isolated `integration/test_apple.py` gate passes all 85 cases:
 `Workflow-Mainboard-CurrentPin-20261022.log` records HTTP 422 for the new exact SHA too.
 Publication is therefore still required; neither this local pin edit nor the test gate is
 hosted CI acceptance. No branch was pushed, PR created, app signed or app distributed.
+
+### Mac statistics/catalog acceptance after forecast repair
+
+`Statistics-Catalog-Mac-Final-20261022.log` and
+`test-8a4a17c1f7534a2aaa746a5c488d7850.xcresult` pass all seven tests in MacStatisticsTests
+and MacCatalogTests, without skips/failures. Coverage stays inline through filters/tabs;
+pace comparison expands/collapses; catalog search, level paging, remaining-work ordering
+and exclusion return state work; the repaired forecast still exposes its stage/subject
+breakdown and returns normally. This is native fixture UI acceptance, not real-account
+forecast calibration or a Mac reproduction of the minute-transition test.
+
+The earlier `Forecast-Clock-Mac-20261022.log` used the wrong class name for the forecast
+method: it belongs to MacCatalogTests in MacStatisticsTests.swift. Xcode executed zero
+cases, and Mainboard correctly rejected the result with `missing_selectors`. Its bundle
+`test-127bb567302a477ba0be4c99ce664a3d.xcresult` is not passing evidence.

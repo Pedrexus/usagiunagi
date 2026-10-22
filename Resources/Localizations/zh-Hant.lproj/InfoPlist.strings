@@ -1,3 +1,3 @@
 "CFBundleDisplayName" = "兔鰻";
 "CFBundleName" = "兔鰻";
-"NSMicrophoneUsageDescription" = "使用麥克風透過語音回答複習題。語音將在此裝置上轉寫。";
+"NSMicrophoneUsageDescription" = "使用語音回答複習題。語音在本裝置上轉寫；使用 Apple Watch 時，語音會在配對的 iPhone 上轉寫。";

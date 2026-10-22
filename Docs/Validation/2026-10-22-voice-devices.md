@@ -125,3 +125,20 @@ or failures. `VoiceFallback-Mac-Lint-20261022.log` passes all 436 files without 
 Production code is unchanged. These checks use the existing isolated capture fixture;
 they do not establish live microphone timing, real permissions or paired-Watch delivery.
 Hide/reactivate is not process termination or saved-window restoration.
+
+## Watch permission localization correction
+
+The Watch target includes the same localized InfoPlist strings as iPhone/Mac. Their old
+microphone explanation said transcription happens on the current device, overriding the
+accurate Watch base-plist explanation. The four shared translations now explicitly say
+Apple Watch uses its paired iPhone. Display names and the shared layered icon are unchanged;
+no duplicate localization set or platform-specific runtime is added.
+
+`Watch-Microphone-Localization-20261022.log` builds the Watch target successfully with zero
+compiler/analyzer warnings/errors (`build-af499b8c1c404c939d9bdf39fc6e63be.xcresult`).
+`Watch-Microphone-CompiledStrings-Final-20261022.log` verifies exact source-to-compiled
+microphone strings and expected app display names for en, ja, zh-Hans and zh-Hant.
+The first inspection stopped because its phrase matcher assumed Apple Watch preceded
+iPhone in every language; the final inspection checks both names independently and still
+requires exact text equality. Full lint passes 436 files. No microphone permission was
+requested and no physical voice acceptance is inferred from this resource correction.

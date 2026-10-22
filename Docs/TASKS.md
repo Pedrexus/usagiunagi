@@ -584,3 +584,12 @@ reject a passing bundle that omits an explicitly requested test. All 85 isolated
 checks and app lint pass. The exact new SHA is still unavailable on GitHub (HTTP 422).
 Publishing the prepared Mainboard branch requires owner approval; no push has occurred.
 [Evidence](Validation/2026-10-22-minimal-working-version.md#hosted-workflow-includes-the-test-selection-safeguard).
+
+### Watch wording and full Mac statistics/catalog group
+
+Fixed the shared microphone localization overriding Watch's paired-iPhone explanation.
+All four compiled Watch translations and localized names are verified; Watch build and
+full lint pass. [Resource evidence](Validation/2026-10-22-voice-devices.md#watch-permission-localization-correction).
+All seven Mac statistics/catalog UI cases pass after the shared forecast repair. The earlier
+incorrect selector was rejected by Mainboard and is retained as failed evidence. Physical
+capture, signed services, hosted publication and real-account calibration remain open.
