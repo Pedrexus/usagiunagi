@@ -38,6 +38,22 @@ iPhone Duo remains deferred. Optional AI/AppIntents and wider macro adoption rem
 
 ## Completion audit — October 21–22
 
+**App-owned avatar consolidation:** URL generation and the image-cache actor moved from
+StudyCore to `App/Shared`; both existing test suites moved to `App/Tests/Unit` and the common
+hosted target. No stored types or cache behavior changed. The signed iOS build
+`build-5cdba92c18bf4456b4b74ccdfe976a1f` passes; Mac receipt
+`test-0cb1e22c763e4327aad752d0a97bd4e3` passes all 9 test functions / 19 executions,
+with no failures, skips or runtime warnings. Scoped Mainboard lint passes all four files.
+Normal iPhone launch was inspected at `/tmp/usagi-avatar-app.png` (Home/sign-in, no error).
+Logs are under `.build/Results/Avatar-App-*-20261022.log`. This validates the moved
+service and normal startup, not signed-in avatar rendering or broader account acceptance.
+
+**Source-capture probe constraint:** the proposed `FileManager.default.delegate` interception
+was discarded without committed changes: the installed Foundation header requires a unique
+FileManager instance for delegated operations. The existing ten-case disk-space matrix stays
+unchanged. A future bounded reserve-space experiment must demonstrate actual ENOSPC at the
+capture-copy destination before this outstanding recovery boundary can be considered covered.
+
 **Shared app / iPad follow-up:** current iPad lesson teaching/quiz/upload, typed review/upload
 and contextual group-selection checks all pass. The active source contains one view
 representable, the Japanese input adapter, and no controller representable. Current system

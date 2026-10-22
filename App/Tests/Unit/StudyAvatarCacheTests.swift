@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import StudyCore
+@testable import Tsurukame
 
 private enum AvatarFailure: CaseIterable {
   case offline, status, corrupt, oversized

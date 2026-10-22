@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import StudyCore
+@testable import Tsurukame
 
 struct StudyAvatarTests {
   @Test(arguments: [

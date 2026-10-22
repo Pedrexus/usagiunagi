@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-public enum StudyAvatar {
+nonisolated public enum StudyAvatar {
   public static let defaultURL = URL(
     string: "https://cdn.wanikani.com/default-avatar-300x300-20121121.png")!
 

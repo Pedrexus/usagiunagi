@@ -15,12 +15,15 @@ Automated validation has passed within the scopes recorded in [current tasks](TA
 | `App/Reviews/Voice` | Actor-owned Apple capture, on-device transcription, model availability and confirmed transcripts |
 | `App` feature folders | Shared SwiftUI navigation/screens, Charts, observable feature owners and small Apple service adapters |
 | `App/Application` | App composition, account model, startup, scene/background ownership and app preference sync |
+| `App/Shared` | App-wide presentation helpers, including avatar URL generation and bounded image caching |
 | `App/Tests` | Hosted unit tests in `Unit`, interface tests/fixtures in `UI`, and existing persistence probes |
 | `App/Configuration` | Platform entitlements and project configuration |
 | `Resources` | One shared Icon Composer document/SVG mark, display-name localizations, listing preparation and content generators |
 | `App/Watch`, `App/WatchHelper.swift` | SwiftUI voice reviews using the paired phone's grader, settings, WidgetKit status, native packet ownership and installed-face migration |
 
 ## Native initialization and synthesis
+
+Avatar URL generation and its image-cache actor now belong to the app alongside the avatar view. Neither is a persisted model or used by the storage package. Their existing tests belong to the shared hosted app target. The URL helper explicitly remains nonisolated when compiled with the app's default MainActor setting; the cache retains its own actor isolation. This is a source-ownership change, with the existing HTTP cache, image bounds, cancellation and account-clear behavior preserved.
 
 Use Swift's synthesized struct initializers and stored-property defaults for internal values and views. Six forwarding/default constructors are removed from `StudyCard`, `StoredReviewPreferences`, `StudySourcesView`, `UpcomingReviewsView` and its `Count`/`Hour` values. Their only callers are inside the app module, so these helpers no longer expose unnecessary public APIs. A stored `@ViewBuilder` content property supplies StudyCard's generated builder initializer. These changes remove nineteen physical production lines without changing the view bodies, stored preferences or data models.
 
