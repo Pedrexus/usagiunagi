@@ -957,3 +957,14 @@ This closes the ten previously unstarted ordinary cases. The 57 logged broad-run
 still lack that run's finalized bundle; obtain finalized coverage for them in bounded groups.
 The five separate URL-event methods and actual-system Reduce Motion gate remain explicitly
 separate. These results do not establish full physical/cross-platform acceptance.
+
+## Approved Mainboard publication
+
+The owner explicitly approved publishing `phvv-me/mainboard` branch
+`codex/apple-development` through `fa467e0`. The source checkout is clean at full SHA
+`fa467e07a71b26876f48b2dd3c273b5e3f14c1fd`. A normal, non-forced exact-SHA push creates
+that remote branch. Both `git ls-remote` and GitHub's commits API independently return the
+same full SHA afterward. All five app workflow pins already use it; no pin edit is needed.
+The previous HTTP 422 missing-commit blocker is resolved. No PR was created, no app branch
+was pushed and no app or signed product was distributed. Hosted Actions execution remains
+unverified; publishing the tool alone does not run the app's local workflow.
