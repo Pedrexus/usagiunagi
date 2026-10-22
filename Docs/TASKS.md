@@ -605,3 +605,35 @@ This entry records an active run, not a passing result; inspect its live handle 
 Reconciled stale Swift-helper instructions against the existing package STATUS, constructor
 showcase and `dataclass-tests-first.log` (12 runtime/persistence plus four macro functions).
 The implemented pilot is not future work. No macro dependency or frozen model rewrite was added.
+
+The active broad run has exposed an obsolete API URL alert assertion in
+`NativeRootFlowTests.testNativeMainSettingsKeepTimingAndExposeKeyboardAndDiagnostics`.
+The application already uses the verified form sheet. The source assertion now checks its
+navigation title, draft field and Cancel dismissal; its focused rerun must wait until session
+2185 finishes. This edit is not yet accepted or committed. Do not restart the active suite.
+
+### Shipping API cleanup and ongoing acceptance follow-up
+
+Committed `7e2fd762`: removed three persistence mutation entry points used only by tests
+from shipping sources, retaining their fixture implementation under tests. All 36 focused
+storage tests and full 436-file lint pass. No persisted schema or decoder changed.
+
+Session `2185` remains live on October 22; its result bundle is
+`.build/Results/test-24db96a26e95402ea900f4e8eeac4304.xcresult`.
+In addition to the stale settings assertion above, the current run reports
+`testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled` failing at the final
+`deletion.isHittable` assertion after popup dismissal (line 1065). Downloads, retry and
+popup disappearance reached their assertions first. Inspect the retained screenshot and
+hierarchy before deciding whether this is a visibility timing issue or a production defect.
+The existing scroll helper also recorded an unreachable-control attachment during this case.
+Do not claim a clean acceptance run or restart the live job. Focused repairs/reruns must
+wait until it is terminal. The actual-system Reduce Motion case remains skipped/open.
+
+### Mac fonts and diagnostics accepted subset
+
+The current native Mac font-selection/draft and diagnostics-sharing journeys pass.
+Corrected an obsolete generic Retry accessibility-label assertion; the complete Mac font
+cancellation/failure/deletion journey then passes on rerun. Full lint passes 436 files.
+[Exact failures and passing receipts](Validation/2026-10-22-minimal-working-version.md#mac-font-and-diagnostic-acceptance).
+The broad iPhone run remains live; its separate font popup and settings assertions are not
+accepted by these Mac results. No production behavior changed in this test correction.

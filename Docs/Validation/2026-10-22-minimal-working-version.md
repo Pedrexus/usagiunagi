@@ -863,3 +863,21 @@ The earlier `Forecast-Clock-Mac-20261022.log` used the wrong class name for the 
 method: it belongs to MacCatalogTests in MacStatisticsTests.swift. Xcode executed zero
 cases, and Mainboard correctly rejected the result with `missing_selectors`. Its bundle
 `test-127bb567302a477ba0be4c99ce664a3d.xcresult` is not passing evidence.
+
+## Mac font and diagnostic acceptance
+
+After production API cleanup `7e2fd762`, the native Mac fixture lane verifies font
+selection/download preserves an unsubmitted review draft, and account-scoped diagnostics
+sharing returns to Settings. Both pass in `test-dd206685c85042de975ad52ece6ff809.xcresult`
+(31.052 and 12.251 seconds). That same run fails the font recovery case because its test
+expects the obsolete generic accessibility label `Retry`; the shared view now correctly
+announces `Retry download of Failed font fixture`.
+
+The assertion now checks that full descriptive label. The unchanged remainder of the
+recovery journey passes in focused rerun `test-d07ca085f2e24186b6f063676c47f358.xcresult`
+(23.806 seconds, one test, no skips), covering download continuation after navigation,
+cancellation, failed download feedback and confirmed deletion. No production UI or font
+behavior changed. Logs: `Media-Diagnostics-Mac-Final-20261022.log` and
+`Media-Mac-Retry-Label-20261022.log`. Mainboard lint passes all 436 files in
+`Media-Acceptance-Lint-20261022.log`. These isolated fixtures do not establish hosted font
+server availability, physical-device accessibility or the pending iPhone popup behavior.

@@ -740,7 +740,7 @@
       let failed = app.buttons["font.download.font-failed.ttf"]
       failed.click()
       XCTAssertTrue(app.staticTexts["font.error.font-failed.ttf"].waitForExistence(timeout: 5))
-      XCTAssertEqual(failed.label, "Retry")
+      XCTAssertEqual(failed.label, "Retry download of Failed font fixture")
       let picker = app.sheets.firstMatch.scrollViews.firstMatch
       let delete = app.buttons["fonts.deleteAll"]
       for _ in 0..<5 {
