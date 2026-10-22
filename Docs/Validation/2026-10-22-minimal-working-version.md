@@ -181,3 +181,19 @@ failures. The frozen V1 schema retains SHA256
 `538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`;
 all five frozen writer/baseline checksums verify. This cleanup deletes 304 code/config/
 test lines and does not remove any active UI, grading or upload path.
+
+## iPhone review parity completion
+
+On app commit `e7a606ca`, `Review-ParityCompletion-20261022.log` passes three native
+UI journeys on iPhone 18 Pro / iOS 27 with no skips, failures, or compiler warnings:
+
+- Previous-subject navigation shows the completed subject, preserves the current draft,
+  and accepts more typing on return without a field tap or question/progress change.
+- Combined Anki exposes the correction actions; dismissing that menu awards no credit.
+  An incorrect assessment requires another reveal/assessment before completion.
+- Wrap-up can be enabled, stopped, resumed, and completed with the reading answer.
+
+Exact bundle: `test-a04b76070ee143d99b9189f21acf7a58.xcresult`. All three requested
+method identifiers are present in its result tree. These isolated fixtures submit no
+real WaniKani exercises. They close the previously unexecuted iPhone scenarios, not
+physical keyboard/IME, full original-flow parity, or paired Watch acceptance.
