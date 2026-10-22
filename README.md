@@ -21,7 +21,7 @@ Open reviews, lessons or a subject using `usagiunagi:///reviews`, `usagiunagi://
 
 Use Xcode 27 and open **`App/UsagiUnagi.xcworkspace`** for iPhone, iPad and native Mac. There is one `UsagiUnagi` app scheme and SwiftUI entry point. The app uses its local shared Swift package and Apple frameworks; CocoaPods and SwiftProtobuf are removed. Historical internal target/module and bundle names preserve compatibility. Set your own signing team and identifiers for devices.
 
-[GitHub Actions](.github/workflows/apple.yml) uses Mainboard for bounded native builds/tests and result evidence. Mainboard is development infrastructure; it is not linked into the app. A standalone fork uses the public tool with its committed lock and does not need the parent workspace. See [development and CI](Docs/Development.md), including the unpublished tool-commit prerequisite.
+[GitHub Actions](.github/workflows/apple.yml) uses Mainboard for bounded native builds/tests and result evidence. Mainboard is development infrastructure; it is not linked into the app. A standalone fork uses the public tool with its committed lock and does not need the parent workspace. See [development and CI](Docs/Development.md) for the published tool revision and remaining hosted validation.
 
 The [Icon Composer asset](Resources/UsagiUnagi.icon) contains outlined SVG kanji layers. Localized store names are prepared in source; this fork has not been published to the App Store.
 

@@ -718,3 +718,32 @@ no skips/runtime warnings). [Coverage and receipt](Validation/2026-10-22-minimal
 No production or test changes were needed. Next: obtain finalized bounded-group coverage
 for the 57 earlier broad-run passes; keep URL-event receipts, actual Reduce Motion, physical
 voice/Watch, signed iCloud, hosted publication and real-account calibration separate.
+
+### Native-root iPhone acceptance group
+
+At `53c68c73`, session `39950` completed successfully: all eleven NativeRootFlowTests
+passed, with no skips or runtime warnings, in finalized bundle
+`test-ca3e8f7fd7554077969066d3c0cdf7a9.xcresult`. Only the main-settings journey was
+excluded; it already passed in `test-8830307936fe444baab93fbbeb86e0b2.xcresult`.
+Log: `.build/Results/iPhone-Acceptance-Root-20261022.log`.
+
+### Normal simulator launch and module consolidation
+
+Normal launch without fixture arguments exposed OSStatus -34018 from Keychain in the
+unsigned simulator product. Ad-hoc signing (`CODE_SIGNING_ALLOWED=YES`,
+`CODE_SIGN_IDENTITY=-`) builds with zero errors/warnings and the installed app now opens
+to the real WaniKani connection screen. No data deletion, replacement credential store,
+test account or real exercise was used. Receipt: `build-a8d3099a220b411b88f8b4397614e8ad.xcresult`;
+manual capture `/tmp/usagi-signed-normal.png`. The default simulator build now uses this
+signing configuration. The actual `mainboard run --locked --no-install build` task also
+passes with zero errors/warnings in `build-e8be9ebcbb0841f9a0161a93ff6b413c.xcresult`.
+This proves unauthenticated startup, not authenticated sync.
+
+This Xcode installation lacks the traditional Simulator.app; DeviceHub opens successfully,
+but its simulator viewing route remains unverified. Mainboard's generic launch helper is
+being checked separately before adding a dependable app run task.
+
+Consolidate app-owned StudyUI and StudySpeech into feature folders in App. A separate-module
+populated preference-store probe is in progress before moving `PrivatePreferencesV1.Change`.
+Do not rename frozen main-store model/Codable identities without migration evidence. The
+goal is fewer modules, not a new service abstraction or loss of saved preferences.
