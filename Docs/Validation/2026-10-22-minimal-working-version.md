@@ -469,3 +469,19 @@ reopening or a rendered UI acceptance check for the new legend, which remain to 
 The full iPhone acceptance lane started from 9cfb5ead before this source change, and remains
 running in session 17816 (`FullPhoneAcceptance-20261022.log`). Its receipt will apply to those
 already-built products, not to the pending-coverage correction. No second UI suite was launched.
+
+### Pending coverage: historical storage acceptance
+
+At commit `60d2ab59`, `PendingCoverage-FrozenStore-20261022.log` passes the current
+`read-native-baseline` probe: disposable copies restore exact baseline fields, revisions,
+ownership and schema twice. `PendingCoverage-SchemaUpgrade-20261022.log` also passes:
+38 exact records across 10 models, fresh-process named V1 comparisons, real saved transaction
+reopening, and a 49,472-byte WAL-only commit copied with exact durable fields. Original frozen
+fixture names and SHA-256 hashes remain unchanged. Writable source SHM bookkeeping changes
+are explicitly reported; protected source generations remain unchanged. These are scoped Mac
+storage checks, not iOS fault-matrix, power-loss or physical-device proof. The historical reopening
+item above is now satisfied for this correction; rendered coverage acceptance remains open.
+
+The pre-correction full iPhone lane continues in session 17816. Reduce Motion acceptance is
+explicitly skipped because the simulator system preference is not enabled; that requirement is
+still open rather than counted as a pass. No final full-suite result exists yet.

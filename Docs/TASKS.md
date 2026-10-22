@@ -456,3 +456,8 @@ and Mainboard lint pass; serialization bytes and frozen sources remain unchanged
 historical on-disk reopening/schema verification and rendered coverage UI check. Full iPhone
 acceptance session 17816 is testing pre-fix commit 9cfb5ead; do not attribute it to this fix.
 See the minimal-working-version validation record for exact logs and limitations.
+
+Pending-coverage historical verification now passes at `60d2ab59`: exact 38-record/10-model
+baseline and named-schema fresh-process/WAL preservation probes. Rendered coverage verification
+remains next after the running iPhone suite. Its Reduce Motion test explicitly skipped because
+the simulator setting is disabled; this does not satisfy real Reduce Motion acceptance.
