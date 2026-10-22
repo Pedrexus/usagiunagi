@@ -117,6 +117,13 @@ public struct StudyDashboard: View {
             }
         }.frame(height: 190).chartXAxisLabel("Items")
         Text("A stage describes WaniKani review progress, not a test score.").studyNote()
+        if !snapshot.pendingSubjectIDs.isEmpty {
+          Text(
+            "\(snapshot.pendingSubjectIDs.count) items awaiting sync are excluded from these stages."
+          )
+          .studyNote()
+        }
+
       }
       StudyCard(title: "Answer accuracy", subtitle: "Lifetime answers, separated by question type")
       {

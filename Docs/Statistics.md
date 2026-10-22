@@ -56,3 +56,8 @@ Coverage matches only kanji subjects. Vocabulary or radicals containing the same
 Dataset snapshots, licenses, transformations and the Swift refresh command are documented in [shared sources](../Shared/Sources/StudyCore/Resources/SOURCES.md), with attribution also visible inside the app. School grades use current KANJIDIC2 rather than the older 1,006-character school list found in some secondary datasets. The generator asserts current totals and preserves the earlier grade when Unicode canonical variants collide.
 
 The iPhone, iPad and Mac app uses the same native SwiftData account-state pipeline, complete snapshot downloads and automatic uploading of confirmed eligible local work. Each device retains its own local outbox; the devices do not share an upload queue. Pending uploads suppress affected forecasts, and attempted or uncertain work requires reconciliation rather than automatic replay. When a user archives an uncertain native review/lesson answer, its old assignment is invalidated and the dashboard asks for a complete refresh instead of plotting incomplete progress or a false zero-due schedule. That state survives restart and failed refresh. Archival is a local choice, not evidence of a successful answer; archived payloads must not be counted as confirmed results or used as remote review history for calibration.
+
+Pending reviews are not counted as confirmed SRS progress. The live snapshot includes transient
+outbox subject IDs so curriculum charts show “Awaiting sync” separately from “Not started.” These
+IDs are rebuilt from SwiftData on reads/refresh and are not part of the saved snapshot payload.
+The SRS chart reports how many subjects are withheld until their reviews synchronize.

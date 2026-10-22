@@ -506,6 +506,7 @@ extension NativeRefreshTests {
     #expect(try await store.assignments(accountID: value.accountID) == [replacement])
     #expect(try await store.pendingReviews(accountID: value.accountID) == pending)
     #expect(pending.count == 1 && snapshot.pendingReviews == 1 && snapshot.assignments.isEmpty)
+    #expect(snapshot.pendingSubjectIDs == Set(pending.map(\.subjectID)))
     #expect(try await store.accountState(accountID: value.accountID)?.progress.first?.srsStage == 4)
   }
 

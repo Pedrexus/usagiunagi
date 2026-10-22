@@ -91,6 +91,8 @@ public struct StudySnapshot: Codable, Sendable {
   public let levels: [StudyLevel]
   public let subjects: [StudySubject]
   public let savedAt: Date
+  /// Derived from the local outbox; never encoded into the persisted snapshot.
+  public let pendingSubjectIDs: Set<Int64>
   public let pendingReviews: Int
   public let isSample: Bool
   /// Local recovery invalidated assignment data; only a complete refresh clears this flag.
@@ -99,7 +101,7 @@ public struct StudySnapshot: Codable, Sendable {
     accountID: String? = nil, username: String, currentLevel: Int, onVacation: Bool = false,
     assignments: [StudyAssignment], statistics: [StudyAnswerStatistics], levels: [StudyLevel],
     subjects: [StudySubject], savedAt: Date = .now, pendingReviews: Int = 0, isSample: Bool = false,
-    requiresAssignmentRefresh: Bool = false
+    requiresAssignmentRefresh: Bool = false, pendingSubjectIDs: Set<Int64> = []
   ) {
     self.accountID = accountID
     self.username = username
@@ -111,6 +113,7 @@ public struct StudySnapshot: Codable, Sendable {
     self.subjects = subjects
     self.savedAt = savedAt
     self.pendingReviews = pendingReviews
+    self.pendingSubjectIDs = pendingSubjectIDs
     self.isSample = isSample
     self.requiresAssignmentRefresh = requiresAssignmentRefresh
   }

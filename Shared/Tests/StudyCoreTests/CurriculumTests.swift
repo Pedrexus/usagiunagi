@@ -223,3 +223,42 @@ func curriculumCoverageThresholdUsesOnlyStudyMilestones(_ threshold: Int) {
     assignments: [])
   #expect(result.fraction == 0)
 }
+
+@Test func coverageKeepsPendingKanjiDistinctUntilSyncConfirmsTheirStage() throws {
+  let curriculum = Curriculum(id: "pending", title: "Pending", characters: ["一", "二", "三", "四"])
+  let subjects = [
+    StudySubject(id: 1, characters: "一", meaning: "One"),
+    StudySubject(id: 2, characters: "二", meaning: "Two"),
+    StudySubject(id: 3, characters: "三", meaning: "Three"),
+    StudySubject(id: 4, characters: "四", meaning: "Four", kind: .vocabulary),
+    StudySubject(id: 5, characters: "五", meaning: "Five"),
+  ]
+  let pending = CurriculumCoverage(
+    curriculum: curriculum, subjects: subjects,
+    assignments: [.init(subjectID: 3, srsStageNumber: 2)], pendingSubjectIDs: [1, 4, 5])
+  #expect(pending.awaitingSync == 1)
+  #expect(pending.notStarted == 1 && pending.learning == 1 && pending.outsideCatalog == 1)
+  #expect(pending.reached == 0 && pending.remaining.count == 4)
+  #expect(
+    pending.awaitingSync + pending.notStarted + pending.learning + pending.outsideCatalog
+      == pending.total)
+  let synced = CurriculumCoverage(
+    curriculum: curriculum, subjects: subjects,
+    assignments: [.init(subjectID: 1, srsStageNumber: 5), .init(subjectID: 3, srsStageNumber: 2)])
+  #expect(synced.awaitingSync == 0 && synced.reached == 1 && synced.notStarted == 1)
+  #expect(!synced.remaining.contains("一"))
+}
+
+@Test func pendingSubjectProjectionDoesNotChangePersistedSnapshotPayload() throws {
+  func snapshot(pending: Set<Int64>) -> StudySnapshot {
+    StudySnapshot(
+      username: "Fixture", currentLevel: 1, assignments: [], statistics: [], levels: [],
+      subjects: [], savedAt: Date(timeIntervalSince1970: 0), pendingReviews: 1,
+      pendingSubjectIDs: pending)
+  }
+  let encoder = JSONEncoder()
+  encoder.outputFormatting = .sortedKeys
+  let encoded = try encoder.encode(snapshot(pending: [1]))
+  #expect(encoded == (try encoder.encode(snapshot(pending: []))))
+  #expect(try JSONDecoder().decode(StudySnapshot.self, from: encoded).pendingSubjectIDs.isEmpty)
+}

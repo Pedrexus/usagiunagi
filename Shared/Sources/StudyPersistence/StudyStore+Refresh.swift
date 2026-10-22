@@ -238,7 +238,7 @@ extension StudyStore {
         }.map(\.summary),
         statistics: download.statistics.map(\.answers), levels: download.levels.map(\.summary),
         subjects: download.subjects.filter { $0.hiddenAt == nil }.map(\.summary),
-        savedAt: download.fetchedAt, pendingReviews: pending.count)
+        savedAt: download.fetchedAt, pendingReviews: pending.count, pendingSubjectIDs: pendingIDs)
       for row in snapshots
       where row.snapshot.accountID == accountID || row.credentialID == credentialID {
         row.snapshot = visible

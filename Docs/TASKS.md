@@ -447,3 +447,12 @@ not be reached at Accessibility XXXL. The shared view now scrolls, wraps labels 
 expanded sheets. Native largest-text reachability/cancellation and ordinary grading pass;
 the Mac synonym/exclusion regression also passes. Before/after captures inspected and
 Mainboard lint passes. Broader physical VoiceOver and adaptive-window acceptance remain open.
+
+### Pending coverage follow-up — October 22
+
+Fixed offline pending-review kanji being mislabeled “Not started”: transient outbox IDs now drive
+an “Awaiting sync” coverage segment and SRS withheld-count note. Shared regression tests (540)
+and Mainboard lint pass; serialization bytes and frozen sources remain unchanged. Still required:
+historical on-disk reopening/schema verification and rendered coverage UI check. Full iPhone
+acceptance session 17816 is testing pre-fix commit 9cfb5ead; do not attribute it to this fix.
+See the minimal-working-version validation record for exact logs and limitations.

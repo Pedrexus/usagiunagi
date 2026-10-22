@@ -48,6 +48,9 @@ struct NativeReviewTests {
     #expect(complete.state.success?.subjectFinished == true)
     let snapshot = try #require(await reopened.snapshot(credentialID: "credential"))
     #expect(snapshot.pendingReviews == 1 && snapshot.assignments.isEmpty)
+    #expect(
+      snapshot.pendingSubjectIDs
+        == Set(try await reopened.pendingReviews(accountID: account).map(\.subjectID)))
     #expect(try await reopened.pendingReviews(accountID: account).count == 1)
     try await reopened.finishReviews(
       accountID: account, expectedRevision: complete.state.saved.revision)

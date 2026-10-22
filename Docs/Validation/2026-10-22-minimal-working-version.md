@@ -445,3 +445,27 @@ expands, and Cancel is visible. Captures live in `AssessmentLargeText-After-2026
 regression passes with the scrolling view and zero exclusion credit. Mainboard lint passes
 436 files in `AssessmentLargeText-Lint-20261022.log`. These scoped runs do not establish
 physical VoiceOver, every window dimension or all app-wide accessibility requirements.
+
+## Pending-review coverage correction
+
+Offline review subjects were intentionally withheld from statistics assignments, but coverage
+interpreted that absence as “Not started.” The current projection carries transient outbox subject
+IDs, populated by both snapshot reads and refresh. Coverage partitions those kanji as “Awaiting
+sync”; the SRS chart discloses withheld items. Assignment exclusion and server-authoritative grading
+remain unchanged. The new IDs are omitted from the existing CodingKeys and default empty when
+reading stored snapshots; they are reconstructed from the outbox, not persisted.
+
+`PendingCoverage-Shared-Final-20261022.log` passes all 540 shared test functions
+(109 + 17 + 171 + 243). Added checks cover pending/unstarted/outside-catalog partitioning, normal
+coverage after sync, and byte-identical encoded snapshots with/without transient IDs. Existing
+reopen and refresh tests now also assert those IDs match the outbox. The initial shared attempt
+failed to compile a new assertion referring to a nonexistent question.subjectID; the corrected
+assertion reads the outbox. It was a test-authoring error, not an app runtime failure.
+`PendingCoverage-Lint-20261022.log`: 436 files, zero rewrites/failures. Frozen schema source SHA256
+remains 538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4;
+all five frozen-fixture checksums pass. These checks do not replace historical on-disk schema
+reopening or a rendered UI acceptance check for the new legend, which remain to be run.
+
+The full iPhone acceptance lane started from 9cfb5ead before this source change, and remains
+running in session 17816 (`FullPhoneAcceptance-20261022.log`). Its receipt will apply to those
+already-built products, not to the pending-coverage correction. No second UI suite was launched.

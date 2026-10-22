@@ -16,7 +16,7 @@ struct CurriculumCoverageView: View {
     library.curricula(for: system).map {
       CurriculumCoverage(
         curriculum: $0, subjects: snapshot.subjects, assignments: snapshot.assignments,
-        threshold: threshold)
+        threshold: threshold, pendingSubjectIDs: snapshot.pendingSubjectIDs)
     }
   }
   private struct Segment: Identifiable {
@@ -29,6 +29,7 @@ struct CurriculumCoverageView: View {
       .init(state: thresholdName, count: row.reached),
       .init(state: "Learning", count: row.learning),
       .init(state: "Not started", count: row.notStarted),
+      .init(state: "Awaiting sync", count: row.awaitingSync),
       .init(state: "Outside catalog", count: row.outsideCatalog),
     ]
   }
@@ -59,10 +60,10 @@ struct CurriculumCoverageView: View {
           }
         }
         .chartForegroundStyleScale(
-          domain: [thresholdName, "Learning", "Not started", "Outside catalog"],
+          domain: [thresholdName, "Learning", "Not started", "Awaiting sync", "Outside catalog"],
           range: [
             StudyPalette.kanji, StudyPalette.vocabulary.opacity(0.65), Color.gray.opacity(0.35),
-            Color.gray.opacity(0.12),
+            StudyPalette.radical, Color.gray.opacity(0.12),
           ]
         )
         .accessibilityIdentifier("coverage.chart")
@@ -99,7 +100,9 @@ struct CurriculumCoverageView: View {
           "Reference lists are included with the app. Coverage uses your saved WaniKani data and is available offline."
         ).studyNote()
         if snapshot.pendingReviews > 0 {
-          Text("Coverage excludes pending local progress until it syncs.").studyNote()
+          Text(
+            "Awaiting sync marks kanji with pending reviews. Their stage is withheld until WaniKani confirms it."
+          ).studyNote()
         }
       }
     }
@@ -128,8 +131,10 @@ private struct CoverageDetail: View {
     VStack(alignment: .leading, spacing: 12) {
       Text("\(row.remaining.count) remaining kanji").font(.headline)
         .accessibilityIdentifier("coverage.remaining.\(row.id)")
-      Text("Below \(thresholdName). This is study coverage, not a passing-score prediction.")
-        .studyNote()
+      Text(
+        "Below \(thresholdName), outside the catalog, or awaiting sync. This is study coverage, not a passing-score prediction."
+      )
+      .studyNote()
       let known = Dictionary(
         subjects.filter { $0.kind == .kanji }.map { ($0.characters, $0) },
         uniquingKeysWith: { first, _ in first })

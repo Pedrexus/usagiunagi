@@ -130,7 +130,7 @@ public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requires
       assignments: currentAssignments.filter { !ids.contains($0.subjectID) },
       statistics: snapshot.statistics, levels: snapshot.levels, subjects: snapshot.subjects,
       savedAt: snapshot.savedAt, pendingReviews: pending.count, isSample: snapshot.isSample,
-      requiresAssignmentRefresh: snapshot.requiresAssignmentRefresh)
+      requiresAssignmentRefresh: snapshot.requiresAssignmentRefresh, pendingSubjectIDs: ids)
   }
 
   public func saveSnapshot(_ snapshot: StudySnapshot, credentialID: String) throws {

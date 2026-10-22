@@ -84,6 +84,7 @@ public struct CurriculumCoverage: Identifiable, Sendable {
   public let reached: Int
   public let learning: Int
   public let notStarted: Int
+  public let awaitingSync: Int
   public let outsideCatalog: Int
   public let remaining: [String]
   public var id: String { curriculum.id }
@@ -92,7 +93,7 @@ public struct CurriculumCoverage: Identifiable, Sendable {
 
   public init(
     curriculum: Curriculum, subjects: [StudySubject], assignments: [StudyAssignment],
-    threshold: Int = 5
+    threshold: Int = 5, pendingSubjectIDs: Set<Int64> = []
   ) {
     self.curriculum = curriculum
     let threshold = min(
@@ -102,6 +103,10 @@ public struct CurriculumCoverage: Identifiable, Sendable {
         guard StudySRSStage(rawValue: assignment.srsStageNumber) != nil else { return nil }
         return (assignment.subjectID, assignment.srsStageNumber)
       }, uniquingKeysWith: max)
+    let pendingCharacters = Set(
+      subjects.filter {
+        $0.kind == .kanji && pendingSubjectIDs.contains($0.id)
+      }.map(\.characters))
     var byCharacter = [String: Int]()
     for subject in subjects where subject.kind == .kanji {
       byCharacter[subject.characters] = max(
@@ -110,6 +115,7 @@ public struct CurriculumCoverage: Identifiable, Sendable {
     var reached = 0
     var learning = 0
     var notStarted = 0
+    var awaitingSync = 0
     var outside = 0
     var remaining = [String]()
     for character in curriculum.characters {
@@ -118,7 +124,10 @@ public struct CurriculumCoverage: Identifiable, Sendable {
         remaining.append(character)
         continue
       }
-      if stage >= threshold {
+      if pendingCharacters.contains(character) {
+        awaitingSync += 1
+        remaining.append(character)
+      } else if stage >= threshold {
         reached += 1
       } else {
         remaining.append(character)
@@ -128,6 +137,7 @@ public struct CurriculumCoverage: Identifiable, Sendable {
     self.reached = reached
     self.learning = learning
     self.notStarted = notStarted
+    self.awaitingSync = awaitingSync
     outsideCatalog = outside
     self.remaining = remaining.sorted()
   }
