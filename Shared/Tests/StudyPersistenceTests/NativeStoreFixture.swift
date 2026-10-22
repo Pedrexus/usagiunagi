@@ -78,3 +78,50 @@ extension StudyStore {
     }
   }
 }
+
+// Test-only state transitions; production uses validated upload and refresh transactions.
+extension StudyStore {
+  /// Call only after a validated successful response for this exact attempt.
+  func acknowledgeReview(_ review: SavedReview) throws {
+    try transaction {
+      if let row = try reviewRecord(review), row.attempted {
+        modelContext.delete(row)
+        try requireCatalogRead(accountID: review.accountID)
+      }
+    }
+  }
+
+  func acknowledgeMaterial(_ sent: SavedStudyMaterial) throws {
+    try transaction {
+      if let row = try MaterialRecord.fetch(
+        in: modelContext, accountID: sent.accountID, subjectID: sent.material.subjectID),
+        row.revision == sent.revision,
+        row.attemptedRevision == nil || row.attemptedRevision == sent.revision
+      {
+        row.pending = false
+        row.revision = UUID()
+        row.issue = nil
+        row.attemptedRevision = nil
+        row.attemptedMaterial = nil
+        row.recoveryBaseline = nil
+      }
+    }
+  }
+
+  /// Capture revisions before a request. Even an edit already acknowledged by the time its
+  /// response arrives must win over that older download. Full refresh never deletes dirty notes.
+  func mergeMaterials(
+    _ incoming: [StudyMaterial], accountID: String,
+    baseline: [Int64: UUID], replacingAll: Bool
+  ) throws {
+    try requireAccount(accountID)
+    guard incoming.allSatisfy({ $0.subjectID > 0 }),
+      Set(incoming.map(\.subjectID)).count == incoming.count
+    else { throw StudyStoreError.invalidMaterial }
+    try transaction {
+      try applyMaterials(
+        incoming, accountID: accountID, baseline: baseline, replacingAll: replacingAll)
+    }
+  }
+
+}

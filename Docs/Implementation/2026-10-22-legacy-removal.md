@@ -154,3 +154,26 @@ Mainboard lint passes for all 436 files. The generic iOS simulator build passes 
 warnings/errors (`build-8d56a981775f4358bc61900f83f731d6.xcresult`).
 Native Mac build also passes with zero warnings/errors
 (`build-c3bf675ed5a7413b9c2b7160ac6f2932.xcresult`). No runtime code changed in this pass.
+
+## Production-only reachability audit
+
+A second declaration/reference audit excludes test callers before classifying production use.
+It identifies three test-only mutation entry points: `acknowledgeReview`,
+`acknowledgeMaterial` and `mergeMaterials`. Removed their 43 lines from the shipping
+StudyPersistence sources and placed the existing fixture transitions in
+`Shared/Tests/StudyPersistenceTests/NativeStoreFixture.swift`, without public visibility.
+Production continues using validated upload and atomic refresh transactions. No persisted
+model, decoder identity, account data or frozen fixture changed. This reduces the production
+API surface; it is not a claim of fewer total repository lines.
+
+`saveSnapshot` remains used by the independent persistence probe. Other single-reference
+production declarations are framework entry points/delegate callbacks. Historical Codable
+fields remain part of saved data. The audit found no tracked Go, Ruby, Python, Objective-C,
+protobuf, storyboard or XIB source to delete. Lexical reference checks are not whole-program
+reachability proof. Preexisting UI acceptance edits remain outside this cleanup.
+
+Mainboard lint passes all 436 files; `git diff --check` passes. Focused existing storage tests
+are recorded in `.build/Results/DeadCode-Cleanup-Tests-20261022.log`.
+The focused run completed successfully: 36 tests across StudyStoreTests, NativeRefreshTests,
+CatalogFreshnessTests and ReviewRecoveryTests. The unrelated in-progress iPhone acceptance
+run uses its previously compiled products; this cleanup does not establish its outcome.

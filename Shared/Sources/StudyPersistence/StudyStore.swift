@@ -295,16 +295,6 @@ public enum StudyAutomaticWork: Equatable, Sendable { case none, ready, requires
     }
   }
 
-  /// Call only after a validated successful response for this exact attempt.
-  public func acknowledgeReview(_ review: SavedReview) throws {
-    try transaction {
-      if let row = try reviewRecord(review), row.attempted {
-        modelContext.delete(row)
-        try requireCatalogRead(accountID: review.accountID)
-      }
-    }
-  }
-
   func reviewRecord(_ review: SavedReview) throws -> ReviewRecord? {
     let accountID = review.accountID
     let subjectID = review.subjectID
