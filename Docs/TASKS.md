@@ -410,3 +410,11 @@ Japanese draft and current navigation state. One native test passes without skip
 Mainboard lint passes. See the minimal-working-version receipt for exact scope. Process-death,
 Mac window-restoration and physical-device acceptance remain separate open requirements.
 Reconciled stale top-level test counts, removed Watch bridge references and automation status.
+
+### 2026-10-22 — Mac reopening and cold-link acceptance
+
+Two current native Mac tests pass: hide/reactivate preserves the draft/question and one study
+window before normal pause/submit/completion; cold subject/review/lesson links each open one
+window. Replaced the wrong-bundle process precondition with the tested app's stopped state,
+and updated the stale prompt expectation. Mainboard lint passes. Actual saved-window
+restoration after termination remains open; fixture cold links intentionally ignore saved state.

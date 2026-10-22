@@ -277,32 +277,41 @@
       XCTAssertTrue(
         element.exists && scroll.frame.intersects(element.frame), element.debugDescription)
     }
-    func testTypedAnswerSurvivesPauseAndClearsForTheNextQuestion() {
+    func testTypedAnswerSurvivesPauseAndClearsForTheNextQuestion() throws {
       let app = launch([])
       defer { app.terminate() }
       app.buttons["home.reviews"].click()
       let input = app.textFields["review.answer"]
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       let prompt = app.staticTexts["review.prompt"]
-      let first = prompt.value as? String
-      XCTAssertTrue(first == "Meaning" || first == "Reading")
-      let answer = first == "Reading" ? "ichi" : "one"
+      let first = try XCTUnwrap(prompt.value as? String)
+      XCTAssertTrue(first.hasSuffix("Meaning") || first.hasSuffix("Reading"))
+      let answer = first.hasSuffix("Reading") ? "ichi" : "one"
       input.click()
       input.typeText(answer)
+      app.typeKey("h", modifierFlags: .command)
+      XCTAssertTrue(app.wait(for: .runningBackground, timeout: 5))
+      app.activate()
+      XCTAssertTrue(input.waitForExistence(timeout: 5))
+      XCTAssertEqual(input.value as? String, answer)
+      XCTAssertEqual(prompt.value as? String, first)
+      XCTAssertEqual(
+        app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "study-AppWindow-"))
+          .count, 1)
       app.pauseStudyAndReturn()
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       XCTAssertEqual(input.value as? String, answer)
       XCTAssertEqual(prompt.value as? String, first)
       app.buttons["review.submit"].click()
       let changed = XCTNSPredicateExpectation(
-        predicate: NSPredicate(format: "value != %@", first!), object: prompt)
+        predicate: NSPredicate(format: "value != %@", first), object: prompt)
       XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
       XCTAssertEqual(input.value as? String, "")
       app.pauseStudyAndReturn()
       XCTAssertTrue(input.waitForExistence(timeout: 5))
       XCTAssertEqual(input.value as? String, "")
       input.click()
-      input.typeText(first == "Reading" ? "one" : "ichi")
+      input.typeText(first.hasSuffix("Reading") ? "one" : "ichi")
       app.buttons["review.submit"].click()
       XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 5))
     }
@@ -472,11 +481,7 @@
         ("usagiunagi:///lessons", true),
       ] {
         app.terminate()
-        XCTAssertTrue(
-          NSRunningApplication.runningApplications(
-            withBundleIdentifier: "com.davidsansome.wanikani"
-          )
-          .isEmpty)
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
         app.launchArguments =
           ["-ApplePersistenceIgnoreState", "YES", "--review-fixture"]
           + (lesson ? ["--lesson-fixture"] : [])

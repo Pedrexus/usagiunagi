@@ -327,3 +327,24 @@ Current native execution passes one test with no skips/failures in
 AppIntents metadata extraction notice remains. Mainboard lint passes in
 `ReviewReopen-Lint-20261022.log`. This is foreground lifecycle evidence on iPhone 18 Pro/iOS 27
 Simulator, not process-death restoration, Mac window reopening or physical-device acceptance.
+
+### Mac foreground and cold-link reopening
+
+Extended the existing typed-review journey with Command-H, a required background-state
+transition, reactivation and a single study-window assertion. The unsubmitted draft and
+question survive; pause/resume still preserves them, submitting clears the field, and the
+fixture review completes. Cold subject/review/lesson links each launch one window. Their
+precondition now waits for the tested application to stop instead of querying the old iPhone
+bundle identifier, which did not establish the Mac process state.
+
+The first run (`MacReopen-20261022.log`) retains a failure caused by an outdated bare
+Meaning/Reading test expectation. The UI includes the subject type; the corrected test
+checks the question suffix, preserves the full prompt for equality across reopening and
+unwraps the value explicitly. No production behavior changed.
+
+Both native tests pass, without skips/failures, in
+`test-3238eb2cef624938a933d1af4e9a734e.xcresult` and
+`MacReopen-Final-20261022.log`. Compiler/analyzer summaries report zero warnings.
+`MacReopen-FinalLint-20261022.log` passes 436 files without rewrites. These are isolated
+fixture-account journeys. Cold links deliberately ignore saved window state; they do not
+prove real-account window restoration after termination or physical iCloud/Watch behavior.
