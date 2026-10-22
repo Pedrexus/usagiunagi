@@ -595,3 +595,14 @@ the bounded run exited 124 at 600 seconds. The bundle
 This is not a completed passing suite. The read-only live screenshot
 `iPad-Summary-Idle-20261022.png` confirms review feedback rendering only. The completed
 iPhone endpoint/summary receipt remains valid for its own platform and source scope.
+
+### iPhone final selector publication ENOSPC
+
+The fixture-only opening-pressure extension passes both its focused four-host run and the
+integrated seven-host Mainboard storage matrix, without skips or failures. Final publication
+fails with Cocoa/640 at the exact selector URL; a fresh retry preserves all 38 baseline records,
+uses a different candidate, and saves a pending note that survives two further process reopens.
+The existing note/review/WAL save cases still pass. Both temporary APFS images were ejected
+and removed. Mainboard lint passes all 436 files; production V1 and frozen fixture hashes
+are unchanged. [Exact protocols and bundles](../Implementation/2026-10-21-frozen-ios-and-review-focus.md#iphone-final-selection-publication-disk-full).
+Earlier capture/verification, committed-WAL opening and physical failure gates remain open.

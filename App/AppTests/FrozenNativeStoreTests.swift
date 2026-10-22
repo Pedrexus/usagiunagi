@@ -33,6 +33,7 @@ private final class FrozenStoreBundle {}
     case seedBeforeAnswer, reopenBeforeAnswer, retryBeforeAnswer, verifyBeforeAnswer
     case spaceAccess, spaceSave, spaceReview, spaceReviewWAL, spaceReopen, spaceVerify
     case spaceMatrix, spaceMatrixReopen, spaceMatrixVerify
+    case spaceOpening, spaceOpeningRetry, spaceOpeningReopen, spaceOpeningVerify
     var abrupt: Bool { self == .seedAbrupt || self == .reopenAbrupt }
     var seeds: Bool {
       [.seed, .seedAbrupt, .seedVerification, .seedCandidate, .seedBeforeAnswer].contains(self)
@@ -109,9 +110,11 @@ private final class FrozenStoreBundle {}
       }
       return
     }
-    if [.spaceAccess, .spaceSave, .spaceReview, .spaceReviewWAL, .spaceReopen, .spaceVerify]
-      .contains(phase)
-    {
+    if [
+      .spaceAccess, .spaceSave, .spaceReview, .spaceReviewWAL, .spaceReopen, .spaceVerify,
+      .spaceOpening, .spaceOpeningRetry, .spaceOpeningReopen, .spaceOpeningVerify,
+    ]
+    .contains(phase) {
       try await boundedVolumeAccess(id: id, phase: phase)
       return
     }
@@ -292,7 +295,8 @@ private final class FrozenStoreBundle {}
     case .seedBeforeAnswer, .reopenBeforeAnswer, .retryBeforeAnswer, .verifyBeforeAnswer:
       Issue.record("Review interruption phase did not use its dedicated path")
     case .spaceAccess, .spaceSave, .spaceReview, .spaceReviewWAL, .spaceReopen, .spaceVerify,
-      .spaceMatrix, .spaceMatrixReopen, .spaceMatrixVerify:
+      .spaceMatrix, .spaceMatrixReopen, .spaceMatrixVerify,
+      .spaceOpening, .spaceOpeningRetry, .spaceOpeningReopen, .spaceOpeningVerify:
       Issue.record("Volume access phase did not use its dedicated path")
     }
     try #require(try family(in: frozen.deletingLastPathComponent()) == original)
@@ -346,6 +350,15 @@ private final class FrozenStoreBundle {}
     let frozenOriginal = try family(in: frozen.deletingLastPathComponent())
     var original = frozenOriginal
     var expected = manifest.expected
+    if [.spaceOpening, .spaceOpeningRetry, .spaceOpeningReopen, .spaceOpeningVerify]
+      .contains(phase)
+    {
+      try await boundedOpening(
+        id: id, phase: phase, volume: volume, capacity: capacity,
+        original: original, expected: expected)
+      try #require(try family(in: frozen.deletingLastPathComponent()) == frozenOriginal)
+      return
+    }
     let suffix = scenario.map { "." + $0.rawValue } ?? ""
     let directory = volume.appending(path: "iPhone-access-\(id)\(suffix)")
     let receiptURL = volume.appending(path: "\(id)\(suffix).save.plist")
@@ -474,6 +487,179 @@ private final class FrozenStoreBundle {}
     try PropertyListEncoder().encode(receipt).write(
       to: volume.appending(path: "\(id).access.plist"), options: .atomic)
     print("NATIVE SPACE ACCESS VERIFIED: \(id), PID \(receipt.processID), 38 exact records")
+  }
+
+  private struct VolumeOpeningReceipt: Codable {
+    let id: UUID
+    let producerPID: Int32
+    let filledBytes: Int
+    let errorDomain: String
+    let errorCode: Int
+    let files: [String: Data]
+    var retryPID: Int32?
+    var readerPID: Int32?
+    var verifierPID: Int32?
+    var expected: NativeStoreBaseline.State?
+    var selection: Data?
+  }
+
+  private func boundedOpening(
+    id: UUID, phase: RestartPhase, volume: URL, capacity: Int,
+    original: [String: Data], expected: NativeStoreBaseline.State
+  ) async throws {
+    let manager = FileManager.default
+    let pid = ProcessInfo.processInfo.processIdentifier
+    let directory = volume.appending(path: "iPhone-opening-\(id)")
+    let receiptURL = volume.appending(path: "\(id).spaceOpening.save.plist")
+    let selectorURL = directory.appending(path: "store-selection.plist")
+    if phase == .spaceOpening {
+      try #require(!manager.fileExists(atPath: directory.path))
+      try #require(!manager.fileExists(atPath: receiptURL.path))
+      try manager.createDirectory(at: directory, withIntermediateDirectories: false)
+      for (name, bytes) in original { try bytes.write(to: directory.appending(path: name)) }
+      let pressure = volume.appending(path: "volume-pressure")
+      defer {
+        if manager.fileExists(atPath: pressure.path) { try? manager.removeItem(at: pressure) }
+      }
+      let witness = Mutex<Result<(Data, Int), any Error>?>(nil)
+      let prefix = directory.resolvingSymlinksInPath().path + "/generations/"
+      let center = NotificationCenter.default
+      let observer = center.addObserver(
+        forName: .NSPersistentStoreCoordinatorStoresDidChange, object: nil, queue: nil
+      ) { notification in
+        guard let coordinator = notification.object as? NSPersistentStoreCoordinator,
+          Set(coordinator.managedObjectModel.entities.compactMap(\.name))
+            == Set(StudySchemaV1.schema.entities.map(\.name))
+        else { return }
+        let added = notification.userInfo?[NSAddedPersistentStoresKey] as? [NSPersistentStore] ?? []
+        for attached in added {
+          guard !attached.isReadOnly,
+            (attached.options?[NSPersistentHistoryTrackingKey] as? NSNumber)?.boolValue == true,
+            let url = attached.url?.resolvingSymlinksInPath(),
+            url.path.hasPrefix(prefix), url.lastPathComponent == "study.store"
+          else { continue }
+          witness.withLock { captured in
+            guard captured == nil else { return }
+            captured = Result {
+              let bytes = try Data(contentsOf: selectorURL)
+              let selection = try PropertyListDecoder().decode(AdoptionSelection.self, from: bytes)
+              try #require(selection.phase == "preparing" && selection.validation == nil)
+              try #require(url.path == prefix + "\(selection.candidate)/study.store")
+              try #require(selection.source == original.mapValues(digest))
+              try #require(try family(in: directory) == original)
+              try #require(
+                try family(in: directory.appending(path: "generations/\(selection.retained)"))
+                  == original)
+              return (bytes, try fillBoundedVolume(at: pressure, capacity: capacity))
+            }
+          }
+        }
+      }
+      defer { center.removeObserver(observer) }
+      var failure: NSError?
+      do { _ = try await StudyStore.openApplication(in: directory) } catch {
+        failure = error as NSError
+      }
+      let captured = try witness.withLock { try #require($0).get() }
+      let error = try #require(failure)
+      let failedURL =
+        (error.userInfo[NSURLErrorKey] as? URL)
+        ?? (error.userInfo[NSFilePathErrorKey] as? String).map { URL(filePath: $0) }
+      try #require(error.domain == NSCocoaErrorDomain)
+      try #require(error.code == CocoaError.fileWriteOutOfSpace.rawValue)
+      try #require(failedURL?.isFileURL == true)
+      try #require(
+        failedURL?.standardizedFileURL.resolvingSymlinksInPath()
+          == selectorURL.standardizedFileURL.resolvingSymlinksInPath())
+      try #require(captured.1 > 0)
+      try #require(try Data(contentsOf: selectorURL) == captured.0)
+      try #require(try family(in: directory) == original)
+      try manager.removeItem(at: pressure)
+      let receipt = VolumeOpeningReceipt(
+        id: id, producerPID: pid, filledBytes: captured.1,
+        errorDomain: error.domain, errorCode: error.code, files: try artifacts(in: directory))
+      try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
+      print("NATIVE SPACE OPENING REFUSED: \(id), PID \(pid), selector publication ENOSPC")
+      return
+    }
+    var receipt = try PropertyListDecoder().decode(
+      VolumeOpeningReceipt.self, from: Data(contentsOf: receiptURL))
+    try #require(receipt.id == id && receipt.producerPID > 0 && receipt.producerPID != pid)
+    try #require(receipt.filledBytes > 0 && receipt.errorDomain == NSCocoaErrorDomain)
+    try #require(receipt.errorCode == CocoaError.fileWriteOutOfSpace.rawValue)
+    let preparing = try #require(receipt.files["store-selection.plist"])
+    let previous = try PropertyListDecoder().decode(AdoptionSelection.self, from: preparing)
+    try #require(previous.phase == "preparing" && previous.validation == nil)
+    try #require(previous.source == original.mapValues(digest))
+    if phase == .spaceOpeningRetry {
+      try #require(receipt.retryPID == nil && receipt.expected == nil && receipt.selection == nil)
+      try #require(try artifacts(in: directory) == receipt.files)
+    } else {
+      let retryPID = try #require(receipt.retryPID)
+      try #require(retryPID != pid && retryPID != receipt.producerPID)
+    }
+    let store = try await StudyStore.openApplication(in: directory)
+    defer { withExtendedLifetime(store) {} }
+    let locations = try selectedURLs(in: directory)
+    let selected = try PropertyListDecoder().decode(
+      AdoptionSelection.self, from: locations.selector)
+    try #require(selected.candidate != previous.candidate && selected.retained == previous.retained)
+    try #require(selected.source == previous.source && selected.validation?.count == 64)
+    if phase == .spaceOpeningRetry {
+      try #require(try await store.nativeBaselineState() == expected)
+      let account = NativeStoreBaseline.accounts[0]
+      let saved = try #require(
+        try await store.materials(accountID: account).first { $0.material.subjectID == 42 })
+      var material = saved.material
+      material.meaningNote = "Opening-space retry note \u{0000}猫\n "
+      let revision = try await store.saveMaterial(
+        material, accountID: account, expectedRevision: saved.revision)
+      let actual = try await store.nativeBaselineState()
+      try #require(
+        actual.schema == expected.schema && actual.schemaVersion == expected.schemaVersion)
+      try #require(actual.records.count == expected.records.count)
+      for before in expected.records {
+        let after = try #require(
+          actual.records.first { $0.model == before.model && $0.identity == before.identity })
+        let editable: Set<String> =
+          before.model == "MaterialRecord" && before.identity == "\(account)/42"
+          ? ["revision", "material", "pending"] : []
+        try #require(after.accountID == before.accountID)
+        try #require(
+          before.fields.filter { !editable.contains($0.key) }
+            == after.fields.filter { !editable.contains($0.key) })
+      }
+      let result = try #require(
+        try await store.materials(accountID: account).first { $0.material.subjectID == 42 })
+      try #require(result.revision == revision && revision != saved.revision)
+      try #require(result.material == material && result.pending)
+      receipt.retryPID = pid
+      receipt.expected = actual
+      receipt.selection = locations.selector
+    } else {
+      let committed = try #require(receipt.expected)
+      try #require(try await store.nativeBaselineState() == committed)
+      try #require(locations.selector == receipt.selection)
+      if phase == .spaceOpeningReopen {
+        try #require(receipt.readerPID == nil)
+        receipt.readerPID = pid
+      } else {
+        try #require(phase == .spaceOpeningVerify)
+        let reader = try #require(receipt.readerPID)
+        try #require(reader != pid && reader != receipt.producerPID && reader != receipt.retryPID)
+        try #require(receipt.verifierPID == nil)
+        receipt.verifierPID = pid
+      }
+    }
+    let after = try artifacts(in: directory)
+    for (path, bytes) in receipt.files where path != "store-selection.plist" {
+      try #require(after[path] == bytes)
+    }
+    try #require(try family(in: directory) == original)
+    try #require(try family(in: locations.retained) == original)
+    try #require(try Data(contentsOf: selectorURL) == receipt.selection)
+    try PropertyListEncoder().encode(receipt).write(to: receiptURL, options: .atomic)
+    print("NATIVE SPACE OPENING RECOVERED: \(id), \(phase.rawValue), PID \(pid), 38 exact records")
   }
 
   private func committedVolumeWAL(in volume: URL, id: UUID, frozen: [String: Data]) async throws

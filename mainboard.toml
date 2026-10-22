@@ -85,8 +85,8 @@ done
 native-store-space = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "mac" } }
 native-store-volume-access-ios = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "ios-access" } }
 native-store-space-ios = { run = "mainboard run --locked native-store-volume", env = { USAGI_NATIVE_SPACE_BACKEND = "ios-matrix" } }
-native-store-volume = '''mainboard proc timeout 1500 sh -eu -c '
-case "${USAGI_NATIVE_SPACE_BACKEND:-}" in mac|ios-access|ios-save|ios-review|ios-review-wal|ios-matrix) ;; *) exit 2 ;; esac
+native-store-volume = '''mainboard proc timeout 2400 sh -eu -c '
+case "${USAGI_NATIVE_SPACE_BACKEND:-}" in mac|ios-access|ios-save|ios-review|ios-review-wal|ios-opening|ios-matrix) ;; *) exit 2 ;; esac
 mkdir -p .build/Results
 space_report=$(mktemp -d .build/Results/StorageSpace.XXXXXX)
 space_root=$(mktemp -d /private/tmp/usagi-disk-space.XXXXXX)
@@ -128,8 +128,10 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
     space_phases="spaceReview spaceReopen spaceVerify"
   elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review-wal ]; then
     space_phases="spaceReviewWAL spaceReopen spaceVerify"
+  elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-opening ]; then
+    space_phases="spaceOpening spaceOpeningRetry spaceOpeningReopen spaceOpeningVerify"
   elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-matrix ]; then
-    space_phases="spaceMatrix spaceMatrixReopen spaceMatrixVerify"
+    space_phases="spaceMatrix spaceMatrixReopen spaceMatrixVerify spaceOpening spaceOpeningRetry spaceOpeningReopen spaceOpeningVerify"
   fi
   for space_phase in $space_phases; do
     mainboard apple execute App/UsagiUnagi.xcworkspace --scheme NativeStoreRestart --action test --destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0" --derived-data .build/Xcode/iOS --timeout 480 --only-testing "AppTests/FrozenNativeStoreTests/persistedStoreReopensInAnotherTestHost()" --setting CODE_SIGNING_ALLOWED=NO --setting "USAGI_NATIVE_RESTART_PHASE=$space_phase" --setting "USAGI_NATIVE_RESTART_ID=$space_id" --setting "USAGI_NATIVE_SPACE_PATH=$space_mount" > "$space_report/$space_phase.log" 2>&1
@@ -141,7 +143,9 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
   else
     space_saves="save"
     if [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-matrix ]; then
-      space_saves="spaceSave spaceReview spaceReviewWAL"
+      space_saves="spaceSave spaceReview spaceReviewWAL spaceOpening"
+    elif [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-opening ]; then
+      space_saves="spaceOpening"
     fi
     for space_save in $space_saves; do
       space_suffix=""
@@ -149,7 +153,19 @@ if [ "$USAGI_NATIVE_SPACE_BACKEND" != mac ]; then
       space_receipt="$space_report/$space_save.plist"
       cp "$space_mount/$space_id$space_suffix.save.plist" "$space_receipt"
       test "$(/usr/bin/plutil -extract id raw -o - "$space_receipt")" = "$space_id"
-      case "$(/usr/bin/plutil -extract sqliteCode raw -o - "$space_receipt")" in 13|4618) ;; *) exit 1 ;; esac
+      if [ "$space_save" = spaceOpening ]; then
+        test "$(/usr/bin/plutil -extract errorDomain raw -o - "$space_receipt")" = NSCocoaErrorDomain
+        test "$(/usr/bin/plutil -extract errorCode raw -o - "$space_receipt")" -eq 640
+        space_pids=" "
+        for space_role in producerPID retryPID readerPID verifierPID; do
+          space_pid=$(/usr/bin/plutil -extract "$space_role" raw -o - "$space_receipt")
+          test "$space_pid" -gt 0
+          case "$space_pids" in *" $space_pid "*) exit 1 ;; esac
+          space_pids="$space_pids$space_pid "
+        done
+      else
+        case "$(/usr/bin/plutil -extract sqliteCode raw -o - "$space_receipt")" in 13|4618) ;; *) exit 1 ;; esac
+      fi
       test "$(/usr/bin/plutil -extract filledBytes raw -o - "$space_receipt")" -gt 0
       if [ "$space_save" = spaceReview ] || [ "$space_save" = spaceReviewWAL ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review ] || [ "$USAGI_NATIVE_SPACE_BACKEND" = ios-review-wal ]; then
         test "$(/usr/bin/plutil -extract review.subjectID raw -o - "$space_receipt")" -eq 42

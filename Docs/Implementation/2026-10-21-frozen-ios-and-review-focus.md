@@ -1007,3 +1007,60 @@ actual mid-copy/inside-publication interruption, wider combinations, physical iP
 Data Protection/power-loss and signed-device services remain open. The broader UI,
 voice, statistics/calibration and delivery obligations remain in TASKS; this does not
 complete the modernization goal.
+
+## iPhone final selection publication disk full
+
+The fixture-only iPhone test now covers journal-free adoption running out of space after the
+writable SwiftData candidate attaches and before the final selection file is published. The
+observer requires the ten-model schema, persistent-history tracking, writable attachment and
+exact preparing-candidate URL; it does not inject a production error. Existing bounded image
+name, capacity, mount and per-run UUID checks precede pressure, including residual 4 KiB writes.
+
+Four fresh hosts require:
+
+1. Real Cocoa error 640 at `store-selection.plist`, with unchanged preparing selection and
+   original source. Pressure is released before writing the receipt.
+2. Byte-identical abandoned artifacts before retry, a different candidate with the same retained
+   source, all 38 historical records, and an exact pending-note edit with a fresh revision.
+   Every unrelated record/field is compared; abandoned artifacts remain unchanged.
+3. A fresh reopen with the complete committed state and identical selection/source/retained data.
+4. Another fresh reopen, with all four distinct process identities saved in the receipt.
+
+The focused command is
+`USAGI_NATIVE_SPACE_BACKEND=ios-opening mainboard run --locked --no-install native-store-volume`.
+It extends the existing driver, not a second volume-management tool. The standard
+`native-store-space-ios` task also includes these four phases after its existing three-host
+note/review/WAL matrix. Its total bound is 2400 seconds, within the 45-minute Actions job;
+each individual phase retains its 480-second bound. Receipt validation distinguishes
+publication Cocoa/640 from the existing SQLite save errors.
+
+Focused run: `.build/Results/StorageSpace.OZR1xy`, UUID
+`24DBCD22-4BCD-43BB-A041-0ED9776D8877`, 123,166,720 pressure bytes. All four selected tests
+pass without skips/failures, with zero build warnings/errors:
+
+- refusal: `test-03abb970bf824658a28d553c08999822.xcresult`
+- retry/write: `test-0ccfc069a2b74172b1ee3a042cc59792.xcresult`
+- reopen: `test-02c133f6b43546bda4b005502e548a7f.xcresult`
+- second reopen: `test-f954ffdaa5374540be21d1fb0ddaa822.xcresult`
+
+Mainboard exits zero, ejects the image and removes the successful temporary directory.
+`OpeningSpace-Lint-20261022.log` reports 436 files, no rewrites/failures. The five historical
+fixture hashes and V1 schema hash remain unchanged. No shipping persistence code changed.
+Earlier capture/verification, committed-WAL opening pressure, actual mid-copy/inside-publication
+interruption and physical Data Protection/power-loss acceptance remain open.
+
+Integrated run: `.build/Results/StorageSpace.5a8wS0`, UUID
+`46EC3097-80F7-4B47-92DC-51DD01F5D050`. All seven phase selections pass, one selected test
+per host, zero skipped/failed tests. This retains the existing note/review/WAL comparisons
+and adds publication refusal/retry/two reopens. The opening phase filled 118,272,000 bytes;
+Mainboard validated all four receipts, exited zero, ejected the image and removed its directory.
+Bundles, in phase order:
+`test-6d413152a79f48bf83fd3db8fa502215`,
+`test-7a7cb0b88a8c4cfa9e6a21c3bec3797e`,
+`test-862b85a109bf4962ad8eb6481fa38a78`,
+`test-98339d1ef04e4d5ba4cc4d41cb8c2750`,
+`test-9938508db1434d108726174b44c7cf75`,
+`test-b631a1a697804fbd800cb446acdb2301`,
+`test-c865056e01a04bee92c1ec06c8bf2ad1` (all `.xcresult`).
+Expected Core Data/SQLite disk-full diagnostics occur during the deliberate pressure cases;
+the passing verdict requires refusal, exact rollback/recovery and successful fresh reopens.
