@@ -800,15 +800,20 @@ final class ReviewFlowTests: XCTestCase {
     _ value: String, in app: XCUIApplication, action: String
   ) {
     app.buttons["developer.endpoint"].tap()
-    let alert = app.navigationBars["API base URL"]
-    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    let editor = app.navigationBars["API base URL"]
+    XCTAssertTrue(editor.waitForExistence(timeout: 5))
     let field = app.textFields["developer.endpoint.draft"]
     field.tap()
-    let current = field.value as? String ?? ""
-    field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + value)
+    field.press(forDuration: 1)
+    let selectAll = app.descendants(matching: .any).matching(
+      NSPredicate(format: "label == %@", "Select All")
+    ).firstMatch
+    XCTAssertTrue(selectAll.waitForExistence(timeout: 5), app.debugDescription)
+    selectAll.tap()
+    field.typeText(value)
     XCTAssertEqual(field.value as? String, value)
-    alert.buttons[action].tap()
-    XCTAssertTrue(alert.waitForNonExistence(timeout: 5), app.debugDescription)
+    editor.buttons[action].tap()
+    XCTAssertTrue(editor.waitForNonExistence(timeout: 5), app.debugDescription)
   }
 
   @MainActor func testDeveloperEndpointCancelValidationPersistenceAndReset() {
@@ -1269,7 +1274,7 @@ final class ReviewFlowTests: XCTestCase {
       app.staticTexts[
         "Completed answers are saved on this device and sync automatically when online."
       ].isHittable)
-    XCTAssertTrue(app.staticTexts["Missed · level 1"].exists)
+    XCTAssertTrue(app.staticTexts["Missed · current level (1)"].exists)
     let missed = app.buttons["summary.subject.0"]
     XCTAssertTrue(missed.waitForExistence(timeout: 5))
     XCTAssertTrue(missed.label.contains("Meaning missed"))
@@ -2149,7 +2154,6 @@ extension ReviewFlowTests {
           foregroundForm.swipeUp(velocity: .slow)
         }
       } else if home.exists && home.isEnabled {
-
         // Keep drags clear of the floating tab bar, which covers the center in landscape.
         let down = towardTop || element.exists && element.frame.midY < home.frame.minY
         let start = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.25 : 0.7))

@@ -132,7 +132,7 @@ jobs:
   ios:
     name: ${{ matrix.device }}
     runs-on: xcode-27
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -187,7 +187,7 @@ jobs:
           --skip-testing AppStoreScreenshots/ReviewFlowTests/testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement
           --skip-testing AppStoreScreenshots/ReviewFlowTests/testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents
           --skip-testing AppStoreScreenshots/ReviewFlowTests/testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit
-          --setting CODE_SIGNING_ALLOWED=NO --timeout 1800
+          --setting CODE_SIGNING_ALLOWED=NO --timeout 2400
       - name: Native material conflict events
         run: >-
           uv run --project .build/Mainboard --locked --no-sync mainboard apple execute App/UsagiUnagi.xcworkspace --scheme UsagiUnagi --action test

@@ -542,3 +542,46 @@ NativeCatalogsMac, NativePackageReconcile, ProtobufPackageUpgrade, ProtobufPlugi
 SubjectsShared. Their reported total was approximately 2.6 GiB. Current iOS/iPad/UnifiedMac/
 Watch directories, validation reports and frozen source/data fixtures remain. No tracked
 source or shared/global cache was removed by this operation.
+
+### Full iPhone lane: bounded completion and focused recovery
+
+The original `9cfb5ead` run ended with exit 124 at its 1,800-second bound. Its log records
+57 passing methods, three failures (endpoint Cancel, audio-enable assertion, lesson drag
+assertion), one explicit Reduce Motion skip and an interrupted Settings review test. The
+`test-12876e94c212457db684e965d0e44360.xcresult` directory lacks a finalized root/Info.plist;
+it is not a complete result bundle. Keep the log and interrupted directory as failure evidence.
+The Actions iOS matrix now allows 2,400 seconds for this lane and 60 minutes for the job,
+including separate event-driven lanes. Bounds remain finite; no hosted run is claimed.
+
+`PhoneRemainingAcceptance-20261022.log`, bundle `test-3906a5d0c9ee4b7da207033c028f43c1`,
+completed all 11 selected methods: nine passed, two failed. Audio download/Keep/deletion and
+lesson order passed without production changes to either feature. Remaining Settings, cold
+links, notification persistence, forecast, voice transcript and wrap-up cases passed. Its two
+failures were the endpoint test leaving `/v2` after typing at a mid-field caret and the summary
+test expecting the old “Missed · level 1” heading instead of “Missed · current level (1)”.
+
+The endpoint helper now invokes the visible Select All editing action before replacement,
+retaining exact text and dismissal assertions. Hardware Command-A and triple-tap trials did
+not reliably select all URL text and are not retained. The summary assertion uses the current
+heading while retaining missed-meaning/reading, subject-detail and return checks.
+`EndpointSummary-iPhone-20261022.log`, bundle `test-79efe98b7e5f42e184dc56fb2ebac550`,
+passes both complete journeys, no skips. Across the original log plus completed focused
+bundles there are 68 distinct logged passing iPhone methods; this is not a single clean full
+suite. Reduce Motion and five separately event-driven selectors retain their distinct scopes.
+
+The pending-coverage iPhone screenshot from the 11-method bundle was inspected:
+`.build/Results/PhoneRemaining-Captures-20261022/172A5885-0B18-44D9-9FE9-53A6C29B2463.png`.
+The five-part legend wraps onto two lines without clipping; N5 has the correct pending count
+and expands inline. Its lower content extends below the floating tab bar and requires scrolling;
+this screenshot does not claim an all-visible expanded grid or largest-text acceptance.
+
+Independent iPad lesson ordering also passes: `LessonReorder-iPad-20261022.log`, bundle
+`test-017f8a5ad4944bafaa1adf454f972eac`. Current code follows Apple's documented ForEach
+`.reorderable()` plus container `.reorderContainer` pattern:
+https://developer.apple.com/documentation/swiftui/reordering-items-in-lists-stacks-grids-and-custom-layouts
+No drag implementation was changed solely to satisfy a failed test.
+
+`PhoneAcceptance-FinalLint-20261022.log`: 436 files, no rewrites/failures. The iPad two-method
+endpoint/summary run is still active in session 79517 with a 600-second bound; endpoint passed
+but summary has long automation-idle waits. Do not count its entire run as accepted or restart
+it while its handle is live.

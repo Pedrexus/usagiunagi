@@ -483,3 +483,16 @@ The three offline-audio journeys pass on iPad without production changes. The fu
 enable-toggle failure in download/Keep/deletion still needs a focused rerun (its retry and
 voice/cellular cases passed). Seven unreferenced generated experiment caches were removed,
 freeing approximately 2.6 GiB while retaining active products and validation/frozen evidence.
+
+### iPhone acceptance reconciliation — October 22
+
+The 30-minute full run is terminal (124), with an incomplete result bundle: its log records
+57 passes, three failures and one Reduce Motion skip. Focused continuation finishes nine of
+11 cases; corrected endpoint text replacement and current-level summary assertions then pass
+in a separate two-case iPhone bundle. All failed/unfinished methods now have scoped passing
+execution, totaling 68 distinct logged passing phone methods across runs, not one green full
+suite. Keep the failed/interrupted evidence. CI limits are now 40 minutes per main UI lane and
+60 minutes per matrix job; hosted publication remains blocked by the unpublished Mainboard pin.
+The new coverage chart is rendered and inspected on iPhone/iPad; full accessibility remains open.
+Audio and lesson-order retests pass without production changes. The iPad endpoint/summary run
+(session 79517) still needs its final result; it has long idle waits. See the validation receipt.
