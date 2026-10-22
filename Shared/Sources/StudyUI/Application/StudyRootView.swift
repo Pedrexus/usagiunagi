@@ -143,8 +143,10 @@ public struct StudyRootView: View {
             KatakanaPracticeMenu { path = [.katakana] }
           } statistics: {
             if let snapshot = model.snapshot {
-              StudyDashboard(snapshot: snapshot) { id in
-                subject = snapshot.subjects.first { $0.id == id }
+              TimelineView(.everyMinute) { context in
+                StudyDashboard(snapshot: snapshot, now: context.date) { id in
+                  subject = snapshot.subjects.first { $0.id == id }
+                }
               }
             } else {
               account

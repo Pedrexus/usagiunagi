@@ -789,7 +789,9 @@
       assignment.level = 1
       assignment.srsStage = 3
       assignment.startedAt = 1
-      assignment.availableAt = 1
+      assignment.availableAt =
+        ProcessInfo.processInfo.arguments.contains("--statistics-clock-fixture")
+        ? Int64(Date.now.timeIntervalSince1970) + 30 : 1
       if ProcessInfo.processInfo.arguments.contains("--lesson-recovery-fixture")
         || ProcessInfo.processInfo.arguments.contains("--lesson-fixture")
       {

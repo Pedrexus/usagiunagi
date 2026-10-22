@@ -313,6 +313,31 @@
       add(picture)
     }
 
+    @MainActor func testStatisticsUpdatesDueCountWithoutRefreshingSnapshot() {
+      let app = launch(["--statistics-fixture", "--statistics-clock-fixture"])
+      defer { app.terminate() }
+      tab("Stats", in: app)
+      let initiallyDue = app.staticTexts["0 due now"]
+      scrollTo(initiallyDue, in: app)
+      XCTAssertTrue(initiallyDue.exists)
+      let snapshot = app.staticTexts.matching(
+        NSPredicate(format: "label BEGINSWITH %@", "Snapshot:")
+      )
+      .firstMatch
+      XCTAssertTrue(snapshot.exists)
+      let savedAt = snapshot.label
+      let updated = app.staticTexts["1 due now"]
+      XCTAssertTrue(updated.waitForExistence(timeout: 100), app.debugDescription)
+      XCTAssertFalse(initiallyDue.exists)
+      XCTAssertEqual(snapshot.label, savedAt)
+      XCTAssertTrue(app.segmentedControls.buttons["Progress"].isSelected)
+      XCTAssertEqual(app.sheets.count, 0)
+      let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      image.name = "Statistics follows the clock without a refresh"
+      image.lifetime = .keepAlways
+      add(image)
+    }
+
     @MainActor func testNativeStatisticsCoverageStaysInline() {
 
       let app = launch(["--statistics-fixture"])

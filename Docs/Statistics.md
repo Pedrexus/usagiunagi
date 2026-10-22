@@ -61,3 +61,12 @@ Pending reviews are not counted as confirmed SRS progress. The live snapshot inc
 outbox subject IDs so curriculum charts show “Awaiting sync” separately from “Not started.” These
 IDs are rebuilt from SwiftData on reads/refresh and are not part of the saved snapshot payload.
 The SRS chart reports how many subjects are withheld until their reviews synchronize.
+
+## Local clock updates
+
+While Statistics is visible, SwiftUI's minute timeline recomputes the existing metrics using
+its current date. Due counts move from future to overdue and seven-day buckets advance at
+local midnight even without a download. This changes derived presentation only: it does not
+fetch, submit reviews, rewrite the cached snapshot or advance the displayed snapshot timestamp.
+Assignment/status changes still come from the normal WaniKani synchronization path. Counts
+can lag the exact due instant by up to one minute while the screen remains open.

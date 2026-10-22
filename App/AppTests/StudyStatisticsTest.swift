@@ -68,6 +68,25 @@ struct StudyStatisticsTest {
     #expect(result.focus.isEmpty)
   }
 
+  @Test func testScheduleAdvancesAcrossLocalMidnightWithoutNewAssignments() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(identifier: "Asia/Tokyo"))
+    let before = try #require(
+      calendar.date(from: DateComponents(year: 2026, month: 10, day: 22, hour: 23, minute: 59)))
+    let after = before.addingTimeInterval(120)
+    let items = [assignment(1, due: before.addingTimeInterval(60))]
+    let metrics = [before, after].map { date in
+      StudyMetrics(
+        assignments: items, statistics: [], levels: [], currentLevel: 1,
+        onVacation: false, now: date, calendar: calendar)
+    }
+    #expect(metrics[0].dueNow == 0 && metrics[0].scheduledDays[1].count == 1)
+    #expect(metrics[1].dueNow == 1 && metrics[1].scheduledDays.allSatisfy { $0.count == 0 })
+    #expect(metrics[0].scheduledDays[0].date == calendar.startOfDay(for: before))
+    #expect(metrics[1].scheduledDays[0].date == calendar.startOfDay(for: after))
+    #expect(metrics[1].scheduledDays.count == 7)
+  }
+
   @Test func testAccuracyWeightsAnswersAndExcludesHiddenItems() throws {
     let result = calculate(statistics: [
       statistic(1, correct: 9, incorrect: 1),

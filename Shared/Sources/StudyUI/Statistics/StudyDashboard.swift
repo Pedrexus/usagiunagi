@@ -19,11 +19,12 @@ public struct StudyDashboard: View {
   }
 
   public init(
-    snapshot: StudySnapshot, initialPage: Page = .progress, openSubject: @escaping (Int64) -> Void
+    snapshot: StudySnapshot, now: Date = .now, initialPage: Page = .progress,
+    openSubject: @escaping (Int64) -> Void
   ) {
     self._page = State(initialValue: initialPage)
     self.snapshot = snapshot
-    self.metrics = snapshot.metrics()
+    self.metrics = snapshot.metrics(now: now)
     self.library = Self.bundledLibrary
     self.openSubject = openSubject
   }

@@ -667,3 +667,51 @@ portrait/light/max-text assessment case, not all screens, landscape or VoiceOver
 The installed simulator `ui` command supports appearance, contrast and content size but
 not Reduce Motion. The existing Reduce Motion gate still requires the actual system
 preference and remains open; this run does not substitute a view override for that gate.
+
+### iPad adaptive Home and review follow-up
+
+At source `e689e9a5`, `AdaptiveLayout-iPad-20261022.log` and bundle
+`test-2d5b83dd4cdd4dc1bbcdab0352289399.xcresult` complete all three selected cases:
+maximum-text Home action/progress navigation, Home counts/charts/refresh across rotation,
+and landscape review with settings/draft preservation and completion. Three passes, no
+skips/failures; zero build warnings/errors. The maximum-text progress screenshot was
+inspected: wrapped explanatory text and current-level rows remain readable and navigable.
+
+The landscape screenshot was captured during keyboard return after Settings. Its test had
+checked keyboard/content visibility before opening Settings, but not again before capture.
+The current test adds the same existing visibility predicate after dismissal; no fixed delay
+or weaker assertion. That final capture/result is recorded separately below.
+
+### Statistics local-clock correction
+
+The dashboard previously cached `snapshot.metrics()` at initialization without a time-driven
+parent update. Leaving Stats open could retain an old due count, calendar-day buckets and
+elapsed pace scenario. The shared root now supplies `TimelineView(.everyMinute)` dates to
+the existing metrics initializer. No new service, persistence type or network request is added.
+The displayed saved-snapshot timestamp remains distinct from the live calculation date.
+
+A fixture assignment is due 30 seconds after launch. The initial native iPhone run verifies
+that it becomes due without leaving Stats and keeps Coverage inline:
+`test-bca71f1ebaf446efa66adfbac8dd9ac6.xcresult`, two passes, no skips/failures. The final
+version additionally asserts the displayed snapshot timestamp is unchanged.
+Native Mac statistics tests pass all 11 cases, including deterministic Tokyo-midnight
+rollover with identical assignments:
+`test-566afa8be19d45a6a0e18e0ba9e10453.xcresult`. Zero build warnings/errors.
+The preceding Mac invocation used the UI-only scheme and exited 70 before running tests;
+`Statistics-Clock-Mac-20261022.log` is retained and not counted as evidence. The corrected
+run uses the repository's `Tsurukame` hosted-unit-test scheme.
+
+Final clock UI test: `Statistics-Clock-iPhone-Final-20261022.log`,
+`test-c652b610221e4045baf4525a4bb4ca11.xcresult`, one pass with no skips/failures.
+The due count advances from 0 to 1 while the displayed snapshot timestamp and selected
+Progress section remain unchanged; no refresh gesture or re-navigation occurs.
+`Statistics-Clock-FinalLint-20261022.log` passes all 436 files with no rewrites/failures.
+This is fixture/time-driven acceptance, not new evidence of real-account forecast calibration.
+
+Final iPad landscape check: `Landscape-iPad-Settled-20261022.log`,
+`test-31840421a305480fa59e682386b051f8.xcresult`, one pass without skips/failures and zero
+build warnings/errors. The post-settings visibility predicate now confirms question, prompt,
+input, submit action, controls and keyboard geometry before capture. The exported
+`Landscape-iPad-Settled-Captures-20261022/2A9A2211-EF7F-45E0-A244-9F7E379706EB.png`
+was inspected: side-by-side subject/input remain above the fully presented keyboard,
+with the preserved draft and review tools visible. The fixture then completes normally.

@@ -535,3 +535,17 @@ max-text test passes on iPhone and iPad, and the Mac normal-size advanced-action
 Fresh phone/tablet captures were inspected; Mainboard lint passes. Reduce Motion, VoiceOver
 and broader accessibility/layout acceptance remain open. Exact failed/fixed receipts are in
 the current validation record.
+
+### 2026-10-22 — Live statistics clock and iPad adaptive checks
+
+Fixed stale due counts/calendar buckets when Statistics remains open by supplying SwiftUI's
+minute timeline date to the existing metrics calculation. Saved snapshots and network behavior
+are unchanged. A live iPhone fixture verifies 0→1 due with the original snapshot timestamp;
+11 Mac statistics tests pass including local-midnight rollover. Mainboard lint passes.
+
+Three iPad adaptive checks pass: maximum-text Home navigation, Home progress/refresh through
+rotation, and landscape review/draft/settings/completion. Screenshot inspection led to a
+stronger post-settings keyboard-visibility assertion; that final landscape check also passes
+and its stable capture was inspected. No extra delay or platform branch was introduced.
+These are scoped local checks; real-account calibration, VoiceOver/Reduce Motion and physical
+services remain open. Exact source scopes and bundles are in the current validation receipt.

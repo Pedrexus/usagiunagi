@@ -1817,6 +1817,7 @@ final class ReviewFlowTests: XCTestCase {
     app.openReviewSettings()
     app.buttons["reviewSettings.done"].tap()
     XCTAssertEqual(field.value as? String, "one thing")
+    expectReviewContentVisible(in: app)
     let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     attachment.name = "SwiftUI landscape review"
     attachment.lifetime = .keepAlways
