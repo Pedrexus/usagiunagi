@@ -203,11 +203,11 @@
 		A29A00000000000000000012 /* WatchVoiceReview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVoiceReview.swift; sourceTree = "<group>"; };
 		27CEFF8942DA0914FAC73201 /* UsagiUnagi.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.icon; path = UsagiUnagi.icon; sourceTree = "<group>"; };
 		28F89B5E01943ECF66363257 /* LessonPreferenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LessonPreferenceTests.swift; sourceTree = "<group>"; };
-		2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacReviewModeTests.swift; path = AppStoreScreenshots/MacReviewModeTests.swift; sourceTree = "<group>"; };
+		2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacReviewModeTests.swift; path = MacReviewModeTests.swift; sourceTree = "<group>"; };
 		2B585E4CA4C6089831827072 /* AudioLibraryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioLibraryTests.swift; sourceTree = "<group>"; };
 		36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsagiUnagiApp.swift; sourceTree = "<group>"; };
 		3756F7F4B1B96F207317CD15 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacStatisticsTests.swift; path = AppStoreScreenshots/MacStatisticsTests.swift; sourceTree = "<group>"; };
+		3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacStatisticsTests.swift; path = MacStatisticsTests.swift; sourceTree = "<group>"; };
 		3F5FAA8DC32D15C9C3AEAA7C /* StudyAppAssembly.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StudyAppAssembly.swift; path = Application/StudyAppAssembly.swift; sourceTree = "<group>"; };
 		42EAD31B1612979F2E9C72DB /* NativeStudyFixture.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeStudyFixture.swift; sourceTree = "<group>"; };
 		46A1C95571AE14C6C96BA35E /* StudyStatisticsTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyStatisticsTest.swift; sourceTree = "<group>"; };
@@ -244,9 +244,9 @@
 		A28600000000000000000014 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A28700000000000000000002 /* WatchCompanionCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCompanionCacheTests.swift; sourceTree = "<group>"; };
 		A28800000000000000000002 /* FrozenNativeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrozenNativeStoreTests.swift; sourceTree = "<group>"; };
-		A28800000000000000000004 /* NativeStoreSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeStoreSnapshot.swift; path = ../Tests/PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreSnapshot.swift; sourceTree = "<group>"; };
-		A28800000000000000000006 /* native-v0-186c1cc3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-v0-186c1cc3"; path = "../Tests/PersistenceProbe/Fixtures/native-v0-186c1cc3"; sourceTree = "<group>"; };
-		B881D213C2680BC8C542CEEE /* MacLessonTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacLessonTests.swift; path = AppStoreScreenshots/MacLessonTests.swift; sourceTree = "<group>"; };
+		A28800000000000000000004 /* NativeStoreSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeStoreSnapshot.swift; path = ../PersistenceProbe/Sources/NativePersistenceProbe/NativeStoreSnapshot.swift; sourceTree = "<group>"; };
+		A28800000000000000000006 /* native-v0-186c1cc3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-v0-186c1cc3"; path = "../PersistenceProbe/Fixtures/native-v0-186c1cc3"; sourceTree = "<group>"; };
+		B881D213C2680BC8C542CEEE /* MacLessonTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacLessonTests.swift; path = MacLessonTests.swift; sourceTree = "<group>"; };
 		B8DA01B76750F7A065DA04D3 /* Release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Configuration/Release.xcconfig; sourceTree = "<group>"; };
 		BB2909A5217FAF8B00B1816F /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		C90846AC237F1C770068A272 /* Tsurukame Complication.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tsurukame Complication.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -320,15 +320,15 @@
 		FAFFBAF3F2398FDE652D5C28 /* CurriculumCoverageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CurriculumCoverageView.swift"; path = "Statistics/CurriculumCoverageView.swift"; sourceTree = SOURCE_ROOT; };
 		1343161A77285BB09951D955 /* StudyDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyDashboard.swift"; path = "Statistics/StudyDashboard.swift"; sourceTree = SOURCE_ROOT; };
 		B2B55D7CA9BD858AEEEA5362 /* UpcomingReviewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UpcomingReviewsView.swift"; path = "Statistics/UpcomingReviewsView.swift"; sourceTree = SOURCE_ROOT; };
-		65EB93267C765D6AF23EADC3 /* AutomaticSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AutomaticSyncTests.swift"; path = "AppTests/AutomaticSyncTests.swift"; sourceTree = SOURCE_ROOT; };
-		DB1D7FBA4D9B8355C4683C62 /* ICloudPreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ICloudPreferenceTests.swift"; path = "AppTests/ICloudPreferenceTests.swift"; sourceTree = SOURCE_ROOT; };
-		D78E966C2077960BA0DED2B8 /* NativeServiceOwnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeServiceOwnerTests.swift"; path = "AppTests/NativeServiceOwnerTests.swift"; sourceTree = SOURCE_ROOT; };
-		2C11276F8B700A9CFA0011CB /* StudyAppModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyAppModelTests.swift"; path = "AppTests/StudyAppModelTests.swift"; sourceTree = SOURCE_ROOT; };
-		3DBCA9576F4A868AD07C80D8 /* StudyCompanionDeliveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyCompanionDeliveryTests.swift"; path = "AppTests/StudyCompanionDeliveryTests.swift"; sourceTree = SOURCE_ROOT; };
-		C96A34F69D17EBCECDB8FC83 /* StudyEndpointSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyEndpointSettingsTests.swift"; path = "AppTests/StudyEndpointSettingsTests.swift"; sourceTree = SOURCE_ROOT; };
-		FAFD6C63097AC8D641A558F8 /* StudyMistakeSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyMistakeSyncTests.swift"; path = "AppTests/StudyMistakeSyncTests.swift"; sourceTree = SOURCE_ROOT; };
-		E964699590376F7A5B801E47 /* StudyNotificationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyNotificationsTests.swift"; path = "AppTests/StudyNotificationsTests.swift"; sourceTree = SOURCE_ROOT; };
-		ACBDB13F831A8C6817FF5AAE /* VoiceReviewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "VoiceReviewControllerTests.swift"; path = "AppTests/VoiceReviewControllerTests.swift"; sourceTree = SOURCE_ROOT; };
+		65EB93267C765D6AF23EADC3 /* AutomaticSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AutomaticSyncTests.swift"; path = "Tests/Unit/AutomaticSyncTests.swift"; sourceTree = SOURCE_ROOT; };
+		DB1D7FBA4D9B8355C4683C62 /* ICloudPreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ICloudPreferenceTests.swift"; path = "Tests/Unit/ICloudPreferenceTests.swift"; sourceTree = SOURCE_ROOT; };
+		D78E966C2077960BA0DED2B8 /* NativeServiceOwnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NativeServiceOwnerTests.swift"; path = "Tests/Unit/NativeServiceOwnerTests.swift"; sourceTree = SOURCE_ROOT; };
+		2C11276F8B700A9CFA0011CB /* StudyAppModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyAppModelTests.swift"; path = "Tests/Unit/StudyAppModelTests.swift"; sourceTree = SOURCE_ROOT; };
+		3DBCA9576F4A868AD07C80D8 /* StudyCompanionDeliveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyCompanionDeliveryTests.swift"; path = "Tests/Unit/StudyCompanionDeliveryTests.swift"; sourceTree = SOURCE_ROOT; };
+		C96A34F69D17EBCECDB8FC83 /* StudyEndpointSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyEndpointSettingsTests.swift"; path = "Tests/Unit/StudyEndpointSettingsTests.swift"; sourceTree = SOURCE_ROOT; };
+		FAFD6C63097AC8D641A558F8 /* StudyMistakeSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyMistakeSyncTests.swift"; path = "Tests/Unit/StudyMistakeSyncTests.swift"; sourceTree = SOURCE_ROOT; };
+		E964699590376F7A5B801E47 /* StudyNotificationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyNotificationsTests.swift"; path = "Tests/Unit/StudyNotificationsTests.swift"; sourceTree = SOURCE_ROOT; };
+		ACBDB13F831A8C6817FF5AAE /* VoiceReviewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "VoiceReviewControllerTests.swift"; path = "Tests/Unit/VoiceReviewControllerTests.swift"; sourceTree = SOURCE_ROOT; };
 		E42F89167F869D296CB7BFB5 /* DownloadFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DownloadFixture.swift"; path = "../Shared/Tests/StudyTestSupport/DownloadFixture.swift"; sourceTree = SOURCE_ROOT; };
 		A2D3D345055885D0DEEE0607 /* SampleSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SampleSnapshot.swift"; path = "../Shared/Tests/StudyTestSupport/SampleSnapshot.swift"; sourceTree = SOURCE_ROOT; };
 		7F17B6AA1400EB8B84EA9668 /* StudyTaskGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StudyTaskGate.swift"; path = "../Shared/Tests/StudyTestSupport/StudyTaskGate.swift"; sourceTree = SOURCE_ROOT; };
@@ -404,13 +404,12 @@
 				BA5DA0C0205ED5441A139A19 /* Application */,
 				9C113540BB5F82DA81F36478 /* Account */,
 				A27000000000000000000003 /* AppTests.xctest */,
-				6335B46323CF0C820071671E /* AppStoreScreenshots */,
+				A29100000000000000000001 /* Tests */,
 				6335B46223CF0C820071671E /* AppStoreScreenshots.xctest */,
 				C90846AD237F1C770068A272 /* Watch */,
 				63CAAB0F1FD7FAC500E09DA1 /* Frameworks */,
 				63EEFEC21FC45CB10070C05F /* Info.plist */,
 				41897D922372287F00F6A0B7 /* Resources */,
-				63E9A8DB21199C2600418CE1 /* AppTests */,
 				6319C9B520441DE200C31F87 /* Tsurukame.app */,
 				C90846AC237F1C770068A272 /* Tsurukame Complication.app */,
 				A28600000000000000000002 /* WatchWidgets.appex */,
@@ -419,17 +418,26 @@
 				36ADEC1AD2A5DAABF5C58CDC /* UsagiUnagiApp.swift */,
 				3F5FAA8DC32D15C9C3AEAA7C /* StudyAppAssembly.swift */,
 				A28000000000000000000002 /* StudyApplicationOwner.swift */,
-				B881D213C2680BC8C542CEEE /* MacLessonTests.swift */,
-				2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */,
 				55D8D2CA6860CA263F708E85 /* Debug.xcconfig */,
 				B8DA01B76750F7A065DA04D3 /* Release.xcconfig */,
-				3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
-		6335B46323CF0C820071671E /* AppStoreScreenshots */ = {
+		A29100000000000000000001 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				63E9A8DB21199C2600418CE1 /* Unit */,
+				6335B46323CF0C820071671E /* UI */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		6335B46323CF0C820071671E /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				B881D213C2680BC8C542CEEE /* MacLessonTests.swift */,
+				2A280ED06DD15EB4287A8E7B /* MacReviewModeTests.swift */,
+				3A5999E4806D2B43E21E23F2 /* MacStatisticsTests.swift */,
 				A27100000000000000000005 /* FontFixture.swift */,
 				A27B00000000000000000002 /* NotificationFixture.swift */,
 				A27200000000000000000002 /* AudioFixture.swift */,
@@ -438,7 +446,7 @@
 				42EAD31B1612979F2E9C72DB /* NativeStudyFixture.swift */,
 				A28100000000000000000002 /* NativeRootFlowTests.swift */,
 			);
-			path = AppStoreScreenshots;
+			path = UI;
 			sourceTree = "<group>";
 		};
 		63CAAB0F1FD7FAC500E09DA1 /* Frameworks */ = {
@@ -451,7 +459,7 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		63E9A8DB21199C2600418CE1 /* AppTests */ = {
+		63E9A8DB21199C2600418CE1 /* Unit */ = {
 			isa = PBXGroup;
 			children = (
 				65EB93267C765D6AF23EADC3 /* AutomaticSyncTests.swift */,
@@ -486,7 +494,7 @@
 				A28800000000000000000004 /* NativeStoreSnapshot.swift */,
 				A28800000000000000000006 /* native-v0-186c1cc3 */,
 			);
-			path = AppTests;
+			path = Unit;
 			sourceTree = "<group>";
 		};
 		A2860000000000000000000C /* WatchWidgets */ = {
@@ -1316,7 +1324,7 @@
 				"CODE_SIGN_STYLE[sdk=macosx*]" = Manual;
 				DEVELOPMENT_TEAM = 7B2GP77Y4A;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = "";
-				INFOPLIST_FILE = AppStoreScreenshots/Info.plist;
+				INFOPLIST_FILE = Tests/UI/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1348,7 +1356,7 @@
 				"CODE_SIGN_STYLE[sdk=macosx*]" = Manual;
 				DEVELOPMENT_TEAM = 7B2GP77Y4A;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = "";
-				INFOPLIST_FILE = AppStoreScreenshots/Info.plist;
+				INFOPLIST_FILE = Tests/UI/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

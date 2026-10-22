@@ -418,6 +418,8 @@ Whole-host retirement also covers non-writer test callers. The following are mig
 
 The table below retains its historical source locators. The October 21 single-target cleanup moves the six retained `AnswerCheckerTest`, `LegacyStudyImporterTest`, `RecentMistakesTest`, `ReviewSessionTest`, `StudyStatisticsTest` and `TKMKanaInputTest` files from `App/Tests` to `App/AppTests` without changing their bytes. Earlier receipts are not rewritten. `App/Tests/PersistenceProbe` remains at its canonical location.
 
+Current layout after the October 22 cleanup: retained hosted unit sources are in `App/Tests/Unit`, and interface tests/fixtures are in `App/Tests/UI`. Target names remain `AppTests` and `AppStoreScreenshots`, so existing test selectors continue to work. Historical paths below are not current file locations.
+
 | Current hosted test owner | Destination / behavior to preserve |
 | --- | --- |
 | `App/Tests/ReviewSessionTest.swift` | `StudySessionTests`, `NativeReviewTests` and `StudyStoreTests`: exactly-once durable completion, zero practice writes, incomplete catalog rejection, correction/reading credit, synonyms and edits during details |
@@ -646,7 +648,7 @@ Actions now has a separate failing whole-first-party `swift-parse` step before g
 
 | Source scope | Required enforcement |
 | --- | --- |
-| All kept first-party Swift, including `App/Tests`, `App/AppTests`, UI tests and `Shared/Tests` | A separate `analyze gate --rule SW-PARSE0001` verdict using the selected SDK, plus actual target/package compilation; missing, skipped or unparsable files fail |
+| All kept first-party Swift, including `App/Tests` and `Shared/Tests` | A separate `analyze gate --rule SW-PARSE0001` verdict using the selected SDK, plus actual target/package compilation; missing, skipped or unparsable files fail |
 | Shared production, application composition and newly migrated first-party files | swift-format, the four SwiftUI rules and complementary SwiftLint checks; widen the explicit path list after each accepted port |
 | Remaining legacy first-party code awaiting deletion | Parser/compiler gate immediately; migration findings stay visible with exact replacement obligations, rather than blanket ignoring the folder |
 | Generated, vendor and build outputs | Explicit reviewed exclusions and target/resource audit; regenerate or remove when their last consumer retires |

@@ -773,3 +773,13 @@ Mac hosted-test compilation `build-for-testing-6e8e1c51f0c04de9ba1899bd6a0782c2`
 zero warnings/errors; all eight changed Swift files pass Mainboard lint. Normal launch
 through the `run` task shows Home/sign-in (`/tmp/usagi-synthesis-normal.png`), with receipt
 `.build/Results/App-Synthesis-Run-20261022.log`. No exercise or UI automation was performed.
+
+### One app test folder
+
+The 36 files previously under `App/AppTests` and `App/AppStoreScreenshots` now live in
+`App/Tests/Unit` and `App/Tests/UI`. Every moved file matches its original Git blob exactly.
+Xcode shows one Tests group; target names/test selectors remain unchanged. Persistence
+probes and their frozen fixtures retain their original paths and identities. Both iPhone
+and Mac build-for-testing pass with zero warnings/errors (`build-for-testing-271c0cdde9b94ef9a78f7d99b5fc0771`
+and `build-for-testing-ef8f1966411c49869d0731c22c25d760`). The frozen native store and checksum
+manifest are present in both built test bundles. No UI tests or live exercises were run.

@@ -15,6 +15,7 @@ Automated validation has passed within the scopes recorded in [current tasks](TA
 | `App/Reviews/Voice` | Actor-owned Apple capture, on-device transcription, model availability and confirmed transcripts |
 | `App` feature folders | Shared SwiftUI navigation/screens, Charts, observable feature owners and small Apple service adapters |
 | `App/Application` | App composition, account model, startup, scene/background ownership and app preference sync |
+| `App/Tests` | Hosted unit tests in `Unit`, interface tests/fixtures in `UI`, and existing persistence probes |
 | `App/Configuration` | Platform entitlements and project configuration |
 | `Resources` | One shared Icon Composer document/SVG mark, display-name localizations, listing preparation and content generators |
 | `App/Watch`, `App/WatchHelper.swift` | SwiftUI voice reviews using the paired phone's grader, settings, WidgetKit status, native packet ownership and installed-face migration |
