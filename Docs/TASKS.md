@@ -525,3 +525,13 @@ summary capture was inspected for visible content and clipping in portrait/light
 text. No app change, extra delay or weaker assertion was introduced. Broader adaptive,
 accessibility and physical-device acceptance remain open. See the current validation receipt.
 Reconciled the top-level shared-test count and storage/Actions table with the latest evidence.
+
+### 2026-10-22 — Accessible review assessment presentation
+
+Fixed the iPad largest-text assessment popover that clipped actions and could not be scrolled
+by the acceptance test. Accessibility text sizes now use a native sheet; ordinary sizes keep
+the popover. Both share the same actions with no added platform checks. The unchanged
+max-text test passes on iPhone and iPad, and the Mac normal-size advanced-action flow passes.
+Fresh phone/tablet captures were inspected; Mainboard lint passes. Reduce Motion, VoiceOver
+and broader accessibility/layout acceptance remain open. Exact failed/fixed receipts are in
+the current validation record.

@@ -634,3 +634,36 @@ Two passes, no skips/failures; zero compiler/analyzer warnings/errors. This clos
 specific iPad endpoint/summary acceptance gap. No production change or test relaxation
 was necessary. Simulator restart recovery is evidence about this run, not proof of the
 precise cause or a guarantee against future simulator stalls.
+
+### Accessibility-sized review assessment on iPad and iPhone
+
+The unchanged largest-text assessment test exposed a real iPad presentation problem:
+the narrow popover displayed only about one and a half actions, while XCTest could not
+scroll the assessment container. The retained failed bundle is
+`test-588c232afc1e43d79211f56aedfd280b.xcresult`; its opening capture is
+`Assessment-LargestText-iPad-Captures-20261022/174C5F2C-851F-412D-823C-B48C83322A40.png`.
+
+`ReviewScreen` now selects a native sheet at accessibility Dynamic Type sizes and retains
+the popover at standard sizes. One shared menu and action body supply both presentations.
+This uses a text-size signal, adds no OS/device branch, and changes no grading or action
+semantics. Accessibility-sized sheets request the large detent; the OS adapts them to a
+centered sheet on iPad. Existing actions and Cancel are preserved.
+
+The original reachability test passes unchanged on both simulators, asserting every action
+is hittable and on screen, then cancelling without changing the question or progress:
+
+- iPad: `test-6be7568d84bd46b2b1221bbc5e1186ba.xcresult`, one pass, no skips/failures.
+- iPhone: `test-3e71a250fa664c328262d7d552f2f386.xcresult`, one pass, no skips/failures.
+- Mac normal-size assessment/Cancel/synonym handoff: `test-adcc28295f9a4ed582db523462e73431.xcresult`,
+  one pass, no skips/failures.
+
+All three build summaries have zero warnings/errors/analyzer warnings. Mainboard lint passes
+436 files. Fixed final-action captures were visually inspected:
+`Assessment-LargestText-iPad-Sheet-Captures-20261022/9DC5DF37-A45A-4E31-8042-D98F43DE5C82.png`
+and `Assessment-LargestText-iPhone-Sheet-Captures-20261022/1E7E6E9A-E7AC-4688-8E22-716FEA1E755D.png`.
+Both show all six action labels, including Cancel, without truncation. This proves the
+portrait/light/max-text assessment case, not all screens, landscape or VoiceOver behavior.
+
+The installed simulator `ui` command supports appearance, contrast and content size but
+not Reduce Motion. The existing Reduce Motion gate still requires the actual system
+preference and remains open; this run does not substitute a view override for that gate.

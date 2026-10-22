@@ -534,37 +534,49 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
         .keyboardShortcut(.defaultAction)
       }
       if state.canOverride || state.isAnki {
-        Group {
-          if state.isAnki {
-            Menu("Assess answer", systemImage: "ellipsis") {
-              correctionActions
-            } primaryAction: {
-              action(.submit)
-            }
-            .keyboardShortcut(.defaultAction)
-          } else {
-            Menu("Correct answer", systemImage: "ellipsis") { correctionActions }
+        if typeSize.isAccessibilitySize {
+          correctionMenu.sheet(isPresented: $state.showAssessment) {
+            assessmentContent.presentationDetents([.large])
           }
-        }.accessibilityIdentifier("review.corrections")
-          .popover(isPresented: $state.showAssessment, arrowEdge: .bottom) {
-            ScrollView {
-              VStack(alignment: .leading, spacing: 12) {
-                Text("Check your answer").font(.headline)
-                Group {
-                  correctionActions
-                  Button("Cancel", role: .cancel) { state.showAssessment = false }
-                }.buttonStyle(.borderless)
-                  .fixedSize(horizontal: false, vertical: true)
-                  .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-              }.padding()
-            }.scrollBounceBehavior(.basedOnSize)
-              .frame(idealWidth: 320, idealHeight: 360)
-              .accessibilityElement(children: .contain)
-              .accessibilityIdentifier("review.assessment")
-              .presentationDetents([.medium, .large])
+        } else {
+          correctionMenu.popover(isPresented: $state.showAssessment, arrowEdge: .bottom) {
+            assessmentContent.presentationDetents([.medium, .large])
           }
+        }
       }
     }.buttonStyle(.bordered).controlSize(.large)
+  }
+
+  private var correctionMenu: some View {
+    Group {
+      if state.isAnki {
+        Menu("Assess answer", systemImage: "ellipsis") {
+          correctionActions
+        } primaryAction: {
+          action(.submit)
+        }
+        .keyboardShortcut(.defaultAction)
+      } else {
+        Menu("Correct answer", systemImage: "ellipsis") { correctionActions }
+      }
+    }.accessibilityIdentifier("review.corrections")
+  }
+
+  private var assessmentContent: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 12) {
+        Text("Check your answer").font(.headline)
+        Group {
+          correctionActions
+          Button("Cancel", role: .cancel) { state.showAssessment = false }
+        }.buttonStyle(.borderless)
+          .fixedSize(horizontal: false, vertical: true)
+          .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+      }.padding()
+    }.scrollBounceBehavior(.basedOnSize)
+      .frame(idealWidth: 320, idealHeight: 360)
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier("review.assessment")
   }
 
   private func performCorrection(_ value: ReviewScreenAction) {
