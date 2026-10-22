@@ -197,3 +197,20 @@ Exact bundle: `test-a04b76070ee143d99b9189f21acf7a58.xcresult`. All three reques
 method identifiers are present in its result tree. These isolated fixtures submit no
 real WaniKani exercises. They close the previously unexecuted iPhone scenarios, not
 physical keyboard/IME, full original-flow parity, or paired Watch acceptance.
+
+## Release verification after final cleanup
+
+Against `09321cfc` (the current runtime sources from `e7a606ca`), both
+`FinalCleanup-ReleaseIOS-20261022.log` and `FinalCleanup-ReleaseMac-20261022.log`
+exit zero with no compiler or analyzer warnings. These are unsigned iPhone simulator
+and native Mac Release products, not device-signed archives.
+
+`FinalCleanup-BundleIOS-20261022.log` and `FinalCleanup-BundleMac-20261022.log`
+both report `successful: true` and no violations. The declared policies verify localized
+English/Japanese/Simplified and Traditional Chinese display names, icon metadata,
+microphone usage descriptions, excluded test/store fixtures and retired library symbols.
+No policy was weakened and no signing, push, hosted CI or distribution was performed.
+
+The preceding three-journey iPhone receipt includes `missing_selectors: []`: the local
+Mainboard `fa467e0` safeguard is active. Compact console output omits the empty list;
+the durable JSON contains it. No environment replacement was needed.
