@@ -783,3 +783,13 @@ probes and their frozen fixtures retain their original paths and identities. Bot
 and Mac build-for-testing pass with zero warnings/errors (`build-for-testing-271c0cdde9b94ef9a78f7d99b5fc0771`
 and `build-for-testing-ef8f1966411c49869d0731c22c25d760`). The frozen native store and checksum
 manifest are present in both built test bundles. No UI tests or live exercises were run.
+
+### Real speech pipeline after consolidation
+
+The actual capture actor and voice controller recognize generated English/Japanese AAC
+recordings on Mac with app-equivalent concurrency settings. English returns `One thing`;
+Japanese raw `1つ` resolves to `ひとつ` using existing dictionary disambiguation of Apple's
+`ひつ`/`ひとつ` alternatives, without an answer key supplied to the controller. Both bounded
+diagnostics pass. [Evidence and limits](Validation/2026-10-22-minimal-working-version.md#production-file-recognition-path-after-app-consolidation).
+This checks the production file-transcription path used by the Watch host; physical
+Watch/phone transport and live bilingual microphone acceptance remain open.

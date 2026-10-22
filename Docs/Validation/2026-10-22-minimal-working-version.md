@@ -65,6 +65,39 @@ and was discarded. Passing lesson picker/teaching/draft screenshots are retained
 - Hosted GitHub Actions depends on the separately tracked unpublished Mainboard revision;
   this checkpoint does not publish dependencies, push a branch or create a PR.
 
+## Production file-recognition path after app consolidation
+
+At `e8461578`, two bounded Mac diagnostics compiled the actual `AppleVoiceCapture` and
+`VoiceCapture` sources, then included the actual `VoiceReviewController` and the current
+compiled StudyCore object. Compilation used Swift 6, default MainActor isolation and the
+same upcoming concurrency features as the app. Both diagnostics exited successfully.
+
+System Samantha and Kyoko voices generated short local clips without microphone input or
+speaker playback; `afconvert` encoded AAC in M4A, the format used for Watch recordings.
+The clips were 0.850 seconds (English) and 0.708 seconds (Japanese). `downloadModel` was
+false. No WaniKani account, expected-answer list, review store or upload path was supplied
+to the controller. The harness checked its expected synthetic phrase only after obtaining
+the controller's answer.
+
+| Language | Actual controller transcript | Returned answer | Recognizer kana alternatives |
+| --- | --- | --- | --- |
+| en-US | `One thing` | `One thing` | None |
+| ja-JP | `1つ` | `ひとつ` | `ひつ`, `ひとつ` |
+
+The actual controller joins Japanese speech segments without spaces and resolves competing
+kana alternatives using the existing dictionary reading. The lower-level diagnostic's
+generic segment display inserted a space (`1 つ`); that display is not the app transcript.
+The result confirms file decoding, result delivery, finalization, kana interpretation and
+capture cleanup in current production code. It does not establish live microphone quality,
+iOS execution, physical Watch recording/transport, interruption behavior, human accuracy,
+or uninterrupted end-to-end review timing. No live exercise was performed.
+
+Evidence: `.build/Results/ProductionVoice.6et21c` contains both temporary harnesses, generated
+AAC clips, result logs and checksums of those artifacts plus the three app source files and
+linked StudyCore object. Compilation logs are `Production-Voice-Compile-20261022.log` and
+`Production-Voice-Controller-Compile-20261022.log` under `.build/Results`. No new diagnostic
+mode, application dependency or production code was added.
+
 ## Statistics rendered follow-up
 
 After `2ed3b434`, a current Mac screenshot exposed a blank future-schedule chart when all
