@@ -85,6 +85,10 @@ struct VoiceAnswerControls: View {
   @State private var audioLease: UUID?
   @State private var submission: Task<Void, Never>?
   @State private var sending = false
+  @State private var captureBusy = false
+  @State private var captureCleanup: Task<Void, Never>?
+  @State private var starting: Task<Void, Never>?
+  @State private var startRequested = false
 
   init(
     model: VoiceReviewController, automaticallySubmit: Bool, startDelay: Duration = .zero,
@@ -99,7 +103,16 @@ struct VoiceAnswerControls: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      captureControls
+      if captureBusy {
+        Label(
+          "The microphone is busy. Finish the other voice session, then try again.",
+          systemImage: "mic.slash"
+        )
+        .accessibilityIdentifier("voice.busy")
+        Button("Try again", systemImage: "arrow.counterclockwise") { start() }
+      } else {
+        captureControls
+      }
       Button("Use keyboard", systemImage: "keyboard") { cancel() }
         .accessibilityIdentifier("voice.keyboard")
     }
@@ -107,7 +120,7 @@ struct VoiceAnswerControls: View {
     .disabled(sending)
     .task {
       do { try await Task.sleep(for: startDelay) } catch { return }
-      guard scenePhase == .active else { return }
+      guard scenePhase == .active, model.phase == .idle, !startRequested else { return }
       start()
     }
     .onChange(of: scenePhase) { _, phase in
@@ -118,6 +131,10 @@ struct VoiceAnswerControls: View {
     }
     .onChange(of: model.phase) { _, phase in
       if phase != .reviewing { transcriptFocused = false }
+      switch phase {
+      case .failed, .needsModel: releaseCapture(keepingMessage: true)
+      default: break
+      }
       guard automaticallySubmit else { return }
       if phase == .reviewing {
         if model.answer(for: model.question, usingSingleKanaInterpretation: true) != nil {
@@ -202,18 +219,41 @@ struct VoiceAnswerControls: View {
   private func start(downloadModel: Bool = false) {
     submission?.cancel()
     submission = nil
-    if audioLease == nil { audioLease = audio.beginVoiceInput() }
-    model.start(downloadModel: downloadModel)
+    starting?.cancel()
+    startRequested = true
+    let cleanup = captureCleanup
+    starting = Task {
+      await cleanup?.value
+      guard !Task.isCancelled, scenePhase == .active else { return }
+      if audioLease == nil {
+        guard let lease = audio.beginVoiceInput() else {
+          captureBusy = true
+          return
+        }
+        audioLease = lease
+      }
+      captureBusy = false
+      model.start(downloadModel: downloadModel)
+    }
   }
 
-  @discardableResult private func releaseCapture() -> Task<Void, Never> {
-    let cleanup = model.cancel()
+  @discardableResult private func releaseCapture(keepingMessage: Bool = false)
+    -> Task<Void, Never>
+  {
+    starting?.cancel()
+    starting = nil
+    startRequested = true
+    let cleanup = keepingMessage ? model.releaseCapture() : model.cancel()
     let lease = audioLease
     audioLease = nil
-    return Task {
+    let previous = captureCleanup
+    let release = Task {
+      await previous?.value
       await cleanup?.value
       if let lease { audio.endVoiceInput(lease) }
     }
+    captureCleanup = release
+    return release
   }
 
   private func checkAnswer() {

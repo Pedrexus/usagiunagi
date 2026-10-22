@@ -130,6 +130,7 @@
       if arguments.contains("--sample-review-fixture") {
         preferences.sessionOptions.skipKanjiReadings = true
       }
+      if arguments.contains("--voice-hint-fixture") { preferences.exactMatch = true }
       defaults.set(try? JSONEncoder().encode(preferences), forKey: "native.reviewPreferences")
       if arguments.contains("--catalog-fixture") {
         let lessons = DefaultsStudyLessonPreferences(defaults: defaults)
@@ -165,7 +166,9 @@
       let voice = FixtureVoiceCapture(
         audio: audio, continuous: arguments.contains("--continuous-voice-fixture"),
         mistake: arguments.contains("--voice-mistake-fixture"),
-        repeatReading: arguments.contains("--voice-repeat-fixture"))
+        repeatReading: arguments.contains("--voice-repeat-fixture"),
+        hint: arguments.contains("--voice-hint-fixture"),
+        slowCleanup: arguments.contains("--voice-cleanup-fixture"))
       return StudyAppAssembly(
         model: model,
         fonts: StudyFontLibrary(
@@ -218,16 +221,23 @@
       private let continuous: Bool
       private let mistake: Bool
       private let repeatReading: Bool
+      private let hint: Bool
+      private let slowCleanup: Bool
       private var meanings = 0
       private var readings = 0
       private var callback: VoiceCaptureReport?
       private var recordingID: UUID?
       private var transcript = ""
-      init(audio: StudyAudioLibrary, continuous: Bool, mistake: Bool, repeatReading: Bool) {
+      init(
+        audio: StudyAudioLibrary, continuous: Bool, mistake: Bool, repeatReading: Bool, hint: Bool,
+        slowCleanup: Bool
+      ) {
         self.audio = audio
         self.continuous = continuous
         self.mistake = mistake
         self.repeatReading = repeatReading
+        self.hint = hint
+        self.slowCleanup = slowCleanup
       }
       func start(
         id: UUID, locale: Locale, downloadModel _: Bool,
@@ -244,11 +254,15 @@
           transcript = "一"
         } else {
           meanings += 1
-          transcript = mistake && meanings == 1 ? "two" : "one"
+          transcript =
+            meanings == 1 && slowCleanup
+            ? ""
+            : meanings == 1 && hint ? "singl" : mistake && meanings == 1 ? "two" : "one"
         }
         await report(.listening)
         if continuous {
           await report(.segment(text: transcript, start: 0, end: 1, isFinal: false))
+          if transcript.isEmpty { await report(.finished) }
         }
       }
       func finish(id: UUID) async {
@@ -261,7 +275,11 @@
         guard recordingID == id else { return }
         await callback?(.finished)
       }
-      func cancel(id: UUID) {
+      func cancel(id: UUID) async {
+        guard recordingID == id else { return }
+        if slowCleanup && meanings == 1 {
+          try? await Task.sleep(for: .seconds(4))
+        }
         guard recordingID == id else { return }
         callback = nil
         recordingID = nil

@@ -72,10 +72,33 @@ struct VoiceAnswerDraftTests {
     #expect(draft.readingSuggestions.isEmpty && draft.answer(for: question) == nil)
     draft.finish(recordingID: id, question: question)
     #expect(draft.readingSuggestions == ["ひつ", "ひとつ"])
+    #expect(draft.resolvedKanaReading == "ひとつ")
     #expect(draft.transcript == "1つ" && draft.answer(for: question) == "1つ")
     #expect(VoiceAnswerDraft.needsKanaCorrection(draft.transcript))
     draft.cancel()
     #expect(draft.readingSuggestions.isEmpty && draft.answer(for: question) == nil)
+    #expect(draft.resolvedKanaReading == nil)
+  }
+
+  @Test(arguments: [
+    ("生", [String](), nil), ("生", ["せい", "しょう"], nil),
+    ("生", ["セイ"], "セイ"), ("スーパー", ["すうぱあ"], "スーパー"),
+    ("20日", ["にじゅうにち", "はつか"], "はつか"),
+    ("1つ", ["ヒつ", "ヒトつ"], "ヒトつ"),
+  ])
+  func dictionaryConversionRequiresSpeechEvidence(
+    transcript: String, alternatives: [String], expected: String?
+  ) throws {
+    let question = try question(reading: true)
+    let id = UUID()
+    var draft = VoiceAnswerDraft(question: question, recordingID: id)
+    draft.receive(
+      text: transcript, start: 0, end: 1, isFinal: true, recordingID: id,
+      question: question, alternatives: alternatives)
+    #expect(draft.resolvedKanaReading == nil)
+    draft.finish(recordingID: id, question: question)
+    #expect(draft.resolvedKanaReading == expected)
+    #expect(draft.transcript == transcript)
   }
 
   @Test(arguments: [

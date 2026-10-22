@@ -72,6 +72,14 @@ struct AnswerGraderTests {
     #expect(AnswerGrader.convertKatakanaToHiragana("ービーーールー") == "ーびーーーるー")
   }
 
+  @Test(arguments: ["ビール", "びーる", "ビーる", "びール"])
+  func katakanaWordsAcceptBothScriptsAndMixedKana(_ answer: String) {
+    let subject = GradingSubject(
+      japanese: "ビール", kind: .vocabulary, meanings: ["Beer"], primaryReadings: ["ビール"])
+    #expect(
+      AnswerGrader.checkNormalizedAnswer(answer, subject: subject, taskType: .reading) == .precise)
+  }
+
   @Test func invalidScriptRangesUseNativeUTF16Offsets() {
     #expect(
       AnswerGrader.checkNormalizedAnswer("a😀漢字b", subject: kanji, taskType: .meaning)

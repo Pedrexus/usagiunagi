@@ -55,11 +55,15 @@ import StudyPersistence
         let note = try await store.materials(accountID: "upgrade").first!
         try await store.saveMaterial(
           note.material, accountID: "upgrade", expectedRevision: note.revision)
-        _ = try await store.uploadPending(accountID: "upgrade", token: "fixture", client: client)
+        do {
+          _ = try await store.uploadPending(accountID: "upgrade", token: "fixture", client: client)
+          preconditionFailure("Expected the synthetic material write to time out")
+        } catch let error as URLError { precondition(error.code == .timedOut) }
         print("PASS: wrote production catalog, assignment and pending note")
       } else {
         let account = try await store.accountState(accountID: "upgrade")
-        precondition(account?.profile.level == 4 && account?.catalogRefreshID != nil)
+        // A completed refresh consumes its marker; a note upload does not request another catalog.
+        precondition(account?.profile.level == 4 && account?.catalogRefreshID == nil)
         let subject = try await store.catalog(accountID: "upgrade").first!
         let assignment = try await store.assignments(accountID: "upgrade").first!
         let note = try await store.materials(accountID: "upgrade").first!

@@ -5,7 +5,7 @@ struct WatchReviewRequest: Codable, Sendable {
   enum Action: String, Codable { case start, answer, advance, refresh, pause }
   static let maximumAudioBytes = 48_000
   static let maximumMessageBytes = 56_000
-  var version = 1
+  var version = 2
   var id = UUID()
   let action: Action
   let runID: UUID
@@ -19,7 +19,7 @@ struct WatchReviewResponse: Codable, Sendable {
   }
   struct Prompt: Codable, Sendable {
     let characters: String
-    let imageURL: URL?
+    let imageData: Data?
     let kind: String
     let reading: Bool
   }

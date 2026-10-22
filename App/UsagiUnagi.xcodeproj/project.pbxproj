@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A29000000000000000000001 /* WatchVoiceReviewHostTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000002 /* WatchVoiceReviewHostTests.swift */; };
+		A29000000000000000000003 /* RadicalImageExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000004 /* RadicalImageExportTests.swift */; };
 		A29A00000000000000000001 /* WatchReviewMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000010 /* WatchReviewMessage.swift */; platformFilter = ios; };
 		A29A00000000000000000002 /* WatchReviewMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000010 /* WatchReviewMessage.swift */; };
 		A29A00000000000000000003 /* WatchReviewHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29A00000000000000000011 /* WatchReviewHost.swift */; platformFilter = ios; };
@@ -123,6 +125,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A29000000000000000000002 /* WatchVoiceReviewHostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVoiceReviewHostTests.swift; sourceTree = "<group>"; };
+		A29000000000000000000004 /* RadicalImageExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadicalImageExportTests.swift; sourceTree = "<group>"; };
 		A29A00000000000000000010 /* WatchReviewMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReviewMessage.swift; sourceTree = "<group>"; };
 		A29A00000000000000000011 /* WatchReviewHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReviewHost.swift; sourceTree = "<group>"; };
 		A29A00000000000000000012 /* WatchVoiceReview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVoiceReview.swift; sourceTree = "<group>"; };
@@ -305,6 +309,8 @@
 				A27700000000000000000002 /* StudyShellStateTests.swift */,
 				A27800000000000000000002 /* ReviewSessionOptionsTests.swift */,
 				A27900000000000000000002 /* NativeAppAssemblyTests.swift */,
+				A29000000000000000000002 /* WatchVoiceReviewHostTests.swift */,
+				A29000000000000000000004 /* RadicalImageExportTests.swift */,
 				A28700000000000000000002 /* WatchCompanionCacheTests.swift */,
 				A28800000000000000000002 /* FrozenNativeStoreTests.swift */,
 				A27000000000000000000002 /* NotificationPreferencesTests.swift */,
@@ -609,6 +615,8 @@
 				A27700000000000000000001 /* StudyShellStateTests.swift in Sources */,
 				A27800000000000000000001 /* ReviewSessionOptionsTests.swift in Sources */,
 				A27900000000000000000001 /* NativeAppAssemblyTests.swift in Sources */,
+				A29000000000000000000001 /* WatchVoiceReviewHostTests.swift in Sources */,
+				A29000000000000000000003 /* RadicalImageExportTests.swift in Sources */,
 				A28700000000000000000001 /* WatchCompanionCacheTests.swift in Sources */,
 				A28700000000000000000003 /* WatchCompanionCache.swift in Sources */,
 				A28800000000000000000001 /* FrozenNativeStoreTests.swift in Sources */,

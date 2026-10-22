@@ -474,7 +474,7 @@
         app.terminate()
         XCTAssertTrue(
           NSRunningApplication.runningApplications(
-            withBundleIdentifier: "com.pedrexus.tsurukame.mac"
+            withBundleIdentifier: "com.davidsansome.wanikani"
           )
           .isEmpty)
         app.launchArguments =
@@ -975,6 +975,95 @@
         app.buttons["review.stopAudio"].waitForExistence(timeout: 5), app.debugDescription)
     }
 
+    func testContinuousVoiceAnswersBothSidesWithoutFurtherTaps() {
+      let app = launch([
+        "--manual-review-fixture", "--continuous-voice-fixture", "--light-fixture",
+      ])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+      app.buttons["review.voice"].click()
+      let reading = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value CONTAINS %@", "Reading"),
+        object: app.staticTexts["review.prompt"])
+      XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 10), .completed)
+      XCTAssertFalse(app.buttons["review.submit"].exists)
+      let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      screenshot.name = "Continuous Mac voice reading inline"
+      screenshot.lifetime = .keepAlways
+      add(screenshot)
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
+      app.assertSummaryValue("100%", for: "accuracy")
+    }
+    func testContinuousVoiceShowsAMistakeAndContinuesWithoutTaps() {
+      let app = launch([
+        "--manual-review-fixture", "--continuous-voice-fixture", "--voice-mistake-fixture",
+        "--light-fixture",
+      ])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+      app.buttons["review.voice"].click()
+      let feedback = app.staticTexts["review.feedback"]
+      XCTAssertTrue(feedback.waitForExistence(timeout: 10))
+      XCTAssertTrue((feedback.value as? String ?? feedback.label).contains("Incorrect"))
+      XCTAssertTrue(
+        (feedback.value as? String ?? feedback.label).localizedCaseInsensitiveContains("one"))
+      XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Kanji Meaning")
+      XCTAssertFalse(app.buttons["voice.stop"].exists)
+      XCTAssertFalse(app.staticTexts["Review session saved"].exists)
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 20))
+      app.assertSummaryValue("0/1", for: "correct")
+    }
+    func testContinuousVoiceRepeatsUnclearKanaWithoutGradingOrTaps() {
+      let app = launch([
+        "--manual-review-fixture", "--continuous-voice-fixture", "--voice-repeat-fixture",
+        "--light-fixture",
+      ])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+      app.buttons["review.voice"].click()
+      XCTAssertTrue(
+        app.staticTexts["Use kana for the reading before submitting."].waitForExistence(timeout: 10)
+      )
+      XCTAssertFalse(app.buttons["voice.submit"].isEnabled)
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 15))
+      app.assertSummaryValue("100%", for: "accuracy")
+    }
+    func testContinuousVoiceRetriesAnExactMeaningHintWithoutGradingOrTaps() {
+      let app = launch([
+        "--manual-review-fixture", "--continuous-voice-fixture", "--voice-hint-fixture",
+        "--light-fixture",
+      ])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+      app.buttons["review.voice"].click()
+      let feedback = app.staticTexts["review.feedback"]
+      XCTAssertTrue(feedback.waitForExistence(timeout: 10))
+      XCTAssertEqual(feedback.value as? String ?? feedback.label, "Use the exact meaning.")
+      XCTAssertEqual(app.staticTexts["review.prompt"].value as? String, "Kanji Meaning")
+      XCTAssertFalse(app.staticTexts["Review session saved"].exists)
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 20))
+      app.assertSummaryValue("100%", for: "accuracy")
+    }
+
+    func testContinuousVoiceWaitsForSlowCaptureCleanupBeforeRetrying() {
+      let app = launch([
+        "--manual-review-fixture", "--continuous-voice-fixture", "--voice-cleanup-fixture",
+        "--light-fixture",
+      ])
+      defer { app.terminate() }
+      app.buttons["home.reviews"].click()
+      XCTAssertTrue(app.buttons["review.voice"].waitForExistence(timeout: 5))
+      app.buttons["review.voice"].click()
+      XCTAssertTrue(app.staticTexts["voice.error"].waitForExistence(timeout: 10))
+      XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 25))
+      app.assertSummaryValue("100%", for: "accuracy")
+      XCTAssertFalse(app.staticTexts["voice.busy"].exists)
+    }
+
     private func launchKatakana(_ arguments: [String] = []) -> XCUIApplication {
       let app = launch(["--light-fixture"] + arguments)
       app.openStudyTab("Practice")
@@ -1065,6 +1154,14 @@
   }
 
   extension XCUIApplication {
+    func assertSummaryValue(_ expected: String, for field: String) {
+      let value = descendants(matching: .any).matching(identifier: "summary." + field).firstMatch
+      let matches = XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value == %@ OR label CONTAINS %@", expected, expected),
+        object: value)
+      XCTAssertEqual(XCTWaiter.wait(for: [matches], timeout: 5), .completed, debugDescription)
+    }
+
     func openReviewTools() {
       let tools = descendants(matching: .any).matching(identifier: "review.tools").firstMatch
       XCTAssertTrue(tools.waitForExistence(timeout: 5), debugDescription)

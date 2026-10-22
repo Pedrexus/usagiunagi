@@ -84,7 +84,8 @@ public final class VoiceReviewController {
 
   @ObservationIgnored private var cleanup: Task<Void, Never>?
 
-  @discardableResult public func cancel() -> Task<Void, Never>? {
+  /// Releases hardware after failure or model setup without clearing the displayed message.
+  @discardableResult public func releaseCapture() -> Task<Void, Never>? {
     operation?.cancel()
     operation = nil
     timeout?.cancel()
@@ -101,6 +102,11 @@ public final class VoiceReviewController {
     }
     draft?.cancel()
     draft = nil
+    return cleanup
+  }
+
+  @discardableResult public func cancel() -> Task<Void, Never>? {
+    let cleanup = releaseCapture()
     text = ""
     liveText = ""
     shouldRepeat = false
@@ -113,8 +119,10 @@ public final class VoiceReviewController {
     for currentQuestion: StudyQuestion, usingSingleKanaInterpretation: Bool = false
   ) -> String? {
     guard phase == .reviewing, draft?.answer(for: currentQuestion) != nil else { return nil }
-    if usingSingleKanaInterpretation, needsKanaCorrection, readingSuggestions.count == 1 {
-      text = readingSuggestions[0]
+    if usingSingleKanaInterpretation, needsKanaCorrection,
+      let reading = draft?.resolvedKanaReading
+    {
+      text = reading
     }
     guard canSubmit else { return nil }
     return VoiceAnswerDraft.cleanTranscript(text)
@@ -157,11 +165,8 @@ public final class VoiceReviewController {
         text.isEmpty
         ? .failed("No speech was recognized. Try again or type your answer.") : .reviewing
     case .failed(let message):
-      timeout?.cancel()
-      endOfAnswer?.cancel()
-      let capture = capture
-      Task { await capture.cancel(id: id) }
       phase = .failed(message)
+      releaseCapture()
     }
   }
 

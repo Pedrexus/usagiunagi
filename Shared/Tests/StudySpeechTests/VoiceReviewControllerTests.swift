@@ -152,6 +152,41 @@ private actor FakeCapture: VoiceCapture {
     model.cancel()
   }
 
+  @Test func failedCaptureCleanupKeepsItsMessageAndWaitsForHardwareRelease() async throws {
+    let capture = FakeCapture(cancelDelay: .milliseconds(50))
+    let model = VoiceReviewController(question: try question(), capture: capture)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    let id = try #require(await capture.ids.first)
+    await capture.fail(id: id)
+    let cleanup = try #require(model.releaseCapture())
+    #expect(model.phase == .failed("Recording interrupted"))
+    await cleanup.value
+    #expect(await capture.cancelled == [id])
+    #expect(model.phase == .failed("Recording interrupted") && !model.shouldRepeat)
+    await capture.lateResult(id: id)
+    #expect(model.phase == .failed("Recording interrupted") && model.text.isEmpty)
+    model.start()
+    try await waitFor { model.phase == .listening }
+    await model.cancel()?.value
+  }
+
+  @Test func missingModelCleanupKeepsTheDownloadActionAndRejectsLateResults() async throws {
+    let capture = FakeCapture(needsModel: true, cancelDelay: .milliseconds(50))
+    let model = VoiceReviewController(question: try question(), capture: capture)
+    model.start()
+    try await waitFor { model.phase == .needsModel }
+    let id = try #require(await capture.ids.first)
+    await model.releaseCapture()?.value
+    #expect(model.phase == .needsModel && !model.canSubmit)
+    #expect(await capture.cancelled == [id])
+    await capture.lateResult(id: id)
+    #expect(model.phase == .needsModel && model.text.isEmpty)
+    model.start(downloadModel: true)
+    try await waitFor { model.phase == .listening }
+    await model.cancel()?.value
+  }
+
   @Test(arguments: [("一。", "いち"), ("1つ", "ひとつ")])
   func nonKanaTranscriptRequiresAnExplicitKanaCorrection(
     transcript: String, correction: String
@@ -261,22 +296,28 @@ private actor FakeCapture: VoiceCapture {
     await model.cancel()?.value
   }
 
-  @Test(arguments: [["いち"], ["いち", "ひと"]])
-  func continuousVoiceOnlySelectsOneUnambiguousRecognizerKanaAlternative(
-    alternatives: [String]
+  @Test(arguments: [
+    ("一", ["いち"], "いち"), ("1つ", ["ひつ", "ひとつ"], "ひとつ"),
+    ("生", ["せい", "しょう"], nil), ("一", [], nil), ("スーパー", [], "スーパー"),
+    ("ビーる", [], "ビーる"), ("1つ", ["ヒつ", "ヒトつ"], "ヒトつ"),
+  ])
+  func continuousVoicePreservesKanaScriptWithoutUsingTheAnswerKey(
+    transcript: String, alternatives: [String], expected: String?
   ) async throws {
     let question = try question(reading: true)
     let model = VoiceReviewController(
-      question: question, capture: FakeCapture(transcript: "一", alternatives: alternatives))
+      question: question, capture: FakeCapture(transcript: transcript, alternatives: alternatives))
     model.start()
     try await waitFor { model.phase == .listening }
     model.stop()
     try await waitFor { model.phase == .reviewing }
-    #expect(model.answer(for: question) == nil && model.text == "一")
+    #expect(model.text == transcript)
     #expect(model.answer(for: try self.question(), usingSingleKanaInterpretation: true) == nil)
-    #expect(model.text == "一")
+    #expect(model.text == transcript)
     let answer = model.answer(for: question, usingSingleKanaInterpretation: true)
-    #expect(answer == (alternatives.count == 1 ? "いち" : nil))
+    #expect(answer == expected)
+    #expect(model.text == (expected ?? transcript))
+    #expect(model.liveText == transcript)
     await model.cancel()?.value
   }
 

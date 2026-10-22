@@ -1,5 +1,10 @@
 # Watch voice reviews — October 22
 
+The later [all-device voice checkpoint](../Validation/2026-10-22-voice-devices.md) supersedes
+the test-deferred status below and adds protocol 2, native radical bitmaps, exclusive audio
+ownership, pause fences and speech-corroborated hiragana conversion. Earlier receipts retain
+their original source scope; signed paired capture remains unaccepted.
+
 ## Interaction and ownership
 
 The Watch opens a native SwiftUI voice-review screen; complication settings remain behind

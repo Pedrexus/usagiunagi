@@ -25,6 +25,7 @@ public struct NativeReviewView: View {
   @State private var error: String?
   @State private var summarySubjectID: Int64?
   @State private var readyImage: String?
+  @State private var voiceAttempt = UUID()
   @Environment(\.scenePhase) private var scenePhase
   @Environment(StudyLessonSettings.self) private var lessonSettings
   @Environment(StudyAudioLibrary.self) private var audio
@@ -125,7 +126,8 @@ public struct NativeReviewView: View {
                 VoiceAnswerControls(
                   model: VoiceReviewController(question: question, capture: voiceCapture()),
                   automaticallySubmit: true,
-                  startDelay: screen.success == nil ? .zero : .milliseconds(650),
+                  startDelay: !screen.feedback.isEmpty
+                    ? .seconds(3) : screen.success == nil ? .zero : .milliseconds(650),
                   submit: { text in
                     guard self.review?.question == question, screen.voiceEnabled, !busy else {
                       return
@@ -133,7 +135,7 @@ public struct NativeReviewView: View {
                     screen.answer = text
                     submit(convertRomaji: false)
                   }, cancel: { screen.voiceEnabled = false }
-                ).id(question)
+                ).id(question).id(voiceAttempt)
               }
             } else {
               StudyAnswerInput(
@@ -417,6 +419,7 @@ public struct NativeReviewView: View {
       }
       if result.state.question == question { screen.answer = result.normalized }
       screen.showAnswerHint(result.grade, exactMatch: exactMatch)
+      if screen.voiceEnabled { voiceAttempt = UUID() }
       if screen.voiceEnabled, result.grade == .incorrect, let subject = review.subject {
         let expected =
           question.kind == .reading

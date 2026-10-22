@@ -63,7 +63,10 @@ public struct VoiceAnswerDraft: Sendable {
       var choices: [String] = []
       for value in [segment.text] + segment.alternatives {
         let value = Self.cleanTranscript(value)
-        guard !value.isEmpty, !Self.needsKanaCorrection(value), !choices.contains(value) else {
+        guard !value.isEmpty, !Self.needsKanaCorrection(value),
+          let hiragana = KanaConverter.hiraganaReading(value),
+          !choices.contains(where: { KanaConverter.hiraganaReading($0) == hiragana })
+        else {
           continue
         }
         choices.append(value)
@@ -77,6 +80,19 @@ public struct VoiceAnswerDraft: Sendable {
         }
     }
     return suggestions.filter { $0 != Self.cleanTranscript(transcript) }
+  }
+
+  /// A dictionary reading may resolve competing speech alternatives, never invent an answer.
+  public var resolvedKanaReading: String? {
+    guard question.kind == .reading, isFinished, !isCancelled else { return nil }
+    let original = Self.cleanTranscript(transcript)
+    if !Self.needsKanaCorrection(original) { return original.isEmpty ? nil : original }
+    let suggestions = readingSuggestions
+    if suggestions.count == 1 { return suggestions[0] }
+    guard let inferred = KanaConverter.hiraganaReading(original) else {
+      return nil
+    }
+    return suggestions.first { KanaConverter.hiraganaReading($0) == inferred }
   }
 
   public func answer(for currentQuestion: StudyQuestion) -> String? {

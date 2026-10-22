@@ -80,20 +80,13 @@ enum WatchReviewError: LocalizedError {
           }
           self.radicalImage = nil
           if let prompt = next.prompt, prompt.characters.isEmpty {
-            guard let url = prompt.imageURL, url.scheme == "https" else {
-              throw WatchReviewError.message(
-                "This radical needs an image. Continue this review on your iPhone.")
-            }
-            self.status = "Loading radical…"
-            let (bytes, response) = try await URLSession.shared.data(
-              for: URLRequest(url: url, timeoutInterval: 10))
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200,
-              bytes.count <= 256_000,
+            guard let bytes = prompt.imageData, bytes.count <= 32_000,
               let source = CGImageSourceCreateWithData(bytes as CFData, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+              image.width <= 128, image.height <= 128
             else {
               throw WatchReviewError.message(
-                "The radical image couldn’t load. Resume or continue on your iPhone.")
+                "This radical needs an image. Continue this review on your iPhone.")
             }
             self.radicalImage = image
           }

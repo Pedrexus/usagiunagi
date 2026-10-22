@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import CoreFoundation
 import Foundation
 
 public enum KanaAlphabet: Sendable {
@@ -291,6 +292,84 @@ public enum KanaConverter {
       complete = false
     }
     return Conversion(text: text as String, convertedAllCharacters: complete)
+  }
+
+  /// A native dictionary reading of written Japanese, not verified phonetics from speech.
+  /// Ambiguous forms such as 生 or 一日 may receive a different reading than the speaker used.
+  /// Prefer recognizer-provided kana before this fallback; never infer the expected study answer.
+  public static func hiraganaReading(_ text: String) -> String? {
+    guard text.utf16.count <= 256 else { return nil }
+    let input = text.precomposedStringWithCompatibilityMapping
+      .components(separatedBy: .whitespacesAndNewlines).joined()
+    guard !input.isEmpty, input.utf16.count <= 256 else { return nil }
+    if let kana = readingKana(input) { return kana }
+    guard
+      input.unicodeScalars.allSatisfy({ scalar in
+        scalar.properties.isIdeographic || scalar == "々"
+          || (0x3041...0x30FA).contains(scalar.value) || scalar == "ー"
+          || (0x30...0x39).contains(scalar.value)
+      }), let expanded = readingNumerals(input)
+    else { return nil }
+    let locale = CFLocaleCreate(
+      kCFAllocatorDefault, CFLocaleIdentifier(rawValue: "ja_JP" as CFString))
+    guard
+      let tokenizer = CFStringTokenizerCreate(
+        kCFAllocatorDefault, expanded as CFString, CFRangeMake(0, (expanded as NSString).length),
+        CFOptionFlags(kCFStringTokenizerUnitWord | kCFStringTokenizerAttributeLatinTranscription),
+        locale)
+    else { return nil }
+    var reading = ""
+    var end = 0
+    while CFStringTokenizerAdvanceToNextToken(tokenizer).rawValue != 0 {
+      let range = CFStringTokenizerGetCurrentTokenRange(tokenizer)
+      guard range.location == end else { return nil }
+      let token = (expanded as NSString).substring(
+        with: NSRange(location: range.location, length: range.length))
+      let latin =
+        CFStringTokenizerCopyCurrentTokenAttribute(
+          tokenizer, CFOptionFlags(kCFStringTokenizerAttributeLatinTranscription)) as? String
+      let converted = latin.flatMap { $0.applyingTransform(.latinToHiragana, reverse: false) }
+      guard
+        let kana = readingKana(token)
+          ?? converted.flatMap(readingKana)
+      else { return nil }
+      reading += kana
+      guard reading.utf16.count <= 512 else { return nil }
+      end = range.location + range.length
+    }
+    return end == (expanded as NSString).length && !reading.isEmpty ? reading : nil
+  }
+
+  private static func readingKana(_ text: String) -> String? {
+    var kana = ""
+    for scalar in text.unicodeScalars {
+      let value =
+        (0x30A1...0x30F6).contains(scalar.value) || (0x30FD...0x30FE).contains(scalar.value)
+        ? scalar.value - 0x60 : scalar.value
+      guard
+        (0x3041...0x3096).contains(value) || (0x309D...0x309F).contains(value)
+          || value == 0x30FC,
+        let character = Unicode.Scalar(value)
+      else { return nil }
+      kana.unicodeScalars.append(character)
+    }
+    return kana.isEmpty ? nil : kana
+  }
+
+  private static func readingNumerals(_ input: String) -> String? {
+    let formatter = NumberFormatter()
+    formatter.locale = Locale(identifier: "ja_JP")
+    formatter.numberStyle = .spellOut
+    let expanded = NSMutableString(string: input)
+    for match in input.matches(of: /[0-9]+/).reversed() {
+      let digits = String(match.output)
+      guard digits.count <= 9, digits.count == 1 || digits.first != "0",
+        let value = Int64(digits), let words = formatter.string(from: NSNumber(value: value)),
+        words.unicodeScalars.allSatisfy({ $0.properties.isIdeographic })
+      else { return nil }
+      expanded.replaceCharacters(in: NSRange(match.range, in: input), with: words)
+    }
+    return expanded as String
   }
 
   /// Returns nil when the platform should process the edit unchanged.

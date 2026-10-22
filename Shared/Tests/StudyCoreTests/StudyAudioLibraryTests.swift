@@ -151,16 +151,20 @@ import Testing
       #expect(library.state == .idle)
     }
   }
-  @Test func voiceOwnershipBlocksOtherWindowsUntilEveryCaptureHasReleasedIt() async throws {
+  @Test func voiceOwnershipRejectsAnotherCaptureUntilTheCurrentOwnerReleasesIt() async throws {
     try await withLibrary { library, _, playback, _ in
       library.play(subject: subject())
-      let first = library.beginVoiceInput()
-      let second = library.beginVoiceInput()
+      let first = try #require(library.beginVoiceInput())
+      #expect(library.beginVoiceInput() == nil)
       #expect(library.state == .idle && library.voiceInputActive)
       let count = playback.urls.count
       library.play(subject: subject())
       #expect(playback.urls.count == count && library.error != nil)
+      library.endVoiceInput(UUID())
+      #expect(library.voiceInputActive)
       library.endVoiceInput(first)
+      #expect(!library.voiceInputActive && library.error == nil)
+      let second = try #require(library.beginVoiceInput())
       library.endVoiceInput(first)
       #expect(library.voiceInputActive)
       library.endVoiceInput(second)

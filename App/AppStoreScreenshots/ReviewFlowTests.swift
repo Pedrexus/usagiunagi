@@ -1352,16 +1352,24 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
     app.buttons["review.close"].tap()
     XCTAssertTrue(app.buttons["End review session"].waitForExistence(timeout: 5))
-    app.buttons["Cancel"].firstMatch.tap()
+    if app.buttons["Cancel"].exists {
+      app.buttons["Cancel"].firstMatch.tap()
+    } else {
+      let regions = app.otherElements.matching(identifier: "PopoverDismissRegion")
+      XCTAssertGreaterThan(regions.count, 0)
+      regions.element(boundBy: regions.count - 1).tap()
+    }
     XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["voice.stop"].exists)
     app.buttons["review.voice"].tap()
     XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
     app.buttons["voice.stop"].tap()
     XCTAssertTrue(app.buttons["voice.submit"].waitForExistence(timeout: 5))
-    let transcript = app.descendants(matching: .any).matching(identifier: "voice.transcript")
+    let transcript = app.staticTexts.matching(identifier: "voice.transcript")
       .firstMatch
+    XCTAssertTrue(transcript.waitForExistence(timeout: 5))
     XCTAssertEqual(transcript.value as? String, "一")
+    XCTAssertFalse(app.textFields["voice.transcript"].exists)
     XCTAssertLessThan(transcript.frame.height, 90, "Kana correction must stay compact inline")
     XCTAssertFalse(
       app.buttons["voice.submit"]
@@ -1378,6 +1386,7 @@ final class ReviewFlowTests: XCTestCase {
     field.typeText("ichi")
     app.buttons["review.submit"].tap()
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 10))
+    app.assertSummaryValue("100%", for: "accuracy")
   }
 
   @MainActor
@@ -1416,12 +1425,12 @@ final class ReviewFlowTests: XCTestCase {
     app.buttons["review.voice"].tap()
     XCTAssertTrue(app.staticTexts["review.feedback"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["review.feedback"].label.contains("Incorrect"))
-    XCTAssertTrue(app.staticTexts["review.feedback"].label.contains("one"))
+    XCTAssertTrue(app.staticTexts["review.feedback"].label.localizedCaseInsensitiveContains("one"))
     XCTAssertFalse(app.buttons["voice.stop"].exists)
     XCTAssertFalse(app.staticTexts["Review session saved"].exists)
     XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Meaning"))
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 20))
-    XCTAssertTrue(app.staticTexts["0/1"].exists, "The spoken mistake must keep its normal penalty")
+    app.assertSummaryValue("0/1", for: "correct")
   }
 
   @MainActor
@@ -1439,7 +1448,42 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertFalse(app.buttons["voice.submit"].isEnabled)
     // The second spoken attempt supplies a kana alternative; no correction button is tapped.
     XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 15))
-    XCTAssertTrue(app.staticTexts["100%"].exists, "Unclear recognition must not count as a mistake")
+    app.assertSummaryValue("100%", for: "accuracy")
+  }
+
+  @MainActor
+  func testContinuousVoiceRetriesAnExactMeaningHintWithoutGradingOrTaps() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--manual-review-fixture", "--continuous-voice-fixture", "--voice-hint-fixture",
+      "--light-fixture",
+    ])
+    defer { app.terminate() }
+    startReviews(in: app)
+    app.buttons["review.voice"].tap()
+    let feedback = app.staticTexts["review.feedback"]
+    XCTAssertTrue(feedback.waitForExistence(timeout: 10))
+    XCTAssertEqual(feedback.label, "Use the exact meaning.")
+    XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Meaning"))
+    XCTAssertFalse(app.staticTexts["Review session saved"].exists)
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 20))
+    app.assertSummaryValue("100%", for: "accuracy")
+  }
+
+  @MainActor
+  func testContinuousVoiceWaitsForSlowCaptureCleanupBeforeRetrying() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--manual-review-fixture", "--continuous-voice-fixture", "--voice-cleanup-fixture",
+      "--light-fixture",
+    ])
+    defer { app.terminate() }
+    startReviews(in: app)
+    app.buttons["review.voice"].tap()
+    XCTAssertTrue(app.staticTexts["voice.error"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review session saved"].waitForExistence(timeout: 25))
+    app.assertSummaryValue("100%", for: "accuracy")
+    XCTAssertFalse(app.staticTexts["voice.busy"].exists)
   }
 
   @MainActor private func launchNativeReview(extra: [String] = []) -> XCUIApplication {
@@ -1824,7 +1868,15 @@ extension ReviewFlowTests {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     field.tap()
     field.typeText("custom")
-    app.buttons["lesson.page.0"].tap()
+    let teachingPage = app.buttons["lesson.page.0"]
+    let pageAboveKeyboard = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        teachingPage.isHittable
+          && !app.keyboards.firstMatch.frame.intersects(teachingPage.frame)
+      }, object: nil)
+    XCTAssertEqual(
+      XCTWaiter.wait(for: [pageAboveKeyboard], timeout: 5), .completed, app.debugDescription)
+    teachingPage.tap()
     expectLessonPage("Lesson 1 of 1", in: app)
     app.buttons["lesson.quiz"].tap()
     XCTAssertTrue(field.waitForExistence(timeout: 5))
@@ -2565,6 +2617,14 @@ extension ReviewFlowTests {
 }
 
 @MainActor extension XCUIApplication {
+  func assertSummaryValue(_ expected: String, for field: String) {
+    let value = descendants(matching: .any).matching(identifier: "summary." + field).firstMatch
+    let matches = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@ OR label CONTAINS %@", expected, expected),
+      object: value)
+    XCTAssertEqual(XCTWaiter.wait(for: [matches], timeout: 5), .completed, debugDescription)
+  }
+
   func submitReviewAnswer() {
     let submit = buttons["review.submit"]
     let ready = XCTNSPredicateExpectation(

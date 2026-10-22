@@ -6,6 +6,26 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Completion audit — October 21–22
 
+**Voice device check and kana conversion:** exclusive microphone ownership,
+failure/retry cleanup, same-question hint restart, Watch pause/account/revision fences and
+native Watch radical images are repaired. Japanese conversion now normalizes kana/numerals
+and can resolve recognizer alternatives without consulting the answer key. Written-text-only
+guesses still repeat without grading. Recognized hiragana, katakana and mixed kana retain
+their spelling; normalization is internal. Focused shared tests (45 functions), seven hosted
+iPhone Watch/image checks, Mac image export and 17 distinct phone/iPad/Mac voice journeys
+pass. Real file-fed Mac recognition resolves `1つ` to `ひとつ` using speech alternatives.
+Physical paired capture remains open. [Scope and receipts](Validation/2026-10-22-voice-devices.md).
+
+**Today's minimal working version:** local core acceptance passes: 542 shared test functions,
+nine distinct iPhone core journeys, Mac cold routes, separate-process SwiftData reopening,
+and iPhone/Mac release-bundle policies. Lessons, typed/voice reviews, account connection,
+saved outbox, settings and inline statistics are covered with isolated fixture accounts.
+The lesson test now waits for keyboard geometry before tapping; production layout is unchanged.
+[Evidence and retained failed trials](Validation/2026-10-22-minimal-working-version.md).
+The remaining physical/signed/hosted-CI gates are tracked separately and do not become
+accepted merely because local fixture journeys pass. Earlier Mac automation failures below
+are historical: the current voice journeys execute successfully on this Mac.
+
 **Legacy removal (current):** the owner requested all obsolete legacy code be deleted. The old SQLite/protobuf database importer and dependency, preference/archive importer, JSON snapshot adoption, Haneke cache adoption, username-based iCloud mistake bridge, excluded UIKit/controller remnants and ClockKit migration bridge are removed. Startup uses the native store directly; WidgetKit and current SwiftUI study flows remain. Existing repository fixtures use native data. The active probe retains native reading/recovery comparisons; its checksum-pinned old writer remains excluded from current targets as historical evidence. Frozen V1 models and minimal Codable receipt declarations remain necessary to open existing native saves and are not alternate runtime paths. Old Tsurukame imports and installed ClockKit face migration are intentionally no longer supported. Validation and remaining acceptance are recorded in [the deletion checkpoint](Implementation/2026-10-22-legacy-removal.md).
 
 Current deletion validation: iPhone/Watch Debug and Mac Release builds pass; shared/hosted/probe

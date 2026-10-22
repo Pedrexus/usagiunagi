@@ -93,17 +93,19 @@ public enum OfflineAudioAction: Sendable {
   private let playback: any StudyAudioPlayback
   private var selectionError: String?
   private var lastIndex = 0
-  private var voiceLeases: Set<UUID> = []
-  public var voiceInputActive: Bool { !voiceLeases.isEmpty }
-  public func beginVoiceInput() -> UUID {
+  private var voiceLease: UUID?
+  public var voiceInputActive: Bool { voiceLease != nil }
+  public func beginVoiceInput() -> UUID? {
+    guard voiceLease == nil else { return nil }
     stop()
     let id = UUID()
-    voiceLeases.insert(id)
+    voiceLease = id
     return id
   }
   public func endVoiceInput(_ id: UUID) {
-    voiceLeases.remove(id)
-    if voiceLeases.isEmpty { selectionError = nil }
+    guard voiceLease == id else { return }
+    voiceLease = nil
+    selectionError = nil
   }
 
   public init(
