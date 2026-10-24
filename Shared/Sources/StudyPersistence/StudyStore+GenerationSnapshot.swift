@@ -56,9 +56,9 @@ extension StudyStore {
     guard entities.allSatisfy({ $0.relationships.isEmpty }) else {
       throw StudyStoreOpeningError.unsupportedLayout
     }
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
     func bytes(_ value: some Encodable) throws -> Data {
-      let encoder = JSONEncoder()
-      encoder.outputFormatting = .sortedKeys
       return try encoder.encode(value)
     }
     var records: [StudyGenerationSnapshot.Record] = []

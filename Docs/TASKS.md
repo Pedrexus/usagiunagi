@@ -110,6 +110,7 @@ is intentionally untracked and must not be deleted as disposable build output.
 
 | Commit / receipt | Scope |
 | --- | --- |
+| `Storage-Encoder-20261025.log`, `Storage-Encoder-Frozen-20261025.log` | Reuse one local sorted-key JSON encoder per synchronous generation snapshot instead of one per field. All seven opening test functions and the frozen base/WAL/review/publication process matrix pass; source/retained checks and the schema hash remain unchanged. Strict Swift formatting passes. No startup latency or physical-device performance claim. |
 | `Mainboard-Collector-20261025/{target,outcomes}.json` | OS-isolated regressions: CLI help with pytest blocked, and parameterized collection without execution; two passes/no skips. Default CLI discovery/toolchain and app Swift lint also pass. No dependencies installed. Mainboard source changes remain local/uncommitted. |
 | `bcd524f8`, `test-ff6d4179c2df47bf815e347d179b18f1` | Two hands-free iPhone flows with Increased Contrast; screenshot inspected; original setting and normal launch restored. |
 | `1e66d190`, `build-0b11948bb45340e29102735b697d08bc` | Explicit statistics chart accessibility values; scoped lint and warning-free iPhone build. Spoken VoiceOver unverified. |
