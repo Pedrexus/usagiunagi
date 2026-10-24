@@ -12,10 +12,15 @@ The current uncommitted Mainboard manifest expansion is not accepted as a CI-rea
 `mainboard app list` successfully discovers its suites with the locally installed tool, but
 that is only schema/discovery evidence. Two concrete gaps remain:
 
-- The new iPhone/iPad device declarations pass `CODE_SIGNING_ALLOWED=NO`. The existing normal
-  `run` task deliberately uses ad-hoc signing because unsigned normal startup previously
-  failed Keychain access with -34018. Generic app builds must preserve that requirement;
-  fixture-only test success cannot establish normal launch safety.
+- The simulator signing gap is now fixed in the pending manifest: the app defaults to
+  `CODE_SIGNING_ALLOWED=YES` and `CODE_SIGN_IDENTITY=-`. Generic
+  `mainboard app build usagiunagi --device iphone` passes with receipt
+  `build-7888749dea744ec8bdf9999c387a03d8`, and normal launch was visually checked at
+  `/tmp/usagi-mainboard-signed-20261024.png` (Home/sign-in, no Keychain/store error).
+  iPhone/iPad share `.build/Xcode/iOS`; Mainboard iterates selected devices sequentially.
+  Removed the obsolete PROTOC environment setting and unnecessary plugin-validation bypass.
+  Logs are `.build/Results/Mainboard-App-{Signed,Launch}-20261024.log`. This is local
+  build/launch acceptance, not signed distribution or the full suite matrix.
 - Local lint declarations now use `mainboard rules`, while Actions still pins the published
   `fa467e07a71b26876f48b2dd3c273b5e3f14c1fd`, whose CLI registers `analyze`. Actions also
   explicitly invokes `analyze`. Coordinate manifest/CLI/CI revision changes before publishing;
