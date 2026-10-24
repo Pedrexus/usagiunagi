@@ -8,6 +8,17 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Finalized catalog acceptance:** all four iPhone catalog journeys pass unchanged in
+`test-11cebd4105794afb839474deecd82d21`, with no failures, skips or runtime warnings:
+level paging/hidden answers/stage navigation; kana search and details; readiness/due-first
+ordering; exclusions updating on return from details. Log:
+`.build/Results/Catalog-Acceptance-20261024.log`. These replace interrupted broad-run log
+evidence for those four cases. The original 57 broad passes comprise 46 ReviewFlowTests and
+11 NativeRootFlowTests; the latter already have their finalized receipt recorded below.
+Do not rerun all 57 indiscriminately. Sidecar `slowest` lists contain at most ten cases and
+are not complete inventories of larger bundles. Continue reconciling remaining cases against
+finalized evidence before choosing the next bounded group. No production changes were needed.
+
 **Statistics follow-up:** Focus rows now use `StudyPalette.color(for:)`, correcting radicals
 that were incorrectly purple while retaining kanji/vocabulary colors and removing a duplicate
 branch. Mainboard lint passes. iPhone Coverage receipt
