@@ -158,7 +158,6 @@ public struct SubjectDetailsContent: View {
         .accessibilityIdentifier("subject.meanings")
         if let material, !material.meaningSynonyms.isEmpty {
           LabeledContent("Your synonyms", value: material.meaningSynonyms.joined(separator: ", "))
-            .foregroundStyle(StudyPalette.radical)
         }
       }
     }
