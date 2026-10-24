@@ -38,6 +38,20 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Store parent-path validation: startup previously accepted a symlinked `generations`
+or `preparations` parent despite validating individual images. Both disposable cases
+reproduced acceptance before the fix. Opening now validates those existing parents with
+`entries(in:)` before reading the selection or opening a store. Three production lines;
+no schema, frozen fixture, serializer or saved-data format changes. The full
+`StudyStoreOpeningTests` suite passes (eight functions, including parameterized cases),
+including exact redirected-target/selector byte preservation, interrupted preparation,
+cancellation, corruption rejection and reopen behavior. Final two-file lint passes.
+Receipts: `.build/Results/Store-Parent-Redirect-{Before,After,Final-Lint}-20261025.log`.
+The initial formatting failure and formatter output are retained. This is a macOS
+Swift Testing check using retained Mainboard `7dfce9f`; it does not prove adversarial
+concurrent filesystem replacement, iOS execution, mid-copy interruption or physical durability.
+Release/runtime receipts above predate this storage change.
+
 Voice background lifecycle: the new isolated iPhone regression starts listening,
 presses Home and reactivates the app, then verifies keyboard mode, the same subject
 and meaning question, zero completed items and no listening control. Explicit voice

@@ -111,6 +111,9 @@ private struct StudyStoreGeneration: Sendable {
     guard Set(names.map(\.lastPathComponent)).isSubset(of: allowed) else {
       throw StudyStoreOpeningError.unsupportedLayout
     }
+    for folder in names where ["generations", "preparations"].contains(folder.lastPathComponent) {
+      _ = try entries(in: folder)
+    }
     if manager.fileExists(atPath: selectionURL.path) {
       let selection = try loadSelection()
       if selection.phase == .selected {

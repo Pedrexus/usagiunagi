@@ -9,6 +9,32 @@ import Testing
 @testable import StudyPersistence
 
 struct StudyStoreOpeningTests {
+  @Test(arguments: ["generations", "preparations"])
+  func redirectedGenerationParentsAreRejectedWithoutChangingTheirTargets(name: String) async throws
+  {
+    let folder = temporaryFolder()
+    let external = temporaryFolder()
+    defer {
+      removeFolder(folder)
+      removeFolder(external)
+    }
+    do {
+      let opened = try await StudyStore.openApplication(in: folder)
+      _ = try await opened.generationSnapshot()
+    }
+    let parent = folder.appending(path: name)
+    try FileManager.default.moveItem(at: parent, to: external)
+    try FileManager.default.createSymbolicLink(at: parent, withDestinationURL: external)
+    let before = try files(in: external)
+    let selector = try Data(contentsOf: folder.appending(path: "store-selection.plist"))
+    do {
+      _ = try await StudyStore.openApplication(in: folder)
+      Issue.record("Opening accepted a redirected generation parent")
+    } catch StudyStoreOpeningError.unsupportedLayout {}
+    #expect(try files(in: external) == before)
+    #expect(try Data(contentsOf: folder.appending(path: "store-selection.plist")) == selector)
+  }
+
   @Test(arguments: [false, true])
   func firstApplicationOpeningAcceptsDirectoryURLForms(directoryHint: Bool) async throws {
     let folder = temporaryFolder()
