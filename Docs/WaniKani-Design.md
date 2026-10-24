@@ -156,3 +156,11 @@ Both final Mainboard Debug builds exit 0: iPhone 18 Pro/iOS 27 and native Mac/ma
 | `.build/Reports/Toolbar27Inventory.json` | `647cf64938c30fc46737f11ba6ec4424092efbddcf61c467d81b17c0455b0558` |
 
 This is source/compiler evidence. No tests/assertions are added or removed for a presentation-only change, and no new shared/app/Release or rendered pass is claimed; the API/storage receipts at `3153d1bc` retain their source scopes. Actual narrow/landscape/Dynamic Type overflow, one-tap settings at ordinary widths, menu keyboard/VoiceOver access, Next/Start quiz and root-toolbar restoration after Back remain required on-screen checks under the existing restriction. Storage, voice capture, statistics, signed/watch and hosted CI obligations remain in [TASKS](TASKS.md).
+
+### Quiz gesture boundary — October 25
+
+The shared lesson page gesture previously also ran over the quiz. An isolated iPhone
+regression reproduced a right swipe leaving Quiz for the final teaching page. Page
+swipes now change teaching pages only; explicit subject chips still allow returning
+to lesson content from the quiz. This protects quiz input gestures without adding a
+platform branch or changing the durable session, grading, or explicit navigation.

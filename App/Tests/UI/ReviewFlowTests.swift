@@ -2135,6 +2135,8 @@ extension ReviewFlowTests {
     app.buttons["lesson.quiz"].tap()
     expectLessonPage("Quiz", in: app)
     XCTAssertEqual(app.buttons["lesson.quiz"].value as? String, "Selected")
+    app.swipeRight()
+    expectLessonPage("Quiz", in: app)
     app.buttons["lesson.page.2"].tap()
     expectLessonPage("Lesson 3 of 3", in: app)
     app.buttons["lesson.back"].tap()

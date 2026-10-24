@@ -38,6 +38,16 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Quiz gesture fix: a right swipe over an active lesson quiz previously changed the
+lesson page. The added regression fails before the fix (`test-479b0a65de7a4344a5cde46854d1bd3e`).
+The shared page gesture now requires a teaching-page index. Afterward both the navigation
+regression and existing selection/unfinished-draft journey pass on iPhone 18 Pro / iOS 27
+(`test-8666ef7123c54d1ca26b7a97b8cd2382`, two tests, zero failures/skips/runtime warnings).
+Teaching swipes and explicit return from Quiz remain available; the durable session is
+unchanged. Two-file Mainboard lint passes. Receipts: `.build/Results/Lesson-Quiz-Swipe-`
+`{Before,After,Lint}-20261025.log`. Other-device gesture execution remains unverified;
+the Release products below predate this small guard change.
+
 Dark lesson accessibility: the expanded audit reproduced contrast failures on the
 toolbar action and bottom Quiz control. The toolbar now uses adaptive system blue
 with prominent glass; Quiz uses an opaque native prominent button with primary fill

@@ -38,7 +38,9 @@ public struct LessonFlowView<Page: View>: View {
           page(index).id(index).frame(maxWidth: .infinity, maxHeight: .infinity)
             .simultaneousGesture(
               DragGesture(minimumDistance: 60).onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height) * 2 else {
+                guard index < subjects.count,
+                  abs(value.translation.width) > abs(value.translation.height) * 2
+                else {
                   return
                 }
                 index = min(subjects.count, max(0, index + (value.translation.width < 0 ? 1 : -1)))
