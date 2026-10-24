@@ -419,3 +419,26 @@ scopes without a relevant source change or a newly identified risk.
   were needed after 0f6213a1.
 - This closes the local repository retry/outbox regression scope. It does not prove
   microphone recognition, Watch transport or physical-device delivery.
+
+### October 25 current-source Release reconciliation at 6da3570a
+
+- Both Release builds now include the alternate-reading kana fix: iOS simulator
+  build-6404d41ed5084a7abccd1eb1ddb96f3d and native Mac
+  build-ee89e3a3bad94084aaaaae9ea1b5dae0 succeed. Logs are
+  iOS-Kana-Final-20261025.log and Mac-Kana-Final-20261025.log. Both retain the raw
+  App Intents metadata-extraction warning; these are not warning-free builds.
+- Fresh product audits pass with no violations: ios-Kana-Final-Bundle-20261025.log
+  covers 37 files/three binaries including Watch; mac-Kana-Final-Bundle-20261025.log
+  covers 17 files/one binary. Localized names/icon metadata and forbidden legacy/test
+  resources pass. No signed installation or distribution claim follows.
+- Kana-Final-Lint-20261025.log: 448 files, zero rewrites, no failures through the
+  configured parser, UI rules, formatter and SwiftLint checks. This is enforcement;
+  informational migration/complexity findings remain visible and reviewed separately.
+- Corrected active migration-spec prose that still referred to a catalog importer
+  and the former StudyUI adapter path. Historical evidence remains intact. Native
+  SwiftData transactions and App/Reviews/StudyAnswerInput.swift are the current
+  implementations; retired importers are not active exceptions.
+- Current shared grading/session receipts are recorded above. Latest rendered iPhone
+  UI receipts predate only the grader change, not the catalog/chart layout changes.
+  VoiceOver, broader Mac/iPad acceptance, precise storage interruption boundaries,
+  Mainboard integration and owner-deferred physical/signed checks remain incomplete.
