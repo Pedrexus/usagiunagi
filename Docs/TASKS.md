@@ -39,7 +39,7 @@ all platform, physical-device or release acceptance is complete.
 
 1. Integrate the verified local Mainboard collector fix into its pending tool work.
    The dispatcher syntax failure is now repaired in the current checkout: normal
-   app build and simulator launch pass. Triage the current 238 rule signals without
+   app build and simulator launch pass. Triage the current 239 rule signals without
    deleting required bridges or frozen evidence. Preserve unrelated in-progress
    changes and do not publish newer tooling without approval.
 2. Finish supported local storage failure boundaries using marked disposable stores
@@ -155,3 +155,31 @@ goal because builds pass or because all currently runnable synthetic checks pass
   shows the full heading and quiz controls without the earlier capture's black
   band/cropping. Heading height increases from 57.5 to 86 points. These are scoped
   simulator fixture checks, not VoiceOver, physical-device or complete UI acceptance.
+
+### October 25 subject-details simplification and iPad review checks
+
+- SubjectDetailsContent now uses Swift's synthesized memberwise initializer within
+  the app module. Removed the unused custom sentence-rendering callback; all callers
+  already use the retained vocabulary highlighter. Net reduction: 27 source lines.
+  Answer-visibility policy remains computed from the same question set. Catalog and
+  material-editor constructors still initialize/clamp state and are not equivalent
+  boilerplate. No schema, sync or grading changes.
+- `test-ae14eb7ea21d49c1b4c6cff87c84e3e3`: two iPhone journeys pass on the simplified
+  source, checking hidden unanswered reading/editor fields, explicit full-detail
+  reveal, translation reveal and dark lesson mnemonics. Zero structured warnings,
+  runtime warnings or skips. Exported sentence screenshot inspected; highlighting
+  and translation remain present. Strict Swift formatting passes.
+- `test-21c16f568cf5493ba0888e1862ed6352` (before that source edit): iPad Quick Settings
+  preserves the draft, rejects a typo with exact match enabled, then accepts it when
+  disabled and completes the kana reading. One pass, one failure: landscape viewport
+  acceptance requires a visible software keyboard, but its recorded frame is
+  `(0, 834, 1210, 0)`. Screenshot shows visible controls with the keyboard hidden.
+  Do not weaken the assertion or claim above-keyboard acceptance; rerun after the
+  simulator keyboard configuration is corrected. No physical checks are required
+  to close this simulator-specific gap.
+- Current Mainboard root rules check completes: 239 signals across 14 rules,
+  including the unchanged 77 Swift migration signals. Raw reports are
+  `Subject-Details-Rules-Final-20261025.log` and the initial unsupported single-file
+  invocation in `Subject-Details-Rules-20261025.log` (NotADirectoryError).
+  A rule signal is not itself a demonstrated defect; required boundaries and
+  independent test expectations remain intact. Normal iPhone launch restored.

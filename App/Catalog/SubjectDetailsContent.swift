@@ -31,52 +31,26 @@ struct MnemonicText: View {
 }
 
 /// Saved values and actions are supplied by each host; this view never owns a storage writer.
-public struct SubjectDetailsContent: View {
-  private let subject: CatalogSubject
-  private let material: StudyMaterial?
-  private let assignment: CatalogAssignment?
+struct SubjectDetailsContent: View {
+  let subject: CatalogSubject
+  let material: StudyMaterial?
+  let assignment: CatalogAssignment?
   private static let artwork = try? StudyArtwork.bundled()
-  private let components: [CatalogSubject]
-  private let combinations: [CatalogSubject]
-  private let similar: [CatalogSubject]
-  private let preferences: SubjectDetailsPreferences
-  private let visibility: SubjectDetailVisibility
-  private let reviewQuestion: StudyQuestionKind?
-  private let edit: (() -> Void)?
-  private let openSubject: (Int64) -> Void
-  private let playAudio: (() -> Void)?
-  private let audioState: SubjectAudioState
-  private let audioError: String?
-  private let sentenceText: ((CatalogSubject.Sentence) -> AttributedString)?
+  let components: [CatalogSubject]
+  let combinations: [CatalogSubject]
+  let similar: [CatalogSubject]
+  let preferences: SubjectDetailsPreferences
+  let visibleQuestions: Set<StudyQuestionKind>
+  let reviewQuestion: StudyQuestionKind?
+  let edit: (() -> Void)?
+  let openSubject: (Int64) -> Void
+  let playAudio: (() -> Void)?
+  let audioState: SubjectAudioState
+  let audioError: String?
 
-  public init(
-    subject: CatalogSubject, material: StudyMaterial? = nil, assignment: CatalogAssignment? = nil,
-    components: [CatalogSubject] = [], combinations: [CatalogSubject] = [],
-    similar: [CatalogSubject] = [],
-    preferences: SubjectDetailsPreferences = .init(),
-    visibleQuestions: Set<StudyQuestionKind> = [.meaning, .reading],
-    reviewQuestion: StudyQuestionKind? = nil, edit: (() -> Void)? = nil,
-    openSubject: @escaping (Int64) -> Void, playAudio: (() -> Void)? = nil,
-    audioState: SubjectAudioState = .idle, audioError: String? = nil,
-    sentenceText: ((CatalogSubject.Sentence) -> AttributedString)? = nil
-  ) {
-    self.subject = subject
-    self.material = material
-    self.assignment = assignment
-    self.components = components
-    self.combinations = combinations
-    self.similar = similar
-    self.preferences = preferences
-    self.visibility = SubjectDetailVisibility(visibleQuestions)
-    self.reviewQuestion = reviewQuestion
-    self.edit = edit
-    self.openSubject = openSubject
-    self.playAudio = playAudio
-    self.audioState = audioState
-    self.audioError = audioError
-    self.sentenceText = sentenceText
-  }
-  public var body: some View {
+  private var visibility: SubjectDetailVisibility { SubjectDetailVisibility(visibleQuestions) }
+
+  var body: some View {
     LazyVStack(alignment: .leading, spacing: 10) {
       if reviewQuestion == .reading {
         reading
@@ -135,7 +109,6 @@ public struct SubjectDetailsContent: View {
     }.frame(maxWidth: 760).frame(maxWidth: .infinity).textSelection(.enabled)
   }
   private func contextSentenceText(_ sentence: CatalogSubject.Sentence) -> AttributedString {
-    if let sentenceText { return sentenceText(sentence) }
     let source = sentence.japanese
     var result = AttributedString()
     var cursor = source.startIndex
