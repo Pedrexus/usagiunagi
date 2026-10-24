@@ -31,15 +31,15 @@ all platform, physical-device or release acceptance is complete.
 | Rename/icon/localization | Fork remote is Pedrexus/usagiunagi. Localized 兔鰻/usagiunagi names and shared layered kanji icon compile; earlier bundle/static exports checked. | Physical Home Screen/Dock/Watch appearance variants and signed identity acceptance. Store listings/distribution require separate owner authorization. |
 | Lean code and modern Swift | Retired UIKit screens, Go/Objective-C/FMDB/protobuf/importers/assets removed; redundant app initializers reduced. Shared modules remain where persisted identity requires them. | Continue only evidence-based simplification without losing functionality or frozen data. Resource and final Release acceptance remain scoped. |
 | dataclass / constructor helpers | Separate reusable library and SwiftData/macro tests implemented. App pilot saved only three lines, so native constructors retained. Weak lifetime boundaries audited. | Publication and a larger measured benefit before app adoption; physical-service lifetime checks. No frozen-schema changes for boilerplate savings. |
-| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Local manifest finalized; iPhone build/lint/launch receipts pass. Optional pytest collection is now isolated from ordinary CLI startup; installed app discovery/toolchain/Swift lint work again. | Collector fix and two passing regressions remain uncommitted alongside unrelated Mainboard work. Integrate them without staging others' edits; newer tool publication still needs approval. |
+| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Local manifest finalized; iPhone build/lint/launch receipts pass. Optional pytest collection is isolated; two regressions and installed CLI checks pass at that checkpoint. | Subsequent unrelated dispatcher edits introduce a syntax error before CLI startup. Use the committed snapshot below for bounded validation. Collector fix remains uncommitted alongside other work; integrate without staging others' edits. Newer publication needs approval. |
 | GitHub Actions / final tests | Bounded native lanes, pinned packages, storage matrices and product audits declared. All five tool checkouts pin published fa467e0. Local app/rules commands are newer than that pin. | Hosted run not performed: app push is not authorized. Newer Mainboard publication also needs approval. Tests run after implementation/manual repairs; preserve full assertion scope. |
 | Launch/reopen reports | iPhone native root, warm links, held refresh, account flows and normal simulator launch have finalized receipts. One pasted crash was SpringBoard, not the app. | Current broader Mac/window restoration and any newly reproduced matching app crash. Latest Mac UI attempt failed to connect its runner before executing tests. Do not equate compilation with launch acceptance. |
 
 ## Remaining work
 
-1. Integrate the verified local Mainboard collector fix into its pending tool work.
-   The installed command works again without dependency installation; preserve
-   unrelated in-progress changes and do not publish newer tooling without approval.
+1. Integrate the verified local Mainboard collector fix into its pending tool work
+   and resolve the later dispatcher syntax failure. Preserve unrelated in-progress
+   changes and do not publish newer tooling without approval.
 2. Finish supported local storage failure boundaries using marked disposable stores
    and bounded volumes. Avoid repeating rejected calibrations recorded below.
 3. Finish adaptive layout, original-app comparison and keyboard/IME/accessibility
@@ -88,6 +88,19 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
 - Computer-use Device Hub inspection stalled for hours despite a requested timeout.
   Avoid that path. Latest Mac UI runner also failed to connect; earlier successful
   Mac receipts retain their own source scopes.
+- October 25 device discovery finds an iPhone 16 Pro Max available/paired and the
+  three existing simulators. `security find-identity -v -p codesigning` reports zero
+  valid identities. Physical deployment and signed iCloud/Watch/Keychain checks remain
+  blocked on signing setup and an available physical connection. The owner has been
+  asked whether to set up signing or defer these checks; no reply is assumed.
+- For stable read-only/Apple execution while Mainboard is being edited, the exact
+  committed `7dfce9f` sources are extracted under `/tmp/usagi-mainboard-7dfce9f`.
+  `PYTHONPATH=/tmp/usagi-mainboard-7dfce9f/src mainboard ...` successfully runs the
+  device/signing checks. It changes neither installation nor checkout; it is not a
+  repair or publication of newer `app`/`rules` behavior. Restore that exact snapshot
+  from Git if temporary files disappear. The later syntax failure is at
+  `dispatch/dispatcher.py:982` (positional argument after keyword), unrelated to the
+  collector fix; do not repeatedly chase a concurrently edited working copy.
 
 ## Latest evidence index
 
