@@ -87,6 +87,32 @@ struct StudyStatisticsTest {
     #expect(metrics[1].scheduledDays.count == 7)
   }
 
+  @Test(arguments: [3, 11])
+  func testScheduleUsesLocalDaysAcrossDaylightSaving(month: Int) throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))
+    let start = try #require(
+      calendar.date(from: DateComponents(year: 2026, month: month, day: month == 3 ? 8 : 1)))
+    let boundaries = try (0...7).map { offset in
+      try #require(calendar.date(byAdding: .day, value: offset, to: start))
+    }
+    #expect(boundaries[1].timeIntervalSince(start) == Double(month == 3 ? 23 : 25) * 3600)
+    var items = [assignment(1, due: start)]
+    for index in 0..<7 {
+      items.append(
+        assignment(Int64(index * 2 + 2), due: boundaries[index + 1].addingTimeInterval(-1)))
+      items.append(assignment(Int64(index * 2 + 3), due: boundaries[index + 1]))
+    }
+    let result = StudyMetrics(
+      assignments: items, statistics: [], levels: [], currentLevel: 1,
+      onVacation: false, now: start, calendar: calendar)
+    #expect(result.dueNow == 1)
+    #expect(result.scheduledDays.map(\.date) == Array(boundaries.prefix(7)))
+    #expect(result.scheduledDays.map(\.count) == [1, 2, 2, 2, 2, 2, 2])
+    // The final midnight belongs to day eight, outside the chart, not to day seven.
+    #expect(result.scheduledDays.reduce(0) { $0 + $1.count } + result.dueNow == items.count - 1)
+  }
+
   @Test func testAccuracyWeightsAnswersAndExcludesHiddenItems() throws {
     let result = calculate(statistics: [
       statistic(1, correct: 9, incorrect: 1),

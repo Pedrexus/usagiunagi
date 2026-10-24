@@ -42,6 +42,16 @@ content, so this is not full-catalog visual parity or landscape/multitasking acc
 Normal iPad launch restored. Receipts: `.build/Results/Lessons-Named-iPad-20261025.log`,
 `Lessons-Named-iPad-20261025/manifest.json`, and `Lessons-Named-iPad-Normal-20261025.log`.
 
+Statistics calendar acceptance (October 25): added a parameterized regression for
+New York's spring 23-hour and autumn 25-hour days. It checks exact local chart dates,
+overdue-at-now separation, midnight attribution and exclusion of day eight; no
+production calculation changed. All 12 StudyStatisticsTest functions pass (13
+parameterized executions) in `test-5942be029cac4d6695c8a481e735502c`, with zero
+failures/skips/reported warnings. Final one-file lint passes after a line-wrap-only
+format fix. Receipts: `.build/Results/Statistics-DST-20261025.log` and
+`Statistics-DST-Final-Lint-20261025.log`; the initial formatting failure is retained.
+This verifies calendar bucketing, not real-account forecast calibration or exam readiness.
+
 ## Requirements and status
 
 “Implemented” means source exists with the cited scoped evidence. It does not mean
