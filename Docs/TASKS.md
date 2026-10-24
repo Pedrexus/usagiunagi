@@ -8,6 +8,28 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Statistics chart accessibility:** accuracy marks now supply a formatted percentage
+and correct/total answer counts. Pace comparison marks distinguish estimated, actual
+and typical-range values with explicit days and level labels, following Coverage's
+existing chart accessibility pattern. Visuals and calculations are unchanged. Scoped
+Mainboard lint passes, and iPhone build `build-0b11948bb45340e29102735b697d08bc` has
+zero warnings/errors. Logs: `.build/Results/Statistics-Accessibility-Lint-Final-20261024.log`
+and `Statistics-Accessibility-Build-Dev-20261024.log`. Spoken VoiceOver behavior remains
+unverified; compilation does not close that acceptance gate.
+
+**Owner-deferred accessibility check:** the owner chose “Leave this check for later”
+for actual-system Reduce Motion on October 24. Do not repeatedly request that toggle
+or mark the skipped case accepted. The supported `simctl ui` options omit Reduce
+Motion, and a Device Hub read stalled for hours despite a requested tool timeout;
+avoid repeating that computer-use path. No simulator preference was changed.
+
+**Local tooling environment changed:** later October 24 Mainboard source work adds
+an eager `pytest` import through `jobs/testing/lanes.py`; the installed CLI environment
+lacks that dependency and fails before command dispatch. Its existing `.venv/bin`
+development environment runs the app commands. This supersedes the earlier claim
+that the default installed invocation currently works; no unrelated Mainboard source
+or dependency declarations were changed here. Keep the installation problem open.
+
 **Local app manifest finalized:** Mainboard recognizes all 28 named suites and the
 three device destinations. The shared app declaration centralizes runtime, ad-hoc iOS
 signing and build directories; local Mac checks retain their unsigned override. The

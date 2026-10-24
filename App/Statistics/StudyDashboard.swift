@@ -136,6 +136,10 @@ public struct StudyDashboard: View {
             if let fraction = rate.fraction {
               BarMark(x: .value("Accuracy", fraction), y: .value("Question", name))
                 .foregroundStyle(name == "Meaning" ? StudyPalette.kanji : StudyPalette.vocabulary)
+                .accessibilityLabel("\(name) accuracy")
+                .accessibilityValue(
+                  "\(fraction.formatted(.percent.precision(.fractionLength(1)))), \(rate.correct) correct out of \(rate.attempts) answers"
+                )
             }
           }.frame(height: 120).chartXScale(domain: 0...1)
             .chartXAxis {
@@ -220,11 +224,22 @@ public struct StudyDashboard: View {
                   yEnd: .value("Upper typical pace", trial.upperDays)
                 )
                 .foregroundStyle(StudyPalette.radical.opacity(0.35)).lineStyle(
-                  StrokeStyle(lineWidth: 6))
+                  StrokeStyle(lineWidth: 6)
+                )
+                .accessibilityLabel("Level \(trial.level), typical pace range")
+                .accessibilityValue(
+                  "\(trial.lowerDays.formatted(.number.precision(.fractionLength(1)))) to \(trial.upperDays.formatted(.number.precision(.fractionLength(1)))) days"
+                )
                 LineMark(x: .value("Level", trial.level), y: .value("Days", trial.estimatedDays))
                   .foregroundStyle(by: .value("Series", "Estimated"))
+                  .accessibilityLabel("Level \(trial.level), estimated pace")
+                  .accessibilityValue(
+                    "\(trial.estimatedDays.formatted(.number.precision(.fractionLength(1)))) days")
                 PointMark(x: .value("Level", trial.level), y: .value("Days", trial.actualDays))
                   .foregroundStyle(by: .value("Series", "Actual"))
+                  .accessibilityLabel("Level \(trial.level), actual pace")
+                  .accessibilityValue(
+                    "\(trial.actualDays.formatted(.number.precision(.fractionLength(1)))) days")
               }.chartForegroundStyleScale([
                 "Estimated": StudyPalette.radical, "Actual": StudyPalette.kanji,
               ])
