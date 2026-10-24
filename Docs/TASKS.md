@@ -57,6 +57,12 @@ all platform, physical-device or release acceptance is complete.
 3. Finish adaptive layout, original-app comparison and keyboard/IME/accessibility
    acceptance. Fix demonstrated regressions before rerunning affected checks.
    Do not retry unchanged Mac runner or Device Hub hangs indefinitely.
+   The failed iPad keyboard run's app diagnostic reports unmatched animation-stop
+   events before idle replies cease. Its temporary driver toggled the software
+   keyboard during typing; causality remains unproven. Extracted evidence is in
+   `.build/Results/iPad-Keyboard-Animation-Diagnostic-20261025.log`. A future retry
+   should configure the keyboard before the test, with no mid-run external toggle;
+   do not disable app animations or weaken keyboard/viewport assertions to pass.
 4. When the owner resumes physical checks, verify voice, Watch, iCloud, Keychain,
    notifications and device performance with the required signing/account setup.
    Real-account statistics calibration also remains open; local mocks cannot close it.
