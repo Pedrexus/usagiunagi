@@ -6,6 +6,28 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ## Active completion order — October 22
 
+### October 24 workflow audit after disk cleanup
+
+The current uncommitted Mainboard manifest expansion is not accepted as a CI-ready change.
+`mainboard app list` successfully discovers its suites with the locally installed tool, but
+that is only schema/discovery evidence. Two concrete gaps remain:
+
+- The new iPhone/iPad device declarations pass `CODE_SIGNING_ALLOWED=NO`. The existing normal
+  `run` task deliberately uses ad-hoc signing because unsigned normal startup previously
+  failed Keychain access with -34018. Generic app builds must preserve that requirement;
+  fixture-only test success cannot establish normal launch safety.
+- Local lint declarations now use `mainboard rules`, while Actions still pins the published
+  `fa467e07a71b26876f48b2dd3c273b5e3f14c1fd`, whose CLI registers `analyze`. Actions also
+  explicitly invokes `analyze`. Coordinate manifest/CLI/CI revision changes before publishing;
+  do not silently repin to an unpublished or unreviewed working tree. Current Mainboard has
+  substantial unrelated uncommitted work, so this audit did not modify or publish it.
+
+Disk cleanup removed rebuildable Xcode/Swift build directories and obsolete simulator runtimes,
+recovering approximately 88 GiB (about 93 GiB available at completion). iOS 27/watchOS 27,
+simulator device data, frozen fixtures and `.build/Results` evidence remain. Missing derived
+products are expected until the next necessary build; avoid regenerating every historical
+scratch directory. Reuse declared platform build directories and retain evidence separately.
+
 Keep the app lean: one adaptive SwiftUI presentation, concrete SwiftData queries, Apple's
 network/audio/notification APIs and one Mainboard toolchain. Preserve grading, pending work
 and the documented Japanese-input/service bridges. No new cache, Parquet workflow, platform
