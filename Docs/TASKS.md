@@ -38,6 +38,13 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Current-source Release follow-up: both iOS Simulator and native Mac builds and declared
+bundle audits pass with the parent-path storage fix. Details are in Current Release
+products below. Earlier comments that Release predates this fix are historical; runtime,
+interruption and physical-device scopes remain distinct. Live `mainboard --version`
+returns 0.5.6 again, but these builds/audits deliberately used retained `7dfce9f`; this
+is not publication or full validation of the concurrently changing Mainboard checkout.
+
 Storage integration at `c2c7e62c`: the full Shared run passes 197 core plus 172
 persistence test functions across 52 suites (369 total), including the parent-path
 regression. On iPhone 18 Pro / iOS 27, the exact frozen-adoption test passes both base
@@ -370,7 +377,7 @@ must not be deleted as disposable build output. These summaries retain source sc
 | --- | --- | --- |
 | Grading and storage | At c2c7e62c: 197 core + 172 persistence functions pass across 52 shared suites. iPhone frozen adoption passes both base/WAL variants (test-8575df5ce4e049419de77a91fa27b996). Earlier 6da3570a native review-store evidence covers 13 functions, including alternate-kana retries/outbox. | Shared logic and scoped simulated adoption; no physical recognition, signed transport or complete interruption matrix claim. |
 | Automatic sync account fences | After three awaited account-state reads, the worker now checks account identity before applying refresh state, notices or retry scheduling. All 18 `AutomaticSyncTests` pass on iPhone 18 Pro / iOS 27, including disconnect during read/write, offline recovery, uncertain writes, throttling and scene ownership. Receipt: test-c8106b43bef043adbbbd04ec0703c098; logs: AutomaticSync-AccountFence-20261025.log and AutomaticSync-AccountFence-Lint-20261025.log. | Existing regression suite and source-level suspension-boundary audit; no deterministic interruption inside those three database reads, real-account or physical transport claim. Release integration is covered by the current products row. |
-| Current Release products | At dc6508d8: iOS build-25571d7174e944da8e516c77ef5b80aa; Mac build-9971ecb80a5e4a968e860d9e194a98c1. Both report zero compiler/analyzer issues. Both declared bundle audits pass with no violations: localized names, icon metadata, microphone description, forbidden retired symbols and frozen/test resources. Receipts: Lesson-Controls-Release-{iOS,Mac}-20261025.log and Lesson-Controls-Bundle-{iOS,Mac}-20261025.log. | Compilation and declared bundle constraints only; no signed distribution, physical icon appearance or full runtime claim. |
+| Current Release products | At c2c7e62c: iOS build-9c5e2a1d099e4ae9a659f3af0882948a; Mac build-6a7777cbd28e45998d0175feaebd5559. Both report zero compiler/analyzer issues. Both bundle audits pass localized names, icon metadata, microphone description and forbidden retired-symbol/frozen/test-resource constraints, with no violations. Receipts: Store-Parents-Release-{iOS,Mac}-20261025.log and Store-Parents-Bundle-{iOS,Mac}-20261025.log. | Retained Mainboard 7dfce9f; unsigned local products, not signed distribution or physical visual acceptance. Live CLI version lookup succeeds again, but does not prove the pending tool revision integrated. |
 | Repository enforcement | At f5e27dde: explicit `mainboard lint --check .` checks 449 files, no rewrites/failures (Modernization-Repository-Lint-20261025.log). `mainboard rules check .` reports 240 findings (Modernization-Rules-20261025.log). | Initial no-path lint checked zero changed files and is not repository evidence. Rule findings require contextual review, not blanket suppression. |
 | iPhone layout | test-22ced2841c594fb99ba6ef315844195f: catalog paging/hidden answers/stages and inline pace comparison pass; fresh screenshots inspected. | Before the grader fix; same catalog/chart layout. |
 | iPhone continuous voice | At 09276bee (production grader 0f6213a1): test-52368b7149b04c70a182887a4443ea0b passes all three journeys: both answers without taps, unclear-kana retry without grading, and mistake recovery without taps. Fresh inline-reading screenshot inspected; normal simulator app restored. Receipts: .build/Results/iPhone-Voice-Kana-20261025.log and iPhone-Voice-Kana-20261025/manifest.json. | Fixture recognizer; no live microphone or physical-device claim. Screenshot confirms subject color, reading strip and inline listening/keyboard controls, not full original-app parity. |
