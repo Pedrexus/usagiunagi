@@ -50,6 +50,9 @@ private actor ModelServer {
   private(set) var subjectReads = 0
   private(set) var userReads = 0
   private var userGate: StudyTaskGate?
+  private(set) var preferenceWrites: [WaniKaniPreferenceChanges] = []
+  private var losePreferenceResponse = false
+  func loseNextPreferenceResponse() { losePreferenceResponse = true }
   private var preferences = WaniKaniPreferences(
     extraStudyAutoplayAudio: false, lessonsAutoplayAudio: false, lessonsBatchSize: 5,
     reviewsAutoplayAudio: false, reviewsDisplaySrsIndicator: true,
@@ -84,6 +87,40 @@ private actor ModelServer {
       return try DownloadFixture.response(
         request, object: ["error": "Rejected fixture"], status: 401)
     }
+    if path == "user" {
+      if request.httpMethod == "PUT" {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let body = try decoder.decode(
+          [String: [String: WaniKaniPreferenceChanges]].self,
+          from: #require(request.httpBody))
+        let changes = try #require(body["user"]?["preferences"])
+        preferenceWrites.append(changes)
+        preferences = preferences.applying(changes)
+        if losePreferenceResponse {
+          losePreferenceResponse = false
+          throw URLError(.timedOut)
+        }
+      } else {
+        reads += 1
+        userReads += 1
+      }
+      if let userGate {
+        self.userGate = nil
+        await userGate.pause()
+      }
+      var user = user
+      var data = user["data"] as! [String: Any]
+      let encoder = JSONEncoder()
+      encoder.keyEncodingStrategy = .convertToSnakeCase
+      data["preferences"] = try JSONSerialization.jsonObject(with: encoder.encode(preferences))
+      if other {
+        data["id"] = "other-account"
+        data["username"] = "other"
+      }
+      user["data"] = data
+      return try DownloadFixture.response(request, object: user)
+    }
     if request.httpMethod != "GET" {
       writes += 1
       let body = try JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
@@ -100,24 +137,6 @@ private actor ModelServer {
     }
     if path == "study_materials" {
       return try DownloadFixture.response(request, object: DownloadFixture.collection([material]))
-    }
-    if path == "user" {
-      userReads += 1
-      if let userGate {
-        self.userGate = nil
-        await userGate.pause()
-      }
-      var user = user
-      var data = user["data"] as! [String: Any]
-      let encoder = JSONEncoder()
-      encoder.keyEncodingStrategy = .convertToSnakeCase
-      data["preferences"] = try JSONSerialization.jsonObject(with: encoder.encode(preferences))
-      if other {
-        data["id"] = "other-account"
-        data["username"] = "other"
-      }
-      user["data"] = data
-      return try DownloadFixture.response(request, object: user)
     }
     return try DownloadFixture.response(request)
   }
@@ -244,6 +263,58 @@ private actor ModelRepository {
     #expect(await second.value)
     #expect(await server.userReads == 3)
     #expect(!model.isLoadingWaniKaniPreferences && !model.isSyncing)
+  }
+
+  @Test func rapidSettingsEditsSendOneDeltaAndKeepUneditedServerValues() async throws {
+    let cache = try await store(cached: true)
+    let server = ModelServer()
+    let model = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), client: await server.client,
+      openStore: { cache })
+    await model.restore()
+    #expect(await model.refreshWaniKaniPreferences())
+    var edit = try #require(model.effectiveWaniKaniPreferences)
+    edit.lessonsBatchSize = 3
+    model.editWaniKaniPreferences(edit)
+    edit.lessonsBatchSize = 7
+    edit.reviewsAutoplayAudio = true
+    model.editWaniKaniPreferences(edit)
+    let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+    while !model.pendingWaniKaniPreferences.isEmpty, ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+    let writes = await server.preferenceWrites
+    #expect(writes.count == 1)
+    #expect(writes.first?.lessonsBatchSize == 7 && writes.first?.reviewsAutoplayAudio == true)
+    #expect(writes.first?.reviewsDisplaySrsIndicator == nil)
+    #expect(model.waniKaniPreferences == edit && model.pendingWaniKaniPreferences.isEmpty)
+    #expect(!model.isLoadingWaniKaniPreferences && !model.waniKaniPreferencesNeedConfirmation)
+    #expect(model.waniKaniPreferencesNotice == nil)
+  }
+
+  @Test func refreshingAnUncertainSettingsSaveConfirmsWithoutAnotherPut() async throws {
+    let cache = try await store(cached: true)
+    let server = ModelServer()
+    let model = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), client: await server.client,
+      openStore: { cache })
+    await model.restore()
+    #expect(await model.refreshWaniKaniPreferences())
+    await server.loseNextPreferenceResponse()
+    var edit = try #require(model.effectiveWaniKaniPreferences)
+    edit.lessonsBatchSize = 3
+    model.editWaniKaniPreferences(edit)
+    let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+    while model.waniKaniPreferencesNotice == nil, ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+    #expect(model.waniKaniPreferencesNeedConfirmation)
+    #expect(!model.pendingWaniKaniPreferences.isEmpty)
+    #expect(await server.preferenceWrites.count == 1)
+    #expect(await model.refreshWaniKaniPreferences(force: true))
+    #expect(model.waniKaniPreferences == edit && model.pendingWaniKaniPreferences.isEmpty)
+    #expect(!model.waniKaniPreferencesNeedConfirmation && model.waniKaniPreferencesNotice == nil)
+    #expect(await server.preferenceWrites.count == 1)
   }
 
   @Test func restoreUsesTheSavedAccountAndOnlyOpensTheRepositoryOnce() async throws {
