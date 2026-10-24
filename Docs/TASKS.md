@@ -38,6 +38,19 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Simulator diagnostics investigation: the post-failure `simctl` lookup error is emitted
+by Xcode's `IDETestOperationsObserverDebug`, after the actual assertion failure, not
+by Mainboard's simulator inventory/launch. The system developer directory is
+`/Library/Developer/CommandLineTools`; direct `xcrun --find simctl` fails, while
+`mainboard proc timeout 15 /usr/bin/xcrun --find simctl` resolves
+`/Applications/Xcode.app/Contents/Developer/usr/bin/simctl`. Mainboard's existing
+process-local Xcode selection is effective. This identifies a tool-selection mismatch,
+not proof of the collector's internal environment or a validated repair. Do not mask
+assertion failures or add a second app build driver. Receipt:
+`.build/Results/Simulator-Diagnostic-Tool-Selection-20261025.log`; original collector
+failure retained in `Lesson-Related-Swipe-20261025.log`. Machine-wide tool selection
+was not changed. Failed-test diagnostic collection remains a tooling limitation.
+
 At `e49a9ae9`, iPad Pro 11-inch (M5) / iPadOS 27 passes all three targeted lesson
 checks: normal/largest Dynamic Type with touch-target audits, teaching/quiz navigation,
 and related-row gesture isolation (`test-3b4d96cb4d6a46be958e4784e6e2e522`; three tests,
