@@ -47,6 +47,14 @@ from `4dc0cced` exactly. No dependency or schema change. Receipts:
 `.build/Results/SwiftMarkup-Final-20261025.log`, `SwiftMarkup-Parity-20261025.log/.swift`
 and `SwiftMarkup-Lint-Verified-20261025.log`. This checks parser behavior, not every
 rendered mnemonic or final platform Release builds after the change.
+At `8da433c3`, iOS dark-lesson rendering passes
+`test-fc7dc969c8ec4c6dad5487a399d22fb7` (13.931 seconds); the fresh exported screenshot
+was inspected for colored mnemonic spans, bold text, kana and the compact lesson
+controls. Native Mac Release build `build-295150747b2e43ffbbfa0e13463ba19b` passes with
+zero reported compiler/analyzer issues, including the adaptive reading style. Receipts:
+`.build/Results/SwiftMarkup-DarkLesson-20261025.log`, its attachment directory and
+`SwiftMarkup-Release-Mac-20261025.log`. This closes those specific integration checks,
+not every mnemonic or current iOS Release acceptance.
 
 Statistics source review at `7b07c322` traced `StudyStore.snapshot` and refresh projection
 through `StudyMetrics` to dashboard/coverage rendering. Pending subjects are removed from
