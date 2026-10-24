@@ -219,6 +219,25 @@ import Testing
     await sync.wake()
     #expect(try await store.mistakeState(accountID: account).values == [1: 999])
   }
+  @Test(arguments: [false, true])
+  func staleMalformedReadCannotPublishAnError(appleAccountChanged: Bool) async throws {
+    let (model, store) = try await fixture()
+    let iCloud = MistakeICloud()
+    let cloudKey = try key
+    let malformed = Data("broken".utf8)
+    iCloud.values[cloudKey] = malformed
+    iCloud.onRead = { [weak iCloud] _ in
+      if appleAccountChanged { iCloud?.observe(.account) } else { model.loadPreview() }
+    }
+    let sync = StudyMistakeSync(model: model, iCloud: iCloud)
+    defer { sync.stop() }
+    await sync.wake()
+    #expect(sync.notice == nil)
+    #expect(iCloud.writes.isEmpty && iCloud.values[cloudKey] == malformed)
+    #expect(try await store.mistakeState(accountID: account).values.isEmpty)
+    #expect(try await store.pendingReviews(accountID: account).isEmpty)
+  }
+
   @Test func notificationCallbackAdvancesEpochSynchronouslyAndCancellationRemovesIt() async {
     let center = NotificationCenter()
     let object = NSObject()

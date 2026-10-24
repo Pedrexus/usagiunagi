@@ -273,7 +273,7 @@ nonisolated public struct StudyMistakeICloudEvent: Sendable {
         guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
         notice = nil
       } catch is CancellationError { return } catch {
-        guard generation == epoch else { return }
+        guard currentPass(account, epoch: epoch, observedEpoch: observedEpoch) else { return }
         notice = error.localizedDescription
         requested = false
         return

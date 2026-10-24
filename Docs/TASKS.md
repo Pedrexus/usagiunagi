@@ -82,6 +82,15 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
 
 ## Storage invariants
 
+- Recent-mistake sync error publication now uses the same account, observed Apple
+  identity epoch and cancellation fence as successful reads. A new malformed-read
+  regression reproduced a stale error after an Apple account change before the fix
+  (test-651d2198f72e41239da5a0f1f0527b5b). Afterward all 11 functions / 12 cases pass
+  (test-f99492e49a3340ada60732f7f2aa499b), including malformed current-account data,
+  quotas, unavailable cache retry and both identity-change variants. Two-file lint
+  passes. Logs: `.build/Results/MistakeSync-StaleError-{Before,After,Lint}-20261025.log`.
+  These are isolated simulator fixtures, not signed iCloud delivery acceptance.
+
 - Preserve frozen `StudySchemaV1.swift` hash
   `538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`, the original
   fixture, writer archives and nested stored type identities. They are required
