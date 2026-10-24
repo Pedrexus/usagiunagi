@@ -10,7 +10,7 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 The current uncommitted Mainboard manifest expansion is not accepted as a CI-ready change.
 `mainboard app list` successfully discovers its suites with the locally installed tool, but
-that is only schema/discovery evidence. Two concrete gaps remain:
+that is only schema/discovery evidence. Two concrete gaps were identified:
 
 - The simulator signing gap is now fixed in the pending manifest: the app defaults to
   `CODE_SIGNING_ALLOWED=YES` and `CODE_SIGN_IDENTITY=-`. Generic
@@ -21,11 +21,14 @@ that is only schema/discovery evidence. Two concrete gaps remain:
   Removed the obsolete PROTOC environment setting and unnecessary plugin-validation bypass.
   Logs are `.build/Results/Mainboard-App-{Signed,Launch}-20261024.log`. This is local
   build/launch acceptance, not signed distribution or the full suite matrix.
-- Local lint declarations now use `mainboard rules`, while Actions still pins the published
-  `fa467e07a71b26876f48b2dd3c273b5e3f14c1fd`, whose CLI registers `analyze`. Actions also
-  explicitly invokes `analyze`. Coordinate manifest/CLI/CI revision changes before publishing;
-  do not silently repin to an unpublished or unreviewed working tree. Current Mainboard has
-  substantial unrelated uncommitted work, so this audit did not modify or publish it.
+- The CI lint-command mismatch is corrected without changing the published tool pin.
+  Actions uses `analyze gate` directly for parser/UI checks, while local lint uses `rules`.
+  The pinned gate reports only explicitly named files, so CI enumerates tracked Swift paths
+  with null delimiters rather than passing directories (262 parser files; 198 App/shared
+  source files for UI rules). Format/SwiftLint steps remain on the declared lint tools.
+  YAML parsing, exact source-scope enumeration and pinned gate/CLI source inspection pass;
+  hosted CI remains unperformed. No unpublished Mainboard revision or unrelated working-tree
+  changes were published. The broader pending app-suite declaration still needs acceptance.
 
 Disk cleanup removed rebuildable Xcode/Swift build directories and obsolete simulator runtimes,
 recovering approximately 88 GiB (about 93 GiB available at completion). iOS 27/watchOS 27,

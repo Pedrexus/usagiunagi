@@ -82,10 +82,12 @@ jobs:
       - name: All first-party Swift parser coverage
         run: |
           mkdir -p .build/Results
-          uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 mainboard lint --check --only swift-parse . 2>&1 | tee .build/Results/SwiftParser.log
+          # The pinned CLI uses analyze; local Mainboard uses rules.
+          git ls-files -z -- '*.swift' | xargs -0 uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 mainboard analyze gate --rule SW-PARSE0001 2>&1 | tee .build/Results/SwiftParser.log
       - name: Swift format and correctness
         run: |
-          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format,swift-ui Shared/Sources App
+          uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swift-format Shared/Sources App
+          git ls-files -z -- 'Shared/Sources/*.swift' 'App/*.swift' | xargs -0 uv run --project .build/Mainboard --locked --no-sync mainboard proc timeout 600 mainboard analyze gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001
           uv run --project .build/Mainboard --locked --no-sync mainboard lint --check --only swiftlint App Shared/Sources
       - name: SwiftUI and storage migration inventory
         run: |
