@@ -148,7 +148,7 @@ final class ReviewFlowTests: XCTestCase {
     XCTAssertTrue(app.collectionViews["catalog.list"].waitForExistence(timeout: 5))
   }
 
-  @MainActor func testLessonHeadingAndFooterSupportLargestDynamicType() {
+  @MainActor func testLessonHeadingAndFooterSupportLargestDynamicType() throws {
     continueAfterFailure = false
     var heights: [CGFloat] = []
     for category in ["UICTContentSizeCategoryL", "UICTContentSizeCategoryAccessibilityXXXL"] {
@@ -156,6 +156,7 @@ final class ReviewFlowTests: XCTestCase {
       defer { app.terminate() }
       let vocabulary = app.buttons["lesson.select.14"]
       scrollTo(vocabulary, in: app)
+      try app.performAccessibilityAudit(for: .hitRegion)
       vocabulary.tap()
       app.buttons["lesson.startSelection"].tap()
       expectLessonPage("Lesson 1 of 1", in: app)
@@ -164,6 +165,7 @@ final class ReviewFlowTests: XCTestCase {
       XCTAssertEqual(heading.label, "こんにちは")
       heights.append(heading.frame.height)
       XCTAssertTrue(app.buttons["lesson.quiz"].isHittable)
+      try app.performAccessibilityAudit(for: .hitRegion)
       let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
       image.name = "Lesson heading and footer at \(category)"
       image.lifetime = .keepAlways

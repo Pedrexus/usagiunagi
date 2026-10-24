@@ -82,6 +82,16 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
 
 ## Storage invariants
 
+- Lesson accessibility follow-up: added unsuppressed touch-target audits on the picker
+  and teaching page at normal and largest Dynamic Type. Initial pass
+  `test-2929774e817e4730aa3a60790dcfdb67` still exposed a visual issue: the two-column
+  reading row split its label and kana unnecessarily. Reading labels now stack only
+  at accessibility sizes using a local SwiftUI `LabeledContentStyle`; normal sizes
+  retain the system layout. Final `test-d2fe48c3264f4bc3bb4cbc5b6f93cf20` passes and
+  the exported largest-text screenshot was inspected: label and kana each fit a line.
+  Logs/attachments: `.build/Results/Lesson-ReadingLayout-20261025*`; final two-file lint
+  passes. This is iPhone fixture coverage, not VoiceOver or all-device acceptance.
+
 - Release verification at `d851b653`, including both recent sync fixes: iOS build
   `build-7f2928eba6c74e8d8853cb647dc66c4b` and native Mac build
   `build-44655a85719949028f7d9879b6095319` succeed with zero reported compiler/analyzer

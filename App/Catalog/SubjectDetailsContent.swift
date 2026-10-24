@@ -145,7 +145,7 @@ struct SubjectDetailsContent: View {
               Text(reading.text + (reading.isPrimary && readings.count > 1 ? " · Primary" : ""))
                 .fontWeight(reading.isPrimary ? .semibold : .regular)
                 .accessibilityIdentifier("subject.reading.\(index)")
-            }
+            }.labeledContentStyle(ReadingLabelStyle())
           }
           if let playAudio {
             Button(
@@ -246,6 +246,24 @@ struct SubjectDetailsContent: View {
           }
         }.scrollIndicators(.hidden)
       }
+    }
+  }
+}
+
+private struct ReadingLabelStyle: LabeledContentStyle {
+  @Environment(\.dynamicTypeSize) private var typeSize
+  func makeBody(configuration: Configuration) -> some View {
+    if typeSize.isAccessibilitySize {
+      VStack(alignment: .leading, spacing: 4) {
+        configuration.label
+        configuration.content.foregroundStyle(.secondary)
+      }
+    } else {
+      LabeledContent {
+        configuration.content
+      } label: {
+        configuration.label
+      }.labeledContentStyle(.automatic)
     }
   }
 }
