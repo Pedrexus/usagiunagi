@@ -8,7 +8,6 @@ import SwiftUI
   public enum Phase: String { case answering, incorrect, details }
   public var phase = Phase.answering
   public var question = ""
-  public var questionImage: Image?
   public var questionFont = ""
   public var questionSize: Double = 72
   public var prompt = ""
@@ -91,7 +90,7 @@ import SwiftUI
 public enum ReviewScreenAction {
   case end, wrap, stopWrapping, settings, voice, submit, reveal, retry, correct, incorrect,
     deferQuestion, exclude
-  case synonym, previous, toggleFont, nextFont, previousFont, showAll, playAudio, focus
+  case synonym, previous, toggleFont, nextFont, previousFont, showAll, playAudio
 }
 
 /// Shared review layout; hosts supply native input and rich subject details.
@@ -449,9 +448,7 @@ public struct ReviewScreen<Input: View, Details: View, QuestionContent: View>: V
     return layout {
       VStack(spacing: 8) {
         Group {
-          if let image = state.questionImage {
-            image.resizable().scaledToFit().frame(maxHeight: state.questionSize)
-          } else if state.question.isEmpty {
+          if state.question.isEmpty {
             questionContent().frame(maxHeight: state.questionSize)
           } else {
             Text(state.question)

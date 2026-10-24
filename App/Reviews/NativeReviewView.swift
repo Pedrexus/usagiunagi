@@ -433,9 +433,7 @@ public struct NativeReviewView: View {
     case .submit:
       if screen.isAnki {
         if screen.phase == .answering { revealAnki() } else { screen.showAssessment = true }
-      } else if screen.phase == .details {
-        change(.advance)
-      } else if screen.phase == .incorrect {
+      } else if screen.phase == .details || screen.phase == .incorrect {
         change(.advance)
       } else {
         submit()
@@ -475,7 +473,6 @@ public struct NativeReviewView: View {
       answerFocused = false
       audio.stop()
       screen.voiceEnabled.toggle()
-    case .focus: answerFocused = true
     case .settings:
       answerFocused = false
       settings = true

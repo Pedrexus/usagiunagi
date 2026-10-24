@@ -271,7 +271,6 @@ struct KatakanaPracticeSessionView: View {
         guard !screen.isAnki else { return }
         focused = false
         voiceRequest = VoiceAnswerRequest(question: question)
-      case .focus: focused = screen.phase == .answering && !screen.isAnki
       case .toggleFont:
         if screen.canChangeFont {
           screen.questionFont = screen.questionFont.isEmpty ? customFont : ""
