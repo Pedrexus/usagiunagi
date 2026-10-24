@@ -2,6 +2,8 @@ import Foundation
 import StudyCore
 import Testing
 
+@testable import Tsurukame
+
 @MainActor struct StudyLessonPreferencesTests {
   @Test func originalDefaultsAndPartialArchivesKeepEveryChoice() throws {
     let value = try JSONDecoder().decode(

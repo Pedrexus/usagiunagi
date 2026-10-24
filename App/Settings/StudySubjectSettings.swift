@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import StudyCore
 
 @MainActor public protocol StudySubjectPreferenceStore: AnyObject {
   var value: SubjectDetailsPreferences { get set }

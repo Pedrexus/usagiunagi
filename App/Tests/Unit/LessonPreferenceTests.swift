@@ -2,6 +2,8 @@ import Foundation
 import StudyCore
 import Testing
 
+@testable import Tsurukame
+
 @Suite(.serialized) @MainActor struct LessonPreferenceTests {
   @Test func commonPreferencesPersistWithoutChangingReviewOptions() throws {
     try PreferenceTestValues.withDefaults { defaults in

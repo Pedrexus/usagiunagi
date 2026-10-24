@@ -38,6 +38,23 @@ iPhone Duo remains deferred. Optional AI/AppIntents and wider macro adoption rem
 
 ## Completion audit — October 21–22
 
+**Observable feature ownership — verified October 24:** sign-in state now lives in
+`App/Account`; lesson and subject settings owners/defaults adapters live in `App/Settings`.
+The shared package has no remaining Observation imports or observable screen models.
+Persisted lesson/subject preference values remain in StudyCore, as do API sign-in errors;
+their decoding, normalization and merge behavior are unchanged. Three existing suites moved
+to the hosted app target. Two initial test builds exposed obsolete module imports, corrected
+before the passing run. iOS build `build-c3319cd527d44f6f8efcd5f98afec3ab` passes. Mac receipt
+`test-bf82bf1c6f5a4650bfddc04e35d63ede` passes 64 functions / 83 executions, including
+account replacement, cancellation, local private-preference persistence and merge behavior.
+iPad receipt `test-c6689d5f499d4b469663ed1746594283` passes rejected/hibernating/successful
+synthetic sign-in, Home navigation and disconnect. Neither proves real iCloud delivery or
+real-account authentication. Logs remain `.build/Results/State-App-*-20261022.log`, dated
+for their October 22 execution; their finalized results were inspected October 24.
+Scoped Mainboard lint passed nine changed Swift files; the final archive-test import received
+an additional strict formatter check. Other in-progress Mainboard manifest/document changes
+are independent of this source move.
+
 **App-owned audio consolidation:** pronunciation playback, the observable library/defaults
 adapter and offline downloads now live in `App/Shared`, alongside their three existing test
 suites in `App/Tests/Unit`. `StudyAudioOptions` and `StudyAudioCatalog` retain byte-identical

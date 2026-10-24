@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AFAD00000000000000000001 /* StudySignIn.swift */ = {isa = PBXBuildFile; fileRef = AFAD00000000000000000011 /* StudySignIn.swift */; };
+		AFAD00000000000000000002 /* StudySubjectSettings.swift */ = {isa = PBXBuildFile; fileRef = AFAD00000000000000000012 /* StudySubjectSettings.swift */; };
+		AFAD00000000000000000003 /* StudyLessonSettings.swift */ = {isa = PBXBuildFile; fileRef = AFAD00000000000000000013 /* StudyLessonSettings.swift */; };
+		AFAD00000000000000000004 /* StudySignInTests.swift */ = {isa = PBXBuildFile; fileRef = AFAD00000000000000000014 /* StudySignInTests.swift */; };
+		AFAD00000000000000000005 /* SubjectPreferenceTests.swift */ = {isa = PBXBuildFile; fileRef = AFAD00000000000000000015 /* SubjectPreferenceTests.swift */; };
+		AFAD00000000000000000006 /* StudyLessonPreferencesTests.swift */ = {isa = PBXBuildFile; fileRef = AFAD00000000000000000016 /* StudyLessonPreferencesTests.swift */; };
 		AFAC00000000000000000001 /* StudyAudioLibrary.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000011 /* StudyAudioLibrary.swift */; };
 		AFAC00000000000000000002 /* StudyAudioDownloads.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000012 /* StudyAudioDownloads.swift */; };
 		AFAC00000000000000000003 /* AppleStudyAudioPlayback.swift */ = {isa = PBXBuildFile; fileRef = AFAC00000000000000000013 /* AppleStudyAudioPlayback.swift */; };
@@ -209,6 +215,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AFAD00000000000000000011 /* StudySignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudySignIn.swift; path = Account/StudySignIn.swift; sourceTree = SOURCE_ROOT; };
+		AFAD00000000000000000012 /* StudySubjectSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudySubjectSettings.swift; path = Settings/StudySubjectSettings.swift; sourceTree = SOURCE_ROOT; };
+		AFAD00000000000000000013 /* StudyLessonSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyLessonSettings.swift; path = Settings/StudyLessonSettings.swift; sourceTree = SOURCE_ROOT; };
+		AFAD00000000000000000014 /* StudySignInTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudySignInTests.swift; path = Tests/Unit/StudySignInTests.swift; sourceTree = SOURCE_ROOT; };
+		AFAD00000000000000000015 /* SubjectPreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SubjectPreferenceTests.swift; path = Tests/Unit/SubjectPreferenceTests.swift; sourceTree = SOURCE_ROOT; };
+		AFAD00000000000000000016 /* StudyLessonPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyLessonPreferencesTests.swift; path = Tests/Unit/StudyLessonPreferencesTests.swift; sourceTree = SOURCE_ROOT; };
 		AFAC00000000000000000011 /* StudyAudioLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAudioLibrary.swift; path = Shared/StudyAudioLibrary.swift; sourceTree = SOURCE_ROOT; };
 		AFAC00000000000000000012 /* StudyAudioDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StudyAudioDownloads.swift; path = Shared/StudyAudioDownloads.swift; sourceTree = SOURCE_ROOT; };
 		AFAC00000000000000000013 /* AppleStudyAudioPlayback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppleStudyAudioPlayback.swift; path = Shared/AppleStudyAudioPlayback.swift; sourceTree = SOURCE_ROOT; };
@@ -509,6 +521,9 @@
 				E692CCE3C866CAADC75B4CAD /* ReviewSessionTest.swift */,
 				A27100000000000000000002 /* FontLibraryTests.swift */,
 				AFAB00000000000000000013 /* StudyFontLibraryTests.swift */,
+				AFAD00000000000000000014 /* StudySignInTests.swift */,
+				AFAD00000000000000000015 /* SubjectPreferenceTests.swift */,
+				AFAD00000000000000000016 /* StudyLessonPreferencesTests.swift */,
 				AFAC00000000000000000014 /* StudyAudioLibraryTests.swift */,
 				AFAC00000000000000000015 /* StudyAudioDownloadsTests.swift */,
 				AFAC00000000000000000016 /* AppleAudioPlaybackTests.swift */,
@@ -688,6 +703,9 @@
 			isa = PBXGroup;
 			children = (
 				662DB68B76CEE7ADF230FC09 /* StudyAvatarView.swift */,
+				AFAD00000000000000000011 /* StudySignIn.swift */,
+				AFAD00000000000000000012 /* StudySubjectSettings.swift */,
+				AFAD00000000000000000013 /* StudyLessonSettings.swift */,
 				AFAC00000000000000000011 /* StudyAudioLibrary.swift */,
 				AFAC00000000000000000012 /* StudyAudioDownloads.swift */,
 				AFAC00000000000000000013 /* AppleStudyAudioPlayback.swift */,
@@ -986,6 +1004,9 @@
 				24E79875E2EDF7ED5A21604C /* SubjectSettingsView.swift */,
 				384E6445B9D95F102FC98D97 /* WaniKaniSettingsSection.swift */,
 				98C99174C1C26C504FB96A81 /* StudyAvatarView.swift */,
+				AFAD00000000000000000001 /* StudySignIn.swift */,
+				AFAD00000000000000000002 /* StudySubjectSettings.swift */,
+				AFAD00000000000000000003 /* StudyLessonSettings.swift */,
 				AFAC00000000000000000001 /* StudyAudioLibrary.swift */,
 				AFAC00000000000000000002 /* StudyAudioDownloads.swift */,
 				AFAC00000000000000000003 /* AppleStudyAudioPlayback.swift */,
@@ -1043,6 +1064,9 @@
 				31112FA5D89FF842E5A7C77A /* StudyTaskGate.swift */,
 				A27100000000000000000001 /* FontLibraryTests.swift in Sources */,
 				AFAB00000000000000000003 /* StudyFontLibraryTests.swift */,
+				AFAD00000000000000000004 /* StudySignInTests.swift */,
+				AFAD00000000000000000005 /* SubjectPreferenceTests.swift */,
+				AFAD00000000000000000006 /* StudyLessonPreferencesTests.swift */,
 				AFAC00000000000000000004 /* StudyAudioLibraryTests.swift */,
 				AFAC00000000000000000005 /* StudyAudioDownloadsTests.swift */,
 				AFAC00000000000000000006 /* AppleAudioPlaybackTests.swift */,

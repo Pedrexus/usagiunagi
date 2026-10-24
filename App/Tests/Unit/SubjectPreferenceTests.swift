@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @testable import StudyCore
+@testable import Tsurukame
 
 struct SubjectPreferenceTests {
   @Test func defaultsAndOlderArchivesKeepTheOriginalDisplayChoices() throws {

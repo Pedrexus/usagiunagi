@@ -2,6 +2,8 @@ import Foundation
 import StudyCore
 import Testing
 
+@testable import Tsurukame
+
 @Suite(.serialized) @MainActor struct SubjectPreferenceArchiveTests {
   @Test func productionHostLoadsTheBundledArtworkCatalog() throws {
     #expect(try StudyArtwork.bundled().url(subjectID: 6)?.host == "global.discourse-cdn.com")

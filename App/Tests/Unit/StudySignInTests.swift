@@ -1,7 +1,8 @@
 import Foundation
 import StudyCore
-import StudyTestSupport
 import Testing
+
+@testable import Tsurukame
 
 @Suite @MainActor struct StudySignInTests {
   @Test func tokenValidationNormalizesOnlySurroundingWhitespace() async {
