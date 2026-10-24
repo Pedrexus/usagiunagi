@@ -38,6 +38,17 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Storage integration at `c2c7e62c`: the full Shared run passes 197 core plus 172
+persistence test functions across 52 suites (369 total), including the parent-path
+regression. On iPhone 18 Pro / iOS 27, the exact frozen-adoption test passes both base
+and committed-WAL parameters (`test-8575df5ce4e049419de77a91fa27b996`), preserving fields
+and writes through reopening. Receipts: `.build/Results/Store-Parents-Full-Shared-20261025.log`
+and `Store-Parents-iOS-Adoption-Exact-20261025.log`. The first iOS invocation omitted
+`(committedWAL:)` and selected zero tests; Mainboard refused it, and its
+`test-fd6bed9ea9c84d31bfbccb859394119b` receipt remains unsuccessful evidence. This
+closes ordinary iOS adoption integration for the new check, not direct iOS symlink cases,
+iOS interruption during capture/publication, physical durability or Release packaging.
+
 Store parent-path validation: startup previously accepted a symlinked `generations`
 or `preparations` parent despite validating individual images. Both disposable cases
 reproduced acceptance before the fix. Opening now validates those existing parents with
@@ -357,7 +368,7 @@ must not be deleted as disposable build output. These summaries retain source sc
 
 | Scope | Latest accepted evidence | Limits |
 | --- | --- | --- |
-| Grading and storage | 0f6213a1: 196 core + 171 persistence test functions pass. 6da3570a: 13 review-store functions pass, including three alternate-kana cases preserving retries/outbox. | Shared logic, not physical recognition or signed transport. |
+| Grading and storage | At c2c7e62c: 197 core + 172 persistence functions pass across 52 shared suites. iPhone frozen adoption passes both base/WAL variants (test-8575df5ce4e049419de77a91fa27b996). Earlier 6da3570a native review-store evidence covers 13 functions, including alternate-kana retries/outbox. | Shared logic and scoped simulated adoption; no physical recognition, signed transport or complete interruption matrix claim. |
 | Automatic sync account fences | After three awaited account-state reads, the worker now checks account identity before applying refresh state, notices or retry scheduling. All 18 `AutomaticSyncTests` pass on iPhone 18 Pro / iOS 27, including disconnect during read/write, offline recovery, uncertain writes, throttling and scene ownership. Receipt: test-c8106b43bef043adbbbd04ec0703c098; logs: AutomaticSync-AccountFence-20261025.log and AutomaticSync-AccountFence-Lint-20261025.log. | Existing regression suite and source-level suspension-boundary audit; no deterministic interruption inside those three database reads, real-account or physical transport claim. Release integration is covered by the current products row. |
 | Current Release products | At dc6508d8: iOS build-25571d7174e944da8e516c77ef5b80aa; Mac build-9971ecb80a5e4a968e860d9e194a98c1. Both report zero compiler/analyzer issues. Both declared bundle audits pass with no violations: localized names, icon metadata, microphone description, forbidden retired symbols and frozen/test resources. Receipts: Lesson-Controls-Release-{iOS,Mac}-20261025.log and Lesson-Controls-Bundle-{iOS,Mac}-20261025.log. | Compilation and declared bundle constraints only; no signed distribution, physical icon appearance or full runtime claim. |
 | Repository enforcement | At f5e27dde: explicit `mainboard lint --check .` checks 449 files, no rewrites/failures (Modernization-Repository-Lint-20261025.log). `mainboard rules check .` reports 240 findings (Modernization-Rules-20261025.log). | Initial no-path lint checked zero changed files and is not repository evidence. Rule findings require contextual review, not blanket suppression. |
