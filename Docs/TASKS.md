@@ -8,6 +8,20 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Lesson-note keyboard warning resolved on iPhone/iPad:** removing the keyboard accessory
+temporarily eliminated the warning (`test-58519566ba76420f989545cfd99f76b4`); restoring only
+its Done button reproduced it (`test-554077ec5708482ba22f1496fffeede8`). The final shared
+editor places Done in its existing bottom safe-area inset while any field is focused, alongside
+save errors when present. Keyboard dismissal, notes, synonyms and concealment remain intact;
+no platform branch or new component is introduced. This isolates the warning to the keyboard
+toolbar path without claiming a framework-internal root cause.
+Two iPhone journeys pass warning-free in `test-d8814d06c8344e6387069634a05fb915` and the
+iPad note/synonym journey passes warning-free in `test-2fcf13d933274f47a92125c8dea96a7a`.
+Both device logs record tapping `material.keyboardDone`; scoped Mainboard lint passes.
+Evidence: `.build/Results/Note-Layout-{NoAccessory,Button,SafeArea,iPad,Lint}-20261024.log`.
+Native Mac rendering remains unverified while its UI runner cannot connect. Earlier failed
+layout experiments below remain historical evidence, not outstanding changes.
+
 **Lesson-note frame-warning investigation:** the isolated original editor reproduces the
 warning in `test-d120ddf0b7e9470e94166d462c86460c`. Two one-variable experiments also
 pass behavior but retain the warning: grouping the keyboard spacer/Done button
@@ -181,8 +195,8 @@ and the documented Japanese-input/service bridges. No new cache, Parquet workflo
 framework, constructor-macro dependency or V2 schema is justified by current evidence.
 
 1. Finish local functional acceptance in bounded groups. The earlier 57 logged passes now
-   have finalized evidence across scoped runs. Investigate the lesson-note focus frame warning
-   recorded above. Keep the five URL-event journeys separate. Resolve actual failures
+   have finalized evidence across scoped runs. The lesson-note focus warning is resolved on
+   iPhone/iPad as recorded above. Keep the five URL-event journeys separate. Resolve actual failures
    without suppressions. Complete iPad/Mac usability, window restoration, accessibility and
    keyboard/IME comparison against the original flow and supplied screenshots.
 2. Finish storage reliability gaps using existing probes: earlier source-capture disk

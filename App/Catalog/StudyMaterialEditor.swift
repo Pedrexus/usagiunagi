@@ -137,9 +137,17 @@ public struct StudyMaterialEditor<Version: Equatable & Sendable>: View {
       .scrollDismissesKeyboard(.interactively)
       .accessibilityIdentifier("material.form")
       .safeAreaInset(edge: .bottom) {
-        if let error {
-          Text(error).font(.callout).foregroundStyle(.red).textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading).padding().background(.bar)
+        if error != nil || focusedField != nil {
+          VStack(alignment: .leading, spacing: 8) {
+            if let error {
+              Text(error).font(.callout).foregroundStyle(.red).textSelection(.enabled)
+            }
+            if focusedField != nil {
+              Button("Done") { focusedField = nil }
+                .accessibilityIdentifier("material.keyboardDone")
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+          }.frame(maxWidth: .infinity, alignment: .leading).padding().background(.bar)
         }
       }
       .disabled(busy)
@@ -154,10 +162,6 @@ public struct StudyMaterialEditor<Version: Equatable & Sendable>: View {
           Button("Save") { save(expectedVersion: initial.version) }
             .accessibilityIdentifier("material.save")
             .disabled(busy || conflict != nil)
-        }
-        ToolbarSpacer(placement: .keyboard)
-        ToolbarItem(placement: .keyboard) {
-          Button("Done") { focusedField = nil }.accessibilityIdentifier("material.keyboardDone")
         }
       }
       .interactiveDismissDisabled(changed || busy)
