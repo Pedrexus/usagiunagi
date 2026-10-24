@@ -8,6 +8,19 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Hands-free reviews with Increased Contrast:** both existing iPhone cases pass in
+`test-ff6d4179c2df47bf815e347d179b18f1`: meaning-to-reading completion without extra
+taps, and incorrect-answer feedback followed by automatic continuation with the
+wrong-answer penalty retained. Two passes, zero failures/skips/runtime warnings;
+build diagnostics also report zero warnings. The supported simulator setting reads
+enabled before/after the run and is verified restored to its original disabled state.
+The exported reading screenshot visibly keeps the prompt, listening status, stop and
+keyboard controls readable without clipping. Evidence: `.build/Results/Voice-Contrast-20261024.log`
+and `Voice-Contrast-20261024/35645DF2-D58A-45D3-9B31-58F3A916645C.png`.
+These are synthetic capture events through the production UI/grader, not microphone,
+human recognition, VoiceOver, dark-mode or all-screen contrast acceptance. No app or
+test source change was needed. Actual Reduce Motion remains owner-deferred.
+
 **Statistics chart accessibility:** accuracy marks now supply a formatted percentage
 and correct/total answer counts. Pace comparison marks distinguish estimated, actual
 and typical-range values with explicit days and level labels, following Coverage's
