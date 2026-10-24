@@ -8,6 +8,15 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Note-editor conflict acceptance after the layout fix:** all three event-driven iPhone
+cases pass in `test-820fa296ecbf40739818d5401cf18a22`, with no failures/skips/runtime
+warnings. Drafts and hidden reading notes survive a concurrent change until explicit
+replacement; unarmed/missing-token/wrong-token/wrong-path events are rejected; rejected
+commits are not acknowledged as saved. The declared `MaterialConflictEvents.json` driver
+delivered synthetic local events. Log: `.build/Results/Note-Conflict-Acceptance-20261024.log`.
+No production or test changes were needed. This closes current-source acceptance for three
+of the five separately driven URL journeys; warm links and held refresh remain separate.
+
 **Lesson-note keyboard warning resolved on iPhone/iPad:** removing the keyboard accessory
 temporarily eliminated the warning (`test-58519566ba76420f989545cfd99f76b4`); restoring only
 its Done button reproduced it (`test-554077ec5708482ba22f1496fffeede8`). The final shared
