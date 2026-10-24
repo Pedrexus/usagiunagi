@@ -36,7 +36,7 @@ public struct LessonFlowView<Page: View>: View {
             description: Text("Return and refresh your account to check for new lessons."))
         } else {
           page(index).id(index).frame(maxWidth: .infinity, maxHeight: .infinity)
-            .simultaneousGesture(
+            .gesture(
               DragGesture(minimumDistance: 60).onEnded { value in
                 guard index < subjects.count,
                   abs(value.translation.width) > abs(value.translation.height) * 2

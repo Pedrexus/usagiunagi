@@ -38,6 +38,16 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Related-subject gesture fix: swiping the radical row in a teaching page also changed
+its parent lesson (`test-379731d439854a928569627651ba943c`, reproduced before repair).
+Replacing the parent's simultaneous gesture with a normal gesture lets child controls
+handle their interaction first. The related-row regression and existing teaching/quiz
+navigation both pass (`test-e1a6b3ef22e845239f800a728252567b`, two tests) on iPhone 18 Pro.
+No new abstraction, platform branch or persistence change. Receipts:
+`.build/Results/Lesson-Related-Swipe-20261025.log` (failure),
+`Lesson-Related-Swipe-Priority-20261025.log` (pass). This verifies the fixture row and
+ordinary page swipes, not every scroll extent, hardware input or platform.
+
 Quiz gesture fix: a right swipe over an active lesson quiz previously changed the
 lesson page. The added regression fails before the fix (`test-479b0a65de7a4344a5cde46854d1bd3e`).
 The shared page gesture now requires a teaching-page index. Afterward both the navigation

@@ -2116,6 +2116,20 @@ extension ReviewFlowTests {
   }
 
   @MainActor
+  func testRelatedSubjectScrollingDoesNotChangeLessonPage() {
+    continueAfterFailure = false
+    let app = launchLessonPicker()
+    defer { app.terminate() }
+    for id in [1, 13] { app.buttons["lesson.select.\(id)"].tap() }
+    app.buttons["lesson.startSelection"].tap()
+    expectLessonPage("Lesson 1 of 2", in: app)
+    let component = app.buttons["subject.related.2"]
+    scrollTo(component, in: app)
+    component.swipeLeft()
+    expectLessonPage("Lesson 1 of 2", in: app)
+  }
+
+  @MainActor
   func testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz() {
     continueAfterFailure = false
     let app = launchLessonPicker()

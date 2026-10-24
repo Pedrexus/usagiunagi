@@ -164,3 +164,9 @@ regression reproduced a right swipe leaving Quiz for the final teaching page. Pa
 swipes now change teaching pages only; explicit subject chips still allow returning
 to lesson content from the quiz. This protects quiz input gestures without adding a
 platform branch or changing the durable session, grading, or explicit navigation.
+
+A second reproduced conflict affected related-subject rows inside teaching pages:
+the parent's simultaneous gesture changed pages while swiping the row. The parent
+now uses a normal gesture, allowing child interactions to take precedence. Focused
+iPhone regressions confirm the related row stays on its lesson and ordinary page
+swipes, explicit subject navigation and the quiz boundary still work.
