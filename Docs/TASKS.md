@@ -8,6 +8,17 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Lesson-note frame-warning investigation:** the isolated original editor reproduces the
+warning in `test-d120ddf0b7e9470e94166d462c86460c`. Two one-variable experiments also
+pass behavior but retain the warning: grouping the keyboard spacer/Done button
+(`test-bbb7f9bb98d34565bf7ee8b53eb74f39`) and removing explicit form presentation sizing
+(`test-61fd51b00f5649efa4d4e570e2c1dd25`). Both experiments are reverted; production source
+is unchanged. Logs are `.build/Results/Note-Layout-{Baseline,Grouped,Automatic}-20261024.log`.
+The baseline activity tree records only the warning title/time, with no associated failure
+or stack attachment. Do not repeat these ineffective changes or suppress the warning.
+Next investigation needs a runtime call stack or a smaller keyboard/editor reproduction;
+its origin is not established as app code or framework behavior.
+
 **Interrupted-run reconciliation complete:** all seven remaining ordinary iPhone cases pass
 in `test-e78153b0374b4990a31d39c33f93664b`: diagnostic sharing, explicit session end, font
 download after leaving its picker, font return/draft retention, lesson notes/synonyms, and
