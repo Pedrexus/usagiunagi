@@ -141,3 +141,17 @@ is intentionally untracked and must not be deleted as disposable build output.
 
 Completion requires evidence for every remaining requirement above. Do not close the
 goal because builds pass or because all currently runnable synthetic checks pass.
+
+### October 25 iPad large-text follow-up
+
+- Fixed the UI test scroll helper to anchor its drag inside a visible content row;
+  the collection frame includes the sidebar on iPad. No app behavior or assertions
+  changed. Initial failures are retained in `test-f8fa08b91e674ef4bf8e9a190fb241aa`.
+- `test-d644b489b1ad495d96b806789b85375b`: both Home action/progress reachability
+  and lesson heading/footer checks pass at the largest Dynamic Type size.
+- `test-107f056a4bff4dcd84872960b07301e9`: lesson recheck passes using a direct
+  window screenshot instead of the application capture. The exported image
+  `iPad-Lesson-Window-20261025/298C846D-2B39-41A5-BDBC-EA6665F02385.png`
+  shows the full heading and quiz controls without the earlier capture's black
+  band/cropping. Heading height increases from 57.5 to 86 points. These are scoped
+  simulator fixture checks, not VoiceOver, physical-device or complete UI acceptance.

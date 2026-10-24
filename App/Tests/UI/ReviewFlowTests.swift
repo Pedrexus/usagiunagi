@@ -164,7 +164,7 @@ final class ReviewFlowTests: XCTestCase {
       XCTAssertEqual(heading.label, "こんにちは")
       heights.append(heading.frame.height)
       XCTAssertTrue(app.buttons["lesson.quiz"].isHittable)
-      let image = XCTAttachment(screenshot: app.screenshot())
+      let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
       image.name = "Lesson heading and footer at \(category)"
       image.lifetime = .keepAlways
       add(image)
@@ -2186,10 +2186,14 @@ extension ReviewFlowTests {
           foregroundForm.swipeUp(velocity: .slow)
         }
       } else if home.exists && home.isEnabled {
-        // Keep drags clear of the floating tab bar, which covers the center in landscape.
+        // The collection frame can include the sidebar; anchor inside an actual visible row.
         let down = towardTop || element.exists && element.frame.midY < home.frame.minY
-        let start = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.25 : 0.7))
-        let end = home.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: down ? 0.7 : 0.25))
+        let row = home.cells.allElementsBoundByIndex.first { $0.frame.intersects(home.frame) }
+        let bounds = row?.frame.intersection(home.frame) ?? home.frame
+        let x = (bounds.minX - home.frame.minX + bounds.width * 0.15) / home.frame.width
+        // Stay left of the floating tab bar within that content region.
+        let start = home.coordinate(withNormalizedOffset: CGVector(dx: x, dy: down ? 0.25 : 0.7))
+        let end = home.coordinate(withNormalizedOffset: CGVector(dx: x, dy: down ? 0.7 : 0.25))
         start.press(forDuration: 0.05, thenDragTo: end)
       } else if towardTop {
         app.swipeDown()
