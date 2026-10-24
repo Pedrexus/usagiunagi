@@ -59,6 +59,19 @@ callback remain intact. Both subject-preference suites pass (6 tests, receipt
 `.build/Results/Subject-Settings-Simplify{,-Lint}-20261025.log`. This verifies local
 merge/reopen behavior, not deferred physical iCloud delivery.
 
+Live Mainboard acceptance (October 25, app `82431eec`): installed CLI 0.5.6 now
+loads `app list`, builds `mainboard app build usagiunagi --device mac
+--configuration Release --timeout 240`, and runs the declared `audit-release-mac`
+task without retained-source or DEVELOPER_DIR overrides. Build
+`build-33702d0a1bdb49f9b693b5f0243d4223` succeeds with zero reported compiler/analyzer
+issues; Xcode separately logs its no-AppIntents-dependency metadata notice. Bundle
+audit has no violations (localized names/icon, microphone metadata, forbidden
+FMDB/test resources). Logs: `.build/Results/Live-Mainboard-Mac-20261025.log` and
+`Live-Mainboard-Mac-Bundle-20261025.log`. Mainboard's checkout remains extensively
+modified by concurrent work; no Mainboard files were edited or published. This
+closes the current live Mac build/audit import blocker, not hosted CI, full tooling
+acceptance, signing or current Mac UI acceptance.
+
 ## Requirements and status
 
 “Implemented” means source exists with the cited scoped evidence. It does not mean
