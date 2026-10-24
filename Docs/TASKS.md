@@ -245,3 +245,33 @@ scopes without a relevant source change or a newly identified risk.
   credential-field values. Other receipts use the `Mac-Normal-*-20261025.log`
   prefix. The original Mac UI-runner connection failure remains unresolved and
   was not retried. Current app source remains 6e265355.
+
+### October 25 iPad software keyboard and Mainboard integration follow-up
+
+- Mainboard remains at 7dfce9f with its broad uncommitted folder reorganization.
+  The verified optional collector split remains in `src/mainboard/jobs/testing/collector.py`,
+  `jobs/testing/lanes.py`, `verbs/work/submit.py` and
+  `integration/cli/test_lane_collection.py`. These depend on the uncommitted moves
+  from the old `jobs/lanes.py` layout; committing only the new collector would not
+  produce a coherent tree. No unrelated Mainboard changes were staged or published.
+- Bounded native accessibility queries can read Device Hub menus without the stalled
+  computer-use path. AXRaise on the iPad window returns -25205; selecting the observed
+  Window-menu item succeeds and confirms the exact iPad main-window title/checkmark.
+  Device → Keyboard → Toggle Software Keyboard is available. A single successful
+  press after the fixture answer field becomes active restores software-keyboard
+  visibility. Reduce Motion and physical-device deferrals remain unchanged.
+- Unchanged `testLandscapeReviewKeepsAnswerControlsAccessible` at source 6e265355
+  passes both viewport assertions (15.37s and 85.47s), including after Quick Settings.
+  The independently captured `iPad-Keyboard-Return-InProgress-20261025.png` confirms
+  the question, answer, tools and actual keyboard keys fit in landscape.
+- The complete test did **not** pass: Mainboard exits 124 at its 180-second limit
+  during subsequent submission idle waits. `test-e926a860ce544dc6affa4643864441ad`
+  is incomplete and has no readable finalized result; do not count it as a passing
+  receipt. Preserve `iPad-Keyboard-Review-20261025.log` and the standalone screenshot.
+  The keyboard precondition is resolved; complete landscape journey acceptance
+  remains open pending the automation idle-delay investigation. Do not repeat the
+  identical run merely with a longer timeout.
+- All menu/selection/action evidence uses `iPad-Keyboard-*-20261025` names under
+  `.build/Results`, including the exact temporary Swift action and shell trigger.
+  No new app tool or production fault hook was added. After timeout, targeted
+  runner cleanup found nothing still running; normal iPad app launch succeeded.
