@@ -34,6 +34,20 @@ The catalog reader also verifies old account bytes decode with no `catalogRefres
 
 ## Source-capture pressure boundary: still open
 
+A separate October 24 file-size-limit calibration also passed capture. A shell child
+ignored SIGXFSZ and set `ulimit -f 16` (16 KiB on this host) before the existing
+`verify-application-opening` command. The 180,224-byte fixture was copied intact;
+verification SHM stopped at 16,384 bytes and opening threw SQLite 4874/Cocoa 256.
+The probe's uncaught top-level error produced SIGTRAP/exit 133, so this is neither
+safe-refusal acceptance nor evidence of a production-app crash. After removing the
+limit, two fresh processes restored all 38 exact records. The selector advanced from
+preparing to selected with a different candidate; all failed preparation file hashes
+and original/retained source bytes stayed unchanged. Evidence is retained in
+`.build/Results/Capture-Limit-{Build-,Recovery-,}20261024.log`, with the disposable
+directory recorded in `Capture-Limit-Root-20261024.txt`. No permanent command or
+production hook was added. This establishes recovery after this verification-file
+failure only; it does not cover WAL-source capture, ENOSPC or mid-copy interruption.
+
 A bounded October 22 calibration did not establish ENOSPC during the actual source copy. The existing production opener uses `FileManager.default`; the installed Foundation SDK says delegate-based operations should use a unique FileManager, so shared-manager delegate interception was rejected without changing production. A disposable 128 MiB APFS experiment then tried the fixed reserve sizes 16, 32, 64, 128 and 256 KiB. After filling to real ENOSPC and deleting a preallocated reserve, 16/32 KiB failed with POSIX 28 before a file-specific error, 64/128 KiB failed at `store-selection.plist` with Cocoa 640, and 256 KiB passed capture but failed opening the verification store with SQLite 13/Cocoa 256. Every original source family remained byte-identical. None identified the required `preparations/<candidate>/capture/study.store` copy destination, so none counts as capture acceptance; no retry/reopen or WAL-source capture claim follows from them.
 
 An initial attempt to release capacity by truncating the pressure file failed at that truncation itself with Cocoa 640; the removable-reserve experiment supersedes that setup attempt, not its failure record. Both images were ejected. Local logs are retained under `.build/Results/CaptureCalibration-20261022/`; the finite experimental command was removed rather than added to the permanent suite. The existing ten-case Mac pressure matrix and its outcome count are unchanged. A future supported capture-specific mechanism must prove the actual copy error, preserve source/partial artifacts, and exercise fresh-candidate retry plus fresh-process reopens before this gap closes. No physical disk, live account, production hook or frozen fixture was changed.

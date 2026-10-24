@@ -8,6 +8,16 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Storage verification-file limit recovery:** a bounded disposable Mac probe with a
+16 KiB per-file limit passed source capture but failed opening the verification image
+(SQLite 4874/Cocoa 256). The probe's throwing entry point terminated with SIGTRAP;
+this is not evidence of an app crash or a safely handled probe failure. Removing the
+limit allowed two independent processes to restore all 38 records. Retry selected a
+fresh candidate; failed preparation hashes and original/retained source bytes stayed
+unchanged. Logs: `.build/Results/Capture-Limit-{Build-,Recovery-,}20261024.log`.
+No production code or frozen fixture changed. This mechanism does **not** exercise
+mid-copy failure or ENOSPC; do not repeat it to claim either remaining boundary.
+
 **Remaining event-driven acceptance complete:** warm review/lesson/subject links from
 Statistics and return to the same tab pass in `test-fc65d99d25d9473e8a1f9117a9e1f8d7`.
 Cached study during a held full refresh and foreground transition passes in
