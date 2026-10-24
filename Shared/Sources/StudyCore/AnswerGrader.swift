@@ -214,21 +214,13 @@ public enum AnswerGrader {
         return .containsInvalidCharacters(nonKanaRanges)
       }
 
-      for reading in subject.primaryReadings {
-        if reading == hiraganaText {
-          return .precise
-        }
-
-        // Some katakana kanji subjects like ページ only have one primary katakana reading.
-        let hiraganaReading = convertKatakanaToHiragana(reading)
-        if hiraganaReading == hiraganaText {
-          return .precise
-        }
+      for reading in subject.primaryReadings
+      where convertKatakanaToHiragana(reading) == hiraganaText {
+        return .precise
       }
-      for reading in subject.alternateReadings {
-        if reading == hiraganaText {
-          return subject.kind == .kanji ? .otherKanjiReading : .precise
-        }
+      for reading in subject.alternateReadings
+      where convertKatakanaToHiragana(reading) == hiraganaText {
+        return subject.kind == .kanji ? .otherKanjiReading : .precise
       }
       if subject.kind == .vocabulary, subject.japanese.count == 1,
         subject.componentSubjectIds.count == 1

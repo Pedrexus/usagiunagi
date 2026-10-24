@@ -378,3 +378,24 @@ scopes without a relevant source change or a newly identified risk.
   pending reorganization, so this change remains uncommitted with it. No unrelated
   Mainboard changes were staged and nothing was published. Integration of this
   regression check and the collector fix remains part of the tooling task.
+
+### October 25 alternate-reading kana grading correction
+
+- Cleanup triage found a real grading inconsistency: primary readings fold katakana
+  for comparison, but alternate readings compared raw stored text against a hiragana
+  answer. An alternate stored in katakana or mixed kana could therefore be rejected.
+  Both reading lists now use the same existing kana conversion, removing eight
+  production lines. Displayed answers are unchanged. Kanji alternates still return
+  otherKanjiReading; vocabulary alternates remain precise. No fuzzy acceptance added.
+- Swift Testing checks 12 combinations of answer/stored kana scripts, each for kanji
+  and vocabulary, plus a different-reading negative control. All pass. The complete
+  shared run passes 196 StudyCore functions/29 suites and 171 StudyPersistence
+  functions/23 suites (367 functions total; parameter cases are counted separately).
+  Receipt: Kana-Alternate-Shared-20261025.log. Expected refused-save diagnostics
+  belong to the existing read-only rollback test. Formatting and diff checks pass;
+  frozen V1 hash remains 538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4.
+- This verifies shared grading, not physical speech capture or a new app bundle.
+  Latest iOS/Mac Release receipts predate this grader change and must be identified
+  as such. Other duplicate/nesting findings are retained for contextual review;
+  shared-vs-frozen snapshot comparisons must not be consolidated into one oracle.
+  Inventory: Shared-Cleanup-Triage-20261025.log (76 signals).

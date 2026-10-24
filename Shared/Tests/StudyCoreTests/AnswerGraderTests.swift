@@ -91,6 +91,23 @@ struct AnswerGraderTests {
         ]))
   }
 
+  @Test(arguments: ["ひと", "ヒト", "ひト", "ヒと"], ["ひと", "ヒト", "ヒと"])
+  func alternateReadingsAcceptBothScriptsWithoutChangingKanjiFeedback(
+    answer: String, alternate: String
+  ) {
+    for kind in [SubjectKind.kanji, .vocabulary] {
+      let subject = GradingSubject(
+        japanese: "一", kind: kind, meanings: ["One"], primaryReadings: ["いち"],
+        alternateReadings: [alternate])
+      #expect(
+        AnswerGrader.checkNormalizedAnswer(answer, subject: subject, taskType: .reading)
+          == (kind == .kanji ? .otherKanjiReading : .precise))
+      #expect(
+        AnswerGrader.checkNormalizedAnswer("ひつ", subject: subject, taskType: .reading)
+          == .incorrect)
+    }
+  }
+
   @Test func okuriganaRangesRespectDecomposedKana() {
     let subject = GradingSubject(
       japanese: "食べる", kind: .vocabulary, meanings: ["To Eat"], primaryReadings: ["たべる"])
