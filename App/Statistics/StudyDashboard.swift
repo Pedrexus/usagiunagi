@@ -269,9 +269,7 @@ public struct StudyDashboard: View {
         } label: {
           HStack(alignment: .top) {
             Text(subject.characters.isEmpty ? subject.meaning : subject.characters)
-              .font(.title2).foregroundStyle(
-                subject.kind == .kanji ? StudyPalette.kanji : StudyPalette.vocabulary
-              )
+              .font(.title2).foregroundStyle(StudyPalette.color(for: subject.kind))
               .frame(minWidth: 70, alignment: .leading)
             VStack(alignment: .leading, spacing: 4) {
               Text(subject.meaning).foregroundStyle(.primary)

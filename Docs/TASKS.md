@@ -8,6 +8,16 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Statistics follow-up:** Focus rows now use `StudyPalette.color(for:)`, correcting radicals
+that were incorrectly purple while retaining kanji/vocabulary colors and removing a duplicate
+branch. Mainboard lint passes. iPhone Coverage receipt
+`test-d29a0e70257f47319ac784a40b3b8728` passes the chart/filter/tab-change journey with no
+failures, skips or runtime warnings (`Statistics-Coverage-20261024.log`). This verifies inline
+Coverage navigation, not visual acceptance of every Focus subject or forecast calibration.
+Source review confirms pending subjects are removed from snapshot assignments and Coverage
+keeps them separate; pace validation uses only history available at each target's unlock.
+Real-account calibration remains open and no exam-pass prediction is claimed.
+
 **Mac navigation follow-up:** the first local run (`test-c42a6846718b49a8af56c9a80203583c`)
 failed before compilation because the generic simulator signing defaults require a Mac
 provisioning profile for this app's entitlements. The pending Mac device declaration now
