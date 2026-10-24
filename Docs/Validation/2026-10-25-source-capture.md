@@ -143,3 +143,35 @@ a recovery pass. Correcting the disposable repaging setup produced the results a
 This closes this Mac cross-volume nonempty single-file interruption point. It does
 not establish same-volume APFS clone failure, every copy instruction, iOS capture or
 publication interruption, or physical power/Data Protection durability.
+
+## Same-volume clone destination collision
+
+At app `3b973d66`, LLDB confirmed that the production copyItem path calls the actual
+`libsystem_kernel.dylib` clonefileat syscall on the same APFS volume. While stopped
+immediately before that syscall, the debugger host created a 37-byte collision file
+at the marked disposable candidate's capture/study.store. No register or return value
+was replaced. The syscall returned -1; Foundation reported Cocoa 516 / POSIX 17
+(File exists), preserving the collision bytes.
+
+Both base and committed-WAL sources subsequently restored all 38 exact records in
+two fresh processes. Each retry chose a new candidate and preserved all abandoned
+preparation hashes, original/retained family hashes and the frozen fixture. The
+second successful reopen left selection bytes unchanged. This proves actual native
+clone destination-collision handling, not same-volume ENOSPC or power-loss behavior.
+
+The first base harness selected hold-application-opening, whose top-level error is
+unhandled rather than exit 74. LLDB stopped at that synthetic failure and its batch
+session exited; PID 16407 was then verified absent. The failed expectation is retained.
+A separate recovery driver reopened that same failed source twice without repeating
+the collision. The WAL run used inspect-application-payload, which catches the same
+production-opener failure and deliberately exits 74. This harness distinction does
+not describe a crash in the app's own launch error handling.
+
+Evidence: `.build/Results/Clone-Collision-20261025` and
+`Clone-Collision-20261025-WAL`, with debugger transcripts, exact-state reopen logs,
+source/preparation receipts and drivers. The probe binary matches the partial-copy
+experiment above. Driver SHA-256 values:
+
+- Initial base: `58e546802b913f0ccbb96e2075918e96d985825650629a2a9857962ec62f4006`.
+- Base recovery: `5120107a4bf5b0a7927b1ca1b3dc7d6104bc696d46b92b966ca581ca8b84e032`.
+- WAL: `be4448beb5b874ed36f994c151b0dc07108232e22d428b4cddbdf4266449c2a4`.

@@ -38,7 +38,9 @@ October 25 base and committed-WAL checks established an actual copy ENOSPC on a
 bounded separate APFS destination. Both recovered all 38 records in two fresh
 processes with a fresh candidate, preserving sources and failed preparation files.
 See the [exact scope and receipts](../../../Docs/Validation/2026-10-25-source-capture.md).
-Same-volume cloning, nonzero mid-copy interruption and iOS acceptance remain open.
+Mac cross-volume partial-file interruption and same-volume native clone destination-collision
+recovery now also pass for base/WAL sources; see the linked receipt for exact boundaries
+and harness limitations. Same-volume clone ENOSPC and iOS acceptance remain open.
 The earlier unsuccessful calibrations below remain historical evidence.
 
 A separate October 24 file-size-limit calibration also passed capture. A shell child
