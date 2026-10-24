@@ -275,3 +275,26 @@ scopes without a relevant source change or a newly identified risk.
   `.build/Results`, including the exact temporary Swift action and shell trigger.
   No new app tool or production fault hook was added. After timeout, targeted
   runner cleanup found nothing still running; normal iPad app launch succeeded.
+
+### October 25 account-screen warning correction
+
+- A normal native Mac window capture revealed an iCloud mistake-sync unavailable
+  banner before any WaniKani account was connected. StudyApplicationWindow now
+  presents mistake-sync notices only when the snapshot is a real account. General
+  startup notices remain the fallback; sync workers, stored data and connected-account
+  notice logic are unchanged. Sample previews also avoid an irrelevant account warning.
+- `build-bb62fde888fc46b7a042a1a1038865cd` builds the change as native Mac Release.
+  Strict formatting and diff checks pass. The raw build still has the known App
+  Intents metadata warning. A fresh normal launch exposes one Account window,
+  Connect disabled without a token, and Preview enabled.
+- Inspected before/after images: `Mac-Account-Current-20261025.png` and
+  `Mac-Account-Notice-Fixed-20261025.png`. The latter shows the native dark account
+  form without the irrelevant banner. This is one window/appearance, not a full
+  Mac accessibility or signed-account acceptance claim.
+- App-only ScreenCaptureKit capture works with the existing permission and explicit
+  NSApplication initialization. The initial helper's graphics assertion affected
+  that helper, not usagiunagi. Exact working temporary Swift source is retained in
+  `Mac-Window-Capture-20261025.swift` under `.build/Results`; no capture tool was added
+  to app production code. The Mac app remains open. Review focus source inspection
+  found no proven app-side loop explaining the earlier XCTest idle timeout, which
+  remains unresolved; no speculative focus change or repeated identical test ran.

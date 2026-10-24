@@ -147,7 +147,8 @@ struct StudyApplicationWindow: View {
         StudyRootView(
           model: services.model, automaticSync: services.automaticSync,
           appName: AppIdentity.name, appearance: services.appearance,
-          notice: services.mistakeSync?.notice ?? services.notice,
+          notice: (services.model.snapshot?.isSample == false ? services.mistakeSync?.notice : nil)
+            ?? services.notice,
           notifications: services.notifications,
           avatars: services.avatars, links: links
         )
