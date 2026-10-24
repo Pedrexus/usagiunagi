@@ -51,8 +51,10 @@ private actor ModelServer {
   private(set) var userReads = 0
   private var userGate: StudyTaskGate?
   private(set) var preferenceWrites: [WaniKaniPreferenceChanges] = []
-  private var losePreferenceResponse = false
-  func loseNextPreferenceResponse() { losePreferenceResponse = true }
+  private var losePreferenceResponse: Bool?
+  func loseNextPreferenceResponse(afterApplying: Bool = true) {
+    losePreferenceResponse = afterApplying
+  }
   private var preferences = WaniKaniPreferences(
     extraStudyAutoplayAudio: false, lessonsAutoplayAudio: false, lessonsBatchSize: 5,
     reviewsAutoplayAudio: false, reviewsDisplaySrsIndicator: true,
@@ -96,11 +98,12 @@ private actor ModelServer {
           from: #require(request.httpBody))
         let changes = try #require(body["user"]?["preferences"])
         preferenceWrites.append(changes)
-        preferences = preferences.applying(changes)
-        if losePreferenceResponse {
-          losePreferenceResponse = false
+        if let afterApplying = losePreferenceResponse {
+          losePreferenceResponse = nil
+          if afterApplying { preferences = preferences.applying(changes) }
           throw URLError(.timedOut)
         }
+        preferences = preferences.applying(changes)
       } else {
         reads += 1
         userReads += 1
@@ -315,6 +318,61 @@ private actor ModelRepository {
     #expect(model.waniKaniPreferences == edit && model.pendingWaniKaniPreferences.isEmpty)
     #expect(!model.waniKaniPreferencesNeedConfirmation && model.waniKaniPreferencesNotice == nil)
     #expect(await server.preferenceWrites.count == 1)
+  }
+
+  @Test(arguments: [false, true])
+  func reopeningUncertainSettingsReadsBeforeOfferingRetry(serverApplied: Bool) async throws {
+    let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let cache = try await store(cached: true)
+    let server = ModelServer()
+    let client = await server.client
+    let service = try #require(client.cacheNamespace)
+    var edit: WaniKaniPreferences
+    do {
+      let model = StudyAppModel(
+        credentials: MemoryCredentials("fixture"), client: client,
+        preferenceCacheDirectory: directory, openStore: { cache })
+      await model.restore()
+      #expect(await model.refreshWaniKaniPreferences())
+      await server.loseNextPreferenceResponse(afterApplying: serverApplied)
+      edit = try #require(model.effectiveWaniKaniPreferences)
+      edit.lessonsBatchSize = 3
+      model.editWaniKaniPreferences(edit)
+      let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+      while model.waniKaniPreferencesNotice == nil, ContinuousClock.now < deadline {
+        try await Task.sleep(for: .milliseconds(10))
+      }
+      #expect(model.waniKaniPreferencesNeedConfirmation)
+      #expect(await server.preferenceWrites.count == 1)
+    }
+    do {
+      let disk = try await WaniKaniSettingsCache.open(in: directory)
+      let saved = try #require(
+        await disk.value(accountID: account, service: service))
+      #expect(saved.preferences.lessonsBatchSize == 5)
+      #expect(saved.pending.lessonsBatchSize == 3 && saved.needsConfirmation)
+    }
+    let reopened = StudyAppModel(
+      credentials: MemoryCredentials("fixture"), client: client,
+      preferenceCacheDirectory: directory, openStore: { cache })
+    await reopened.restore()
+    let previousReads = await server.userReads
+    #expect(await reopened.refreshWaniKaniPreferences())
+    #expect(await server.userReads == previousReads + 1)
+    #expect(reopened.effectiveWaniKaniPreferences == edit)
+    #expect(reopened.pendingWaniKaniPreferences.isEmpty == serverApplied)
+    #expect(reopened.waniKaniPreferencesNeedConfirmation == !serverApplied)
+    #expect((reopened.waniKaniPreferencesNotice == nil) == serverApplied)
+    // Wait beyond the debounce to detect an unintended automatic replay after reading disk.
+    try await Task.sleep(for: .milliseconds(800))
+    #expect(await server.preferenceWrites.count == 1)
+    let disk = try await WaniKaniSettingsCache.open(in: directory)
+    let saved = try #require(
+      await disk.value(accountID: account, service: service))
+    #expect(saved.pending.isEmpty == serverApplied)
+    #expect(saved.needsConfirmation == !serverApplied)
+    #expect(saved.preferences.lessonsBatchSize == (serverApplied ? 3 : 5))
   }
 
   @Test func restoreUsesTheSavedAccountAndOnlyOpensTheRepositoryOnce() async throws {
