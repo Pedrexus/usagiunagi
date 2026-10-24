@@ -102,3 +102,44 @@ This closes the tested same-volume, nonempty source-family capture interruption:
 one whole file copied, remaining WAL family incomplete. It does not prove interruption
 inside a single `copyItem` call, failure inside APFS clone optimization, iOS capture or
 physical power-loss behavior. Those narrower boundaries must not be inferred from this result.
+
+## Interruption inside a nonempty single-file copy
+
+At app `2d1907bb` (production opener last changed at `c2c7e62c`), a fresh probe build
+now verifies a true partial-file interruption for both base and committed-WAL sources.
+Only disposable copies were repaged to 65,536-byte SQLite pages using DELETE journal
+mode and VACUUM, retaining the frozen logical schema/records. The resulting database
+is 2,359,296 bytes. WAL seeding uses the existing probe's deliberate exit 86 and its
+updated exact baseline. The original frozen fixture is unchanged, SHA-256
+`f82be6077bbe12593c95c3ef27b7df576e65dde06965b0a297dbd12be3a3bf94`.
+
+Each capture directory resides on a bounded 128 MB disposable APFS image, a different
+filesystem device from the source. LLDB first stops at the production copyItem call,
+then at libcopyfile's copyfile_data and its native write syscall. Stepping out of that
+write returns 1,048,576 bytes while still inside copyfile_data; process kill reports
+status 9. The captured file is exactly 1,048,576 bytes, smaller than the source.
+No registers, app source, schema or production fault hooks were changed.
+
+Two fresh processes per variant restore all 38 exact records. Retry selects a new
+candidate, the abandoned preparation hashes stay unchanged, and original/retained
+files match the source hashes (including WAL/SHM for the WAL case). Selection is
+stable on the second reopen. Both images were ejected after verification.
+
+Receipts and exact drivers: `.build/Results/MidCopy-Repaged-20261025` and
+`MidCopy-Repaged-WAL-20261025`, including debugger transcripts, files.json,
+receipt.json, both reopen logs and detach logs. Driver SHA-256 values:
+
+- Base: `19c6b03eb96cdc407a9a7f7c972f23441775dac999b163229adc23c3176c5713`.
+- WAL: `f42623545a6f8601d262cbe599cc16cb7f64d852f4a298976ec64301d55dd54c`.
+- Probe: `f9ef686d26645657c9e448933432c4d0bcce6a9b53d8e107daaddabbb0f76e8f`.
+- Opener: `669a2df30a48a57ba841c2360d52a0974e56aa0a1b0a7d15b0c3e103d8d72ecb`.
+
+Initial discovery wrote the entire 180,224-byte fixture in one syscall, which did not
+qualify as partial-copy evidence. The first repaging attempt remained in WAL mode and
+failed its size precondition before creating/mounting a volume. Both receipts remain
+under MidCopy-Discovery-20261025 and MidCopy-Partial-20261025; neither is counted as
+a recovery pass. Correcting the disposable repaging setup produced the results above.
+
+This closes this Mac cross-volume nonempty single-file interruption point. It does
+not establish same-volume APFS clone failure, every copy instruction, iOS capture or
+publication interruption, or physical power/Data Protection durability.
