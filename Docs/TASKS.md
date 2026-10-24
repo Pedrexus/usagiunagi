@@ -31,15 +31,15 @@ all platform, physical-device or release acceptance is complete.
 | Rename/icon/localization | Fork remote is Pedrexus/usagiunagi. Localized 兔鰻/usagiunagi names and shared layered kanji icon compile; earlier bundle/static exports checked. | Physical Home Screen/Dock/Watch appearance variants and signed identity acceptance. Store listings/distribution require separate owner authorization. |
 | Lean code and modern Swift | Retired UIKit screens, Go/Objective-C/FMDB/protobuf/importers/assets removed; redundant app initializers reduced. Shared modules remain where persisted identity requires them. | Continue only evidence-based simplification without losing functionality or frozen data. Resource and final Release acceptance remain scoped. |
 | dataclass / constructor helpers | Separate reusable library and SwiftData/macro tests implemented. App pilot saved only three lines, so native constructors retained. Weak lifetime boundaries audited. | Publication and a larger measured benefit before app adoption; physical-service lifetime checks. No frozen-schema changes for boilerplate savings. |
-| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Local manifest finalized; iPhone build/lint/launch receipts pass. | Default installed CLI currently fails on a new eager pytest import. Existing Mainboard development environment works. Repair declared runtime dependencies; do not overwrite unrelated live edits. |
+| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Local manifest finalized; iPhone build/lint/launch receipts pass. Optional pytest collection is now isolated from ordinary CLI startup; installed app discovery/toolchain/Swift lint work again. | Collector fix and two passing regressions remain uncommitted alongside unrelated Mainboard work. Integrate them without staging others' edits; newer tool publication still needs approval. |
 | GitHub Actions / final tests | Bounded native lanes, pinned packages, storage matrices and product audits declared. All five tool checkouts pin published fa467e0. Local app/rules commands are newer than that pin. | Hosted run not performed: app push is not authorized. Newer Mainboard publication also needs approval. Tests run after implementation/manual repairs; preserve full assertion scope. |
 | Launch/reopen reports | iPhone native root, warm links, held refresh, account flows and normal simulator launch have finalized receipts. One pasted crash was SpringBoard, not the app. | Current broader Mac/window restoration and any newly reproduced matching app crash. Latest Mac UI attempt failed to connect its runner before executing tests. Do not equate compilation with launch acceptance. |
 
 ## Remaining work
 
-1. Restore a reliable default Mainboard installation without modifying unrelated
-   in-progress tooling changes. Its existing development environment is a temporary
-   validation route, not proof the installed command is repaired.
+1. Integrate the verified local Mainboard collector fix into its pending tool work.
+   The installed command works again without dependency installation; preserve
+   unrelated in-progress changes and do not publish newer tooling without approval.
 2. Finish supported local storage failure boundaries using marked disposable stores
    and bounded volumes. Avoid repeating rejected calibrations recorded below.
 3. Finish adaptive layout, original-app comparison and keyboard/IME/accessibility
@@ -97,6 +97,7 @@ is intentionally untracked and must not be deleted as disposable build output.
 
 | Commit / receipt | Scope |
 | --- | --- |
+| `Mainboard-Collector-20261025/{target,outcomes}.json` | OS-isolated regressions: CLI help with pytest blocked, and parameterized collection without execution; two passes/no skips. Default CLI discovery/toolchain and app Swift lint also pass. No dependencies installed. Mainboard source changes remain local/uncommitted. |
 | `bcd524f8`, `test-ff6d4179c2df47bf815e347d179b18f1` | Two hands-free iPhone flows with Increased Contrast; screenshot inspected; original setting and normal launch restored. |
 | `1e66d190`, `build-0b11948bb45340e29102735b697d08bc` | Explicit statistics chart accessibility values; scoped lint and warning-free iPhone build. Spoken VoiceOver unverified. |
 | `3e77fed7`, `build-9c68d7c8ceab4fdab0538d4cd2b84e24` | Local app manifest and corrected workflow guide; build/lint/launch. Later installed-CLI dependency failure supersedes default-command usability. |
