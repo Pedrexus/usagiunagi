@@ -8,6 +8,14 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Finalized lesson acceptance:** all three iPhone lesson journeys pass unchanged in
+`test-cd4520d36005405d895128e0da32d0a9` (no failures/skips/runtime warnings). Coverage:
+selection and unfinished quiz draft retention; teaching pages/swipes and return from quiz;
+wrong-answer handling followed by completion of the selected lesson. Log:
+`.build/Results/Lessons-Acceptance-20261024.log`. These isolated-fixture results replace
+unfinished broad-run evidence for lesson navigation and quiz completion. No real WaniKani
+exercise, data migration or grading change was performed.
+
 **Finalized catalog acceptance:** all four iPhone catalog journeys pass unchanged in
 `test-11cebd4105794afb839474deecd82d21`, with no failures, skips or runtime warnings:
 level paging/hidden answers/stage navigation; kana search and details; readiness/due-first
