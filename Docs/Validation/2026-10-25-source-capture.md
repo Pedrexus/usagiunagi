@@ -214,3 +214,40 @@ The binary hash matches the partial-copy experiment. This closes the tested Mac
 same-volume clone ENOSPC boundary for base/WAL sources. It does not establish iOS
 capture/publication, physical power loss, Data Protection or large real-account
 performance. Older sections retain their original, narrower evidence scope.
+
+## iOS simulator final-publication interruption
+
+At app `5841fcd8`, a temporary standalone SwiftPM probe was built for
+arm64-apple-ios27.0-simulator against the current Shared packages and the unchanged
+NativeStoreSnapshot reader. `vtool -show-build` confirms platform IOSSIMULATOR,
+minimum OS/SDK 27.0. Its exact package, entry point and reader are retained in the
+successful result directories. No app source, shipping target or fault hook changed.
+
+The entry point accepts only a marked disposable fixture root and compares the entire
+schema/record/field baseline. Two preliminary simulator processes passed exact control
+reads. The initial launch used an obsolete SwiftPM output path and failed before a
+process spawned; its receipt is retained. The current toolchain outputs the binary
+under out/Products/Debug-iphonesimulator.
+
+For base and committed-WAL fixtures, simctl spawn --wait-for-debugger starts a
+suspended process on iPhone 18 Pro/iOS 27. LLDB attaches to the exact process whose
+arguments contain the disposable path, stops at StudyStoreGeneration.swift:418 on
+publication hit three, and kills it before synchronizeFile(selectionURL). The selected
+selector has already been atomically written. Both transcripts report kill status 9.
+Two fresh simulator processes per case then restore all 38 exact records, preserving
+selector bytes and original/retained family hashes (including WAL/SHM). The WAL
+fixture is seeded by the existing Mac probe; its updated exact baseline is used.
+
+Evidence: `.build/Results/IOS-Publication-Debugger-20261025` and
+`IOS-Publication-Debugger-WAL-20261025`, with source snapshots, debugger/spawn logs,
+receipts and two reopens. Platform receipt: IOS-Debugger-Probe-Platform-20261025.log.
+
+- Simulator binary SHA-256: `fcc20d45d228d909d468dc183dd98a299780ecff6e5213a73d5ebda0e0227732`.
+- Base driver: `baffb867d214495570891295f16f460a2fd601a2f7c292affc36c3e962871268`.
+- WAL driver: `11daf23823923271cad8a76a427e65fa1623564e73cf1ac483dc7695226d2cfc`.
+
+This verifies the iOS Simulator runtime's pre-fsync publication process boundary.
+The standalone probe is outside the app-host sandbox; this does not prove app-host
+container permissions, iOS partial-file capture, physical power/Data Protection or
+signed-device behavior. The existing app-host interruption tests cover their own
+container-attachment boundaries and are not retroactively broadened by this result.

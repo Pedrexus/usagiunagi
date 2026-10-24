@@ -41,7 +41,9 @@ See the [exact scope and receipts](../../../Docs/Validation/2026-10-25-source-ca
 Mac cross-volume partial-file interruption and same-volume native clone destination-collision
 recovery now also pass for base/WAL sources; see the linked receipt for exact boundaries
 and harness limitations. Bounded same-volume clone ENOSPC also passes with exact
-base/WAL recovery; iOS capture/publication and physical acceptance remain open.
+base/WAL recovery. A standalone iOS Simulator probe also verifies pre-fsync final
+publication for base/WAL sources. iOS capture, app-host sandbox publication and
+physical acceptance remain open; see the linked receipt for the exact scope.
 The earlier unsuccessful calibrations below remain historical evidence.
 
 A separate October 24 file-size-limit calibration also passed capture. A shell child

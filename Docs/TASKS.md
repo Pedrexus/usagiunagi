@@ -21,7 +21,7 @@ all platform, physical-device or release acceptance is complete.
 | One iPhone-first app | Shared SwiftUI root, account model and SwiftData store; adaptive tabs/sidebar, toolbars and forms. App-owned UI/services moved out of StudyUI/StudySpeech into App. Tests share App/Tests. | Wider iPad/Mac layouts, keyboard/IME, window restoration and original-app usability comparison. Preserve required bridges. |
 | Lessons and reviews | Selection, interleaving, teaching, quizzes, Anki, correction, wrap-up, notes, synonyms, exclusion and summaries have scoped fixture acceptance. All 57 logged passes from the interrupted iPhone run now map to finalized receipts; five URL-driven journeys also pass. | Physical input/caret/IME, broader device layouts and final original-Tsurukame parity. Receipt reconciliation spans source revisions, not one full current-source suite. |
 | WaniKani design | Pink/blue/purple subject colors, compact review/lesson flow, native typography, SF Symbols and glass controls; owner screenshots guide the design. Note-editor keyboard warning fixed on iPhone/iPad. | Full dark/light/high-contrast/Dynamic Type and VoiceOver coverage; broader iPad/Mac rendering. Two high-contrast voice journeys are accepted, not every screen. |
-| SwiftData-only study storage | FMDB/importers retired. Native actor, outbox, frozen V1, generation validation/adoption and recovery. Mac/iPhone corruption, interrupted saves and bounded disk-full matrices have receipts. Mac base/WAL cross-volume copy and same-volume clone ENOSPC, partial-file/family interruption and final publication before fsync recover exact records. | iOS capture/publication (including partial-file interruption), physical pre-answer interruption, Data Protection/power loss and real-catalog/device performance. See storage invariants below. |
+| SwiftData-only study storage | FMDB/importers retired. Native actor, outbox, frozen V1, generation validation/adoption and recovery. Mac/iPhone corruption, interrupted saves and bounded disk-full matrices have receipts. Mac base/WAL cross-volume copy and same-volume clone ENOSPC, partial-file/family interruption and final publication before fsync recover exact records. | iOS capture (including partial-file interruption), app-host publication/sandbox acceptance, physical pre-answer interruption, Data Protection/power loss and real-catalog/device performance. See storage invariants below. |
 | Offline sync and recent mistakes | Durable pending work, account/origin fences, rollback/retry, refresh cancellation and 24-hour mistake projection have scoped tests. | Real account permissions/delivery, signed iOS/Mac KVS identity, multi-device/account transitions and offline recovery with real data. Never perform live exercises without authorization. |
 | Continuous bilingual voice | English/Japanese selection, pause-to-submit, automatic advance/mistake/retry and keyboard fallback. Kana script is preserved; recognizer alternatives can disambiguate without an answer key. Actual Mac file-fed capture/controller works. | Live microphones, language-model readiness, latency, interruptions/audio routes and human recognition across physical iPhone/iPad/Mac. Synthetic capture and generated audio are not live speech acceptance. |
 | Watch reviews and widgets | SwiftUI Watch app, foreground voice loop, phone recognition/grading bridge, four WidgetKit families and atomic snapshot. ClockKit migration code removed. | Physical paired Watch/phone transport, permissions, reachability, locked/background phone behavior, signed App Groups and installed-face/cache upgrades. |
@@ -38,8 +38,8 @@ all platform, physical-device or release acceptance is complete.
 
 ## Next work and acceptance gates
 
-1. **Storage recovery:** finish iOS capture/publication boundaries (including
-   partial-file interruption) using disposable stores and
+1. **Storage recovery:** finish iOS capture boundaries (including partial-file
+   interruption) and app-host publication/sandbox acceptance using disposable stores and
    bounded experiments. The existing iOS interruptedOpening harness stops during
    container attachment, so it cannot prove these earlier/later boundaries. Preserve
    failed calibrations; do not repeat them unchanged. See the
@@ -85,8 +85,10 @@ including failures. Do not suppress rules or remove functionality just to close 
   Same-volume native clone destination-collision recovery also passes for base/WAL
   stores: real POSIX 17 refusal, preserved collision/source bytes and two exact reopens.
   Bounded same-volume clone ENOSPC now also recovers base/WAL sources exactly twice,
-  with native failure and direct WAL errno 28 evidence. iOS and physical power/
-  Data Protection gates remain open.
+  with native failure and direct WAL errno 28 evidence. Standalone iOS Simulator
+  pre-fsync publication interruption now restores base/WAL data in two fresh processes
+  with stable selectors and source hashes. iOS capture, app-host sandbox publication
+  and physical power/Data Protection gates remain open.
 
 ## Owner decisions and platform boundaries
 
