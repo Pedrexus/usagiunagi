@@ -4,6 +4,14 @@ import Testing
 @testable import StudyCore
 
 struct StudyMarkupTests {
+  @Test(arguments: ["\u{301}かな", "か\u{3099}", "👩🏽‍💻"])
+  func unicodeScalarsAdjacentToTagsRemainStyled(_ text: String) {
+    let runs = StudyMarkup.parse("<b>\(text)</b>")
+    #expect(runs.count == 1)
+    #expect(runs.first?.text == text)
+    #expect(runs.first?.styles == [.bold])
+  }
+
   @Test func nestedMarkupPreservesStylesAndUnicode() {
     let runs = StudyMarkup.parse("  あ[ja]二[b]🐰[i]三[/i]四[/b]五[/ja]六\n")
     #expect(runs.map(\.text) == ["  あ", "二", "🐰", "三", "四", "五", "六\n"])

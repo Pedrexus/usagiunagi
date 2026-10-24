@@ -15,16 +15,15 @@ public enum StudyMarkup {
     let style: Style?
     let link: URL?
   }
-  private static let tags = try! NSRegularExpression(
-    pattern:
-      #"(<|\[)(/?)(radical|kanji|kan|vocabulary|reading|ja|jp|b|em|strong|i|a)(?:\s+href\s*=\s*["']([^"']*)["'][^>\]]*)?(>|\])"#,
-    options: .caseInsensitive)
-
   public static func parse(_ source: String) -> [Run] {
-    let text = source as NSString
+    let tags =
+      #/
+      (<|\[)(/?)(radical|kanji|kan|vocabulary|reading|ja|jp|b|em|strong|i|a)
+      (?:\s+href\s*=\s*["']([^"']*)["'][^>\]]*)?(>|\])
+      /#.ignoresCase().matchingSemantics(.unicodeScalar)
     var stack: [Tag] = []
     var runs: [Run] = []
-    var position = 0
+    var position = source.startIndex
     func append(_ value: String) {
       guard !value.isEmpty else { return }
       let styles = stack.compactMap(\.style)
@@ -35,20 +34,18 @@ public enum StudyMarkup {
         runs.append(Run(text: value, styles: styles, link: link))
       }
     }
-    for match in tags.matches(in: source, range: NSRange(location: 0, length: text.length)) {
-      append(
-        text.substring(with: NSRange(location: position, length: match.range.location - position)))
+    for match in source.matches(of: tags) {
+      append(String(source[position..<match.range.lowerBound]))
       position = match.range.upperBound
-      let opening = text.substring(with: match.range(at: 1))
-      let closing = text.substring(with: match.range(at: 5))
-      let name = text.substring(with: match.range(at: 3)).lowercased()
+      let (raw, opening, slash, tag, href, closing) = match.output
+      let name = tag.lowercased()
       guard (opening == "<" && closing == ">") || (opening == "[" && closing == "]") else {
-        append(text.substring(with: match.range))
+        append(String(raw))
         continue
       }
-      if text.substring(with: match.range(at: 2)) == "/" {
+      if slash == "/" {
         guard stack.last?.name == name else {
-          append(text.substring(with: match.range))
+          append(String(raw))
           continue
         }
         stack.removeLast()
@@ -58,12 +55,11 @@ public enum StudyMarkup {
           "vocabulary": .vocabulary, "reading": .reading, "ja": .japanese, "jp": .japanese,
           "b": .bold, "em": .bold, "strong": .bold, "i": .italic,
         ]
-        let href =
-          match.range(at: 4).location == NSNotFound ? nil : text.substring(with: match.range(at: 4))
-        stack.append(Tag(name: name, style: styles[name], link: href.flatMap(webURL)))
+        stack.append(
+          Tag(name: name, style: styles[name], link: href.map(String.init).flatMap(webURL)))
       }
     }
-    append(text.substring(from: position))
+    append(String(source[position...]))
     return runs
   }
 

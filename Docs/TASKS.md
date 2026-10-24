@@ -38,6 +38,16 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Mnemonic cleanup: `StudyMarkup` now uses compile-time typed Swift regex captures and
+Swift string indices, removing `NSRegularExpression`, forced initialization and manual
+UTF-16/`NSString` range conversion (four fewer production lines). Unicode-scalar
+matching preserves combining marks next to tags. Six focused test functions pass,
+including three new Unicode cases; 9,261 deterministic combinations match the parser
+from `4dc0cced` exactly. No dependency or schema change. Receipts:
+`.build/Results/SwiftMarkup-Final-20261025.log`, `SwiftMarkup-Parity-20261025.log/.swift`
+and `SwiftMarkup-Lint-Verified-20261025.log`. This checks parser behavior, not every
+rendered mnemonic or final platform Release builds after the change.
+
 Statistics source review at `7b07c322` traced `StudyStore.snapshot` and refresh projection
 through `StudyMetrics` to dashboard/coverage rendering. Pending subjects are removed from
 stage assignments and separately identified in coverage; pending uploads suppress date
