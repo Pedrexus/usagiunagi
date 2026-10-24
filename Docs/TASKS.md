@@ -38,6 +38,21 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Dark lesson accessibility: the expanded audit reproduced contrast failures on the
+toolbar action and bottom Quiz control. The toolbar now uses adaptive system blue
+with prominent glass; Quiz uses an opaque native prominent button with primary fill
+and inverse background-colored text. WaniKani subject colors remain unchanged.
+Final `test-70b8010292364d75969cf1ba71991ce8` passes contrast and sufficient-description
+checks; the exported screenshot was inspected to confirm visible labels (an earlier
+passing audit missed an invisible white-on-white label, which was corrected).
+Contrast excludes only static text outside the measured content viewport, retaining
+each exception: the sole final exclusion is Stats at y=768…820.33, clipped below the
+viewport ending at y=780. Buttons and description checks are never excluded.
+Receipts: `.build/Results/DarkLesson-Accessibility-Inverse-20261025.log`,
+`DarkLesson-Inverse-20261025/` and `DarkLesson-Inverse-Lint-Verified-20261025.log`.
+Earlier failed experiments remain in Results. Final light/large-text and other-platform
+checks for these control changes remain open; this is not full VoiceOver acceptance.
+
 Mnemonic cleanup: `StudyMarkup` now uses compile-time typed Swift regex captures and
 Swift string indices, removing `NSRegularExpression`, forced initialization and manual
 UTF-16/`NSString` range conversion (four fewer production lines). Unicode-scalar

@@ -96,18 +96,22 @@ public struct LessonFlowView<Page: View>: View {
                       }
                     }
                 }
-                Button("Quiz") { index = subjects.count }.buttonStyle(.glass).tint(
-                  .primary
-                )
-                .id(subjects.count).accessibilityValue(
-                  index == subjects.count ? "Selected" : "Not selected"
-                )
-                .accessibilityIdentifier("lesson.quiz")
+                Button {
+                  index = subjects.count
+                } label: {
+                  Text("Quiz").foregroundStyle(.background)
+                }.buttonStyle(.borderedProminent).tint(.primary)
+                  .id(subjects.count).accessibilityValue(
+                    index == subjects.count ? "Selected" : "Not selected"
+                  )
+                  .accessibilityIdentifier("lesson.quiz")
               }.padding(.horizontal, 6).padding(.vertical, 4)
             }.scrollIndicators(.hidden)
               .onChange(of: index) { _, value in proxy.scrollTo(value, anchor: .center) }
           }
         }.padding(.vertical, 4).background(.bar)
+          .accessibilityElement(children: .contain)
+          .accessibilityIdentifier("lesson.navigation")
       }
     }.toolbar {
       ToolbarItem(placement: .navigation) {
@@ -119,7 +123,8 @@ public struct LessonFlowView<Page: View>: View {
           Button(index == subjects.count - 1 ? "Start quiz" : "Next") {
             index = min(subjects.count, index + 1)
           }
-          .buttonStyle(.glassProminent).accessibilityIdentifier("lesson.next")
+          .buttonStyle(.glassProminent).tint(.blue)
+          .accessibilityIdentifier("lesson.next")
         }
       }.visibilityPriority(.high)
     }.toolbarTitleDisplayMode(.inline)

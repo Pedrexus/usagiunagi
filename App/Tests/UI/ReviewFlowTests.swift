@@ -16,7 +16,7 @@ import UIKit
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
-  @MainActor func testDarkLessonMnemonicRemainsReadable() {
+  @MainActor func testDarkLessonMnemonicRemainsReadable() throws {
     continueAfterFailure = false
     let app = launchNativeHome([
       "--lesson-fixture", "--lesson-settings-fixture", "--dark-fixture",
@@ -32,6 +32,23 @@ final class ReviewFlowTests: XCTestCase {
     let mnemonic = app.staticTexts["A single line represents one."]
     scrollTo(mnemonic, in: app)
     XCTAssertTrue(mnemonic.isHittable)
+    let footer = app.descendants(matching: .any)["lesson.navigation"]
+    XCTAssertTrue(footer.exists)
+    let top = app.navigationBars.firstMatch.frame.maxY
+    let viewport = CGRect(
+      x: app.frame.minX, y: top, width: app.frame.width, height: footer.frame.minY - top)
+    try app.performAccessibilityAudit(for: [.contrast, .sufficientElementDescription]) { issue in
+      guard issue.auditType == .contrast, let element = issue.element,
+        element.elementType == .staticText, !viewport.contains(element.frame)
+      else { return false }
+      let evidence = XCTAttachment(
+        string: "Clipped lesson text: \(element.label)\nFrame: \(element.frame)"
+          + "\nViewport: \(viewport)")
+      evidence.name = "Contrast outside visible lesson content"
+      evidence.lifetime = .keepAlways
+      self.add(evidence)
+      return true
+    }
     let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
     image.name = "Dark lesson mnemonic colors"
     image.lifetime = .keepAlways
