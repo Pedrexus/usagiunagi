@@ -76,3 +76,29 @@ This closes the tested Mac pre-fsync process-interruption point. It does not est
 power-loss durability, every instruction within atomic replacement/fsync, iOS publication
 interruption, or nonzero mid-copy interruption. The cross-volume capture results above
 retain their original scope.
+
+## Nonempty interruption during source-family capture
+
+The same unchanged probe also stopped at `StudyStoreGeneration.swift:429`, immediately
+after the first `FileManager.copyItem` returns and before its permissions update or the
+next family member. LLDB reported one resolved location, first-hit interruption and
+process kill status 9. Source and capture had the same filesystem device ID.
+
+Both base and committed-WAL cases left exactly `capture/study.store`, 180,224 bytes,
+matching the original database hash. The WAL case had not yet copied either sidecar;
+the retained generation did not exist. The selector remained preparing. Two fresh
+processes per case restored all 38 exact records, with a different candidate but the
+same retained identity. Every abandoned preparation file, original DB/WAL/SHM file,
+retained file and frozen-fixture hash remained unchanged; selection stayed stable
+after the successful retry.
+
+Receipts and exact driver: `.build/Results/CaptureDebugger-20261025` and
+`CaptureDebugger-20261025-WAL`. Each contains `interruption.log`, `reopen-0.log`,
+`reopen-1.log`, `receipt.json` and `driver.py`.
+`Capture-Debugger-20261025.log` reports both passes. The probe binary and opener
+hashes match the publication experiment above. No source, schema or fixture changed.
+
+This closes the tested same-volume, nonempty source-family capture interruption:
+one whole file copied, remaining WAL family incomplete. It does not prove interruption
+inside a single `copyItem` call, failure inside APFS clone optimization, iOS capture or
+physical power-loss behavior. Those narrower boundaries must not be inferred from this result.

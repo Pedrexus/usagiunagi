@@ -101,6 +101,12 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
   No production hook or schema change. This closes that Mac process boundary only;
   iOS publication interruption, nonzero mid-copy and power loss remain unverified.
   See the [debugger receipt](Validation/2026-10-25-source-capture.md#interruption-inside-final-selector-publication).
+- Same-volume base/WAL capture interruption after the first real file copy now passes:
+  the 180,224-byte abandoned capture stays unchanged, retry chooses a fresh candidate,
+  and two fresh processes restore all 38 records. In the WAL case neither sidecar had
+  been copied. This verifies the incomplete family boundary, not interruption inside
+  one file's copy or APFS clone failure. See the
+  [capture receipt](Validation/2026-10-25-source-capture.md#nonempty-interruption-during-source-family-capture).
 
 ## Owner decisions and platform boundaries
 
