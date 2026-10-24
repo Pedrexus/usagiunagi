@@ -442,3 +442,32 @@ scopes without a relevant source change or a newly identified risk.
   UI receipts predate only the grader change, not the catalog/chart layout changes.
   VoiceOver, broader Mac/iPad acceptance, precise storage interruption boundaries,
   Mainboard integration and owner-deferred physical/signed checks remain incomplete.
+
+### October 25 direct native Mac statistics and settings inspection
+
+- Debug build-d133fa1d8a52471d979d922e7ca54396 succeeds at source 27ff68f7.
+  Opened the existing --review-fixture --statistics-fixture --light-fixture account
+  directly, bypassing only the stalled XCTest runner. Production screens still run;
+  services/data are the existing isolated fixture. No real account exercise occurred.
+- Bounded native AX selection of the observed Stats sidebar row succeeds. Viewed
+  Mac-Fixture-Native-Stats-20261025.png: shared two-column cards and native toolbar
+  render. The pace disclosure expands/collapses with successful AXPress actions and
+  values 1/0; Mac-Fixture-Pace-Expanded-20261025.png shows the inline comparison,
+  uncertainty explanation and source footer without a sheet. Native scrolling succeeds.
+- AX exposes the new stage/level/median chart labels. Its simple AXValue lookup for
+  chart marks returns nil, so neither spoken values nor VoiceOver traversal is
+  accepted from this inspection. No inferred accessibility fix was made.
+- Settings opens a single native sheet with the WaniKani and app-setting groups;
+  the synthetic service explicitly reports unsupported server preferences. Done
+  dismisses it and returns to Stats with the comparison collapsed. This does not
+  verify individual setting changes, live server preferences or all Mac settings.
+- The first screenshot helper selected the separate sheet surface and yielded an
+  incorrectly scaled capture. Selecting the largest app window corrects the capture;
+  Mac-Fixture-Settings-Window-20261025.png was inspected. This was a capture-helper
+  issue, not an app layout repair. Exact bounded AX/capture scripts and all logs are
+  retained under .build/Results/Mac-Fixture-*-20261025.*.
+- The fixture app quit cleanly and its exact-path process check is empty. The normal
+  Release app remains open on Subjects (PID 37908), confirmed by
+  Mac-Fixture-Normal-Window-20261025.log. Absolute-path open restored focus after an
+  initial relative-path lookup failed. The already-running Release process was not
+  relaunched, so this is not runtime proof of the newest Release binary.
