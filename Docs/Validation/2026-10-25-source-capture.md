@@ -42,3 +42,37 @@ Each directory contains the exact temporary driver, capacity/candidate/hash rece
 capture error, two reopen logs and detach evidence. Execution used the committed
 Mainboard `7dfce9f` snapshot with a 240-second outer limit and bounded subprocesses.
 No one-off experimental tool was added to the app or its permanent suite.
+
+## Interruption inside final selector publication
+
+A separate bounded debugger experiment now covers a Mac process interruption inside
+`StudyStoreGeneration.publish`, after the atomic selector write and permissions update,
+but before `synchronizeFile(selectionURL)` at line 415. LLDB resolved one source
+breakpoint, ignored the first two preparing publications, and stopped on its third hit.
+The stopped frame and selected selector were inspected before `process kill` reported
+exit status 9. This changes no production source and adds no app fault hook.
+
+Both journal-free and committed-WAL disposable sources passed. Two fresh processes
+restored the exact 38-record state with unchanged selection and source/retained hashes.
+The existing first-write command then committed an answer/outbox and note and exited
+86 deliberately. Two more fresh processes restored all 39 expected records. All source
+DB/WAL/SHM files, retained files and the frozen fixture remained unchanged throughout.
+
+The first WAL driver expected zero from the deliberate-exit first-write command and
+stopped after its successful save. The recovery driver explicitly accounts for exit 86
+and continued that same fixture, without repeating the mutation. Both the initial
+failure and continuation receipts are retained; this was a harness expectation error.
+
+Evidence: `.build/Results/PublicationDebugger-20261025` and
+`PublicationDebugger-20261025-WAL`, each containing the exact driver, debugger transcript,
+initial reopen logs, first-write log, two written-state reopen logs and
+`post-write-receipt.json`. `Publication-Debugger-Postwrite-20261025.log` reports both passes.
+The probe binary SHA-256 is
+`fea66c09d7332b287cb9302c2e3e9d7c319c908802b662a3cca6d1e8b01704ca`.
+The opener is unchanged from `a3c02c52`, SHA-256
+`8d0f4da0b3937c0ec5d75e2c0bbf3a8dbb554f1ef96cfaa957b33681b5d26b33`.
+
+This closes the tested Mac pre-fsync process-interruption point. It does not establish
+power-loss durability, every instruction within atomic replacement/fsync, iOS publication
+interruption, or nonzero mid-copy interruption. The cross-volume capture results above
+retain their original scope.

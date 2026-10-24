@@ -95,6 +95,12 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
   preserving sources and failed preparations. Same-volume cloning, nonzero mid-copy
   interruption and iOS capture remain unverified. See the
   [scoped receipt](Validation/2026-10-25-source-capture.md).
+- Mac base/WAL interruption inside final publication now passes at the pre-fsync
+  breakpoint: each restores 38 exact records twice, then an abrupt first answer/note
+  write restores 39 records twice. Original/retained files and selection stay unchanged.
+  No production hook or schema change. This closes that Mac process boundary only;
+  iOS publication interruption, nonzero mid-copy and power loss remain unverified.
+  See the [debugger receipt](Validation/2026-10-25-source-capture.md#interruption-inside-final-selector-publication).
 
 ## Owner decisions and platform boundaries
 
