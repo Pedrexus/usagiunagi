@@ -50,8 +50,13 @@ each exception: the sole final exclusion is Stats at y=768…820.33, clipped bel
 viewport ending at y=780. Buttons and description checks are never excluded.
 Receipts: `.build/Results/DarkLesson-Accessibility-Inverse-20261025.log`,
 `DarkLesson-Inverse-20261025/` and `DarkLesson-Inverse-Lint-Verified-20261025.log`.
-Earlier failed experiments remain in Results. Final light/large-text and other-platform
-checks for these control changes remain open; this is not full VoiceOver acceptance.
+Earlier failed experiments remain in Results. At `dc6508d8`, the iPhone light-mode
+normal/largest Dynamic Type test passes (`test-349274da6a904b3995f66d5882626457`,
+41.163 seconds), including unsuppressed picker/teaching touch-target audits. Both
+exported screenshots were inspected: normal Quiz has visible white text on black;
+at largest text the footer scrolls horizontally and the top Start quiz remains fully
+visible. Receipt: `.build/Results/Lesson-Controls-Light-Large-20261025.log` and its
+attachment directory. Other-platform rendering and full VoiceOver acceptance remain open.
 
 Mnemonic cleanup: `StudyMarkup` now uses compile-time typed Swift regex captures and
 Swift string indices, removing `NSRegularExpression`, forced initialization and manual
@@ -239,8 +244,8 @@ must not be deleted as disposable build output. These summaries retain source sc
 | Scope | Latest accepted evidence | Limits |
 | --- | --- | --- |
 | Grading and storage | 0f6213a1: 196 core + 171 persistence test functions pass. 6da3570a: 13 review-store functions pass, including three alternate-kana cases preserving retries/outbox. | Shared logic, not physical recognition or signed transport. |
-| Automatic sync account fences | After three awaited account-state reads, the worker now checks account identity before applying refresh state, notices or retry scheduling. All 18 `AutomaticSyncTests` pass on iPhone 18 Pro / iOS 27, including disconnect during read/write, offline recovery, uncertain writes, throttling and scene ownership. Receipt: test-c8106b43bef043adbbbd04ec0703c098; logs: AutomaticSync-AccountFence-20261025.log and AutomaticSync-AccountFence-Lint-20261025.log. | Existing regression suite and source-level suspension-boundary audit; no deterministic interruption inside those three database reads, real-account or physical transport claim. Final Release evidence predates this change. |
-| Current Release products | At 6da3570a: iOS build-6404d41ed5084a7abccd1eb1ddb96f3d; Mac build-ee89e3a3bad94084aaaaae9ea1b5dae0. Both bundle audits pass. | Known App Intents metadata warning remains. No signed distribution claim. |
+| Automatic sync account fences | After three awaited account-state reads, the worker now checks account identity before applying refresh state, notices or retry scheduling. All 18 `AutomaticSyncTests` pass on iPhone 18 Pro / iOS 27, including disconnect during read/write, offline recovery, uncertain writes, throttling and scene ownership. Receipt: test-c8106b43bef043adbbbd04ec0703c098; logs: AutomaticSync-AccountFence-20261025.log and AutomaticSync-AccountFence-Lint-20261025.log. | Existing regression suite and source-level suspension-boundary audit; no deterministic interruption inside those three database reads, real-account or physical transport claim. Release integration is covered by the current products row. |
+| Current Release products | At dc6508d8: iOS build-25571d7174e944da8e516c77ef5b80aa; Mac build-9971ecb80a5e4a968e860d9e194a98c1. Both report zero compiler/analyzer issues. Both declared bundle audits pass with no violations: localized names, icon metadata, microphone description, forbidden retired symbols and frozen/test resources. Receipts: Lesson-Controls-Release-{iOS,Mac}-20261025.log and Lesson-Controls-Bundle-{iOS,Mac}-20261025.log. | Compilation and declared bundle constraints only; no signed distribution, physical icon appearance or full runtime claim. |
 | Repository enforcement | Kana-Final-Lint-20261025.log: 448 files, no rewrites/failures. | Informational review signals are not suppressed or all treated as defects. |
 | iPhone layout | test-22ced2841c594fb99ba6ef315844195f: catalog paging/hidden answers/stages and inline pace comparison pass; fresh screenshots inspected. | Before the grader fix; same catalog/chart layout. |
 | iPhone continuous voice | At 09276bee (production grader 0f6213a1): test-52368b7149b04c70a182887a4443ea0b passes all three journeys: both answers without taps, unclear-kana retry without grading, and mistake recovery without taps. Fresh inline-reading screenshot inspected; normal simulator app restored. Receipts: .build/Results/iPhone-Voice-Kana-20261025.log and iPhone-Voice-Kana-20261025/manifest.json. | Fixture recognizer; no live microphone or physical-device claim. Screenshot confirms subject color, reading strip and inline listening/keyboard controls, not full original-app parity. |
