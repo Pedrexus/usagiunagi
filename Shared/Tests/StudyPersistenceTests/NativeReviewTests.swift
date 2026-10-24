@@ -149,8 +149,18 @@ struct NativeReviewTests {
     }
   }
 
-  @Test func invalidReadingAndAlternativeReadingDoNotPenalize() async throws {
+  @Test(arguments: ["ひと", "ヒト", "ヒと"])
+  func invalidReadingAndAlternativeReadingDoNotPenalize(alternate: String) async throws {
     let store = try await store()
+    var download = try await WaniKaniClient(transport: DownloadFixture.response).download(
+      token: "fixture")
+    let subject = try #require(download.subjects.firstIndex { $0.japanese == "一" })
+    download.subjects[subject].readings = [
+      .init("いち", isPrimary: true, kind: .onyomi),
+      .init(alternate, isPrimary: false, kind: .kunyomi),
+    ]
+    let baseline = try await store.refreshBaseline(accountID: account)
+    _ = try await store.applyDownload(download, credentialID: "credential", baseline: baseline)
     let initial = try await store.openReviews(accountID: account, now: now)
     let meaning = try #require(initial.question)
     let readingState =
@@ -165,12 +175,31 @@ struct NativeReviewTests {
     for (text, expected) in [
       ("一", AnswerGrade.containsInvalidCharacters([NSRange(location: 0, length: 1)])),
       ("ひと", .otherKanjiReading),
+      ("ヒト", .otherKanjiReading),
+      ("ヒと", .otherKanjiReading),
     ] {
       let result = try await store.answerReview(
         text, question: question, accountID: account, expectedRevision: revision, now: now)
       #expect(result.grade == expected && result.state.saved.revision == revision)
       #expect(result.state.saved.session.tasksAnswered == readingState.saved.session.tasksAnswered)
+      #expect(result.state.saved.session.items == readingState.saved.session.items)
+      #expect(result.state.question == question)
+      #expect(try await store.pendingReviews(accountID: account).isEmpty)
     }
+    let resumed = try await store.openReviews(accountID: account, now: now)
+    #expect(resumed.saved.revision == revision && resumed.question == question)
+    var completed = try await store.answerReview(
+      "イチ", question: question, accountID: account, expectedRevision: revision, now: now)
+    #expect(completed.grade == .precise)
+    if let remaining = completed.state.question {
+      #expect(remaining.kind == .meaning)
+      #expect(try await store.pendingReviews(accountID: account).isEmpty)
+      completed = try await store.answerReview(
+        "one", question: remaining, accountID: account,
+        expectedRevision: completed.state.saved.revision, now: now)
+    }
+    #expect(completed.grade == .precise && completed.state.question == nil)
+    #expect(try await store.pendingReviews(accountID: account).count == 1)
   }
 
   @Test func changedAssignmentAndDisconnectedAccountCannotAcceptAnswers() async throws {

@@ -399,3 +399,23 @@ scopes without a relevant source change or a newly identified risk.
   as such. Other duplicate/nesting findings are retained for contextual review;
   shared-vs-frozen snapshot comparisons must not be consolidated into one oracle.
   Inventory: Shared-Cleanup-Triage-20261025.log (76 signals).
+
+### October 25 kana retry integration through the native review store
+
+- Source tracing confirms the shared review screen and Watch phone host both call
+  StudyStore.answerReview, which normalizes the submitted text and calls the shared
+  grader. No separate voice-only answer-key path was introduced.
+- Extended the existing invalid/alternate-reading persistence test with hiragana,
+  katakana and mixed-script stored alternates. Each case submits invalid characters
+  and three kana-equivalent alternates, requiring unchanged revision, question,
+  item penalties, answered count and an empty pending-review queue. Reopening the
+  session keeps its question/revision. A primary katakana answer is accepted; after
+  both questions are complete, exactly one review is queued.
+- Kana-Alternate-Session-Order-20261025.log: all 13 NativeReviewTests functions pass,
+  including the three parameter cases. Formatting and diff checks pass. Earlier
+  logs retain a test-only catalog-field typo and an incorrect assumption that the
+  randomized session always asks meaning first. The final test handles either order
+  and still requires no upload until both questions finish. No production changes
+  were needed after 0f6213a1.
+- This closes the local repository retry/outbox regression scope. It does not prove
+  microphone recognition, Watch transport or physical-device delivery.
