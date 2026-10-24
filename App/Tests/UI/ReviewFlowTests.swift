@@ -2569,11 +2569,14 @@ extension ReviewFlowTests {
     image.lifetime = .keepAlways
     add(image)
     app.navigationBars.buttons["BackButton"].tap()
-    app.buttons["settings.page.subjects"].tap()
+    let subjects = app.buttons["settings.page.subjects"]
+    scrollTo(subjects, in: app)
+    subjects.tap()
     let readings = app.switches["settings.showAllReadings"]
     setSettingsSwitch(readings, on: true, in: app)
     app.navigationBars.buttons["BackButton"].tap()
-    app.buttons["settings.page.subjects"].tap()
+    scrollTo(subjects, in: app)
+    subjects.tap()
     XCTAssertTrue(readings.waitForExistence(timeout: 5))
     XCTAssertEqual(readings.value as? String, "1")
     app.navigationBars.buttons["BackButton"].tap()

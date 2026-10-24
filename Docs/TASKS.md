@@ -8,6 +8,22 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**iPad settings acceptance:** `test-b1826a9250e14b189b514ca74c6ac7bc` passed lesson
+preferences, review dependencies/download navigation and notification persistence. The
+appearance journey failed because it assumed the subject-settings row fit in the visible
+sheet. It now uses the existing scroll helper before both subject-page visits; the focused
+retry `test-1942a6f984f246049accb37d42d75ce7` passes with no failures/skips/runtime warnings.
+Production layout and persistence were unchanged. Scoped Mainboard lint passed. Logs:
+`.build/Results/Settings-iPad-{Retry-,}20261024.log`. Normal iPad launch completed through
+Mainboard; the subsequent screenshot attempt was blocked by an unrelated live Mainboard
+startup regression (`verbs/jobs.py`: undefined `_SPEC_ONLY`), so no screenshot is claimed.
+
+Automatic Xcode selection reaches direct subprocesses and xcrun's own children, resolving
+the installed simctl path without an override (`Xcode-Child-Environment-20261024.log`).
+However, Xcode's failure-diagnostic collector again reported missing simctl on the failed
+iPad run. Keep this narrower issue open; changing Mainboard environment propagation is not
+justified by the successful direct probes. Both iPad test invocations used automatic selection.
+
 **Settings acceptance:** generic `mainboard app test usagiunagi settings --device iphone`
 passes all four UI cases in `test-1eb4b5f84e6d49ce8f5b5f1b0619f1ef` (no failures,
 skips, build warnings or reported runtime warnings). This covers lesson ordering, review
