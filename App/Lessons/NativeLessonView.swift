@@ -127,6 +127,7 @@ public struct NativeLessonView: View {
       }
       let available = try await store.availableLessons(
         accountID: accountID, lessonPreferences: lessonSettings.value)
+      try Task.checkCancellation()
       let byID = Dictionary(uniqueKeysWithValues: available.map { ($0.id, $0) })
       guard !ids.isEmpty, ids.allSatisfy({ byID[$0] != nil }) else {
         throw NativeReviewError.invalidLessonSelection

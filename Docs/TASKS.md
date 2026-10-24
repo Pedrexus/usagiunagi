@@ -19,6 +19,16 @@ resolve to source methods. Receipt: `.build/Results/Focused-Suite-Registration-2
 This configuration-only change does not represent another simulator test run.
 Physical-device checks remain deferred at the owner's request.
 
+Lesson picker lifecycle (October 25): Start lessons now uses a SwiftUI `.task(id:)`
+owned by the picker instead of an untracked button task. Pending subject IDs also
+supply the busy state. NativeLessonView checks cancellation after fetching available
+lessons and before replacing the selection; cancellation does not present an error.
+iPhone fixture tests for retained selection/unfinished quiz drafts and wrong-answer
+rules/completion both pass in `test-397088e320f64ef19c3c748755e8b503`, zero warnings
+or skips. Two-file lint passes. Receipts: `.build/Results/Lesson-Picker-Lifecycle-20261025.log`
+and `Lesson-Picker-Lifecycle-Lint-20261025.log`. These normal-flow regressions do not
+inject the precise close-during-read race. Physical acceptance remains deferred.
+
 ## Requirements and status
 
 “Implemented” means source exists with the cited scoped evidence. It does not mean

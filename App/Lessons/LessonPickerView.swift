@@ -14,7 +14,8 @@ struct LessonPickerView: View {
       if let selection { selection.wrappedValue = newValue } else { localSelection = newValue }
     }
   }
-  @State private var busy = false
+  @State private var pendingIDs: [Int64]?
+  private var busy: Bool { pendingIDs != nil }
   @State private var interleave = false
   @State private var error: String?
   @Environment(\.dynamicTypeSize) private var typeSize
@@ -109,6 +110,17 @@ struct LessonPickerView: View {
         }
       }
       .onChange(of: items.map(\.id)) { _, ids in selected.formIntersection(ids) }
+      .task(id: pendingIDs) {
+        guard let pendingIDs else { return }
+        defer { self.pendingIDs = nil }
+        do {
+          try Task.checkCancellation()
+          try await start(pendingIDs)
+        } catch {
+          if !Task.isCancelled { self.error = error.localizedDescription }
+        }
+      }
+
   }
   private var selectionCount: some View {
     Text("\(selected.count) selected").monospacedDigit()
@@ -126,12 +138,8 @@ struct LessonPickerView: View {
           queues.compactMap { $0.indices.contains(index) ? $0[index] : nil }
         } : chosen
       let ids = ordered.prefix(selected.isEmpty ? max(1, batchSize) : ordered.count).map(\.id)
-      busy = true
       error = nil
-      Task {
-        defer { busy = false }
-        do { try await start(ids) } catch { self.error = error.localizedDescription }
-      }
+      pendingIDs = ids
     }.buttonStyle(.glassProminent).disabled(items.isEmpty || busy)
       .accessibilityIdentifier("lesson.startSelection")
   }
