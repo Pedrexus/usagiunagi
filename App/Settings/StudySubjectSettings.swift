@@ -2,11 +2,7 @@ import Foundation
 import Observation
 import StudyCore
 
-@MainActor public protocol StudySubjectPreferenceStore: AnyObject {
-  var value: SubjectDetailsPreferences { get set }
-}
-
-@MainActor public final class DefaultsStudySubjectPreferences: StudySubjectPreferenceStore {
+@MainActor public final class DefaultsStudySubjectPreferences {
   private let defaults: UserDefaults
   private let changed: (@MainActor (SubjectDetailsPreferences, SubjectDetailsPreferences) -> Void)?
   public init(
@@ -32,8 +28,8 @@ import StudyCore
 
 @MainActor @Observable public final class StudySubjectSettings {
   public private(set) var value: SubjectDetailsPreferences
-  private let store: any StudySubjectPreferenceStore
-  public init(store: any StudySubjectPreferenceStore = DefaultsStudySubjectPreferences()) {
+  private let store: DefaultsStudySubjectPreferences
+  public init(store: DefaultsStudySubjectPreferences = DefaultsStudySubjectPreferences()) {
     self.store = store
     value = store.value
   }

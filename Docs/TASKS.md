@@ -52,6 +52,13 @@ format fix. Receipts: `.build/Results/Statistics-DST-20261025.log` and
 `Statistics-DST-Final-Lint-20261025.log`; the initial formatting failure is retained.
 This verifies calendar bucketing, not real-account forecast calibration or exam readiness.
 
+Subject-settings cleanup (October 25): removed the unused single-implementation
+`StudySubjectPreferenceStore` protocol; observation, defaults injection and the iCloud
+callback remain intact. Both subject-preference suites pass (6 tests, receipt
+`test-23dd9107e33544d6973e38a03810aabd`); one-file lint passes. Logs:
+`.build/Results/Subject-Settings-Simplify{,-Lint}-20261025.log`. This verifies local
+merge/reopen behavior, not deferred physical iCloud delivery.
+
 ## Requirements and status
 
 “Implemented” means source exists with the cited scoped evidence. It does not mean
