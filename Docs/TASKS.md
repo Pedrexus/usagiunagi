@@ -38,6 +38,17 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Lesson reload ownership: all four `Task { await load() }` actions in
+`NativeLessonView` now change a refresh identity consumed by its existing SwiftUI
+`.task(id:)`. Back, completion and retry use the same cancellable lifecycle as initial
+loading; no controller/task registry or platform branch was added. Draft/selection
+retention and wrong-answer/completion pass on iPhone 18 Pro
+(`test-cf1eb844e7d641919ac783289cbde8fc`, two tests), and one-file Mainboard lint passes.
+Receipts: `.build/Results/Lesson-Reload-Lifecycle-20261025.log` and
+`Lesson-Reload-Lifecycle-Lint-20261025.log`. This replaces the unstructured reload
+ownership noted below; precise suspended-read cancellation and broader scene/account
+transitions still lack deterministic acceptance.
+
 Lesson load cancellation: after awaiting `store.session`, `NativeLessonView.load` now
 checks task cancellation before mutating paused-session/batch state or calling
 `openLessons`. Later store reads already had this boundary. This closes a source-level

@@ -20,6 +20,7 @@ public struct NativeLessonView: View {
   @State private var pausedReview = false
   @State private var pausedLesson: Selection?
   @State private var loaded = false
+  @State private var refreshID = UUID()
   @State private var error: String?
   private struct Selection: Identifiable {
     let id = UUID()
@@ -47,7 +48,7 @@ public struct NativeLessonView: View {
               finished()
             } else {
               self.selection = nil
-              Task { await load() }
+              refreshID = UUID()
             }
           },
           autoplay: { index in
@@ -70,7 +71,7 @@ public struct NativeLessonView: View {
               finished: {
                 self.selection = nil
                 finished()
-                Task { await load() }
+                refreshID = UUID()
               })
           } else {
             NativeSubjectDetailsView(
@@ -90,11 +91,11 @@ public struct NativeLessonView: View {
           description: Text(
             "Open Reviews to finish or end that session before starting a lesson quiz. Your completed answers stay saved."
           ))
-        Button("Check saved session") { Task { await load() } }
+        Button("Check saved session") { refreshID = UUID() }
       } else if let error {
         ContentUnavailableView(
           "Lessons unavailable", systemImage: "books.vertical", description: Text(error))
-        Button("Try again") { Task { await load() } }
+        Button("Try again") { refreshID = UUID() }
       } else if loaded {
         picker(items)
       } else {
@@ -103,7 +104,8 @@ public struct NativeLessonView: View {
     }.navigationTitle("Lessons")
       .navigationBarBackButtonHidden(selection != nil)
       .task(
-        id: LessonReadKey(accountID: accountID, preferences: lessonSettings.value)
+        id: LessonReadKey(
+          accountID: accountID, preferences: lessonSettings.value, refreshID: refreshID)
       ) {
         if selection == nil { await load() }
       }
@@ -135,6 +137,7 @@ public struct NativeLessonView: View {
   private struct LessonReadKey: Equatable {
     let accountID: String
     let preferences: StudyLessonPreferences
+    let refreshID: UUID
   }
   private func load() async {
     error = nil
