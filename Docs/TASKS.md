@@ -8,6 +8,16 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Remaining event-driven acceptance complete:** warm review/lesson/subject links from
+Statistics and return to the same tab pass in `test-fc65d99d25d9473e8a1f9117a9e1f8d7`.
+Cached study during a held full refresh and foreground transition passes in
+`test-3ed7bc7855434cec9c5f53c5b033a844`. Both finalized iPhone runs have no failures,
+skips or runtime warnings and use their declared `WarmLinks.json`/`HeldRefresh.json` drivers.
+Logs: `.build/Results/{Warm-Links,Held-Refresh}-Acceptance-20261024.log`. Together with the
+three conflict cases below, all five separately driven URL journeys now have current-source
+passing evidence. Keep them in dedicated driver-equipped lanes; no network/account claims
+or native Mac restoration acceptance follow from these synthetic iPhone checks.
+
 **Note-editor conflict acceptance after the layout fix:** all three event-driven iPhone
 cases pass in `test-820fa296ecbf40739818d5401cf18a22`, with no failures/skips/runtime
 warnings. Drafts and hidden reading notes survive a concurrent change until explicit
