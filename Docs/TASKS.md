@@ -8,6 +8,17 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Finalized Home acceptance:** `test-951368f321e948cba792d69ee33d425c` passes seven
+iPhone cases, including Home rotation/refresh, empty queues/vacation and upcoming-review
+breakdown, plus full typed review completion and the preexisting lesson/catalog/Coverage
+duplicates. `test-8daeaddf43874a87b75aa072dcf58205` separately passes Home actions and
+progress at the largest Dynamic Type size. Both have zero failures/skips/runtime warnings.
+Logs: `Home-Acceptance-20261024.log` and `Home-Large-Text-20261024.log` under `.build/Results`.
+No production changes were required. The pending Home suite now contains its four Home
+journeys (including large text), bounded to 600 seconds; review/lesson/catalog/Coverage
+cases stay in their own suites. This avoids repeated validation without dropping coverage.
+The broader Mainboard manifest remains pending rather than silently committing unrelated edits.
+
 **Finalized lesson acceptance:** all three iPhone lesson journeys pass unchanged in
 `test-cd4520d36005405d895128e0da32d0a9` (no failures/skips/runtime warnings). Coverage:
 selection and unfinished quiz draft retention; teaching pages/swipes and return from quiz;
