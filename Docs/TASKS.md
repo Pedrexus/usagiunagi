@@ -38,6 +38,18 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Pinned CI compatibility review: all workflow Mainboard checkouts still name authorized
+`fa467e07a71b26876f48b2dd3c273b5e3f14c1fd`; the workflow correctly uses that revision's
+`analyze` namespace. Its exact Git source was extracted to `/tmp/usagi-mainboard-fa467e0`.
+With Mainboard's installed interpreter/dependencies, that source validates the current
+manifest and constructs `PixiManifest` successfully (19 tasks; test, both Release builds
+and both bundle audits present). New `[apps]` metadata does not require a schema edit
+for those old task routes. Receipt: `.build/Results/CI-Pinned-Manifest-Runtime-20261025.log`.
+The first attempt used PATH's unrelated Python without patos and failed before validation;
+its `CI-Pinned-Manifest-20261025.log` is retained. No workflow/pin changes were needed.
+This is manifest/compiler compatibility, not a clean `uv sync --locked` environment,
+all CI command execution or hosted Actions acceptance; no push or dispatch occurred.
+
 Current-source Release follow-up: both iOS Simulator and native Mac builds and declared
 bundle audits pass with the parent-path storage fix. Details are in Current Release
 products below. Earlier comments that Release predates this fix are historical; runtime,
