@@ -29,6 +29,19 @@ or skips. Two-file lint passes. Receipts: `.build/Results/Lesson-Picker-Lifecycl
 and `Lesson-Picker-Lifecycle-Lint-20261025.log`. These normal-flow regressions do not
 inject the precise close-during-read race. Physical acceptance remains deferred.
 
+Current iPad lesson acceptance (October 25, source `0d2b12cf`): the actual named
+Mainboard command `mainboard app test usagiunagi --suite lessons --device ipad`
+passes all five tests in `test-da11e48086d34743ae035bb407b12324`: largest Dynamic
+Type, page/swipe/quiz navigation, retained selection and unfinished draft,
+wrong-answer/completion rules, and related-subject scrolling. Zero failures,
+skips, compiler/analyzer warnings or reported runtime warnings. Retained tooling
+source `7dfce9f` was used; this does not establish the live Mainboard reorganization.
+Normal and XXXL portrait screenshots were inspected: heading, Start quiz and
+footer Quiz remain visible/readable; reading stacks at XXXL. The fixture has sparse
+content, so this is not full-catalog visual parity or landscape/multitasking acceptance.
+Normal iPad launch restored. Receipts: `.build/Results/Lessons-Named-iPad-20261025.log`,
+`Lessons-Named-iPad-20261025/manifest.json`, and `Lessons-Named-iPad-Normal-20261025.log`.
+
 ## Requirements and status
 
 “Implemented” means source exists with the cited scoped evidence. It does not mean
