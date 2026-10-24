@@ -8,6 +8,23 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Interrupted-run reconciliation complete:** all seven remaining ordinary iPhone cases pass
+in `test-e78153b0374b4990a31d39c33f93664b`: diagnostic sharing, explicit session end, font
+download after leaving its picker, font return/draft retention, lesson notes/synonyms, and
+typed/Anki practice modes. No failed or skipped cases. One runtime warning remains:
+“Invalid frame dimension (negative or non-finite)” when focusing `material.meaningNote`
+in the lesson-details test (log line 592). Investigate that layout before clean acceptance;
+do not suppress it or equate passing assertions with warning-free behavior.
+Log: `.build/Results/Remaining-Acceptance-20261024.log`.
+
+The case-by-case `.build/Results/iPhone-Broad-Pass-Reconciliation-20261024.json` maps all
+57 logged passes from the interrupted October 22 run to finalized passing evidence (46
+ReviewFlowTests plus 11 NativeRootFlowTests, the latter checked against its complete result
+tree). No missing cases remain in that specific set. Receipts span source revisions; this is
+not a single full-suite run or all-platform acceptance. This supersedes historical requests
+below to re-finalize those 57 cases. URL-event, real Reduce Motion, physical/signed, storage
+fault and normal Mac restoration gates remain distinct.
+
 **Finalized account acceptance:** six iPhone journeys pass unchanged in
 `test-50c253b9132a464da49256254ed1c69f`, with zero failures/skips/runtime warnings:
 expired-account reauthentication/forced email; deferred warning with review draft retention;
@@ -144,9 +161,9 @@ network/audio/notification APIs and one Mainboard toolchain. Preserve grading, p
 and the documented Japanese-input/service bridges. No new cache, Parquet workflow, platform
 framework, constructor-macro dependency or V2 schema is justified by current evidence.
 
-1. Finish local functional acceptance in bounded groups. The latest 13 focused iPhone cases
-   have finalized passing bundles; the earlier 57 logged passes need finalized coverage after
-   the broad-run timeout. Keep the five URL-event journeys separate. Resolve actual failures
+1. Finish local functional acceptance in bounded groups. The earlier 57 logged passes now
+   have finalized evidence across scoped runs. Investigate the lesson-note focus frame warning
+   recorded above. Keep the five URL-event journeys separate. Resolve actual failures
    without suppressions. Complete iPad/Mac usability, window restoration, accessibility and
    keyboard/IME comparison against the original flow and supplied screenshots.
 2. Finish storage reliability gaps using existing probes: earlier source-capture disk
