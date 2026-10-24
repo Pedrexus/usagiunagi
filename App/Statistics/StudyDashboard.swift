@@ -113,6 +113,8 @@ public struct StudyDashboard: View {
           }.count
           BarMark(x: .value("Items", count), y: .value("Stage", category.name))
             .foregroundStyle(StudyPalette.color(for: category))
+            .accessibilityLabel("\(category.name) stage")
+            .accessibilityValue("\(count) items")
             .annotation(position: .trailing) {
               Text(count.formatted()).font(.caption).foregroundStyle(.secondary)
             }
@@ -175,6 +177,8 @@ public struct StudyDashboard: View {
             Chart(metrics.scheduledDays, id: \.date) { day in
               BarMark(x: .value("Day", day.date, unit: .day), y: .value("Items", day.count))
                 .foregroundStyle(StudyPalette.radical)
+                .accessibilityLabel(day.date.formatted(date: .complete, time: .omitted))
+                .accessibilityValue("\(day.count) items scheduled")
             }.frame(height: 180)
               .chartXAxis {
                 AxisMarks(values: .stride(by: .day)) {
@@ -196,9 +200,18 @@ public struct StudyDashboard: View {
             ForEach(pace.history, id: \.level) { level in
               BarMark(x: .value("Level", String(level.level)), y: .value("Days", level.days))
                 .foregroundStyle(StudyPalette.kanji)
+                .accessibilityLabel("Level \(level.level)")
+                .accessibilityValue(
+                  "\(level.days.formatted(.number.precision(.fractionLength(1)))) days from unlocking to passing"
+                )
             }
             RuleMark(y: .value("Median", pace.medianDays)).foregroundStyle(.secondary).lineStyle(
-              StrokeStyle(dash: [4]))
+              StrokeStyle(dash: [4])
+            )
+            .accessibilityLabel("Median level pace")
+            .accessibilityValue(
+              "\(pace.medianDays.formatted(.number.precision(.fractionLength(1)))) days"
+            )
           }.frame(height: 180).chartYAxisLabel("Days")
           Text(
             "Median \(pace.medianDays.formatted(.number.precision(.fractionLength(1)))) days per level"

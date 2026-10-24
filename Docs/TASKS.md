@@ -315,3 +315,18 @@ scopes without a relevant source change or a newly identified risk.
   catalog acceptance only, not new iOS, VoiceOver or account-sync evidence.
 - Mac-Catalog-Size-Restored-20261025.log confirms the original 1120x800 size was
   restored successfully. Physical-device and Reduce Motion checks remain deferred.
+
+### October 25 chart accessibility descriptions
+
+- SRS stage, upcoming-review and level-pace marks now provide explicit accessibility
+  labels and values, matching the existing accuracy/coverage chart approach. Upcoming
+  marks speak complete local dates rather than only narrow weekday initials; level
+  durations describe unlocking to passing, and the median is named explicitly.
+  No calculations, chart geometry or platform branches changed.
+- Native Mac Release build-c64cd7ffdd254be5947513e50b6bc295 succeeds; raw output retains
+  the known App Intents metadata warning. Receipt: Mac-Chart-Labels-20261025.log.
+  Native swift-format corrected one modifier-chain layout afterward; strict formatting
+  and diff checks pass. The build covers the same semantic source before whitespace
+  formatting, not a fresh iOS build.
+- Actual VoiceOver navigation, grouping and spoken-chart acceptance remain open.
+  Explicit labels and successful compilation do not prove that interaction gate.
