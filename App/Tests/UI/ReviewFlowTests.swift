@@ -1524,6 +1524,31 @@ final class ReviewFlowTests: XCTestCase {
   }
 
   @MainActor
+  func testBackgroundingVoiceReturnsToTheSameQuestionWithoutGrading() {
+    continueAfterFailure = false
+    let app = launchNativeHome(["--manual-review-fixture", "--light-fixture"])
+    defer { app.terminate() }
+    startReviews(in: app)
+    app.buttons["review.voice"].tap()
+    XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+    XCUIDevice.shared.press(.home)
+    activateFixture(app)
+    XCTAssertTrue(app.textFields["review.answer"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["voice.stop"].exists)
+    XCTAssertEqual(app.staticTexts["review.question"].value as? String, "一")
+    XCTAssertTrue(app.staticTexts["review.prompt"].label.contains("Meaning"))
+    XCTAssertTrue(app.staticTexts["review.progress"].label.contains("0 completed"))
+    app.buttons["review.voice"].tap()
+    XCTAssertTrue(app.buttons["voice.stop"].waitForExistence(timeout: 5))
+    app.buttons["voice.stop"].tap()
+    let reading = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.staticTexts["review.prompt"].label.contains("Reading")
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [reading], timeout: 5), .completed)
+  }
+
+  @MainActor
   func testContinuousVoiceAnswersBothSidesWithoutFurtherTaps() {
     continueAfterFailure = false
     let app = launchNativeHome([

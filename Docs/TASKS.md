@@ -38,6 +38,17 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Voice background lifecycle: the new isolated iPhone regression starts listening,
+presses Home and reactivates the app, then verifies keyboard mode, the same subject
+and meaning question, zero completed items and no listening control. Explicit voice
+restart and finalization then advance to Reading. It passes in 20.829 seconds
+(`test-18fc074083a74b38a54b9cf1093ed11a`, no failures/skips/runtime warnings); one-file
+lint passes. No production change was needed. Receipts:
+`.build/Results/Voice-Background-20261025.log` and `Voice-Background-Lint-20261025.log`.
+This uses the synthetic recognizer and retained Mainboard `7dfce9f`, not live microphone,
+audio-route interruption, delayed post-cancellation callback injection or physical-device
+acceptance. Normal simulator launch was restored.
+
 Current native Mac checkpoint at `5fc4cc34` (production `f5e27dde`): Release
 `build-30360c5444be4184b72b5f1900b0050a` passes with zero reported compiler/analyzer
 issues. The prior Release process quit normally. PID 71723 opened one responsive
