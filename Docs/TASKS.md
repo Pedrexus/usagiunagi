@@ -38,6 +38,18 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Statistics source review at `7b07c322` traced `StudyStore.snapshot` and refresh projection
+through `StudyMetrics` to dashboard/coverage rendering. Pending subjects are removed from
+stage assignments and separately identified in coverage; pending uploads suppress date
+scenarios. Empty history produces no accuracy/pace, fewer than three eligible levels
+produce no pace, and held-out estimates use only earlier completed levels with at least
+three training and three validation levels. Vacation/elapsed ranges suppress forecasts;
+coverage uses the complete reference denominator and explicitly disclaims exam-pass
+prediction. Existing API validation rejects negative answer counters. No new defect was
+found in these paths, so no calculation changes or unchanged test reruns were made.
+Real-account calibration and performance remain open; this is a source audit, not proof
+of live statistical accuracy or all edge cases.
+
 1. Integrate the verified local Mainboard collector and report-link fixes into its pending tool work.
    Permanent report regressions now live in Mainboard's
    `integration/analysis/test_finding_report.py`: four cases pass, preserving complete
