@@ -11,6 +11,14 @@ Work in `/Users/pedro/Developer/projects/apps/usagiunagi`, branch
 `codex/swiftui-27-curriculum`. Commit locally; no PRs, app pushes or distribution.
 Only Mainboard publication through `fa467e07a71b26876f48b2dd3c273b5e3f14c1fd` was approved.
 
+Focused suite maintenance (October 25): `lessons` now includes related-subject
+scrolling and largest Dynamic Type; `review-modes` includes voice backgrounding
+without grading. The full UI suite already included these tests. Mainboard app
+discovery loads the amended manifest and all declared ReviewFlowTests selectors
+resolve to source methods. Receipt: `.build/Results/Focused-Suite-Registration-20261025.log`.
+This configuration-only change does not represent another simulator test run.
+Physical-device checks remain deferred at the owner's request.
+
 ## Requirements and status
 
 “Implemented” means source exists with the cited scoped evidence. It does not mean
