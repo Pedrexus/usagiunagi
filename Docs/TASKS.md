@@ -18,6 +18,14 @@ The baseline activity tree records only the warning title/time, with no associat
 or stack attachment. Do not repeat these ineffective changes or suppress the warning.
 Next investigation needs a runtime call stack or a smaller keyboard/editor reproduction;
 its origin is not established as app code or framework behavior.
+Further inspection of the baseline's exported diagnostics confirms Xcode attempted
+symbolication. Its underlying `ActionTestIssueSummary.sourceCodeContext.callStack` has
+63 entries, all address `0`, with no symbols/source locations. The modern test-details and
+activity reports contain no additional stack. Retained compact evidence:
+`.build/Results/Note-Layout-Retained-Stack-20261024.json`; exported logs and object reads are
+under `/tmp/usagi-note-diagnostics-20261024` and `/tmp/usagi-note-summary-0.json`.
+Adjacent keyboard-rendering messages establish timing only, not causation. A live debugger
+or minimal reproduction is required; further reads of this bundle cannot supply the caller.
 
 **Interrupted-run reconciliation complete:** all seven remaining ordinary iPhone cases pass
 in `test-e78153b0374b4990a31d39c33f93664b`: diagnostic sharing, explicit session end, font
