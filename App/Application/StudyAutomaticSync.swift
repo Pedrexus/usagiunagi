@@ -172,17 +172,17 @@ import StudyPersistence
           retry(after: 300)
         }
       }
-      needsStudyRead =
-        try await store.accountState(accountID: account)?.catalogRefreshID != nil
-        || model.snapshot?.requiresAssignmentRefresh == true
+      let refreshID = try await store.accountState(accountID: account)?.catalogRefreshID
+      guard accountID == account, model.snapshot?.accountID == account else { return }
+      needsStudyRead = refreshID != nil || model.snapshot?.requiresAssignmentRefresh == true
       if let deadline = nextRead, deadline <= now() {
         reading = true
         try await model.refresh(accountID: account)
         guard accountID == account, model.snapshot?.accountID == account else { return }
         lastRead = now()
-        needsStudyRead =
-          try await store.accountState(accountID: account)?.catalogRefreshID != nil
-          || model.snapshot?.requiresAssignmentRefresh == true
+        let refreshID = try await store.accountState(accountID: account)?.catalogRefreshID
+        guard accountID == account, model.snapshot?.accountID == account else { return }
+        needsStudyRead = refreshID != nil || model.snapshot?.requiresAssignmentRefresh == true
         retryDelay = 15
       }
       scheduleRead()
@@ -192,9 +192,9 @@ import StudyPersistence
       await model.reloadSavedSnapshot()
       let work = try? await store.automaticWorkState(accountID: account)
       guard accountID == account, model.snapshot?.accountID == account else { return }
-      needsStudyRead =
-        (try? await store.accountState(accountID: account)?.catalogRefreshID) != nil
-        || model.snapshot?.requiresAssignmentRefresh == true
+      let refreshID = try? await store.accountState(accountID: account)?.catalogRefreshID
+      guard accountID == account, model.snapshot?.accountID == account else { return }
+      needsStudyRead = refreshID != nil || model.snapshot?.requiresAssignmentRefresh == true
       if !reading, work == .requiresAttention {
         notice = "Some saved work needs attention. Open Saved work to check it."
         scheduleRead()
