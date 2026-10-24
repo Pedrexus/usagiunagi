@@ -82,6 +82,14 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
 
 ## Storage invariants
 
+- Release verification at `d851b653`, including both recent sync fixes: iOS build
+  `build-7f2928eba6c74e8d8853cb647dc66c4b` and native Mac build
+  `build-44655a85719949028f7d9879b6095319` succeed with zero reported compiler/analyzer
+  issues. Both declared bundle audits return no violations for retired dependencies,
+  bundled test/store fixtures, localized names, icon metadata and microphone usage
+  description. Receipts: `.build/Results/SyncFences-{Release,Bundle}-{iOS,Mac}-20261025.log`.
+  This supersedes pre-fix Release build evidence, not runtime or physical acceptance.
+
 - Recent-mistake sync error publication now uses the same account, observed Apple
   identity epoch and cancellation fence as successful reads. A new malformed-read
   regression reproduced a stale error after an Apple account change before the fix
