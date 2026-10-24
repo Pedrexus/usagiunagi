@@ -221,3 +221,27 @@ resources; it does not prove installation, rendered icons, live speech or signed
 services. No app push, distribution, physical check or real WaniKani exercise ran.
 The outstanding acceptance items above remain open; do not repeat these passing
 scopes without a relevant source change or a newly identified risk.
+
+### October 25 normal native Mac launch and reopen
+
+- Opened the current native Release bundle directly through Mainboard's bounded
+  process runner, without the UI-test runner or Device Hub. NSWorkspace reported
+  PID 28523 fully launched, active and not terminated; a two-second-bounded
+  accessibility window query returned success and one window.
+- `Mac-Normal-Window-20261025.log` identifies the normal Account screen: Paste API
+  token and Preview free levels 1–3 enabled, Connect and sync disabled for no token.
+  Pressed the observed preview button via its accessibility action (success=0).
+  `Mac-Normal-Preview-20261025.log` shows the Subjects window and bundled Japanese
+  subjects/meanings at levels 1–2 within the bounded traversal of the levels 1–3
+  preview. No credentials or exercises were entered; no real account connected.
+- Requested a normal quit (accepted) and confirmed the process was absent before
+  reopening the same bundle. `Mac-Normal-Reopen-20261025.log` reports new PID 29039,
+  finished launching, one Account window and the same available connection/preview
+  controls. The app is left open. This proves a normal unauthenticated launch,
+  preview navigation and clean reopen on this Mac; it does not prove rendered
+  layout, saved-account window restoration, live speech or signed services.
+- Exact bounded inspection script is retained as disposable evidence at
+  `.build/Results/Mac-Normal-Window-20261025.swift`; it reads control labels, not
+  credential-field values. Other receipts use the `Mac-Normal-*-20261025.log`
+  prefix. The original Mac UI-runner connection failure remains unresolved and
+  was not retried. Current app source remains 6e265355.
