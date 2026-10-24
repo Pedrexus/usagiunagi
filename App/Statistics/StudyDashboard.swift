@@ -203,10 +203,23 @@ public struct StudyDashboard: View {
           Text(
             "Median \(pace.medianDays.formatted(.number.precision(.fractionLength(1)))) days per level"
           ).font(.headline)
-          if snapshot.pendingReviews == 0, let range = pace.nextLevelRange {
+          Text(
+            "Middle half: \(pace.lowerDays.formatted(.number.precision(.fractionLength(1))))–\(pace.upperDays.formatted(.number.precision(.fractionLength(1)))) days across \(pace.sampleCount) completed levels."
+          ).font(.callout)
+          if snapshot.pendingReviews > 0 {
+            Text("Sync pending answers before estimating your next level date.").studyNote()
+          } else if snapshot.onVacation {
+            Text("Next level estimates are paused during vacation mode.").studyNote()
+          } else if snapshot.currentLevel >= 60 {
+            Text("You have reached WaniKani’s highest level.").studyNote()
+          } else if let range = pace.nextLevelRange {
             Text(
               "At a similar pace: level \(snapshot.currentLevel + 1) around \(range.lowerBound.formatted(date: .abbreviated, time: .omitted))–\(range.upperBound.formatted(date: .abbreviated, time: .omitted))."
             ).font(.callout)
+          } else {
+            Text(
+              "No current date estimate: this level may have reached the historical range, or its start date is unavailable. Your past pace remains available."
+            ).studyNote()
           }
           Text(
             "Up to 8 levels, excluding the first two and recorded resets. Includes breaks. Dates are scenarios, not guarantees."
