@@ -8,6 +8,24 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Settings acceptance:** generic `mainboard app test usagiunagi settings --device iphone`
+passes all four UI cases in `test-1eb4b5f84e6d49ce8f5b5f1b0619f1ef` (no failures,
+skips, build warnings or reported runtime warnings). This covers lesson ordering, review
+dependencies/download navigation, appearance/email/subject persistence, safe disconnect
+cancellation and notification preferences without permission prompts. The first run
+`test-53d0581334ee4ae6968663f082675df9` passed three cases but could not tap an offscreen
+system keyboard Done key. The test now submits the email through Return; assertions and
+production behavior are unchanged. Scoped Mainboard lint passes. Retry log:
+`.build/Results/Mainboard-Settings-Retry-20261024.log`.
+The retry explicitly selects `DEVELOPER_DIR`: the first run also showed a missing-simctl
+diagnostics error, so automatic Xcode selection still needs subprocess-environment review.
+This is local settings acceptance, not real WaniKani/iCloud synchronization evidence.
+
+The pending generic UI suite now excludes the held-refresh journey, which requires its
+external URL driver and remains in the dedicated `shell` suite with `HeldRefresh.json`.
+Keep that correction when accepting the broader manifest migration; the manifest and
+associated CLI-documentation edits remain uncommitted pending tooling acceptance.
+
 The current uncommitted Mainboard manifest expansion is not accepted as a CI-ready change.
 `mainboard app list` successfully discovers its suites with the locally installed tool, but
 that is only schema/discovery evidence. Two concrete gaps were identified:

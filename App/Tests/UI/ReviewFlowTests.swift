@@ -2555,8 +2555,7 @@ extension ReviewFlowTests {
     app.buttons["Dark"].tap()
     let email = app.textFields["settings.gravatarCustomEmail"]
     email.tap()
-    email.typeText("fixture@example.invalid")
-    if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+    email.typeText("fixture@example.invalid\n")
     XCTAssertTrue(app.switches["settings.notificationsAllReviews"].exists)
     XCTAssertTrue(app.switches["settings.notificationsBadging"].exists)
     XCTAssertTrue(app.switches["settings.notificationSounds"].exists)
