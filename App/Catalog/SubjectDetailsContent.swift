@@ -252,23 +252,16 @@ struct SubjectDetailsContent: View {
 
 struct SubjectDetailsHeader: View {
   let subject: CatalogSubject
-  var japaneseFont: String? = nil
   var fontSize = 48.0
-  var image: Image? = nil
   @ScaledMetric(relativeTo: .largeTitle) private var scale = 1.0
   var body: some View {
     let size = fontSize * scale
     VStack(spacing: 4) {
       Group {
-        if let image {
-          image.resizable().scaledToFit().frame(height: size)
-        } else if subject.japanese.isEmpty, let url = URL(string: subject.characterImageURL) {
+        if subject.japanese.isEmpty, let url = URL(string: subject.characterImageURL) {
           RadicalImageView(url: url).environment(\.colorScheme, .dark).frame(height: size)
         } else {
-          Text(subject.japanese).font(
-            japaneseFont.map { .custom($0, size: fontSize, relativeTo: .largeTitle) }
-              ?? .system(size: size)
-          )
+          Text(subject.japanese).font(.system(size: size))
         }
       }.accessibilityIdentifier("subject.characters")
       Text("\(subject.kind.rawValue.capitalized) · Level \(subject.level)").font(.caption)

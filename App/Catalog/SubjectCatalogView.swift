@@ -10,8 +10,6 @@ public struct SubjectCatalogView: View {
   private let maximumLevel: Int
   private let selectedLevel: Binding<Int>?
   private let preferences: SubjectDetailsPreferences
-  private let japaneseFont: String?
-  private let image: (Int64) -> Image?
   private let back: (() -> Void)?
   private let openSubject: (Int64) -> Void
   @Binding private var showAnswers: Bool
@@ -27,9 +25,9 @@ public struct SubjectCatalogView: View {
   public init(
     collection: SubjectCatalogCollection, title: String, mode: Mode,
     showAnswers: Binding<Bool>, maximumLevel: Int = 60, selectedLevel: Binding<Int>? = nil,
-    preferences: SubjectDetailsPreferences = .init(), japaneseFont: String? = nil,
+    preferences: SubjectDetailsPreferences = .init(),
     initialQuery: SubjectCatalogQuery = .init(),
-    image: @escaping (Int64) -> Image? = { _ in nil }, back: (() -> Void)? = nil,
+    back: (() -> Void)? = nil,
     openSubject: @escaping (Int64) -> Void
   ) {
     self._query = State(initialValue: initialQuery)
@@ -40,8 +38,6 @@ public struct SubjectCatalogView: View {
     self.maximumLevel = max(0, maximumLevel)
     self.selectedLevel = selectedLevel
     self.preferences = preferences
-    self.japaneseFont = japaneseFont
-    self.image = image
     self.back = back
     self.openSubject = openSubject
     self._searching = State(initialValue: mode == .search)
@@ -222,7 +218,7 @@ public struct SubjectCatalogView: View {
     ForEach(items) { item in
       let row = SubjectCatalogRow(
         item: item, showAnswers: mode == .search || showAnswers, showsTiming: mode == .remaining,
-        preferences: preferences, japaneseFont: japaneseFont, image: image(item.id))
+        preferences: preferences)
       Button {
         openSubject(item.id)
       } label: {
@@ -238,8 +234,6 @@ private struct SubjectCatalogRow: View {
   let showAnswers: Bool
   let showsTiming: Bool
   let preferences: SubjectDetailsPreferences
-  let japaneseFont: String?
-  let image: Image?
   @Environment(\.dynamicTypeSize) private var typeSize
   private var subject: CatalogSubject { item.subject }
   private var meaning: String {
@@ -313,11 +307,8 @@ private struct SubjectCatalogRow: View {
   }
   private var tile: some View {
     Group {
-      if let image {
-        image.resizable().scaledToFit().frame(width: 28, height: 28)
-      } else if !subject.japanese.isEmpty {
-        Text(subject.japanese).font(
-          japaneseFont.map { .custom($0, size: 22, relativeTo: .title3) } ?? .title3)
+      if !subject.japanese.isEmpty {
+        Text(subject.japanese).font(.title3)
       } else if let url = URL(string: subject.characterImageURL), !subject.characterImageURL.isEmpty
       {
         RadicalImageView(url: url).environment(\.colorScheme, .dark).frame(width: 32, height: 32)

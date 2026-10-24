@@ -183,3 +183,19 @@ goal because builds pass or because all currently runnable synthetic checks pass
   invocation in `Subject-Details-Rules-20261025.log` (NotADirectoryError).
   A rule signal is not itself a demonstrated defect; required boundaries and
   independent test expectations remain intact. Normal iPhone launch restored.
+
+### October 25 unused catalog presentation inputs
+
+- Removed unused custom-font and pre-rendered-image inputs from SubjectCatalogView,
+  its private row, and SubjectDetailsHeader after checking both catalog callers and
+  the single header caller. Net 16 fewer source lines. Native typography, scaled
+  header sizing, cached radical images and separate review font selection remain.
+  Explicit catalog initializers still seed state; no new abstraction was added.
+- `test-8c43132dc18d4f78b8b7be1ed82d934e`: two iPhone catalog journeys pass, covering
+  level paging/swiping, persistent hidden answers, stage filtering, kana/romaji
+  search clearing and opening details. Zero structured build/runtime warnings or
+  skips. Strict formatting and diff checks pass. Fresh hidden-answer screenshot
+  `Catalog-Inputs-20261025/F0C54427-C90E-4C99-80F9-927D050FB8F8.png` inspected:
+  native subject tiles, hidden labels, stage badges and the image-only radical
+  remain visible. Normal iPhone launch restored. This is scoped simulator evidence,
+  not completion of wider accessibility, real-account or physical-device checks.
