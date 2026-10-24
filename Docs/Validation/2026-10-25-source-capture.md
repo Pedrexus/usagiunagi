@@ -175,3 +175,42 @@ experiment above. Driver SHA-256 values:
 - Initial base: `58e546802b913f0ccbb96e2075918e96d985825650629a2a9857962ec62f4006`.
 - Base recovery: `5120107a4bf5b0a7927b1ca1b3dc7d6104bc696d46b92b966ca581ca8b84e032`.
 - WAL: `be4448beb5b874ed36f994c151b0dc07108232e22d428b4cddbdf4266449c2a4`.
+
+## Same-volume clone disk exhaustion
+
+At app `b0202047`, bounded 128 MB APFS images now cover source and destination on the
+same volume. LLDB stops at the real clonefileat call reached through production
+copyItem. A debugger-host helper fills only that marked image with 1 MB then 4 KB
+writes until actual ENOSPC; its capacity and written-byte bounds prevent host-volume
+pressure. It does not replace syscall arguments or return values.
+
+Base pressure wrote 123,379,712 bytes; WAL pressure wrote 123,289,600 bytes. Each
+clonefileat returned -1, followed by Cocoa 640 / POSIX 28 refusal from the production
+opener and handled probe exit 74. For WAL, reading the thread's errno immediately
+after stepping out of clonefileat returned 28 directly. APFS still reported about
+3 MB available: the observed syscall failure, not a zero free-space estimate, is
+the evidence of exhaustion.
+
+After deleting only the pressure file, two fresh processes per case restore all
+38 exact records. Failed preparation hashes and source/retained files remain
+unchanged, including WAL/SHM for the committed-WAL variant. Retry chooses a different
+candidate, and selection bytes remain stable on the second reopen. Both images
+were ejected. Production source and the frozen fixture are unchanged.
+
+The first setup mounted one directory too deep and was rejected by the probe's
+marked-temporary-root guard before capture or pressure. Its image was ejected;
+`Clone-Pressure-20261025` retains the failed setup. No safety guard was weakened:
+the corrected setup mounts at the exact allowed temporary root.
+
+Successful receipts: `.build/Results/Clone-Pressure-Marked-20261025` and
+`Clone-Pressure-WAL-20261025`, including debugger/pressure output, before/after
+receipts, both exact reopen logs and detach logs. Driver SHA-256 values:
+
+- Base: `1a5f7dd4943b0eb8506efdfe0ebfc3481eb905dc341ece58fe2c20a1a6d37a44`.
+- WAL: `58527761525a3bfd40aa1cf25b4d03a25291c78230337e159c51e7abc8f890f0`.
+- Bounded pressure helper: `5b83619a199c21f58e07263570250ee78a04c5e5acaba089039d2573a6599c03`.
+
+The binary hash matches the partial-copy experiment. This closes the tested Mac
+same-volume clone ENOSPC boundary for base/WAL sources. It does not establish iOS
+capture/publication, physical power loss, Data Protection or large real-account
+performance. Older sections retain their original, narrower evidence scope.

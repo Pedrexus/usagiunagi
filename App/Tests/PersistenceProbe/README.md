@@ -40,7 +40,8 @@ processes with a fresh candidate, preserving sources and failed preparation file
 See the [exact scope and receipts](../../../Docs/Validation/2026-10-25-source-capture.md).
 Mac cross-volume partial-file interruption and same-volume native clone destination-collision
 recovery now also pass for base/WAL sources; see the linked receipt for exact boundaries
-and harness limitations. Same-volume clone ENOSPC and iOS acceptance remain open.
+and harness limitations. Bounded same-volume clone ENOSPC also passes with exact
+base/WAL recovery; iOS capture/publication and physical acceptance remain open.
 The earlier unsuccessful calibrations below remain historical evidence.
 
 A separate October 24 file-size-limit calibration also passed capture. A shell child
