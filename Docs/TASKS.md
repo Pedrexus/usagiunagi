@@ -38,6 +38,15 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+At `e49a9ae9`, iPad Pro 11-inch (M5) / iPadOS 27 passes all three targeted lesson
+checks: normal/largest Dynamic Type with touch-target audits, teaching/quiz navigation,
+and related-row gesture isolation (`test-3b4d96cb4d6a46be958e4784e6e2e522`; three tests,
+zero failures/skips/runtime warnings). Both exported portrait screenshots were inspected:
+Quiz text is visible, the largest reading row stacks, and both toolbar and footer actions
+fit. This closes these specific iPad follow-ups for the control/gesture fixes below;
+Mac gestures, multitasking, hardware input and VoiceOver remain unverified. Receipts:
+`.build/Results/Lesson-Gestures-iPad-20261025.log` and its attachment directory.
+
 Related-subject gesture fix: swiping the radical row in a teaching page also changed
 its parent lesson (`test-379731d439854a928569627651ba943c`, reproduced before repair).
 Replacing the parent's simultaneous gesture with a normal gesture lets child controls
