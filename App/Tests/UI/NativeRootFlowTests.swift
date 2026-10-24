@@ -365,6 +365,34 @@
       add(image)
     }
 
+    @MainActor func testPaceExplainsItsSampleAndExpandsComparisonInline() {
+      let app = launch(["--statistics-fixture"])
+      defer { app.terminate() }
+      tab("Stats", in: app)
+      let range = app.staticTexts.matching(
+        NSPredicate(format: "label BEGINSWITH %@", "Middle half:")
+      ).firstMatch
+      scrollTo(range, in: app)
+      XCTAssertTrue(range.label.contains("across 8 completed levels."))
+      let summary = app.staticTexts["statistics.pace.validationSummary"]
+      scrollTo(summary, in: app)
+      XCTAssertEqual(summary.label, "Past average error: 1.8 days across 5 levels.")
+      let comparison = app.buttons["Compare past estimates"]
+      scrollTo(comparison, in: app)
+      comparison.tap()
+      let chart = app.descendants(matching: .any)
+        .matching(identifier: "statistics.pace.validationChart").firstMatch
+      XCTAssertTrue(chart.waitForExistence(timeout: 5))
+      let note = app.staticTexts["statistics.pace.validationNote"]
+      scrollTo(note, in: app)
+      XCTAssertTrue(note.label.contains("not exam readiness or a guaranteed finish date"))
+      XCTAssertEqual(app.sheets.count, 0)
+      let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+      image.name = "iPhone historical pace comparison"
+      image.lifetime = .keepAlways
+      add(image)
+    }
+
     @MainActor func testNativeStatisticsCoverageStaysInline() {
 
       let app = launch(["--statistics-fixture"])
