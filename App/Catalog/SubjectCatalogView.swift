@@ -225,6 +225,7 @@ public struct SubjectCatalogView: View {
         row
       }.buttonStyle(.plain).accessibilityLabel(row.accessibilityText)
         .accessibilityIdentifier("catalog.subject.\(item.id)")
+        .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
     }
   }
 }

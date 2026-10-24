@@ -298,3 +298,20 @@ scopes without a relevant source change or a newly identified risk.
   to app production code. The Mac app remains open. Review focus source inspection
   found no proven app-side loop explaining the earlier XCTest idle timeout, which
   remains unresolved; no speculative focus change or repeated identical test ran.
+
+### October 25 catalog row alignment and narrow Mac window
+
+- Native catalog screenshots showed row separators starting beneath only the
+  trailing level badge. One shared SwiftUI listRowSeparatorLeading alignment guide
+  now aligns them with the subject tile; no platform branch or custom row renderer.
+- Native Mac Release build-7d44f45452c242d0a4f6ee3d0c5ba7d1 succeeds. Structured
+  diagnostics report zero errors/warnings; the known raw App Intents metadata warning
+  remains. Formatting and diff checks pass.
+- Inspected Mac-Catalog-Current-20261025.png, Mac-Catalog-Separators-Fixed-20261025.png
+  and Mac-Catalog-Narrow-20261025.png under .build/Results. The populated bundled
+  catalog displays Japanese tiles, meanings and level badges with correctly aligned
+  separators at 1120x800 and 600x700 points. The narrow native search placeholder
+  truncates, while its control and row content remain visible. This is dark Mac
+  catalog acceptance only, not new iOS, VoiceOver or account-sync evidence.
+- Mac-Catalog-Size-Restored-20261025.log confirms the original 1120x800 size was
+  restored successfully. Physical-device and Reduce Motion checks remain deferred.
