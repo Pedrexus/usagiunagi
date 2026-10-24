@@ -8,6 +8,19 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Local app manifest finalized:** Mainboard recognizes all 28 named suites and the
+three device destinations. The shared app declaration centralizes runtime, ad-hoc iOS
+signing and build directories; local Mac checks retain their unsigned override. The
+five event-driven cases are excluded from the generic UI suite and retain dedicated
+drivers. `mainboard app build usagiunagi --device iphone --timeout 300` passes with
+zero warnings/errors (`build-9c68d7c8ceab4fdab0538d4cd2b84e24`), scoped note-editor
+lint passes, and the normal app installs/launches successfully. Evidence:
+`.build/Results/Mainboard-Config-{Build,Lint,Launch}-20261024.log`.
+The development guide now distinguishes local `app`/`rules` from the published CI
+pin's `analyze`, and removes obsolete executable handoff instructions. This accepts
+local configuration and the exercised paths, not all suite/device combinations or
+hosted Actions. Newer Mainboard publication remains unapproved; no CI pin was changed.
+
 **Storage verification-file limit recovery:** a bounded disposable Mac probe with a
 16 KiB per-file limit passed source capture but failed opening the verification image
 (SQLite 4874/Cocoa 256). The probe's throwing entry point terminated with SIGTRAP;

@@ -216,10 +216,6 @@ release-mac = "mainboard apple execute App/UsagiUnagi.xcworkspace --scheme Usagi
 audit-release-ios = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/iOS/Build/Products/Release-iphonesimulator/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
 audit-release-mac = "mainboard proc timeout 120 mainboard apple bundle .build/Xcode/UnifiedMac/Build/Products/Release/Tsurukame.app --forbid-symbol 'FMDatabase|FMResultSet|FMDB|Hippolyte|PromiseKit' --forbid-resource '**/study.store' --forbid-resource '**/study.store.baseline.plist' --forbid-resource '**/NativeStoreBaseline.swift' --forbid-resource '**/native-v0-186c1cc3' --forbid-resource '**/*.xctest' --forbid-resource '**/*.xctestrun' --expect-info CFBundleDisplayName=usagiunagi --expect-info CFBundleIconName=UsagiUnagi --require-info NSMicrophoneUsageDescription --expect-name en=usagiunagi --expect-name ja=兔鰻 --expect-name zh-Hans=兔鰻 --expect-name zh-Hant=兔鰻 --json"
 
-[on.osx.env]
-# Native lint and tasks share Xcode; an explicit shell/CI selection takes precedence.
-DEVELOPER_DIR = "{{ env('DEVELOPER_DIR', '/Applications/Xcode.app/Contents/Developer') }}"
-
 # Official release asset coordinates; explicit setup: `mainboard binary sync`.
 [on.osx.binary.dev]
 swiftlint = { version = "0.65.1", url = "https://github.com/realm/SwiftLint/releases/download/0.65.1/portable_swiftlint.zip", sha256 = "c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0", member = "swiftlint" }
@@ -230,14 +226,14 @@ exclude = ["**/.build/**", "**/.mainboard/**"]
 # Parse every kept first-party Swift file independently of gradual style adoption.
 # Native checks activate the declared environment without installing tools or resolving deps.
 [lint.tools.swift-parse]
-check = "mainboard run --locked --no-install mainboard analyze gate --rule SW-PARSE0001 {files}"
+check = "mainboard run --locked --no-install mainboard rules gate --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
 exclude = ["**/.build/**", "**/.mainboard/**"]
 serial = true
 timeout = 600
 
 [lint.tools.swift-ui]
-check = "mainboard run --locked --no-install mainboard analyze gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
+check = "mainboard run --locked --no-install mainboard rules gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
 exclude = ["**/.build/**", "**/.mainboard/**"]
 serial = true
@@ -252,3 +248,222 @@ files = ["*.swift"]
 check = "mainboard run --locked --no-install {root}/.mainboard/envs/default/binary/bin/swiftlint lint --strict --quiet --no-cache --force-exclude -- {files}"
 files = ["*.swift"]
 timeout = 120
+
+[apps.usagiunagi]
+project = "App/UsagiUnagi.xcworkspace"
+scheme = "UsagiUnagi"
+runtime = "27.0"
+settings = ["CODE_SIGNING_ALLOWED=YES", "CODE_SIGN_IDENTITY=-"]
+
+[apps.usagiunagi.devices]
+iphone = {destination = "iPhone 18 Pro", derived-data = ".build/Xcode/iOS"}
+ipad = {destination = "iPad Pro 11-inch (M5)", derived-data = ".build/Xcode/iOS"}
+mac = {destination = "platform=macOS", derived-data = ".build/Xcode/UnifiedMac", settings = ["CODE_SIGNING_ALLOWED=NO"]}
+
+[apps.usagiunagi.suites.developer]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testDeveloperEndpointCancelValidationPersistenceAndReset",
+    "AppStoreScreenshots/ReviewFlowTests/testDeveloperCacheFeedbackAndNativeDatabaseSharing",
+]
+
+[apps.usagiunagi.suites.audio]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testOfflineAudioVoiceChoicesAndCellularSettingPersist",
+    "AppStoreScreenshots/ReviewFlowTests/testOfflineAudioDownloadsKeepAndExplicitDeletion",
+    "AppStoreScreenshots/ReviewFlowTests/testOfflineAudioFailuresRemainVisibleAndCanRetry",
+]
+
+[apps.usagiunagi.suites.fonts]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft",
+    "AppStoreScreenshots/ReviewFlowTests/testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled",
+    "AppStoreScreenshots/ReviewFlowTests/testFontDownloadContinuesAfterLeavingThePicker",
+    "AppStoreScreenshots/ReviewFlowTests/testFontLibraryReturnsToDraftAndUnstartedReviewCanClose",
+    "AppStoreScreenshots/ReviewFlowTests/testSettingsReviewDependenciesAndDownloadNavigation",
+]
+
+[apps.usagiunagi.suites.fonts-ipad]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testFontSelectionPersistsWhenReturningToAnUnchangedReviewDraft",
+    "AppStoreScreenshots/ReviewFlowTests/testFontDownloadsCanBeCancelledRetriedAndDeletionCancelled",
+    "AppStoreScreenshots/ReviewFlowTests/testFontDownloadContinuesAfterLeavingThePicker",
+]
+devices = ["ipad"]
+
+[apps.usagiunagi.suites.feedback]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft",
+    "AppStoreScreenshots/ReviewFlowTests/testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion",
+    "AppStoreScreenshots/ReviewFlowTests/testQuickSettingsPreservesDraftAndAppliesExactMatch",
+    "AppStoreScreenshots/ReviewFlowTests/testCombinedAnkiIncorrectThenCorrectCompletesOneSubject",
+    "AppStoreScreenshots/ReviewFlowTests/testPracticeMenuPreservesTypedReviewsAndReturns",
+]
+
+[apps.usagiunagi.suites.feedback-ipad]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testReviewFeedbackSettingsApplyIndependentlyAndPreserveDraft",
+    "AppStoreScreenshots/ReviewFlowTests/testCompletionAndMilestoneFeedbackRemainReadableWithReducedMotion",
+]
+devices = ["ipad"]
+
+[apps.usagiunagi.suites.resolve]
+scheme = "Tsurukame"
+action = "resolve"
+devices = ["mac"]
+derived-data = ".build/Xcode/iOS"
+timeout = 600
+
+[apps.usagiunagi.suites.shared]
+project = "Shared"
+scheme = "StudyKit-Package"
+derived-data = ".build/Xcode/Shared"
+
+[apps.usagiunagi.suites.ui]
+only = ["AppStoreScreenshots/ReviewFlowTests"]
+skip = [
+    "AppStoreScreenshots/ReviewFlowTests/testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics",
+    "AppStoreScreenshots/ReviewFlowTests/testShellFullRefreshKeepsCachedStudyAvailableAfterForeground",
+    "AppStoreScreenshots/ReviewFlowTests/testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement",
+    "AppStoreScreenshots/ReviewFlowTests/testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents",
+    "AppStoreScreenshots/ReviewFlowTests/testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit",
+]
+timeout = 2400
+
+[apps.usagiunagi.suites.lessons]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testLessonPickerPreservesSelectionAndUnfinishedQuizDraft",
+    "AppStoreScreenshots/ReviewFlowTests/testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson",
+    "AppStoreScreenshots/ReviewFlowTests/testLessonNavigationSupportsPagesSwipesAndReturningFromQuiz",
+]
+
+[apps.usagiunagi.suites.warm-links]
+only = ["AppStoreScreenshots/ReviewFlowTests/testNativeTabsPreserveWarmStudyLinksAndReturnToStatistics"]
+url-test = "App/Tests/WarmLinks.json"
+
+[apps.usagiunagi.suites.navigation]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testAccountExpiryUsesNativeReauthenticationAndPreservesForcedEmail",
+    "AppStoreScreenshots/ReviewFlowTests/testHibernationWarningStaysDismissedAcrossNativeTabChanges",
+    "AppStoreScreenshots/ReviewFlowTests/testAccountWarningWaitsForReviewCloseAndKeepsTheAnswerDraft",
+    "AppStoreScreenshots/ReviewFlowTests/testPracticeMenuPreservesTypedReviewsAndReturns",
+    "AppStoreScreenshots/ReviewFlowTests/testPracticeMenuPreservesAnkiReadingMode",
+    "AppStoreScreenshots/ReviewFlowTests/testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges",
+]
+timeout = 1200
+
+[apps.usagiunagi.suites.login]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testNativeLoginTokenFailuresHibernationAndHomeNavigation",
+    "AppStoreScreenshots/ReviewFlowTests/testNativeLoginUsesOnlyTheTokenAndSubmitsFromKeyboard",
+    "AppStoreScreenshots/ReviewFlowTests/testAccountExpiryUsesNativeReauthenticationAndPreservesForcedEmail",
+]
+
+[apps.usagiunagi.suites.shell]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testShellFullRefreshKeepsCachedStudyAvailableAfterForeground",
+    "AppStoreScreenshots/ReviewFlowTests/testCatalogSearchClearsKanaQueryAndOpensDetails",
+    "AppStoreScreenshots/ReviewFlowTests/testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation",
+    "AppStoreScreenshots/ReviewFlowTests/testDeveloperCacheFeedbackAndNativeDatabaseSharing",
+    "AppStoreScreenshots/ReviewFlowTests/testShellColdReviewLessonAndSubjectLinksReturnToHome",
+]
+url-test = "App/Tests/HeldRefresh.json"
+timeout = 1200
+
+[apps.usagiunagi.suites.home]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testHomeProgressCountsChartsAndRefreshSurviveRotation",
+    "AppStoreScreenshots/ReviewFlowTests/testHomeDisablesEmptyStudyQueuesAndHidesVacationActions",
+    "AppStoreScreenshots/ReviewFlowTests/testHomeActionsAndProgressRemainReachableAtLargestDynamicType",
+    "AppStoreScreenshots/ReviewFlowTests/testUpcomingReviewsShowsStageAndSubjectCountsAndReturns",
+]
+timeout = 600
+
+[apps.usagiunagi.suites.coverage]
+scheme = "ReviewValidation"
+only = ["AppStoreScreenshots/ReviewFlowTests/testCoverageStaysInlineAcrossChartTapsFiltersAndTabChanges"]
+timeout = 600
+
+[apps.usagiunagi.suites.details]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testLessonDetailsSaveNotesAndSynonymsUsedByTheQuiz",
+    "AppStoreScreenshots/ReviewFlowTests/testReviewDetailsConcealUnansweredReadingAndBlurTranslations",
+    "AppStoreScreenshots/ReviewFlowTests/testMaterialConflictRetainsDraftAndHiddenNoteUntilExplicitReplacement",
+    "AppStoreScreenshots/ReviewFlowTests/testMaterialConflictFixtureRejectsUnarmedAndMismatchedEvents",
+    "AppStoreScreenshots/ReviewFlowTests/testMaterialConflictFixtureDoesNotAcknowledgeRejectedCommit",
+]
+url-test = "App/Tests/MaterialConflictEvents.json"
+
+[apps.usagiunagi.suites.catalog]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testCatalogLevelPagingHidesAnswersAndStageNavigation",
+    "AppStoreScreenshots/ReviewFlowTests/testCatalogSearchClearsKanaQueryAndOpensDetails",
+    "AppStoreScreenshots/ReviewFlowTests/testCatalogRemainingExplainsReadinessAndKeepsDueItemsFirst",
+    "AppStoreScreenshots/ReviewFlowTests/testCatalogExclusionUpdatesAfterReturningFromDetails",
+]
+
+[apps.usagiunagi.suites.settings]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testSettingsLessonChoicesAndReorderingPersistWhenReopened",
+    "AppStoreScreenshots/ReviewFlowTests/testSettingsReviewDependenciesAndDownloadNavigation",
+    "AppStoreScreenshots/ReviewFlowTests/testSettingsAppearanceEmailSubjectsAndSafeLogoutCancellation",
+    "AppStoreScreenshots/ReviewFlowTests/testSharedNotificationSettingsPersistWithoutSystemPrompts",
+]
+
+[apps.usagiunagi.suites.build-ios]
+scheme = "Tsurukame"
+action = "build"
+
+[apps.usagiunagi.suites.build-mac-tests]
+action = "build-for-testing"
+devices = ["mac"]
+
+[apps.usagiunagi.suites.review-modes]
+scheme = "ReviewValidation"
+only = [
+    "AppStoreScreenshots/ReviewFlowTests/testCombinedAnkiIncorrectThenCorrectCompletesOneSubject",
+    "AppStoreScreenshots/ReviewFlowTests/testPracticeMenuPreservesAnkiReadingMode",
+    "AppStoreScreenshots/ReviewFlowTests/testQuickSettingsPreservesDraftAndAppliesExactMatch",
+    "AppStoreScreenshots/ReviewFlowTests/testLessonQuizPreservesWrongAnswerRulesAndCompletesTheSelectedLesson",
+    "AppStoreScreenshots/ReviewFlowTests/testCompleteSampleReviewsThroughTypedAnswers",
+]
+
+[apps.usagiunagi.suites.mac-review-modes]
+only = ["AppStoreScreenshots/MacReviewModeTests"]
+devices = ["mac"]
+timeout = 600
+
+[apps.usagiunagi.suites.mac-lessons]
+only = ["AppStoreScreenshots/MacLessonTests"]
+devices = ["mac"]
+timeout = 600
+
+[apps.usagiunagi.suites.mac-catalog]
+only = ["AppStoreScreenshots/MacCatalogTests"]
+devices = ["mac"]
+
+[apps.usagiunagi.suites.build-mac]
+action = "build"
+devices = ["mac"]
+
+[apps.usagiunagi.suites.restore]
+action = "resolve"
+devices = ["mac"]
+derived-data = ".build/Xcode/iOS"
+timeout = 600
+
+[apps.usagiunagi.suites.mac]
+devices = ["mac"]

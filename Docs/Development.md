@@ -8,7 +8,7 @@ The Xcode project's Debug and Release configurations now own one inherited Swift
 
 All nine Shared production/support/test targets use SwiftPM's native [`.treatAllWarnings(as: .error)`](https://developer.apple.com/documentation/packagedescription/swiftsetting/treatallwarnings(as:_:)), supported since SwiftPM 6.2. Existing concurrency/default-isolation settings retain their scopes. This covers Swift compiler warnings; it does not suppress or promote Interface Builder/metadata tool diagnostics. The archived historical writer, separate probe manifests and external package configurations are not rewritten. Mainboard continues to execute native builds and diagnostics without a second warning checker.
 
-SwiftLint's existing `unneeded_synthesized_initializer` rule now signals redundant struct memberwise/default constructors through the same strict Mainboard/Actions lint path. Automatic correction remains disabled; caller visibility, state seeding, bindings and validation still require review. The standalone manifest declares Xcode in `on.osx.env`, preserving an explicit shell/CI `DEVELOPER_DIR` and otherwise using `/Applications/Xcode.app/Contents/Developer`. All four native lint tools enter that environment through `mainboard run --locked --no-install`; they do not require a manual export, install tools or change global Xcode selection. Command Line Tools alone lack the required SwiftParser/SourceKit host libraries.
+SwiftLint's existing `unneeded_synthesized_initializer` rule signals redundant struct memberwise/default constructors through the same strict Mainboard/Actions lint path. Automatic correction remains disabled; caller visibility, state seeding, bindings and validation still require review. Current local Mainboard selects Xcode and propagates that choice to child processes; the app no longer duplicates it in `on.osx.env`. CI selects its installed Xcode explicitly through `DEVELOPER_DIR`. All four native lint tools use `mainboard run --locked --no-install`. Command Line Tools alone lack the required SwiftParser/SourceKit host libraries.
 
 ## Shared native scene acceptance
 
@@ -16,10 +16,24 @@ The production app uses one SwiftUI root and native store on iPhone, iPad and Ma
 
 For the final validation stage, use the generic Mainboard Apple executor with scheme `ReviewValidation`, action `test`, the iPhone/iPad simulator destination, and `--only-testing AppStoreScreenshots/NativeRootFlowTests`. Keep simulator GUI and hosted runs serialized. No live account exercise or OS microphone/notification authorization is part of these fixtures.
 
-The persistence probe additionally supports `write-native-selection` (expected abrupt exit 86) followed by `read-native-selection` (expected exit 0) against a disposable store. This proves a fresh installation retains its native-writer decision without reopening the old credentials/source after a process restart. The existing four restart phases and seven handoff/rollback phases continue to apply. The standalone Actions workflow includes all thirteen phases.
+The current persistence probe checks native SwiftData write/read recovery, catalog continuity, the frozen baseline, generation adoption, interrupted transactions, and selected-store/first-adoption corruption. Retired legacy selection and handoff commands are no longer executable. Use the [probe guide](../App/Tests/PersistenceProbe/README.md) for current modes and limits; dated handoff sections below preserve historical evidence, not current commands or release acceptance.
 
 
 ## Mainboard owns execution
+
+The local `[apps.usagiunagi]` declaration centralizes the workspace, runtime, signing,
+device destinations and named test selections. Use `mainboard app list` to discover
+suites, `mainboard app build usagiunagi --device iphone` to build, and
+`mainboard app test usagiunagi lessons --device iphone` for a focused journey.
+Choose `ipad` or `mac` only where that suite supports the platform. URL-driven suites
+(`warm-links`, `shell`, `details`) carry their fixture drivers; the broad `ui` suite
+excludes those driver-dependent cases. These declarations require the current local
+Mainboard with `app` and `rules` commands, which is newer than the published CI pin.
+They do not imply that every suite/device combination has passed.
+
+GitHub Actions still uses the published Mainboard revision and its `analyze` command
+directly for syntax gates. Do not replace those calls with local `rules`/`app` commands
+until a supporting Mainboard revision is approved for publication and the CI pin is updated.
 
 From this app checkout, `mainboard run --locked setup` installs the pinned correctness tool,
 `mainboard run --locked lint` checks the full repository without changing files,
@@ -120,7 +134,7 @@ Declared jobs are not evidence of hosted acceptance until they actually run succ
 
 Mainboard is pinned to `phvv-me/mainboard@fa467e07a71b26876f48b2dd3c273b5e3f14c1fd`, with `uv sync --locked` restoring its own environment. The owner-approved Mainboard branch publication completed on October 22; all five workflow references use that published revision. The app branch remains local, with no push or distribution approval. Local tool/Release validation is recorded in the [current checkpoint](Implementation/2026-10-21-frozen-ios-and-review-focus.md); no hosted CI pass is claimed.
 
-The executor automatically retains readable build reports as `<result-name>.build.json`, and test actions retain available `<result-name>.tests.json`. It attempts diagnostics after native failure, preserves nonzero status and refuses to overwrite evidence. Results uploads include these files. Compare saved inventories with `mainboard analyze swift-compare before.json after.json --json`; this validates hashes/counts/parser coverage and separates byte changes from reclassification. The [reporting checkpoint](Implementation/2026-10-20-mainboard-reports.md) preserves the implementation receipt; the [current follow-up](Implementation/2026-10-20-original-flow.md#compact-native-scene-and-fixture-follow-up--october-21) records 228 Apple/Swift regressions and the broader Mainboard suite/typing limits. Reports do not attest which source bytes Xcode compiled.
+The executor automatically retains readable build reports as `<result-name>.build.json`, and test actions retain available `<result-name>.tests.json`. It attempts diagnostics after native failure, preserves nonzero status and refuses to overwrite evidence. Results uploads include these files. Compare saved inventories with `mainboard rules swift-compare before.json after.json --json`; this validates hashes/counts/parser coverage and separates byte changes from reclassification. The [reporting checkpoint](Implementation/2026-10-20-mainboard-reports.md) preserves the implementation receipt; the [current follow-up](Implementation/2026-10-20-original-flow.md#compact-native-scene-and-fixture-follow-up--october-21) records 228 Apple/Swift regressions and the broader Mainboard suite/typing limits. Reports do not attest which source bytes Xcode compiled.
 
 The pinned Mainboard includes the `41c2774` executor change: Apple execution suppresses automatic shell-script environment dumps with Xcode’s built-in `-hideShellScriptEnvironment`, including scheme pre-actions and descriptor-backed URL tests. This preserves the normal build environment while preventing Xcode from printing its values by default. A synthetic pre-action probe and all 80 executor regression cases verify the boundary. Use `mainboard apple results` and `mainboard apple diagnostics` for reviewable summaries; do not publish raw historical build logs. Scripts must also avoid explicitly printing credentials.
 
