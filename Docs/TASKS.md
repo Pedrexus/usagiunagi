@@ -330,3 +330,26 @@ scopes without a relevant source change or a newly identified risk.
   formatting, not a fresh iOS build.
 - Actual VoiceOver navigation, grouping and spoken-chart acceptance remain open.
   Explicit labels and successful compilation do not prove that interaction gate.
+
+### October 25 primary-platform follow-up at df7e2474
+
+- iOS simulator Release build-bb0e373d65a541a2ba2369c6499aa60e succeeds with the
+  shared catalog alignment and chart accessibility descriptions. Raw output retains
+  the known App Intents metadata warning. iOS-Shared-UI-Bundle-20261025.log reports
+  no audit violations across 37 files and three binaries, including Watch products;
+  localized names, icon metadata and test/retired-resource exclusions pass.
+- test-22ced2841c594fb99ba6ef315844195f passes both existing iPhone UI journeys:
+  historical pace explanation/inline comparison (16.404s) and catalog level paging,
+  hidden answers/stage navigation (48.971s). No assertions were weakened or new
+  production fixtures added. Screenshots under iPhone-Shared-UI-20261025 were
+  inspected: inline chart, sample/uncertainty copy, aligned catalog rows and the
+  image-only radical render. This does not establish spoken VoiceOver behavior.
+- Normal iPhone launch was restored after fixture testing; receipt is
+  iPhone-Shared-UI-Normal-20261025.log. No real account exercises ran.
+- Re-inspected generation copying/publication and existing recovery probes.
+  Deterministic partial-capture/candidate images already have exact-data recovery
+  assertions; they do not prove interruption inside FileManager copy or atomic
+  publication. No reliable new local interruption mechanism was established in
+  this inspection, and no production fault hook or speculative storage edit was added.
+- Mainboard remains at 7dfce9f with the broad pending reorganization; the collector
+  integration is still uncommitted. No Mainboard files were staged or published.
