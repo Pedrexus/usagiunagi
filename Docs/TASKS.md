@@ -91,6 +91,13 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
   the exported largest-text screenshot was inspected: label and kana each fit a line.
   Logs/attachments: `.build/Results/Lesson-ReadingLayout-20261025*`; final two-file lint
   passes. This is iPhone fixture coverage, not VoiceOver or all-device acceptance.
+- The same updated lesson test passes on iPad Pro 11-inch (M5), at `34c7b00d`:
+  `test-a2247074e44c4b8e8c4ff7ef6be52f91`. Both exported screenshots were inspected:
+  normal text retains the compact two-column reading, largest text stacks it without
+  splitting the label or kana, and lesson navigation/quiz controls remain reachable.
+  Touch-target audits pass on picker and teaching pages at both sizes. Receipts:
+  `.build/Results/Lesson-ReadingLayout-iPad-20261025.log` and its attachment directory.
+  This does not close the separate keyboard/IME idle issue or multitasking/VoiceOver.
 
 - Release verification at `d851b653`, including both recent sync fixes: iOS build
   `build-7f2928eba6c74e8d8853cb647dc66c4b` and native Mac build
