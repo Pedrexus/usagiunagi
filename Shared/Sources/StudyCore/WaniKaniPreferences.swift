@@ -31,16 +31,14 @@ public struct WaniKaniPreferences: Codable, Equatable, Sendable {
   }
 
   public func applying(_ changes: WaniKaniPreferenceChanges) -> Self {
-    var value = self
-    if let edit = changes.extraStudyAutoplayAudio { value.extraStudyAutoplayAudio = edit }
-    if let edit = changes.lessonsAutoplayAudio { value.lessonsAutoplayAudio = edit }
-    if let edit = changes.lessonsBatchSize { value.lessonsBatchSize = edit }
-    if let edit = changes.reviewsAutoplayAudio { value.reviewsAutoplayAudio = edit }
-    if let edit = changes.reviewsDisplaySrsIndicator { value.reviewsDisplaySrsIndicator = edit }
-    if let edit = changes.reviewsPresentationOrder {
-      value.reviewsPresentationOrder = edit.rawValue
-    }
-    return value
+    Self(
+      extraStudyAutoplayAudio: changes.extraStudyAutoplayAudio ?? extraStudyAutoplayAudio,
+      lessonsAutoplayAudio: changes.lessonsAutoplayAudio ?? lessonsAutoplayAudio,
+      lessonsBatchSize: changes.lessonsBatchSize ?? lessonsBatchSize,
+      reviewsAutoplayAudio: changes.reviewsAutoplayAudio ?? reviewsAutoplayAudio,
+      reviewsDisplaySrsIndicator: changes.reviewsDisplaySrsIndicator ?? reviewsDisplaySrsIndicator,
+      reviewsPresentationOrder: changes.reviewsPresentationOrder?.rawValue
+        ?? reviewsPresentationOrder)
   }
 }
 
@@ -80,12 +78,12 @@ public struct WaniKaniPreferenceChanges: Codable, Equatable, Sendable {
   }
 
   public mutating func merge(_ edits: Self) {
-    if let value = edits.extraStudyAutoplayAudio { extraStudyAutoplayAudio = value }
-    if let value = edits.lessonsAutoplayAudio { lessonsAutoplayAudio = value }
-    if let value = edits.lessonsBatchSize { lessonsBatchSize = value }
-    if let value = edits.reviewsAutoplayAudio { reviewsAutoplayAudio = value }
-    if let value = edits.reviewsDisplaySrsIndicator { reviewsDisplaySrsIndicator = value }
-    if let value = edits.reviewsPresentationOrder { reviewsPresentationOrder = value }
+    extraStudyAutoplayAudio = edits.extraStudyAutoplayAudio ?? extraStudyAutoplayAudio
+    lessonsAutoplayAudio = edits.lessonsAutoplayAudio ?? lessonsAutoplayAudio
+    lessonsBatchSize = edits.lessonsBatchSize ?? lessonsBatchSize
+    reviewsAutoplayAudio = edits.reviewsAutoplayAudio ?? reviewsAutoplayAudio
+    reviewsDisplaySrsIndicator = edits.reviewsDisplaySrsIndicator ?? reviewsDisplaySrsIndicator
+    reviewsPresentationOrder = edits.reviewsPresentationOrder ?? reviewsPresentationOrder
   }
 
   func matches(_ value: WaniKaniPreferences) -> Bool {
