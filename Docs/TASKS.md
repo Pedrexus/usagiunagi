@@ -487,3 +487,19 @@ scopes without a relevant source change or a newly identified risk.
   The fixture process quit normally, its exact-path check is empty, and focus was
   restored to the normal Release app. No real account or global accessibility
   setting was changed.
+
+### October 25 native Mac settings route inspection
+
+Using the existing isolated Debug fixture (build-d133fa1d8a52471d979d922e7ca54396),
+verified Settings → Appearance & Notifications, Lessons, Reviews, Subject details,
+and Reviews → Japanese fonts / Offline Audio. Every observed navigation/Back action
+succeeded; page titles and Done remain available. Inspected six fresh app-window
+captures: Mac-Settings-Appearance-20261025.png, Mac-Settings-Page-{1,2,3}-20261025.png,
+Mac-Settings-Fonts-20261025.png and Mac-Settings-Audio-20261025.png under .build/Results.
+Native forms render their controls, help text, installed-font sample and empty-audio
+state. These are default-size light-appearance route/render checks, not every scrolled
+row, preference mutation, download/playback, notification delivery or VoiceOver proof.
+No preferences were changed or downloads started. Done dismissed the last page;
+the isolated process quit and its exact-path check is empty. The normal app was
+restored. Matching action/tree/capture/cleanup logs retain the Mac-Settings prefix.
+No production edit or repeated build was needed.
