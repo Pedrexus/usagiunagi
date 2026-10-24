@@ -38,6 +38,17 @@ all platform, physical-device or release acceptance is complete.
 
 ## Remaining work
 
+Lesson load cancellation: after awaiting `store.session`, `NativeLessonView.load` now
+checks task cancellation before mutating paused-session/batch state or calling
+`openLessons`. Later store reads already had this boundary. This closes a source-level
+cancellation gap without a new abstraction or schema change. Existing iPhone draft
+retention and wrong-answer/completion journeys both pass
+(`test-c3fddf58429f4ebba944bc2d61812e39`), as does one-file Mainboard lint. Receipts:
+`.build/Results/Lesson-Load-Cancellation-20261025.log` and
+`Lesson-Load-Cancellation-Lint-20261025.log`. These are surrounding behavior regressions;
+they do not deterministically suspend/cancel the first database read. Unstructured
+reload ownership and broader scene/account transitions remain review scope.
+
 Simulator diagnostics investigation: the post-failure `simctl` lookup error is emitted
 by Xcode's `IDETestOperationsObserverDebug`, after the actual assertion failure, not
 by Mainboard's simulator inventory/launch. The system developer directory is

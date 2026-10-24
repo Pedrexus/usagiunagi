@@ -142,7 +142,9 @@ public struct NativeLessonView: View {
     pausedReview = false
     pausedLesson = nil
     do {
-      if let saved = try await store.session(accountID: accountID) {
+      let saved = try await store.session(accountID: accountID)
+      try Task.checkCancellation()
+      if let saved {
         initialBatchOpened = true
         if saved.session.isPractice || saved.session.items.values.contains(where: { !$0.isLesson })
         {
