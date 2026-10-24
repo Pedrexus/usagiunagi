@@ -8,6 +8,13 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Finalized offline-audio acceptance:** all three iPhone cases pass unchanged in
+`test-d0377e3ce2e745d2a3a1102a877a6ea2`, with no failures/skips/runtime warnings. Download
+retention and explicit deletion, visible failures/retry, and persisted voice/cellular choices
+are covered by isolated fixtures. Log: `.build/Results/Audio-Acceptance-20261024.log`.
+This finalizes the previously log-only download and failure-recovery journeys; it does not
+prove real-network downloads, microphone recognition or physical audio-route behavior.
+
 **Finalized Home acceptance:** `test-951368f321e948cba792d69ee33d425c` passes seven
 iPhone cases, including Home rotation/refresh, empty queues/vacation and upcoming-review
 breakdown, plus full typed review completion and the preexisting lesson/catalog/Coverage
