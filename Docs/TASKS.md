@@ -64,12 +64,17 @@ all platform, physical-device or release acceptance is complete.
 3. Finish adaptive layout, original-app comparison and keyboard/IME/accessibility
    acceptance. Fix demonstrated regressions before rerunning affected checks.
    Do not retry unchanged Mac runner or Device Hub hangs indefinitely.
-   The failed iPad keyboard run's app diagnostic reports unmatched animation-stop
-   events before idle replies cease. Its temporary driver toggled the software
-   keyboard during typing; causality remains unproven. Extracted evidence is in
-   `.build/Results/iPad-Keyboard-Animation-Diagnostic-20261025.log`. A future retry
-   should configure the keyboard before the test, with no mid-run external toggle;
-   do not disable app animations or weaken keyboard/viewport assertions to pass.
+   The earlier iPad keyboard timeout is superseded by a full 35.374-second pass at
+   `b875a762`, test-254a0e8e65b04a989340e766afb1346e. Device Hub's verified iPad window
+   had hardware-keyboard simulation enabled; it was disabled before launch and the
+   settled menu state confirmed. No mid-run toggle or assertion changes were used.
+   Visible-keyboard geometry passes before/after Quick Settings, the draft survives,
+   and both answers reach the saved-session screen. The exported screenshot was
+   inspected. Receipts: `.build/Results/iPad-Keyboard-Preconfigured-Review-20261025.log`
+   and `iPad-Keyboard-Preconfigured-20261025/`. Original timeout diagnostics remain;
+   their exact cause is unproven. Physical IME and broader layouts remain open.
+   Native app inventory reported Device Hub PID -1 despite live PID 96505 and working
+   AX menus: verify process/accessibility state before treating that inventory as absence.
 4. When the owner resumes physical checks, verify voice, Watch, iCloud, Keychain,
    notifications and device performance with the required signing/account setup.
    Real-account statistics calibration also remains open; local mocks cannot close it.
@@ -97,7 +102,7 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
   splitting the label or kana, and lesson navigation/quiz controls remain reachable.
   Touch-target audits pass on picker and teaching pages at both sizes. Receipts:
   `.build/Results/Lesson-ReadingLayout-iPad-20261025.log` and its attachment directory.
-  This does not close the separate keyboard/IME idle issue or multitasking/VoiceOver.
+  This lesson check does not establish physical IME or multitasking/VoiceOver acceptance.
 
 - Release verification at `d851b653`, including both recent sync fixes: iOS build
   `build-7f2928eba6c74e8d8853cb647dc66c4b` and native Mac build
@@ -199,7 +204,7 @@ must not be deleted as disposable build output. These summaries retain source sc
 | Current Mac startup | Release build-ee89e3a3bad94084aaaaae9ea1b5dae0: terminated the old running process, launched PID 70875 to Account, opened the display-only catalog, verified graceful exit, and reopened PID 71677 to Account. Native accessibility inspection found responsive controls and one window on both launches. Dark catalog screenshot inspected. Receipts: .build/Results/Mac-Current-Reopen-*-20261025.log and Mac-Current-Reopen-Preview-20261025.png. | No token entered or exercises performed; signed-account and session/window restoration are not proven. Preview is not restored automatically on relaunch. |
 | Mac preference mutation | Debug build-d133fa1d8a52471d979d922e7ca54396, isolated settings fixture: selected Dark in the native picker, inspected the changed window, closed/reopened Settings and confirmed Dark remained selected. A separate process read `appearance=dark` from only the fixture preferences suite. Restored Light through the picker and inspected it, closed the fixture, and returned to the normal Release app. Receipts: .build/Results/Mac-Settings-Mutation-*-20261025.log/png. | Appearance only; fixture launch resets its suite, so this does not prove app-relaunch restoration, iCloud delivery, notification effects or other setting writes. Normal preferences were untouched. |
 | Mac media controls | Same Debug build, synthetic font/audio fixture: font download/automatic selection, deselection, held-download cancellation, HTTP 503 retry presentation and confirmed deletion verified through native controls. Audio reached Up to date with 8 kB cached; disabling with Keep retained it, explicit deletion cleared it without clearing voice choices, and re-enabling restored 8 kB. Receipts: .build/Results/Mac-Media-*-20261025.log; exact inspector and screenshot retained. | No real network, playback, review-draft or relaunch claim. Initial live-tool failure occurred after opening a fixture; the duplicate snapshot launch was detected and closed before outcome inspection. Final fixture closed and normal Release app focused. |
-| iPad | Large-text Home/lesson checks pass; actual landscape keyboard viewport fits before/after Quick Settings. | Complete landscape submission journey timed out waiting for XCTest idle; not a pass. |
+| iPad | Large-text Home/lesson checks pass. test-254a0e8e65b04a989340e766afb1346e completes the full landscape review in 35.374 seconds with real software keys, viewport checks before/after Quick Settings, draft retention and both answers saved. Keyboard configured before launch; no mid-run intervention. | Physical IME, floating/split keyboards and broader multitasking/window layouts remain unverified. Earlier timeout retained as historical evidence. |
 | Current iPad continuous voice | At 9b38dc90, test-9392df988b3e47dfb731e44535695d90: all three current correct-answer, unclear-kana retry and mistake-recovery journeys pass on iPad Pro 11-inch (M5), 60.260 seconds, zero failures/skips/runtime warnings. Fresh exported screenshot shows the centered subject, prompt, listening/fallback and study tools without clipping; normal simulator launch restored. Receipts: .build/Results/iPad-Voice-Current-20261025.log and iPad-Voice-Current-20261025/manifest.json. | Synthetic recognition; does not close the separate landscape keyboard-idle failure, live speech, multitasking layouts or physical-device acceptance. |
 | Storage capture/publication | Base/WAL cross-volume copy ENOSPC and same-volume incomplete family capture recover 38 exact records in fresh processes. Final publication interrupted before fsync recovers 38 records, then an abrupt answer/note write recovers 39. Sources and abandoned preparations remain unchanged; detailed receipts are linked above. | Single-file mid-copy, APFS clone failure, iOS capture/publication and physical failures remain open. |
 | Mainboard | Collector split regressions pass; compact report preserves numeric documentation URLs after a local formatter correction. | Both fixes remain in the unrelated pending reorganization; not committed/published as a coherent tool revision. |
