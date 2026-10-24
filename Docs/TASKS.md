@@ -471,3 +471,19 @@ scopes without a relevant source change or a newly identified risk.
   Mac-Fixture-Normal-Window-20261025.log. Absolute-path open restored focus after an
   initial relative-path lookup failed. The already-running Release process was not
   relaunched, so this is not runtime proof of the newest Release binary.
+
+### October 25 native chart value exposure resolved
+
+- Follow-up enumeration of each chart mark's supported native AX attributes resolves
+  the earlier nil AXValue observation. Swift Charts exposes accessibilityValue through
+  AXValueDescription on this Mac: Apprentice stage is "1 items", Median level pace is
+  "12.0 days", and Level 16 is "10.0 days from unlocking to passing". The explicit
+  labels and values are both exposed; no production workaround or wrapper is needed.
+- Mac-Chart-Attributes-20261025.log and its exact temporary Swift inspector are
+  retained under .build/Results. This uses the same isolated statistics fixture and
+  Debug build-d133fa1d8a52471d979d922e7ca54396. No production change or rebuild occurred.
+- This closes native attribute exposure for those observed stage/pace marks only.
+  Actual VoiceOver focus order, speech and other chart types remain unverified.
+  The fixture process quit normally, its exact-path check is empty, and focus was
+  restored to the normal Release app. No real account or global accessibility
+  setting was changed.
