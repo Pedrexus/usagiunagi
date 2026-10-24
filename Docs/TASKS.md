@@ -8,6 +8,15 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Finalized account acceptance:** six iPhone journeys pass unchanged in
+`test-50c253b9132a464da49256254ed1c69f`, with zero failures/skips/runtime warnings:
+expired-account reauthentication/forced email; deferred warning with review draft retention;
+cold link waiting for sign-in; hibernation warning dismissal across tabs; token rejection,
+hibernation/success and Home navigation; token-only keyboard submission. These use synthetic
+accounts and do not prove real-token authentication or signed Keychain access. Log:
+`.build/Results/Account-Acceptance-20261024.log`. All six now have finalized evidence rather
+than the interrupted broad run's log-only passes. No production changes were required.
+
 **Finalized offline-audio acceptance:** all three iPhone cases pass unchanged in
 `test-d0377e3ce2e745d2a3a1102a877a6ea2`, with no failures/skips/runtime warnings. Download
 retention and explicit deletion, visible failures/retry, and persisted voice/cellular choices
