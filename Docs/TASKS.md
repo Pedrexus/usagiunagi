@@ -31,7 +31,7 @@ all platform, physical-device or release acceptance is complete.
 | Rename/icon/localization | Fork remote is Pedrexus/usagiunagi. Localized 兔鰻/usagiunagi names and shared layered kanji icon compile; earlier bundle/static exports checked. | Physical Home Screen/Dock/Watch appearance variants and signed identity acceptance. Store listings/distribution require separate owner authorization. |
 | Lean code and modern Swift | Retired UIKit screens, Go/Objective-C/FMDB/protobuf/importers/assets removed; redundant app initializers reduced. Shared modules remain where persisted identity requires them. | Continue only evidence-based simplification without losing functionality or frozen data. Resource and final Release acceptance remain scoped. |
 | dataclass / constructor helpers | Separate reusable library and SwiftData/macro tests implemented. App pilot saved only three lines, so native constructors retained. Weak lifetime boundaries audited. | Publication and a larger measured benefit before app adoption; physical-service lifetime checks. No frozen-schema changes for boilerplate savings. |
-| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Optional pytest collection is isolated; two regressions pass. Current installed CLI, warning-free iPhone build and simulator launch pass after the dispatcher repair. | Current rules report 238 signals, including 77 Swift migration signals; review remaining general findings individually. Collector fix remains uncommitted alongside other work; integrate without staging others' edits. Newer publication needs approval. |
+| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Optional pytest collection is isolated; two regressions pass. Current installed CLI, warning-free iPhone build and simulator launch pass after the dispatcher repair. | Latest rules report 239 signals, including 77 Swift migration signals; review remaining general findings individually. Collector fix remains uncommitted alongside other work; integrate without staging others' edits. Newer publication needs approval. |
 | GitHub Actions / final tests | Bounded native lanes, pinned packages, storage matrices and product audits declared. All five tool checkouts pin published fa467e0. Local app/rules commands are newer than that pin. | Hosted run not performed: app push is not authorized. Newer Mainboard publication also needs approval. Tests run after implementation/manual repairs; preserve full assertion scope. |
 | Launch/reopen reports | iPhone native root, warm links, held refresh, account flows and normal simulator launch have finalized receipts. One pasted crash was SpringBoard, not the app. | Current broader Mac/window restoration and any newly reproduced matching app crash. Latest Mac UI attempt failed to connect its runner before executing tests. Do not equate compilation with launch acceptance. |
 
@@ -199,3 +199,25 @@ goal because builds pass or because all currently runnable synthetic checks pass
   native subject tiles, hidden labels, stage badges and the image-only radical
   remain visible. Normal iPhone launch restored. This is scoped simulator evidence,
   not completion of wider accessibility, real-account or physical-device checks.
+
+### October 25 consolidated validation at 6e265355
+
+All commands below completed successfully through the checked-in Mainboard tasks
+or native Apple runner on source `6e265355415265f2574175fef27adeec55862959`.
+
+| Check | Evidence and scope |
+| --- | --- |
+| Shared Swift Testing | `Shared-Final-20261025.log`: 195 StudyCore functions/29 suites plus 171 StudyPersistence functions/23 suites, all passing. Counts are test functions, not expanded parameter cases. The read-only refresh rollback test intentionally logs a refused SwiftData save and passes its recovery assertions. This is the Shared package, not hosted AppTests, UI, dataclass or physical services. |
+| Formatting/lint | `Lint-Final-20261025.log`: 448 files, zero rewrites, no failures. Mainboard migration/complexity signals remain a separate audit. |
+| Frozen schema | StudySchemaV1 SHA-256 remains `538e50dd4e3d3192be488bad568ab67b2990925d937f62aedba0bcf307b0f5f4`. |
+| Native Mac Release | `build-431773f5a75c49729c8cd60e9656e2e7`, `Mac-Current-20261025.log`: arm64 native build passes. `Mac-Current-Bundle-20261025.log`: audit passes, no violations, 17 files/one binary. |
+| iOS simulator Release | `build-39c3a8855e3440498440d9ed80389b25`, `iOS-Current-20261025.log`: optimized generic simulator build passes with ad-hoc signing. `iOS-Current-Bundle-20261025.log`: audit passes, no violations, 37 files/three binaries including Watch app/widgets. |
+
+Both raw Release logs contain the App Intents metadata-extraction warning for an
+absent AppIntents dependency, despite zero warnings in their structured summaries.
+Do not call these builds warning-free. Bundle policy checks localized names/icon
+metadata, microphone text, retired library symbol patterns and forbidden fixture
+resources; it does not prove installation, rendered icons, live speech or signed
+services. No app push, distribution, physical check or real WaniKani exercise ran.
+The outstanding acceptance items above remain open; do not repeat these passing
+scopes without a relevant source change or a newly identified risk.
