@@ -1,5 +1,24 @@
 # Original study-flow comparison
 
+## October 25 control-source recheck
+
+Compared original local `master` (`d20defc3`) with current sources at `107c4e9f`.
+The repository has no local `main` ref. This is source evidence, not new rendered or
+hardware-keyboard acceptance.
+
+| Original behavior | Current shared implementation |
+| --- | --- |
+| Lesson previous/next with arrows or A/D, Return to advance, Q for quiz, Space/J for audio | `LessonFlowView.onKeyPress` retains these actions while teaching and ignores modified key presses. |
+| Review Return, Delete retry, F reveal, Space details, J audio | `ReviewScreen` attaches the actions to their applicable phase's controls; native answer input owns submission. |
+| Previous subject and custom font cycling | Review tools retain Command-P, Option-Tab, Command-Option arrows and horizontal question swipes. |
+| Correct/incorrect, ask later, synonym and exclusion | Shared correction controls and host actions remain. Control-C/I/A avoid overriding normal Copy/Select All; Command-S adds a synonym. |
+| Anki question tap reveals/assesses an answer | Shared question tap submits while answering; explicit assessment controls handle the revealed phase. The original broad blank-area gesture is not reproduced. Wider touch/keyboard usability remains an acceptance item. |
+
+The removed `.focus` action had no sender, and `questionImage` had no writer.
+Their removal does not remove a mapped original input action or radical rendering:
+radicals use the host's `RadicalImageView` question-content closure. Existing iPad
+continuous-voice acceptance is recorded in TASKS; it is not proof of all controls.
+
 Source comparison after `d90afc63` against pinned original `upstream/master` at `d20defc38db78a844d49130031e54969d1907331`. This original already contains its Orizuru visual refresh. The first comparison covers shared Home, lesson teaching/picker/quiz, typed and Anki reviews, feedback/correction, summaries, catalog/search, details and settings at source level. The scoped rendered Mac follow-up below does not establish full cross-platform usability.
 
 The existing compact Home sections, subject colors, lesson strip/quiz, native settings, grading and saved-work responsibilities remain. The source comparison identified these concrete regressions and the following production fixes:
