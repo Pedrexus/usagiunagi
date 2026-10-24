@@ -251,3 +251,36 @@ The standalone probe is outside the app-host sandbox; this does not prove app-ho
 container permissions, iOS partial-file capture, physical power/Data Protection or
 signed-device behavior. The existing app-host interruption tests cover their own
 container-attachment boundaries and are not retroactively broadened by this result.
+
+## iOS simulator partial-file capture interruption
+
+At app `51da22ea`, the same IOSSIMULATOR 27.0 binary now verifies interruption inside
+native copyfile_data for base and committed-WAL sources. Only disposable sources
+are repaged to 65,536-byte pages, producing 2,359,296-byte files with the same exact
+logical baseline. Capture resides on a separate bounded 128 MB APFS image.
+
+LLDB attaches to the exact suspended simulator child, stops at the production copy
+call, then at copyfile_data and its write syscall. After the first write returns,
+it kills the process while still inside copyfile_data. Both captured files contain
+1,048,576 bytes, less than the source; both transcripts report kill status 9.
+Two fresh simulator processes per variant restore all 38 exact records, select a
+new candidate, preserve source/retained family and abandoned preparation hashes,
+and retain stable selector bytes on the second reopen. Both volumes were ejected.
+
+The first fixture preparation found stale SHM bookkeeping after DELETE-mode repaging
+and stopped before mounting or launching a probe. The corrected preparation confirms
+there is no WAL and removes only that closed disposable fixture's stale SHM before
+freezing its family hashes or creating committed WAL state. This is test-fixture
+preparation, not a production cleanup policy.
+
+Receipts: `.build/Results/IOS-Partial-Capture-Checked-20261025` and
+`IOS-Partial-Capture-Checked-20261025-WAL`, including exact driver, debugger/spawn,
+reopen and detach logs, and source/candidate receipts. The initial setup failure is
+retained under IOS-Partial-Capture-20261025. Shared driver SHA-256:
+`dec52240b5b382b0ca35bc3f72167fc84f5392eb9cfcc9d029a567cab1ceaefd`.
+The binary/source snapshot is retained with the preceding publication experiment.
+
+This closes the standalone iOS Simulator cross-volume partial-file interruption
+boundary. It does not establish app-host sandbox capture/publication, physical
+power/Data Protection, full-account performance or every instruction within copying.
+Production code, schema and frozen fixtures remain unchanged.
