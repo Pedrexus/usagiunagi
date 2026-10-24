@@ -71,6 +71,11 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
 - [Probe guide](../App/Tests/PersistenceProbe/README.md), [migration specification](Migration.md)
   and [storage evidence](Implementation/2026-10-21-frozen-ios-and-review-focus.md)
   define the exact matrices and limits.
+- October 25 cross-volume APFS capture failed with actual ENOSPC for base and
+  committed-WAL sources. Each recovered 38 exact records in two fresh processes,
+  preserving sources and failed preparations. Same-volume cloning, nonzero mid-copy
+  interruption and iOS capture remain unverified. See the
+  [scoped receipt](Validation/2026-10-25-source-capture.md).
 
 ## Owner decisions and platform boundaries
 
@@ -90,9 +95,9 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
   Mac receipts retain their own source scopes.
 - October 25 device discovery finds an iPhone 16 Pro Max available/paired and the
   three existing simulators. `security find-identity -v -p codesigning` reports zero
-  valid identities. Physical deployment and signed iCloud/Watch/Keychain checks remain
-  blocked on signing setup and an available physical connection. The owner has been
-  asked whether to set up signing or defer these checks; no reply is assumed.
+  valid identities. The owner explicitly deferred physical-device checks. Do not
+  request signing setup again until the owner resumes them. Live voice, paired Watch,
+  signed iCloud/Keychain and physical-device acceptance remain unverified.
 - For stable read-only/Apple execution while Mainboard is being edited, the exact
   committed `7dfce9f` sources are extracted under `/tmp/usagi-mainboard-7dfce9f`.
   `PYTHONPATH=/tmp/usagi-mainboard-7dfce9f/src mainboard ...` successfully runs the

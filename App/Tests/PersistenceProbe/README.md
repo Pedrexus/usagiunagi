@@ -32,7 +32,14 @@ The opening phase also kills two separate ordinary/WAL-source children when a co
 
 The catalog reader also verifies old account bytes decode with no `catalogRefreshID`. Automatic-read acceptance builds the writer from exact commit `70414fb6` in a disposable archive, then reads that store with the current binary. The optional marker belongs to the existing Codable account value; no SwiftData column is added. See [current evidence](../../../Docs/Validation/2026-10-20-automatic-catalog-reads.json).
 
-## Source-capture pressure boundary: still open
+## Source-capture pressure boundary: cross-volume verified
+
+October 25 base and committed-WAL checks established an actual copy ENOSPC on a
+bounded separate APFS destination. Both recovered all 38 records in two fresh
+processes with a fresh candidate, preserving sources and failed preparation files.
+See the [exact scope and receipts](../../../Docs/Validation/2026-10-25-source-capture.md).
+Same-volume cloning, nonzero mid-copy interruption and iOS acceptance remain open.
+The earlier unsuccessful calibrations below remain historical evidence.
 
 A separate October 24 file-size-limit calibration also passed capture. A shell child
 ignored SIGXFSZ and set `ulimit -f 16` (16 KiB on this host) before the existing
