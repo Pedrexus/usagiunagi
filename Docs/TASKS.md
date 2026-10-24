@@ -39,6 +39,11 @@ all platform, physical-device or release acceptance is complete.
 ## Remaining work
 
 1. Integrate the verified local Mainboard collector and report-link fixes into its pending tool work.
+   Permanent report regressions now live in Mainboard's
+   `integration/analysis/test_finding_report.py`: four cases pass, preserving complete
+   documentation URLs, distinct targets and grouped finding values/counts. Receipt:
+   `.build/Results/Mainboard-Report-Regression-20261025.log`. They depend on the pending
+   Report implementation and must land with it, not as a broken standalone commit.
    The dispatcher syntax failure is now repaired in the current checkout: normal
    app build and simulator launch pass. Continue contextual triage of general rule signals without
    deleting required bridges or frozen evidence. Preserve unrelated in-progress
