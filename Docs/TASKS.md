@@ -31,14 +31,16 @@ all platform, physical-device or release acceptance is complete.
 | Rename/icon/localization | Fork remote is Pedrexus/usagiunagi. Localized 兔鰻/usagiunagi names and shared layered kanji icon compile; earlier bundle/static exports checked. | Physical Home Screen/Dock/Watch appearance variants and signed identity acceptance. Store listings/distribution require separate owner authorization. |
 | Lean code and modern Swift | Retired UIKit screens, Go/Objective-C/FMDB/protobuf/importers/assets removed; redundant app initializers reduced. Shared modules remain where persisted identity requires them. | Continue only evidence-based simplification without losing functionality or frozen data. Resource and final Release acceptance remain scoped. |
 | dataclass / constructor helpers | Separate reusable library and SwiftData/macro tests implemented. App pilot saved only three lines, so native constructors retained. Weak lifetime boundaries audited. | Publication and a larger measured benefit before app adoption; physical-service lifetime checks. No frozen-schema changes for boilerplate savings. |
-| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Local manifest finalized; iPhone build/lint/launch receipts pass. Optional pytest collection is isolated; two regressions and installed CLI checks pass at that checkpoint. | Subsequent unrelated dispatcher edits introduce a syntax error before CLI startup. Use the committed snapshot below for bounded validation. Collector fix remains uncommitted alongside other work; integrate without staging others' edits. Newer publication needs approval. |
+| Mainboard rules/workflow | Swift rules, formatter/SwiftLint, inventories, native builds/results and 28 named app suites. Optional pytest collection is isolated; two regressions pass. Current installed CLI, warning-free iPhone build and simulator launch pass after the dispatcher repair. | Current rules report 238 signals, including 77 Swift migration signals; review remaining general findings individually. Collector fix remains uncommitted alongside other work; integrate without staging others' edits. Newer publication needs approval. |
 | GitHub Actions / final tests | Bounded native lanes, pinned packages, storage matrices and product audits declared. All five tool checkouts pin published fa467e0. Local app/rules commands are newer than that pin. | Hosted run not performed: app push is not authorized. Newer Mainboard publication also needs approval. Tests run after implementation/manual repairs; preserve full assertion scope. |
 | Launch/reopen reports | iPhone native root, warm links, held refresh, account flows and normal simulator launch have finalized receipts. One pasted crash was SpringBoard, not the app. | Current broader Mac/window restoration and any newly reproduced matching app crash. Latest Mac UI attempt failed to connect its runner before executing tests. Do not equate compilation with launch acceptance. |
 
 ## Remaining work
 
-1. Integrate the verified local Mainboard collector fix into its pending tool work
-   and resolve the later dispatcher syntax failure. Preserve unrelated in-progress
+1. Integrate the verified local Mainboard collector fix into its pending tool work.
+   The dispatcher syntax failure is now repaired in the current checkout: normal
+   app build and simulator launch pass. Triage the current 238 rule signals without
+   deleting required bridges or frozen evidence. Preserve unrelated in-progress
    changes and do not publish newer tooling without approval.
 2. Finish supported local storage failure boundaries using marked disposable stores
    and bounded volumes. Avoid repeating rejected calibrations recorded below.
@@ -103,9 +105,9 @@ Re-run accepted scopes only for a relevant source change, failure or unresolved 
   `PYTHONPATH=/tmp/usagi-mainboard-7dfce9f/src mainboard ...` successfully runs the
   device/signing checks. It changes neither installation nor checkout; it is not a
   repair or publication of newer `app`/`rules` behavior. Restore that exact snapshot
-  from Git if temporary files disappear. The later syntax failure is at
-  `dispatch/dispatcher.py:982` (positional argument after keyword), unrelated to the
-  collector fix; do not repeatedly chase a concurrently edited working copy.
+  from Git if temporary files disappear. The subsequent dispatcher syntax failure
+  has now been repaired in the live checkout; normal CLI/build/launch work again.
+  Keep the snapshot as a fallback, not the default required path.
 
 ## Latest evidence index
 
@@ -115,6 +117,8 @@ is intentionally untracked and must not be deleted as disposable build output.
 
 | Commit / receipt | Scope |
 | --- | --- |
+| `build-47d5dd39fb9f4a558b54852b8d4c66e0`, `Mainboard-Current-Launch-20261025.log` | Current installed Mainboard (no snapshot override) builds iPhone with zero errors/warnings and launches bundle `com.davidsansome.wanikani`, PID 85282. This verifies workflow recovery, not manual usability or physical-device behavior. |
+| `Mainboard-Current-Rules-20261025.log`, `Mainboard-Current-Swift-Rules-20261025.log` | 238 signals across 14 rules; 77 Swift migration signals across eight rules. UIKit/Objective-C signals identify the Japanese input bridge, notification adapter and tests; SQLite signals are confined to disposable persistence tests/probes. Frozen V1 Codable storage and intentional container boundaries also signal. Findings are not automatically bugs or safe deletions. Remaining general complexity/duplication findings require individual review. |
 | `Storage-Encoder-20261025.log`, `Storage-Encoder-Frozen-20261025.log` | Reuse one local sorted-key JSON encoder per synchronous generation snapshot instead of one per field. All seven opening test functions and the frozen base/WAL/review/publication process matrix pass; source/retained checks and the schema hash remain unchanged. Strict Swift formatting passes. No startup latency or physical-device performance claim. |
 | `Mainboard-Collector-20261025/{target,outcomes}.json` | OS-isolated regressions: CLI help with pytest blocked, and parameterized collection without execution; two passes/no skips. Default CLI discovery/toolchain and app Swift lint also pass. No dependencies installed. Mainboard source changes remain local/uncommitted. |
 | `bcd524f8`, `test-ff6d4179c2df47bf815e347d179b18f1` | Two hands-free iPhone flows with Increased Contrast; screenshot inspected; original setting and normal launch restored. |
