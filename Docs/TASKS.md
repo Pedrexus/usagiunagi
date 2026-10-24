@@ -8,6 +8,19 @@ Work lives in `/Users/pedro/Developer/projects/apps/usagiunagi`, on `codex/swift
 
 ### October 24 workflow audit after disk cleanup
 
+**Mac navigation follow-up:** the first local run (`test-c42a6846718b49a8af56c9a80203583c`)
+failed before compilation because the generic simulator signing defaults require a Mac
+provisioning profile for this app's entitlements. The pending Mac device declaration now
+overrides `CODE_SIGNING_ALLOWED=NO`, matching the established local Mac test tasks. This
+does not qualify the product for signed Keychain/iCloud/distribution acceptance.
+The corrected invocation compiled, but `test-2438cb329a6f4f05bbbaa3679480cbfa` ended with
+“The test runner hung before establishing connection”; none of the three requested draft,
+cold-link or settings-window journeys ran. Its process is terminal (exit 65), not pending.
+Logs: `.build/Results/Mac-Navigation-{Retry-,}20261024.log`. Do not repeat this unchanged
+Mac automation attempt or count it as functional coverage. Computer Use inspection also
+stalled, then reported that Xcode's transient runner bundle no longer existed. iOS/iPad
+acceptance is unaffected; native Mac automation and normal saved-window restoration remain open.
+
 **iPad settings acceptance:** `test-b1826a9250e14b189b514ca74c6ac7bc` passed lesson
 preferences, review dependencies/download navigation and notification persistence. The
 appearance journey failed because it assumed the subject-settings row fit in the visible
