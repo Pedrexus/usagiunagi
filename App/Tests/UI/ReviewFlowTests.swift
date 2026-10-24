@@ -16,6 +16,28 @@ import UIKit
 import XCTest
 
 final class ReviewFlowTests: XCTestCase {
+  @MainActor func testDarkLessonMnemonicRemainsReadable() {
+    continueAfterFailure = false
+    let app = launchNativeHome([
+      "--lesson-fixture", "--lesson-settings-fixture", "--dark-fixture",
+    ])
+    defer { app.terminate() }
+    let choose = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose lessons"))
+      .firstMatch
+    scrollTo(choose, in: app)
+    choose.tap()
+    app.buttons["lesson.select.1"].tap()
+    app.buttons["lesson.startSelection"].tap()
+    expectLessonPage("Lesson 1 of 1", in: app)
+    let mnemonic = app.staticTexts["A single line represents one."]
+    scrollTo(mnemonic, in: app)
+    XCTAssertTrue(mnemonic.isHittable)
+    let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+    image.name = "Dark lesson mnemonic colors"
+    image.lifetime = .keepAlways
+    add(image)
+  }
+
   @MainActor func testHomeContentContrastAcrossAppearances() throws {
     continueAfterFailure = true
     for appearance in ["--light-fixture", "--dark-fixture"] {

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MnemonicText: View {
   let source: String
+  @Environment(\.colorScheme) private var colorScheme
   private var attributed: AttributedString {
     StudyMarkup.parse(source).reduce(into: AttributedString()) { result, run in
       var part = AttributedString(run.text)
@@ -18,6 +19,9 @@ struct MnemonicText: View {
         case .reading: part.font = font.bold()
         default: break
         }
+      }
+      if colorScheme == .dark, let color = part.foregroundColor {
+        part.foregroundColor = color.mix(with: .white, by: 0.4)
       }
       part.link = run.link
       result += part
