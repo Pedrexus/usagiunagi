@@ -353,3 +353,28 @@ scopes without a relevant source change or a newly identified risk.
   this inspection, and no production fault hook or speculative storage edit was added.
 - Mainboard remains at 7dfce9f with the broad pending reorganization; the collector
   integration is still uncommitted. No Mainboard files were staged or published.
+
+### October 25 Swift migration rule triage and documentation links
+
+- Fresh SW-MIG0001–0008 inventory reports 77 review signals. UIKit/AppKit references
+  are the documented Japanese text-input adapter, system notification settings,
+  Mac lifecycle ownership and their tests. Direct SQLite imports/calls occur only
+  in disposable corruption/recovery tests, not shipping persistence. The 15 encoded
+  attributes belong to frozen V1; container findings span distinct documented stores,
+  verification and tests. No blanket suppression or frozen-schema edit was applied.
+  Receipt: Swift-Migration-Triage-20261025.log.
+- Found a Mainboard report-rendering defect: numeric URL segments were extracted as
+  variable values, replacing Apple's /274/ documentation link with /_/. The compact
+  report matcher now preserves complete HTTP(S) URLs while still extracting ordinary
+  numbers and backticked names. Actual SW-MIG0006 output retains the full link and
+  removes the spurious 274 value from every property finding.
+- Four focused cases cover numeric path/query/fragment segments, ports, ordinary
+  decimals and named values; grouped output/count assertions also pass through
+  Mainboard's managed environment. Exact check retained as
+  .build/Results/Mainboard-Rule-Links-20261025.py. Real-rule receipt:
+  Swift-Rule-Links-Fixed-20261025.log. Both repositories' scoped diff checks pass.
+- The correction is three lines in Mainboard's already-modified
+  src/mainboard/analysis/findings.py. Report itself belongs to that repository's
+  pending reorganization, so this change remains uncommitted with it. No unrelated
+  Mainboard changes were staged and nothing was published. Integration of this
+  regression check and the collector fix remains part of the tooling task.
