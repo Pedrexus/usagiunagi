@@ -47,7 +47,9 @@ all platform, physical-device or release acceptance is complete.
    The earlier dispatcher repair enabled builds/launches. During the later Mac media
    check, the changing live checkout failed startup with missing `mainboard.fleet.batch`;
    bounded inspection continued through the preserved committed 7dfce9f snapshot.
-   Revalidate live CLI integration after the reorganization settles. Continue contextual triage without
+   Subsequent live recheck found the import corrected by the concurrent reorganization;
+   app discovery and a declarative Mac Release build pass (receipt below).
+   Coherent commit/publication remains pending. Continue contextual triage without
    deleting required bridges or frozen evidence. Preserve unrelated in-progress
    changes and do not publish newer tooling without approval.
 2. Finish supported local storage failure boundaries using marked disposable stores
@@ -139,6 +141,7 @@ must not be deleted as disposable build output. These summaries retain source sc
 | iPad | Large-text Home/lesson checks pass; actual landscape keyboard viewport fits before/after Quick Settings. | Complete landscape submission journey timed out waiting for XCTest idle; not a pass. |
 | Storage capture | Base/WAL cross-volume APFS copy ENOSPC recovers 38 exact records in two fresh processes, preserving sources/failed preparations. | Same-volume clone, nonzero mid-copy, inside-publication and physical failures remain open. |
 | Mainboard | Collector split regressions pass; compact report preserves numeric documentation URLs after a local formatter correction. | Both fixes remain in the unrelated pending reorganization; not committed/published as a coherent tool revision. |
+| Live Mainboard app workflow | After the transient missing-module failure, live `app --help` and `app list` succeed, discovering three device targets and 28 suites. `mainboard app build usagiunagi --device mac --configuration Release --timeout 180` passes: build-4d0f913fffb445028c6c4ef5fbf678cd, zero reported compiler/analyzer issues. Logs: Mainboard-Live-Recheck-20261025.log, Mainboard-App-List-20261025.log, Mainboard-Live-App-Build-20261025.log. | Working checkout evidence, not a published Mainboard revision or hosted CI result. No app source change or new runtime acceptance inferred. |
 
 Do not repeat passing checks without a relevant change. Record new evidence against
 its source revision and link detailed receipts; update the requirement rows when a
