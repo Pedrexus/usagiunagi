@@ -226,14 +226,14 @@ exclude = ["**/.build/**", "**/.mainboard/**"]
 # Parse every kept first-party Swift file independently of gradual style adoption.
 # Native checks activate the declared environment without installing tools or resolving deps.
 [lint.tools.swift-parse]
-check = "mainboard run --locked --no-install mainboard rules gate --rule SW-PARSE0001 {files}"
+check = "mainboard run --locked --no-install mainboard refactor gate --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
 exclude = ["**/.build/**", "**/.mainboard/**"]
 serial = true
 timeout = 600
 
 [lint.tools.swift-ui]
-check = "mainboard run --locked --no-install mainboard rules gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
+check = "mainboard run --locked --no-install mainboard refactor gate --rule SW-UI0001 --rule SW-UI0002 --rule SW-UI0003 --rule SW-UI0004 --rule SW-PARSE0001 {files}"
 files = ["*.swift"]
 exclude = ["**/.build/**", "**/.mainboard/**"]
 serial = true

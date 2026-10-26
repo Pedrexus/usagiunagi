@@ -167,32 +167,37 @@ final class ReviewFlowTests: XCTestCase {
 
   @MainActor func testLessonHeadingAndFooterSupportLargestDynamicType() throws {
     continueAfterFailure = false
-    var heights: [CGFloat] = []
-    for category in ["UICTContentSizeCategoryL", "UICTContentSizeCategoryAccessibilityXXXL"] {
-      let app = launchLessonPicker(extra: ["-UIPreferredContentSizeCategoryName", category])
-      defer { app.terminate() }
-      let vocabulary = app.buttons["lesson.select.14"]
-      scrollTo(vocabulary, in: app)
-      try app.performAccessibilityAudit(for: .hitRegion)
-      vocabulary.tap()
-      app.buttons["lesson.startSelection"].tap()
-      expectLessonPage("Lesson 1 of 1", in: app)
-      let heading = app.staticTexts["subject.characters"]
-      XCTAssertTrue(heading.waitForExistence(timeout: 5))
-      XCTAssertEqual(heading.label, "こんにちは")
-      heights.append(heading.frame.height)
-      XCTAssertTrue(app.buttons["lesson.quiz"].isHittable)
-      try app.performAccessibilityAudit(for: .hitRegion)
-      let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
-      image.name = "Lesson heading and footer at \(category)"
-      image.lifetime = .keepAlways
-      add(image)
+    defer { XCUIDevice.shared.orientation = .portrait }
+    for orientation: UIDeviceOrientation in [.portrait, .landscapeLeft] {
+      XCUIDevice.shared.orientation = orientation
+      var heights: [CGFloat] = []
+      for category in ["UICTContentSizeCategoryL", "UICTContentSizeCategoryAccessibilityXXXL"] {
+        let app = launchLessonPicker(extra: ["-UIPreferredContentSizeCategoryName", category])
+        defer { app.terminate() }
+        let vocabulary = app.buttons["lesson.select.14"]
+        scrollTo(vocabulary, in: app)
+        try app.performAccessibilityAudit(for: .hitRegion)
+        vocabulary.tap()
+        app.buttons["lesson.startSelection"].tap()
+        expectLessonPage("Lesson 1 of 1", in: app)
+        let heading = app.staticTexts["subject.characters"]
+        XCTAssertTrue(heading.waitForExistence(timeout: 5))
+        XCTAssertEqual(heading.label, "こんにちは")
+        heights.append(heading.frame.height)
+        XCTAssertTrue(app.buttons["lesson.quiz"].isHittable)
+        try app.performAccessibilityAudit(for: .hitRegion)
+        let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        image.name = "Lesson heading and footer at \(category), \(orientation.rawValue)"
+        image.lifetime = .keepAlways
+        add(image)
+      }
+      XCTAssertGreaterThan(heights[1], heights[0] * 1.25)
+      let measurement = XCTAttachment(
+        string: "Orientation \(orientation.rawValue), heading heights in points: \(heights)")
+      measurement.name = "Default and largest Dynamic Type heading heights"
+      measurement.lifetime = .keepAlways
+      add(measurement)
     }
-    XCTAssertGreaterThan(heights[1], heights[0] * 1.25)
-    let measurement = XCTAttachment(string: "Lesson heading heights in points: \(heights)")
-    measurement.name = "Default and largest Dynamic Type heading heights"
-    measurement.lifetime = .keepAlways
-    add(measurement)
   }
 
   @MainActor func testLessonGroupSelectionAndClearRemainAccessibleButtons() {
